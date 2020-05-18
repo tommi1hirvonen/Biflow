@@ -1,0 +1,52 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.Steps.IndexModel 
+
+@{
+    ViewData["Title"] = "Job Steps";
+}
+
+<h1>JOB NAME HERE Steps</h1>
+
+<p>
+    <a asp-page="Create" asp-route-id="@Model.JobId">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Step[0].StepName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Step[0].ExecutionPhase)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Step[0].StepType)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Step) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.StepName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ExecutionPhase)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StepType)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.StepId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+
+<div>
+    <a asp-page="../Index">Back to Jobs</a>
+</div>

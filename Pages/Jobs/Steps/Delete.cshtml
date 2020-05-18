@@ -1,0 +1,94 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.Steps.DeleteModel
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Step</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.JobId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.JobId)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.StepId)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.StepId)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.CreatedDateTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.CreatedDateTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.LastModifiedDateTime)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.LastModifiedDateTime)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.StepName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.StepName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.ExecutionPhase)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.ExecutionPhase)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.StepType)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.StepType)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.SqlStatement)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.SqlStatement)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.FolderName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.FolderName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.ProjectName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.ProjectName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.PackageName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.PackageName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.ExecuteIn32BitMode)
+        </dd>
+    </dl>
+    
+    <form method="post">
+        <input type="hidden" asp-for="Step.StepId" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to List</a>
+    </form>
+</div>

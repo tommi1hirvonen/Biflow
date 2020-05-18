@@ -1,0 +1,55 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.IndexModel
+
+@{
+    ViewData["Title"] = "Jobs";
+}
+
+<h1>Jobs</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Job[0].JobName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Job[0].CreatedDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Job[0].LastModifiedDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Job[0].UseDependencyMode)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Job) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.JobName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastModifiedDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.UseDependencyMode)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.JobId">Details</a> |
+                <a asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
+                <a asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

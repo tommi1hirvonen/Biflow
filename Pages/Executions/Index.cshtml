@@ -1,0 +1,62 @@
+﻿@page
+@model ExecutorManager.Pages.Executions.IndexModel
+
+@{
+    ViewData["Title"] = "Executions";
+}
+
+<h1>Executions</h1>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].JobName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].StepName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].StartDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].EndDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].ExecutionStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Execution[0].ExecutionInSeconds)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Execution) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.JobName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StepName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StartDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EndDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ExecutionStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ExecutionInSeconds)
+            </td>
+            <td>
+                <a asp-page="./Details" asp-route-id="@item.ExecutionId">Details</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
