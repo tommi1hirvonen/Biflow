@@ -10,14 +10,10 @@
 <h4>Step</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-8">
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Step.JobId" class="control-label"></label>
-                <input asp-for="Step.JobId" class="form-control" />
-                <span asp-validation-for="Step.JobId" class="text-danger"></span>
-            </div>
+            <input type="hidden" asp-for="Step.JobId" />
             <div class="form-group">
                 <label asp-for="Step.StepName" class="control-label"></label>
                 <input asp-for="Step.StepName" class="form-control" />
@@ -30,30 +26,33 @@
             </div>
             <div class="form-group">
                 <label asp-for="Step.StepType" class="control-label"></label>
-                <input asp-for="Step.StepType" class="form-control" />
+                <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                    <option>SQL</option>
+                    <option>SSIS</option>
+                </select>
                 <span asp-validation-for="Step.StepType" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="sql_statement_div">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
-                <input asp-for="Step.SqlStatement" class="form-control" />
+                <textarea asp-for="Step.SqlStatement" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="folder_div">
                 <label asp-for="Step.FolderName" class="control-label"></label>
                 <input asp-for="Step.FolderName" class="form-control" />
                 <span asp-validation-for="Step.FolderName" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="project_div">
                 <label asp-for="Step.ProjectName" class="control-label"></label>
                 <input asp-for="Step.ProjectName" class="form-control" />
                 <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="package_div">
                 <label asp-for="Step.PackageName" class="control-label"></label>
                 <input asp-for="Step.PackageName" class="form-control" />
                 <span asp-validation-for="Step.PackageName" class="text-danger"></span>
             </div>
-            <div class="form-group form-check">
+            <div class="form-group form-check" id="32_bit_mode_div">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
                 </label>
@@ -66,9 +65,32 @@
 </div>
 
 <div>
-    <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to List</a>
+    <a asp-page="./Index" asp-route-id="@Model.JobId">Back to List</a>
 </div>
 
 @section Scripts {
+
+    <script type="text/javascript">
+        $(document).ready(function () { stepTypeSelected(); });
+
+        function stepTypeSelected() {
+            var stepType = document.getElementById('step_type').value;
+            if (stepType == "SQL") {
+                $('#sql_statement_div').show();
+                $('#folder_div').hide();
+                $('#project_div').hide();
+                $('#package_div').hide();
+                $('#32_bit_mode_div').hide();
+            } else if (stepType == "SSIS") {
+                $('#sql_statement_div').hide();
+                $('#folder_div').show();
+                $('#project_div').show();
+                $('#package_div').show();
+                $('#32_bit_mode_div').show();
+            }
+        }
+
+    </script>
+
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

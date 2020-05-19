@@ -15,36 +15,45 @@ namespace ExecutorManager.Data
         {
         }
 
-        public DbSet<ExecutorManager.Models.Job> Job { get; set; }
+        public DbSet<ExecutorManager.Models.Job> Jobs { get; set; }
 
-        public DbSet<ExecutorManager.Models.Execution> Execution { get; set; }
+        public DbSet<ExecutorManager.Models.Step> Steps { get; set; }
+
+        public DbSet<ExecutorManager.Models.Execution> Executions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
             modelBuilder.HasDefaultSchema("executor");
-            modelBuilder.Entity<Execution>(builder =>
-            {
-                builder.ToTable("vExecution");
-            });
+            modelBuilder.Entity<Execution>()
+                .ToTable("vExecution");
+            modelBuilder.Entity<Job>()
+                .ToTable("Job")
+                .HasMany(job => job.Steps)
+                .WithOne(step => step.Job);
+            modelBuilder.Entity<Step>()
+                .ToTable("Step")
+                .HasOne(step => step.Job)
+                .WithMany(job => job.Steps)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            
         }
 
-        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             // If there are Jobs or Steps that have been edited, set the LastModified date.
             var editedJobs = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Modified).ToList();
             editedJobs.ForEach(entity => entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now);
 
             var addedJobs = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
-            addedJobs.ForEach(entity => {
+            addedJobs.ForEach(entity =>
+            {
                 entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
             });
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
-
-        public DbSet<ExecutorManager.Models.Step> Step { get; set; }
 
     }
 }

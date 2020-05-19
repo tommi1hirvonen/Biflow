@@ -20,15 +20,14 @@ namespace ExecutorManager.Pages.Jobs.Steps
             _context = context;
         }
 
-        public IList<Step> Step { get;set; }
+        public IList<Step> Steps { get;set; }
 
-        public Guid? JobId { get; set; }
+        public Job Job { get; set; }
 
-        public async Task OnGetAsync(Guid? id)
+        public async Task OnGetAsync(Guid id)
         {
-            JobId = id;
-            List<Step> steps = await _context.Step.ToListAsync();
-            Step = steps.Where(step => step.JobId == id).OrderBy(step => step.JobId).ThenBy(step => step.ExecutionPhase).ToList();
+            Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
+            Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ToList();
         }
     }
 }

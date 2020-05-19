@@ -24,6 +24,12 @@
             @Html.DisplayFor(model => model.Step.StepId)
         </dd>
         <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.StepName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.StepName)
+        </dd>
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Step.CreatedDateTime)
         </dt>
         <dd class="col-sm-10">
@@ -35,12 +41,7 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Step.LastModifiedDateTime)
         </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Step.StepName)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Step.StepName)
-        </dd>
+
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Step.ExecutionPhase)
         </dt>
@@ -82,6 +83,12 @@
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Step.ExecuteIn32BitMode)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Step.IsDisabled)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Step.IsDisabled)
         </dd>
     </dl>
 </div>

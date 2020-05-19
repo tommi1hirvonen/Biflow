@@ -48,7 +48,23 @@
                 @Html.DisplayFor(modelItem => item.EndDateTime)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ExecutionStatus)
+                @{
+                    switch (item.ExecutionStatus)
+                    {
+                        case "COMPLETED":
+                            <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        case "FAILED":
+                            <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        case "SKIPPED":
+                            <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        default:
+                            <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                    }
+                }
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.ExecutionInSeconds)

@@ -19,11 +19,15 @@ namespace ExecutorManager.Pages.Jobs.Steps
             _context = context;
         }
 
-        public Guid? JobId { get; set; }
+        public Guid JobId { get; set; }
 
-        public IActionResult OnGet(Guid? jobId)
+        public IActionResult OnGet(Guid id)
         {
-            JobId = jobId;
+            JobId = id;
+            Step = new Step
+            {
+                JobId = JobId
+            };
             return Page();
         }
 
@@ -34,12 +38,13 @@ namespace ExecutorManager.Pages.Jobs.Steps
         // more details, see https://aka.ms/RazorPagesCRUD.
         public async Task<IActionResult> OnPostAsync()
         {
+
             if (!ModelState.IsValid)
             {
                 return Page();
             }
-            Step.JobId = (Guid)JobId;
-            _context.Step.Add(Step);
+            
+            _context.Steps.Add(Step);
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index", new { id = Step.JobId });

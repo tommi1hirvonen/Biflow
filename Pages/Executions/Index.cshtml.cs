@@ -23,8 +23,8 @@ namespace ExecutorManager.Pages.Executions
 
         public async Task OnGetAsync()
         {
-            List<Execution> execution = await _context.Execution.ToListAsync();
-            Execution = execution.OrderBy(execution => execution.StartDateTime).ToList();
+            List<Execution> execution = await _context.Executions.ToListAsync();
+            Execution = execution.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToList();
         }
     }
 }

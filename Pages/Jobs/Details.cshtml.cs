@@ -28,7 +28,7 @@ namespace ExecutorManager.Pages.Jobs
                 return NotFound();
             }
 
-            Job = await _context.Job.FirstOrDefaultAsync(m => m.JobId == id);
+            Job = await _context.Jobs.FirstOrDefaultAsync(m => m.JobId == id);
 
             if (Job == null)
             {

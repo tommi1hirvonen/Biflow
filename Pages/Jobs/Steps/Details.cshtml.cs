@@ -28,7 +28,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return NotFound();
             }
 
-            Step = await _context.Step.FirstOrDefaultAsync(m => m.StepId == id);
+            Step = await _context.Steps.FirstOrDefaultAsync(m => m.StepId == id);
 
             if (Step == null)
             {

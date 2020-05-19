@@ -8,20 +8,29 @@ namespace ExecutorManager.Models
 {
     public class Job
     {
+        [Key]
+        [Required]
         public Guid JobId { get; set; }
 
-        [Display(Name = "Name")]
+        [Required]
+        [MaxLength(250)]
+        [Display(Name = "Job Name")]
         public string JobName { get; set; }
         
-        [Display(Name = "Created")]
+        [Required]
         [DataType(DataType.DateTime)]
+        [Display(Name = "Created")]
         public DateTime CreatedDateTime { get; set; }
         
-        [Display(Name = "Last Modified")]
+        [Required]
         [DataType(DataType.DateTime)]
+        [Display(Name = "Last Modified")]
         public DateTime LastModifiedDateTime { get; set; }
 
+        [Required]
         [Display(Name = "Use Dependency Mode")]
         public bool UseDependencyMode { get; set; }
+
+        public ICollection<Step> Steps { get; set; }
     }
 }

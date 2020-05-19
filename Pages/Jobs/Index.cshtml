@@ -46,7 +46,7 @@
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
                 <a asp-page="./Details" asp-route-id="@item.JobId">Details</a> |
-                <a asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
+                <a asp-page="./Steps/Index" asp-route-id="@item.JobId" asp-route-jobName="@item.JobName">Steps</a> |
                 <a asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
             </td>
         </tr>

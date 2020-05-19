@@ -30,7 +30,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return NotFound();
             }
 
-            Step = await _context.Step.FirstOrDefaultAsync(m => m.StepId == id);
+            Step = await _context.Steps.Include(step => step.Job).FirstOrDefaultAsync(m => m.StepId == id);
 
             if (Step == null)
             {
@@ -38,6 +38,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
             }
             return Page();
         }
+
 
         // To protect from overposting attacks, enable the specific properties you want to bind to, for
         // more details, see https://aka.ms/RazorPagesCRUD.
@@ -71,7 +72,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
 
         private bool StepExists(Guid id)
         {
-            return _context.Step.Any(e => e.StepId == id);
+            return _context.Steps.Any(e => e.StepId == id);
         }
     }
 }

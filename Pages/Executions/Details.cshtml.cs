@@ -28,7 +28,7 @@ namespace ExecutorManager.Pages.Executions
                 return NotFound();
             }
 
-            Execution = await _context.Execution.FirstOrDefaultAsync(m => m.ExecutionId == id);
+            Execution = await _context.Executions.FirstOrDefaultAsync(m => m.ExecutionId == id);
 
             if (Execution == null)
             {

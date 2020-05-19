@@ -23,7 +23,7 @@ namespace ExecutorManager.Pages.Jobs
 
         public async Task OnGetAsync()
         {
-            Job = await _context.Job.ToListAsync();
+            Job = await _context.Jobs.ToListAsync();
         }
     }
 }

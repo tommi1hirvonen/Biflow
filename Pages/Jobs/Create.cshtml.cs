@@ -36,7 +36,7 @@ namespace ExecutorManager.Pages.Jobs
                 return Page();
             }
 
-            _context.Job.Add(Job);
+            _context.Jobs.Add(Job);
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index");

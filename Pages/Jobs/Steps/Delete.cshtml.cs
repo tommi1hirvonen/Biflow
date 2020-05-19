@@ -29,7 +29,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return NotFound();
             }
 
-            Step = await _context.Step.FirstOrDefaultAsync(m => m.StepId == id);
+            Step = await _context.Steps.FirstOrDefaultAsync(m => m.StepId == id);
 
             if (Step == null)
             {
@@ -45,11 +45,11 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return NotFound();
             }
 
-            Step = await _context.Step.FindAsync(id);
+            Step = await _context.Steps.FindAsync(id);
 
             if (Step != null)
             {
-                _context.Step.Remove(Step);
+                _context.Steps.Remove(Step);
                 await _context.SaveChangesAsync();
             }
 

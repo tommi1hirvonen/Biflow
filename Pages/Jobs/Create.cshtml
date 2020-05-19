@@ -18,16 +18,6 @@
                 <input asp-for="Job.JobName" class="form-control" />
                 <span asp-validation-for="Job.JobName" class="text-danger"></span>
             </div>
-            @*<div class="form-group">
-                <label asp-for="Job.CreatedDateTime" class="control-label"></label>
-                <input asp-for="Job.CreatedDateTime" class="form-control" />
-                <span asp-validation-for="Job.CreatedDateTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Job.LastModifiedDateTime" class="control-label"></label>
-                <input asp-for="Job.LastModifiedDateTime" class="form-control" />
-                <span asp-validation-for="Job.LastModifiedDateTime" class="text-danger"></span>
-            </div>*@
             <div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Job.UseDependencyMode" /> @Html.DisplayNameFor(model => model.Job.UseDependencyMode)

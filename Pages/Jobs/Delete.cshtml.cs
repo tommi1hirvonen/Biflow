@@ -29,7 +29,7 @@ namespace ExecutorManager.Pages.Jobs
                 return NotFound();
             }
 
-            Job = await _context.Job.FirstOrDefaultAsync(m => m.JobId == id);
+            Job = await _context.Jobs.FirstOrDefaultAsync(m => m.JobId == id);
 
             if (Job == null)
             {
@@ -45,11 +45,11 @@ namespace ExecutorManager.Pages.Jobs
                 return NotFound();
             }
 
-            Job = await _context.Job.FindAsync(id);
+            Job = await _context.Jobs.FindAsync(id);
 
             if (Job != null)
             {
-                _context.Job.Remove(Job);
+                _context.Jobs.Remove(Job);
                 await _context.SaveChangesAsync();
             }
 

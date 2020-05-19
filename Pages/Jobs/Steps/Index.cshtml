@@ -5,28 +5,31 @@
     ViewData["Title"] = "Job Steps";
 }
 
-<h1>JOB NAME HERE Steps</h1>
+<h1>@Model.Job.JobName Steps</h1>
 
 <p>
-    <a asp-page="Create" asp-route-id="@Model.JobId">Create New</a>
+    <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
 </p>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Step[0].StepName)
+                @Html.DisplayNameFor(model => model.Steps[0].StepName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Step[0].ExecutionPhase)
+                @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Step[0].StepType)
+                @Html.DisplayNameFor(model => model.Steps[0].StepType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Steps[0].IsDisabled)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Step) {
+@foreach (var item in Model.Steps) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.StepName)
@@ -36,6 +39,9 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StepType)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsDisabled)
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
