@@ -37,8 +37,16 @@
         </dd>
     </dl>
 </div>
+
 <div>
+    <form method="post">
+        <input type="hidden" asp-for="Job.JobId" />
+        <input type="submit" value="Execute" class="btn btn-primary" />
+        
+    </form>
+</div>
+<p></p>
+<p>
     <a asp-page="./Edit" asp-route-id="@Model.Job.JobId">Edit</a> |
     <a asp-page="./Index">Back to List</a>
-    
-</div>
+</p>

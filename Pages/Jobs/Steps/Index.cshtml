@@ -7,9 +7,17 @@
 
 <h1>@Model.Job.JobName Steps</h1>
 
-<p>
-    <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
-</p>
+<p></p>
+<div>
+    <form method="post">
+        <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
+        <text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+        <input type="hidden" asp-for="Job.JobId" />
+        <input type="submit" value="Execute" class="btn btn-primary" />
+    </form>
+</div>
+<p></p>
+
 <table class="table">
     <thead>
         <tr>

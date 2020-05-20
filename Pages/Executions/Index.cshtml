@@ -12,9 +12,6 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].JobName)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.Execution[0].StepName)
             </th>
             <th>
@@ -35,9 +32,6 @@
     <tbody>
 @foreach (var item in Model.Execution) {
         <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.JobName)
-            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.StepName)
             </td>
