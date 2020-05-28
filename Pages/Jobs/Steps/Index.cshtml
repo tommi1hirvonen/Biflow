@@ -49,8 +49,16 @@
                 @Html.DisplayFor(modelItem => item.StepType)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.IsDisabled)
+                <form>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="switch1" asp-for="@item.IsDisabled">
+                        <label class="custom-control-label" for="switch1"></label>
+                    </div>
+                </form>
             </td>
+            @*<td>
+                @Html.DisplayFor(modelItem => item.IsDisabled)
+            </td>*@
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
                 <a asp-page="./Details" asp-route-id="@item.StepId">Details</a> |

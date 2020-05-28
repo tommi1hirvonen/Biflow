@@ -18,7 +18,7 @@
             <input type="hidden" asp-for="Step.JobId" />
             <div class="form-group">
                 <label asp-for="Step.Job.JobName" class="control-label"></label>
-                <input asp-for="Step.Job.JobName" class="form-control" readonly/>
+                <input asp-for="Step.Job.JobName" class="form-control" readonly />
                 <span asp-validation-for="Step.Job.JobName" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -74,11 +74,16 @@
                     <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
                 </label>
             </div>
-            <div class="form-group form-check">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="switch1" asp-for="Step.IsDisabled">
+                <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsDisabled)</label>
+            </div>
+            <p></p>
+            @*<div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Step.IsDisabled" /> @Html.DisplayNameFor(model => model.Step.IsDisabled)
                 </label>
-            </div>
+            </div>*@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

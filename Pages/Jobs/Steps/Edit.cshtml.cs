@@ -49,6 +49,9 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return Page();
             }
 
+            // The JobId property of the Job member of Step is lost. Restore it before saving.
+            // Otherwise Entity Framework will try to generate a new Job and place the step under it.
+            Step.Job.JobId = Step.JobId;
             _context.Attach(Step).State = EntityState.Modified;
 
             try
