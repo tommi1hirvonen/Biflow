@@ -52,8 +52,8 @@
                 <td>
                     <form>
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="switch1" asp-for="@item.IsDisabled" onchange="toggleDisabled(this)" data-disabled-id="@item.StepId">
-                            <label class="custom-control-label" for="switch1"></label>
+                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsDisabled" onchange="toggleDisabled(this)" data-disabled-id="@item.StepId">
+                            <label class="custom-control-label" for="@item.StepId"></label>
                         </div>
                     </form>
                 </td>
