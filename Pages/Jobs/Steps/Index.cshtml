@@ -1,5 +1,5 @@
 ﻿@page
-@model ExecutorManager.Pages.Jobs.Steps.IndexModel 
+@model ExecutorManager.Pages.Jobs.Steps.IndexModel
 
 @{
     ViewData["Title"] = "Job Steps";
@@ -37,38 +37,70 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Steps) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StepName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ExecutionPhase)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StepType)
-            </td>
-            <td>
-                <form>
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="switch1" asp-for="@item.IsDisabled">
-                        <label class="custom-control-label" for="switch1"></label>
-                    </div>
-                </form>
-            </td>
-            @*<td>
-                @Html.DisplayFor(modelItem => item.IsDisabled)
-            </td>*@
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
-                <a asp-page="./Delete" asp-route-id="@item.StepId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Steps)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StepName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ExecutionPhase)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StepType)
+                </td>
+                <td>
+                    <form>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="switch1" asp-for="@item.IsDisabled" onchange="toggleDisabled(this)" data-disabled-id="@item.StepId">
+                            <label class="custom-control-label" for="switch1"></label>
+                        </div>
+                    </form>
+                </td>
+                @*<td>
+                        @Html.DisplayFor(modelItem => item.IsDisabled)
+                    </td>*@
+                <td>
+                    <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
+                    <a asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
+                    <a asp-page="./Delete" asp-route-id="@item.StepId">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
 
 <div>
     <a asp-page="../Index">Back to Jobs</a>
 </div>
+
+@section Scripts {
+
+    <script type="text/javascript">
+
+        function toggleDisabled(elem) {
+            var id_ = $(elem).data('disabled-id');
+            //alert(id);
+
+            $.ajax({
+                url: "./Steps/Index?handler=Disable",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id_
+                },
+                success: function (response) {
+                    //alert(response);
+                },
+                failure: function (response) {
+                    alert("AJAX error");
+                }
+            });
+        }
+
+    </script>
+
+}

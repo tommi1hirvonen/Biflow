@@ -10,6 +10,8 @@ using ExecutorManager.Models;
 using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace ExecutorManager.Pages.Jobs.Steps
 {
@@ -51,6 +53,25 @@ namespace ExecutorManager.Pages.Jobs.Steps
             await Utility.StartExecution(_configuration, Job);
 
             return RedirectToPage("../../Executions/Index");
+        }
+
+        public async Task<IActionResult> OnPostDisable(Guid? id)
+        {
+            if (id == null)
+            {
+                return new JsonResult("Id argument was null");
+            }
+
+            Step step = await _context.Steps.FindAsync(id);
+
+            if (step == null)
+            {
+                return new JsonResult("No step found for id " + id);
+            }
+
+            await Utility.ToggleStepDisabled(_configuration, step);
+
+            return new JsonResult("Success");
         }
     }
 }
