@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using ExecutorManager.Data;
 using ExecutorManager.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ExecutorManager.Pages.Jobs
 {
@@ -25,5 +27,6 @@ namespace ExecutorManager.Pages.Jobs
         {
             Job = await _context.Jobs.ToListAsync();
         }
+
     }
 }

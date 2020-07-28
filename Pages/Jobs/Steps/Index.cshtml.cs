@@ -12,6 +12,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
 using System.IO;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ExecutorManager.Pages.Jobs.Steps
 {
@@ -73,5 +75,6 @@ namespace ExecutorManager.Pages.Jobs.Steps
 
             return new JsonResult("Success");
         }
+
     }
 }
