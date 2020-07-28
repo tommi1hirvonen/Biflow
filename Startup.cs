@@ -30,6 +30,8 @@ namespace ExecutorManager
             services.AddDbContext<ExecutorManagerContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("ExecutorManagerContext")));
 
+            // AJAX requests used in cshtml files send the anti-forgery token in a header called XSRF-TOKEN.
+            // Configure the service to listen to it.
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
         }
 
