@@ -1,0 +1,42 @@
+﻿@page
+@model ExecutorManager.Pages.LogInModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <section>
+            <form method="post" role="form" class="form-horizontal">
+                @Html.AntiForgeryToken()
+
+                <h4>Log in</h4>
+                <hr />
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Login.Username, new { @class = "col-md-2 control-label" })
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(m => m.Login.Username, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Login.Username, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Login.Password, new { @class = "col-md-2 control-label" })
+                    <div class="col-md-10">
+                        @Html.PasswordFor(m => m.Login.Password, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(m => m.Login.Password, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <button asp-page-handler="LogIn" class="btn btn-primary">Log in</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+</div> 

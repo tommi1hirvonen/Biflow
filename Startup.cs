@@ -34,14 +34,14 @@ namespace ExecutorManager
                 options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             }).AddCookie(options =>
             {
-                options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Index");
+                options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/LogIn");
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5.0);
             });
 
             services.AddRazorPages(options =>
             {
                 options.Conventions.AuthorizeFolder("/");
-                options.Conventions.AllowAnonymousToPage("/Index");
+                options.Conventions.AllowAnonymousToPage("/LogIn");
             });
 
             services.AddDbContext<ExecutorManagerContext>(options =>

@@ -31,9 +31,9 @@ namespace ExecutorManager.Pages
         {
             try
             {
-                if (User.Identity.IsAuthenticated)
+                if (!User.Identity.IsAuthenticated)
                 {
-                    return RedirectToPage("/Jobs/Index");
+                    return RedirectToPage("/LogIn");
                 }
             }
             catch (Exception ex)
@@ -42,49 +42,6 @@ namespace ExecutorManager.Pages
             }
 
             return Page();
-        }
-
-        public async Task<IActionResult> OnPostLogIn()
-        {
-            try
-            {
-                if (ModelState.IsValid)
-                {
-                    if (Utility.AuthenticateUser(_configuration, Login.Username, Login.Password))
-                    {
-                        await SignInUser(Login.Username, false);
-                        return RedirectToPage("/Jobs/Index");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError(string.Empty, "Invalid username or password.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Write(ex);
-            }
-
-            return Page();
-        }
-
-        private async Task SignInUser(string username, bool isPersistent)
-        {
-            var claims = new List<Claim>();
-            try
-            {
-                claims.Add(new Claim(ClaimTypes.Name, username));
-                var claimIdenties = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var claimPrincipal = new ClaimsPrincipal(claimIdenties);
-                var authenticationManager = Request.HttpContext;
-
-                await authenticationManager.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, new AuthenticationProperties() { IsPersistent = isPersistent });
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
         }
 
         public async Task<IActionResult> OnPostLogOff()
@@ -98,7 +55,7 @@ namespace ExecutorManager.Pages
             {
                 throw ex;
             }
-            return RedirectToPage("/Index");
+            return RedirectToPage("/LogIn");
         }
 
     }
