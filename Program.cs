@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using ExecutorManager.Models;
 using Microsoft.AspNetCore.Hosting;
@@ -20,7 +21,10 @@ namespace ExecutorManager
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder
+                    .UseIISIntegration()
+                    .UseContentRoot(Directory.GetCurrentDirectory())
+                    .UseStartup<Startup>();
                 });
 
     }
