@@ -93,7 +93,7 @@ namespace ExecutorManager
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [Executor].[executor].[AuthenticateUser] @Username = @Username_, @Password = @Password_"
+                "EXEC [Executor].[executor].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);

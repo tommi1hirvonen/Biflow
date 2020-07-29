@@ -60,8 +60,8 @@ namespace ExecutorManager.Pages
             try
             {
                 claims.Add(new Claim(ClaimTypes.Name, username));
-                var claimIdenties = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var claimPrincipal = new ClaimsPrincipal(claimIdenties);
+                var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimPrincipal = new ClaimsPrincipal(claimIdentity);
                 var authenticationManager = Request.HttpContext;
 
                 await authenticationManager.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, new AuthenticationProperties() { IsPersistent = isPersistent });
