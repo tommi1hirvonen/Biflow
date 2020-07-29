@@ -16,35 +16,35 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item">
-                            <form method="post">
-                                @if (User.Identity.IsAuthenticated)
-                                {
+                @*Only show the navigation links if the user is logged in*@ 
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Account">Account</a>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post">
                                     <button asp-page="/Index" asp-page-handler="LogOff" class="btn btn-light">Log off</button>
-                                }
-                                else
-                                {
-                                    <button disabled class="btn btn-light">Log off</button>
-                                }
-                            </form>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Jobs/Index">Jobs</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Executions/Index">Executions</a>
-                        </li>
-                    </ul>
-                    
+                                </form>
+                            </li>
+                        </ul>
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Jobs/Index">Jobs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Executions/Index">Executions</a>
+                            </li>
+                        </ul>
+
+                    </div>
+                }
                 </div>
-            </div>
         </nav>
     </header>
     <div class="container">

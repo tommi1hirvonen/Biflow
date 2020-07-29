@@ -1,0 +1,39 @@
+﻿@page
+@model ExecutorManager.Pages.AccountModel
+@{
+    ViewData["Title"] = "Account";
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <section>
+            <form method="post" role="form" class="form-horizontal">
+                @Html.AntiForgeryToken()
+
+                <h4>Change password</h4>
+                <hr />
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @Html.ValidationMessage("MatchError", "", new { @class = "text-danger" })
+
+                <div class="form-group">
+                    @Html.LabelFor(m => m.Password, new { @class = "control-label" })
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    @Html.LabelFor(m => m.ConfirmPassword, new { @class = "control-label" })
+                    @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.ConfirmPassword, "", new { @class = "text-danger" })
+                </div>
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" value="Update">
+                </div>
+            </form>
+            @if (Model.success)
+            {
+                <div class="alert alert-success" role="alert">Password updated successfully!</div>
+            }
+        </section>
+    </div>
+</div> 

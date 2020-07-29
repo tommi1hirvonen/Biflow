@@ -5,7 +5,7 @@
 }
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-4">
         <section>
             <form method="post" role="form" class="form-horizontal">
                 @Html.AntiForgeryToken()
@@ -16,25 +16,17 @@
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
                 <div class="form-group">
-                    @Html.LabelFor(m => m.Login.Username, new { @class = "col-md-2 control-label" })
-                    <div class="col-md-10">
-                        @Html.TextBoxFor(m => m.Login.Username, new { @class = "form-control" })
-                        @Html.ValidationMessageFor(m => m.Login.Username, "", new { @class = "text-danger" })
-                    </div>
+                    @Html.LabelFor(m => m.Login.Username, new { @class = "control-label" })
+                    @Html.TextBoxFor(m => m.Login.Username, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Login.Username, "", new { @class = "text-danger" })
                 </div>
-
                 <div class="form-group">
-                    @Html.LabelFor(m => m.Login.Password, new { @class = "col-md-2 control-label" })
-                    <div class="col-md-10">
-                        @Html.PasswordFor(m => m.Login.Password, new { @class = "form-control" })
-                        @Html.ValidationMessageFor(m => m.Login.Password, "", new { @class = "text-danger" })
-                    </div>
+                    @Html.LabelFor(m => m.Login.Password, new { @class = "control-label" })
+                    @Html.PasswordFor(m => m.Login.Password, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.Login.Password, "", new { @class = "text-danger" })
                 </div>
-
                 <div class="form-group">
-                    <div class="col-md-offset-2 col-md-10">
-                        <button asp-page-handler="LogIn" class="btn btn-primary">Log in</button>
-                    </div>
+                    <button asp-page-handler="LogIn" class="btn btn-primary">Log in</button>
                 </div>
             </form>
         </section>

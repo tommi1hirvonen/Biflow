@@ -105,6 +105,23 @@ namespace ExecutorManager
             if (result > 0) return true;
             else return false;
         }
+
+        public static bool UpdatePassword(IConfiguration configuration, string username, string password)
+        {
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "EXEC [Executor].[executor].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@Username_", username);
+            sqlCommand.Parameters.AddWithValue("@Password_", password);
+
+            sqlConnection.Open();
+            int result = (int)sqlCommand.ExecuteScalar();
+            sqlConnection.Close();
+
+            if (result > 0) return true;
+            else return false;
+        }
     }
     
 }
