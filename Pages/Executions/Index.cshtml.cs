@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using ExecutorManager.Data;
 using ExecutorManager.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace ExecutorManager.Pages.Executions
 {
@@ -19,12 +20,52 @@ namespace ExecutorManager.Pages.Executions
             _context = context;
         }
 
+        public SelectList Statuses { get; set; }
+        
+        [BindProperty(SupportsGet = true)]
+        public string Status { get; set; }
+
+
+        public SelectList StepNames { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string StepName { get; set; }
+
+
+        public SelectList JobNames { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string JobName { get; set; }
+
+
         public IList<Execution> Execution { get;set; }
 
         public async Task OnGetAsync()
         {
-            List<Execution> execution = await _context.Executions.ToListAsync();
-            Execution = execution.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToList();
+            IQueryable<Execution> executions = _context.Executions;
+
+            Statuses = new SelectList(await executions.Select(execution => execution.ExecutionStatus).Distinct().ToListAsync());
+            StepNames = new SelectList(await executions.Select(execution => execution.StepName).Distinct().ToListAsync());
+            JobNames = new SelectList(await executions.Select(execution => execution.JobName).Distinct().ToListAsync());
+
+            if (!string.IsNullOrEmpty(Status))
+            {
+                executions = executions.Where(execution => execution.ExecutionStatus == Status);
+            }
+
+            if (!string.IsNullOrEmpty(StepName))
+            {
+                executions = executions.Where(execution => execution.StepName == StepName);
+            }
+
+            if (!string.IsNullOrEmpty(JobName))
+            {
+                executions = executions.Where(execution => execution.JobName == JobName);
+            }
+
+            Execution = await executions.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToListAsync();
+            
         }
+
     }
 }
