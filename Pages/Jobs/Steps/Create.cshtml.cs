@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using ExecutorManager.Data;
 using ExecutorManager.Models;
 
@@ -12,9 +9,9 @@ namespace ExecutorManager.Pages.Jobs.Steps
 {
     public class CreateModel : PageModel
     {
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly ExecutorManagerContext _context;
 
-        public CreateModel(ExecutorManager.Data.ExecutorManagerContext context)
+        public CreateModel(ExecutorManagerContext context)
         {
             _context = context;
         }

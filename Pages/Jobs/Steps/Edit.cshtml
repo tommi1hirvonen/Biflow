@@ -26,28 +26,32 @@
                 <input asp-for="Step.StepName" class="form-control" />
                 <span asp-validation-for="Step.StepName" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Step.CreatedDateTime" class="control-label"></label>
-                <input asp-for="Step.CreatedDateTime" class="form-control" readonly />
-                <span asp-validation-for="Step.CreatedDateTime" class="text-danger"></span>
+            <div class="form-row">
+                <div class="form-group col-md-5">
+                    <label asp-for="Step.CreatedDateTime" class="control-label"></label>
+                    <input asp-for="Step.CreatedDateTime" class="form-control" readonly />
+                    <span asp-validation-for="Step.CreatedDateTime" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-5">
+                    <label asp-for="Step.LastModifiedDateTime" class="control-label"></label>
+                    <input asp-for="Step.LastModifiedDateTime" class="form-control" readonly />
+                    <span asp-validation-for="Step.LastModifiedDateTime" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Step.LastModifiedDateTime" class="control-label"></label>
-                <input asp-for="Step.LastModifiedDateTime" class="form-control" readonly />
-                <span asp-validation-for="Step.LastModifiedDateTime" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Step.ExecutionPhase" class="control-label"></label>
-                <input asp-for="Step.ExecutionPhase" class="form-control" />
-                <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Step.StepType" class="control-label"></label>
-                <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
-                    <option>SQL</option>
-                    <option>SSIS</option>
-                </select>
-                <span asp-validation-for="Step.StepType" class="text-danger"></span>
+            <div class="form-row">
+                <div class="form-group col-md-5">
+                    <label asp-for="Step.ExecutionPhase" class="control-label"></label>
+                    <input asp-for="Step.ExecutionPhase" class="form-control" />
+                    <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-5">
+                    <label asp-for="Step.StepType" class="control-label"></label>
+                    <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                        <option>SQL</option>
+                        <option>SSIS</option>
+                    </select>
+                    <span asp-validation-for="Step.StepType" class="text-danger"></span>
+                </div>
             </div>
             <div class="form-group" id="sql_statement_div">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
@@ -79,11 +83,6 @@
                 <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsEnabled)</label>
             </div>
             <p></p>
-            @*<div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Step.IsDisabled" /> @Html.DisplayNameFor(model => model.Step.IsDisabled)
-                </label>
-            </div>*@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

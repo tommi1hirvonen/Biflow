@@ -13,9 +13,9 @@ namespace ExecutorManager.Pages.Executions
 {
     public class IndexModel : PageModel
     {
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly Data.ExecutorManagerContext _context;
 
-        public IndexModel(ExecutorManager.Data.ExecutorManagerContext context)
+        public IndexModel(Data.ExecutorManagerContext context)
         {
             _context = context;
         }
@@ -40,7 +40,7 @@ namespace ExecutorManager.Pages.Executions
 
         [BindProperty(SupportsGet = true)]
         [DataType(DataType.DateTime)]
-        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute);
+        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
         [BindProperty(SupportsGet = true)]
         public int IntervalHours { get; set; } = 3;
