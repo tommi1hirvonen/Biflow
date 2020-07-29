@@ -33,7 +33,7 @@ namespace ExecutorManager
             SqlCommand sqlCommand = new SqlCommand(
                 "DECLARE @execution_id BIGINT\n" +
 
-                "EXEC[SSISDB].[catalog].[create_execution]\n" +
+                "EXEC [SSISDB].[catalog].[create_execution]\n" +
                     "@package_name = @PackageName,\n" +
                     "@execution_id = @execution_id OUTPUT,\n" +
                     "@folder_name = @FolderName,\n" +
@@ -41,25 +41,25 @@ namespace ExecutorManager
                     "@use32bitruntime = 0,\n" +
                     "@reference_id = NULL\n" +
 
-                "EXEC[SSISDB].[catalog].[set_execution_parameter_value]\n" +
+                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
                     "@execution_id,\n" +
                     "@object_type = 50,\n" +
                     "@parameter_name = N'LOGGING_LEVEL',\n" +
                     "@parameter_value = 1\n" +
 
-                "EXEC[SSISDB].[catalog].[set_execution_parameter_value]\n" +
+                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
                     "@execution_id,\n" +
                     "@object_type = 50,\n" +
                     "@parameter_name = N'SYNCHRONIZED',\n" +
                     "@parameter_value = 0\n" +
 
-                "EXEC[SSISDB].[catalog].[set_execution_parameter_value]\n" +
+                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
                     "@execution_id,\n" +
                     "@object_type = 30,\n" +
                     "@parameter_name = N'JobId',\n" +
                     "@parameter_value = @JobId\n" +
 
-                "EXEC[SSISDB].[catalog].[start_execution]\n" +
+                "EXEC [SSISDB].[catalog].[start_execution]\n" +
                     "@execution_id"
 
                 , sqlConnection);
@@ -77,7 +77,7 @@ namespace ExecutorManager
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "UPDATE [Executor].[executor].[Step]\n" +
+                "UPDATE [executor].[Step]\n" +
                 "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
                 "WHERE [StepId] = @StepId"
 
@@ -93,7 +93,7 @@ namespace ExecutorManager
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [Executor].[executor].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
+                "EXEC [executor].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);
@@ -110,7 +110,7 @@ namespace ExecutorManager
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [Executor].[executor].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
+                "EXEC [executor].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);

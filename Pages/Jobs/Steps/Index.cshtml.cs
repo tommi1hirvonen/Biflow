@@ -35,7 +35,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
         public async Task OnGetAsync(Guid id)
         {
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
-            Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ToList();
+            Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
         }
 
         public async Task<IActionResult> OnPostAsync(Guid? id)
