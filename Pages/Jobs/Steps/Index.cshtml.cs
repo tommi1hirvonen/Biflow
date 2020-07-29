@@ -57,7 +57,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
             return RedirectToPage("../../Executions/Index");
         }
 
-        public async Task<IActionResult> OnPostDisable(Guid? id)
+        public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
         {
             if (id == null)
             {
@@ -71,7 +71,7 @@ namespace ExecutorManager.Pages.Jobs.Steps
                 return new JsonResult("No step found for id " + id);
             }
 
-            await Utility.ToggleStepDisabled(_configuration, step);
+            await Utility.ToggleStepEnabled(_configuration, step);
 
             return new JsonResult("Success");
         }

@@ -31,7 +31,7 @@
                 @Html.DisplayNameFor(model => model.Steps[0].StepType)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Steps[0].IsDisabled)
+                @Html.DisplayNameFor(model => model.Steps[0].IsEnabled)
             </th>
             <th></th>
         </tr>
@@ -52,7 +52,7 @@
                 <td>
                     <form>
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsDisabled" onchange="toggleDisabled(this)" data-disabled-id="@item.StepId">
+                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
                             <label class="custom-control-label" for="@item.StepId"></label>
                         </div>
                     </form>
@@ -78,12 +78,12 @@
 
     <script type="text/javascript">
 
-        function toggleDisabled(elem) {
-            var id_ = $(elem).data('disabled-id');
+        function toggleEnabled(elem) {
+            var id_ = $(elem).data('step-id');
             //alert(id);
 
             $.ajax({
-                url: "./Steps/Index?handler=Disable",
+                url: "./Steps/Index?handler=ToggleEnabled",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",

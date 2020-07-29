@@ -73,12 +73,12 @@ namespace ExecutorManager
             await sqlConnection.CloseAsync();
         }
 
-        public async static Task ToggleStepDisabled(IConfiguration configuration, Step step)
+        public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "UPDATE [Executor].[executor].[Step]\n" +
-                "SET [IsDisabled] = CASE [IsDisabled] WHEN 1 THEN 0 ELSE 1 END\n" +
+                "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
                 "WHERE [StepId] = @StepId"
 
                 , sqlConnection);

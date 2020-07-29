@@ -61,7 +61,7 @@ namespace ExecutorManager.Models
         public DateTime LastModifiedDateTime { get; set; }
 
         [Required]
-        [Display(Name = "Disabled")]
-        public bool IsDisabled { get; set; }
+        [Display(Name = "Enabled")]
+        public bool IsEnabled { get; set; }
     }
 }
