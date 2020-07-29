@@ -31,6 +31,11 @@ namespace ExecutorManager
 
     public static class Utility
     {
+        public static DateTime Trim(this DateTime date, long roundTicks)
+        {
+            return new DateTime(date.Ticks - date.Ticks % roundTicks, date.Kind);
+        }
+
         public async static Task StartExecution(IConfiguration configuration, Job job)
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));

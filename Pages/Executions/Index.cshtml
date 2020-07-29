@@ -29,6 +29,16 @@
         </div>
     </div>
     <div class="form-row">
+        <div class="form-group col-md-3">
+            <label>Date & time until</label>
+            <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
+        </div>
+        <div class="form-group col-md-1">
+            <label>Interval (h)</label>
+            <input asp-for="IntervalHours" class="form-control" >
+        </div>
+    </div>
+    <div class="form-row">
         <input type="submit" value="Filter" class="btn btn-primary" />
     </div>
 </form>

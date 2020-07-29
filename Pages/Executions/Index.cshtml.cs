@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
 using ExecutorManager.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace ExecutorManager.Pages.Executions
 {
@@ -38,6 +38,14 @@ namespace ExecutorManager.Pages.Executions
         public string JobName { get; set; }
 
 
+        [BindProperty(SupportsGet = true)]
+        [DataType(DataType.DateTime)]
+        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute);
+
+        [BindProperty(SupportsGet = true)]
+        public int IntervalHours { get; set; } = 3;
+
+
         public IList<Execution> Execution { get;set; }
 
         public async Task OnGetAsync()
@@ -62,6 +70,10 @@ namespace ExecutorManager.Pages.Executions
             {
                 executions = executions.Where(execution => execution.JobName == JobName);
             }
+
+            executions = executions
+                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
+                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 
             Execution = await executions.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToListAsync();
             
