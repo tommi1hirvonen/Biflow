@@ -15,17 +15,21 @@ namespace ExecutorManager.Data
         {
         }
 
-        public DbSet<ExecutorManager.Models.Job> Jobs { get; set; }
+        public DbSet<Job> Jobs { get; set; }
 
-        public DbSet<ExecutorManager.Models.Step> Steps { get; set; }
+        public DbSet<Step> Steps { get; set; }
 
-        public DbSet<ExecutorManager.Models.Execution> Executions { get; set; }
+        public DbSet<Execution> Executions { get; set; }
+
+        public DbSet<Dependency> Dependencies { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("executor");
             modelBuilder.Entity<Execution>()
-                .ToTable("vExecution");
+                .ToView("vExecution");
+            modelBuilder.Entity<Dependency>()
+                .ToView("vDependency");
             modelBuilder.Entity<Job>()
                 .ToTable("Job")
                 .HasMany(job => job.Steps)

@@ -12,6 +12,8 @@
     <form method="post">
         <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
         <text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+        <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
+        <text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
         <input type="hidden" asp-for="Job.JobId" />
         <input type="submit" value="Execute" class="btn btn-primary" />
     </form>

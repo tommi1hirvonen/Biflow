@@ -1,0 +1,46 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.Steps.DependencyModel
+@{
+    ViewData["Title"] = "Job Dependencies";
+}
+
+<h2>@Model.JobName Dependencies</h2>
+
+<p></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Dependencies[0].StepName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Dependencies[0].DependantOnStepName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Dependencies[0].StrictDependency)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Dependencies)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StepName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DependantOnStepName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StrictDependency)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <a asp-page="./Index" asp-route-id="@Model.JobId">Back to List</a>
+</div>
