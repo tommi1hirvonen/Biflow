@@ -40,42 +40,10 @@ namespace ExecutorManager
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "DECLARE @execution_id BIGINT\n" +
-
-                "EXEC [SSISDB].[catalog].[create_execution]\n" +
-                    "@package_name = @PackageName,\n" +
-                    "@execution_id = @execution_id OUTPUT,\n" +
-                    "@folder_name = @FolderName,\n" +
-                    "@project_name = @ProjectName,\n" +
-                    "@use32bitruntime = 0,\n" +
-                    "@reference_id = NULL\n" +
-
-                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
-                    "@execution_id,\n" +
-                    "@object_type = 50,\n" +
-                    "@parameter_name = N'LOGGING_LEVEL',\n" +
-                    "@parameter_value = 1\n" +
-
-                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
-                    "@execution_id,\n" +
-                    "@object_type = 50,\n" +
-                    "@parameter_name = N'SYNCHRONIZED',\n" +
-                    "@parameter_value = 0\n" +
-
-                "EXEC [SSISDB].[catalog].[set_execution_parameter_value]\n" +
-                    "@execution_id,\n" +
-                    "@object_type = 30,\n" +
-                    "@parameter_name = N'JobId',\n" +
-                    "@parameter_value = @JobId\n" +
-
-                "EXEC [SSISDB].[catalog].[start_execution]\n" +
-                    "@execution_id"
-
+                "EXEC [executor].[JobExecute] @JobId = @JobId_"
                 , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@PackageName", "MasterExecutor.dtsx");
-            sqlCommand.Parameters.AddWithValue("@FolderName", "Executor");
-            sqlCommand.Parameters.AddWithValue("@ProjectName", "Executor");
-            sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
+            
+            sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
