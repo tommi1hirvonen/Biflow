@@ -16,12 +16,10 @@ namespace ExecutorManager.Data
         }
 
         public DbSet<Job> Jobs { get; set; }
-
         public DbSet<Step> Steps { get; set; }
-
         public DbSet<Execution> Executions { get; set; }
-
         public DbSet<Dependency> Dependencies { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,10 +32,19 @@ namespace ExecutorManager.Data
                 .ToTable("Job")
                 .HasMany(job => job.Steps)
                 .WithOne(step => step.Job);
+            modelBuilder.Entity<Job>()
+                .HasMany(job => job.Schedules)
+                .WithOne(schedule => schedule.Job);
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
                 .HasOne(step => step.Job)
                 .WithMany(job => job.Steps)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Schedule>()
+                .ToTable("Schedule")
+                .HasOne(schedule => schedule.Job)
+                .WithMany(job => job.Schedules)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
         }

@@ -1,0 +1,85 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.Schedules.CreateModel
+@{
+    ViewData["Title"] = "Create Schedule";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Schedule.JobId" />
+            <div class="form-group col-md-2">
+                <label asp-for="Schedule.TimeHours" class="control-label"></label>
+                <input asp-for="Schedule.TimeHours" class="form-control" />
+                <span asp-validation-for="Schedule.TimeHours" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="OnMinutes" value="0">
+                    <label class="form-check-label">:00</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="OnMinutes" value="15">
+                    <label class="form-check-label">:15</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="OnMinutes" value="30">
+                    <label class="form-check-label">:30</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" asp-for="OnMinutes" value="45">
+                    <label class="form-check-label">:45</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Monday" /> @Html.DisplayNameFor(model => model.Schedule.Monday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Tuesday" /> @Html.DisplayNameFor(model => model.Schedule.Tuesday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Wednesday" /> @Html.DisplayNameFor(model => model.Schedule.Wednesday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Thursday" /> @Html.DisplayNameFor(model => model.Schedule.Thursday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Friday" /> @Html.DisplayNameFor(model => model.Schedule.Friday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Saturday" /> @Html.DisplayNameFor(model => model.Schedule.Saturday)
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input class="form-check-input" asp-for="Schedule.Sunday" /> @Html.DisplayNameFor(model => model.Schedule.Sunday)
+                    </label>
+                </div>
+            </div>
+            
+
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index" asp-route-id="@Model.Schedule.JobId">Back to List</a>
+</div>

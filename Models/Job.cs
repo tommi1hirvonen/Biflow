@@ -32,5 +32,6 @@ namespace ExecutorManager.Models
         public bool UseDependencyMode { get; set; }
 
         public ICollection<Step> Steps { get; set; }
+        public ICollection<Schedule> Schedules { get; set; }
     }
 }

@@ -1,0 +1,89 @@
+﻿@page
+@model ExecutorManager.Pages.Jobs.SchedulesModel
+@{
+    ViewData["Title"] = "Schedules";
+}
+
+<h4>@Model.Job.JobName Schedules</h4>
+
+<p />
+<div>
+    <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
+</div>
+<p/>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Time
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Monday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Tuesday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Wednesday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Thursday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Friday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Saturday)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Schedules[0].Sunday)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Schedules)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Monday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Tuesday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Wednesday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Thursday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Friday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Saturday)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Sunday)
+            </td>
+            <td>
+                <form method="post">
+                    <button type="button" class="btn btn-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Delete
+                    </button>
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId">Confirm</button>
+                    </div>
+                </form>
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    <a asp-page="../Index">Back to Jobs</a>
+</div>
