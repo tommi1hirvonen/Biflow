@@ -18,27 +18,21 @@
                 Time
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Monday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Tuesday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Wednesday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Thursday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Friday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Saturday)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Schedules[0].Sunday)
             </th>
-            <th></th>
+            <th>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -49,25 +43,74 @@
                 @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Monday)
+                @if (item.Monday)
+                {
+                    <span class="badge badge-primary">Monday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Monday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Tuesday)
+                @if (item.Tuesday)
+                {
+                    <span class="badge badge-primary">Tuesday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Tuesday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Wednesday)
+                @if (item.Wednesday)
+                {
+                    <span class="badge badge-primary">Wednesday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Wednesday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Thursday)
+                @if (item.Thursday)
+                {
+                    <span class="badge badge-primary">Thursday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Thursday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Friday)
+                @if (item.Friday)
+                {
+                    <span class="badge badge-primary">Friday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Friday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Saturday)
+                @if (item.Saturday)
+                {
+                    <span class="badge badge-primary">Saturday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Saturday</span>
+                }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Sunday)
+                @if (item.Sunday)
+                {
+                    <span class="badge badge-primary">Sunday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Sunday</span>
+                }
             </td>
             <td>
                 <form method="post">

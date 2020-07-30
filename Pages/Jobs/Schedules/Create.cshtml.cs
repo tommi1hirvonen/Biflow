@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication.ExtendedProtection;
 using System.Threading.Tasks;
 using ExecutorManager.Data;
 using ExecutorManager.Models;
@@ -35,6 +36,13 @@ namespace ExecutorManager.Pages.Jobs.Schedules
 
             if (!ModelState.IsValid)
             {
+                return Page();
+            }
+
+            if (!Schedule.Monday && !Schedule.Tuesday && !Schedule.Wednesday && !Schedule.Thursday
+                && !Schedule.Friday && !Schedule.Saturday && !Schedule.Sunday)
+            {
+                ModelState.AddModelError(string.Empty, "Select at least one weekday");
                 return Page();
             }
 

@@ -35,7 +35,7 @@ namespace ExecutorManager.Models
         [Display(Name = "Sun")]
         public bool Sunday { get; set; }
         [Required]
-        [Range(0, 23)]
+        [Range(0, 23, ErrorMessage = "Use values between 0 and 23")]
         [Display(Name = "Hours")]
         public int TimeHours { get; set; }
         [Required]
