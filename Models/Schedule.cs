@@ -39,25 +39,13 @@ namespace EtlManager.Models
         [Display(Name = "Hours")]
         public int TimeHours { get; set; }
         [Required]
-        [Display(Name = ":00")]
-        public bool On00Minutes { get; set; }
-        [Required]
-        [Display(Name = ":15")]
-        public bool On15Minutes { get; set; }
-        [Required]
-        [Display(Name = ":30")]
-        public bool On30Minutes { get; set; }
-        [Required]
-        [Display(Name = ":45")]
-        public bool On45Minutes { get; set; }
+        [Display(Name = "Minutes")]
+        public int TimeMinutes { get; set; } = 0;
 
         public string GetMinutesText()
         {
-            if (On00Minutes) return "00";
-            else if (On15Minutes) return "15";
-            else if (On30Minutes) return "30";
-            else if (On45Minutes) return "45";
-            else return "";
+            string temp = "0" + TimeMinutes.ToString();
+            return temp.Substring(temp.Length - 2);
         }
 
     }

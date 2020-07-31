@@ -22,9 +22,6 @@ namespace EtlManager.Pages.Jobs.Schedules
         [BindProperty]
         public Schedule Schedule { get; set; }
 
-        [BindProperty]
-        public string OnMinutes { get; set; } = "0";
-
         public IActionResult OnGet(Guid id)
         {
             Schedule = new Schedule { JobId = id };
@@ -46,20 +43,10 @@ namespace EtlManager.Pages.Jobs.Schedules
                 return Page();
             }
 
-            switch (OnMinutes)
+            if (Schedule.TimeMinutes != 0 && Schedule.TimeMinutes != 15 && Schedule.TimeMinutes != 30 && Schedule.TimeMinutes != 45)
             {
-                case "15":
-                    Schedule.On15Minutes = true;
-                    break;
-                case "30":
-                    Schedule.On30Minutes = true;
-                    break;
-                case "45":
-                    Schedule.On45Minutes = true;
-                    break;
-                default:
-                    Schedule.On00Minutes = true;
-                    break;
+                ModelState.AddModelError(string.Empty, "Incorrect minutes value");
+                return Page();
             }
 
             _context.Schedules.Add(Schedule);
