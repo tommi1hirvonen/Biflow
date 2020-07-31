@@ -2,19 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExecutorManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.Steps
 {
     public class DependencyModel : PageModel
     {
-        private readonly ExecutorManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public DependencyModel(ExecutorManagerContext context)
+        public DependencyModel(EtlManagerContext context)
         {
             _context = context;
         }

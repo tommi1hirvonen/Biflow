@@ -10,14 +10,14 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 
-namespace ExecutorManager.Pages
+namespace EtlManager.Pages
 {
     public class AccountModel : PageModel
     {
 
         private readonly IConfiguration _configuration;
 
-        public AccountModel(IConfiguration configuration, ExecutorManager.Data.ExecutorManagerContext context)
+        public AccountModel(IConfiguration configuration, EtlManager.Data.EtlManagerContext context)
         {
             _configuration = configuration;
         }

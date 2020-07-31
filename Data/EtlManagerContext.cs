@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Models;
+using EtlManager.Models;
 using System.Threading;
 
-namespace ExecutorManager.Data
+namespace EtlManager.Data
 {
-    public class ExecutorManagerContext : DbContext
+    public class EtlManagerContext : DbContext
     {
-        public ExecutorManagerContext (DbContextOptions<ExecutorManagerContext> options)
+        public EtlManagerContext (DbContextOptions<EtlManagerContext> options)
             : base(options)
         {
         }

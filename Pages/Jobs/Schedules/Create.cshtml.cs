@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
 using System.Threading.Tasks;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace ExecutorManager.Pages.Jobs.Schedules
+namespace EtlManager.Pages.Jobs.Schedules
 {
     public class CreateModel : PageModel
     {
-        private readonly ExecutorManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public CreateModel(ExecutorManagerContext context)
+        public CreateModel(EtlManagerContext context)
         {
             _context = context;
         }

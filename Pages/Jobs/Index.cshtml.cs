@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 
 
-namespace ExecutorManager.Pages.Jobs
+namespace EtlManager.Pages.Jobs
 {
     public class IndexModel : PageModel
     {
-        private readonly ExecutorManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public IndexModel(ExecutorManagerContext context)
+        public IndexModel(EtlManagerContext context)
         {
             _context = context;
         }

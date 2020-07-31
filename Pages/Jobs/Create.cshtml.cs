@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 
-namespace ExecutorManager.Pages.Jobs
+namespace EtlManager.Pages.Jobs
 {
     public class CreateModel : PageModel
     {
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly EtlManager.Data.EtlManagerContext _context;
 
-        public CreateModel(ExecutorManager.Data.ExecutorManagerContext context)
+        public CreateModel(EtlManager.Data.EtlManagerContext context)
         {
             _context = context;
         }

@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace ExecutorManager.Pages.Jobs
+namespace EtlManager.Pages.Jobs
 {
     public class SchedulesModel : PageModel
     {
 
-        private readonly ExecutorManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public SchedulesModel(ExecutorManagerContext context)
+        public SchedulesModel(EtlManagerContext context)
         {
             _context = context;
         }

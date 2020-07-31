@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ExecutorManager.Models
+namespace EtlManager.Models
 {
     public class Step
     {

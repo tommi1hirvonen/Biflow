@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 
-namespace ExecutorManager.Pages.Executions
+namespace EtlManager.Pages.Executions
 {
     public class DetailsModel : PageModel
     {
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly EtlManager.Data.EtlManagerContext _context;
 
-        public DetailsModel(ExecutorManager.Data.ExecutorManagerContext context)
+        public DetailsModel(EtlManager.Data.EtlManagerContext context)
         {
             _context = context;
         }

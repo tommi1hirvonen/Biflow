@@ -2,16 +2,16 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 
-namespace ExecutorManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.Steps
 {
     public class CreateModel : PageModel
     {
-        private readonly ExecutorManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public CreateModel(ExecutorManagerContext context)
+        public CreateModel(EtlManagerContext context)
         {
             _context = context;
         }

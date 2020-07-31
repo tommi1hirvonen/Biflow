@@ -5,19 +5,19 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
-namespace ExecutorManager.Pages.Jobs
+namespace EtlManager.Pages.Jobs
 {
     public class DetailsModel : PageModel
     {
         private readonly IConfiguration _configuration;
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly EtlManager.Data.EtlManagerContext _context;
 
-        public DetailsModel(IConfiguration configuration, ExecutorManager.Data.ExecutorManagerContext context)
+        public DetailsModel(IConfiguration configuration, EtlManager.Data.EtlManagerContext context)
         {
             _configuration = configuration;
             _context = context;

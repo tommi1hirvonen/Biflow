@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using ExecutorManager.Models;
+using EtlManager.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 
-namespace ExecutorManager.Pages
+namespace EtlManager.Pages
 {
     public class LogInModel : PageModel
     {
 
         private readonly IConfiguration _configuration;
 
-        public LogInModel(IConfiguration configuration, ExecutorManager.Data.ExecutorManagerContext context)
+        public LogInModel(IConfiguration configuration, EtlManager.Data.EtlManagerContext context)
         {
             _configuration = configuration;
         }

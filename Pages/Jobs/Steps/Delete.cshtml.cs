@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
-using ExecutorManager.Models;
+using EtlManager.Data;
+using EtlManager.Models;
 
-namespace ExecutorManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.Steps
 {
     public class DeleteModel : PageModel
     {
-        private readonly ExecutorManager.Data.ExecutorManagerContext _context;
+        private readonly EtlManager.Data.EtlManagerContext _context;
 
-        public DeleteModel(ExecutorManager.Data.ExecutorManagerContext context)
+        public DeleteModel(EtlManager.Data.EtlManagerContext context)
         {
             _context = context;
         }

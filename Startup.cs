@@ -9,11 +9,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Data;
+using EtlManager.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Net;
 
-namespace ExecutorManager
+namespace EtlManager
 {
     public class Startup
     {
@@ -44,8 +44,8 @@ namespace ExecutorManager
                 options.Conventions.AllowAnonymousToPage("/LogIn");
             });
 
-            services.AddDbContext<ExecutorManagerContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("ExecutorManagerContext")));
+            services.AddDbContext<EtlManagerContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
 
             // AJAX requests used in cshtml files send the anti-forgery token in a header called XSRF-TOKEN.
             // Configure the service to listen to it.

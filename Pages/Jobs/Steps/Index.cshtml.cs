@@ -5,18 +5,18 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ExecutorManager.Models;
+using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
 
 
-namespace ExecutorManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.Steps
 {
     public class IndexModel : PageModel
     {
         private readonly IConfiguration _configuration;
-        private readonly Data.ExecutorManagerContext _context;
+        private readonly Data.EtlManagerContext _context;
 
-        public IndexModel(IConfiguration configuration, Data.ExecutorManagerContext context)
+        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context)
         {
             _configuration = configuration;
             _context = context;

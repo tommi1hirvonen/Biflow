@@ -6,7 +6,7 @@ using System.Linq;
 using System.Security.Policy;
 using System.Threading.Tasks;
 
-namespace ExecutorManager.Models
+namespace EtlManager.Models
 {
     public class Execution
     {
