@@ -18,6 +18,7 @@ namespace EtlManager.Data
         public DbSet<Job> Jobs { get; set; }
         public DbSet<Step> Steps { get; set; }
         public DbSet<Execution> Executions { get; set; }
+        public DbSet<JobExecution> JobExecutions { get; set; }
         public DbSet<Dependency> Dependencies { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
 
@@ -26,6 +27,8 @@ namespace EtlManager.Data
             modelBuilder.HasDefaultSchema("etlmanager");
             modelBuilder.Entity<Execution>()
                 .ToView("vExecution");
+            modelBuilder.Entity<JobExecution>()
+                .ToView("vExecutionJob");
             modelBuilder.Entity<Dependency>()
                 .ToView("vDependency");
             modelBuilder.Entity<Job>()

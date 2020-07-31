@@ -22,7 +22,7 @@
                     <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul class="navbar-nav mr-auto">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Account">Account</a>
+                                <a class="nav-link text-dark" asp-page="/Account">Account</a>
                             </li>
                             <li class="nav-item">
                                 <form method="post">
@@ -32,13 +32,17 @@
                         </ul>
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                                <a class="nav-link text-dark" asp-page="/Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Jobs/Index">Jobs</a>
+                                <a class="nav-link text-dark" asp-page="/Jobs/Index">Jobs</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-page="/Executions/Index">Executions</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" asp-page="/Executions/Index">Steps</a>
+                                    <a class="dropdown-item" asp-page="/Executions/Jobs">Jobs</a>
+                                </div>
                             </li>
                         </ul>
 

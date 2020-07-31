@@ -1,35 +1,29 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Executions
 {
-    public class IndexModel : PageModel
+    public class JobsModel : PageModel
     {
         private readonly Data.EtlManagerContext _context;
 
-        public IndexModel(Data.EtlManagerContext context)
+        public JobsModel(Data.EtlManagerContext context)
         {
             _context = context;
         }
 
         public SelectList Statuses { get; set; }
-        
+
         [BindProperty(SupportsGet = true)]
         public string Status { get; set; }
-
-
-        public SelectList StepNames { get; set; }
-
-        [BindProperty(SupportsGet = true)]
-        public string StepName { get; set; }
 
 
         public SelectList JobNames { get; set; }
@@ -46,24 +40,18 @@ namespace EtlManager.Pages.Executions
         public int IntervalHours { get; set; } = 3;
 
 
-        public IList<Execution> Executions { get;set; }
+        public IList<JobExecution> Executions { get; set; }
 
         public async Task OnGetAsync()
         {
-            IQueryable<Execution> executions = _context.Executions;
+            IQueryable<JobExecution> executions = _context.JobExecutions;
 
             Statuses = new SelectList(await executions.Select(execution => execution.ExecutionStatus).Distinct().ToListAsync());
-            StepNames = new SelectList(await executions.Select(execution => execution.StepName).Distinct().ToListAsync());
             JobNames = new SelectList(await executions.Select(execution => execution.JobName).Distinct().ToListAsync());
 
             if (!string.IsNullOrEmpty(Status))
             {
                 executions = executions.Where(execution => execution.ExecutionStatus == Status);
-            }
-
-            if (!string.IsNullOrEmpty(StepName))
-            {
-                executions = executions.Where(execution => execution.StepName == StepName);
             }
 
             if (!string.IsNullOrEmpty(JobName))
@@ -76,8 +64,7 @@ namespace EtlManager.Pages.Executions
                 .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 
             Executions = await executions.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToListAsync();
-            
-        }
 
+        }
     }
 }

@@ -49,25 +49,25 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].StepName)
+                @Html.DisplayNameFor(model => model.Executions[0].StepName)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].StartDateTime)
+                @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].EndDateTime)
+                @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].ExecutionStatus)
+                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Execution[0].ExecutionInSeconds)
+                @Html.DisplayNameFor(model => model.Executions[0].ExecutionInSeconds)
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Execution) {
+@foreach (var item in Model.Executions) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.StepName)
