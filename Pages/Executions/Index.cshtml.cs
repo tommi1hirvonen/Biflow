@@ -40,7 +40,7 @@ namespace EtlManager.Pages.Executions
 
         [BindProperty(SupportsGet = true)]
         [DataType(DataType.DateTime)]
-        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(1);
 
         [BindProperty(SupportsGet = true)]
         public int IntervalHours { get; set; } = 3;

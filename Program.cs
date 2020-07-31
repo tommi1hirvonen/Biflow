@@ -38,9 +38,9 @@ namespace EtlManager
 
         public async static Task StartExecution(IConfiguration configuration, Job job)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [executor].[JobExecute] @JobId = @JobId_"
+                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_"
                 , sqlConnection);
             
             sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
@@ -52,9 +52,9 @@ namespace EtlManager
 
         public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "UPDATE [executor].[Step]\n" +
+                "UPDATE [etlmanager].[Step]\n" +
                 "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
                 "WHERE [StepId] = @StepId"
 
@@ -68,9 +68,9 @@ namespace EtlManager
 
         public static bool AuthenticateUser(IConfiguration configuration, string username, string password)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [executor].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
+                "EXEC [etlmanager].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);
@@ -85,9 +85,9 @@ namespace EtlManager
 
         public static bool UpdatePassword(IConfiguration configuration, string username, string password)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("ExecutorManagerContext"));
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [executor].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
+                "EXEC [etlmanager].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);

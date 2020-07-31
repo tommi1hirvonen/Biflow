@@ -23,7 +23,7 @@ namespace EtlManager.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema("executor");
+            modelBuilder.HasDefaultSchema("etlmanager");
             modelBuilder.Entity<Execution>()
                 .ToView("vExecution");
             modelBuilder.Entity<Dependency>()
