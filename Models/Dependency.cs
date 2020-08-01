@@ -9,7 +9,7 @@ namespace EtlManager.Models
     public class Dependency
     {
         [Key]
-        public string DependencyId { get; set; }
+        public Guid DependencyId { get; set; }
 
         public Guid JobId { get; set; }
 
