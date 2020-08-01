@@ -94,6 +94,37 @@
     <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to List</a>
 </div>
 
+<hr />
+
+<h4>Dependencies</h4>
+<p />
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Dependant On
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Job.Steps.OrderBy(step => step.StepName))
+        {
+            <tr>
+                <td>
+                    @if (Model.Step.Dependencies.Select(d => d.DependantOnStep.StepId).Contains(item.StepId))
+                    {
+                        <label class="text-primary">@Html.DisplayFor(modelItem => item.StepName)</label>
+                    }
+                    else
+                    {
+                        <label>@Html.DisplayFor(modelItem => item.StepName)</label>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
 @section Scripts {
     
     <script type="text/javascript">

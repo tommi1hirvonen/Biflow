@@ -23,6 +23,8 @@ namespace EtlManager.Pages.Jobs.Steps
         [BindProperty]
         public Step Step { get; set; }
 
+        public Job Job { get; set; }
+
         public async Task<IActionResult> OnGetAsync(Guid? id)
         {
             if (id == null)
@@ -30,7 +32,13 @@ namespace EtlManager.Pages.Jobs.Steps
                 return NotFound();
             }
 
-            Step = await _context.Steps.Include(step => step.Job).FirstOrDefaultAsync(m => m.StepId == id);
+            Step = await _context.Steps
+                .Include(step => step.Job)
+                .Include(step => step.Dependencies)
+                .ThenInclude(dependency => dependency.DependantOnStep)
+                .FirstOrDefaultAsync(m => m.StepId == id);
+
+            Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == Step.JobId);
 
             if (Step == null)
             {
