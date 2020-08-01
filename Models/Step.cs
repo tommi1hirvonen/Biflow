@@ -63,5 +63,7 @@ namespace EtlManager.Models
         [Required]
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
+
+        public ICollection<Dependency> Dependencies { get; set; }
     }
 }

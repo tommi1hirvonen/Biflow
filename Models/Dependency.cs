@@ -11,13 +11,15 @@ namespace EtlManager.Models
         [Key]
         public Guid DependencyId { get; set; }
 
-        public Guid JobId { get; set; }
+        [Required]
+        public Guid StepId { get; set; }
 
-        [Display(Name = "Step")]
-        public string StepName { get; set; }
+        public Step Step { get; set; }
 
-        [Display(Name = "Dependant On")]
-        public string DependantOnStepName { get; set; }
+        [Required]
+        public Guid DependantOnStepId { get; set; }
+
+        public Step DependantOnStep { get; set; }
 
         [Display(Name = "Strict Dependency")]
         public bool StrictDependency { get; set; }

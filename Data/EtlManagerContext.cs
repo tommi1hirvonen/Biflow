@@ -30,7 +30,11 @@ namespace EtlManager.Data
             modelBuilder.Entity<JobExecution>()
                 .ToView("vExecutionJob");
             modelBuilder.Entity<Dependency>()
-                .ToView("vDependency");
+                .ToTable("Dependency")
+                .HasOne(dependency => dependency.Step)
+                .WithMany(step => step.Dependencies)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<Job>()
                 .ToTable("Job")
                 .HasMany(job => job.Steps)

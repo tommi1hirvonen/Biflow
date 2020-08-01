@@ -12,10 +12,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Dependencies[0].StepName)
+                Step
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Dependencies[0].DependantOnStepName)
+                Dependant On
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Dependencies[0].StrictDependency)
@@ -28,10 +28,10 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.StepName)
+                    @Html.DisplayFor(modelItem => item.Step.StepName)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DependantOnStepName)
+                    @Html.DisplayFor(modelItem => item.DependantOnStep.StepName)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StrictDependency)

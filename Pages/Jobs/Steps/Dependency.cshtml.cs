@@ -29,10 +29,10 @@ namespace EtlManager.Pages.Jobs.Steps
             JobId = id;
             JobName = name;
 
-            Dependencies = await _context.Dependencies
-                .Where(d => d.JobId == id)
-                .OrderBy(d => d.StepName)
-                .ThenBy(d => d.DependantOnStepName).ToListAsync();
+            Dependencies = await _context.Dependencies.Include(d => d.Step).Include(d => d.DependantOnStep)
+                .Where(d => d.Step.JobId == id)
+                .OrderBy(d => d.Step.StepName)
+                .ThenBy(d => d.DependantOnStep.StepName).ToListAsync();
         }
     }
 }
