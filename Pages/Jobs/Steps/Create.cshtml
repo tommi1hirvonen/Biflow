@@ -14,6 +14,7 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.JobId" />
+            <input type="hidden" asp-for="Step.IsEnabled" value="true" />
             <div class="form-group">
                 <label asp-for="Step.StepName" class="control-label"></label>
                 <input asp-for="Step.StepName" class="form-control" />
