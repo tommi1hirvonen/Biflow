@@ -10,12 +10,13 @@
 
 <h4>Step</h4>
 <hr />
-<div class="row">
-    <div class="col-md-8">
-        <form method="post">
+<form method="post">
+    <div class="row">
+        <div class="col-md-8">
+
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Step.StepId" />
-            <input type="hidden" asp-for="Step.JobId" />
+            <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
+            <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
             <div class="form-group">
                 <label asp-for="Step.Job.JobName" class="control-label"></label>
                 <input asp-for="Step.Job.JobName" class="form-control" readonly />
@@ -86,44 +87,52 @@
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
-        </form>
+        </div>
     </div>
-</div>
 
-<div>
-    <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to List</a>
-</div>
+    <div>
+        <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to List</a>
+    </div>
 
-<hr />
+    <hr />
 
-<h4>Dependencies</h4>
-<p />
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Dependant On
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Job.Steps.OrderBy(step => step.StepName))
-        {
+    <h4>Dependencies</h4>
+    <p />
+    <table class="table">
+        <thead>
             <tr>
+                <th>
+                    Dependant On
+                </th>
+                <th>
+                    Enabled
+                </th>
+                <th>
+                    Strict Dependency
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int index = 0; index < Model.DependencyEdits.Count; index++)
+            {
+            <tr>
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
                 <td>
-                    @if (Model.Step.Dependencies.Select(d => d.DependantOnStep.StepId).Contains(item.StepId))
-                    {
-                        <label class="text-primary">@Html.DisplayFor(modelItem => item.StepName)</label>
-                    }
-                    else
-                    {
-                        <label>@Html.DisplayFor(modelItem => item.StepName)</label>
-                    }
+                    @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => Model.DependencyEdits[index].Enabled)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => Model.DependencyEdits[index].StrictDependency)
                 </td>
             </tr>
-        }
-    </tbody>
-</table>
+            }
+        </tbody>
+    </table>
+</form>
 
 @section Scripts {
     
