@@ -10,17 +10,22 @@
 <p></p>
 <div>
     <form method="post">
-        <a asp-page="Create" asp-route-id="@Model.Job.JobId">Create New</a>
-        <text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
-        <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
-        <text>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Execute and...
-            </button>
-            <div class="dropdown-menu">
-                <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="false">stay here</button>
-                <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="true">go to executions</button>
+        <div class="row">
+            <div class="col">
+                <a class="btn btn-success" asp-page="Create" asp-route-id="@Model.Job.JobId">New Step</a>
+            </div>
+            <div class="col float-right">
+                <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
+                <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Execute and...
+                    </button>
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="false">stay here</button>
+                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="true">go to executions</button>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

@@ -6,9 +6,9 @@
 }
 
 <h1>Jobs</h1>
-
+<p/>
 <p>
-    <a asp-page="Create">Create New</a>
+    <a class="btn btn-success" asp-page="Create">New Job</a>
 </p>
 <table class="table">
     <thead>
@@ -45,7 +45,6 @@
             </td>
             <td>
                 <a asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
-                <a asp-page="./Details" asp-route-id="@item.JobId">Details</a> |
                 <a asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
                 <a asp-page="./Schedules/Index" asp-route-id="@item.JobId">Schedules</a> |
                 <a asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
