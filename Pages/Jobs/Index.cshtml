@@ -10,6 +10,7 @@
 <p>
     <a class="btn btn-success" asp-page="Create">New Job</a>
 </p>
+
 <table class="table">
     <thead>
         <tr>
@@ -29,27 +30,31 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Jobs) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.JobName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDateTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastModifiedDateTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UseDependencyMode)
-            </td>
-            <td>
-                <a asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
-                <a asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
-                <a asp-page="./Schedules/Index" asp-route-id="@item.JobId">Schedules</a> |
-                <a asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Jobs)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.JobName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastModifiedDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UseDependencyMode)
+                </td>
+                <td>
+                    <form method="post">
+                        <button class="btn btn-link btn-sm" asp-page-handler="Copy" asp-route-id="@item.JobId">Copy</button> |
+                        <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Schedules/Index" asp-route-id="@item.JobId">Schedules</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
+                    </form>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
