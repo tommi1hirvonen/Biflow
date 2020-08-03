@@ -32,6 +32,12 @@ namespace EtlManager.Pages.Jobs.Steps
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="redirect">true if the user should be redirected to Executions/Index, false if not</param>
+        /// <returns></returns>
         public async Task<IActionResult> OnPostExecuteAsync(Guid id, bool redirect)
         {
             if (id == null)

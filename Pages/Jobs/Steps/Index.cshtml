@@ -19,11 +19,10 @@
                 <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Execute and...
+                        Execute
                     </button>
                     <div class="dropdown-menu">
-                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="false">stay here</button>
-                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="true">go to executions</button>
+                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="true">Confirm</button>
                     </div>
                 </div>
             </div>
