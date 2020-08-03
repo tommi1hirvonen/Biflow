@@ -18,7 +18,7 @@
                 Dependant On
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Dependencies[0].StrictDependency)
+                Strict Dependency *
             </th>
             <th></th>
         </tr>
@@ -40,6 +40,8 @@
         }
     </tbody>
 </table>
+<hr/>
+<p class="text-secondary"><small>* Strict dependency means that the step will skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
 
 <div>
     <a asp-page="./Index" asp-route-id="@Model.JobId">Back to List</a>

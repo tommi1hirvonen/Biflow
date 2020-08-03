@@ -123,10 +123,10 @@
                     @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
                 </td>
                 <td>
-                    @Html.CheckBoxFor(modelItem => Model.DependencyEdits[index].Enabled)
+                    <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
                 </td>
                 <td>
-                    @Html.CheckBoxFor(modelItem => Model.DependencyEdits[index].StrictDependency)
+                    <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
                 </td>
             </tr>
             }
@@ -158,6 +158,11 @@
                 $('#package_div').show();
                 $('#32_bit_mode_div').show();
             }
+        }
+
+        function toggleVisibility(elem) {
+            var id = $(elem).data('id');
+            $('#' + id).toggleClass('d-none');
         }
 
     </script>
