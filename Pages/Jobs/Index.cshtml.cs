@@ -7,17 +7,19 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using EtlManager.Data;
 using EtlManager.Models;
-
+using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages.Jobs
 {
     public class IndexModel : PageModel
     {
         private readonly EtlManagerContext _context;
+        private readonly IConfiguration _configuration;
 
-        public IndexModel(EtlManagerContext context)
+        public IndexModel(IConfiguration configuration, EtlManagerContext context)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public IList<Job> Jobs { get;set; }
@@ -29,54 +31,8 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostCopy(Guid id)
         {
-            Job clone = await _context.Jobs
-                .Include(job => job.Schedules)
-                .Include(job => job.Steps)
-                .ThenInclude(step => step.Dependencies)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.JobId == id);
 
-            if (clone == null)
-            {
-                return NotFound();
-            }
-
-            clone.JobId = Guid.NewGuid();
-            Dictionary<Guid, Guid> idMapping = new Dictionary<Guid, Guid>();
-            foreach (var step in clone.Steps)
-            {
-                var oldId = step.StepId;
-                step.StepId = Guid.NewGuid();
-                var newId = step.StepId;
-                idMapping.Add(oldId, newId);
-            }
-
-            foreach (var schedule in clone.Schedules)
-            {
-                schedule.ScheduleId = Guid.NewGuid();
-            }
-
-            foreach (var step in clone.Steps)
-            {
-                foreach (var dependency in step.Dependencies)
-                {
-                    dependency.DependencyId = Guid.NewGuid();
-                    dependency.StepId = idMapping[dependency.StepId];
-                }
-            }
-
-            _context.Jobs.Add(clone);
-            await _context.SaveChangesAsync();
-
-            foreach (var step in clone.Steps)
-            {
-                foreach (var dependency in step.Dependencies)
-                {
-                    dependency.DependantOnStepId = idMapping[dependency.DependantOnStepId];
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            await Utility.JobCopy(_configuration, id);
 
             return RedirectToPage("./Index");
         }

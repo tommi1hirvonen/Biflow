@@ -66,6 +66,19 @@ namespace EtlManager
             await sqlConnection.CloseAsync();
         }
 
+        public async static Task JobCopy(IConfiguration configuration, Guid jobId)
+        {
+            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "EXEC [etlmanager].[JobCopy] @JobId = @JobId_"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@JobId_", jobId.ToString());
+
+            await sqlConnection.OpenAsync();
+            await sqlCommand.ExecuteNonQueryAsync();
+            await sqlConnection.CloseAsync();
+        }
+
         public static bool AuthenticateUser(IConfiguration configuration, string username, string password)
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
