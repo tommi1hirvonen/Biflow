@@ -39,7 +39,7 @@
         </div>
     </div>
     <div class="form-row">
-        <input type="submit" value="Refresh" class="btn btn-primary" />
+        <input type="submit" value="Refresh" class="btn btn-outline-primary" />
     </div>
 </form>
 
@@ -101,7 +101,7 @@
                 @Html.DisplayFor(modelItem => item.ExecutionInSeconds)
             </td>
             <td>
-                <a asp-page="./Details" asp-route-id="@item.ExecutionId">Details</a>
+                <a asp-page="./Details" asp-route-id="@item.ExecutionId" target="_blank">Details</a>
             </td>
         </tr>
 }

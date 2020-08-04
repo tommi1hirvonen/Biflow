@@ -86,5 +86,19 @@ namespace EtlManager.Pages.Jobs.Steps
             return new JsonResult("Success");
         }
 
+        public async Task<IActionResult> OnPostDelete(Guid id)
+        {
+            if (id == null) return NotFound();
+
+            Step step = await _context.Steps.FindAsync(id);
+
+            if (step == null) return NotFound();
+
+            _context.Steps.Remove(step);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index", new { id = step.JobId });
+        }
+
     }
 }

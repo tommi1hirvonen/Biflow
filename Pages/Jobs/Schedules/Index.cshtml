@@ -114,11 +114,13 @@
             </td>
             <td>
                 <form method="post">
-                    <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Delete
-                    </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId">Confirm</button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Delete
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId">Confirm</button>
+                        </div>
                     </div>
                 </form>
             </td>

@@ -18,7 +18,7 @@
                 <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
                 <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
                 <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Execute
                     </button>
                     <div class="dropdown-menu">
@@ -71,9 +71,18 @@
                     </form>
                 </td>
                 <td>
-                    <a asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
-                    <a asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
-                    <a asp-page="./Delete" asp-route-id="@item.StepId">Delete</a>
+                    <form method="post">
+                        <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.StepId">Confirm</button>
+                            </div>
+                        </div>
+                    </form>
                 </td>
             </tr>
         }
