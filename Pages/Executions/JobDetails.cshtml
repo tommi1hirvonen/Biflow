@@ -1,48 +1,16 @@
 ﻿@page
-@model EtlManager.Pages.Executions.JobsModel
+@model EtlManager.Pages.Executions.JobDetailsModel
+
 @{
-    ViewData["Title"] = "Executions";
+    ViewData["Title"] = "Details";
 }
 
-<h2>Executions</h2>
-
-<form>
-    <div class="form-row">
-        <div class="form-group col-md-2">
-            <label>Status</label>
-            <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
-                <option value="">ALL</option>
-            </select>
-        </div>
-        <div class="form-group col-md-4">
-            <label>Job</label>
-            <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
-                <option value="">All</option>
-            </select>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-md-3">
-            <label>Date & time until</label>
-            <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
-        </div>
-        <div class="form-group col-md-1">
-            <label>Interval (h)</label>
-            <input asp-for="IntervalHours" class="form-control">
-        </div>
-    </div>
-    <div class="form-row">
-        <input type="submit" value="Refresh" class="btn btn-outline-primary" />
-    </div>
-</form>
-
-<p />
 
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Executions[0].JobName)
+                @Html.DisplayNameFor(model => model.Executions[0].StepName)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
@@ -64,7 +32,7 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.JobName)
+                    @Html.DisplayFor(modelItem => item.StepName)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StartDateTime)
@@ -95,7 +63,7 @@
                     <text>@item.GetDurationInReadableFormat()</text>
                 </td>
                 <td>
-                    <a asp-page="./JobDetails" asp-route-id="@item.ExecutionId" target="_blank">Details</a>
+                    <a asp-page="./StepDetails" asp-route-id="@item.StepExecutionId" target="_blank">Details</a>
                 </td>
             </tr>
         }

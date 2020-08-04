@@ -1,5 +1,5 @@
 ﻿@page
-@model EtlManager.Pages.Executions.IndexModel
+@model EtlManager.Pages.Executions.StepsModel
 
 @{
     ViewData["Title"] = "Executions";
@@ -101,7 +101,7 @@
                 <text>@item.GetDurationInReadableFormat()</text>
             </td>
             <td>
-                <a asp-page="./Details" asp-route-id="@item.ExecutionId" target="_blank">Details</a>
+                <a asp-page="./StepDetails" asp-route-id="@item.StepExecutionId" target="_blank">Details</a>
             </td>
         </tr>
 }

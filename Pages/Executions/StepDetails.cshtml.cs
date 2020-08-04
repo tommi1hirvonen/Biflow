@@ -10,16 +10,16 @@ using EtlManager.Models;
 
 namespace EtlManager.Pages.Executions
 {
-    public class DetailsModel : PageModel
+    public class StepDetailsModel : PageModel
     {
         private readonly EtlManager.Data.EtlManagerContext _context;
 
-        public DetailsModel(EtlManager.Data.EtlManagerContext context)
+        public StepDetailsModel(EtlManager.Data.EtlManagerContext context)
         {
             _context = context;
         }
 
-        public Execution Execution { get; set; }
+        public StepExecution Execution { get; set; }
 
         public async Task<IActionResult> OnGetAsync(string id)
         {
@@ -28,7 +28,7 @@ namespace EtlManager.Pages.Executions
                 return NotFound();
             }
 
-            Execution = await _context.Executions.FirstOrDefaultAsync(m => m.ExecutionId == id);
+            Execution = await _context.Executions.FirstOrDefaultAsync(m => m.StepExecutionId == id);
 
             if (Execution == null)
             {

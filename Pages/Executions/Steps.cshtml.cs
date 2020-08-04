@@ -11,11 +11,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EtlManager.Pages.Executions
 {
-    public class IndexModel : PageModel
+    public class StepsModel : PageModel
     {
         private readonly Data.EtlManagerContext _context;
 
-        public IndexModel(Data.EtlManagerContext context)
+        public StepsModel(Data.EtlManagerContext context)
         {
             _context = context;
         }
@@ -46,11 +46,11 @@ namespace EtlManager.Pages.Executions
         public int IntervalHours { get; set; } = 3;
 
 
-        public IList<Execution> Executions { get;set; }
+        public IList<StepExecution> Executions { get;set; }
 
         public async Task OnGetAsync()
         {
-            IQueryable<Execution> executions = _context.Executions;
+            IQueryable<StepExecution> executions = _context.Executions;
 
             executions = executions
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
