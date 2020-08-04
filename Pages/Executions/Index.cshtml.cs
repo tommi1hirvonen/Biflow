@@ -52,6 +52,10 @@ namespace EtlManager.Pages.Executions
         {
             IQueryable<Execution> executions = _context.Executions;
 
+            executions = executions
+                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
+                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
+
             Statuses = new SelectList(await executions.Select(execution => execution.ExecutionStatus).Distinct().ToListAsync());
             StepNames = new SelectList(await executions.Select(execution => execution.StepName).Distinct().ToListAsync());
             JobNames = new SelectList(await executions.Select(execution => execution.JobName).Distinct().ToListAsync());
@@ -70,10 +74,6 @@ namespace EtlManager.Pages.Executions
             {
                 executions = executions.Where(execution => execution.JobName == JobName);
             }
-
-            executions = executions
-                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
-                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 
             Executions = await executions.OrderByDescending(execution => execution.CreatedDateTime).ThenByDescending(execution => execution.StartDateTime).ToListAsync();
             
