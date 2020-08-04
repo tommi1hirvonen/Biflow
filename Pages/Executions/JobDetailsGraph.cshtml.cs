@@ -10,22 +10,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Executions
 {
-    public class JobDetailsModel : PageModel
+    public class JobDetailsGraphModel : PageModel
     {
         private readonly Data.EtlManagerContext _context;
 
-        public JobDetailsModel(Data.EtlManagerContext context)
+        public JobDetailsGraphModel(Data.EtlManagerContext context)
         {
             _context = context;
         }
-
-        public Guid ExecutionId { get; set; }
 
         public IList<StepExecution> Executions { get; set; }
 
         public async Task OnGetAsync(Guid id)
         {
-            ExecutionId = id;
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
                 .OrderByDescending(execution => execution.CreatedDateTime)

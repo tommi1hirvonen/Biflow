@@ -69,3 +69,24 @@ body {
   white-space: nowrap;
   line-height: 60px; /* Vertically center the text there */
 }
+
+
+/*Gantt chart style properties*/
+.failed {
+    fill: #dc3545;
+}
+
+.completed {
+    fill: #28a745;
+}
+
+.running {
+    fill: #007bff;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
