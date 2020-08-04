@@ -54,7 +54,7 @@
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Executions[0].ExecutionInSeconds)
+                Duration
             </th>
         </tr>
     </thead>
@@ -91,7 +91,7 @@
                     }
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.ExecutionInSeconds)
+                    <text>@item.GetDurationInReadableFormat()</text>
                 </td>
             </tr>
         }

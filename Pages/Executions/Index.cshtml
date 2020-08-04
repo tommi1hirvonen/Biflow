@@ -61,7 +61,7 @@
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Executions[0].ExecutionInSeconds)
+                Duration
             </th>
             <th></th>
         </tr>
@@ -98,7 +98,7 @@
                 }
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ExecutionInSeconds)
+                <text>@item.GetDurationInReadableFormat()</text>
             </td>
             <td>
                 <a asp-page="./Details" asp-route-id="@item.ExecutionId" target="_blank">Details</a>

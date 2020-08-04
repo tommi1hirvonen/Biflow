@@ -46,16 +46,10 @@
             @Html.DisplayFor(model => model.Execution.EndDateTime)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Execution.ExecutionInSeconds)
+            <text>Duration</text>
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Execution.ExecutionInSeconds)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Execution.ExecutionInMinutes)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Execution.ExecutionInMinutes)
+            <text>@Model.Execution.GetDurationInReadableFormat()</text>
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Execution.ExecutionStatus)
