@@ -20,34 +20,34 @@ namespace EtlManager.Models
 
         [Required]
         [MaxLength(250)]
-        [Display(Name = "Step Name")]
+        [Display(Name = "Step name")]
         public string StepName { get; set; }
 
         [Required]
-        [Display(Name = "Execution Phase")]
+        [Display(Name = "Execution phase")]
         public int ExecutionPhase { get; set; }
 
         [Required]
-        [Display(Name = "Step Type")]
+        [Display(Name = "Step type")]
         public string StepType { get; set; }
 
-        [Display(Name = "SQL Statement")]
+        [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 
         [MaxLength(250)]
-        [Display(Name = "Folder Name")]
+        [Display(Name = "Folder name")]
         public string FolderName { get; set; }
 
         [MaxLength(250)]
-        [Display(Name = "Project Name")]
+        [Display(Name = "Project name")]
         public string ProjectName { get; set; }
 
         [MaxLength(250)]
-        [Display(Name = "Package Name")]
+        [Display(Name = "Package name")]
         public string PackageName { get; set; }
 
         [Required]
-        [Display(Name = "32 Bit Mode")]
+        [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
         [Required]
@@ -57,7 +57,7 @@ namespace EtlManager.Models
         
         [Required]
         [DataType(DataType.DateTime)]
-        [Display(Name = "Last Modified")]
+        [Display(Name = "Last modified")]
         public DateTime LastModifiedDateTime { get; set; }
 
         [Required]

@@ -12,7 +12,7 @@
     <form method="post">
         <div class="row">
             <div class="col">
-                <a class="btn btn-success" asp-page="Create" asp-route-id="@Model.Job.JobId">New Step</a>
+                <a class="btn btn-success" asp-page="Create" asp-route-id="@Model.Job.JobId">New step</a>
             </div>
             <div class="col float-right">
                 <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
@@ -90,7 +90,7 @@
 </table>
 
 <div>
-    <a asp-page="../Index">Back to Jobs</a>
+    <a asp-page="../Index">Back to jobs</a>
 </div>
 
 @section Scripts {

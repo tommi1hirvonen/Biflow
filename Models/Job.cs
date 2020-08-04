@@ -14,7 +14,7 @@ namespace EtlManager.Models
 
         [Required]
         [MaxLength(250)]
-        [Display(Name = "Job Name")]
+        [Display(Name = "Job name")]
         public string JobName { get; set; }
         
         [Required]
@@ -24,11 +24,11 @@ namespace EtlManager.Models
         
         [Required]
         [DataType(DataType.DateTime)]
-        [Display(Name = "Last Modified")]
+        [Display(Name = "Last modified")]
         public DateTime LastModifiedDateTime { get; set; }
 
         [Required]
-        [Display(Name = "Use Dependency Mode")]
+        [Display(Name = "Use dependency mode")]
         public bool UseDependencyMode { get; set; }
 
         public ICollection<Step> Steps { get; set; }

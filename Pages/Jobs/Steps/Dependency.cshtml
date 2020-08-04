@@ -4,7 +4,7 @@
     ViewData["Title"] = "Job Dependencies";
 }
 
-<h2>@Model.JobName Dependencies</h2>
+<h2>@Model.JobName dependencies</h2>
 
 <p></p>
 
@@ -15,10 +15,10 @@
                 Step
             </th>
             <th>
-                Dependant On
+                Dependant on
             </th>
             <th>
-                Strict Dependency*
+                Strict dependency*
             </th>
             <th></th>
         </tr>
@@ -47,5 +47,5 @@
 <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
 
 <div>
-    <a asp-page="./Index" asp-route-id="@Model.JobId">Back to List</a>
+    <a asp-page="./Index" asp-route-id="@Model.JobId">Back to steps</a>
 </div>

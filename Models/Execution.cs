@@ -39,19 +39,19 @@ namespace EtlManager.Models
 
         public bool DependencyMode { get; set; }
 
-        [Display(Name = "Step Type")]
+        [Display(Name = "Step type")]
         public string StepType { get; set; }
 
-        [Display(Name = "SQL Statement")]
+        [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 
-        [Display(Name = "Package Path")]
+        [Display(Name = "Package path")]
         public string PackagePath { get; set; }
 
-        [Display(Name = "Error Message")]
+        [Display(Name = "Error message")]
         public string ErrorMessage { get; set; }
 
-        [Display(Name = "32 Bit Mode")]
+        [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
         public string GetDurationInReadableFormat()

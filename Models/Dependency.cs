@@ -21,7 +21,7 @@ namespace EtlManager.Models
 
         public Step DependantOnStep { get; set; }
 
-        [Display(Name = "Strict Dependency")]
+        [Display(Name = "Strict dependency")]
         public bool StrictDependency { get; set; }
     }
 }
