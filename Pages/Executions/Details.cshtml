@@ -5,10 +5,8 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
-
 <div>
-    <h4>Execution</h4>
+    <h4>Details</h4>
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -87,23 +85,29 @@
         <dd class="col-sm-10" style="color:red">
             @Html.DisplayFor(model => model.Execution.ErrorMessage)
         </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Execution.SqlStatement)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Execution.SqlStatement)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Execution.PackagePath)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Execution.PackagePath)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Execution.ExecuteIn32BitMode)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Execution.ExecuteIn32BitMode)
-        </dd>
+        @if (Model.Execution.StepType == "SQL")
+        {
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Execution.SqlStatement)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Execution.SqlStatement)
+            </dd>
+        }
+        else if (Model.Execution.StepType == "SSIS")
+        {
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Execution.PackagePath)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Execution.PackagePath)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Execution.ExecuteIn32BitMode)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Execution.ExecuteIn32BitMode)
+            </dd>
+        }
     </dl>
 </div>
