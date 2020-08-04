@@ -5,85 +5,38 @@
     ViewData["Title"] = "Details";
 }
 
-<h2>Placeholder</h2>
 <p></p>
-<svg width="900" height="500">
-    <g transform="translate(100,50)">
-        <g class="x axis" transform="translate(0,400)">
-            @*<g class="tick" transform="translate(0,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">01Jan</text>
+<svg width="@Model.ChartWidth" height="@Model.ChartHeight">
+    <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
+        @foreach (var execution in Model.Executions)
+        {
+            <g class="tick" transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))" style="opacity: 1;">
+                <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px">@execution.StepName</text>
             </g>
-            <g class="tick" transform="translate(75,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">08Jan</text>
-            </g>
-            <g class="tick" transform="translate(150,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">15Jan</text>
-            </g>
-            <g class="tick" transform="translate(225,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">22Jan</text>
-            </g>
-            <g class="tick" transform="translate(300,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">29Jan</text>
-            </g>
-            <g class="tick" transform="translate(375,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">05Feb</text>
-            </g>
-            <g class="tick" transform="translate(450,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">12Feb</text>
-            </g>
-            <g class="tick" transform="translate(525,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">19Feb</text>
-            </g>
-            <g class="tick" transform="translate(600,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">26Feb</text>
-            </g>
-            <g class="tick" transform="translate(675,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">05Mar</text>
-            </g>
-            <g class="tick" transform="translate(750,0)" style="opacity: 1;">
-                <line y2="6" x2="0"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle;">12Mar</text>
-            </g>*@
-            <path class="domain" d="M0,6 V0 H750 V6"></path>
-            @*<text x="700" dx=".71em" dy="-0.2em">Time</text>*@
-        </g>
-        <g class="y axis">
-            <g class="tick" transform="translate(0,48.5)" style="opacity: 1;">
-                @*<line x2="-6" y2="0"></line>*@
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end;">Task 1</text>
-            </g>
-            <g class="tick" transform="translate(0,124.5)" style="opacity: 1;">
-                @*<line x2="-6" y2="0"></line>*@
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end;">Task 2</text>
-            </g>
-            <g class="tick" transform="translate(0,200.5)" style="opacity: 1;">
-                @*<line x2="-6" y2="0"></line>*@
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end;">Task 3</text>
-            </g>
-            <g class="tick" transform="translate(0,276.5)" style="opacity: 1;">
-                @*<line x2="-6" y2="0"></line>*@
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end;">Task 4</text>
-            </g>
-            <g class="tick" transform="translate(0,352.5)" style="opacity: 1;">
-                @*<line x2="-6" y2="0"></line>*@
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end;">Task 5</text>
-            </g>
-            <path class="domain" d="M-6,0 H0 V400 H-6"></path>
-        </g>
-        <rect class="completed" y="18" height="61" x="0" width="150"></rect>
-        <rect class="completed" y="94" height="61" x="128.57142857142858" width="203.57142857142853"></rect>
-        <rect class="failed" y="170" height="61" x="332.1428571428571" width="195.00000000000006"></rect>
-        <rect class="completed" y="246" height="61" x="428.57142857142856" width="203.57142857142856"></rect>
-        <rect class="completed" y="322" height="61" x="632.1428571428571" width="117.85714285714289"></rect>
+        } 
+        @foreach (var execution in Model.Executions)
+        {
+            <rect class="@GetClassFromStatus(execution.ExecutionStatus)"
+                  y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                  height="@(Model.BarHeight.ToString().Replace(',', '.'))"
+                  x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                  width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"></rect>
+        }
     </g>
 </svg>
+
+@functions {
+    public string GetClassFromStatus(string status)
+    {
+        switch (status)
+        {
+            case "COMPLETED":
+                return "gantt-completed";
+            case "FAILED":
+                return "gantt-failed";
+            case "RUNNING":
+            default:
+                return "gantt-running";
+        }
+    }
+}

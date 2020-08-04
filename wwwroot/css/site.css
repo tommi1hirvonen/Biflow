@@ -72,21 +72,14 @@ body {
 
 
 /*Gantt chart style properties*/
-.failed {
+.gantt-failed {
     fill: #dc3545;
 }
 
-.completed {
+.gantt-completed {
     fill: #28a745;
 }
 
-.running {
+.gantt-running {
     fill: #007bff;
-}
-
-.axis path,
-.axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
 }

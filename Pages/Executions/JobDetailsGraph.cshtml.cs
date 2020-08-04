@@ -21,13 +21,60 @@ namespace EtlManager.Pages.Executions
 
         public IList<StepExecution> Executions { get; set; }
 
+        public Dictionary<string, ChartElement> ChartElements = new Dictionary<string, ChartElement>();
+
+        public int ChartHeight = 700;
+        public int ChartWidth = 1000;
+        public int ChartPaddingLeft = 250;
+        public int ChartPaddingTop = 50;
+        public double BarHeight { get; set; } = 10;
+
         public async Task OnGetAsync(Guid id)
         {
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
-                .OrderByDescending(execution => execution.CreatedDateTime)
-                .ThenByDescending(execution => execution.StartDateTime)
+                .OrderBy(execution => execution.CreatedDateTime)
+                .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
+
+            double yInterval = (double)(ChartHeight - ChartPaddingTop) / Executions.Count;
+            BarHeight = (double)(ChartHeight - ChartPaddingTop) / Executions.Count / 2;
+            double yLocation = 0;
+
+            DateTime minTime = (DateTime)Executions.Min(e => e.StartDateTime);
+            DateTime maxTime = (DateTime)Executions.Max(e => e.EndDateTime);
+            long minTicks = minTime.Ticks;
+            long maxTicks = maxTime.Ticks;
+            
+            foreach (var execution in Executions)
+            {
+
+                long startTicks = ((DateTime)execution.StartDateTime).Ticks;
+                double xLocation = (double)(startTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
+
+                long endTicks = ((DateTime)execution.StartDateTime).AddSeconds((double)execution.ExecutionInSeconds).Ticks;
+                double endLocation = (double)(endTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
+                double width = endLocation - xLocation;
+                width = width >= 10 ? width : 10; // minimum value for the width to prevent hidden bars with width = 0
+
+                ChartElements.Add(execution.StepExecutionId, new ChartElement{
+                    LabelYLocation = yLocation.ToString().Replace(',', '.'),
+                    BarYLocation = (yLocation - BarHeight / 2).ToString().Replace(',', '.'),
+                    BarXLocation = xLocation.ToString().Replace(',', '.'),
+                    BarWidth = width.ToString().Replace(',', '.')
+                });
+
+                yLocation += yInterval;
+            }
         }
+
+        public class ChartElement
+        {
+            public string LabelYLocation { get; set; }
+            public string BarYLocation { get; set; }
+            public string BarXLocation { get; set; }
+            public string BarWidth { get; set; }
+        }
+
     }
 }
