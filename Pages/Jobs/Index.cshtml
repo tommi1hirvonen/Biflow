@@ -47,11 +47,25 @@
                 </td>
                 <td>
                     <form method="post">
-                        <button class="btn btn-link btn-sm" asp-page-handler="Copy" asp-route-id="@item.JobId">Copy</button> |
                         <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
                         <a class="btn btn-link btn-sm" asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
                         <a class="btn btn-link btn-sm" asp-page="./Schedules/Index" asp-route-id="@item.JobId">Schedules</a> |
-                        <a class="btn btn-link btn-sm" asp-page="./Delete" asp-route-id="@item.JobId">Delete</a>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Copy
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Confirm</button>
+                            </div>
+                        </div> |
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
+                            </div>
+                        </div>
                     </form>
                 </td>
             </tr>

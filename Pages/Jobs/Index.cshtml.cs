@@ -37,5 +37,19 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
+        public async Task<IActionResult> OnPostDelete(Guid id)
+        {
+            if (id == null) return NotFound();
+
+            Job job= await _context.Jobs.FindAsync(id);
+
+            if (job == null) return NotFound();
+
+            _context.Jobs.Remove(job);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index");
+        }
+
     }
 }
