@@ -29,6 +29,9 @@ namespace EtlManager.Pages.Executions
         public int ChartPaddingTop = 50;
         public double BarHeight { get; set; } = 10;
 
+        public DateTime MinTime { get; set; }
+        public DateTime MaxTime { get; set; }
+
         public async Task OnGetAsync(Guid id)
         {
             Executions = await _context.Executions
@@ -44,17 +47,20 @@ namespace EtlManager.Pages.Executions
             BarHeight = (double)(ChartHeight - ChartPaddingTop) / Executions.Count / 2.0;
             double yLocation = 0;
 
-            DateTime minTime = (DateTime)Executions.Min(e => e.StartDateTime);
-            DateTime maxTime = (DateTime)Executions.Max(e => e.EndDateTime);
-            
-            if (minTime == null) return;
-            if (maxTime == null)
+            MinTime = (DateTime)Executions.Min(e => e.StartDateTime);
+            if (MinTime == null) return;
+
+            if (Executions.Any(e => e.EndDateTime == null))
             {
-                maxTime = Executions.Select(e => ((DateTime)e.StartDateTime).AddSeconds((double)e.ExecutionInSeconds)).Max();
+                MaxTime = Executions.Select(e => ((DateTime)e.StartDateTime).AddSeconds((double)e.ExecutionInSeconds)).Max();
+            }
+            else
+            {
+                MaxTime = (DateTime)Executions.Max(e => e.EndDateTime);
             }
             
-            long minTicks = minTime.Ticks;
-            long maxTicks = maxTime.Ticks;
+            long minTicks = MinTime.Ticks;
+            long maxTicks = MaxTime.Ticks;
             
             foreach (var execution in Executions)
             {
@@ -62,7 +68,16 @@ namespace EtlManager.Pages.Executions
                 long startTicks = ((DateTime)execution.StartDateTime).Ticks;
                 double xLocation = (double)(startTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
 
-                long endTicks = ((DateTime)execution.StartDateTime).AddSeconds((double)execution.ExecutionInSeconds).Ticks;
+                long endTicks;
+                if (execution.EndDateTime != null)
+                {
+                    endTicks = ((DateTime)execution.EndDateTime).Ticks;
+                }
+                else
+                {
+                    endTicks = ((DateTime)execution.StartDateTime).AddSeconds((double)execution.ExecutionInSeconds).Ticks;
+                }
+
                 double endLocation = (double)(endTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
                 double width = endLocation - xLocation;
                 width = width >= 10 ? width : 10; // minimum value for the width to prevent hidden bars with width = 0
