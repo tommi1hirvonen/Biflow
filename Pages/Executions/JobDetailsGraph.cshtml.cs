@@ -38,8 +38,10 @@ namespace EtlManager.Pages.Executions
                 .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
 
+            ChartHeight = Executions.Count * 40 + ChartPaddingTop;
+
             double yInterval = (double)(ChartHeight - ChartPaddingTop) / Executions.Count;
-            BarHeight = (double)(ChartHeight - ChartPaddingTop) / Executions.Count / 2;
+            BarHeight = (double)(ChartHeight - ChartPaddingTop) / Executions.Count / 2.0;
             double yLocation = 0;
 
             DateTime minTime = (DateTime)Executions.Min(e => e.StartDateTime);

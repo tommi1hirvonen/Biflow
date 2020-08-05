@@ -16,7 +16,7 @@
         } 
         @foreach (var execution in Model.Executions)
         {
-            <rect class="@GetClassFromStatus(execution.ExecutionStatus)"
+            <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus);"
                   y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
                   height="@(Model.BarHeight.ToString().Replace(',', '.'))"
                   x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
@@ -26,17 +26,17 @@
 </svg>
 
 @functions {
-    public string GetClassFromStatus(string status)
+    public string GetFillFromStatus(string status)
     {
         switch (status)
         {
             case "COMPLETED":
-                return "gantt-completed";
+                return "#28a745";
             case "FAILED":
-                return "gantt-failed";
+                return "#dc3545";
             case "RUNNING":
             default:
-                return "gantt-running";
+                return "#007bff";
         }
     }
 }
