@@ -33,6 +33,7 @@ namespace EtlManager.Pages.Executions
         {
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
+                .Where(e => e.StartDateTime != null)
                 .OrderBy(execution => execution.CreatedDateTime)
                 .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
@@ -43,6 +44,13 @@ namespace EtlManager.Pages.Executions
 
             DateTime minTime = (DateTime)Executions.Min(e => e.StartDateTime);
             DateTime maxTime = (DateTime)Executions.Max(e => e.EndDateTime);
+            
+            if (minTime == null) return;
+            if (maxTime == null)
+            {
+                maxTime = Executions.Select(e => ((DateTime)e.StartDateTime).AddSeconds((double)e.ExecutionInSeconds)).Max();
+            }
+            
             long minTicks = minTime.Ticks;
             long maxTicks = maxTime.Ticks;
             
