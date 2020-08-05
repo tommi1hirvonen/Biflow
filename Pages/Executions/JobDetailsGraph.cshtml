@@ -6,38 +6,40 @@
 }
 
 <p></p>
-<svg width="@(Model.ChartWidth+20)" height="@Model.ChartHeight">
-    <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
-        <g transform="translate(0,@(Model.ChartHeight-Model.ChartPaddingTop-25))">
-            <g transform="translate(0,0)">
-                <line y2="6" x2="0" style="stroke: #000;"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MinTime.ToString("HH:mm")</text>
+<div>
+    <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeight">
+        <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
+            <g transform="translate(0,@(Model.ChartHeight-Model.ChartPaddingTop-25))">
+                <g transform="translate(0,0)">
+                    <line y2="6" x2="0" style="stroke: #000;"></line>
+                    <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MinTime.ToString("HH:mm")</text>
+                </g>
             </g>
+            <g transform="translate(@(Model.ChartWidth-Model.ChartPaddingLeft),@(Model.ChartHeight-Model.ChartPaddingTop-25))">
+                <g transform="translate(0,0)">
+                    <line y2="6" x2="0" style="stroke: #000;"></line>
+                    <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
+                </g>
+            </g>
+            @foreach (var execution in Model.Executions)
+            {
+                <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))">
+                    <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
+                </g>
+            }
+            @foreach (var execution in Model.Executions)
+            {
+                <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus);"
+                      y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                      height="@(Model.BarHeight.ToString().Replace(',', '.'))"
+                      x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                      width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)">
+                    <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
+                </rect>
+            }
         </g>
-        <g transform="translate(@(Model.ChartWidth-Model.ChartPaddingLeft),@(Model.ChartHeight-Model.ChartPaddingTop-25))">
-            <g transform="translate(0,0)">
-                <line y2="6" x2="0" style="stroke: #000;"></line>
-                <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
-            </g>
-        </g>
-        @foreach (var execution in Model.Executions)
-        {
-            <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))">
-                <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
-            </g>
-        }
-        @foreach (var execution in Model.Executions)
-        {
-            <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus);"
-                  y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
-                  height="@(Model.BarHeight.ToString().Replace(',', '.'))"
-                  x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
-                  width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)">
-                <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
-            </rect>
-        }
-    </g>
-</svg>
+    </svg>
+</div>
 
 @functions {
     public string GetFillFromStatus(string status)

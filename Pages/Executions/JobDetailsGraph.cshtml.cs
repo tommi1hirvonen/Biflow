@@ -32,6 +32,8 @@ namespace EtlManager.Pages.Executions
         public DateTime MinTime { get; set; }
         public DateTime MaxTime { get; set; }
 
+        private const int MinWidth = 5;
+
         public async Task OnGetAsync(Guid id)
         {
             Executions = await _context.Executions
@@ -80,7 +82,7 @@ namespace EtlManager.Pages.Executions
 
                 double endLocation = (double)(endTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
                 double width = endLocation - xLocation;
-                width = width >= 10 ? width : 10; // minimum value for the width to prevent hidden bars with width = 0
+                width = width >= MinWidth ? width : MinWidth; // minimum value for the width to prevent hidden bars with width = 0
 
                 ChartElements.Add(execution.StepExecutionId, new ChartElement{
                     LabelYLocation = yLocation.ToString().Replace(',', '.'),
