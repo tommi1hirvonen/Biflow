@@ -10,19 +10,22 @@
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            @{
+                String pageRoute = ViewContext.RouteData.Values["page"].ToString();
+            }
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-page="/Index">ETL Manager</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                @*Only show the navigation links if the user is logged in*@ 
+                @*Only show the navigation links if the user is logged in*@
                 @if (User.Identity.IsAuthenticated)
                 {
                     <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul class="navbar-nav mr-auto">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute == "/Account" ? "active" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" asp-page="/Account">Change password</a>
                                     <form method="post">
@@ -33,16 +36,16 @@
                         </ul>
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Index">Home</a>
+                                <a class="nav-link @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Jobs/Index">Jobs</a>
+                                <a class="nav-link @(pageRoute.Contains("/Jobs/") ? "active" : "")" asp-page="/Jobs/Index">Jobs</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-page="/Schedules/Index">Schedules</a>
+                                <a class="nav-link @(pageRoute.Contains("/Schedules/") ? "active" : "")" asp-page="/Schedules/Index">Schedules</a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute.Contains("/Executions/") ? "active" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" asp-page="/Executions/Steps">Steps</a>
                                     <a class="dropdown-item" asp-page="/Executions/Jobs">Jobs</a>
@@ -52,7 +55,7 @@
 
                     </div>
                 }
-                </div>
+            </div>
         </nav>
     </header>
     <div class="container">
