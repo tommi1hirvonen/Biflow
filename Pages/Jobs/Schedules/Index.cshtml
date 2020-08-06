@@ -173,7 +173,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
+                            <div id="weekdays" class="form-group">
                                 <div class="form-check form-check-inline">
                                     <label class="form-check-label">
                                         <input class="form-check-input" asp-for="NewSchedule.Monday" /> @Html.DisplayNameFor(model => model.NewSchedule.Monday)
@@ -210,11 +210,12 @@
                                     </label>
                                 </div>
                             </div>
+                            <text id="weekdaysError" class="text-danger" style="display: none;">Select at least one weekday</text>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
             </form>
@@ -224,4 +225,22 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script type="text/javascript">
+        $(function () {
+            $("#button_submit").click(function () {
+                var checked_checkboxes = $("#weekdays input[type=checkbox]:checked");
+                if (checked_checkboxes.length == 0) {
+                    $("#weekdaysError").show();
+                    return false;
+                }
+                return true;
+            });
+        });
+
+        $(function () {
+            $("#weekdays input[type=checkbox]").change(function () {
+                $("#weekdaysError").hide();
+            });
+        });
+    </script>
 }

@@ -50,7 +50,7 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index", new { id = jobId });
         }
 
-        public async Task<IActionResult> OnPostCreateAsync()
+        public async Task<IActionResult> OnPost()
         {
 
             _context.Schedules.Add(NewSchedule);
