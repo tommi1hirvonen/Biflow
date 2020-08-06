@@ -7,9 +7,75 @@
 
 <p></p>
 <div class="btn-group btn-group-sm">
-    <a class="btn btn-secondary active" style="color: white;">Table</a>
-    <a class="btn btn-secondary" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId">Graph</a>
+    <a class="btn btn-outline-primary active">Table</a>
+    <a class="btn btn-outline-primary" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId">Graph</a>
 </div>
+<p/>
+<h4>@Model.JobExecution.JobName</h4>
+<p/>
+<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
+    Toggle details
+</button>
+<p/>
+<div class="collapse" id="jobDetails">
+    <div class="card card-body">
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.ExecutionId)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.JobExecution.ExecutionId)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.JobId)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.JobExecution.JobId)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.StartDateTime)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.JobExecution.StartDateTime)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.EndDateTime)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.JobExecution.EndDateTime)
+            </dd>
+            <dt class="col-sm-2">
+                Duration
+            </dt>
+            <dd class="col-sm-10">
+                <text>@Model.JobExecution.GetDurationInReadableFormat()</text>
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.ExecutionStatus)
+            </dt>
+            <dd class="col-sm-10">
+                @{
+                    switch (Model.JobExecution.ExecutionStatus)
+                    {
+                        case "COMPLETED":
+                            <span class="badge badge-success">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
+                            break;
+                        case "FAILED":
+                            <span class="badge badge-danger">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
+                            break;
+                        case "SKIPPED":
+                            <span class="badge badge-warning">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
+                            break;
+                        default:
+                            <span class="badge badge-primary">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
+                            break;
+                    }
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
 <p></p>
 <table class="table">
     <thead>

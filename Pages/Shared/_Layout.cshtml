@@ -25,7 +25,7 @@
                     <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul class="navbar-nav mr-auto">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(pageRoute == "/Account" ? "active" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute == "/Account" ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" asp-page="/Account">Change password</a>
                                     <form method="post">
@@ -36,19 +36,19 @@
                         </ul>
                         <ul class="navbar-nav flex-grow-1">
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">Home</a>
+                                <a class="nav-link @(pageRoute == "/Index" ? "active font-weight-bold" : "")" asp-page="/Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Contains("/Jobs/") ? "active" : "")" asp-page="/Jobs/Index">Jobs</a>
+                                <a class="nav-link @(pageRoute.Contains("/Jobs/") ? "active font-weight-bold" : "")" asp-page="/Jobs/Index">Jobs</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Contains("/Schedules/") ? "active" : "")" asp-page="/Schedules/Index">Schedules</a>
+                                <a class="nav-link @(pageRoute.Contains("/Schedules/") ? "active font-weight-bold" : "")" asp-page="/Schedules/Index">Schedules</a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(pageRoute.Contains("/Executions/") ? "active" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute.Contains("/Executions/") ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" asp-page="/Executions/Steps">Steps</a>
                                     <a class="dropdown-item" asp-page="/Executions/Jobs">Jobs</a>
+                                    <a class="dropdown-item" asp-page="/Executions/Steps">Steps</a>
                                 </div>
                             </li>
                         </ul>

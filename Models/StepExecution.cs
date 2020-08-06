@@ -13,7 +13,11 @@ namespace EtlManager.Models
         [Key]
         public string StepExecutionId { get; set; }
 
+        [Display(Name = "Execution id")]
         override public Guid ExecutionId { get; set; }
+
+        [Display(Name = "Step id")]
+        public Guid StepId { get; set; }
 
         [Display(Name = "Step")]
         public string StepName { get; set; }

@@ -56,7 +56,7 @@ namespace EtlManager.Pages.Jobs.Steps
 
             if (redirect)
             {
-                return RedirectToPage("../../Executions/Steps");
+                return RedirectToPage("../../Executions/Jobs");
             }
             else
             {

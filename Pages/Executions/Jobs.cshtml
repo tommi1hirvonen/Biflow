@@ -4,8 +4,6 @@
     ViewData["Title"] = "Executions";
 }
 
-<h2>Executions</h2>
-
 <form>
     <div class="form-row">
         <div class="form-group col-md-2">
@@ -32,7 +30,7 @@
         </div>
     </div>
     <div class="form-row">
-        <input type="submit" value="Refresh" class="btn btn-outline-primary" />
+        <input type="submit" value="Refresh" class="btn btn-primary" />
     </div>
 </form>
 
@@ -95,7 +93,8 @@
                     <text>@item.GetDurationInReadableFormat()</text>
                 </td>
                 <td>
-                    <a asp-page="./JobDetails" asp-route-id="@item.ExecutionId" target="_blank">Details</a>
+                    <a asp-page="./JobDetails" asp-route-id="@item.ExecutionId" target="_blank">Details</a> |
+                    <a asp-page="./JobDetailsGraph" asp-route-id="@item.ExecutionId" target="_blank">Graph</a>
                 </td>
             </tr>
         }

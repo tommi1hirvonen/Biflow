@@ -23,14 +23,18 @@ namespace EtlManager.Pages.Executions
 
         public IList<StepExecution> Executions { get; set; }
 
+        public JobExecution JobExecution { get; set; }
+
         public async Task OnGetAsync(Guid id)
         {
             ExecutionId = id;
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
-                .OrderByDescending(execution => execution.CreatedDateTime)
-                .ThenByDescending(execution => execution.StartDateTime)
+                .OrderBy(execution => execution.CreatedDateTime)
+                .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
+            JobExecution = await _context.JobExecutions
+                .FirstOrDefaultAsync(e => e.ExecutionId == id);
         }
     }
 }

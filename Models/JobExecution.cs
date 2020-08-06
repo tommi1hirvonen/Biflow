@@ -9,6 +9,7 @@ namespace EtlManager.Models
     public class JobExecution : Execution
     {
         [Key]
+        [Display(Name = "Execution id")]
         override public Guid ExecutionId { get; set; }
     }
 }
