@@ -6,17 +6,23 @@
 }
 
 <p></p>
-<div class="btn-group">
-    @if (Model.Collapsed == false)
-    {
-        <a class="btn btn-secondary btn-sm active" style="color: white;">Expanded</a>
-        <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="true">Collapsed</a>
-    }
-    else
-    {
-        <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="false">Expanded</a>
-        <a class="btn btn-secondary btn-sm active" style="color: white;">Collapsed</a>
-    }
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group btn-group-sm mr-2" role="group">
+        <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetails" asp-route-id="@Model.ExecutionId">Table</a>
+        <a class="btn btn-secondary btn-sm active" style="color: white;">Graph</a>
+    </div>
+    <div class="btn-group btn-group-sm mr-2" role="group">
+        @if (Model.Collapsed == false)
+        {
+            <a class="btn btn-secondary btn-sm active" style="color: white;">Expanded</a>
+            <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="true">Collapsed</a>
+        }
+        else
+        {
+            <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="false">Expanded</a>
+            <a class="btn btn-secondary btn-sm active" style="color: white;">Collapsed</a>
+        }
+    </div>
 </div>
 <p></p>
 <div>
@@ -43,10 +49,10 @@
             @foreach (var execution in Model.Executions)
             {
                 <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus);"
-                      y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
-                      height="@(Model.BarHeight.ToString().Replace(',', '.'))"
-                      x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
-                      width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)">
+                        y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                        height="@(Model.BarHeight.ToString().Replace(',', '.'))"
+                        x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                        width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)">
                     <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
                 </rect>
             }

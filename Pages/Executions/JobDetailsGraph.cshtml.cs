@@ -52,7 +52,7 @@ namespace EtlManager.Pages.Executions
 
             if (collapsed)
             {
-                ChartHeight = 550;
+                ChartHeight = 500;
                 ChartPaddingBottom = 20;
             }
             else

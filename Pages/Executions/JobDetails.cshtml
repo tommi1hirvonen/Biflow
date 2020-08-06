@@ -5,7 +5,11 @@
     ViewData["Title"] = "Details";
 }
 
-<a asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId">Execution graph</a>
+<p></p>
+<div class="btn-group btn-group-sm">
+    <a class="btn btn-secondary active" style="color: white;">Table</a>
+    <a class="btn btn-secondary" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId">Graph</a>
+</div>
 <p></p>
 <table class="table">
     <thead>
