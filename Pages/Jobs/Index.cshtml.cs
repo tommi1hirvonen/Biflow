@@ -24,6 +24,9 @@ namespace EtlManager.Pages.Jobs
 
         public IList<Job> Jobs { get;set; }
 
+        [BindProperty]
+        public Job NewJob { get; set; }
+
         public async Task OnGetAsync()
         {
             Jobs = await _context.Jobs.ToListAsync();
@@ -48,6 +51,17 @@ namespace EtlManager.Pages.Jobs
             _context.Jobs.Remove(job);
             await _context.SaveChangesAsync();
 
+            return RedirectToPage("./Index");
+        }
+
+        public async Task<IActionResult> OnPostCreate()
+        {
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+            _context.Jobs.Add(NewJob);
+            await _context.SaveChangesAsync();
             return RedirectToPage("./Index");
         }
 
