@@ -35,7 +35,7 @@ namespace EtlManager
             }).AddCookie(options =>
             {
                 options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/LogIn");
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(5.0);
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(10.0);
             });
 
             services.AddRazorPages(options =>
