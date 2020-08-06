@@ -66,12 +66,14 @@
         switch (status)
         {
             case "COMPLETED":
-                return "#28a745";
+                return "#28a745"; // green
             case "FAILED":
-                return "#dc3545";
+                return "#dc3545"; // red
+            case "SKIPPED":
+                return "#ffc107"; // orange
             case "RUNNING":
             default:
-                return "#007bff";
+                return "#007bff"; // blue
         }
     }
 }
