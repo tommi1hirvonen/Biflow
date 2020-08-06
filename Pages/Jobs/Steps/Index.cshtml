@@ -73,7 +73,10 @@
                 <td>
                     <form method="post">
                         <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
-                        <a class="btn btn-link btn-sm" asp-page="./Details" asp-route-id="@item.StepId">Details</a> |
+                        @*Open corresponding modal popup to display step execution details*@
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
+                            Details
+                        </button> |
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Delete
@@ -122,4 +125,108 @@
 
     </script>
 
+}
+
+
+@*Generate modal popup windows to display step execution displays*@
+@foreach (var item in Model.Steps)
+{
+    <div class="modal fade" id="modal_@item.StepId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">@item.StepName</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.JobId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.JobId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.CreatedDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.CreatedDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.LastModifiedDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.LastModifiedDateTime)
+                        </dd>
+
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecutionPhase)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.ExecutionPhase)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepType)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepType)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.SqlStatement)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.SqlStatement)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.FolderName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.FolderName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ProjectName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.ProjectName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.PackageName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.PackageName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.ExecuteIn32BitMode)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.IsEnabled)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.IsEnabled)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 }

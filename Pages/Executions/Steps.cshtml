@@ -33,7 +33,7 @@
         </div>
         <div class="form-group col-md-1">
             <label>Interval (h)</label>
-            <input asp-for="IntervalHours" class="form-control" >
+            <input asp-for="IntervalHours" class="form-control">
         </div>
     </div>
     <div class="form-row">
@@ -41,7 +41,7 @@
     </div>
 </form>
 
-<p/>
+<p />
 
 <table class="table">
     <thead>
@@ -65,43 +65,184 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model.Executions) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StepName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartDateTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndDateTime)
-            </td>
-            <td>
-                @{
-                    switch (item.ExecutionStatus)
-                    {
-                        case "COMPLETED":
-                            <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        case "FAILED":
-                            <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        case "SKIPPED":
-                            <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        default:
-                            <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
+        @foreach (var item in Model.Executions)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StepName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StartDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EndDateTime)
+                </td>
+                <td>
+                    @{
+                        switch (item.ExecutionStatus)
+                        {
+                            case "COMPLETED":
+                                <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "FAILED":
+                                <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "SKIPPED":
+                                <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            default:
+                                <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                        }
                     }
-                }
-            </td>
-            <td>
-                <text>@item.GetDurationInReadableFormat()</text>
-            </td>
-            <td>
-                <a asp-page="./StepDetails" asp-route-id="@item.StepExecutionId" target="_blank">Details</a>
-            </td>
-        </tr>
-}
+                </td>
+                <td>
+                    <text>@item.GetDurationInReadableFormat()</text>
+                </td>
+                <td>
+                    @*Open corresponding modal popup to display step execution details*@
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
+                        Details
+                    </button>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
+
+
+@*Generate modal popup windows to display step execution displays*@
+@foreach (var item in Model.Executions)
+{
+    <div class="modal fade" id="modal_@item.StepExecutionId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">@item.StepName</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecutionId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.ExecutionId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.JobId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.JobId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.JobName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.JobName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepType)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepType)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.CreatedDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.CreatedDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StartDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StartDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.EndDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.EndDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            <text>Duration</text>
+                        </dt>
+                        <dd class="col-sm-10">
+                            <text>@item.GetDurationInReadableFormat()</text>
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecutionStatus)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @{
+                                switch (item.ExecutionStatus)
+                                {
+                                    case "COMPLETED":
+                                        <span class="badge badge-success">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    case "FAILED":
+                                        <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    case "SKIPPED":
+                                        <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-primary">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                }
+                            }
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ErrorMessage)
+                        </dt>
+                        <dd class="col-sm-10">
+                            <text class="text-danger" style="white-space: pre-wrap">@item.ErrorMessage</text>
+                        </dd>
+                        @if (item.StepType == "SQL")
+                        {
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.SqlStatement)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.SqlStatement)
+                            </dd>
+                        }
+                        else if (item.StepType == "SSIS")
+                        {
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.PackagePath)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.PackagePath)
+                            </dd>
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.ExecuteIn32BitMode)
+                            </dd>
+                        }
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
