@@ -23,13 +23,18 @@ namespace EtlManager.Pages.Jobs
         public Job Job { get; set; }
         public IList<Schedule> Schedules { get; set; }
 
+        [BindProperty]
+        public Schedule NewSchedule { get; set; }
+
         public async Task OnGetAsync(Guid id)
         {
             Job = await _context.Jobs.Include(job => job.Schedules).FirstOrDefaultAsync(job => job.JobId == id);
             Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
+
+            NewSchedule = new Schedule { JobId = id };
         }
 
-        public async Task<IActionResult> OnPostDeleteAsync(Guid? id)
+        public async Task<IActionResult> OnPostDeleteAsync(Guid? id, Guid jobId)
         {
             if (id == null) return NotFound();
 
@@ -42,7 +47,16 @@ namespace EtlManager.Pages.Jobs
             
             Job = await _context.Jobs.Include(job => job.Schedules).FirstOrDefaultAsync(job => job.JobId == schedule.JobId);
             Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
-            return Page();
+            return RedirectToPage("./Index", new { id = jobId });
+        }
+
+        public async Task<IActionResult> OnPostCreateAsync()
+        {
+
+            _context.Schedules.Add(NewSchedule);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index", new { id = NewSchedule.JobId });
         }
     }
 }

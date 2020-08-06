@@ -36,6 +36,16 @@ namespace EtlManager
             return new DateTime(date.Ticks - date.Ticks % roundTicks, date.Kind);
         }
 
+        public static string Left(this string value, int length)
+        {
+            if (value.Length > length)
+            {
+                return value.Substring(0, length);
+            }
+
+            return value;
+        }
+
         public async static Task StartExecution(IConfiguration configuration, Job job)
         {
             SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

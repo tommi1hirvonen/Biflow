@@ -7,10 +7,10 @@
 <h4>@Model.Job.JobName schedules</h4>
 <hr />
 <p />
-<div>
-    <a class="btn btn-success" asp-page="Create" asp-route-id="@Model.Job.JobId">New schedule</a>
-</div>
-<p/>
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+    New schedule
+</button>
+<p />
 <table class="table">
     <thead>
         <tr>
@@ -38,93 +38,93 @@
     <tbody>
         @foreach (var item in Model.Schedules)
         {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
-            </td>
-            <td>
-                @if (item.Monday)
-                {
-                    <span class="badge badge-primary">Monday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Monday</span>
-                }
-            </td>
-            <td>
-                @if (item.Tuesday)
-                {
-                    <span class="badge badge-primary">Tuesday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Tuesday</span>
-                }
-            </td>
-            <td>
-                @if (item.Wednesday)
-                {
-                    <span class="badge badge-primary">Wednesday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Wednesday</span>
-                }
-            </td>
-            <td>
-                @if (item.Thursday)
-                {
-                    <span class="badge badge-primary">Thursday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Thursday</span>
-                }
-            </td>
-            <td>
-                @if (item.Friday)
-                {
-                    <span class="badge badge-primary">Friday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Friday</span>
-                }
-            </td>
-            <td>
-                @if (item.Saturday)
-                {
-                    <span class="badge badge-primary">Saturday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Saturday</span>
-                }
-            </td>
-            <td>
-                @if (item.Sunday)
-                {
-                    <span class="badge badge-primary">Sunday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Sunday</span>
-                }
-            </td>
-            <td>
-                <form method="post">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Delete
-                        </button>
-                        <div class="dropdown-menu">
-                            <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId">Confirm</button>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
+                </td>
+                <td>
+                    @if (item.Monday)
+                    {
+                        <span class="badge badge-primary">Monday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Monday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Tuesday)
+                    {
+                        <span class="badge badge-primary">Tuesday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Tuesday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Wednesday)
+                    {
+                        <span class="badge badge-primary">Wednesday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Wednesday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Thursday)
+                    {
+                        <span class="badge badge-primary">Thursday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Thursday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Friday)
+                    {
+                        <span class="badge badge-primary">Friday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Friday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Saturday)
+                    {
+                        <span class="badge badge-primary">Saturday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Saturday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Sunday)
+                    {
+                        <span class="badge badge-primary">Sunday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Sunday</span>
+                    }
+                </td>
+                <td>
+                    <form method="post">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Confirm</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </td>
-        </tr>
+                    </form>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
@@ -132,3 +132,96 @@
 <div>
     <a asp-page="../Index">Back to jobs</a>
 </div>
+
+<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Create</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="NewSchedule.JobId" />
+                            <div class="form-group col-md-4">
+                                <label asp-for="NewSchedule.TimeHours" class="control-label"></label>
+                                <input asp-for="NewSchedule.TimeHours" class="form-control" />
+                                <span asp-validation-for="NewSchedule.TimeHours" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="NewSchedule.TimeMinutes" value="0">
+                                    <label class="form-check-label">:00</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="NewSchedule.TimeMinutes" value="15">
+                                    <label class="form-check-label">:15</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="NewSchedule.TimeMinutes" value="30">
+                                    <label class="form-check-label">:30</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" asp-for="NewSchedule.TimeMinutes" value="45">
+                                    <label class="form-check-label">:45</label>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Monday" /> @Html.DisplayNameFor(model => model.NewSchedule.Monday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Tuesday" /> @Html.DisplayNameFor(model => model.NewSchedule.Tuesday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Wednesday" /> @Html.DisplayNameFor(model => model.NewSchedule.Wednesday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Thursday" /> @Html.DisplayNameFor(model => model.NewSchedule.Thursday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Friday" /> @Html.DisplayNameFor(model => model.NewSchedule.Friday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Saturday" /> @Html.DisplayNameFor(model => model.NewSchedule.Saturday)
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewSchedule.Sunday" /> @Html.DisplayNameFor(model => model.NewSchedule.Sunday)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

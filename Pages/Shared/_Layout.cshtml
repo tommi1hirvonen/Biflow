@@ -39,13 +39,13 @@
                                 <a class="nav-link @(pageRoute == "/Index" ? "active font-weight-bold" : "")" asp-page="/Index">Home</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Contains("/Jobs/") ? "active font-weight-bold" : "")" asp-page="/Jobs/Index">Jobs</a>
+                                <a class="nav-link @(pageRoute.Left(5) == "/Jobs" ? "active font-weight-bold" : "")" asp-page="/Jobs/Index">Jobs</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Contains("/Schedules/") ? "active font-weight-bold" : "")" asp-page="/Schedules/Index">Schedules</a>
+                                <a class="nav-link @(pageRoute.Left(10) == "/Schedules" ? "active font-weight-bold" : "")" asp-page="/Schedules/Index">Schedules</a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(pageRoute.Contains("/Executions/") ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute.Left(11) == "/Executions" ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Executions</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" asp-page="/Executions/Jobs">Jobs</a>
                                     <a class="dropdown-item" asp-page="/Executions/Steps">Steps</a>

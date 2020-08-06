@@ -47,6 +47,5 @@ namespace EtlManager.Models
             string temp = "0" + TimeMinutes.ToString();
             return temp.Substring(temp.Length - 2);
         }
-
     }
 }
