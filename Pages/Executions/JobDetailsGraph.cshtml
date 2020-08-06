@@ -6,6 +6,19 @@
 }
 
 <p></p>
+<div class="btn-group">
+    @if (Model.Collapsed == false)
+    {
+        <a class="btn btn-secondary btn-sm active" style="color: white;">Expanded</a>
+        <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="true">Collapsed</a>
+    }
+    else
+    {
+        <a class="btn btn-secondary btn-sm" style="color: white;" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId" asp-route-collapsed="false">Expanded</a>
+        <a class="btn btn-secondary btn-sm active" style="color: white;">Collapsed</a>
+    }
+</div>
+<p></p>
 <div>
     <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeight">
         <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">

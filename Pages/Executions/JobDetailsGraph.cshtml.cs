@@ -19,6 +19,9 @@ namespace EtlManager.Pages.Executions
             _context = context;
         }
 
+        public Guid ExecutionId { get; set; }
+        public bool Collapsed { get; set; }
+
         public IList<StepExecution> Executions { get; set; }
 
         public Dictionary<string, ChartElement> ChartElements = new Dictionary<string, ChartElement>();
@@ -26,7 +29,8 @@ namespace EtlManager.Pages.Executions
         public int ChartHeight = 700;
         public int ChartWidth = 1000;
         public int ChartPaddingLeft = 250;
-        public int ChartPaddingTop = 50;
+        public int ChartPaddingTop = 25;
+        public int ChartPaddingBottom = 0;
         public double BarHeight { get; set; } = 10;
 
         public DateTime MinTime { get; set; }
@@ -34,8 +38,11 @@ namespace EtlManager.Pages.Executions
 
         private const int MinWidth = 5;
 
-        public async Task OnGetAsync(Guid id)
+        public async Task OnGetAsync(Guid id, bool collapsed = false)
         {
+            ExecutionId = id;
+            Collapsed = collapsed;
+
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
                 .Where(e => e.StartDateTime != null)
@@ -43,10 +50,18 @@ namespace EtlManager.Pages.Executions
                 .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
 
-            ChartHeight = Executions.Count * 40 + ChartPaddingTop;
+            if (collapsed)
+            {
+                ChartHeight = 550;
+                ChartPaddingBottom = 20;
+            }
+            else
+            {
+                ChartHeight = Executions.Count * 40 + ChartPaddingTop;
+            }
 
-            double yInterval = (double)(ChartHeight - ChartPaddingTop) / Executions.Count;
-            BarHeight = (double)(ChartHeight - ChartPaddingTop) / Executions.Count / 2.0;
+            double yInterval = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count;
+            BarHeight = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count / 2.0;
             double yLocation = 0;
 
             MinTime = (DateTime)Executions.Min(e => e.StartDateTime);
