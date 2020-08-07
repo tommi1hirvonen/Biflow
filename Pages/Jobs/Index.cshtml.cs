@@ -24,8 +24,11 @@ namespace EtlManager.Pages.Jobs
 
         public IList<Job> Jobs { get;set; }
 
-        [BindProperty]
+        //[BindProperty]
         public Job NewJob { get; set; }
+
+        //[BindProperty]
+        public Job EditJob { get; set; }
 
         public async Task OnGetAsync()
         {
@@ -54,7 +57,7 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
-        public async Task<IActionResult> OnPostCreate()
+        public async Task<IActionResult> OnPostCreate([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job NewJob)
         {
             if (!ModelState.IsValid)
             {
@@ -63,6 +66,39 @@ namespace EtlManager.Pages.Jobs
             _context.Jobs.Add(NewJob);
             await _context.SaveChangesAsync();
             return RedirectToPage("./Index");
+        }
+
+        public async Task<IActionResult> OnPostEdit([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job EditJob)
+        {
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            _context.Attach(EditJob).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!JobExists(EditJob.JobId))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return RedirectToPage("./Index");
+        }
+
+        private bool JobExists(Guid id)
+        {
+            return _context.Jobs.Any(e => e.JobId == id);
         }
 
     }

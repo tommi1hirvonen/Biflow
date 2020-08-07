@@ -47,7 +47,9 @@
                 </td>
                 <td>
                     <form method="post">
-                        <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.JobId">Edit</a> |
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                            Edit
+                        </button> |
                         <a class="btn btn-link btn-sm" asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
                         <a class="btn btn-link btn-sm" asp-page="./Schedules/Index" asp-route-id="@item.JobId">Schedules</a> |
                         <div class="btn-group">
@@ -73,6 +75,7 @@
     </tbody>
 </table>
 
+@*NEW JOB MODAL*@
 <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -108,6 +111,57 @@
         </div>
     </div>
 </div>
+
+@*GENERATE EDIT MODALS*@
+@foreach (var item in Model.Jobs)
+{
+    <div class="modal fade" id="modal_edit_@item.JobId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8 mx-auto">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input type="hidden" asp-for="EditJob.JobId" value="@item.JobId" />
+                                <div class="form-group">
+                                    <label asp-for="EditJob.JobName" class="control-label"></label>
+                                    <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
+                                    <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="EditJob.CreatedDateTime" class="control-label"></label>
+                                    <input asp-for="EditJob.CreatedDateTime" class="form-control" readonly value="@item.CreatedDateTime.ToString("yyyy-MM-ddTHH:mm").Replace(".", ":")" />
+                                    <span asp-validation-for="EditJob.CreatedDateTime" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="EditJob.LastModifiedDateTime" class="control-label"></label>
+                                    <input asp-for="EditJob.LastModifiedDateTime" class="form-control" readonly value="@item.LastModifiedDateTime.ToString("yyyy-MM-ddTHH:mm").Replace(".", ":")" />
+                                    <span asp-validation-for="EditJob.LastModifiedDateTime" class="text-danger"></span>
+                                </div>
+                                <div class="form-group form-check">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="EditJob.UseDependencyMode" value="@item.UseDependencyMode" /> @Html.DisplayNameFor(model => model.EditJob.UseDependencyMode)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
