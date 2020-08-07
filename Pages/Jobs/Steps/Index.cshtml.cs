@@ -26,10 +26,14 @@ namespace EtlManager.Pages.Jobs.Steps
 
         public Job Job { get; set; }
 
+        [BindProperty]
+        public Step NewStep { get; set; }
+
         public async Task OnGetAsync(Guid id)
         {
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+            NewStep = new Step { JobId = id };
         }
 
         /// <summary>
@@ -98,6 +102,20 @@ namespace EtlManager.Pages.Jobs.Steps
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index", new { id = step.JobId });
+        }
+
+        public async Task<IActionResult> OnPostCreate()
+        {
+
+            if (!ModelState.IsValid)
+            {
+                return Page();
+            }
+
+            _context.Steps.Add(NewStep);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index", new { id = NewStep.JobId });
         }
 
     }

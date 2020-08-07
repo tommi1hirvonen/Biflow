@@ -12,7 +12,9 @@
     <form method="post">
         <div class="row">
             <div class="col">
-                <a class="btn btn-success" asp-page="Create" asp-route-id="@Model.Job.JobId">New step</a>
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                    New step
+                </button>
             </div>
             <div class="col float-right">
                 <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
@@ -125,10 +127,108 @@
 
     </script>
 
+    <script type="text/javascript">
+        $(document).ready(function () { stepTypeSelected(); });
+
+        function stepTypeSelected() {
+            var stepType = document.getElementById('step_type').value;
+            if (stepType == "SQL") {
+                $('#sql_statement_div').show();
+                $('#folder_div').hide();
+                $('#project_div').hide();
+                $('#package_div').hide();
+                $('#32_bit_mode_div').hide();
+            } else if (stepType == "SSIS") {
+                $('#sql_statement_div').hide();
+                $('#folder_div').show();
+                $('#project_div').show();
+                $('#package_div').show();
+                $('#32_bit_mode_div').show();
+            }
+        }
+
+    </script>
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
 }
 
 
-@*Generate modal popup windows to display step execution displays*@
+@*NEW STEP MODAL*@
+<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Create</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="hidden" asp-for="NewStep.JobId" />
+                            <input type="hidden" asp-for="NewStep.IsEnabled" value="true" />
+                            <div class="form-group">
+                                <label asp-for="NewStep.StepName" class="control-label"></label>
+                                <input asp-for="NewStep.StepName" class="form-control" />
+                                <span asp-validation-for="NewStep.StepName" class="text-danger"></span>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-5">
+                                    <label asp-for="NewStep.ExecutionPhase" class="control-label"></label>
+                                    <input asp-for="NewStep.ExecutionPhase" class="form-control" />
+                                    <span asp-validation-for="NewStep.ExecutionPhase" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col-md-5">
+                                    <label asp-for="NewStep.StepType" class="control-label"></label>
+                                    <select asp-for="NewStep.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                                        <option>SQL</option>
+                                        <option>SSIS</option>
+                                    </select>
+                                    <span asp-validation-for="NewStep.StepType" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="form-group" id="sql_statement_div">
+                                <label asp-for="NewStep.SqlStatement" class="control-label"></label>
+                                <textarea asp-for="NewStep.SqlStatement" class="form-control" rows="3"></textarea>
+                                <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
+                            </div>
+                            <div class="form-group" id="folder_div">
+                                <label asp-for="NewStep.FolderName" class="control-label"></label>
+                                <input asp-for="NewStep.FolderName" class="form-control" />
+                                <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group" id="project_div">
+                                <label asp-for="NewStep.ProjectName" class="control-label"></label>
+                                <input asp-for="NewStep.ProjectName" class="form-control" />
+                                <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group" id="package_div">
+                                <label asp-for="NewStep.PackageName" class="control-label"></label>
+                                <input asp-for="NewStep.PackageName" class="form-control" />
+                                <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
+                            </div>
+                            <div class="form-group form-check" id="32_bit_mode_div">
+                                <label class="form-check-label">
+                                    <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@*Generate modal popup windows to display step details*@
 @foreach (var item in Model.Steps)
 {
     <div class="modal fade" id="modal_@item.StepId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
