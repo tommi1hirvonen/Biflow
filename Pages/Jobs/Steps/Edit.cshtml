@@ -53,24 +53,28 @@
             </div>
             <div class="form-group" id="sql_statement_div">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
-                <textarea asp-for="Step.SqlStatement" class="form-control" rows="3"></textarea>
+                <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
             </div>
             <div class="form-group" id="folder_div">
                 <label asp-for="Step.FolderName" class="control-label"></label>
-                <input asp-for="Step.FolderName" class="form-control" />
+                <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
                 <span asp-validation-for="Step.FolderName" class="text-danger"></span>
             </div>
             <div class="form-group" id="project_div">
                 <label asp-for="Step.ProjectName" class="control-label"></label>
-                <input asp-for="Step.ProjectName" class="form-control" />
+                <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
                 <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
             </div>
             <div class="form-group" id="package_div">
                 <label asp-for="Step.PackageName" class="control-label"></label>
-                <input asp-for="Step.PackageName" class="form-control" />
+                <input asp-for="Step.PackageName" id="package_input" class="form-control" />
                 <span asp-validation-for="Step.PackageName" class="text-danger"></span>
             </div>
+
+            <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
+            <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
+            
             <div class="form-group form-check" id="32_bit_mode_div">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
@@ -82,7 +86,7 @@
             </div>
             <p></p>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-success" />
+                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
             </div>
         </div>
     </div>
@@ -162,6 +166,39 @@
             $('#' + id).toggleClass('d-none');
         }
 
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("#button_submit").click(function () {
+                var stepType = document.getElementById('step_type').value;
+                var sql = document.getElementById('sql_input').value;
+                var folder = document.getElementById('folder_input').value;
+                var project = document.getElementById('project_input').value;
+                var package = document.getElementById('package_input').value;
+                if (stepType == "SQL" && sql.length == 0) {
+                    $('#sql_error').show();
+                    return false;
+                } else if (stepType == "SSIS" && (folder.length == 0 || project.length == 0 || package.length == 0)) {
+                    $('#ssis_error').show();
+                    return false;
+                }
+                return true;
+            });
+        });
+
+        $(function () {
+            $('#step_type').change(function () { hideErrors(); });
+            $('#sql_input').on('input', function () { hideErrors(); });
+            $('#folder_input').on('input', function () { hideErrors(); });
+            $('#project_input').on('input', function () { hideErrors(); });
+            $('#package_input').on('input', function () { hideErrors(); });
+        });
+
+        function hideErrors() {
+            $('#ssis_error').hide();
+            $('#sql_error').hide();
+        }
     </script>
 
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

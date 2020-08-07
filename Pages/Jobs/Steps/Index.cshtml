@@ -149,6 +149,39 @@
 
     </script>
 
+    <script type="text/javascript">
+        $(function () {
+            $("#button_submit").click(function () {
+                var stepType = document.getElementById('step_type').value;
+                var sql = document.getElementById('sql_input').value;
+                var folder = document.getElementById('folder_input').value;
+                var project = document.getElementById('project_input').value;
+                var package = document.getElementById('package_input').value;
+                if (stepType == "SQL" && sql.length == 0) {
+                    $('#sql_error').show();
+                    return false;
+                } else if (stepType == "SSIS" && (folder.length == 0 || project.length == 0 || package.length == 0)) {
+                    $('#ssis_error').show();
+                    return false;
+                }
+                return true;
+            });
+        });
+
+        $(function () {
+            $('#step_type').change(function () { hideErrors(); });
+            $('#sql_input').on('input', function () { hideErrors(); });
+            $('#folder_input').on('input', function () { hideErrors(); });
+            $('#project_input').on('input', function () { hideErrors(); });
+            $('#package_input').on('input', function () { hideErrors(); });
+        });
+
+        function hideErrors() {
+            $('#ssis_error').hide();
+            $('#sql_error').hide();
+        }
+    </script>
+
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
 }
@@ -158,7 +191,7 @@
 <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="post">
+            <form method="post" asp-page-handler="Create">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Create</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -193,22 +226,22 @@
                             </div>
                             <div class="form-group" id="sql_statement_div">
                                 <label asp-for="NewStep.SqlStatement" class="control-label"></label>
-                                <textarea asp-for="NewStep.SqlStatement" class="form-control" rows="3"></textarea>
+                                <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
                                 <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
                             </div>
                             <div class="form-group" id="folder_div">
                                 <label asp-for="NewStep.FolderName" class="control-label"></label>
-                                <input asp-for="NewStep.FolderName" class="form-control" />
+                                <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
                                 <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
                             </div>
                             <div class="form-group" id="project_div">
                                 <label asp-for="NewStep.ProjectName" class="control-label"></label>
-                                <input asp-for="NewStep.ProjectName" class="form-control" />
+                                <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
                                 <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
                             </div>
                             <div class="form-group" id="package_div">
                                 <label asp-for="NewStep.PackageName" class="control-label"></label>
-                                <input asp-for="NewStep.PackageName" class="form-control" />
+                                <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
                                 <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
                             </div>
                             <div class="form-group form-check" id="32_bit_mode_div">
@@ -216,11 +249,14 @@
                                     <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
                                 </label>
                             </div>
+
+                            <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
+                            <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
             </form>
