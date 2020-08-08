@@ -257,6 +257,7 @@
             $('#parameters_table tr:last').after(`
                 <tr>
                     <td>
+                        <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
                     </td>
                         <td>
                         <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '250'." data-val-maxlength-max="250" data-val-required="The Name field is required." maxlength="250" name="Parameters[` + parameterCount + `].ParameterName">

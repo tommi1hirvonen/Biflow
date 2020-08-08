@@ -154,7 +154,7 @@ namespace EtlManager.Pages.Jobs.Steps
                     {
                         _context.Parameters.Remove(parameter);
                     }
-                    else
+                    else if (!parameter.IsDeleted)
                     {
                         _context.Attach((Parameter)parameter).State = EntityState.Modified;
                     }
