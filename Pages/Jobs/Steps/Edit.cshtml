@@ -5,19 +5,27 @@
     ViewData["Title"] = "Edit";
 }
 
-<h4>Edit</h4>
-<hr />
 <form id="form" method="post">
+
+    <nav class="navbar border-bottom sticky-top bg-white navbar-expand-md">
+        <ul class="navbar-nav mr-3">
+            <li class="nav-item">
+                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
+            </li>
+        </ul>
+        <ul class="navbar-nav mr-3">
+            <li class="nav-item">
+                <a class="btn btn-secondary" asp-page="./Index" asp-route-id="@Model.Step.JobId">Back</a>
+            </li>
+        </ul>     
+    </nav>
+
+
+    <p />
     <div class="row">
         <div class="col-md-8">
 
-            <div>
-                <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to list</a>
-            </div>
-            <p />
-            <div class="form-group">
-                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
-            </div>
+            
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
