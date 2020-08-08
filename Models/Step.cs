@@ -65,5 +65,7 @@ namespace EtlManager.Models
         public bool IsEnabled { get; set; }
 
         public ICollection<Dependency> Dependencies { get; set; }
+
+        public IList<Parameter> Parameters { get; set; }
     }
 }

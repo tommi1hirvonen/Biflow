@@ -7,9 +7,17 @@
 
 <h4>Edit</h4>
 <hr />
-<form method="post">
+<form id="form" method="post">
     <div class="row">
         <div class="col-md-8">
+
+            <div>
+                <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to list</a>
+            </div>
+            <p />
+            <div class="form-group">
+                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
+            </div>
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
@@ -74,7 +82,7 @@
 
             <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
             <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
-            
+
             <div class="form-group form-check" id="32_bit_mode_div">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
@@ -85,19 +93,53 @@
                 <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsEnabled)</label>
             </div>
             <p></p>
-            <div class="form-group">
-                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
-            </div>
+
         </div>
     </div>
 
-    <div>
-        <a asp-page="./Index" asp-route-id="@Model.Step.JobId">Back to list</a>
+    <div id="parameters_div">
+        <p />
+        <h5>Parameters</h5>
+        <p />
+        <table id="parameters_table" class="table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Parameter name</th>
+                    <th>Parameter value</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
+                @for (int index = 0; index < Model.Step.Parameters.Count; index++)
+                {
+                    <tr>
+                        <td>
+                            @Html.HiddenFor(m => m.Parameters[index].ParameterId)
+                            @Html.HiddenFor(m => m.Parameters[index].StepId)
+                            <input id="input_isdeleted" type="hidden" asp-for="Parameters[index].IsDeleted" value="false" />
+                        </td>
+                        <td>
+                            <input id="input_parameter_name" asp-for="Parameters[index].ParameterName" class="form-control" />
+                            <span asp-validation-for="Parameters[index].ParameterName" class="text-danger"></span>
+                        </td>
+                        <td>
+                            <input id="input_parameter_value" asp-for="Parameters[index].ParameterValue" class="form-control" />
+                            <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
     </div>
 
-    <hr />
-
-    <h4>Dependencies</h4>
+    <p />
+    <h5>Dependencies</h5>
     <p />
     <table class="table">
         <thead>
@@ -116,31 +158,33 @@
         <tbody>
             @for (int index = 0; index < Model.DependencyEdits.Count; index++)
             {
-            <tr>
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
-                <td>
-                    @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
-                </td>
-                <td>
-                    <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
-                </td>
-                <td>
-                    <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
-                </td>
-            </tr>
+                <tr>
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
+                    <td>
+                        @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
+                    </td>
+                    <td>
+                        <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
+                    </td>
+                    <td>
+                        <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
+                    </td>
+                </tr>
             }
         </tbody>
     </table>
 </form>
 
-<hr/>
+<hr />
 
 <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
 
 @section Scripts {
-    
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
     <script type="text/javascript">
         $(document).ready(function () { stepTypeSelected(); });
 
@@ -152,12 +196,14 @@
                 $('#project_div').hide();
                 $('#package_div').hide();
                 $('#32_bit_mode_div').hide();
+                $('#parameters_div').hide();
             } else if (stepType == "SSIS") {
                 $('#sql_statement_div').hide();
                 $('#folder_div').show();
                 $('#project_div').show();
                 $('#package_div').show();
                 $('#32_bit_mode_div').show();
+                $('#parameters_div').show();
             }
         }
 
@@ -201,5 +247,42 @@
         }
     </script>
 
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script type="text/javascript">
+        var parameterCount = @Model.Parameters.Count;
+
+        function addParameter() {
+            @*Remove the validator from the form...*@
+            $('#form').removeData("validator");
+            $('#form').removeData("unobtrusiveValidation");
+            $('#parameters_table tr:last').after(`
+                <tr>
+                    <td>
+                    </td>
+                        <td>
+                        <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '250'." data-val-maxlength-max="250" data-val-required="The Name field is required." maxlength="250" name="Parameters[` + parameterCount + `].ParameterName">
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
+                    </td>
+                        <td>
+                        <input id="input_parameter_value" class="form-control" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                    </td>
+                </tr>
+                `);
+            parameterCount += 1;
+            @*...and add it again to include the newly added fields in the validator.*@
+            $.validator.unobtrusive.parse("form");
+            return false;
+        }
+
+        function removeParameter(element) {
+            $(element).closest('tr').find("#input_isdeleted").val(true);
+            $(element).closest('tr').find("#input_parameter_name").val("_"); @*Set the input values to strings of length = 1 to prevent jQuery validation errors*@
+            $(element).closest('tr').find("#input_parameter_value").val("_");
+            $(element).closest('tr').hide();
+        }
+    </script>
+
 }

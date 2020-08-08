@@ -29,6 +29,9 @@ namespace EtlManager.Pages.Jobs.Steps
         [BindProperty]
         public IList<DependencyEdit> DependencyEdits { get; set; } = new List<DependencyEdit>();
 
+        [BindProperty]
+        public IList<ParameterEdit> Parameters { get; set; } = new List<ParameterEdit>();
+
         public async Task<IActionResult> OnGetAsync(Guid? id)
         {
             if (id == null)
@@ -38,11 +41,14 @@ namespace EtlManager.Pages.Jobs.Steps
 
             Step = await _context.Steps
                 .Include(step => step.Job)
+                .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
                 .ThenInclude(dependency => dependency.DependantOnStep)
                 .FirstOrDefaultAsync(m => m.StepId == id);
 
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == Step.JobId);
+
+            Parameters = Step.Parameters.Select(parameter => new ParameterEdit(parameter)).ToList();
 
             // Iterate through all the steps in this job except for the current step.
             foreach (var step in Job.Steps.Where(step_ => step_.StepId != Step.StepId))
@@ -90,7 +96,7 @@ namespace EtlManager.Pages.Jobs.Steps
         {
             if (!ModelState.IsValid)
             {
-                return Page();
+                return RedirectToPage("./Edit", new { id = Step.StepId });
             }
 
             // The JobId property of the Job member of Step is lost. Restore it before saving.
@@ -129,7 +135,33 @@ namespace EtlManager.Pages.Jobs.Steps
                     _context.Dependencies.Remove(dependency);
                 }
             }
+
+
+            if (Step.StepType == "SSIS")
+            {
+                // Iterate through the parameters of the form and compare them to the current ones retrieved from db.
+                // Deleted parameters are marked with IsDeleted.
+                IList<Parameter> parameters = await _context.Parameters.AsNoTracking().Where(p => p.StepId == Step.StepId).ToListAsync();
+                foreach (var parameter in Parameters)
+                {
+                    if (!parameter.IsDeleted && !parameters.Select(p => p.ParameterId).Contains(parameter.ParameterId))
+                    {
+                        parameter.ParameterId = Guid.NewGuid();
+                        parameter.StepId = Step.StepId;
+                        _context.Parameters.Add(parameter);
+                    }
+                    else if (parameter.IsDeleted && parameters.Select(p => p.ParameterId).Contains(parameter.ParameterId))
+                    {
+                        _context.Parameters.Remove(parameter);
+                    }
+                    else
+                    {
+                        _context.Attach((Parameter)parameter).State = EntityState.Modified;
+                    }
+                }
+            }
             
+
             _context.Attach(Step).State = EntityState.Modified;
 
             try

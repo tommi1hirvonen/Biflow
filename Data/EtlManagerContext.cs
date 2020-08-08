@@ -22,6 +22,8 @@ namespace EtlManager.Data
         public DbSet<Dependency> Dependencies { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
 
+        public DbSet<Parameter> Parameters { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("etlmanager");
@@ -52,6 +54,12 @@ namespace EtlManager.Data
                 .ToTable("Schedule")
                 .HasOne(schedule => schedule.Job)
                 .WithMany(job => job.Schedules)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Parameter>()
+                .ToTable("Parameter")
+                .HasOne(parameter => parameter.Step)
+                .WithMany(step => step.Parameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
         }
