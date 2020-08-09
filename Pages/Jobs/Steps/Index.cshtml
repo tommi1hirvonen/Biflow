@@ -24,12 +24,19 @@
                         Execute
                     </button>
                     <div class="dropdown-menu">
-                        <button class="dropdown-item" asp-page-handler="Execute" asp-route-id="@Model.Job.JobId" asp-route-redirect="true">Confirm</button>
+                        <button class="dropdown-item" type="button" onclick="startExecution()">Confirm</button>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+</div>
+<p />
+<div id="alert_execution">
+    
+</div>
+<div id="alert_execution_error" style="display: none;" class="alert alert-danger" role="alert">
+    Alert message set in jQuery
 </div>
 <p></p>
 
@@ -127,11 +134,62 @@
                     //alert(response);
                 },
                 failure: function (response) {
-                    alert("AJAX error");
+                    alert("Error enabling/disabling step");
                 }
             });
         }
 
+    </script>
+
+    <script type="text/javascript">
+        function startExecution() {
+            var jobId = "@Model.Job.JobId";
+            $.ajax({
+                url: "./Steps/Index?handler=Execute",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: jobId
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#alert_execution').empty();
+                        $('#alert_execution').append(`
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                              Job started successfully - <a class="alert-link" href="/Executions/Jobs">monitor execution</a>
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                    } else {
+                        $('#alert_execution').empty();
+                        $('#alert_execution').append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                              ` + response.responseText + `
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                    }
+                },
+                error: function (response) {
+                    $('#alert_execution').empty();
+                    $('#alert_execution').append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                              Error starting job: AJAX error
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                }
+            });
+        }
     </script>
 
     <script type="text/javascript">

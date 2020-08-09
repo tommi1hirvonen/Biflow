@@ -48,21 +48,20 @@ namespace EtlManager
 
         public async static Task StartExecution(IConfiguration configuration, Job job)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[JobExecute] @JobId = @JobId_"
                 , sqlConnection);
-            
+
             sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
-            await sqlConnection.CloseAsync();
         }
 
         public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "UPDATE [etlmanager].[Step]\n" +
                 "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
@@ -73,12 +72,11 @@ namespace EtlManager
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
-            await sqlConnection.CloseAsync();
         }
 
         public async static Task JobCopy(IConfiguration configuration, Guid jobId)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[JobCopy] @JobId = @JobId_"
                 , sqlConnection);
@@ -86,12 +84,11 @@ namespace EtlManager
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
-            await sqlConnection.CloseAsync();
         }
 
         public static bool AuthenticateUser(IConfiguration configuration, string username, string password)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
@@ -100,7 +97,6 @@ namespace EtlManager
 
             sqlConnection.Open();
             int result = (int)sqlCommand.ExecuteScalar();
-            sqlConnection.Close();
 
             if (result > 0) return true;
             else return false;
@@ -108,7 +104,7 @@ namespace EtlManager
 
         public static bool UpdatePassword(IConfiguration configuration, string username, string password)
         {
-            SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
                 , sqlConnection);
@@ -117,7 +113,6 @@ namespace EtlManager
 
             sqlConnection.Open();
             int result = (int)sqlCommand.ExecuteScalar();
-            sqlConnection.Close();
 
             if (result > 0) return true;
             else return false;

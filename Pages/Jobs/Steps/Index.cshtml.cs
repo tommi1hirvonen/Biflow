@@ -47,33 +47,30 @@ namespace EtlManager.Pages.Jobs.Steps
         /// <param name="id"></param>
         /// <param name="redirect">true if the user should be redirected to Executions/Index, false if not</param>
         /// <returns></returns>
-        public async Task<IActionResult> OnPostExecuteAsync(Guid id, bool redirect)
+        public async Task<IActionResult> OnPostExecute(Guid id)
         {
             if (id == null)
             {
-                return NotFound();
+                return new JsonResult("Id argument was null");
             }
 
             Job = await _context.Jobs.FindAsync(id);
 
             if (Job == null)
             {
-                return NotFound();
+                return new JsonResult("No job found with provided id");
             }
 
-            await Utility.StartExecution(_configuration, Job);
+            try
+            {
+                await Utility.StartExecution(_configuration, Job);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error starting job: " + ex.Message });
+            }
 
-            if (redirect)
-            {
-                return RedirectToPage("../../Executions/Jobs");
-            }
-            else
-            {
-                // Load again for post
-                Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
-                Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
-                return Page();
-            }
+            return new JsonResult(new { success = true, responseText = "Job started successfully" });
         }
 
         public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
