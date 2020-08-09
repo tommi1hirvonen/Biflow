@@ -19,7 +19,7 @@ namespace EtlManager.Models
         public Guid StepId { get; set; }
 
         [Required]
-        [MaxLength(250)]
+        [MaxLength(128)]
         [Display(Name = "Name")]
         public string ParameterName { get; set; }
 

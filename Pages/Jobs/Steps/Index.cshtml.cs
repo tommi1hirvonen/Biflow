@@ -29,6 +29,9 @@ namespace EtlManager.Pages.Jobs.Steps
         [BindProperty]
         public Step NewStep { get; set; }
 
+        [BindProperty]
+        public IList<ParameterEdit> Parameters { get; set; } = new List<ParameterEdit>();
+
         public async Task OnGetAsync(Guid id)
         {
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
@@ -110,6 +113,18 @@ namespace EtlManager.Pages.Jobs.Steps
             if (!ModelState.IsValid)
             {
                 return Page();
+            }
+
+            if (NewStep.StepType == "SSIS")
+            {
+                NewStep.Parameters = new List<Parameter>();
+                foreach (var parameter in Parameters)
+                {
+                    if (!parameter.IsDeleted)
+                    {
+                        NewStep.Parameters.Add(parameter);
+                    }
+                }
             }
 
             _context.Steps.Add(NewStep);

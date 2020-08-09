@@ -34,15 +34,15 @@ namespace EtlManager.Models
         [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 
-        [MaxLength(250)]
+        [MaxLength(128)]
         [Display(Name = "Folder name")]
         public string FolderName { get; set; }
 
-        [MaxLength(250)]
+        [MaxLength(128)]
         [Display(Name = "Project name")]
         public string ProjectName { get; set; }
 
-        [MaxLength(250)]
+        [MaxLength(260)]
         [Display(Name = "Package name")]
         public string PackageName { get; set; }
 

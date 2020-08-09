@@ -113,8 +113,8 @@
             <thead>
                 <tr>
                     <th></th>
-                    <th>Parameter name</th>
-                    <th>Parameter value</th>
+                    <th>Name</th>
+                    <th>Value</th>
                     <th></th>
                 </tr>
             </thead>
@@ -268,7 +268,7 @@
                         <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
                     </td>
                         <td>
-                        <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '250'." data-val-maxlength-max="250" data-val-required="The Name field is required." maxlength="250" name="Parameters[` + parameterCount + `].ParameterName">
+                        <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
                     </td>
                         <td>
