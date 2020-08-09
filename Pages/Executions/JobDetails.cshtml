@@ -5,17 +5,25 @@
     ViewData["Title"] = "Details";
 }
 
-<p></p>
-<div class="btn-group btn-group-sm">
-    <a class="btn btn-outline-primary active">Table</a>
-    <a class="btn btn-outline-primary" asp-page="./JobDetailsGraph" asp-route-id="@Model.ExecutionId">Graph</a>
-</div>
-<p />
+
 <h4>@Model.JobExecution.JobName</h4>
-<p />
-<button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
-    Job details
-</button>
+<p></p>
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group btn-group-sm mr-2" role="group">
+        <button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
+            Job details
+        </button>
+    </div>
+    <div class="btn-group btn-group-sm mr-2" role="group">
+        <button id="button_toggle_table" class="btn btn-outline-primary active" onclick="toggleTable()">Table</button>
+        <button id="button_toggle_graph" class="btn btn-outline-primary" onclick="toggleGraph()">Graph</button>
+    </div>
+    <div id="button_group_graph" style="display: none;" class="btn-group btn-group-sm mr-2" role="group">
+        <button id="button_toggle_expanded" class="btn btn-outline-primary btn-sm active" onclick="toggleGraphExpanded()">Expanded</button>
+        <button id="button_toggle_collapsed" class="btn btn-outline-primary btn-sm" onclick="toggleGraphCollapsed()">Collapsed</button>
+    </div>
+</div>
+
 <p />
 <div class="collapse" id="jobDetails">
     <div class="card card-body">
@@ -76,8 +84,9 @@
     </div>
 </div>
 
-<p></p>
-<table class="table">
+
+
+<table id="steps_table" class="table">
     <thead>
         <tr>
             <th>
@@ -143,6 +152,197 @@
         }
     </tbody>
 </table>
+
+
+
+<div id="steps_graph" style="display: none;">
+    <div id="graph_expanded">
+        <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeight">
+            <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
+                <g transform="translate(0,@(Model.ChartHeight-Model.ChartPaddingTop-25))">
+                    <g transform="translate(0,0)">
+                        <line y2="6" x2="0" style="stroke: #000;"></line>
+                        <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MinTime.ToString("HH:mm")</text>
+                    </g>
+                </g>
+                <g transform="translate(@(Model.ChartWidth-Model.ChartPaddingLeft),@(Model.ChartHeight-Model.ChartPaddingTop-25))">
+                    <g transform="translate(0,0)">
+                        <line y2="6" x2="0" style="stroke: #000;"></line>
+                        <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
+                    </g>
+                </g>
+                @foreach (var execution in Model.Executions)
+                {
+                    <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))">
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
+                    </g>
+                }
+                @foreach (var execution in Model.Executions)
+                {
+                    <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
+                          y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                          height="@(Model.BarHeight.ToString().Replace(',', '.'))"
+                          x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                          width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"
+                          data-toggle="modal" data-target="#modal_@execution.StepExecutionId">
+                        <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
+                    </rect>
+                }
+            </g>
+        </svg>
+    </div>
+    
+    <div id="graph_collapsed" style="display: none;">
+        <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeightCollapsed">
+            <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
+                <g transform="translate(0,@(Model.ChartHeightCollapsed-Model.ChartPaddingTop-25))">
+                    <g transform="translate(0,0)">
+                        <line y2="6" x2="0" style="stroke: #000;"></line>
+                        <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MinTime.ToString("HH:mm")</text>
+                    </g>
+                </g>
+                <g transform="translate(@(Model.ChartWidth-Model.ChartPaddingLeft),@(Model.ChartHeightCollapsed-Model.ChartPaddingTop-25))">
+                    <g transform="translate(0,0)">
+                        <line y2="6" x2="0" style="stroke: #000;"></line>
+                        <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
+                    </g>
+                </g>
+                @foreach (var execution in Model.Executions)
+                {
+                    <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocationCollapsed))">
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
+                    </g>
+                }
+                @foreach (var execution in Model.Executions)
+                {
+                    <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
+                          y="@(Model.ChartElements[execution.StepExecutionId].BarYLocationCollapsed)"
+                          height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
+                          x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                          width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"
+                          data-toggle="modal" data-target="#modal_@execution.StepExecutionId">
+                        <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
+                    </rect>
+                }
+            </g>
+        </svg>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+@functions {
+    public string GetFillFromStatus(string status)
+    {
+        switch (status)
+        {
+            case "COMPLETED":
+                return "#28a745"; // green
+            case "FAILED":
+                return "#dc3545"; // red
+            case "SKIPPED":
+                return "#ffc107"; // orange
+            case "RUNNING":
+            default:
+                return "#007bff"; // blue
+        }
+    }
+}
+
+@section Scripts {
+    <script type="text/javascript">
+
+        function toggleTable() {
+            $('#steps_graph').hide();
+            $('#steps_table').show();
+            $('#button_toggle_graph').removeClass('active');
+            $('#button_toggle_table').addClass('active');
+            $('#button_group_graph').hide();
+        }
+
+        function toggleGraph() {
+            $('#steps_table').hide();
+            $('#steps_graph').show();
+            $('#button_toggle_table').removeClass('active');
+            $('#button_toggle_graph').addClass('active');
+            $('#button_group_graph').show();
+        }
+
+        function toggleGraphExpanded() {
+            $('#graph_collapsed').hide();
+            $('#graph_expanded').show();
+            $('#button_toggle_expanded').addClass('active');
+            $('#button_toggle_collapsed').removeClass('active');
+        }
+
+        function toggleGraphCollapsed() {
+            $('#graph_expanded').hide();
+            $('#graph_collapsed').show();
+            $('#button_toggle_expanded').removeClass('active');
+            $('#button_toggle_collapsed').addClass('active');
+        }
+
+
+        // Function to darken the rect elements when mouse hovering over them
+        $(function () {
+            $('rect').mouseenter(function () {
+                var oldColor = $(this).css('fill');
+                var newColor = lightenDarkenColor(rgbToHex(oldColor), -20);
+                $(this).css({ 'fill': newColor });
+            });
+            $('rect').mouseleave(function () {
+                var oldColor = $(this).css('fill');
+                var newColor = lightenDarkenColor(rgbToHex(oldColor), 25);
+                $(this).css({ 'fill': newColor });
+            });
+        });
+
+        function lightenDarkenColor(col, amt) {
+            var usePound = false;
+            if (col[0] == "#") {
+                col = col.slice(1);
+                usePound = true;
+            }
+
+            var num = parseInt(col, 16);
+
+            var r = (num >> 16) + amt;
+            if (r > 255) r = 255;
+            else if (r < 0) r = 0;
+
+            var b = ((num >> 8) & 0x00FF) + amt;
+            if (b > 255) b = 255;
+            else if (b < 0) b = 0;
+
+            var g = (num & 0x0000FF) + amt;
+            if (g > 255) g = 255;
+            else if (g < 0) g = 0;
+
+            return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+        }
+
+        var hexDigits = new Array
+            ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
+
+        function rgbToHex(rgb) {
+            rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+        }
+
+        function hex(x) {
+            return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+        }
+    </script>
+}
+
+
+
 
 @*Generate modal popup windows to display step execution details*@
 @foreach (var item in Model.Executions)
