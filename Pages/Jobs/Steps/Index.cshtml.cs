@@ -61,16 +61,18 @@ namespace EtlManager.Pages.Jobs.Steps
                 return new JsonResult("No job found with provided id");
             }
 
+            Guid executionId_;
+
             try
             {
-                await Utility.StartExecution(_configuration, Job);
+                executionId_ = await Utility.StartExecution(_configuration, Job);
             }
             catch (Exception ex)
             {
                 return new JsonResult(new { success = false, responseText = "Error starting job: " + ex.Message });
             }
 
-            return new JsonResult(new { success = true, responseText = "Job started successfully" });
+            return new JsonResult(new { success = true, responseText = "Job started successfully", executionId = executionId_ });
         }
 
         public async Task<IActionResult> OnPostToggleEnabled(Guid? id)

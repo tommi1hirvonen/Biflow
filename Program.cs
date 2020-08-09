@@ -46,7 +46,7 @@ namespace EtlManager
             return value;
         }
 
-        public async static Task StartExecution(IConfiguration configuration, Job job)
+        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -56,7 +56,8 @@ namespace EtlManager
             sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
 
             await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+            Guid executionId = (Guid) await sqlCommand.ExecuteScalarAsync();
+            return executionId;
         }
 
         public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
