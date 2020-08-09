@@ -21,7 +21,8 @@ namespace EtlManager.Pages.Executions
 
         public Guid ExecutionId { get; set; }
 
-        public bool Collapsed { get; set; }
+        public bool Graph = false;
+        public bool Collapsed = false;
 
         public IList<StepExecution> Executions { get; set; }
 
@@ -52,7 +53,7 @@ namespace EtlManager.Pages.Executions
         private const int MinWidth = 5;
 
 
-        public async Task OnGetAsync(Guid id)
+        public async Task OnGetAsync(Guid id, bool graph = false, bool collapsed = false)
         {
             ExecutionId = id;
             Executions = await _context.Executions
@@ -63,6 +64,8 @@ namespace EtlManager.Pages.Executions
             JobExecution = await _context.JobExecutions
                 .FirstOrDefaultAsync(e => e.ExecutionId == id);
 
+            Graph = graph;
+            Collapsed = collapsed;
 
             // Calculate chart properties
 

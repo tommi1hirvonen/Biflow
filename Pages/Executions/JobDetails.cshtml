@@ -10,17 +10,22 @@
 <p></p>
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group btn-group-sm mr-2" role="group">
+        <a id="button_refresh" class="btn btn-primary btn-sm" asp-page="./JobDetails" asp-route-id="@Model.JobExecution.ExecutionId" asp-route-graph="@Model.Graph" asp-route-collapsed="@Model.Collapsed">
+            Refresh
+        </a>
+    </div>
+    <div class="btn-group btn-group-sm mr-2" role="group">
         <button class="btn btn-outline-primary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
             Job details
         </button>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_table" class="btn btn-outline-primary active" onclick="toggleTable()">Table</button>
-        <button id="button_toggle_graph" class="btn btn-outline-primary" onclick="toggleGraph()">Graph</button>
+        <button id="button_toggle_table" class="btn btn-outline-primary @(Model.Graph ? "" : "active")" onclick="toggleTable()">Table</button>
+        <button id="button_toggle_graph" class="btn btn-outline-primary @(Model.Graph ? "active" : "")" onclick="toggleGraph()">Graph</button>
     </div>
-    <div id="button_group_graph" style="display: none;" class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_expanded" class="btn btn-outline-primary btn-sm active" onclick="toggleGraphExpanded()">Expanded</button>
-        <button id="button_toggle_collapsed" class="btn btn-outline-primary btn-sm" onclick="toggleGraphCollapsed()">Collapsed</button>
+    <div id="button_group_graph" style="@(Model.Graph ? "" : "display: none;")" class="btn-group btn-group-sm mr-2" role="group">
+        <button id="button_toggle_expanded" class="btn btn-outline-primary btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">Expanded</button>
+        <button id="button_toggle_collapsed" class="btn btn-outline-primary btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">Collapsed</button>
     </div>
 </div>
 
@@ -86,7 +91,7 @@
 
 
 
-<table id="steps_table" class="table">
+<table id="steps_table" class="table" style="@(Model.Graph ? "display: none;" : "")">
     <thead>
         <tr>
             <th>
@@ -155,8 +160,8 @@
 
 
 
-<div id="steps_graph" style="display: none;">
-    <div id="graph_expanded">
+<div id="steps_graph" style="@(Model.Graph ? "" : "display: none;")">
+    <div id="graph_expanded" style="@(Model.Collapsed ? "display: none;" : "")">
         <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeight">
             <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
                 <g transform="translate(0,@(Model.ChartHeight-Model.ChartPaddingTop-25))">
@@ -192,7 +197,7 @@
         </svg>
     </div>
     
-    <div id="graph_collapsed" style="display: none;">
+    <div id="graph_collapsed" style="@(Model.Collapsed ? "" : "display: none;")">
         <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeightCollapsed">
             <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
                 <g transform="translate(0,@(Model.ChartHeightCollapsed-Model.ChartPaddingTop-25))">
@@ -257,6 +262,13 @@
 
 @section Scripts {
     <script type="text/javascript">
+        var executionId = "@Model.JobExecution.ExecutionId";
+        var graph = @(Model.Graph ? "true" : "false");
+        var collapsed = @(Model.Collapsed ? "true" : "false");
+
+        function updateRefreshLink() {
+            $('#button_refresh').attr('href', "/Executions/JobDetails?id=" + executionId + "&graph=" + graph + "&collapsed=" + collapsed);
+        }
 
         function toggleTable() {
             $('#steps_graph').hide();
@@ -264,6 +276,8 @@
             $('#button_toggle_graph').removeClass('active');
             $('#button_toggle_table').addClass('active');
             $('#button_group_graph').hide();
+            graph = false;
+            updateRefreshLink();
         }
 
         function toggleGraph() {
@@ -272,6 +286,8 @@
             $('#button_toggle_table').removeClass('active');
             $('#button_toggle_graph').addClass('active');
             $('#button_group_graph').show();
+            graph = true;
+            updateRefreshLink();
         }
 
         function toggleGraphExpanded() {
@@ -279,6 +295,8 @@
             $('#graph_expanded').show();
             $('#button_toggle_expanded').addClass('active');
             $('#button_toggle_collapsed').removeClass('active');
+            collapsed = false;
+            updateRefreshLink();
         }
 
         function toggleGraphCollapsed() {
@@ -286,6 +304,8 @@
             $('#graph_collapsed').show();
             $('#button_toggle_expanded').removeClass('active');
             $('#button_toggle_collapsed').addClass('active');
+            collapsed = true;
+            updateRefreshLink();
         }
 
 
