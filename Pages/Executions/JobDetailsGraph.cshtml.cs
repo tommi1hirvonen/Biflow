@@ -22,6 +22,8 @@ namespace EtlManager.Pages.Executions
         public Guid ExecutionId { get; set; }
         public bool Collapsed { get; set; }
 
+        public JobExecution JobExecution { get; set; }
+
         public IList<StepExecution> Executions { get; set; }
 
         public Dictionary<string, ChartElement> ChartElements = new Dictionary<string, ChartElement>();
@@ -49,6 +51,9 @@ namespace EtlManager.Pages.Executions
                 .OrderBy(execution => execution.CreatedDateTime)
                 .ThenBy(execution => execution.StartDateTime)
                 .ToListAsync();
+
+            JobExecution = await _context.JobExecutions
+                .FirstOrDefaultAsync(e => e.ExecutionId == id);
 
             if (collapsed)
             {
