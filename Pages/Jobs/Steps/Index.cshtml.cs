@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
-
+using Microsoft.AspNetCore.Hosting;
 
 namespace EtlManager.Pages.Jobs.Steps
 {
@@ -15,11 +15,13 @@ namespace EtlManager.Pages.Jobs.Steps
     {
         private readonly IConfiguration _configuration;
         private readonly Data.EtlManagerContext _context;
+        public readonly string WebRootPath;
 
-        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context)
+        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IWebHostEnvironment webHostEnvironment)
         {
             _configuration = configuration;
             _context = context;
+            WebRootPath = webHostEnvironment.WebRootPath;
         }
 
         public IList<Step> Steps { get;set; }

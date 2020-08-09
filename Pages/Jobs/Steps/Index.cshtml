@@ -62,7 +62,14 @@
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.StepType)
+                    @if (item.StepType == "SQL")
+                    {
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/code-black-48dp.svg")))
+                    }
+                    else if (item.StepType == "SSIS")
+                    {
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                    }
                 </td>
                 <td>
                     <form>
