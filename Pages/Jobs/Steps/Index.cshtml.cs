@@ -41,12 +41,7 @@ namespace EtlManager.Pages.Jobs.Steps
             NewStep = new Step { JobId = id };
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="redirect">true if the user should be redirected to Executions/Index, false if not</param>
-        /// <returns></returns>
+        
         public async Task<IActionResult> OnPostExecute(Guid id)
         {
             if (id == null)
@@ -96,16 +91,29 @@ namespace EtlManager.Pages.Jobs.Steps
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return new JsonResult("Id argument was null");
+            }
 
             Step step = await _context.Steps.FindAsync(id);
 
-            if (step == null) return NotFound();
+            if (step == null)
+            {
+                return new JsonResult("No step found for id " + id);
+            }
 
-            _context.Steps.Remove(step);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Steps.Remove(step);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error deleting step: " + ex.Message });
+            }
 
-            return RedirectToPage("./Index", new { id = step.JobId });
+            return new JsonResult(new { success = true });
         }
 
         public async Task<IActionResult> OnPostCreate()

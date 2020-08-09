@@ -9,27 +9,25 @@
 <hr />
 <p></p>
 <div>
-    <form method="post">
-        <div class="row">
-            <div class="col">
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-                    New step
+    <div class="row">
+        <div class="col">
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                New step
+            </button>
+        </div>
+        <div class="col float-right">
+            <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
+            <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Execute
                 </button>
-            </div>
-            <div class="col float-right">
-                <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
-                <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Execute
-                    </button>
-                    <div class="dropdown-menu">
-                        <button class="dropdown-item" type="button" onclick="startExecution()">Confirm</button>
-                    </div>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item" type="button" onclick="startExecution()">Confirm</button>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 </div>
 <p />
 <div id="alert_execution">
@@ -87,21 +85,19 @@
                     </form>
                 </td>
                 <td>
-                    <form method="post">
-                        <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
-                        @*Open corresponding modal popup to display step execution details*@
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
-                            Details
-                        </button> |
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Delete
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.StepId">Confirm</button>
-                            </div>
+                    <a class="btn btn-link btn-sm" asp-page="./Edit" asp-route-id="@item.StepId">Edit</a> |
+                    @*Open corresponding modal popup to display step execution details*@
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
+                        Details
+                    </button> |
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Delete
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
                         </div>
-                    </form>
+                    </div>
                 </td>
             </tr>
         }
@@ -139,6 +135,28 @@
             });
         }
 
+    </script>
+
+    <script type="text/javascript">
+        function deleteStep(element, id) {
+            $.ajax({
+                url: "./Steps/Index?handler=Delete",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id
+                },
+                success: function (response) {
+                    $(element).closest('tr').remove();
+                },
+                failure: function (response) {
+                    alert(response.responseText);
+                }
+            });
+        }
     </script>
 
     <script type="text/javascript">
