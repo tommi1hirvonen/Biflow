@@ -48,17 +48,155 @@
             }
             @foreach (var execution in Model.Executions)
             {
-                <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus);"
-                        y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
-                        height="@(Model.BarHeight.ToString().Replace(',', '.'))"
-                        x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
-                        width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)">
+                <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
+                      y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                      height="@(Model.BarHeight.ToString().Replace(',', '.'))"
+                      x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
+                      width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"
+                      data-toggle="modal" data-target="#modal_@execution.StepExecutionId">
                     <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
                 </rect>
             }
         </g>
     </svg>
 </div>
+
+
+@*Generate modal popup windows to display step execution details*@
+@foreach (var item in Model.Executions)
+{
+    <div class="modal fade" id="modal_@item.StepExecutionId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">@item.StepName</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <dl class="row">
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecutionId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.ExecutionId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.JobId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.JobId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.JobName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.JobName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepId)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepId)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepName)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepName)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StepType)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StepType)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.CreatedDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.CreatedDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.StartDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.StartDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.EndDateTime)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @Html.DisplayFor(model => item.EndDateTime)
+                        </dd>
+                        <dt class="col-sm-2">
+                            <text>Duration</text>
+                        </dt>
+                        <dd class="col-sm-10">
+                            <text>@item.GetDurationInReadableFormat()</text>
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ExecutionStatus)
+                        </dt>
+                        <dd class="col-sm-10">
+                            @{
+                                switch (item.ExecutionStatus)
+                                {
+                                    case "COMPLETED":
+                                        <span class="badge badge-success">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    case "FAILED":
+                                        <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    case "SKIPPED":
+                                        <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-primary">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                }
+                            }
+                        </dd>
+                        <dt class="col-sm-2">
+                            @Html.DisplayNameFor(model => item.ErrorMessage)
+                        </dt>
+                        <dd class="col-sm-10">
+                            <text class="text-danger" style="white-space: pre-wrap">@item.ErrorMessage</text>
+                        </dd>
+                        @if (item.StepType == "SQL")
+                        {
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.SqlStatement)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.SqlStatement)
+                            </dd>
+                        }
+                        else if (item.StepType == "SSIS")
+                        {
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.PackagePath)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.PackagePath)
+                            </dd>
+                            <dt class="col-sm-2">
+                                @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
+                            </dt>
+                            <dd class="col-sm-10">
+                                @Html.DisplayFor(model => item.ExecuteIn32BitMode)
+                            </dd>
+                        }
+                    </dl>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @functions {
     public string GetFillFromStatus(string status)
@@ -76,4 +214,58 @@
                 return "#007bff"; // blue
         }
     }
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        // Function to darken the rect elements when mouse hovering over them
+        $(function () {
+            $('rect').mouseenter(function () {
+                var oldColor = $(this).css('fill');
+                var newColor = lightenDarkenColor(rgbToHex(oldColor), -20);
+                $(this).css({ 'fill': newColor });
+            });
+            $('rect').mouseleave(function () {
+                var oldColor = $(this).css('fill');
+                var newColor = lightenDarkenColor(rgbToHex(oldColor), 25);
+                $(this).css({ 'fill': newColor });
+            });
+        });
+
+        function lightenDarkenColor(col, amt) {
+            var usePound = false;
+            if (col[0] == "#") {
+                col = col.slice(1);
+                usePound = true;
+            }
+
+            var num = parseInt(col, 16);
+
+            var r = (num >> 16) + amt;
+            if (r > 255) r = 255;
+            else if (r < 0) r = 0;
+
+            var b = ((num >> 8) & 0x00FF) + amt;
+            if (b > 255) b = 255;
+            else if (b < 0) b = 0;
+
+            var g = (num & 0x0000FF) + amt;
+            if (g > 255) g = 255;
+            else if (g < 0) g = 0;
+
+            return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+        }
+
+        var hexDigits = new Array
+            ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
+
+        function rgbToHex(rgb) {
+            rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+        }
+
+        function hex(x) {
+            return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+        }
+    </script>
 }
