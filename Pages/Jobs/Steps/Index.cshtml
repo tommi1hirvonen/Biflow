@@ -223,6 +223,30 @@
         }
     </script>
 
+    <script type="text/javascript">
+        $('#button_submit').click(
+            function () {
+                var parameterNames = [];
+                $("input[id=input_parameter_name]").each(function () {
+                    parameterNames.push(this.value);
+                });
+                parameterNames = parameterNames.sort();
+                for (var i = 0; i < parameterNames.length - 1; i++) {
+                    if (parameterNames[i + 1] == parameterNames[i]) {
+                        $('#duplicate_parameter_error').show();
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+        $(function () {
+            $("#parameters_div").on('input', function () {
+                $('#duplicate_parameter_error').hide();
+            });
+        });
+    </script>
+
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
 }
@@ -312,6 +336,10 @@
                                         <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
                                     </tbody>
                                 </table>
+                                <div id="duplicate_parameter_error" style="display: none;">
+                                    <text class="text-danger">Duplicate parameter names</text>
+                                    <p />
+                                </div>
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
                             </div>
                         </div>
