@@ -215,7 +215,7 @@
                 @foreach (var execution in Model.Executions)
                 {
                     <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocationCollapsed))">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");">@execution.StepName</text>
                     </g>
                 }
                 @foreach (var execution in Model.Executions)

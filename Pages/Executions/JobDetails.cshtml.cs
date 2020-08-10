@@ -33,7 +33,7 @@ namespace EtlManager.Pages.Executions
         public Dictionary<string, ChartElement> ChartElements = new Dictionary<string, ChartElement>();
 
         public int ChartHeight;
-        public int ChartHeightCollapsed = 500;
+        public int ChartHeightCollapsed = 550;
 
         public int ChartPaddingTop = 25;
 
