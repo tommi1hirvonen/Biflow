@@ -176,23 +176,22 @@
                         <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
                     </g>
                 </g>
-                @foreach (var execution in Model.Executions)
+                @foreach (var chartElement in Model.ChartElements)
                 {
-                    <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))">
+                    <g transform="translate(0,@chartElement.LabelYLocation)">
                         <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;"
-                              data-toggle="modal" data-target="#modal_@execution.StepExecutionId">@execution.StepName</text>
+                              data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
                     </g>
                 }
-                @foreach (var execution in Model.Executions)
+                @foreach (var chartElement in Model.ChartElements)
                 {
-                    <rect status="@execution.ExecutionStatus"
-                          style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
-                          y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
+                    <rect status="@chartElement.ExecutionStatus"
+                          style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
+                          y="@chartElement.BarYLocation"
                           height="@(Model.BarHeight.ToString().Replace(',', '.'))"
-                          x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
-                          width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"
-                          data-toggle="modal" data-target="#modal_@execution.StepExecutionId">
-                        <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
+                          x="@chartElement.BarXLocation"
+                          width="@chartElement.BarWidth"
+                          data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
                     </rect>
                 }
             </g>
@@ -214,23 +213,22 @@
                         <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
                     </g>
                 </g>
-                @foreach (var execution in Model.Executions)
+                @foreach (var chartElement in Model.ChartElements)
                 {
-                    <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocationCollapsed))">
+                    <g transform="translate(0,@chartElement.LabelYLocationCollapsed)">
                         <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");"
-                              data-toggle="modal" data-target="#modal_@execution.StepExecutionId">@execution.StepName</text>
+                              data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
                     </g>
                 }
-                @foreach (var execution in Model.Executions)
+                @foreach (var chartElement in Model.ChartElements)
                 {
-                    <rect status="@execution.ExecutionStatus"
-                          style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
-                          y="@(Model.ChartElements[execution.StepExecutionId].BarYLocationCollapsed)"
+                    <rect status="@chartElement.ExecutionStatus"
+                          style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
+                          y="@chartElement.BarYLocationCollapsed"
                           height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
-                          x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
-                          width="@(Model.ChartElements[execution.StepExecutionId].BarWidth)"
-                          data-toggle="modal" data-target="#modal_@execution.StepExecutionId">
-                        <title>@execution.StepName - @execution.GetDurationInReadableFormat()</title>
+                          x="@chartElement.BarXLocation"
+                          width="@chartElement.BarWidth"
+                          data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
                     </rect>
                 }
             </g>

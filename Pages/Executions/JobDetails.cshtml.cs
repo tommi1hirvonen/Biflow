@@ -30,7 +30,7 @@ namespace EtlManager.Pages.Executions
 
 
 
-        public Dictionary<string, ChartElement> ChartElements = new Dictionary<string, ChartElement>();
+        public IList<ChartElement> ChartElements = new List<ChartElement>();
 
         public int ChartHeight;
         public int ChartHeightCollapsed = 550;
@@ -67,7 +67,17 @@ namespace EtlManager.Pages.Executions
             Graph = graph;
             Collapsed = collapsed;
 
-            if (JobExecution == null) JobExecution = new JobExecution { ExecutionId = id, JobName = "Waiting for execution to start..."};
+            if (JobExecution == null)
+            {
+                JobExecution = new JobExecution { ExecutionId = id, JobName = "Waiting for execution to start..." };
+                return;
+            }
+
+            // No steps were started, no need to calculate chart properties or add chart elements.
+            if (Executions.All(e => e.StartDateTime == null))
+            {
+                return;
+            }
 
             // Calculate chart properties
 
@@ -82,19 +92,14 @@ namespace EtlManager.Pages.Executions
             double yLocation = 0;
             double yLocationCollapsed = 0;
 
-            var minTime = Executions.Min(e => e.StartDateTime);
-            if (minTime != null)
-            {
-                MinTime = (DateTime)minTime;
-            }
-            else
-            {
-                return;
-            }
+            MinTime = (DateTime)Executions.Min(e => e.StartDateTime);
 
+            // If there are uncompleted steps
             if (Executions.Any(e => e.EndDateTime == null))
             {
-                MaxTime = Executions.Select(e => ((DateTime)e.StartDateTime).AddSeconds((double)e.ExecutionInSeconds)).Max();
+                MaxTime = Executions.Where(e => e.StartDateTime != null && e.ExecutionInSeconds != null)
+                    .Select(e => ((DateTime)e.StartDateTime).AddSeconds((double)e.ExecutionInSeconds))
+                    .Max();
             }
             else
             {
@@ -106,6 +111,7 @@ namespace EtlManager.Pages.Executions
 
             foreach (var execution in Executions)
             {
+                if (execution.StartDateTime == null) continue;
 
                 long startTicks = ((DateTime)execution.StartDateTime).Ticks;
                 double xLocation = (double)(startTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
@@ -124,8 +130,11 @@ namespace EtlManager.Pages.Executions
                 double width = endLocation - xLocation;
                 width = width >= MinWidth ? width : MinWidth; // minimum value for the width to prevent hidden bars with width = 0
 
-                ChartElements.Add(execution.StepExecutionId, new ChartElement
+                ChartElements.Add(new ChartElement
                 {
+                    StepExecutionId = execution.StepExecutionId,
+                    StepName = execution.StepName,
+                    ExecutionStatus = execution.ExecutionStatus,
                     LabelYLocation = yLocation.ToString().Replace(',', '.'),
                     LabelYLocationCollapsed = yLocationCollapsed.ToString().Replace(',', '.'),
                     BarYLocation = (yLocation - BarHeight / 2).ToString().Replace(',', '.'),
@@ -142,6 +151,9 @@ namespace EtlManager.Pages.Executions
 
         public class ChartElement
         {
+            public string StepExecutionId { get; set; }
+            public string StepName { get; set; }
+            public string ExecutionStatus { get; set; }
             public string LabelYLocation { get; set; }
             public string LabelYLocationCollapsed { get; set; }
             public string BarYLocation { get; set; }

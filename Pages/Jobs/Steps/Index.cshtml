@@ -19,12 +19,16 @@
             <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
             <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
             <div class="btn-group">
-                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button id="button_execute" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Execute
                 </button>
                 <div class="dropdown-menu">
                     <button class="dropdown-item" type="button" onclick="startExecution()">Confirm</button>
                 </div>
+            </div>
+            <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
+            <div id="spinner_starting" class="spinner-border text-primary align-middle" hidden role="status">
+                <span class="sr-only">Loading...</span>
             </div>
         </div>
     </div>
@@ -162,6 +166,9 @@
     <script type="text/javascript">
         function startExecution() {
             var jobId = "@Model.Job.JobId";
+            $('#button_execute').attr("disabled", "true");
+            $('#spinner_starting').removeAttr("hidden");
+
             $.ajax({
                 url: "./Steps/Index?handler=Execute",
                 method: "POST",
@@ -174,6 +181,9 @@
                 },
                 success: function (response) {
                     if (response.success) {
+                        $('#button_execute').removeAttr("disabled");
+                        $('#spinner_starting').attr("hidden", "hidden");
+
                         $('#alert_execution').empty();
                         $('#alert_execution').append(`
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -184,6 +194,9 @@
                             </div>
                             `);
                     } else {
+                        $('#button_execute').removeAttr("disabled");
+                        $('#spinner_starting').attr("hidden", "hidden");
+
                         $('#alert_execution').empty();
                         $('#alert_execution').append(`
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -196,6 +209,9 @@
                     }
                 },
                 error: function (response) {
+                    $('#button_execute').removeAttr("disabled");
+                    $('#spinner_starting').attr("hidden", "hidden");
+
                     $('#alert_execution').empty();
                     $('#alert_execution').append(`
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
