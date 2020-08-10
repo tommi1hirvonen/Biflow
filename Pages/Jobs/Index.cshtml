@@ -147,7 +147,7 @@
                                 </div>
                                 <div class="form-group form-check">
                                     <label class="form-check-label">
-                                        <input class="form-check-input" asp-for="EditJob.UseDependencyMode" value="@item.UseDependencyMode" /> @Html.DisplayNameFor(model => model.EditJob.UseDependencyMode)
+                                        <input class="form-check-input" checked="@(item.UseDependencyMode ? "checked" : null)" asp-for="EditJob.UseDependencyMode" /> @Html.DisplayNameFor(model => model.EditJob.UseDependencyMode)
                                     </label>
                                 </div>
                             </div>
