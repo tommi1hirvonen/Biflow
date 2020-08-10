@@ -47,7 +47,7 @@ namespace EtlManager.Pages.Jobs
             
             Job = await _context.Jobs.Include(job => job.Schedules).FirstOrDefaultAsync(job => job.JobId == schedule.JobId);
             Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
-            return RedirectToPage("./Index", new { id = jobId });
+            return RedirectToPage("./Schedules", new { id = jobId });
         }
 
         public async Task<IActionResult> OnPost()
@@ -56,7 +56,7 @@ namespace EtlManager.Pages.Jobs
             _context.Schedules.Add(NewSchedule);
             await _context.SaveChangesAsync();
 
-            return RedirectToPage("./Index", new { id = NewSchedule.JobId });
+            return RedirectToPage("./Schedules", new { id = NewSchedule.JobId });
         }
     }
 }

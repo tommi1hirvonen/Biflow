@@ -42,7 +42,7 @@
 </div>
 <p></p>
 
-<table class="table">
+<table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
@@ -64,13 +64,13 @@
         @foreach (var item in Model.Steps)
         {
             <tr>
-                <td>
+                <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.StepName)
                 </td>
-                <td>
+                <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
                 </td>
-                <td>
+                <td class="align-middle">
                     @if (item.StepType == "SQL")
                     {
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/code-black-48dp.svg")))
@@ -80,11 +80,11 @@
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/meditation-black-48dp.svg")))
                     }
                 </td>
-                <td>
+                <td class="align-middle">
                     <form>
                         <div class="custom-control custom-switch">
                             <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
-                            <label class="custom-control-label" for="@item.StepId"></label>
+                            <label class="custom-control-label" style="cursor: pointer;" for="@item.StepId"></label>
                         </div>
                     </form>
                 </td>

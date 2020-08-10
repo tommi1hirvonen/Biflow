@@ -41,11 +41,14 @@
 
 <p />
 
-<table class="table">
+<table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
                 @Html.DisplayNameFor(model => model.Executions[0].JobName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Executions[0].CreatedDateTime)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
@@ -59,48 +62,50 @@
             <th>
                 Duration
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model.Executions)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.JobName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StartDateTime)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.EndDateTime)
-                </td>
-                <td>
-                    @{
-                        switch (item.ExecutionStatus)
-                        {
-                            case "COMPLETED":
-                                <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            case "FAILED":
-                                <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            case "SKIPPED":
-                                <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            default:
-                                <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                        }
+        <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)');">
+            <td>
+                @Html.DisplayFor(modelItem => item.JobName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.StartDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EndDateTime)
+            </td>
+            <td>
+                @{
+                    switch (item.ExecutionStatus)
+                    {
+                        case "COMPLETED":
+                            <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        case "FAILED":
+                            <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        case "SKIPPED":
+                            <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        case "RUNNING":
+                            <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
+                        default:
+                            <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                            break;
                     }
-                </td>
-                <td>
-                    <text>@item.GetDurationInReadableFormat()</text>
-                </td>
-                <td>
-                    <a asp-page="./JobDetails" asp-route-id="@item.ExecutionId" target="_blank">Details</a>
-                </td>
-            </tr>
+                }
+            </td>
+            <td>
+                <text>@item.GetDurationInReadableFormat()</text>
+            </td>
+        </tr>
         }
     </tbody>
 </table>

@@ -48,7 +48,7 @@
 
 <p />
 
-<table class="table">
+<table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
@@ -66,13 +66,12 @@
             <th>
                 Duration
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
         @foreach (var item in Model.Executions)
         {
-            <tr>
+            <tr style="cursor: pointer;" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
                 <td>
                     @Html.DisplayFor(modelItem => item.StepName)
                 </td>
@@ -95,20 +94,17 @@
                             case "SKIPPED":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
-                            default:
+                            case "RUNNING":
                                 <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            default:
+                                <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
                         }
                     }
                 </td>
                 <td>
                     <text>@item.GetDurationInReadableFormat()</text>
-                </td>
-                <td>
-                    @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
-                        Details
-                    </button>
                 </td>
             </tr>
         }
@@ -205,6 +201,9 @@
                                         break;
                                     case "SKIPPED":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
+                                        break;
+                                    case "RUNNING":
+                                        <span class="badge badge-primary">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
                                     default:
                                         <span class="badge badge-primary">@Html.DisplayFor(model => item.ExecutionStatus)</span>
