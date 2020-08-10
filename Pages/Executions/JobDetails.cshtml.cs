@@ -67,6 +67,8 @@ namespace EtlManager.Pages.Executions
             Graph = graph;
             Collapsed = collapsed;
 
+            if (JobExecution == null) JobExecution = new JobExecution { ExecutionId = id, JobName = "Waiting for execution to start..."};
+
             // Calculate chart properties
 
             ChartHeight = Executions.Count * 40 + ChartPaddingTop;
@@ -80,8 +82,15 @@ namespace EtlManager.Pages.Executions
             double yLocation = 0;
             double yLocationCollapsed = 0;
 
-            MinTime = (DateTime)Executions.Min(e => e.StartDateTime);
-            if (MinTime == null) return;
+            var minTime = Executions.Min(e => e.StartDateTime);
+            if (minTime != null)
+            {
+                MinTime = (DateTime)minTime;
+            }
+            else
+            {
+                return;
+            }
 
             if (Executions.Any(e => e.EndDateTime == null))
             {
@@ -128,6 +137,7 @@ namespace EtlManager.Pages.Executions
                 yLocation += yInterval;
                 yLocationCollapsed += yIntervalCollapsed;
             }
+
         }
 
         public class ChartElement
