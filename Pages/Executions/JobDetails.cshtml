@@ -179,12 +179,14 @@
                 @foreach (var execution in Model.Executions)
                 {
                     <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocation))">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@execution.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;"
+                              data-toggle="modal" data-target="#modal_@execution.StepExecutionId">@execution.StepName</text>
                     </g>
                 }
                 @foreach (var execution in Model.Executions)
                 {
-                    <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
+                    <rect status="@execution.ExecutionStatus"
+                          style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
                           y="@(Model.ChartElements[execution.StepExecutionId].BarYLocation)"
                           height="@(Model.BarHeight.ToString().Replace(',', '.'))"
                           x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
@@ -215,12 +217,14 @@
                 @foreach (var execution in Model.Executions)
                 {
                     <g transform="translate(0,@(Model.ChartElements[execution.StepExecutionId].LabelYLocationCollapsed))">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");">@execution.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");"
+                              data-toggle="modal" data-target="#modal_@execution.StepExecutionId">@execution.StepName</text>
                     </g>
                 }
                 @foreach (var execution in Model.Executions)
                 {
-                    <rect style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
+                    <rect status="@execution.ExecutionStatus"
+                          style="fill: @GetFillFromStatus(execution.ExecutionStatus); cursor: pointer;"
                           y="@(Model.ChartElements[execution.StepExecutionId].BarYLocationCollapsed)"
                           height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
                           x="@(Model.ChartElements[execution.StepExecutionId].BarXLocation)"
@@ -312,51 +316,41 @@
         // Function to darken the rect elements when mouse hovering over them
         $(function () {
             $('rect').mouseenter(function () {
-                var oldColor = $(this).css('fill');
-                var newColor = lightenDarkenColor(rgbToHex(oldColor), -20);
-                $(this).css({ 'fill': newColor });
+                var status = $(this).attr('status');
+                $(this).css({ 'fill': getDarkerColorByStatus(status) });
             });
             $('rect').mouseleave(function () {
-                var oldColor = $(this).css('fill');
-                var newColor = lightenDarkenColor(rgbToHex(oldColor), 25);
-                $(this).css({ 'fill': newColor });
+                var status = $(this).attr('status');
+                $(this).css({ 'fill': getColorByStatus(status) });
             });
         });
 
-        function lightenDarkenColor(col, amt) {
-            var usePound = false;
-            if (col[0] == "#") {
-                col = col.slice(1);
-                usePound = true;
+        function getColorByStatus(status) {
+            switch (status) {
+                case "COMPLETED":
+                    return "#28a745"; // green
+                case "FAILED":
+                    return "#dc3545"; // red
+                case "SKIPPED":
+                    return "#ffc107"; // orange
+                case "RUNNING":
+                default:
+                    return "#007bff"; // blue
             }
-
-            var num = parseInt(col, 16);
-
-            var r = (num >> 16) + amt;
-            if (r > 255) r = 255;
-            else if (r < 0) r = 0;
-
-            var b = ((num >> 8) & 0x00FF) + amt;
-            if (b > 255) b = 255;
-            else if (b < 0) b = 0;
-
-            var g = (num & 0x0000FF) + amt;
-            if (g > 255) g = 255;
-            else if (g < 0) g = 0;
-
-            return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
         }
 
-        var hexDigits = new Array
-            ("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f");
-
-        function rgbToHex(rgb) {
-            rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-            return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
-        }
-
-        function hex(x) {
-            return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
+        function getDarkerColorByStatus(status) {
+            switch (status) {
+                case "COMPLETED":
+                    return "#088725"; // green
+                case "FAILED":
+                    return "#bc1525"; // red
+                case "SKIPPED":
+                    return "#dfa100"; // orange
+                case "RUNNING":
+                default:
+                    return "#005bdf"; // blue
+            }
         }
     </script>
 }
