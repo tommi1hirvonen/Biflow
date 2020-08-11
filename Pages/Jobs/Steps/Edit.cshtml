@@ -25,7 +25,7 @@
     <div class="row">
         <div class="col-md-8">
 
-            
+
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
@@ -71,6 +71,11 @@
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
                 <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
+            </div>
+            <div class="form-group" id="server_div">
+                <label asp-for="Step.ServerName" class="control-label"></label>
+                <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                <span asp-validation-for="Step.ServerName" class="text-danger"></span>
             </div>
             <div class="form-group" id="folder_div">
                 <label asp-for="Step.FolderName" class="control-label"></label>
@@ -204,6 +209,7 @@
             var stepType = document.getElementById('step_type').value;
             if (stepType == "SQL") {
                 $('#sql_statement_div').show();
+                $('#server_div').hide();
                 $('#folder_div').hide();
                 $('#project_div').hide();
                 $('#package_div').hide();
@@ -211,6 +217,7 @@
                 $('#parameters_div').hide();
             } else if (stepType == "SSIS") {
                 $('#sql_statement_div').hide();
+                $('#server_div').show();
                 $('#folder_div').show();
                 $('#project_div').show();
                 $('#package_div').show();
@@ -231,13 +238,14 @@
             $("#button_submit").click(function () {
                 var stepType = document.getElementById('step_type').value;
                 var sql = document.getElementById('sql_input').value;
+                var server = document.getElementById('server_input').value;
                 var folder = document.getElementById('folder_input').value;
                 var project = document.getElementById('project_input').value;
                 var package = document.getElementById('package_input').value;
                 if (stepType == "SQL" && sql.length == 0) {
                     $('#sql_error').show();
                     return false;
-                } else if (stepType == "SSIS" && (folder.length == 0 || project.length == 0 || package.length == 0)) {
+                } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
                     $('#ssis_error').show();
                     return false;
                 }
@@ -248,6 +256,7 @@
         $(function () {
             $('#step_type').change(function () { hideErrors(); });
             $('#sql_input').on('input', function () { hideErrors(); });
+            $('#server_input').on('input', function () { hideErrors(); });
             $('#folder_input').on('input', function () { hideErrors(); });
             $('#project_input').on('input', function () { hideErrors(); });
             $('#package_input').on('input', function () { hideErrors(); });
