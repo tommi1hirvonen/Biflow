@@ -36,6 +36,9 @@ namespace EtlManager.Models
 
         public bool DependencyMode { get; set; }
 
+        [Display(Name = "Created by")]
+        public string CreatedBy { get; set; }
+
         public string GetDurationInReadableFormat()
         {
             if (ExecutionInSeconds == null) return null;

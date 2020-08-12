@@ -23,5 +23,12 @@ namespace EtlManager.Models
 
         [Display(Name = "Strict dependency")]
         public bool StrictDependency { get; set; }
+
+        [Required]
+        [Display(Name = "Created")]
+        public DateTime CreatedDateTime { get; set; }
+
+        [Display(Name = "Created by")]
+        public string CreatedBy { get; set; }
     }
 }
