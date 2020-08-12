@@ -130,20 +130,14 @@
                             <div class="col-md-8 mx-auto">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                 <input type="hidden" asp-for="EditJob.JobId" value="@item.JobId" />
+                                <input type="hidden" asp-for="EditJob.CreatedDateTime" value="@item.CreatedDateTime" />
+                                <input type="hidden" asp-for="EditJob.LastModifiedDateTime" value="@item.LastModifiedDateTime" />
+                                <input type="hidden" asp-for="EditJob.LastModifiedBy" value="@item.LastModifiedBy" />
+                                <input type="hidden" asp-for="EditJob.CreatedBy" value="@item.CreatedBy" />
                                 <div class="form-group">
                                     <label asp-for="EditJob.JobName" class="control-label"></label>
                                     <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
                                     <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="EditJob.CreatedDateTime" class="control-label"></label>
-                                    <input asp-for="EditJob.CreatedDateTime" class="form-control" readonly value="@item.CreatedDateTime.ToString("yyyy-MM-ddTHH:mm").Replace(".", ":")" />
-                                    <span asp-validation-for="EditJob.CreatedDateTime" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="EditJob.LastModifiedDateTime" class="control-label"></label>
-                                    <input asp-for="EditJob.LastModifiedDateTime" class="form-control" readonly value="@item.LastModifiedDateTime.ToString("yyyy-MM-ddTHH:mm").Replace(".", ":")" />
-                                    <span asp-validation-for="EditJob.LastModifiedDateTime" class="text-danger"></span>
                                 </div>
                                 <div class="form-group form-check">
                                     <label class="form-check-label">

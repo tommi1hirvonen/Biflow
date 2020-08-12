@@ -30,19 +30,6 @@ namespace EtlManager
 
     }
 
-    public class UserResolverService
-    {
-        private readonly IHttpContextAccessor _context;
-        public UserResolverService(IHttpContextAccessor context)
-        {
-            _context = context;
-        }
-        public string GetUser()
-        {
-            return _context.HttpContext.User?.Identity?.Name;
-        }
-    }
-
     public static class Utility
     {
         public static DateTime Trim(this DateTime date, long roundTicks)

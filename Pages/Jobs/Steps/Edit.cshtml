@@ -31,6 +31,8 @@
             <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
             <input type="hidden" asp-for="Step.LastModifiedDateTime" />
             <input type="hidden" asp-for="Step.CreatedDateTime" />
+            <input type="hidden" asp-for="Step.LastModifiedBy" />
+            <input type="hidden" asp-for="Step.CreatedBy" />
             <div class="form-group">
                 <label asp-for="Step.StepName" class="control-label"></label>
                 <input asp-for="Step.StepName" class="form-control" />

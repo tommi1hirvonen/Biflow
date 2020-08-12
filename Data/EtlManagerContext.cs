@@ -5,17 +5,18 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using EtlManager.Models;
 using System.Threading;
+using Microsoft.AspNetCore.Http;
 
 namespace EtlManager.Data
 {
     public class EtlManagerContext : DbContext
     {
-        private readonly UserResolverService _userResolver;
+        private readonly HttpContext HttpContext;
 
-        public EtlManagerContext (DbContextOptions<EtlManagerContext> options, UserResolverService userResolver)
+        public EtlManagerContext (DbContextOptions<EtlManagerContext> options, IHttpContextAccessor httpContextAccessor)
             : base(options)
         {
-            _userResolver = userResolver;
+            HttpContext = httpContextAccessor.HttpContext;
         }
 
         public DbSet<Job> Jobs { get; set; }
@@ -70,7 +71,7 @@ namespace EtlManager.Data
         
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            string user = _userResolver.GetUser();
+            string user = HttpContext.User?.Identity?.Name;
 
             // If there are Jobs or Steps that have been edited, set the LastModified date.
             var editedJobs = ChangeTracker.Entries()

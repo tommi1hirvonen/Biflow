@@ -24,10 +24,8 @@ namespace EtlManager.Pages.Jobs
 
         public IList<Job> Jobs { get;set; }
 
-        //[BindProperty]
         public Job NewJob { get; set; }
 
-        //[BindProperty]
         public Job EditJob { get; set; }
 
         public async Task OnGetAsync()
