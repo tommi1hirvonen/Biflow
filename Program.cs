@@ -47,14 +47,15 @@ namespace EtlManager
             return value;
         }
 
-        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job)
+        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_"
+                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_, @Username = @Username_"
                 , sqlConnection);
 
             sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
             Guid executionId = (Guid) await sqlCommand.ExecuteScalarAsync();
@@ -76,13 +77,14 @@ namespace EtlManager
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task JobCopy(IConfiguration configuration, Guid jobId)
+        public async static Task JobCopy(IConfiguration configuration, Guid jobId, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[JobCopy] @JobId = @JobId_"
+                "EXEC [etlmanager].[JobCopy] @JobId = @JobId_, @Username = @Username_"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@JobId_", jobId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();

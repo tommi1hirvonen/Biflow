@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace EtlManager.Pages.Jobs.Steps
 {
@@ -16,12 +17,14 @@ namespace EtlManager.Pages.Jobs.Steps
         private readonly IConfiguration _configuration;
         private readonly Data.EtlManagerContext _context;
         public readonly string WebRootPath;
+        private readonly HttpContext httpContext;
 
-        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IWebHostEnvironment webHostEnvironment)
+        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
             _context = context;
             WebRootPath = webHostEnvironment.WebRootPath;
+            httpContext = httpContextAccessor.HttpContext;
         }
 
         public IList<Step> Steps { get;set; }
@@ -56,11 +59,12 @@ namespace EtlManager.Pages.Jobs.Steps
                 return new JsonResult("No job found with provided id");
             }
 
+            string user = httpContext.User?.Identity?.Name;
             Guid executionId_;
 
             try
             {
-                executionId_ = await Utility.StartExecution(_configuration, Job);
+                executionId_ = await Utility.StartExecution(_configuration, Job, user);
             }
             catch (Exception ex)
             {

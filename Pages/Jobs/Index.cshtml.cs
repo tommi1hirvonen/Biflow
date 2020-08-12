@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using EtlManager.Data;
 using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 
 namespace EtlManager.Pages.Jobs
 {
@@ -15,11 +16,13 @@ namespace EtlManager.Pages.Jobs
     {
         private readonly EtlManagerContext _context;
         private readonly IConfiguration _configuration;
+        private readonly HttpContext httpContext;
 
-        public IndexModel(IConfiguration configuration, EtlManagerContext context)
+        public IndexModel(IConfiguration configuration, EtlManagerContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _configuration = configuration;
+            httpContext = httpContextAccessor.HttpContext;
         }
 
         public IList<Job> Jobs { get;set; }
@@ -35,8 +38,9 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostCopy(Guid id)
         {
+            string user = httpContext.User?.Identity?.Name;
 
-            await Utility.JobCopy(_configuration, id);
+            await Utility.JobCopy(_configuration, id, user);
 
             return RedirectToPage("./Index");
         }
