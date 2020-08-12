@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +28,19 @@ namespace EtlManager
                     .UseStartup<Startup>();
                 });
 
+    }
+
+    public class UserResolverService
+    {
+        private readonly IHttpContextAccessor _context;
+        public UserResolverService(IHttpContextAccessor context)
+        {
+            _context = context;
+        }
+        public string GetUser()
+        {
+            return _context.HttpContext.User?.Identity?.Name;
+        }
     }
 
     public static class Utility

@@ -47,6 +47,8 @@ namespace EtlManager
             services.AddDbContext<EtlManagerContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
 
+            services.AddTransient<UserResolverService>();
+
             // AJAX requests used in cshtml files send the anti-forgery token in a header called XSRF-TOKEN.
             // Configure the service to listen to it.
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");

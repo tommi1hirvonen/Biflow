@@ -10,9 +10,12 @@ namespace EtlManager.Data
 {
     public class EtlManagerContext : DbContext
     {
-        public EtlManagerContext (DbContextOptions<EtlManagerContext> options)
+        private readonly UserResolverService _userResolver;
+
+        public EtlManagerContext (DbContextOptions<EtlManagerContext> options, UserResolverService userResolver)
             : base(options)
         {
+            _userResolver = userResolver;
         }
 
         public DbSet<Job> Jobs { get; set; }
@@ -67,15 +70,36 @@ namespace EtlManager.Data
         
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
+            string user = _userResolver.GetUser();
+
             // If there are Jobs or Steps that have been edited, set the LastModified date.
-            var editedJobs = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Modified).ToList();
-            editedJobs.ForEach(entity => entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now);
+            var editedJobs = ChangeTracker.Entries()
+                .Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Modified)
+                .ToList();
+            editedJobs.ForEach(entity =>
+            {
+                entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("LastModifiedBy").CurrentValue = user;
+             });
 
             var addedJobs = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
             addedJobs.ForEach(entity =>
             {
                 entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("CreatedBy").CurrentValue = user;
+                entity.Property("LastModifiedBy").CurrentValue = user;
+            });
+
+            var addedDependenciesAndSchedules = ChangeTracker
+                .Entries()
+                .Where(entity => (entity.Entity is Dependency || entity.Entity is Schedule) && entity.State == EntityState.Added)
+                .ToList();
+
+            addedDependenciesAndSchedules.ForEach(entity =>
+            {
+                entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("CreatedBy").CurrentValue = user;
             });
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);

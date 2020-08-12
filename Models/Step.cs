@@ -68,6 +68,12 @@ namespace EtlManager.Models
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
 
+        [Display(Name = "Created by")]
+        public string CreatedBy { get; set; }
+
+        [Display(Name = "Last modified by")]
+        public string LastModifiedBy { get; set; }
+
         public ICollection<Dependency> Dependencies { get; set; }
 
         public IList<Parameter> Parameters { get; set; }

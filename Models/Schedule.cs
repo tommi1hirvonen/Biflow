@@ -41,6 +41,11 @@ namespace EtlManager.Models
         [Required]
         [Display(Name = "Minutes")]
         public int TimeMinutes { get; set; } = 0;
+        [Required]
+        [Display(Name = "Created")]
+        public DateTime CreatedDateTime { get; set; }
+        [Display(Name = "Created by")]
+        public string CreatedBy { get; set; }
 
         public string GetMinutesText()
         {

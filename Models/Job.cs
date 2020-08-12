@@ -33,5 +33,11 @@ namespace EtlManager.Models
 
         public ICollection<Step> Steps { get; set; }
         public ICollection<Schedule> Schedules { get; set; }
+
+        [Display(Name = "Created by")]
+        public string CreatedBy { get; set; }
+
+        [Display(Name = "Last modified by")]
+        public string LastModifiedBy { get; set; }
     }
 }
