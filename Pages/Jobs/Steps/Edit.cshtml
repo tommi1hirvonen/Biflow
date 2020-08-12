@@ -24,41 +24,25 @@
     <p />
     <div class="row">
         <div class="col-md-8">
-
-
-
+            <h6>@Model.Job.JobName</h6>
+            <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
             <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
-            <div class="form-group">
-                <label asp-for="Step.Job.JobName" class="control-label"></label>
-                <input asp-for="Step.Job.JobName" class="form-control" readonly />
-                <span asp-validation-for="Step.Job.JobName" class="text-danger"></span>
-            </div>
+            <input type="hidden" asp-for="Step.LastModifiedDateTime" />
+            <input type="hidden" asp-for="Step.CreatedDateTime" />
             <div class="form-group">
                 <label asp-for="Step.StepName" class="control-label"></label>
                 <input asp-for="Step.StepName" class="form-control" />
                 <span asp-validation-for="Step.StepName" class="text-danger"></span>
             </div>
             <div class="form-row">
-                <div class="form-group col-md-5">
-                    <label asp-for="Step.CreatedDateTime" class="control-label"></label>
-                    <input asp-for="Step.CreatedDateTime" class="form-control" readonly />
-                    <span asp-validation-for="Step.CreatedDateTime" class="text-danger"></span>
-                </div>
-                <div class="form-group col-md-5">
-                    <label asp-for="Step.LastModifiedDateTime" class="control-label"></label>
-                    <input asp-for="Step.LastModifiedDateTime" class="form-control" readonly />
-                    <span asp-validation-for="Step.LastModifiedDateTime" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col-md-5">
+                <div class="form-group col-md-3">
                     <label asp-for="Step.ExecutionPhase" class="control-label"></label>
                     <input asp-for="Step.ExecutionPhase" class="form-control" />
                     <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
                 </div>
-                <div class="form-group col-md-5">
+                <div class="form-group col-md-3">
                     <label asp-for="Step.StepType" class="control-label"></label>
                     <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
                         <option>SQL</option>
@@ -72,25 +56,29 @@
                 <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
             </div>
-            <div class="form-group" id="server_div">
-                <label asp-for="Step.ServerName" class="control-label"></label>
-                <input asp-for="Step.ServerName" id="server_input" class="form-control" />
-                <span asp-validation-for="Step.ServerName" class="text-danger"></span>
+            <div class="form-row">
+                <div class="form-group col" id="server_div">
+                    <label asp-for="Step.ServerName" class="control-label"></label>
+                    <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                    <span asp-validation-for="Step.ServerName" class="text-danger"></span>
+                </div>
+                <div class="form-group col" id="folder_div">
+                    <label asp-for="Step.FolderName" class="control-label"></label>
+                    <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
+                    <span asp-validation-for="Step.FolderName" class="text-danger"></span>
+                </div>
+                <div class="form-group col" id="project_div">
+                    <label asp-for="Step.ProjectName" class="control-label"></label>
+                    <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
+                    <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group" id="folder_div">
-                <label asp-for="Step.FolderName" class="control-label"></label>
-                <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
-                <span asp-validation-for="Step.FolderName" class="text-danger"></span>
-            </div>
-            <div class="form-group" id="project_div">
-                <label asp-for="Step.ProjectName" class="control-label"></label>
-                <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
-                <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
-            </div>
-            <div class="form-group" id="package_div">
-                <label asp-for="Step.PackageName" class="control-label"></label>
-                <input asp-for="Step.PackageName" id="package_input" class="form-control" />
-                <span asp-validation-for="Step.PackageName" class="text-danger"></span>
+            <div class="form-row">
+                <div class="form-group col" id="package_div">
+                    <label asp-for="Step.PackageName" class="control-label"></label>
+                    <input asp-for="Step.PackageName" id="package_input" class="form-control" />
+                    <span asp-validation-for="Step.PackageName" class="text-danger"></span>
+                </div>
             </div>
 
             <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
@@ -110,11 +98,11 @@
         </div>
     </div>
 
-    <div id="parameters_div">
+    <div id="parameters_div" class="col-md-8">
         <p />
         <h5>Parameters</h5>
         <p />
-        <table id="parameters_table" class="table">
+        <table id="parameters_table" class="table table-sm">
             <thead>
                 <tr>
                     <th></th>
@@ -134,11 +122,11 @@
                             <input id="input_isdeleted" type="hidden" asp-for="Parameters[index].IsDeleted" value="false" />
                         </td>
                         <td>
-                            <input id="input_parameter_name" asp-for="Parameters[index].ParameterName" class="form-control" />
+                            <input id="input_parameter_name" asp-for="Parameters[index].ParameterName" class="form-control form-control-sm" />
                             <span asp-validation-for="Parameters[index].ParameterName" class="text-danger"></span>
                         </td>
                         <td>
-                            <input id="input_parameter_value" asp-for="Parameters[index].ParameterValue" class="form-control" />
+                            <input id="input_parameter_value" asp-for="Parameters[index].ParameterValue" class="form-control form-control-sm" />
                             <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
                         </td>
                         <td>
@@ -158,7 +146,7 @@
     <p />
     <h5>Dependencies</h5>
     <p />
-    <table class="table">
+    <table class="table table-sm table-hover">
         <thead>
             <tr>
                 <th>
@@ -175,10 +163,10 @@
         <tbody>
             @for (int index = 0; index < Model.DependencyEdits.Count; index++)
             {
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
+                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
                 <tr>
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
                     <td>
                         @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
                     </td>
@@ -281,11 +269,11 @@
                         <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
                     </td>
                         <td>
-                        <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
+                        <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
                     </td>
                         <td>
-                        <input id="input_parameter_value" class="form-control" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
+                        <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>

@@ -300,11 +300,11 @@
                         <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
                     </td>
                         <td>
-                        <input id="input_parameter_name" class="form-control" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
+                        <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
                     </td>
                         <td>
-                        <input id="input_parameter_value" class="form-control" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
+                        <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>
@@ -368,7 +368,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-8 mx-auto">
+                        <div class="col mx-3">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                             <input type="hidden" asp-for="NewStep.JobId" />
                             <input type="hidden" asp-for="NewStep.IsEnabled" value="true" />
@@ -378,12 +378,12 @@
                                 <span asp-validation-for="NewStep.StepName" class="text-danger"></span>
                             </div>
                             <div class="form-row">
-                                <div class="form-group col-md-5">
+                                <div class="form-group col">
                                     <label asp-for="NewStep.ExecutionPhase" class="control-label"></label>
                                     <input asp-for="NewStep.ExecutionPhase" class="form-control" />
                                     <span asp-validation-for="NewStep.ExecutionPhase" class="text-danger"></span>
                                 </div>
-                                <div class="form-group col-md-5">
+                                <div class="form-group col">
                                     <label asp-for="NewStep.StepType" class="control-label"></label>
                                     <select asp-for="NewStep.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
                                         <option>SQL</option>
@@ -397,25 +397,29 @@
                                 <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
                                 <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
                             </div>
-                            <div class="form-group" id="server_div">
-                                <label asp-for="NewStep.ServerName" class="control-label"></label>
-                                <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
-                                <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
+                            <div class="form-row">
+                                <div class="form-group col" id="server_div">
+                                    <label asp-for="NewStep.ServerName" class="control-label"></label>
+                                    <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
+                                    <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col" id="folder_div">
+                                    <label asp-for="NewStep.FolderName" class="control-label"></label>
+                                    <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
+                                    <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
+                                </div>
                             </div>
-                            <div class="form-group" id="folder_div">
-                                <label asp-for="NewStep.FolderName" class="control-label"></label>
-                                <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
-                                <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
-                            </div>
-                            <div class="form-group" id="project_div">
-                                <label asp-for="NewStep.ProjectName" class="control-label"></label>
-                                <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
-                                <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
-                            </div>
-                            <div class="form-group" id="package_div">
-                                <label asp-for="NewStep.PackageName" class="control-label"></label>
-                                <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
-                                <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
+                            <div class="form-row">
+                                <div class="form-group col" id="project_div">
+                                    <label asp-for="NewStep.ProjectName" class="control-label"></label>
+                                    <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
+                                    <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
+                                </div>
+                                <div class="form-group col" id="package_div">
+                                    <label asp-for="NewStep.PackageName" class="control-label"></label>
+                                    <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
+                                    <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
+                                </div>
                             </div>
                             <div class="form-group form-check" id="32_bit_mode_div">
                                 <label class="form-check-label">
@@ -431,7 +435,7 @@
                                 <p />
                                 <h5>Parameters</h5>
                                 <p />
-                                <table id="parameters_table" class="table">
+                                <table id="parameters_table" class="table table-sm">
                                     <thead>
                                         <tr>
                                             <th></th>

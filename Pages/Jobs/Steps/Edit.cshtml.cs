@@ -40,13 +40,12 @@ namespace EtlManager.Pages.Jobs.Steps
             }
 
             Step = await _context.Steps
-                .Include(step => step.Job)
                 .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
                 .ThenInclude(dependency => dependency.DependantOnStep)
                 .FirstOrDefaultAsync(m => m.StepId == id);
 
-            Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == Step.JobId);
+            Job = await _context.Jobs.Include(job => job.Steps).AsNoTracking().FirstOrDefaultAsync(job => job.JobId == Step.JobId);
 
             Parameters = Step.Parameters.Select(parameter => new ParameterEdit(parameter)).ToList();
 
@@ -101,7 +100,7 @@ namespace EtlManager.Pages.Jobs.Steps
 
             // The JobId property of the Job member of Step is lost. Restore it before saving.
             // Otherwise Entity Framework will try to generate a new Job and place the step under it.
-            Step.Job.JobId = Step.JobId;
+            //Step.Job.JobId = Step.JobId;
 
             // Get all current dependencies for this step.
             IList<Dependency> dependencies = await _context.Dependencies.Where(d => d.StepId == Step.StepId).ToListAsync();
