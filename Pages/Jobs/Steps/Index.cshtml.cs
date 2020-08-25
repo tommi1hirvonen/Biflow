@@ -45,11 +45,16 @@ namespace EtlManager.Pages.Jobs.Steps
         }
 
         
-        public async Task<IActionResult> OnPostExecute(Guid id)
+        public async Task<IActionResult> OnPostExecute(Guid id, string stepIds)
         {
             if (id == null)
             {
                 return new JsonResult("Id argument was null");
+            }
+
+            if (stepIds == null)
+            {
+                return new JsonResult("List of step ids was empty");
             }
 
             Job = await _context.Jobs.FindAsync(id);
@@ -61,10 +66,11 @@ namespace EtlManager.Pages.Jobs.Steps
 
             string user = httpContext.User?.Identity?.Name;
             Guid executionId_;
+            List<string> stepList = stepIds.Split(',').ToList();
 
             try
             {
-                executionId_ = await Utility.StartExecution(_configuration, Job, user);
+                executionId_ = await Utility.StartExecution(_configuration, Job, user, stepList);
             }
             catch (Exception ex)
             {

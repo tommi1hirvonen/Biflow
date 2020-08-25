@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using EtlManager.Models;
@@ -47,12 +48,25 @@ namespace EtlManager
             return value;
         }
 
-        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username)
+        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            SqlCommand sqlCommand = new SqlCommand(
+            SqlCommand sqlCommand;
+            
+            if (stepIds != null && stepIds.Count > 0)
+            {
+                sqlCommand = new SqlCommand(
+                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_"
+                , sqlConnection);
+
+                sqlCommand.Parameters.AddWithValue("@StepIds_", string.Join(',', stepIds));
+            }
+            else
+            {
+                sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[JobExecute] @JobId = @JobId_, @Username = @Username_"
                 , sqlConnection);
+            }
 
             sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
             sqlCommand.Parameters.AddWithValue("@Username_", username);

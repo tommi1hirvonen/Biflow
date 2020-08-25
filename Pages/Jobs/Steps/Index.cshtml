@@ -19,12 +19,9 @@
             <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
             <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
             <div class="btn-group">
-                <button id="button_execute" type="button" class="btn btn-outline-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Execute
+                <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
+                    Execute...
                 </button>
-                <div class="dropdown-menu">
-                    <button class="dropdown-item" type="button" onclick="startExecution()">Confirm</button>
-                </div>
             </div>
             <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
             <div id="spinner_starting" class="spinner-border text-primary align-middle" hidden role="status">
@@ -35,7 +32,7 @@
 </div>
 <p />
 <div id="alert_execution">
-    
+
 </div>
 <div id="alert_execution_error" style="display: none;" class="alert alert-danger" role="alert">
     Alert message set in jQuery
@@ -166,6 +163,21 @@
     <script type="text/javascript">
         function startExecution() {
             var jobId = "@Model.Job.JobId";
+
+            var stepsToExecute = [];
+            $("input[name=execute_checkbox]:checked").each(function () {
+                stepsToExecute.push(this.id);
+                $(this).prop('checked', false);
+            });
+
+            $('#execute_check_all').prop('checked', false);
+
+            if (stepsToExecute.length == 0) {
+                return;
+            }
+
+            var stepList = stepsToExecute.join(",");
+
             $('#button_execute').attr("disabled", "true");
             $('#spinner_starting').removeAttr("hidden");
 
@@ -177,7 +189,8 @@
                         $('input:hidden[name="__RequestVerificationToken"]').val());
                 },
                 data: {
-                    id: jobId
+                    id: jobId,
+                    stepIds: stepList
                 },
                 success: function (response) {
                     if (response.success) {
@@ -224,6 +237,13 @@
                 }
             });
         }
+
+        $(function () {
+            $('#execute_check_all').change(function () {
+                var value = $(this).prop('checked');
+                $("input[name=execute_checkbox]").prop('checked', value);
+            });
+        });
     </script>
 
     <script type="text/javascript">
@@ -353,6 +373,54 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
 }
+
+
+@*EXECUTE MODAL*@
+<div class="modal fade" id="modal_execute" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Execute steps</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mx-5">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="align-top">
+                                        <input type="checkbox" class="form-check-input" id="execute_check_all">
+                                    </th>
+                                    <th>Step name</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var step in Model.Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
+                                {
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
+                                        </td>
+                                        <td>
+                                            @step.StepName
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @*NEW STEP MODAL*@
