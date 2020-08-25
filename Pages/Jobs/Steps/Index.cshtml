@@ -128,10 +128,12 @@
                     id: id_
                 },
                 success: function (response) {
-                    //alert(response);
+                    if (!response.success) {
+                        alert(response.responseText);
+                    }
                 },
-                failure: function (response) {
-                    alert("Error enabling/disabling step");
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
                 }
             });
         }
@@ -151,10 +153,14 @@
                     id: id
                 },
                 success: function (response) {
-                    $(element).closest('tr').remove();
+                    if (response.success) {
+                        $(element).closest('tr').remove();
+                    } else {
+                        alert(response.responseText);
+                    }
                 },
-                failure: function (response) {
-                    alert(response.responseText);
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
                 }
             });
         }
@@ -228,7 +234,7 @@
                     $('#alert_execution').empty();
                     $('#alert_execution').append(`
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                              Error starting job: AJAX error
+                              Error starting job: AJAX error, try logging in again
                               <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                               </button>

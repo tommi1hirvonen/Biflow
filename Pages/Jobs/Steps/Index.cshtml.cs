@@ -49,19 +49,19 @@ namespace EtlManager.Pages.Jobs.Steps
         {
             if (id == null)
             {
-                return new JsonResult("Id argument was null");
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
             }
 
             if (stepIds == null)
             {
-                return new JsonResult("List of step ids was empty");
+                return new JsonResult(new { success = false, responseText = "List of step ids was empty" });
             }
 
             Job = await _context.Jobs.FindAsync(id);
 
             if (Job == null)
             {
-                return new JsonResult("No job found with provided id");
+                return new JsonResult(new { success = false, responseText = "No job found with provided id" });
             }
 
             string user = httpContext.User?.Identity?.Name;
@@ -84,33 +84,33 @@ namespace EtlManager.Pages.Jobs.Steps
         {
             if (id == null)
             {
-                return new JsonResult("Id argument was null");
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
             }
 
             Step step = await _context.Steps.FindAsync(id);
 
             if (step == null)
             {
-                return new JsonResult("No step found for id " + id);
+                return new JsonResult(new { success = false, responseText = "No step found for id " + id });
             }
 
             await Utility.ToggleStepEnabled(_configuration, step);
 
-            return new JsonResult("Success");
+            return new JsonResult(new { success = true });
         }
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
             if (id == null)
             {
-                return new JsonResult("Id argument was null");
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
             }
 
             Step step = await _context.Steps.FindAsync(id);
 
             if (step == null)
             {
-                return new JsonResult("No step found for id " + id);
+                return new JsonResult(new { success = false, responseText = "No step found for id " + id });
             }
 
             try
