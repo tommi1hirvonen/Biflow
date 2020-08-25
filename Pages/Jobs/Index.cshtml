@@ -17,14 +17,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Jobs[0].JobName)
             </th>
+            <th></th>
             <th>
-                @Html.DisplayNameFor(model => model.Jobs[0].CreatedDateTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Jobs[0].LastModifiedDateTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Jobs[0].UseDependencyMode)
+                Dependency mode
             </th>
             <th></th>
         </tr>
@@ -37,13 +32,13 @@
                     @Html.DisplayFor(modelItem => item.JobName)
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
+                    <text>@item.Steps.Count steps</text>
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.LastModifiedDateTime)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.UseDependencyMode)
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="dependency_mode_@item.JobId" asp-for="@item.UseDependencyMode" disabled>
+                        <label class="custom-control-label" for="dependency_mode_@item.JobId"></label>
+                    </div>
                 </td>
                 <td>
                     <form method="post">
@@ -95,10 +90,9 @@
                                 <input asp-for="NewJob.JobName" class="form-control" />
                                 <span asp-validation-for="NewJob.JobName" class="text-danger"></span>
                             </div>
-                            <div class="form-group form-check">
-                                <label class="form-check-label">
-                                    <input class="form-check-input" asp-for="NewJob.UseDependencyMode" /> @Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)
-                                </label>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="dependency_mode_new" asp-for="NewJob.UseDependencyMode">
+                                <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_new">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
                             </div>
                         </div>
                     </div>
@@ -139,10 +133,9 @@
                                     <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
                                     <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
                                 </div>
-                                <div class="form-group form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" checked="@(item.UseDependencyMode ? "checked" : null)" asp-for="EditJob.UseDependencyMode" /> @Html.DisplayNameFor(model => model.EditJob.UseDependencyMode)
-                                    </label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" checked="@(item.UseDependencyMode ? "checked" : null)" class="custom-control-input" id="dependency_mode_edit_@item.JobId" asp-for="EditJob.UseDependencyMode">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_edit_@item.JobId">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
                                 </div>
                             </div>
                         </div>
