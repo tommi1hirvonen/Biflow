@@ -11,5 +11,10 @@ namespace EtlManager.Models
         [Key]
         [Display(Name = "Execution id")]
         override public Guid ExecutionId { get; set; }
+
+        public int NumberOfSteps { get; set; }
+
+        [DisplayFormat(DataFormatString = "{0:N0}%")]
+        public decimal SuccessPercent { get; set; }
     }
 }

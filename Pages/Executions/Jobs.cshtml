@@ -57,6 +57,12 @@
                 @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
             </th>
             <th>
+                Number of steps
+            </th>
+            <th>
+                Success percent
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
             <th>
@@ -79,6 +85,12 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.EndDateTime)
+            </td>
+            <td style="text-align: right;">
+                @Html.DisplayFor(modelItem => item.NumberOfSteps)
+            </td>
+            <td style="text-align: right;">
+                @Html.DisplayFor(modelItem => item.SuccessPercent)
             </td>
             <td>
                 @{
