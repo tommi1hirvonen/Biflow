@@ -199,9 +199,9 @@
                         <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;"
                               data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
                     </g>
-                }
-                @foreach (var chartElement in Model.ChartElements)
-                {
+
+                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@chartElement.LabelYLocation" y2="@chartElement.LabelYLocation" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
+                    
                     <rect status="@chartElement.ExecutionStatus"
                           style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
                           y="@chartElement.BarYLocation"
@@ -233,19 +233,19 @@
                 @foreach (var chartElement in Model.ChartElements)
                 {
                     <g transform="translate(0,@chartElement.LabelYLocationCollapsed)">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");"
-                              data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
+                    <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");"
+                            data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
                     </g>
-                }
-                @foreach (var chartElement in Model.ChartElements)
-                {
+
+                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@chartElement.LabelYLocationCollapsed" y2="@chartElement.LabelYLocationCollapsed" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
+
                     <rect status="@chartElement.ExecutionStatus"
-                          style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
-                          y="@chartElement.BarYLocationCollapsed"
-                          height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
-                          x="@chartElement.BarXLocation"
-                          width="@chartElement.BarWidth"
-                          data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
+                            style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
+                            y="@chartElement.BarYLocationCollapsed"
+                            height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
+                            x="@chartElement.BarXLocation"
+                            width="@chartElement.BarWidth"
+                            data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
                     </rect>
                 }
             </g>
