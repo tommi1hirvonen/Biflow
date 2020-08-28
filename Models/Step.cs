@@ -68,6 +68,16 @@ namespace EtlManager.Models
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
 
+        [Required]
+        [Display(Name = "Retry attempts")]
+        [Range(0, 10)]
+        public int RetryAttempts { get; set; }
+
+        [Required]
+        [Display(Name = "Retry interval (min)")]
+        [Range(0, 1000)]
+        public int RetryIntervalMinutes { get; set; }
+
         [Display(Name = "Created by")]
         public string CreatedBy { get; set; }
 

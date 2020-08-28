@@ -36,5 +36,11 @@ namespace EtlManager.Models
 
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
+
+        public int RetryAttemptIndex { get; set; }
+
+        public int RetryAttempts { get; set; }
+
+        public int RetryIntervalMinutes { get; set; }
     }
 }

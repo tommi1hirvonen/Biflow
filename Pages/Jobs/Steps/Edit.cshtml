@@ -52,6 +52,16 @@
                     </select>
                     <span asp-validation-for="Step.StepType" class="text-danger"></span>
                 </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="Step.RetryAttempts" class="control-label"></label>
+                    <input asp-for="Step.RetryAttempts" class="form-control" />
+                    <span asp-validation-for="Step.RetryAttempts" class="text-danger"></span>
+                </div>
+                <div class="form-group col-md-3">
+                    <label asp-for="Step.RetryIntervalMinutes" class="control-label"></label>
+                    <input asp-for="Step.RetryIntervalMinutes" class="form-control" />
+                    <span asp-validation-for="Step.RetryIntervalMinutes" class="text-danger"></span>
+                </div>
             </div>
             <div class="form-group" id="sql_statement_div" style="@(Model.Step.StepType == "SSIS" ? "display: none;" : null)">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>

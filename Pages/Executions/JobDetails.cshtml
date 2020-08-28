@@ -94,6 +94,7 @@
                         case "FAILED":
                             <span class="badge badge-danger">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
+                        case "AWAIT RETRY":
                         case "SKIPPED":
                             <span class="badge badge-warning">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
@@ -155,6 +156,7 @@
                             case "FAILED":
                                 <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
+                            case "AWAIT RETRY":
                             case "SKIPPED":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
@@ -270,6 +272,7 @@
                 return "#28a745"; // green
             case "FAILED":
                 return "#dc3545"; // red
+            case "AWAIT RETRY":
             case "SKIPPED":
                 return "#ffc107"; // orange
             case "RUNNING":
@@ -346,6 +349,7 @@
                     return "#28a745"; // green
                 case "FAILED":
                     return "#dc3545"; // red
+                case "AWAIT RETRY":
                 case "SKIPPED":
                     return "#ffc107"; // orange
                 case "RUNNING":
@@ -360,6 +364,7 @@
                     return "#088725"; // green
                 case "FAILED":
                     return "#bc1525"; // red
+                case "AWAIT RETRY":
                 case "SKIPPED":
                     return "#dfa100"; // orange
                 case "RUNNING":
