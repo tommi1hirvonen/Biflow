@@ -94,8 +94,7 @@
                         case "FAILED":
                             <span class="badge badge-danger">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
-                        case "AWAIT RETRY":
-                        case "SKIPPED":
+                        case "WARNING":
                             <span class="badge badge-warning">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
                         case "RUNNING":
@@ -465,6 +464,7 @@
                                     case "FAILED":
                                         <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
+                                    case "AWAIT RETRY":
                                     case "SKIPPED":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
