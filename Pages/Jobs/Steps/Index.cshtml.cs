@@ -41,7 +41,7 @@ namespace EtlManager.Pages.Jobs.Steps
         {
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
-            NewStep = new Step { JobId = id };
+            NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
         }
 
         
