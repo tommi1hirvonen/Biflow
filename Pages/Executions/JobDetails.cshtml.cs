@@ -31,6 +31,7 @@ namespace EtlManager.Pages.Executions
 
 
         public IList<ChartElement> ChartElements = new List<ChartElement>();
+        public IList<ChartLabel> ChartLabels = new List<ChartLabel>();
 
         public int ChartHeight;
         public int ChartHeightCollapsed = 550;
@@ -109,6 +110,21 @@ namespace EtlManager.Pages.Executions
             long minTicks = MinTime.Ticks;
             long maxTicks = MaxTime.Ticks;
 
+            foreach (var step in Executions.Select(e => new KeyValuePair<Guid, string>(e.StepId, e.StepName)).Distinct())
+            {
+                ChartLabels.Add(new ChartLabel
+                {
+                    StepId = step.Key,
+                    StepName = step.Value,
+                    LabelYLocation = yLocation.ToString().Replace(',', '.'),
+                    LabelYLocationCollapsed = yLocationCollapsed.ToString().Replace(',', '.'),
+                    YLocationDouble = yLocation,
+                    YLocationCollapsedDouble = yLocationCollapsed
+                });
+                yLocation += yInterval;
+                yLocationCollapsed += yIntervalCollapsed;
+            }
+
             foreach (var execution in Executions)
             {
                 if (execution.StartDateTime == null) continue;
@@ -130,21 +146,19 @@ namespace EtlManager.Pages.Executions
                 double width = endLocation - xLocation;
                 width = width >= MinWidth ? width : MinWidth; // minimum value for the width to prevent hidden bars with width = 0
 
+                var yLocation_ = ChartLabels.Where(label => label.StepId == execution.StepId).Select(label => label.YLocationDouble).First();
+                var yLocationCollapsed_ = ChartLabels.Where(label => label.StepId == execution.StepId).Select(label => label.YLocationCollapsedDouble).First();
+
                 ChartElements.Add(new ChartElement
                 {
                     StepExecutionId = execution.StepExecutionId,
-                    StepName = execution.StepName,
                     ExecutionStatus = execution.ExecutionStatus,
-                    LabelYLocation = yLocation.ToString().Replace(',', '.'),
-                    LabelYLocationCollapsed = yLocationCollapsed.ToString().Replace(',', '.'),
-                    BarYLocation = (yLocation - BarHeight / 2).ToString().Replace(',', '.'),
-                    BarYLocationCollapsed = (yLocationCollapsed - BarHeightCollapsed / 2).ToString().Replace(',', '.'),
+                    BarYLocation = (yLocation_ - BarHeight / 2).ToString().Replace(',', '.'),
+                    BarYLocationCollapsed = (yLocationCollapsed_ - BarHeightCollapsed / 2).ToString().Replace(',', '.'),
                     BarXLocation = xLocation.ToString().Replace(',', '.'),
                     BarWidth = width.ToString().Replace(',', '.')
                 });
 
-                yLocation += yInterval;
-                yLocationCollapsed += yIntervalCollapsed;
             }
 
         }
@@ -152,14 +166,21 @@ namespace EtlManager.Pages.Executions
         public class ChartElement
         {
             public string StepExecutionId { get; set; }
-            public string StepName { get; set; }
             public string ExecutionStatus { get; set; }
-            public string LabelYLocation { get; set; }
-            public string LabelYLocationCollapsed { get; set; }
             public string BarYLocation { get; set; }
             public string BarYLocationCollapsed { get; set; }
             public string BarXLocation { get; set; }
             public string BarWidth { get; set; }
+        }
+
+        public class ChartLabel
+        {
+            public Guid StepId { get; set; }
+            public string StepName { get; set; }
+            public string LabelYLocation { get; set; }
+            public string LabelYLocationCollapsed { get; set; }
+            public double YLocationDouble { get; set; }
+            public double YLocationCollapsedDouble { get; set; }
         }
     }
 }

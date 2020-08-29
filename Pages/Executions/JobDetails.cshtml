@@ -194,15 +194,18 @@
                         <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
                     </g>
                 </g>
-                @foreach (var chartElement in Model.ChartElements)
+
+                @foreach (var label in Model.ChartLabels)
                 {
-                    <g transform="translate(0,@chartElement.LabelYLocation)">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;"
-                              data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
+                    <g transform="translate(0,@label.LabelYLocation)">
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;">@label.StepName</text>
                     </g>
 
-                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@chartElement.LabelYLocation" y2="@chartElement.LabelYLocation" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
-                    
+                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@label.LabelYLocation" y2="@label.LabelYLocation" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
+                }
+
+                @foreach (var chartElement in Model.ChartElements)
+                {
                     <rect status="@chartElement.ExecutionStatus"
                           style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
                           y="@chartElement.BarYLocation"
@@ -231,15 +234,18 @@
                         <text dy=".71em" y="9" x="0" style="text-anchor: middle; font-size: 13px;">@Model.MaxTime.ToString("HH:mm")</text>
                     </g>
                 </g>
-                @foreach (var chartElement in Model.ChartElements)
+
+                @foreach (var label in Model.ChartLabels)
                 {
-                    <g transform="translate(0,@chartElement.LabelYLocationCollapsed)">
-                    <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: @(Model.Executions.Count > 50 ? "8px" : "13px");"
-                            data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">@chartElement.StepName</text>
+                    <g transform="translate(0,@label.LabelYLocationCollapsed)">
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;">@label.StepName</text>
                     </g>
 
-                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@chartElement.LabelYLocationCollapsed" y2="@chartElement.LabelYLocationCollapsed" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
+                    <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@label.LabelYLocationCollapsed" y2="@label.LabelYLocationCollapsed" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
+                }
 
+                @foreach (var chartElement in Model.ChartElements)
+                {
                     <rect status="@chartElement.ExecutionStatus"
                             style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
                             y="@chartElement.BarYLocationCollapsed"
