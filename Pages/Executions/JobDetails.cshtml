@@ -152,11 +152,11 @@
                             case "COMPLETED":
                                 <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
+                            case "SKIPPED":
                             case "FAILED":
                                 <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
                             case "AWAIT RETRY":
-                            case "SKIPPED":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
                             case "RUNNING":
@@ -198,7 +198,7 @@
                 @foreach (var label in Model.ChartLabels)
                 {
                     <g transform="translate(0,@label.LabelYLocation)">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;">@label.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@label.StepName</text>
                     </g>
 
                     <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@label.LabelYLocation" y2="@label.LabelYLocation" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
@@ -238,7 +238,7 @@
                 @foreach (var label in Model.ChartLabels)
                 {
                     <g transform="translate(0,@label.LabelYLocationCollapsed)">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; cursor: pointer; font-size: 13px;">@label.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@label.StepName</text>
                     </g>
 
                     <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@label.LabelYLocationCollapsed" y2="@label.LabelYLocationCollapsed" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
@@ -275,10 +275,10 @@
         {
             case "COMPLETED":
                 return "#28a745"; // green
+            case "SKIPPED":
             case "FAILED":
                 return "#dc3545"; // red
             case "AWAIT RETRY":
-            case "SKIPPED":
                 return "#ffc107"; // orange
             case "RUNNING":
             default:
@@ -352,10 +352,10 @@
             switch (status) {
                 case "COMPLETED":
                     return "#28a745"; // green
+                case "SKIPPED":
                 case "FAILED":
                     return "#dc3545"; // red
                 case "AWAIT RETRY":
-                case "SKIPPED":
                     return "#ffc107"; // orange
                 case "RUNNING":
                 default:
@@ -367,10 +367,10 @@
             switch (status) {
                 case "COMPLETED":
                     return "#088725"; // green
+                case "SKIPPED":
                 case "FAILED":
                     return "#bc1525"; // red
                 case "AWAIT RETRY":
-                case "SKIPPED":
                     return "#dfa100"; // orange
                 case "RUNNING":
                 default:
@@ -467,11 +467,11 @@
                                     case "COMPLETED":
                                         <span class="badge badge-success">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
+                                    case "SKIPPED":
                                     case "FAILED":
                                         <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
                                     case "AWAIT RETRY":
-                                    case "SKIPPED":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
                                     case "RUNNING":
