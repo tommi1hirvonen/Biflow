@@ -34,6 +34,7 @@ namespace EtlManager.Models
         [Display(Name = "Duration (s)")]
         public int? ExecutionInSeconds { get; set; }
 
+        [Display(Name = "Dependency mode")]
         public bool DependencyMode { get; set; }
 
         [Display(Name = "Created by")]

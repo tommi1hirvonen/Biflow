@@ -46,6 +46,12 @@
                 @Html.DisplayFor(model => model.JobExecution.JobId)
             </dd>
             <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.JobExecution.DependencyMode)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.JobExecution.DependencyMode)
+            </dd>
+            <dt class="col-sm-2">
                 @Html.DisplayNameFor(model => model.JobExecution.CreatedDateTime)
             </dt>
             <dd class="col-sm-10">
