@@ -401,6 +401,12 @@
                                         <input type="checkbox" class="form-check-input" id="execute_check_all">
                                     </th>
                                     <th>Step name</th>
+                                    <th>
+                                        @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
+                                    </th>
+                                    <th>
+                                        @Html.DisplayNameFor(model => model.Steps[0].StepType)
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -412,6 +418,19 @@
                                         </td>
                                         <td>
                                             @step.StepName
+                                        </td>
+                                        <td class="align-middle">
+                                            @Html.DisplayFor(modelItem => step.ExecutionPhase)
+                                        </td>
+                                        <td class="align-middle">
+                                            @if (step.StepType == "SQL")
+                                            {
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/code-black-48dp.svg")))
+                                            }
+                                            else if (step.StepType == "SSIS")
+                                            {
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                                            }
                                         </td>
                                     </tr>
                                 }

@@ -6,6 +6,7 @@ using EtlManager.Data;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Schedules
@@ -20,6 +21,9 @@ namespace EtlManager.Pages.Schedules
         }
 
         public IList<Job> Jobs { get; set; }
+
+        [BindProperty]
+        public Schedule NewSchedule { get; set; } = new Schedule();
 
         public async Task OnGetAsync()
         {
@@ -37,8 +41,15 @@ namespace EtlManager.Pages.Schedules
             _context.Schedules.Remove(schedule);
             await _context.SaveChangesAsync();
 
-            Jobs = await _context.Jobs.Include(job => job.Schedules).ToListAsync();
-            return Page();
+            return RedirectToPage("./Index");
+        }
+
+        public async Task<IActionResult> OnPostAsync()
+        {
+            _context.Schedules.Add(NewSchedule);
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index");
         }
     }
 }

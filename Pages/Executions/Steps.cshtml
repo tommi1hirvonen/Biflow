@@ -88,10 +88,10 @@
                             case "COMPLETED":
                                 <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
-                            case "SKIPPED":
                             case "FAILED":
                                 <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
+                            case "SKIPPED":
                             case "AWAIT RETRY":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
@@ -197,10 +197,10 @@
                                     case "COMPLETED":
                                         <span class="badge badge-success">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
-                                    case "SKIPPED":
                                     case "FAILED":
                                         <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
+                                    case "SKIPPED":
                                     case "AWAIT RETRY":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;

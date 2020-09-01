@@ -152,10 +152,10 @@
                             case "COMPLETED":
                                 <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
-                            case "SKIPPED":
                             case "FAILED":
                                 <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
+                            case "SKIPPED":
                             case "AWAIT RETRY":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
@@ -275,9 +275,9 @@
         {
             case "COMPLETED":
                 return "#28a745"; // green
-            case "SKIPPED":
             case "FAILED":
                 return "#dc3545"; // red
+            case "SKIPPED":
             case "AWAIT RETRY":
                 return "#ffc107"; // orange
             case "RUNNING":
@@ -352,9 +352,9 @@
             switch (status) {
                 case "COMPLETED":
                     return "#28a745"; // green
-                case "SKIPPED":
                 case "FAILED":
                     return "#dc3545"; // red
+                case "SKIPPED":
                 case "AWAIT RETRY":
                     return "#ffc107"; // orange
                 case "RUNNING":
@@ -367,9 +367,9 @@
             switch (status) {
                 case "COMPLETED":
                     return "#088725"; // green
-                case "SKIPPED":
                 case "FAILED":
                     return "#bc1525"; // red
+                case "SKIPPED":
                 case "AWAIT RETRY":
                     return "#dfa100"; // orange
                 case "RUNNING":
@@ -467,10 +467,10 @@
                                     case "COMPLETED":
                                         <span class="badge badge-success">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
-                                    case "SKIPPED":
                                     case "FAILED":
                                         <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
+                                    case "SKIPPED":
                                     case "AWAIT RETRY":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;

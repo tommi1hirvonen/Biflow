@@ -110,7 +110,7 @@ namespace EtlManager.Pages.Executions
             long minTicks = MinTime.Ticks;
             long maxTicks = MaxTime.Ticks;
 
-            foreach (var step in Executions.Select(e => new KeyValuePair<Guid, string>(e.StepId, e.StepName)).Distinct())
+            foreach (var step in Executions.Where(e => e.StartDateTime != null).Select(e => new KeyValuePair<Guid, string>(e.StepId, e.StepName)).Distinct())
             {
                 ChartLabels.Add(new ChartLabel
                 {
@@ -125,10 +125,8 @@ namespace EtlManager.Pages.Executions
                 yLocationCollapsed += yIntervalCollapsed;
             }
 
-            foreach (var execution in Executions)
+            foreach (var execution in Executions.Where(e => e.StartDateTime != null))
             {
-                if (execution.StartDateTime == null) continue;
-
                 long startTicks = ((DateTime)execution.StartDateTime).Ticks;
                 double xLocation = (double)(startTicks - minTicks) / (maxTicks - minTicks) * (ChartWidth - ChartPaddingLeft); // normalize time range to the chart height
 
