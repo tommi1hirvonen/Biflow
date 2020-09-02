@@ -127,70 +127,70 @@
                 </div>
                 <div class="modal-body">
                     <dl class="row">
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.ExecutionId)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.ExecutionId)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.JobId)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.JobId)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.JobName)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.JobName)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.StepId)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.StepId)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.StepName)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.StepName)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.StepType)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.StepType)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.CreatedDateTime)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.CreatedDateTime)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.StartDateTime)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.StartDateTime)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.EndDateTime)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.EndDateTime)
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             <text>Duration</text>
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             <text>@item.GetDurationInReadableFormat()</text>
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.ExecutionStatus)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             @{
                                 switch (item.ExecutionStatus)
                                 {
@@ -213,33 +213,33 @@
                                 }
                             }
                         </dd>
-                        <dt class="col-sm-2">
+                        <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.ErrorMessage)
                         </dt>
-                        <dd class="col-sm-10">
+                        <dd class="col-sm-9">
                             <text class="text-danger" style="white-space: pre-wrap">@item.ErrorMessage</text>
                         </dd>
                         @if (item.StepType == "SQL")
                         {
-                            <dt class="col-sm-2">
+                            <dt class="col-sm-3">
                                 @Html.DisplayNameFor(model => item.SqlStatement)
                             </dt>
-                            <dd class="col-sm-10">
+                            <dd class="col-sm-9">
                                 @Html.DisplayFor(model => item.SqlStatement)
                             </dd>
                         }
                         else if (item.StepType == "SSIS")
                         {
-                            <dt class="col-sm-2">
+                            <dt class="col-sm-3">
                                 @Html.DisplayNameFor(model => item.PackagePath)
                             </dt>
-                            <dd class="col-sm-10">
+                            <dd class="col-sm-9">
                                 @Html.DisplayFor(model => item.PackagePath)
                             </dd>
-                            <dt class="col-sm-2">
+                            <dt class="col-sm-3">
                                 @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
                             </dt>
-                            <dd class="col-sm-10">
+                            <dd class="col-sm-9">
                                 @Html.DisplayFor(model => item.ExecuteIn32BitMode)
                             </dd>
                         }
