@@ -25,6 +25,7 @@ namespace EtlManager.Data
         public DbSet<JobExecution> JobExecutions { get; set; }
         public DbSet<Dependency> Dependencies { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<Subscription> Subscriptions { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
 
@@ -48,6 +49,9 @@ namespace EtlManager.Data
             modelBuilder.Entity<Job>()
                 .HasMany(job => job.Schedules)
                 .WithOne(schedule => schedule.Job);
+            modelBuilder.Entity<Job>()
+                .HasMany(job => job.Subscriptions)
+                .WithOne(subscription => subscription.Job);
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
                 .HasOne(step => step.Job)
@@ -64,6 +68,12 @@ namespace EtlManager.Data
                 .ToTable("Parameter")
                 .HasOne(parameter => parameter.Step)
                 .WithMany(step => step.Parameters)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Subscription>()
+                .ToTable("Subscription")
+                .HasOne(subscription => subscription.Job)
+                .WithMany(job => job.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
         }

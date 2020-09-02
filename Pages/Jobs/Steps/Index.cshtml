@@ -19,6 +19,14 @@
             <a asp-page="Dependency" asp-route-id="@Model.Job.JobId" asp-route-name="@Model.Job.JobName">Dependencies</a>
             <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
             <div class="btn-group">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-success" : "btn-outline-secondary")" onclick="toggleSubscribed()" data-toggle="tooltip" data-placement="top" title="Toggle subscription">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-envelope-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414.05 3.555zM0 4.697v7.104l5.803-3.558L0 4.697zM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586l-1.239-.757zm3.436-.586L16 11.801V4.697l-5.803 3.546z"></path>
+                    </svg>
+                </button>
+            </div>
+            <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
+            <div class="btn-group">
                 <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
                     Execute...
                 </button>
@@ -109,276 +117,6 @@
     <a asp-page="../Index">Back to jobs</a>
 </div>
 
-@section Scripts {
-
-    <script type="text/javascript">
-
-        function toggleEnabled(elem) {
-            var id_ = $(elem).data('step-id');
-            //alert(id);
-
-            $.ajax({
-                url: "./Steps/Index?handler=ToggleEnabled",
-                method: "POST",
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("XSRF-TOKEN",
-                        $('input:hidden[name="__RequestVerificationToken"]').val());
-                },
-                data: {
-                    id: id_
-                },
-                success: function (response) {
-                    if (!response.success) {
-                        alert(response.responseText);
-                    }
-                },
-                error: function (response) {
-                    alert("AJAX error, try logging in again");
-                }
-            });
-        }
-
-    </script>
-
-    <script type="text/javascript">
-        function deleteStep(element, id) {
-            $.ajax({
-                url: "./Steps/Index?handler=Delete",
-                method: "POST",
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("XSRF-TOKEN",
-                        $('input:hidden[name="__RequestVerificationToken"]').val());
-                },
-                data: {
-                    id: id
-                },
-                success: function (response) {
-                    if (response.success) {
-                        $(element).closest('tr').remove();
-                    } else {
-                        alert(response.responseText);
-                    }
-                },
-                error: function (response) {
-                    alert("AJAX error, try logging in again");
-                }
-            });
-        }
-    </script>
-
-    <script type="text/javascript">
-        function startExecution() {
-            var jobId = "@Model.Job.JobId";
-
-            var stepsToExecute = [];
-            $("input[name=execute_checkbox]:checked").each(function () {
-                stepsToExecute.push(this.id);
-                $(this).prop('checked', false);
-            });
-
-            $('#execute_check_all').prop('checked', false);
-
-            if (stepsToExecute.length == 0) {
-                return;
-            }
-
-            var stepList = stepsToExecute.join(",");
-
-            $('#button_execute').attr("disabled", "true");
-            $('#spinner_starting').removeAttr("hidden");
-
-            $.ajax({
-                url: "./Steps/Index?handler=Execute",
-                method: "POST",
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("XSRF-TOKEN",
-                        $('input:hidden[name="__RequestVerificationToken"]').val());
-                },
-                data: {
-                    id: jobId,
-                    stepIds: stepList
-                },
-                success: function (response) {
-                    if (response.success) {
-                        $('#button_execute').removeAttr("disabled");
-                        $('#spinner_starting').attr("hidden", "hidden");
-
-                        $('#alert_execution').empty();
-                        $('#alert_execution').append(`
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                              Job started successfully - <a class="alert-link" href="/Executions/JobDetails?id=` + response.executionId + `" target="_blank">monitor execution</a>
-                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            `);
-                    } else {
-                        $('#button_execute').removeAttr("disabled");
-                        $('#spinner_starting').attr("hidden", "hidden");
-
-                        $('#alert_execution').empty();
-                        $('#alert_execution').append(`
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                              ` + response.responseText + `
-                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            `);
-                    }
-                },
-                error: function (response) {
-                    $('#button_execute').removeAttr("disabled");
-                    $('#spinner_starting').attr("hidden", "hidden");
-
-                    $('#alert_execution').empty();
-                    $('#alert_execution').append(`
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                              Error starting job: AJAX error, try logging in again
-                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            `);
-                }
-            });
-        }
-
-        $(function () {
-            $('#execute_check_all').change(function () {
-                var value = $(this).prop('checked');
-                $("input[name=execute_checkbox]").prop('checked', value);
-            });
-        });
-    </script>
-
-    <script type="text/javascript">
-        $(document).ready(function () { stepTypeSelected(); });
-
-        function stepTypeSelected() {
-            var stepType = document.getElementById('step_type').value;
-            if (stepType == "SQL") {
-                $('#sql_statement_div').show();
-                $('#server_div').hide();
-                $('#folder_div').hide();
-                $('#project_div').hide();
-                $('#package_div').hide();
-                $('#32_bit_mode_div').hide();
-                $('#parameters_div').hide();
-            } else if (stepType == "SSIS") {
-                $('#sql_statement_div').hide();
-                $('#server_div').show();
-                $('#folder_div').show();
-                $('#project_div').show();
-                $('#package_div').show();
-                $('#32_bit_mode_div').show();
-                $('#parameters_div').show();
-            }
-        }
-
-    </script>
-
-    <script type="text/javascript">
-        $(function () {
-            $("#button_submit").click(function () {
-                var stepType = document.getElementById('step_type').value;
-                var sql = document.getElementById('sql_input').value;
-                var server = document.getElementById('server_input').value;
-                var folder = document.getElementById('folder_input').value;
-                var project = document.getElementById('project_input').value;
-                var package = document.getElementById('package_input').value;
-                if (stepType == "SQL" && sql.length == 0) {
-                    $('#sql_error').show();
-                    return false;
-                } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
-                    $('#ssis_error').show();
-                    return false;
-                }
-                return true;
-            });
-        });
-
-        $(function () {
-            $('#step_type').change(function () { hideErrors(); });
-            $('#sql_input').on('input', function () { hideErrors(); });
-            $('#server_input').on('input', function () { hideErrors(); });
-            $('#folder_input').on('input', function () { hideErrors(); });
-            $('#project_input').on('input', function () { hideErrors(); });
-            $('#package_input').on('input', function () { hideErrors(); });
-        });
-
-        function hideErrors() {
-            $('#ssis_error').hide();
-            $('#sql_error').hide();
-        }
-    </script>
-
-    <script type="text/javascript">
-        var parameterCount = @Model.Parameters.Count;
-
-        function addParameter() {
-            @*Remove the validator from the form...*@
-            $('#form').removeData("validator");
-            $('#form').removeData("unobtrusiveValidation");
-            $('#parameters_table tr:last').after(`
-                <tr>
-                    <td>
-                        <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
-                    </td>
-                        <td>
-                        <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
-                    </td>
-                        <td>
-                        <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
-                    </td>
-                </tr>
-                `);
-            parameterCount += 1;
-            @*...and add it again to include the newly added fields in the validator.*@
-            $.validator.unobtrusive.parse("form");
-            return false;
-        }
-
-        function removeParameter(element) {
-            $(element).closest('tr').find("#input_isdeleted").val(true);
-            $(element).closest('tr').find("#input_parameter_name").val("_"); @*Set the input values to strings of length = 1 to prevent jQuery validation errors*@
-            $(element).closest('tr').find("#input_parameter_value").val("_");
-            $(element).closest('tr').hide();
-        }
-    </script>
-
-    <script type="text/javascript">
-        $('#button_submit').click(
-            function () {
-                var parameterNames = [];
-                $("input[id=input_parameter_name]").each(function () {
-                    parameterNames.push(this.value);
-                });
-                parameterNames = parameterNames.sort();
-                for (var i = 0; i < parameterNames.length - 1; i++) {
-                    if (parameterNames[i + 1] == parameterNames[i]) {
-                        $('#duplicate_parameter_error').show();
-                        return false;
-                    }
-                }
-                return true;
-            });
-
-        $(function () {
-            $("#parameters_div").on('input', function () {
-                $('#duplicate_parameter_error').hide();
-            });
-        });
-    </script>
-
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-
-}
 
 
 @*EXECUTE MODAL*@
@@ -688,4 +426,313 @@
             </div>
         </div>
     </div>
+}
+
+
+
+@section Scripts {
+
+    <script type="text/javascript">
+
+        // Initialize all Bootstrap tooltips
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        })
+
+        function toggleEnabled(elem) {
+            var id_ = $(elem).data('step-id');
+            //alert(id);
+
+            $.ajax({
+                url: "./Steps/Index?handler=ToggleEnabled",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id_
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
+
+        var subscribed = @Model.Subscribed.ToString().ToLower();
+
+        function toggleSubscribed() {
+            var jobId = "@Model.Job.JobId";
+            $.ajax({
+                url: "./Steps/Index?handler=ToggleSubscribed",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: jobId
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        alert(response.responseText);
+                    } else {
+                        if (subscribed) {
+                            $('#button_toggle_subscribed').removeClass("btn-outline-success");
+                            $('#button_toggle_subscribed').addClass("btn-outline-secondary");
+                        } else {
+                            $('#button_toggle_subscribed').addClass("btn-outline-success");
+                            $('#button_toggle_subscribed').removeClass("btn-outline-secondary");
+                        }
+                        subscribed = !subscribed;
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
+
+
+        function deleteStep(element, id) {
+            $.ajax({
+                url: "./Steps/Index?handler=Delete",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $(element).closest('tr').remove();
+                    } else {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
+
+
+
+        function startExecution() {
+            var jobId = "@Model.Job.JobId";
+
+            var stepsToExecute = [];
+            $("input[name=execute_checkbox]:checked").each(function () {
+                stepsToExecute.push(this.id);
+                $(this).prop('checked', false);
+            });
+
+            $('#execute_check_all').prop('checked', false);
+
+            if (stepsToExecute.length == 0) {
+                return;
+            }
+
+            var stepList = stepsToExecute.join(",");
+
+            $('#button_execute').attr("disabled", "true");
+            $('#spinner_starting').removeAttr("hidden");
+
+            $.ajax({
+                url: "./Steps/Index?handler=Execute",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: jobId,
+                    stepIds: stepList
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#button_execute').removeAttr("disabled");
+                        $('#spinner_starting').attr("hidden", "hidden");
+
+                        $('#alert_execution').empty();
+                        $('#alert_execution').append(`
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                              Job started successfully - <a class="alert-link" href="/Executions/JobDetails?id=` + response.executionId + `" target="_blank">monitor execution</a>
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                    } else {
+                        $('#button_execute').removeAttr("disabled");
+                        $('#spinner_starting').attr("hidden", "hidden");
+
+                        $('#alert_execution').empty();
+                        $('#alert_execution').append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                              ` + response.responseText + `
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                    }
+                },
+                error: function (response) {
+                    $('#button_execute').removeAttr("disabled");
+                    $('#spinner_starting').attr("hidden", "hidden");
+
+                    $('#alert_execution').empty();
+                    $('#alert_execution').append(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                              Error starting job: AJAX error, try logging in again
+                              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            `);
+                }
+            });
+        }
+
+        $(function () {
+            $('#execute_check_all').change(function () {
+                var value = $(this).prop('checked');
+                $("input[name=execute_checkbox]").prop('checked', value);
+            });
+        });
+
+
+
+        $(document).ready(function () { stepTypeSelected(); });
+
+        function stepTypeSelected() {
+            var stepType = document.getElementById('step_type').value;
+            if (stepType == "SQL") {
+                $('#sql_statement_div').show();
+                $('#server_div').hide();
+                $('#folder_div').hide();
+                $('#project_div').hide();
+                $('#package_div').hide();
+                $('#32_bit_mode_div').hide();
+                $('#parameters_div').hide();
+            } else if (stepType == "SSIS") {
+                $('#sql_statement_div').hide();
+                $('#server_div').show();
+                $('#folder_div').show();
+                $('#project_div').show();
+                $('#package_div').show();
+                $('#32_bit_mode_div').show();
+                $('#parameters_div').show();
+            }
+        }
+
+
+
+        $(function () {
+            $("#button_submit").click(function () {
+                var stepType = document.getElementById('step_type').value;
+                var sql = document.getElementById('sql_input').value;
+                var server = document.getElementById('server_input').value;
+                var folder = document.getElementById('folder_input').value;
+                var project = document.getElementById('project_input').value;
+                var package = document.getElementById('package_input').value;
+                if (stepType == "SQL" && sql.length == 0) {
+                    $('#sql_error').show();
+                    return false;
+                } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
+                    $('#ssis_error').show();
+                    return false;
+                }
+                return true;
+            });
+        });
+
+        $(function () {
+            $('#step_type').change(function () { hideErrors(); });
+            $('#sql_input').on('input', function () { hideErrors(); });
+            $('#server_input').on('input', function () { hideErrors(); });
+            $('#folder_input').on('input', function () { hideErrors(); });
+            $('#project_input').on('input', function () { hideErrors(); });
+            $('#package_input').on('input', function () { hideErrors(); });
+        });
+
+        function hideErrors() {
+            $('#ssis_error').hide();
+            $('#sql_error').hide();
+        }
+
+
+
+        var parameterCount = @Model.Parameters.Count;
+
+        function addParameter() {
+            @*Remove the validator from the form...*@
+            $('#form').removeData("validator");
+            $('#form').removeData("unobtrusiveValidation");
+            $('#parameters_table tr:last').after(`
+                <tr>
+                    <td>
+                        <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
+                    </td>
+                        <td>
+                        <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
+                    </td>
+                        <td>
+                        <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
+                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                    </td>
+                </tr>
+                `);
+            parameterCount += 1;
+            @*...and add it again to include the newly added fields in the validator.*@
+            $.validator.unobtrusive.parse("form");
+            return false;
+        }
+
+        function removeParameter(element) {
+            $(element).closest('tr').find("#input_isdeleted").val(true);
+            $(element).closest('tr').find("#input_parameter_name").val("_"); @*Set the input values to strings of length = 1 to prevent jQuery validation errors*@
+            $(element).closest('tr').find("#input_parameter_value").val("_");
+            $(element).closest('tr').hide();
+        }
+
+
+
+        $('#button_submit').click(
+            function () {
+                var parameterNames = [];
+                $("input[id=input_parameter_name]").each(function () {
+                    parameterNames.push(this.value);
+                });
+                parameterNames = parameterNames.sort();
+                for (var i = 0; i < parameterNames.length - 1; i++) {
+                    if (parameterNames[i + 1] == parameterNames[i]) {
+                        $('#duplicate_parameter_error').show();
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+        $(function () {
+            $("#parameters_div").on('input', function () {
+                $('#duplicate_parameter_error').hide();
+            });
+        });
+    </script>
+
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
 }
