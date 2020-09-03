@@ -42,5 +42,9 @@ namespace EtlManager.Models
         public int RetryAttempts { get; set; }
 
         public int RetryIntervalMinutes { get; set; }
+
+        public long ExecutorOperationId { get; set; }
+
+        public long PackageOperationId { get; set; }
     }
 }

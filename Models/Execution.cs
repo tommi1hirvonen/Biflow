@@ -40,6 +40,9 @@ namespace EtlManager.Models
         [Display(Name = "Created by")]
         public string CreatedBy { get; set; }
 
+        [Display(Name = "Schedule id")]
+        public Guid ScheduleId { get; set; }
+
         public string GetDurationInReadableFormat()
         {
             if (ExecutionInSeconds == null) return null;
