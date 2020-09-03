@@ -101,6 +101,7 @@
                             <span class="badge badge-danger">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
                         case "WARNING":
+                        case "SUSPENDED":
                             <span class="badge badge-warning">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
                         case "RUNNING":
