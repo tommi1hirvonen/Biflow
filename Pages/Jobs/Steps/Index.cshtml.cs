@@ -107,6 +107,25 @@ namespace EtlManager.Pages.Jobs.Steps
             return new JsonResult(new { success = true });
         }
 
+        public async Task<IActionResult> OnPostToggleDependencyMode(Guid? id)
+        {
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
+
+            Job job = await _context.Jobs.FindAsync(id);
+
+            if (job == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No job found for id " + id });
+            }
+
+            await Utility.ToggleJobDependencyMode(_configuration, job);
+
+            return new JsonResult(new { success = true });
+        }
+
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
             if (id == null)

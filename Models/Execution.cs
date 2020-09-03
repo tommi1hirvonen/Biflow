@@ -41,7 +41,7 @@ namespace EtlManager.Models
         public string CreatedBy { get; set; }
 
         [Display(Name = "Schedule id")]
-        public Guid ScheduleId { get; set; }
+        public Guid? ScheduleId { get; set; }
 
         public string GetDurationInReadableFormat()
         {

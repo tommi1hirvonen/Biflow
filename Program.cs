@@ -76,6 +76,19 @@ namespace EtlManager
             return executionId;
         }
 
+        public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "UPDATE [etlmanager].[Job]\n" +
+                "SET [UseDependencyMode] = CASE [UseDependencyMode] WHEN 1 THEN 0 ELSE 1 END\n" +
+                "WHERE [JobId] = @JobId"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
+            await sqlConnection.OpenAsync();
+            await sqlCommand.ExecuteNonQueryAsync();
+        }
+
         public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
@@ -83,10 +96,8 @@ namespace EtlManager
                 "UPDATE [etlmanager].[Step]\n" +
                 "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
                 "WHERE [StepId] = @StepId"
-
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
-
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
         }
