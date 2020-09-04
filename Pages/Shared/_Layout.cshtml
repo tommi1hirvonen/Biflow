@@ -25,9 +25,9 @@
                     <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                         <ul class="navbar-nav mr-auto">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle @(pageRoute == "/Account" ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
+                                <a class="nav-link dropdown-toggle @(pageRoute.Left(8) == "/Account" ? "active font-weight-bold" : "")" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Account</a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" asp-page="/Account">Change password</a>
+                                    <a class="dropdown-item" asp-page="/Account/Email">Settings</a>
                                     <form method="post">
                                         <button class="dropdown-item" asp-page="/Index" asp-page-handler="LogOff">Log out</button>
                                     </form>

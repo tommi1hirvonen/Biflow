@@ -4,23 +4,32 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
+using EtlManager.Data;
+using EtlManager.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages
 {
-    public class AccountModel : PageModel
+    public class PasswordModel : PageModel
     {
 
         private readonly IConfiguration _configuration;
+        private EtlManagerContext _context;
+        private HttpContext _httpContext;
 
-        public AccountModel(IConfiguration configuration, EtlManager.Data.EtlManagerContext context)
+        public PasswordModel(IConfiguration configuration, EtlManagerContext context, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
+            _context = context;
+            _httpContext = httpContextAccessor.HttpContext;
         }
+
+        public string Username { get; set; }
 
         [BindProperty]
         [Required]
@@ -38,23 +47,26 @@ namespace EtlManager.Pages
         [Display(Name = "Confirm new password")]
         public string ConfirmPassword { get; set; }
 
-        public bool success = false;
+        public bool Success = false;
 
         public void OnGet()
         {
+            Username = _httpContext.User?.Identity?.Name;
         }
 
-        public IActionResult OnPost()
+        public IActionResult OnPostChangePassword()
         {
+            string username = _httpContext.User?.Identity?.Name;
+
             if (ModelState.ContainsKey("MatchError")) ModelState["MatchError"].Errors.Clear();
             if (ModelState.IsValid)
             {
                 if (Password.Equals(ConfirmPassword))
                 {
-                    var username = User.FindFirstValue(ClaimTypes.Name);
+                    
                     if (Utility.UpdatePassword(_configuration, username, Password))
                     {
-                        success = true;
+                        Success = true;
                     }
                     else
                     {

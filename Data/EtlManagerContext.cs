@@ -26,6 +26,7 @@ namespace EtlManager.Data
         public DbSet<Dependency> Dependencies { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
+        public DbSet<User> Users { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
 
@@ -76,6 +77,8 @@ namespace EtlManager.Data
                 .WithMany(job => job.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<User>()
+                .ToTable("User");
         }
 
         
@@ -112,6 +115,9 @@ namespace EtlManager.Data
                 entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("CreatedBy").CurrentValue = user;
             });
+
+            var editedUsers = ChangeTracker.Entries().Where(entity => entity.Entity is User && entity.State == EntityState.Modified).ToList();
+            editedUsers.ForEach(user => user.Property("LastModifiedDateTime").CurrentValue = DateTime.Now);
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }

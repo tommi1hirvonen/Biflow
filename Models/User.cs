@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace EtlManager.Models
+{
+    public class User
+    {
+        [Key]
+        [Required]
+        [MaxLength(250)]
+        public string Username { get; set; }
+
+        [MaxLength(254)]
+        [DataType(DataType.EmailAddress)]
+        public string Email { get; set; }
+
+        [Required]
+        public DateTime LastModifiedDateTime { get; set; }
+    }
+}
