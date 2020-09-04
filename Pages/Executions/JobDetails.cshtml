@@ -245,7 +245,7 @@
                 @foreach (var label in Model.ChartLabels)
                 {
                     <g transform="translate(0,@label.LabelYLocationCollapsed)">
-                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: 13px;">@label.StepName</text>
+                        <text dy=".32em" x="-9" y="0" style="text-anchor: end; font-size: @(Model.ChartLabels.Count > 50 ? "9" : "13")px;">@label.StepName</text>
                     </g>
 
                     <line x1="0" x2="@(Model.ChartWidth-Model.ChartPaddingLeft)" y1="@label.LabelYLocationCollapsed" y2="@label.LabelYLocationCollapsed" style="stroke-dasharray: 5,5; stroke: rgb(210,210,210); stroke-width: 1;"></line>
