@@ -8,22 +8,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages.Schedules
 {
     public class IndexModel : PageModel
     {
         private readonly EtlManagerContext _context;
+        private readonly IConfiguration _configuration;
 
-        public IndexModel(EtlManagerContext context)
+        public IndexModel(IConfiguration configuration, EtlManagerContext context)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public IList<Job> Jobs { get; set; }
 
         [BindProperty]
-        public Schedule NewSchedule { get; set; } = new Schedule();
+        public Schedule NewSchedule { get; set; } = new Schedule { IsEnabled = true };
 
         public async Task OnGetAsync()
         {
@@ -50,6 +53,25 @@ namespace EtlManager.Pages.Schedules
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index");
+        }
+
+        public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
+        {
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
+
+            Schedule schedule = await _context.Schedules.FindAsync(id);
+
+            if (schedule == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No schedule found for id " + id });
+            }
+
+            await Utility.ToggleScheduleEnabled(_configuration, schedule);
+
+            return new JsonResult(new { success = true });
         }
     }
 }

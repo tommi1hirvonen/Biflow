@@ -15,6 +15,9 @@
     <thead>
         <tr>
             <th>
+                Enabled
+            </th>
+            <th>
                 Time
             </th>
             <th>
@@ -38,93 +41,101 @@
     <tbody>
         @foreach (var item in Model.Schedules)
         {
-            <tr>
-                <td>
-                    @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
-                </td>
-                <td>
-                    @if (item.Monday)
-                    {
-                        <span class="badge badge-primary">Monday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Monday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Tuesday)
-                    {
-                        <span class="badge badge-primary">Tuesday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Tuesday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Wednesday)
-                    {
-                        <span class="badge badge-primary">Wednesday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Wednesday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Thursday)
-                    {
-                        <span class="badge badge-primary">Thursday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Thursday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Friday)
-                    {
-                        <span class="badge badge-primary">Friday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Friday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Saturday)
-                    {
-                        <span class="badge badge-primary">Saturday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Saturday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Sunday)
-                    {
-                        <span class="badge badge-primary">Sunday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Sunday</span>
-                    }
-                </td>
-                <td>
-                    <form method="post">
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Delete
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Confirm</button>
-                            </div>
+        <tr>
+            <td class="align-middle">
+                <form>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
+                        <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
+                    </div>
+                </form>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
+            </td>
+            <td>
+                @if (item.Monday)
+                {
+                    <span class="badge badge-primary">Monday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Monday</span>
+                }
+            </td>
+            <td>
+                @if (item.Tuesday)
+                {
+                    <span class="badge badge-primary">Tuesday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Tuesday</span>
+                }
+            </td>
+            <td>
+                @if (item.Wednesday)
+                {
+                    <span class="badge badge-primary">Wednesday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Wednesday</span>
+                }
+            </td>
+            <td>
+                @if (item.Thursday)
+                {
+                    <span class="badge badge-primary">Thursday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Thursday</span>
+                }
+            </td>
+            <td>
+                @if (item.Friday)
+                {
+                    <span class="badge badge-primary">Friday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Friday</span>
+                }
+            </td>
+            <td>
+                @if (item.Saturday)
+                {
+                    <span class="badge badge-primary">Saturday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Saturday</span>
+                }
+            </td>
+            <td>
+                @if (item.Sunday)
+                {
+                    <span class="badge badge-primary">Sunday</span>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Sunday</span>
+                }
+            </td>
+            <td>
+                <form method="post">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Delete
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Confirm</button>
                         </div>
-                    </form>
-                </td>
-            </tr>
+                    </div>
+                </form>
+            </td>
+        </tr>
         }
     </tbody>
 </table>
@@ -148,6 +159,7 @@
                         <div class="col-md-8 mx-auto">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                             <input type="hidden" asp-for="NewSchedule.JobId" />
+                            <input hidden asp-for="NewSchedule.IsEnabled" />
                             <div class="form-group col-md-4">
                                 <label asp-for="NewSchedule.TimeHours" class="control-label"></label>
                                 <input asp-for="NewSchedule.TimeHours" class="form-control" />
@@ -242,5 +254,30 @@
                 $("#weekdaysError").hide();
             });
         });
+
+        function toggleEnabled(elem) {
+            var id_ = $(elem).data('schedule-id');
+            //alert(id);
+
+            $.ajax({
+                url: "/Schedules/Index?handler=ToggleEnabled",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id_
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
     </script>
 }

@@ -42,6 +42,9 @@ namespace EtlManager.Models
         [Display(Name = "Minutes")]
         public int TimeMinutes { get; set; } = 0;
         [Required]
+        [Display(Name = "Enabled")]
+        public bool IsEnabled { get; set; }
+        [Required]
         [Display(Name = "Created")]
         public DateTime CreatedDateTime { get; set; }
         [Display(Name = "Created by")]

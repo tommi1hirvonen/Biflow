@@ -31,7 +31,7 @@ namespace EtlManager.Pages.Jobs
             Job = await _context.Jobs.Include(job => job.Schedules).FirstOrDefaultAsync(job => job.JobId == id);
             Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
 
-            NewSchedule = new Schedule { JobId = id };
+            NewSchedule = new Schedule { JobId = id, IsEnabled = true };
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid? id, Guid jobId)

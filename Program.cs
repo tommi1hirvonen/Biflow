@@ -102,6 +102,19 @@ namespace EtlManager
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
+        public async static Task ToggleScheduleEnabled(IConfiguration configuration, Schedule schedule)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "UPDATE [etlmanager].[Schedule]\n" +
+                "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
+                "WHERE [ScheduleId] = @ScheduleId"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@ScheduleId", schedule.ScheduleId.ToString());
+            await sqlConnection.OpenAsync();
+            await sqlCommand.ExecuteNonQueryAsync();
+        }
+
         public async static Task JobCopy(IConfiguration configuration, Guid jobId, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
