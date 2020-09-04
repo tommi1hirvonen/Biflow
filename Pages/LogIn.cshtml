@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-md-4 mx-auto">
         <section>
-            <form method="post" role="form" class="form-horizontal">
+            <form method="post" role="form" class="form-horizontal" onsubmit="disableLoginbutton()">
                 @Html.AntiForgeryToken()
 
                 <h4>Log in</h4>
@@ -28,7 +28,7 @@
                 <p />
                 <p />
                 <div class="form-group">
-                    <button asp-page-handler="LogIn" class="btn btn-success btn-block">Log in</button>
+                    <button id="button_login" asp-page-handler="LogIn" class="btn btn-success btn-block">Log in</button>
                 </div>
             </form>
         </section>
@@ -37,9 +37,16 @@
 
 @section Scripts {
     <script type="text/javascript">
+
         $(document).ready(function () { focusUsername(); });
+
         function focusUsername() {
             $('#username').focus();
+        }
+
+        function disableLoginbutton() {
+            $('#button_login').attr("disabled", "true");
+            return true;
         }
     </script>
 }
