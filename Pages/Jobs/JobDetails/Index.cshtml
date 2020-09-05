@@ -1,5 +1,5 @@
 ﻿@page
-@model EtlManager.Pages.Jobs.Steps.IndexModel
+@model EtlManager.Pages.Jobs.JobDetails.IndexModel
 
 @{
     ViewData["Title"] = "Job Steps";
@@ -82,7 +82,7 @@
         {
             <tr>
                 <td class="align-middle">
-                    <a class="text-dark" asp-page="./Step/Edit" asp-route-id="@item.StepId">@item.StepName</a>
+                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.StepName</a>
                 </td>
                 <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
@@ -449,7 +449,7 @@
             var id_ = $(elem).data('job-id');
 
             $.ajax({
-                url: "./Job/Index?handler=ToggleDependencyMode",
+                url: "./JobDetails/Index?handler=ToggleDependencyMode",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -474,7 +474,7 @@
             //alert(id);
 
             $.ajax({
-                url: "./Job/Index?handler=ToggleEnabled",
+                url: "./JobDetails/Index?handler=ToggleEnabled",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -497,7 +497,7 @@
 
         function deleteStep(element, id) {
             $.ajax({
-                url: "./Job/Index?handler=Delete",
+                url: "./JobDetails/Index?handler=Delete",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -542,7 +542,7 @@
             $('#spinner_starting').removeAttr("hidden");
 
             $.ajax({
-                url: "./Job/Index?handler=Execute",
+                url: "./JobDetails/Index?handler=Execute",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",

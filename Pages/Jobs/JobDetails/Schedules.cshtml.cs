@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace EtlManager.Pages.Jobs
+namespace EtlManager.Pages.Jobs.JobDetails
 {
     public class SchedulesModel : PageModel
     {

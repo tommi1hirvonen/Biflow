@@ -33,7 +33,7 @@ namespace EtlManager.Pages.Jobs
 
         public async Task OnGetAsync()
         {
-            Jobs = await _context.Jobs.Include(job => job.Steps).ToListAsync();
+            Jobs = await _context.Jobs.Include(job => job.Steps).OrderBy(job => job.JobName).ToListAsync();
         }
 
         public async Task<IActionResult> OnPostCopy(Guid id)

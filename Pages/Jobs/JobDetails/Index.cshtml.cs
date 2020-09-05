@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 
-namespace EtlManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.JobDetails
 {
     public class IndexModel : PageModel
     {

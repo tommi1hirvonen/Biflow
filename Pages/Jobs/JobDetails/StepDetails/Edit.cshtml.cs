@@ -10,13 +10,13 @@ using EtlManager.Data;
 using EtlManager.Models;
 using System.Collections;
 
-namespace EtlManager.Pages.Jobs.Steps
+namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
 {
     public class EditModel : PageModel
     {
-        private readonly EtlManager.Data.EtlManagerContext _context;
+        private readonly EtlManagerContext _context;
 
-        public EditModel(EtlManager.Data.EtlManagerContext context)
+        public EditModel(EtlManagerContext context)
         {
             _context = context;
         }

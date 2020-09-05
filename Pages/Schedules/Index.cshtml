@@ -8,7 +8,7 @@
     New schedule
 </button>
 <p />
-<table class="table">
+<table class="table table-hover">
     <thead>
         <tr>
             <th>Job</th>
@@ -31,7 +31,7 @@
             {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => job.JobName)
+                <a class="text-dark" asp-page="../Jobs/JobDetails/Index" asp-route-id="@job.JobId">@job.JobName</a>
             </td>
             <td class="align-middle">
                 <form>

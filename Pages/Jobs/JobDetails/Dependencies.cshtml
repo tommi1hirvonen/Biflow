@@ -1,5 +1,5 @@
 ﻿@page
-@model EtlManager.Pages.Jobs.Steps.DependenciesModel
+@model EtlManager.Pages.Jobs.JobDetails.DependenciesModel
 @{
     ViewData["Title"] = "Job Dependencies";
 }
@@ -37,10 +37,10 @@
         {
             <tr>
                 <td>
-                    <a class="text-dark" asp-page="./Step/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
+                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
                 </td>
                 <td>
-                    @Html.DisplayFor(modelItem => item.DependantOnStep.StepName)
+                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StrictDependency)
