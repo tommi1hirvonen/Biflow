@@ -42,8 +42,8 @@
                 </td>
                 <td>
                     <form method="post">
-                        <a class="btn btn-link btn-sm" asp-page="./Steps/Index" asp-route-id="@item.JobId">Steps</a> |
-                        <a class="btn btn-link btn-sm" asp-page="./Schedules" asp-route-id="@item.JobId">Schedules</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Job/Index" asp-route-id="@item.JobId">Steps</a> |
+                        <a class="btn btn-link btn-sm" asp-page="./Job/Schedules" asp-route-id="@item.JobId">Schedules</a> |
                         <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
                             Edit
                         </button> |

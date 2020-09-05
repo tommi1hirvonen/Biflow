@@ -10,11 +10,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Jobs.Steps
 {
-    public class DependencyModel : PageModel
+    public class DependenciesModel : PageModel
     {
         private readonly EtlManagerContext _context;
 
-        public DependencyModel(EtlManagerContext context)
+        public DependenciesModel(EtlManagerContext context)
         {
             _context = context;
         }
