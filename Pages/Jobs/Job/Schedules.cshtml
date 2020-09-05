@@ -4,13 +4,39 @@
     ViewData["Title"] = "Schedules";
 }
 
-<h4>@Model.Job.JobName schedules</h4>
-<hr />
-<p />
-<button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-    New schedule
-</button>
-<p />
+<h4>@Model.Job.JobName</h4>
+
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Index" asp-route-id="@Model.Job.JobId">Steps</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">Dependencies</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">Schedules</a>
+    </li>
+</ul>
+
+<p></p>
+<div class="container">
+    <div class="row align-items-center">
+        <div class="col">
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                New schedule
+            </button>
+        </div>
+        <div class="col" align="right">
+            <div class="btn-group">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-outline-secondary")" onclick="toggleSubscribed()" data-toggle="tooltip" data-placement="left" title="@(Model.Subscribed ? "Unsubscribe" : "Subscribe")">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/bootstrap/envelope-fill.svg")))
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p></p>
 <table class="table">
     <thead>
         <tr>
@@ -41,101 +67,101 @@
     <tbody>
         @foreach (var item in Model.Schedules)
         {
-        <tr>
-            <td class="align-middle">
-                <form>
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
-                        <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
-                    </div>
-                </form>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
-            </td>
-            <td>
-                @if (item.Monday)
-                {
-                    <span class="badge badge-primary">Monday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Monday</span>
-                }
-            </td>
-            <td>
-                @if (item.Tuesday)
-                {
-                    <span class="badge badge-primary">Tuesday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Tuesday</span>
-                }
-            </td>
-            <td>
-                @if (item.Wednesday)
-                {
-                    <span class="badge badge-primary">Wednesday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Wednesday</span>
-                }
-            </td>
-            <td>
-                @if (item.Thursday)
-                {
-                    <span class="badge badge-primary">Thursday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Thursday</span>
-                }
-            </td>
-            <td>
-                @if (item.Friday)
-                {
-                    <span class="badge badge-primary">Friday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Friday</span>
-                }
-            </td>
-            <td>
-                @if (item.Saturday)
-                {
-                    <span class="badge badge-primary">Saturday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Saturday</span>
-                }
-            </td>
-            <td>
-                @if (item.Sunday)
-                {
-                    <span class="badge badge-primary">Sunday</span>
-                }
-                else
-                {
-                    <span class="badge badge-secondary">Sunday</span>
-                }
-            </td>
-            <td>
-                <form method="post">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Delete
-                        </button>
-                        <div class="dropdown-menu">
-                            <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Confirm</button>
+            <tr>
+                <td class="align-middle">
+                    <form>
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
+                            <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
                         </div>
-                    </div>
-                </form>
-            </td>
-        </tr>
+                    </form>
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
+                </td>
+                <td>
+                    @if (item.Monday)
+                    {
+                        <span class="badge badge-primary">Monday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Monday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Tuesday)
+                    {
+                        <span class="badge badge-primary">Tuesday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Tuesday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Wednesday)
+                    {
+                        <span class="badge badge-primary">Wednesday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Wednesday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Thursday)
+                    {
+                        <span class="badge badge-primary">Thursday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Thursday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Friday)
+                    {
+                        <span class="badge badge-primary">Friday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Friday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Saturday)
+                    {
+                        <span class="badge badge-primary">Saturday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Saturday</span>
+                    }
+                </td>
+                <td>
+                    @if (item.Sunday)
+                    {
+                        <span class="badge badge-primary">Sunday</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-secondary">Sunday</span>
+                    }
+                </td>
+                <td>
+                    <form method="post">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Confirm</button>
+                            </div>
+                        </div>
+                    </form>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
@@ -237,47 +263,93 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script type="text/javascript">
-        $(function () {
-            $("#button_submit").click(function () {
-                var checked_checkboxes = $("#weekdays input[type=checkbox]:checked");
-                if (checked_checkboxes.length == 0) {
-                    $("#weekdaysError").show();
-                    return false;
+<script type="text/javascript">
+
+    // Initialize all Bootstrap tooltips
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    })
+
+    $(function () {
+        $("#button_submit").click(function () {
+            var checked_checkboxes = $("#weekdays input[type=checkbox]:checked");
+            if (checked_checkboxes.length == 0) {
+                $("#weekdaysError").show();
+                return false;
+            }
+            return true;
+        });
+    });
+
+    $(function () {
+        $("#weekdays input[type=checkbox]").change(function () {
+            $("#weekdaysError").hide();
+        });
+    });
+
+    function toggleEnabled(elem) {
+        var id_ = $(elem).data('schedule-id');
+        //alert(id);
+
+        $.ajax({
+            url: "/Schedules/Index?handler=ToggleEnabled",
+            method: "POST",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+            data: {
+                id: id_
+            },
+            success: function (response) {
+                if (!response.success) {
+                    alert(response.responseText);
                 }
-                return true;
-            });
+            },
+            error: function (response) {
+                alert("AJAX error, try logging in again");
+            }
         });
+    }
 
-        $(function () {
-            $("#weekdays input[type=checkbox]").change(function () {
-                $("#weekdaysError").hide();
-            });
-        });
+    var subscribed = @Model.Subscribed.ToString().ToLower();
 
-        function toggleEnabled(elem) {
-            var id_ = $(elem).data('schedule-id');
-            //alert(id);
-
-            $.ajax({
-                url: "/Schedules/Index?handler=ToggleEnabled",
-                method: "POST",
-                beforeSend: function (xhr) {
-                    xhr.setRequestHeader("XSRF-TOKEN",
-                        $('input:hidden[name="__RequestVerificationToken"]').val());
-                },
-                data: {
-                    id: id_
-                },
-                success: function (response) {
-                    if (!response.success) {
-                        alert(response.responseText);
+    function toggleSubscribed() {
+        var jobId = "@Model.Job.JobId";
+        var activeClass = "btn-outline-primary";
+        var inactiveClass = "btn-outline-secondary";
+        $.ajax({
+            url: "./Schedules?handler=ToggleSubscribed",
+            method: "POST",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+            data: {
+                id: jobId
+            },
+            success: function (response) {
+                if (!response.success) {
+                    alert(response.responseText);
+                } else {
+                    if (subscribed) {
+                        $('#button_toggle_subscribed').removeClass(activeClass);
+                        $('#button_toggle_subscribed').addClass(inactiveClass);
+                        $('#button_toggle_subscribed').attr('data-original-title', 'Subscribe');
+                    } else {
+                        $('#button_toggle_subscribed').addClass(activeClass);
+                        $('#button_toggle_subscribed').removeClass(inactiveClass);
+                        $('#button_toggle_subscribed').attr('data-original-title', 'Unsubscribe');
                     }
-                },
-                error: function (response) {
-                    alert("AJAX error, try logging in again");
+                    $('#button_toggle_subscribed').tooltip('update');
+                    $('#button_toggle_subscribed').tooltip('show');
+                    subscribed = !subscribed;
                 }
-            });
-        }
-    </script>
+            },
+            error: function (response) {
+                alert("AJAX error, try logging in again");
+            }
+        });
+    }
+</script>
 }

@@ -4,9 +4,20 @@
     ViewData["Title"] = "Job Dependencies";
 }
 
-<h4>@Model.JobName dependencies</h4>
-<p />
+<h4>@Model.Job.JobName</h4>
 
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Index" asp-route-id="@Model.Job.JobId">Steps</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">Dependencies</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">Schedules</a>
+    </li>
+</ul>
+<p></p>
 <table class="table table-sm">
     <thead>
         <tr>
@@ -19,7 +30,6 @@
             <th>
                 Strict dependency*
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -27,16 +37,13 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Step.StepName)
+                    <a class="text-dark" asp-page="./Step/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.DependantOnStep.StepName)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StrictDependency)
-                </td>
-                <td>
-                    <a asp-page="./Step/Edit" asp-route-id="@item.StepId">Edit</a>
                 </td>
             </tr>
         }
@@ -46,5 +53,5 @@
 <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
 
 <div>
-    <a asp-page="./Index" asp-route-id="@Model.JobId">Back to steps</a>
+    <a asp-page="../Index">Back to jobs</a>
 </div>

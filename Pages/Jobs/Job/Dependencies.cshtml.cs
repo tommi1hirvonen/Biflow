@@ -19,15 +19,13 @@ namespace EtlManager.Pages.Jobs.Steps
             _context = context;
         }
 
-        public Guid JobId { get; set; }
-        public string JobName { get; set; }
+        public Job Job { get; set; }
 
         public IList<Dependency> Dependencies { get; set; }
 
-        public async Task OnGetAsync(Guid id, string name)
+        public async Task OnGetAsync(Guid id)
         {
-            JobId = id;
-            JobName = name;
+            Job = await _context.Jobs.FindAsync(id);
 
             Dependencies = await _context.Dependencies.Include(d => d.Step).Include(d => d.DependantOnStep)
                 .Where(d => d.Step.JobId == id)

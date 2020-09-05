@@ -41,15 +41,9 @@ namespace EtlManager.Pages.Jobs.Steps
 
         public async Task OnGetAsync(Guid id)
         {
-            Job = await _context.Jobs.Include(job => job.Steps).Include(job => job.Subscriptions).FirstOrDefaultAsync(job => job.JobId == id);
+            Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
             NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
-
-            string user = httpContext.User?.Identity?.Name;
-            if (Job.Subscriptions.Select(subscription => subscription.Username).Contains(user))
-            {
-                Subscribed = true;
-            }
         }
 
         
@@ -153,33 +147,6 @@ namespace EtlManager.Pages.Jobs.Steps
             return new JsonResult(new { success = true });
         }
 
-        public async Task<IActionResult> OnPostToggleSubscribed(Guid id)
-        {
-            string username = httpContext.User?.Identity?.Name;
-
-            var subscription = await _context.Subscriptions
-                .Where(subscription => subscription.JobId == id && subscription.Username == username)
-                .FirstOrDefaultAsync();
-
-            try
-            {
-                if (subscription != null)
-                {
-                    _context.Subscriptions.Remove(subscription);
-                }
-                else
-                {
-                    _context.Subscriptions.Add(new Subscription { JobId = id, Username = username });
-                }
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, responseText = "Error toggling subscription: " + ex.Message });
-            }
-
-            return new JsonResult(new { success = true });
-        }
 
         public async Task<IActionResult> OnPostCreate()
         {
