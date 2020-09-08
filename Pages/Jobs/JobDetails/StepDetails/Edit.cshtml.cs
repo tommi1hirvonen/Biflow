@@ -179,7 +179,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
                 }
             }
 
-            return RedirectToPage("./Index", new { id = Step.JobId});
+            return RedirectToPage("../Index", new { id = Step.JobId});
         }
 
         private bool StepExists(Guid id)
