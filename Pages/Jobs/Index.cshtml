@@ -1,5 +1,6 @@
 ﻿@page
 @model EtlManager.Pages.Jobs.IndexModel
+@using EtlManager;
 
 @{
     ViewData["Title"] = "Jobs";
@@ -21,6 +22,12 @@
             <th>
                 Dependency mode
             </th>
+            <th>
+                Last execution
+            </th>
+            <th>
+                Next execution
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -39,6 +46,12 @@
                         <input type="checkbox" class="custom-control-input" id="dependency_mode_@item.JobId" asp-for="@item.UseDependencyMode" disabled>
                         <label class="custom-control-label" for="dependency_mode_@item.JobId"></label>
                     </div>
+                </td>
+                <td class="align-middle">
+                    @GetMaxStartTime(item)
+                </td>
+                <td>
+                    @GetNextStartTime(item)
                 </td>
                 <td class="align-middle" align="right">
                     <form method="post">
@@ -152,4 +165,44 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+@functions {
+    public DateTime? GetMaxStartTime(EtlManager.Models.Job job)
+    {
+        DateTime? dt;
+        Model.LastExecutions.TryGetValue(job.JobId, out dt);
+        return dt;
+    }
+
+    public DateTime? GetNextStartTime(EtlManager.Models.Job job)
+    {
+        IEnumerable<DateTime> dateTimes = GetPossibleDateTimes(job.Schedules);
+        dateTimes = dateTimes.Where(dt => dt > DateTime.Now);
+        return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
+    }
+
+    public List<DateTime> GetPossibleDateTimes(ICollection<EtlManager.Models.Schedule> schedules)
+    {
+        List<DateTime> dateTimes = new List<DateTime>();
+        foreach (var schedule in schedules.Where(schedule => schedule.IsEnabled))
+        {
+            List<DateTime> dateTimesTemp = new List<DateTime>();
+            DateTime startOfWeek = DateTime.Now.StartOfWeek(DayOfWeek.Monday);
+            startOfWeek = startOfWeek.AddHours(schedule.TimeHours).AddMinutes(schedule.TimeMinutes);
+            if (schedule.Monday) dateTimesTemp.Add(startOfWeek);
+            if (schedule.Tuesday) dateTimesTemp.Add(startOfWeek.AddDays(1));
+            if (schedule.Wednesday) dateTimesTemp.Add(startOfWeek.AddDays(2));
+            if (schedule.Thursday) dateTimesTemp.Add(startOfWeek.AddDays(3));
+            if (schedule.Friday) dateTimesTemp.Add(startOfWeek.AddDays(4));
+            if (schedule.Saturday) dateTimesTemp.Add(startOfWeek.AddDays(5));
+            if (schedule.Sunday) dateTimesTemp.Add(startOfWeek.AddDays(6));
+            // Current week
+            dateTimesTemp.ForEach(dt => dateTimes.Add(dt));
+            // Add next week in case current has no match
+            dateTimesTemp.ForEach(dt => dateTimes.Add(dt.AddDays(7)));
+        }
+        return dateTimes;
+    }
+
 }

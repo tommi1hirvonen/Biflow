@@ -29,11 +29,22 @@ namespace EtlManager.Pages.Jobs
 
         public Job NewJob { get; set; }
 
+        public Dictionary<Guid, DateTime?> LastExecutions { get; set; } = new Dictionary<Guid, DateTime?>();
+
         public Job EditJob { get; set; }
 
         public async Task OnGetAsync()
         {
-            Jobs = await _context.Jobs.Include(job => job.Steps).OrderBy(job => job.JobName).ToListAsync();
+            Jobs = await _context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+            var jobExecutions = await _context.JobExecutions
+                .Where(execution => Jobs.Select(job => job.JobId).Contains(execution.JobId))
+                .GroupBy(execution => execution.JobId, (jobId, executions) => new
+                {
+                    Key = jobId,
+                    MaxStartTime = executions.Max(execution => execution.StartDateTime)
+                })
+                .ToListAsync();
+            jobExecutions.ForEach(item => LastExecutions[item.Key] = item.MaxStartTime);
         }
 
         public async Task<IActionResult> OnPostCopy(Guid id)
