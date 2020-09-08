@@ -30,6 +30,8 @@ namespace EtlManager.Pages.Jobs.JobDetails
         public IList<Step> Steps { get;set; }
 
         public Job Job { get; set; }
+        
+        public IList<Job> Jobs { get; set; }
 
         public bool Subscribed { get; set; }
 
@@ -41,6 +43,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task OnGetAsync(Guid id)
         {
+            Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
             NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };

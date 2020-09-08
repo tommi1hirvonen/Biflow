@@ -27,6 +27,9 @@ namespace EtlManager.Pages.Jobs.JobDetails
         }
 
         public Job Job { get; set; }
+
+        public IList<Job> Jobs { get; set; }
+
         public IList<Schedule> Schedules { get; set; }
 
         public bool Subscribed { get; set; }
@@ -36,6 +39,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task OnGetAsync(Guid id)
         {
+            Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Schedules).Include(job => job.Subscriptions).FirstOrDefaultAsync(job => job.JobId == id);
             Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
 

@@ -4,7 +4,13 @@
     ViewData["Title"] = "Job Dependencies";
 }
 
-<h4>@Model.Job.JobName</h4>
+<nav class="nav nav-pills">
+    @foreach (var job in Model.Jobs)
+    {
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="./Dependencies" asp-route-id="@job.JobId">@job.JobName</a>
+    }
+</nav>
+<p></p>
 
 <ul class="nav nav-tabs mt-3" role="tablist">
     <li class="nav-item" role="presentation">

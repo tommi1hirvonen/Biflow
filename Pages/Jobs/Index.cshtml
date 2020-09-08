@@ -40,11 +40,12 @@
                         <label class="custom-control-label" for="dependency_mode_@item.JobId"></label>
                     </div>
                 </td>
-                <td class="align-middle">
+                <td class="align-middle" align="right">
                     <form method="post">
                         <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
                             Edit
-                        </button> |
+                        </button>
+                        &nbsp;
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Copy
@@ -52,7 +53,8 @@
                             <div class="dropdown-menu">
                                 <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Confirm</button>
                             </div>
-                        </div> |
+                        </div>
+                        &nbsp;
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Delete

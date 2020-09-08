@@ -30,7 +30,7 @@ namespace EtlManager.Pages.Schedules
 
         public async Task OnGetAsync()
         {
-            Jobs = await _context.Jobs.Include(job => job.Schedules).ToListAsync();
+            Jobs = await _context.Jobs.Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid? id)

@@ -4,7 +4,13 @@
     ViewData["Title"] = "Schedules";
 }
 
-<h4>@Model.Job.JobName</h4>
+<nav class="nav nav-pills nav-justified">
+    @foreach (var job in Model.Jobs)
+    {
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="./Schedules" asp-route-id="@job.JobId">@job.JobName</a>
+    }
+</nav>
+<p></p>
 
 <ul class="nav nav-tabs mt-3" role="tablist">
     <li class="nav-item" role="presentation">
@@ -149,7 +155,7 @@
                         <span class="badge badge-secondary">Sunday</span>
                     }
                 </td>
-                <td>
+                <td align="right">
                     <form method="post">
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

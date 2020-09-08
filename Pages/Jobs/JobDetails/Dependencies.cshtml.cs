@@ -21,11 +21,14 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public Job Job { get; set; }
 
+        public IList<Job> Jobs { get; set; }
+
         public IList<Dependency> Dependencies { get; set; }
 
         public async Task OnGetAsync(Guid id)
         {
-            Job = await _context.Jobs.FindAsync(id);
+            Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+            Job = Jobs.First(job => job.JobId == id);
 
             Dependencies = await _context.Dependencies.Include(d => d.Step).Include(d => d.DependantOnStep)
                 .Where(d => d.Step.JobId == id)

@@ -1,11 +1,16 @@
 ﻿@page
 @model EtlManager.Pages.Jobs.JobDetails.IndexModel
-
 @{
     ViewData["Title"] = "Job Steps";
 }
 
-<h4>@Model.Job.JobName</h4>
+<nav class="nav nav-pills nav-justified">
+    @foreach (var job in Model.Jobs)
+    {
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="./Index" asp-route-id="@job.JobId">@job.JobName</a>
+    }
+</nav>
+<p></p>
 
 <ul class="nav nav-tabs mt-3" role="tablist">
     <li class="nav-item" role="presentation">
@@ -105,11 +110,12 @@
                         </div>
                     </form>
                 </td>
-                <td>
+                <td align="right">
                     @*Open corresponding modal popup to display step execution details*@
                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
                         Details
-                    </button> |
+                    </button>
+                    &nbsp;
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Delete
