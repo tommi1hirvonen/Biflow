@@ -45,7 +45,7 @@ namespace EtlManager.Pages.Executions
         public double BarHeightCollapsed = 10;
 
 
-        public int ChartWidth = 1000;
+        public int ChartWidth = 1200;
         public int ChartPaddingLeft = 250;
 
         public DateTime MinTime { get; set; }

@@ -44,19 +44,5 @@ namespace EtlManager.Pages
             return Page();
         }
 
-        public async Task<IActionResult> OnPostLogOff()
-        {
-            try
-            {
-                var authenticationManager = Request.HttpContext;
-                await authenticationManager.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            return RedirectToPage("/LogIn");
-        }
-
     }
 }
