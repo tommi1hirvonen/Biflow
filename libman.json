@@ -5,6 +5,10 @@
     {
       "library": "feather-icons@4.28.0",
       "destination": "wwwroot/lib/feather-icons/"
+    },
+    {
+      "library": "Chart.js@2.9.3",
+      "destination": "wwwroot/lib/Chart.js/"
     }
   ]
 }
