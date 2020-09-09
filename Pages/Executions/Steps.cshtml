@@ -12,19 +12,19 @@
 <p />
 <form>
     <div class="form-row">
-        <div class="form-group col-md-2">
+        <div class="form-group col-2">
             <label>Status</label>
             <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
                 <option value="">ALL</option>
             </select>
         </div>
-        <div class="form-group col-md-5">
+        <div class="form-group col-5">
             <label>Job</label>
             <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
                 <option value="">All</option>
             </select>
         </div>
-        <div class="form-group col-md-5">
+        <div class="form-group col-5">
             <label>Step</label>
             <select asp-for="StepName" asp-items="Model.StepNames" class="form-control">
                 <option value="">All</option>
@@ -32,11 +32,11 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group col-md-3">
+        <div class="form-group col-3">
             <label>Date & time until</label>
             <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
         </div>
-        <div class="form-group col-md-1">
+        <div class="form-group col-2">
             <label>Interval (h)</label>
             <input asp-for="IntervalHours" class="form-control">
         </div>

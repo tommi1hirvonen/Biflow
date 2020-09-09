@@ -4,8 +4,11 @@
     ViewData["Title"] = "Log in";
 }
 
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
+
 <div class="row">
-    <div class="col-md-4 mx-auto">
+    <div class="col-5 mx-auto">
         <section>
             <form method="post" role="form" class="form-horizontal" onsubmit="disableLoginbutton()">
                 @Html.AntiForgeryToken()
@@ -16,13 +19,25 @@
                 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
                 <div class="form-group">
-                    @Html.LabelFor(m => m.Login.Username, new { @class = "control-label" })
-                    @Html.TextBoxFor(m => m.Login.Username, new { @class = "form-control", @id = "username" })
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                            </div>
+                        </div>
+                        <input id="username" asp-for="Login.Username" class="form-control" placeholder="Username" />
+                    </div>
                     @Html.ValidationMessageFor(m => m.Login.Username, "", new { @class = "text-danger" })
                 </div>
                 <div class="form-group">
-                    @Html.LabelFor(m => m.Login.Password, new { @class = "control-label" })
-                    @Html.PasswordFor(m => m.Login.Password, new { @class = "form-control" })
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                            </div>
+                        </div>
+                        <input type="password" asp-for="Login.Password" class="form-control" placeholder="Password" />
+                    </div>
                     @Html.ValidationMessageFor(m => m.Login.Password, "", new { @class = "text-danger" })
                 </div>
                 <p />
