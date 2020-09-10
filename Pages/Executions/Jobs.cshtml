@@ -4,6 +4,8 @@
     ViewData["Title"] = "Executions";
 }
 
+<h3>Executions</h3>
+<hr />
 <div class="btn-group btn-group-sm">
     <a class="btn btn-outline-secondary active">Jobs</a>
     <a class="btn btn-outline-secondary" asp-page="./Steps">Steps</a>
@@ -73,52 +75,52 @@
     <tbody>
         @foreach (var item in Model.Executions)
         {
-        <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)');">
-            <td>
-                @Html.DisplayFor(modelItem => item.JobName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDateTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartDateTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndDateTime)
-            </td>
-            <td style="text-align: right;">
-                @Html.DisplayFor(modelItem => item.NumberOfSteps)
-            </td>
-            <td style="text-align: right;">
-                @Html.DisplayFor(modelItem => item.SuccessPercent)
-            </td>
-            <td>
-                @{
-                    switch (item.ExecutionStatus)
-                    {
-                        case "COMPLETED":
-                            <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        case "FAILED":
-                            <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        case "WARNING":
-                        case "SUSPENDED":
-                            <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        case "RUNNING":
-                            <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
-                        default:
-                            <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                            break;
+            <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)');">
+                <td>
+                    @Html.DisplayFor(modelItem => item.JobName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StartDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EndDateTime)
+                </td>
+                <td style="text-align: right;">
+                    @Html.DisplayFor(modelItem => item.NumberOfSteps)
+                </td>
+                <td style="text-align: right;">
+                    @Html.DisplayFor(modelItem => item.SuccessPercent)
+                </td>
+                <td>
+                    @{
+                        switch (item.ExecutionStatus)
+                        {
+                            case "COMPLETED":
+                                <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "FAILED":
+                                <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "WARNING":
+                            case "SUSPENDED":
+                                <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "RUNNING":
+                                <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            default:
+                                <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                        }
                     }
-                }
-            </td>
-            <td>
-                <text>@item.GetDurationInReadableFormat()</text>
-            </td>
-        </tr>
+                </td>
+                <td>
+                    <text>@item.GetDurationInReadableFormat()</text>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
