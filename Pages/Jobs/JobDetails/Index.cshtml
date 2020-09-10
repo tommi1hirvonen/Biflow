@@ -186,7 +186,7 @@
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/search.svg")))
                                 </div>
                             </div>
-                            <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" />
+                            <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
                         </div>
                         <table class="table" id="table_executable_steps">
                             <thead>
@@ -206,7 +206,7 @@
                             <tbody>
                                 @foreach (var step in Model.Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
                                 {
-                                    <tr>
+                                    <tr id="executable_step_@step.StepId">
                                         <td>
                                             <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
                                         </td>
@@ -576,6 +576,7 @@
                 success: function (response) {
                     if (response.success) {
                         $(element).closest('tr').remove();
+                        $('#executable_step_' + id).remove();
                     } else {
                         alert(response.responseText);
                     }
@@ -593,7 +594,11 @@
 
             var stepsToExecute = [];
             $("input[name=execute_checkbox]:checked").each(function () {
-                stepsToExecute.push(this.id);
+                var element = $(this).closest('tr');
+                if (element.css('display') != 'none') {
+                    // Skip steps that have filtered and hidden using the search input
+                    stepsToExecute.push(this.id);
+                }
                 $(this).prop('checked', false);
             });
 
