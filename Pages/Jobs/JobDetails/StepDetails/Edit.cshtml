@@ -8,6 +8,7 @@
 <form id="form" method="post" autocomplete="off">
 
     <nav class="navbar border-bottom sticky-top bg-white navbar-expand-md">
+
         <ul class="navbar-nav mr-3">
             <li class="nav-item">
                 <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
@@ -24,8 +25,9 @@
     <p />
     <div class="row">
         <div class="col-8">
-            <h6>@Model.Job.JobName</h6>
-            <hr />
+            <h4>@Model.Job.JobName</h4>
+            <h5>@Model.Step.StepName</h5>
+            <p></p>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
             <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
@@ -155,48 +157,50 @@
         <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
     </div>
 
-    <p />
-    <h5>Dependencies</h5>
-    <p />
-    <table class="table table-sm table-hover">
-        <thead>
-            <tr>
-                <th>
-                    Dependant on
-                </th>
-                <th>
-                    Enabled
-                </th>
-                <th>
-                    Strict dependency*
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int index = 0; index < Model.DependencyEdits.Count; index++)
-            {
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
-                @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
+    <div class="col-8">
+        <p />
+        <h5>Dependencies</h5>
+        <p />
+        <table class="table table-sm table-hover">
+            <thead>
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
-                    </td>
-                    <td>
-                        <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
-                    </td>
-                    <td>
-                        <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
-                    </td>
+                    <th>
+                        Dependant on
+                    </th>
+                    <th>
+                        Enabled
+                    </th>
+                    <th>
+                        Strict dependency*
+                    </th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @for (int index = 0; index < Model.DependencyEdits.Count; index++)
+                {
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
+                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
+                        </td>
+                        <td>
+                            <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
+                        </td>
+                        <td>
+                            <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <hr />
+        <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
+    </div>
 </form>
 
-<hr />
 
-<p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
 
 @section Scripts {
 
