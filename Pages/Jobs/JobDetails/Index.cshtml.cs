@@ -150,6 +150,15 @@ namespace EtlManager.Pages.Jobs.JobDetails
             return new JsonResult(new { success = true });
         }
 
+        public async Task<IActionResult> OnPostCopy(Guid stepId, Guid targetJobId, Guid sourceJobId)
+        {
+            string user = httpContext.User?.Identity?.Name;
+
+            await Utility.StepCopy(_configuration, stepId, targetJobId, user);
+
+            return RedirectToPage("./Index", new { id = sourceJobId });
+        }
+
 
         public async Task<IActionResult> OnPostCreate()
         {

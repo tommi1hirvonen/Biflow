@@ -128,6 +128,20 @@ namespace EtlManager
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
+        public async static Task StepCopy(IConfiguration configuration, Guid stepId, Guid targetJobId, string username)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "EXEC [etlmanager].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@StepId_", stepId.ToString());
+            sqlCommand.Parameters.AddWithValue("@TargetJobId_", targetJobId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Username_", username);
+
+            await sqlConnection.OpenAsync();
+            await sqlCommand.ExecuteNonQueryAsync();
+        }
+
         public static bool AuthenticateUser(IConfiguration configuration, string username, string password)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

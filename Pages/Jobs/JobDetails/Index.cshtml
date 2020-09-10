@@ -113,11 +113,33 @@
                         </div>
                     </form>
                 </td>
-                <td align="right">
+                <td align="center">
                     @*Open corresponding modal popup to display step execution details*@
                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
                         Details
                     </button>
+                    &nbsp;
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Copy to
+                        </button>
+                        <div class="dropdown-menu">
+                            <form method="post">
+                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
+                                    here
+                                </button>
+                            </form>
+                            <div class="dropdown-divider"></div>
+                            @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+                            {
+                            <form method="post">
+                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                    @job.JobName
+                                </button>
+                            </form>
+                            }
+                        </div>
+                    </div>
                     &nbsp;
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
