@@ -75,7 +75,7 @@
     <tbody>
         @foreach (var item in Model.Executions)
         {
-            <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)');">
+            <tr style="cursor: pointer;" onclick="window.location.href = '@("/Executions/JobDetails?id=" + item.ExecutionId)'">
                 <td>
                     @Html.DisplayFor(modelItem => item.JobName)
                 </td>

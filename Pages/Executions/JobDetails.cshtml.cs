@@ -34,7 +34,7 @@ namespace EtlManager.Pages.Executions
         public IList<ChartLabel> ChartLabels = new List<ChartLabel>();
 
         public int ChartHeight;
-        public int ChartHeightCollapsed = 600;
+        public int ChartHeightCollapsed = 500;
 
         public int ChartPaddingTop = 25;
 
