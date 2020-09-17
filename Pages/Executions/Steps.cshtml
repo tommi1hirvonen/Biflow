@@ -226,7 +226,7 @@
                                 @Html.DisplayNameFor(model => item.SqlStatement)
                             </dt>
                             <dd class="col-sm-9">
-                                @Html.DisplayFor(model => item.SqlStatement)
+                                <pre><code>@item.SqlStatement</code></pre>
                             </dd>
                         }
                         else if (item.StepType == "SSIS")

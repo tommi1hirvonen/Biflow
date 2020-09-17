@@ -432,48 +432,48 @@
                         <dd class="col-sm-9">
                             @Html.DisplayFor(model => item.RetryIntervalMinutes)
                         </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.SqlStatement)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.SqlStatement)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.ServerName)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.ServerName)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.FolderName)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.FolderName)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.ProjectName)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.ProjectName)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.PackageName)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.PackageName)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.ExecuteIn32BitMode)
-                        </dd>
-                        <dt class="col-sm-3">
-                            @Html.DisplayNameFor(model => item.IsEnabled)
-                        </dt>
-                        <dd class="col-sm-9">
-                            @Html.DisplayFor(model => item.IsEnabled)
-                        </dd>
+                        @if (item.StepType == "SQL")
+                        {
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.SqlStatement)
+                            </dt>
+                            <dd class="col-sm-9">
+                                <pre><code>@item.SqlStatement</code></pre>
+                            </dd>
+                        }
+                        else if (item.StepType == "SSIS")
+                        {
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.ServerName)
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Html.DisplayFor(model => item.ServerName)
+                            </dd>
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.FolderName)
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Html.DisplayFor(model => item.FolderName)
+                            </dd>
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.ProjectName)
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Html.DisplayFor(model => item.ProjectName)
+                            </dd>
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.PackageName)
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Html.DisplayFor(model => item.PackageName)
+                            </dd>
+                            <dt class="col-sm-3">
+                                @Html.DisplayNameFor(model => item.ExecuteIn32BitMode)
+                            </dt>
+                            <dd class="col-sm-9">
+                                @Html.DisplayFor(model => item.ExecuteIn32BitMode)
+                            </dd>
+                        }
                     </dl>
                 </div>
                 <div class="modal-footer">
