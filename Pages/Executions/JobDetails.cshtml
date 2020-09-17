@@ -131,10 +131,10 @@
                 @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
+                Duration
             </th>
             <th>
-                Duration
+                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
         </tr>
     </thead>
@@ -150,6 +150,9 @@
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.EndDateTime)
+                </td>
+                <td>
+                    <text>@item.GetDurationInReadableFormat()</text>
                 </td>
                 <td>
                     @{
@@ -173,9 +176,6 @@
                                 break;
                         }
                     }
-                </td>
-                <td>
-                    <text>@item.GetDurationInReadableFormat()</text>
                 </td>
             </tr>
         }

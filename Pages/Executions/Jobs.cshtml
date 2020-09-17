@@ -60,6 +60,9 @@
                 @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
             </th>
             <th>
+                Duration
+            </th>
+            <th>
                 Number of steps
             </th>
             <th>
@@ -67,9 +70,6 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
-            </th>
-            <th>
-                Duration
             </th>
         </tr>
     </thead>
@@ -88,6 +88,9 @@
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.EndDateTime)
+                </td>
+                <td>
+                    <text>@item.GetDurationInReadableFormat()</text>
                 </td>
                 <td style="text-align: right;">
                     @Html.DisplayFor(modelItem => item.NumberOfSteps)
@@ -117,9 +120,6 @@
                                 break;
                         }
                     }
-                </td>
-                <td>
-                    <text>@item.GetDurationInReadableFormat()</text>
                 </td>
             </tr>
         }
