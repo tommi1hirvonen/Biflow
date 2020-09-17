@@ -16,14 +16,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
     {
         private readonly IConfiguration _configuration;
         private readonly Data.EtlManagerContext _context;
-        public readonly string WebRootPath;
         private readonly HttpContext httpContext;
 
-        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
+        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IHttpContextAccessor httpContextAccessor)
         {
             _configuration = configuration;
             _context = context;
-            WebRootPath = webHostEnvironment.WebRootPath;
             httpContext = httpContextAccessor.HttpContext;
         }
 

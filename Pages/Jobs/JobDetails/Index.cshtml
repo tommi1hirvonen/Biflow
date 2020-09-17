@@ -1,5 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.Jobs.JobDetails.IndexModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Job Steps";
 }
@@ -70,7 +72,7 @@
     <div class="input-group">
         <div class="input-group-prepend">
             <div class="input-group-text">
-                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/search.svg")))
+                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
             </div>
         </div>
         <input type="text" id="steps_search_input" class="form-control" onkeyup="filterSteps('steps_search_input', 'steps_table', 0)" placeholder="Search" />
@@ -108,11 +110,11 @@
                 <td class="align-middle">
                     @if (item.StepType == "SQL")
                     {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/code-black-48dp.svg")))
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
                     }
                     else if (item.StepType == "SSIS")
                     {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
                     }
                 </td>
                 <td class="align-middle">
@@ -142,11 +144,11 @@
                             <div class="dropdown-divider"></div>
                             @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
                             {
-                            <form method="post">
-                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                    @job.JobName
-                                </button>
-                            </form>
+                                <form method="post">
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                        @job.JobName
+                                    </button>
+                                </form>
                             }
                         </div>
                     </div>
@@ -183,7 +185,7 @@
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/search.svg")))
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
                                 </div>
                             </div>
                             <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
@@ -219,11 +221,11 @@
                                         <td class="align-middle">
                                             @if (step.StepType == "SQL")
                                             {
-                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/code-black-48dp.svg")))
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
                                             }
                                             else if (step.StepType == "SSIS")
                                             {
-                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
                                             }
                                         </td>
                                     </tr>
