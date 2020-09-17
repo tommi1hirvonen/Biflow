@@ -48,6 +48,11 @@ namespace EtlManager
             return value;
         }
 
+        public static DateTime ToDateTime(this long value)
+        {
+            return new DateTime(value);
+        }
+
         public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

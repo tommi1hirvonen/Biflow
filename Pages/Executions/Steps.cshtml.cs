@@ -48,9 +48,12 @@ namespace EtlManager.Pages.Executions
 
         public IList<StepExecution> Executions { get;set; }
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(long? dateTimeUntilTicks)
         {
             IQueryable<StepExecution> executions = _context.Executions;
+
+            // If dateTimeUntilTicks was provided, use that.
+            DateTimeUntil = dateTimeUntilTicks?.ToDateTime() ?? DateTimeUntil;
 
             executions = executions
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)

@@ -8,7 +8,8 @@
 <hr />
 <div class="btn-group btn-group-sm">
     <a class="btn btn-outline-secondary active">Jobs</a>
-    <a class="btn btn-outline-secondary" asp-page="./Steps">Steps</a>
+    <a class="btn btn-outline-secondary" asp-page="./Steps" asp-route-IntervalHours="@Model.IntervalHours"
+       asp-route-Status="@Model.Status" asp-route-JobName="@Model.JobName" asp-route-dateTimeUntilTicks="@Model.DateTimeUntil.Ticks">Steps</a>
 </div>
 <p />
 <form>
