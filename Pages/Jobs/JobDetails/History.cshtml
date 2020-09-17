@@ -1,0 +1,111 @@
+﻿@page
+@model EtlManager.Pages.Jobs.JobDetails.HistoryModel
+@{
+    ViewData["Title"] = "History";
+}
+
+<h3>Jobs</h3>
+<hr />
+
+<nav class="nav nav-pills">
+    @foreach (var job in Model.Jobs)
+    {
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="./History" asp-route-id="@job.JobId">@job.JobName</a>
+    }
+</nav>
+<p></p>
+
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Index" asp-route-id="@Model.Job.JobId">Steps</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">Dependencies</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">Schedules</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" asp-page="./History" asp-route-id="@Model.Job.JobId">History</a>
+    </li>
+</ul>
+
+<p></p>
+
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Executions[0].CreatedDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
+            </th>
+            <th>
+                Number of steps
+            </th>
+            <th>
+                Success percent
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
+            </th>
+            <th>
+                Duration
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Executions)
+        {
+            <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)')">
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.StartDateTime)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.EndDateTime)
+                </td>
+                <td style="text-align: right;">
+                    @Html.DisplayFor(modelItem => item.NumberOfSteps)
+                </td>
+                <td style="text-align: right;">
+                    @Html.DisplayFor(modelItem => item.SuccessPercent)
+                </td>
+                <td>
+                    @{
+                        switch (item.ExecutionStatus)
+                        {
+                            case "COMPLETED":
+                                <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "FAILED":
+                                <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "WARNING":
+                            case "SUSPENDED":
+                                <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            case "RUNNING":
+                                <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                            default:
+                                <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
+                                break;
+                        }
+                    }
+                </td>
+                <td>
+                    <text>@item.GetDurationInReadableFormat()</text>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<hr />
+<p class="text-secondary">Showing @Model.MaxExecutions latest executions</p>
