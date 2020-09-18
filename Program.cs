@@ -85,9 +85,9 @@ namespace EtlManager
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "UPDATE [etlmanager].[Job]\n" +
-                "SET [UseDependencyMode] = CASE [UseDependencyMode] WHEN 1 THEN 0 ELSE 1 END\n" +
-                "WHERE [JobId] = @JobId"
+                @"UPDATE [etlmanager].[Job]
+                SET [UseDependencyMode] = CASE [UseDependencyMode] WHEN 1 THEN 0 ELSE 1 END
+                WHERE [JobId] = @JobId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
             await sqlConnection.OpenAsync();
@@ -98,9 +98,9 @@ namespace EtlManager
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "UPDATE [etlmanager].[Step]\n" +
-                "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
-                "WHERE [StepId] = @StepId"
+                @"UPDATE [etlmanager].[Step]
+                SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END
+                WHERE [StepId] = @StepId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
             await sqlConnection.OpenAsync();
@@ -111,9 +111,9 @@ namespace EtlManager
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
-                "UPDATE [etlmanager].[Schedule]\n" +
-                "SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END\n" +
-                "WHERE [ScheduleId] = @ScheduleId"
+                @"UPDATE [etlmanager].[Schedule]
+                SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END
+                WHERE [ScheduleId] = @ScheduleId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@ScheduleId", schedule.ScheduleId.ToString());
             await sqlConnection.OpenAsync();
