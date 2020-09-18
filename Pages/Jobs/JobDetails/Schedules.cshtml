@@ -33,15 +33,16 @@
 <p></p>
 <div class="container-fluid">
     <div class="row align-items-center">
-        <div class="col">
+        <div class="col-4">
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
                 New schedule
             </button>
         </div>
-        <div class="col" align="right">
+        <div class="col-4">
             <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-outline-secondary")" onclick="toggleSubscribed()" data-toggle="tooltip" data-placement="left" title="@(Model.Subscribed ? "Unsubscribe" : "Subscribe")">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-outline-secondary")" onclick="toggleSubscribed()">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/bootstrap/envelope-fill.svg")))
+                    <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
                 </button>
             </div>
         </div>
@@ -273,11 +274,6 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script type="text/javascript">
 
-    // Initialize all Bootstrap tooltips
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
-    })
-
     $(function () {
         $("#button_submit").click(function () {
             var checked_checkboxes = $("#weekdays input[type=checkbox]:checked");
@@ -343,14 +339,12 @@
                     if (subscribed) {
                         $('#button_toggle_subscribed').removeClass(activeClass);
                         $('#button_toggle_subscribed').addClass(inactiveClass);
-                        $('#button_toggle_subscribed').attr('data-original-title', 'Subscribe');
+                        $('#span_toggle_subscribed').text('Subscribe');
                     } else {
                         $('#button_toggle_subscribed').addClass(activeClass);
                         $('#button_toggle_subscribed').removeClass(inactiveClass);
-                        $('#button_toggle_subscribed').attr('data-original-title', 'Unsubscribe');
+                        $('#span_toggle_subscribed').text('Unsubscribe');
                     }
-                    $('#button_toggle_subscribed').tooltip('update');
-                    $('#button_toggle_subscribed').tooltip('show');
                     subscribed = !subscribed;
                 }
             },
