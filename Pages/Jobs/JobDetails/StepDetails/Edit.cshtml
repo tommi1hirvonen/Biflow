@@ -67,7 +67,7 @@
             </div>
             <div class="form-group" id="sql_statement_div" style="@(Model.Step.StepType == "SSIS" ? "display: none;" : null)">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
-                <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" rows="3"></textarea>
+                <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
             </div>
             <div class="form-row">
