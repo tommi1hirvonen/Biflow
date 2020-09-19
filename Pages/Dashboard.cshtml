@@ -9,82 +9,75 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col">
-            <h4>Avg. execution in seconds</h4>
+            <h5>Avg. execution duration</h5>
             <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
         </div>
         <div class="col">
-            <h4>Chart #2</h4>
+            <h5>Job success rate</h5>
+            <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h5># of executions</h5>
+            <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
+        </div>
+        <div class="col">
+            <h5>Top 5 failing steps</h5>
             <div class="row mt-4">
                 <table class="table table-striped table-sm">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Header</th>
-                            <th>Header</th>
-                            <th>Header</th>
-                            <th>Header</th>
+                            <th></th>
+                            <th>Step</th>
+                            <th>Job</th>
+                            <th>Success %</th>
+                            <th># of executions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1,001</td>
-                            <td>Lorem</td>
-                            <td>ipsum</td>
-                            <td>dolor</td>
-                            <td>sit</td>
-                        </tr>
-                        <tr>
-                            <td>1,002</td>
-                            <td>amet</td>
-                            <td>consectetur</td>
-                            <td>adipiscing</td>
-                            <td>elit</td>
-                        </tr>
-                        <tr>
-                            <td>1,003</td>
-                            <td>Integer</td>
-                            <td>nec</td>
-                            <td>odio</td>
-                            <td>Praesent</td>
-                        </tr>
-                        <tr>
-                            <td>1,003</td>
-                            <td>libero</td>
-                            <td>Sed</td>
-                            <td>cursus</td>
-                            <td>ante</td>
-                        </tr>
-                        <tr>
-                            <td>1,004</td>
-                            <td>dapibus</td>
-                            <td>diam</td>
-                            <td>Sed</td>
-                            <td>nisi</td>
-                        </tr>
+                        @for (int i = 0; i < Model.TopFailedSteps.Count; i++)
+                        {
+                            <tr>
+                                <td>@(i+1)</td>
+                                <td>
+                                    <a class="text-dark" asp-page="/Jobs/JobDetails/StepDetails/Edit" asp-route-id="@Model.TopFailedSteps[i].StepId">
+                                        @Model.TopFailedSteps[i].StepName
+                                    </a>
+                                </td>
+                                <td>
+                                    <a class="text-dark" asp-page="/Jobs/JobDetails/History" asp-route-id="@Model.TopFailedSteps[i].JobId">
+                                        @Model.TopFailedSteps[i].JobName
+                                    </a>
+                                </td>
+                                <td>@Html.DisplayFor(item => Model.TopFailedSteps[i].SuccessPercent)</td>
+                                <td>@Model.TopFailedSteps[i].NoOfExecutions</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            <h4>Chart#3</h4>
-            <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
-        </div>
-        <div class="col">
-            <h4>Chart #4</h4>
-            <canvas class="my-4 w-100" id="myChart4" width="900" height="380"></canvas>
-        </div>
-    </div>
 </div>
 
 @functions {
-    public string GetDataSetString()
+    public string GetDurationDatasetString()
     {
         return string.Join(',',
-            Model.Executions.Select(e =>
+            Model.TimeSeriesItems.Select(e =>
                 "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
-                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Key.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.Value + @"}")) +
+                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.DurationInMinutes.ToString().Replace(',', '.') + @"}")) +
+                "]}")
+            );
+    }
+
+    public string GetNoOfExecutionsDatasetString()
+    {
+        return string.Join(',',
+            Model.TimeSeriesItems.Select(e =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.NumberOfExecutions + @"}")) +
                 "]}")
             );
     }
@@ -110,22 +103,27 @@
 
         $(function () {
 
-            var datasets = [
-                    @Html.Raw(GetDataSetString())
-               ];
+            // Average execution duration in minutes by date
+            var datasets1 = [
+                    @Html.Raw(GetDurationDatasetString())
+            ];
 
-            // CHART 1
             var ctx1 = document.getElementById('myChart1')
+
             var myChart1 = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    datasets: datasets
+                    datasets: datasets1
                 },
                 options: {
                     scales: {
                         yAxes: [{
                             ticks: {
                                 beginAtZero: true
+                            },
+                            scaleLabel: {
+                                display: true,
+                                labelString: 'min'
                             }
                         }],
                         xAxes: [{
@@ -135,42 +133,35 @@
                 }
             })
 
-            // CHART 3
-            var ctx3 = document.getElementById('myChart3')
-            var myChart3 = new Chart(ctx3, {
-                type: 'bar',
+            // Job success rates
+            var ctx2 = document.getElementById('myChart2')
+            var myChart2 = new Chart(ctx2, {
+                type: 'horizontalBar',
                 data: {
                     labels: [
-                        'Sunday',
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday'
+                        @Html.Raw(string.Join(',', Model.Jobs.Select(job => "'" + job.JobName + "'")))
                     ],
                     datasets: [{
                         data: [
-                            15339,
-                            21345,
-                            18483,
-                            24003,
-                            23489,
-                            24092,
-                            12034
+                            @string.Join(',', Model.Jobs.Select(job => decimal.Round(job.SuccessPercent, 2).ToString().Replace(',', '.')))
                         ],
                         lineTension: 0,
-                        backgroundColor: '#007bff',
-                        borderColor: '#007bff',
-                        borderWidth: 0,
-                        pointBackgroundColor: '#007bff'
+                        backgroundColor: [
+                            @Html.Raw(string.Join(',', Model.Jobs.Select(job => "stringToColour('" + job.JobName + "')")))
+                        ]
                     }]
                 },
                 options: {
                     scales: {
-                        yAxes: [{
+                        xAxes: [{
                             ticks: {
-                                beginAtZero: false
+                                beginAtZero: true,
+                                max: 100,
+                                min: 0,
+                                stepSize: 10,
+                                callback: function (value, index, values) {
+                                    return value + '%';
+                                }
                             }
                         }]
                     },
@@ -180,49 +171,38 @@
                 }
             })
 
-            var ctx4 = document.getElementById('myChart4')
-            var myChart4 = new Chart(ctx4, {
-                type: 'horizontalBar',
+
+            // Number of job executions by date
+            var datasets3 = [
+                    @Html.Raw(GetNoOfExecutionsDatasetString())
+            ];
+
+            var ctx3 = document.getElementById('myChart3')
+
+            var myChart3 = new Chart(ctx3, {
+                type: 'line',
                 data: {
-                    labels: [
-                        'Sunday',
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday'
-                    ],
-                    datasets: [{
-                        data: [
-                            12034,
-                            24092,
-                            23489,
-                            24003,
-                            18483,
-                            21345,
-                            15339
-                        ],
-                        lineTension: 0,
-                        backgroundColor: '#007bff',
-                        borderColor: '#007bff',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#007bff'
-                    }]
+                    datasets: datasets3
                 },
                 options: {
                     scales: {
                         yAxes: [{
                             ticks: {
-                                beginAtZero: false
+                                beginAtZero: true,
+                                stepSize: 1
                             }
+                        }],
+                        xAxes: [{
+                            type: 'time'
                         }]
-                    },
-                    legend: {
-                        display: false
                     }
                 }
             })
+
         })
+
+
+
+
     </script>
 }

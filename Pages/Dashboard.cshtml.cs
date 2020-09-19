@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Schema;
@@ -7,6 +8,7 @@ using EtlManager.Data;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EtlManager.Pages
@@ -20,34 +22,97 @@ namespace EtlManager.Pages
             _context = context;
         }
 
-        public IList<JobExecution> JobExecutions { get; set; }
+        public Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
 
-        public Dictionary<string, Dictionary<DateTime, int>> Executions { get; set; } = new Dictionary<string, Dictionary<DateTime, int>>();
+        public List<ReportingJob> Jobs { get; set; }
 
-        public void OnGet()
+        public List<TopStep> TopFailedSteps { get; set; }
+
+        public async Task OnGetAsync()
         {
-            var executions = _context.JobExecutions
-                .Where(e => e.ExecutionInSeconds > 0)
+            var dateStart = DateTime.Now.AddDays(-180);
+
+            // Get duration executions
+            var executions = await _context.JobExecutions
+                .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateStart)
                 .OrderBy(e => e.CreatedDateTime)
-                .GroupBy(group => new {
+                .GroupBy(group => new
+                {
                     group.JobName,
                     ((DateTime)group.CreatedDateTime).Date
                 })
-                .Select(select => new {
-                    Duration = select.Average(total => total.ExecutionInSeconds),
-                    select.Key.JobName,
-                    select.Key.Date
-                })
-                .ToList();
+                .Select(select => new TimeSeriesItem
+                {
+                    DurationInMinutes = select.Average(total => (decimal)total.ExecutionInSeconds / 60),
+                    JobName = select.Key.JobName,
+                    Date = select.Key.Date,
+                    NumberOfExecutions = select.Count()
+                }).ToListAsync();
 
-            var jobNames = executions.Select(s => s.JobName).Distinct().ToList();
-            foreach (var name in jobNames)
-            {
-                Dictionary<DateTime, int> d = new Dictionary<DateTime, int>();
-                var e = executions.Where(e => e.JobName == name).ToList();
-                e.ForEach(e => d[e.Date] = (int)e.Duration);
-                Executions[name] = d;
-            }
+            TimeSeriesItems = executions
+                .GroupBy(e => e.JobName)
+                .ToDictionary(e => e.Key, e => e.ToList());
+
+
+            // Job success rates
+            Jobs = await _context.JobExecutions
+                .Where(e => e.CreatedDateTime >= dateStart)
+                .GroupBy(group => group.JobName)
+                .Select(select => new ReportingJob
+                {
+                    SuccessPercent = select.Average(total => total.SuccessPercent),
+                    JobName = select.Key
+                })
+                .OrderByDescending(order => order.SuccessPercent)
+                .ToListAsync();
+
+
+            // Get top failed steps
+            var topFailedStepsGrouping = await _context.Executions
+                .Where(e => e.CreatedDateTime >= dateStart)
+                .ToListAsync();
+
+            TopFailedSteps = topFailedStepsGrouping
+                .GroupBy(group => new { group.StepId, group.StepName, group.JobId, group.JobName })
+                .Select(select => new TopStep
+                {
+                    StepName = select.Key.StepName,
+                    StepId = select.Key.StepId,
+                    JobName = select.Key.JobName,
+                    JobId = select.Key.JobId,
+                    NoOfExecutions = select.Count(),
+                    SuccessPercent = (decimal)select.Count(e => e.ExecutionStatus == "COMPLETED") / select.Count() * 100
+                })
+                .OrderBy(order => order.SuccessPercent)
+                .Where(e => e.SuccessPercent < 100)
+                .Take(5)
+                .ToList();
+        }
+
+        public class TimeSeriesItem
+        {
+            public string JobName { get; set; }
+            public DateTime Date { get; set; }
+            public decimal DurationInMinutes { get; set; }
+            public int NumberOfExecutions { get; set; }
+        }
+
+        public class ReportingJob
+        {
+            [DisplayFormat(DataFormatString = "{0:N0}%")]
+            public decimal SuccessPercent { get; set; }
+            public string JobName { get; set; }
+        }
+
+        public class TopStep
+        {
+            [DisplayFormat(DataFormatString = "{0:N0}%")]
+            public decimal SuccessPercent { get; set; }
+            public string StepName { get; set; }
+            public Guid StepId { get; set; }
+            public string JobName { get; set; }
+            public Guid JobId { get; set; }
+            public int NoOfExecutions { get; set; }
         }
     }
 }
