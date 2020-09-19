@@ -12,24 +12,37 @@
 <body>
     @{ String pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
 
-    <header>
-        <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-            <text class="navbar-brand col-md-3 col-lg-2 mr-0 px-3">ETL Manager</text>
-            <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </nav>
-    </header>
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <header>
+            <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+                <text class="navbar-brand col-md-3 col-lg-2 mr-0 px-3">ETL Manager</text>
+            </nav>
+        </header>
+        <div class="container">
+            <main role="main">
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
 
-    <div class="container-fluid">
-        <div role="row">
+        <header>
+            <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
+                <text class="navbar-brand col-md-3 col-lg-2 mr-0 px-3">ETL Manager</text>
+                <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </nav>
+        </header>
 
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-                <div class="sidebar-sticky">
-                    <ul class="nav flex-column pt-3">
-                        @*Only show the navigation links if the user is logged in*@
-                        @if (User.Identity.IsAuthenticated)
-                        {
+        <div class="container-fluid">
+            <div role="row">
+
+                <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                    <div class="sidebar-sticky">
+                        <ul class="nav flex-column pt-3">
                             <li class="nav-item">
                                 <a class="nav-link @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/home.svg")))
@@ -74,16 +87,18 @@
                                     </a>
                                 </form>
                             </li>
-                        }
-                    </ul>
-                </div>
-            </nav>
+                        </ul>
+                    </div>
+                </nav>
 
-            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4 pt-4">
-                @RenderBody()
-            </main>
+                <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-md-4 pt-4">
+                    @RenderBody()
+                </main>
+
+            </div>
         </div>
-    </div>
+
+    }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
