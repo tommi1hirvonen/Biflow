@@ -9,21 +9,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
-namespace EtlManager.Pages.Jobs.JobDetails
+namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
 {
-    public class HistoryModel : PageModel
+    public class StepHistoryModel : PageModel
     {
         private readonly EtlManagerContext _context;
-        public HistoryModel(EtlManagerContext context)
+
+        public StepHistoryModel(EtlManagerContext context)
         {
             _context = context;
         }
 
+        public Step Step { get; set; }
+
         public Job Job { get; set; }
 
-        public IList<Job> Jobs { get; set; }
-
-        public IList<JobExecution> Executions { get; set; }
+        public IList<StepExecution> Executions { get; set; }
 
         public int MaxExecutions { get; set; } = 50;
 
@@ -31,13 +32,24 @@ namespace EtlManager.Pages.Jobs.JobDetails
         public decimal AverageSuccessRate { get; set; }
         public int AverageDurationInSeconds { get; set; }
 
-        public async Task OnGetAsync(Guid id)
+        public async Task<IActionResult> OnGetAsync(Guid id)
         {
-            Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-            Job = Jobs.First(job => job.JobId == id);
 
-            Executions = await _context.JobExecutions
-                .Where(execution => execution.JobId == Job.JobId)
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            Step = await _context.Steps
+                .Include(step => step.Parameters)
+                .Include(step => step.Dependencies)
+                .ThenInclude(dependency => dependency.DependantOnStep)
+                .FirstOrDefaultAsync(m => m.StepId == id);
+
+            Job = await _context.Jobs.Include(job => job.Steps).AsNoTracking().FirstOrDefaultAsync(job => job.JobId == Step.JobId);
+
+            Executions = await _context.Executions
+                .Where(execution => execution.StepId == Step.StepId)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(Execution => Execution.StartDateTime)
                 .Take(MaxExecutions)
@@ -45,6 +57,8 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
             AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
             AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
+
+            return Page();
         }
     }
 }

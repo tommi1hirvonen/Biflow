@@ -9,7 +9,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col">
-            <h5>Avg. execution duration</h5>
+            <h5>Average execution duration</h5>
             <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
         </div>
         <div class="col">
@@ -19,7 +19,7 @@
     </div>
     <div class="row">
         <div class="col">
-            <h5># of executions</h5>
+            <h5>Number of executions</h5>
             <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
         </div>
         <div class="col">
@@ -41,7 +41,7 @@
                             <tr>
                                 <td>@(i+1)</td>
                                 <td>
-                                    <a class="text-dark" asp-page="/Jobs/JobDetails/StepDetails/Edit" asp-route-id="@Model.TopFailedSteps[i].StepId">
+                                    <a class="text-dark" asp-page="/Jobs/JobDetails/StepDetails/StepHistory" asp-route-id="@Model.TopFailedSteps[i].StepId">
                                         @Model.TopFailedSteps[i].StepName
                                     </a>
                                 </td>

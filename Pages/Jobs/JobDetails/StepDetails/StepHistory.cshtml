@@ -1,60 +1,19 @@
 ﻿@page
-@model EtlManager.Pages.Executions.StepsModel
+@model EtlManager.Pages.Jobs.JobDetails.StepDetails.StepHistoryModel
 @{
-    ViewData["Title"] = "Executions";
+    ViewData["Title"] = "StepHistory";
 }
 
-<h3>Executions</h3>
-<hr />
-<div class="btn-group btn-group-sm">
-    <a class="btn btn-outline-secondary" asp-page="./Jobs" asp-route-IntervalHours="@Model.IntervalHours"
-       asp-route-Status="@Model.Status" asp-route-JobName="@Model.JobName" asp-route-dateTimeUntilTicks="@Model.DateTimeUntil.Ticks">Jobs</a>
-    <a class="btn btn-outline-secondary active">Steps</a>
-</div>
-<p />
-<form>
-    <div class="form-row">
-        <div class="form-group col-2">
-            <label>Status</label>
-            <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
-                <option value="">ALL</option>
-            </select>
-        </div>
-        <div class="form-group col-5">
-            <label>Job</label>
-            <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
-                <option value="">All</option>
-            </select>
-        </div>
-        <div class="form-group col-5">
-            <label>Step</label>
-            <select asp-for="StepName" asp-items="Model.StepNames" class="form-control">
-                <option value="">All</option>
-            </select>
-        </div>
-    </div>
-    <div class="form-row">
-        <div class="form-group col-3">
-            <label>Date & time until</label>
-            <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
-        </div>
-        <div class="form-group col-2">
-            <label>Interval (h)</label>
-            <input asp-for="IntervalHours" class="form-control">
-        </div>
-    </div>
-    <div class="form-row">
-        <input type="submit" value="Refresh" class="btn btn-primary" />
-    </div>
-</form>
-
-<p />
-
+<h4>@Model.Job.JobName</h4>
+<h5>@Model.Step.StepName</h5>
+<p></p>
+<a class="btn btn-sm btn-secondary" asp-page="../Index" asp-route-id="@Model.Job.JobId">Back to steps</a>
+<p></p>
 <table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Executions[0].StepName)
+                @Html.DisplayNameFor(model => model.Executions[0].CreatedDateTime)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
@@ -66,8 +25,19 @@
                 Duration
             </th>
             <th>
+                Success percent
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
+        </tr>
+        <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th><text>@Model.AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
+            <th>@Html.DisplayFor(modelItem => Model.AverageSuccessRate)</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -75,7 +45,7 @@
         {
             <tr style="cursor: pointer;" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
                 <td>
-                    @Html.DisplayFor(modelItem => item.StepName)
+                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
                 </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.StartDateTime)
@@ -85,6 +55,8 @@
                 </td>
                 <td>
                     <text>@item.GetDurationInReadableFormat()</text>
+                </td>
+                <td>
                 </td>
                 <td>
                     @{
@@ -113,7 +85,8 @@
         }
     </tbody>
 </table>
-
+<hr />
+<p class="text-secondary">Showing @Model.MaxExecutions latest executions</p>
 
 @*Generate modal popup windows to display step execution details*@
 @foreach (var item in Model.Executions)
@@ -133,7 +106,7 @@
                             @Html.DisplayNameFor(model => item.ExecutionId)
                         </dt>
                         <dd class="col-sm-9">
-                            <a asp-page="./JobDetails" asp-route-id="@item.ExecutionId">@Html.DisplayFor(model => item.ExecutionId)</a>
+                            <a asp-page="/Executions/JobDetails" asp-route-id="@item.ExecutionId">@Html.DisplayFor(model => item.ExecutionId)</a>
                         </dd>
                         <dt class="col-sm-3">
                             @Html.DisplayNameFor(model => item.JobId)

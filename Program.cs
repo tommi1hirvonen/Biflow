@@ -33,6 +33,21 @@ namespace EtlManager
 
     public static class Utility
     {
+        public static string SecondsToReadableFormat(this int value)
+        {
+            var duration = TimeSpan.FromSeconds(value);
+            var result = "";
+            var days = duration.Days;
+            var hours = duration.Hours;
+            var minutes = duration.Minutes;
+            var seconds = duration.Seconds;
+            if (days > 0) result += days + " d ";
+            if (hours > 0 || days > 0) result += hours + " h ";
+            if (minutes > 0 || hours > 0 || days > 0) result += minutes + " min ";
+            result += seconds + " s";
+            return result;
+        }
+
         public static DateTime Trim(this DateTime date, long roundTicks)
         {
             return new DateTime(date.Ticks - date.Ticks % roundTicks, date.Kind);

@@ -57,6 +57,15 @@
                 @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
             </th>
         </tr>
+        <tr>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th><text>@Model.AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
+            <th></th>
+            <th style="text-align: right;">@Html.DisplayFor(modelItem => Model.AverageSuccessRate)</th>
+            <th></th>
+        </tr>
     </thead>
     <tbody>
         @foreach (var item in Model.Executions)
