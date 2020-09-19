@@ -9,7 +9,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col">
-            <h4>Chart #1</h4>
+            <h4>Avg. execution in seconds</h4>
             <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
         </div>
         <div class="col">
@@ -78,51 +78,59 @@
     </div>
 </div>
 
+@functions {
+    public string GetDataSetString()
+    {
+        return string.Join(',',
+            Model.Executions.Select(e =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Key.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.Value + @"}")) +
+                "]}")
+            );
+    }
+}
+
 @section Scripts {
     <script src="~/lib/Chart.js/Chart.min.js"></script>
+    <script src="~/lib/Chart.js/Chart.bundle.js"></script>
     <script type="text/javascript">
+
+        var stringToColour = function (str) {
+            var hash = 0;
+            for (var i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            var colour = '#';
+            for (var i = 0; i < 3; i++) {
+                var value = (hash >> (i * 8)) & 0xFF;
+                colour += ('00' + value.toString(16)).substr(-2);
+            }
+            return colour;
+        }
+
         $(function () {
+
+            var datasets = [
+                    @Html.Raw(GetDataSetString())
+               ];
+
             // CHART 1
             var ctx1 = document.getElementById('myChart1')
             var myChart1 = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: [
-                        'Sunday',
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday'
-                    ],
-                    datasets: [{
-                        data: [
-                            15339,
-                            21345,
-                            18483,
-                            24003,
-                            23489,
-                            24092,
-                            12034
-                        ],
-                        lineTension: 0,
-                        backgroundColor: 'transparent',
-                        borderColor: '#007bff',
-                        borderWidth: 4,
-                        pointBackgroundColor: '#007bff'
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     scales: {
                         yAxes: [{
                             ticks: {
-                                beginAtZero: false
+                                beginAtZero: true
                             }
+                        }],
+                        xAxes: [{
+                            type: 'time'
                         }]
-                    },
-                    legend: {
-                        display: false
                     }
                 }
             })
