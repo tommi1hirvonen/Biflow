@@ -111,6 +111,7 @@
                             <span class="badge badge-danger">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
                         case "WARNING":
+                        case "STOPPED":
                         case "SUSPENDED":
                             <span class="badge badge-warning">@Html.DisplayFor(model => model.JobExecution.ExecutionStatus)</span>
                             break;
@@ -176,6 +177,7 @@
                                 <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
                             case "SKIPPED":
+                            case "STOPPED":
                             case "AWAIT RETRY":
                                 <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
                                 break;
@@ -295,6 +297,7 @@
             case "FAILED":
                 return "#dc3545"; // red
             case "SKIPPED":
+            case "STOPPED":
             case "AWAIT RETRY":
                 return "#ffc107"; // orange
             case "RUNNING":
@@ -387,6 +390,7 @@
                 case "FAILED":
                     return "#bc1525"; // red
                 case "SKIPPED":
+                case "STOPPED":
                 case "AWAIT RETRY":
                     return "#dfa100"; // orange
                 case "RUNNING":
@@ -521,6 +525,7 @@
                                         <span class="badge badge-danger">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;
                                     case "SKIPPED":
+                                    case "STOPPED":
                                     case "AWAIT RETRY":
                                         <span class="badge badge-warning">@Html.DisplayFor(model => item.ExecutionStatus)</span>
                                         break;

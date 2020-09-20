@@ -103,10 +103,59 @@ namespace EtlManager
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
 
-            SqlCommand fetchOperationId = new SqlCommand(
+            SqlCommand fetchMasterOperationId = new SqlCommand(
                 "SELECT TOP 1 MasterExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                 , sqlConnection);
+            fetchMasterOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
+
+            await sqlConnection.OpenAsync();
+
+            long masterOperationId = (long)await fetchMasterOperationId.ExecuteScalarAsync();
+
+            SqlCommand stopMasterOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+            stopMasterOperation.Parameters.AddWithValue("@OperationId", masterOperationId);
+            await stopMasterOperation.ExecuteNonQueryAsync();
+
+            SqlCommand fetchSlaveOperationIds = new SqlCommand(
+                @"SELECT SlaveExecutorOperationId
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND SlaveExecutorOperationId IS NOT NULL
+                ORDER BY RetryAttemptIndex DESC"
+                , sqlConnection);
+            fetchSlaveOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
+            SqlDataReader slaveOperationIdReader = await fetchSlaveOperationIds.ExecuteReaderAsync();
+            while (slaveOperationIdReader.Read())
+            {
+                long slaveOperationId = (long)slaveOperationIdReader[0];
+                SqlCommand stopSlaveOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+                stopSlaveOperation.Parameters.AddWithValue("@OperationId", slaveOperationId);
+                await stopSlaveOperation.ExecuteNonQueryAsync();
+            }
+            await slaveOperationIdReader.CloseAsync();
+
+            SqlCommand updateStatuses = new SqlCommand(
+              @"UPDATE etlmanager.Execution
+                SET EndDateTime = GETDATE(),
+	                ExecutionStatus = 'STOPPED'
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StartDateTime IS NOT NULL"
+                , sqlConnection);
+            updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
+            await updateStatuses.ExecuteNonQueryAsync();
+            
+        }
+
+        public async static Task StopStepExecution(IConfiguration configuration, Guid executionId, Guid stepId, int retryAttemptIndex)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+
+            SqlCommand fetchOperationId = new SqlCommand(
+              @"SELECT TOP 1 SlaveExecutorOperationId
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                , sqlConnection);
             fetchOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
+            fetchOperationId.Parameters.AddWithValue("@StepId", stepId);
+            fetchOperationId.Parameters.AddWithValue("@RetryAttemptIndex", retryAttemptIndex);
 
             await sqlConnection.OpenAsync();
 
@@ -115,16 +164,6 @@ namespace EtlManager
             SqlCommand stopOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
             stopOperation.Parameters.AddWithValue("@OperationId", operationId);
             await stopOperation.ExecuteNonQueryAsync();
-
-            SqlCommand updateStatuses = new SqlCommand(
-              @"UPDATE etlmanager.Execution
-                SET EndDateTime = CASE WHEN StartDateTime IS NOT NULL THEN GETDATE() ELSE EndDateTime END,
-	                ExecutionStatus = 'STOPPED'
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL"
-                , sqlConnection);
-            updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
-            await updateStatuses.ExecuteNonQueryAsync();
-            
         }
 
         public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)
