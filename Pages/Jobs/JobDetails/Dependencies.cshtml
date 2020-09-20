@@ -6,13 +6,8 @@
 
 <h3>Jobs</h3>
 <hr />
-
-<partial name="_JobNavigationPartial"
-         model="@(new EtlManager.Pages.Shared._JobNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
-<p></p>
-
-<partial name="_JobDetailsNavigationPartial" model="@(new KeyValuePair<Guid, string>(Model.Job.JobId, "Dependencies"))" />
-
+<partial name="_JobDetailsNavigationPartial"
+         model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
 <p></p>
 <table class="table table-sm table-striped">
     <thead>

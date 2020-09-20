@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace EtlManager.Pages.Shared
 {
-    public class _JobNavigationPartialModel : PageModel
+    public class _JobDetailsNavigationPartialModel : PageModel
     {
         public Job Job { get; set; }
         public IList<Job> Jobs { get; set; }
