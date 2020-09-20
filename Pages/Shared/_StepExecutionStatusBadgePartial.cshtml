@@ -1,0 +1,24 @@
+﻿@model EtlManager.Models.StepExecution
+
+@{
+    switch (Model.ExecutionStatus)
+    {
+        case "COMPLETED":
+            <span class="badge badge-success">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
+            break;
+        case "FAILED":
+            <span class="badge badge-danger">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
+            break;
+        case "SKIPPED":
+        case "STOPPED":
+        case "AWAIT RETRY":
+            <span class="badge badge-warning">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
+            break;
+        case "RUNNING":
+            <span class="badge badge-primary">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
+            break;
+        default:
+            <span class="badge badge-secondary">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
+            break;
+    }
+}

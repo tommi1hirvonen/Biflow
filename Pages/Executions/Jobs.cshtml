@@ -99,28 +99,7 @@
                     @Html.DisplayFor(modelItem => item.SuccessPercent)
                 </td>
                 <td>
-                    @{
-                        switch (item.ExecutionStatus)
-                        {
-                            case "COMPLETED":
-                                <span class="badge badge-success">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            case "FAILED":
-                                <span class="badge badge-danger">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            case "WARNING":
-                            case "STOPPED":
-                            case "SUSPENDED":
-                                <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            case "RUNNING":
-                                <span class="badge badge-primary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                            default:
-                                <span class="badge badge-secondary">@Html.DisplayFor(modelItem => item.ExecutionStatus)</span>
-                                break;
-                        }
-                    }
+                    <partial name="_JobExecutionStatusBadgePartial" model="item" />
                 </td>
             </tr>
         }
