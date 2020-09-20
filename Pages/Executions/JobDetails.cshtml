@@ -183,7 +183,8 @@
 
                 @foreach (var chartElement in Model.ChartElements)
                 {
-                    <rect status="@chartElement.ExecutionStatus"
+                    <rect fill-dark="@GetFillFromStatus(chartElement.ExecutionStatus, true)"
+                          fill-light="@GetFillFromStatus(chartElement.ExecutionStatus)"
                           style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
                           y="@chartElement.BarYLocation"
                           height="@(Model.BarHeight.ToString().Replace(',', '.'))"
@@ -223,7 +224,8 @@
 
                 @foreach (var chartElement in Model.ChartElements)
                 {
-                    <rect status="@chartElement.ExecutionStatus"
+                    <rect fill-dark="@GetFillFromStatus(chartElement.ExecutionStatus, true)"
+                          fill-light="@GetFillFromStatus(chartElement.ExecutionStatus)"
                           style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
                           y="@chartElement.BarYLocationCollapsed"
                           height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
@@ -239,28 +241,31 @@
 
 
 
-
-
-
-
-
-
 @functions {
-    public string GetFillFromStatus(string status)
+    string colorRed = "#dc3545";
+    string colorRedDark = "#bc1525";
+    string colorGreen = "#28a745";
+    string colorGreenDark = "#088725";
+    string colorOrange = "#ffc107";
+    string colorOrangeDark = "#dfa100";
+    string colorBlue = "#007bff";
+    string colorBlueDark = "#005bdf";
+
+    public string GetFillFromStatus(string status, bool dark = false)
     {
         switch (status)
         {
             case "COMPLETED":
-                return "#28a745"; // green
+                return dark ? colorGreenDark : colorGreen;
             case "FAILED":
-                return "#dc3545"; // red
+                return dark ? colorRedDark : colorRed;
             case "SKIPPED":
             case "STOPPED":
             case "AWAIT RETRY":
-                return "#ffc107"; // orange
+                return dark ? colorOrangeDark : colorOrange;
             case "RUNNING":
             default:
-                return "#007bff"; // blue
+                return dark ? colorBlueDark : colorBlue;
         }
     }
 }
@@ -317,45 +322,15 @@
         // Function to darken the rect elements when mouse hovering over them
         $(function () {
             $('rect').mouseenter(function () {
-                var status = $(this).attr('status');
-                $(this).css({ 'fill': getDarkerColorByStatus(status) });
+                var color = $(this).attr('fill-dark');
+                $(this).css({ 'fill': color });
             });
             $('rect').mouseleave(function () {
-                var status = $(this).attr('status');
-                $(this).css({ 'fill': getColorByStatus(status) });
+                var color = $(this).attr('fill-light');
+                $(this).css({ 'fill': color });
             });
         });
 
-        function getColorByStatus(status) {
-            switch (status) {
-                case "COMPLETED":
-                    return "#28a745"; // green
-                case "FAILED":
-                    return "#dc3545"; // red
-                case "SKIPPED":
-                case "AWAIT RETRY":
-                    return "#ffc107"; // orange
-                case "RUNNING":
-                default:
-                    return "#007bff"; // blue
-            }
-        }
-
-        function getDarkerColorByStatus(status) {
-            switch (status) {
-                case "COMPLETED":
-                    return "#088725"; // green
-                case "FAILED":
-                    return "#bc1525"; // red
-                case "SKIPPED":
-                case "STOPPED":
-                case "AWAIT RETRY":
-                    return "#dfa100"; // orange
-                case "RUNNING":
-                default:
-                    return "#005bdf"; // blue
-            }
-        }
 
         function stopExecution() {
             var executionId = "@Model.JobExecution.ExecutionId";
