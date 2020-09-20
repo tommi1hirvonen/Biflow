@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -94,6 +97,34 @@ namespace EtlManager
             await sqlConnection.OpenAsync();
             Guid executionId = (Guid) await sqlCommand.ExecuteScalarAsync();
             return executionId;
+        }
+
+        public async static Task StopJobExecution(IConfiguration configuration, Guid executionId)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+
+            SqlCommand fetchOperationId = new SqlCommand(
+                "SELECT TOP 1 MasterExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
+                , sqlConnection);
+            fetchOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
+
+            await sqlConnection.OpenAsync();
+
+            long operationId = (long)await fetchOperationId.ExecuteScalarAsync();
+
+            SqlCommand stopOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+            stopOperation.Parameters.AddWithValue("@OperationId", operationId);
+            await stopOperation.ExecuteNonQueryAsync();
+
+            SqlCommand updateStatuses = new SqlCommand(
+              @"UPDATE etlmanager.Execution
+                SET EndDateTime = CASE WHEN StartDateTime IS NOT NULL THEN GETDATE() ELSE EndDateTime END,
+	                ExecutionStatus = 'STOPPED'
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL"
+                , sqlConnection);
+            updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
+            await updateStatuses.ExecuteNonQueryAsync();
+            
         }
 
         public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)

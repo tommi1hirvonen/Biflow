@@ -28,6 +28,17 @@
     </div>
 </div>
 
+@if (Model.JobExecution.ExecutionStatus == "RUNNING")
+{
+    <p></p>
+    <div class="btn-toolbar" role="toolbar">
+        <button id="button_stop_execution" class="btn btn-sm btn-danger" onclick="stopExecution()">Stop execution</button>
+        <div id="spinner_stopping" class="spinner-border text-primary align-middle ml-3" hidden role="status">
+            <span class="sr-only">Stopping...</span>
+        </div>
+    </div>
+}
+
 <p />
 <div class="collapse" id="jobDetails">
     <div class="card card-body">
@@ -224,7 +235,7 @@
             </g>
         </svg>
     </div>
-    
+
     <div id="graph_collapsed" style="@(Model.Collapsed ? "" : "display: none;")">
         <svg viewBox="0 0 @(Model.ChartWidth+20) @Model.ChartHeightCollapsed">
             <g transform="translate(@Model.ChartPaddingLeft,@Model.ChartPaddingTop)">
@@ -253,12 +264,12 @@
                 @foreach (var chartElement in Model.ChartElements)
                 {
                     <rect status="@chartElement.ExecutionStatus"
-                            style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
-                            y="@chartElement.BarYLocationCollapsed"
-                            height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
-                            x="@chartElement.BarXLocation"
-                            width="@chartElement.BarWidth"
-                            data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
+                          style="fill: @GetFillFromStatus(chartElement.ExecutionStatus); cursor: pointer;"
+                          y="@chartElement.BarYLocationCollapsed"
+                          height="@(Model.BarHeightCollapsed.ToString().Replace(',', '.'))"
+                          x="@chartElement.BarXLocation"
+                          width="@chartElement.BarWidth"
+                          data-toggle="modal" data-target="#modal_@chartElement.StepExecutionId">
                     </rect>
                 }
             </g>
@@ -382,6 +393,39 @@
                 default:
                     return "#005bdf"; // blue
             }
+        }
+
+        function stopExecution() {
+            var executionId = "@Model.JobExecution.ExecutionId";
+            $('#button_stop_execution').attr("disabled", "true");
+            $('#spinner_stopping').removeAttr("hidden");
+
+            $.ajax({
+                url: "./JobDetails?handler=StopJobExecution",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: executionId
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#spinner_stopping').attr("hidden", "hidden");
+                        alert('Execution stopped successfully');
+                    } else {
+                        $('#button_stop_execution').removeAttr("disabled");
+                        $('#spinner_stopping').attr("hidden", "hidden");
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    $('#button_stop_execution').removeAttr("disabled");
+                    $('#spinner_stopping').attr("hidden", "hidden");
+                    alert('Error stopping execution: AJAX error, try logging in again');
+                }
+            });
         }
     </script>
 }

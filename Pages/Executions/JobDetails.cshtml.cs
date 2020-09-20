@@ -7,16 +7,19 @@ using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages.Executions
 {
     public class JobDetailsModel : PageModel
     {
         private readonly Data.EtlManagerContext _context;
+        private readonly IConfiguration _configuration;
 
-        public JobDetailsModel(Data.EtlManagerContext context)
+        public JobDetailsModel(Data.EtlManagerContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public Guid ExecutionId { get; set; }
@@ -159,6 +162,25 @@ namespace EtlManager.Pages.Executions
 
             }
 
+        }
+
+        public async Task<JsonResult> OnPostStopJobExecution(Guid id)
+        {
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
+
+            try
+            {
+                await Utility.StopJobExecution(_configuration, id);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error stopping execution: " + ex.Message });
+            }
+
+            return new JsonResult(new { success = true });
         }
 
         public class ChartElement
