@@ -4,89 +4,90 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<h3>Dashboard</h3>
-<hr />
 <div class="container-fluid">
     <div class="row">
-        <div class="col">
-            <h5>Average execution duration</h5>
-            <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
+        <div class="col-lg-3">
+            <h3>Dashboard</h3>
         </div>
-        <div class="col">
-            <h5>Job success rate</h5>
-            <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col">
-            <h5>Number of executions</h5>
-            <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
-        </div>
-        <div class="col">
-            <h5>Top 5 failing steps</h5>
-            <div class="row mt-4">
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Step</th>
-                            <th>Job</th>
-                            <th>Success %</th>
-                            <th># of executions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < Model.TopFailedSteps.Count; i++)
-                        {
-                            <tr>
-                                <td>@(i+1)</td>
-                                <td>
-                                    <a class="text-dark" asp-page="/Jobs/JobDetails/StepDetails/StepHistory" asp-route-id="@Model.TopFailedSteps[i].StepId">
-                                        @Model.TopFailedSteps[i].StepName
-                                    </a>
-                                </td>
-                                <td>
-                                    <a class="text-dark" asp-page="/Jobs/JobDetails/History" asp-route-id="@Model.TopFailedSteps[i].JobId">
-                                        @Model.TopFailedSteps[i].JobName
-                                    </a>
-                                </td>
-                                <td>@Html.DisplayFor(item => Model.TopFailedSteps[i].SuccessPercent)</td>
-                                <td>@Model.TopFailedSteps[i].NoOfExecutions</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+        <div class="col-lg-9 d-flex justify-content-end">
+            <form class="form-inline">
+                <input type="hidden" asp-for="LoadReport" value="true" />
+                <div id="spinner_loading" class="spinner-border text-primary align-middle" hidden role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <input type="submit" value="Load report" class="btn btn-sm btn-primary ml-3" onclick="$('#spinner_loading').removeAttr('hidden');" />
+                <label class="ml-5">Date until:</label>
+                <input asp-for="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
+                <label class="ml-5">Interval (d):</label>
+                <input asp-for="IntervalDays" class="form-control form-control-sm col-1 ml-2">
+            </form>
         </div>
     </div>
 </div>
+<hr />
 
-@functions {
-    public string GetDurationDatasetString()
-    {
-        return string.Join(',',
-            Model.TimeSeriesItems.Select(e =>
-                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
-                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.DurationInMinutes.ToString().Replace(',', '.') + @"}")) +
-                "]}")
-            );
-    }
+@if (Model.LoadReport)
+{
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <h5>Average execution duration</h5>
+                <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
+            </div>
+            <div class="col">
+                <h5>Job success rate</h5>
+                <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <h5>Number of executions</h5>
+                <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
+            </div>
+            <div class="col">
+                <h5>Top 5 failing steps</h5>
+                <div class="row mt-4">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Step</th>
+                                <th>Job</th>
+                                <th>Success %</th>
+                                <th># of executions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.TopFailedSteps.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        <a class="text-dark" asp-page="/Jobs/JobDetails/StepDetails/StepHistory" asp-route-id="@Model.TopFailedSteps[i].StepId">
+                                            @Model.TopFailedSteps[i].StepName
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a class="text-dark" asp-page="/Jobs/JobDetails/History" asp-route-id="@Model.TopFailedSteps[i].JobId">
+                                            @Model.TopFailedSteps[i].JobName
+                                        </a>
+                                    </td>
+                                    <td>@Html.DisplayFor(item => Model.TopFailedSteps[i].SuccessPercent)</td>
+                                    <td>@Model.TopFailedSteps[i].NoOfExecutions</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    public string GetNoOfExecutionsDatasetString()
-    {
-        return string.Join(',',
-            Model.TimeSeriesItems.Select(e =>
-                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
-                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.NumberOfExecutions + @"}")) +
-                "]}")
-            );
-    }
-}
 
-@section Scripts {
-    <script src="~/lib/Chart.js/Chart.min.js"></script>
-    <script src="~/lib/Chart.js/Chart.bundle.js"></script>
-    <script type="text/javascript">
+    @section Scripts {
+        <script src="~/lib/Chart.js/Chart.min.js"></script>
+        <script src="~/lib/Chart.js/Chart.bundle.js"></script>
+        <script type="text/javascript">
 
         var stringToColour = function (str) {
             var hash = 0;
@@ -204,5 +205,29 @@
 
 
 
-    </script>
+        </script>
+    }
+
+}
+
+@functions {
+    public string GetDurationDatasetString()
+    {
+        return string.Join(',',
+            Model.TimeSeriesItems.Select(e =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.DurationInMinutes.ToString().Replace(',', '.') + @"}")) +
+                "]}")
+            );
+    }
+
+    public string GetNoOfExecutionsDatasetString()
+    {
+        return string.Join(',',
+            Model.TimeSeriesItems.Select(e =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+                    string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.NumberOfExecutions + @"}")) +
+                "]}")
+            );
+    }
 }

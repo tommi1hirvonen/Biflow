@@ -28,13 +28,25 @@ namespace EtlManager.Pages
 
         public List<TopStep> TopFailedSteps { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public bool LoadReport { get; set; } = false;
+
+        [BindProperty(SupportsGet = true)]
+        public int IntervalDays { get; set; } = 90;
+
+        [BindProperty(SupportsGet = true)]
+        [DataType(DataType.Date)]
+        public DateTime DateTimeUntil { get; set; } = DateTime.Now.Date.Trim(TimeSpan.TicksPerMinute).AddHours(1);
+
         public async Task OnGetAsync()
         {
-            var dateStart = DateTime.Now.AddDays(-180);
+            if (!LoadReport) return;
+
+            var dateTimeStart = DateTimeUntil.AddDays(-IntervalDays);
 
             // Get duration executions
             var executions = await _context.JobExecutions
-                .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateStart)
+                .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
                 .OrderBy(e => e.CreatedDateTime)
                 .GroupBy(group => new
                 {
@@ -56,7 +68,7 @@ namespace EtlManager.Pages
 
             // Job success rates
             Jobs = await _context.JobExecutions
-                .Where(e => e.CreatedDateTime >= dateStart)
+                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
                 .GroupBy(group => group.JobName)
                 .Select(select => new ReportingJob
                 {
@@ -69,7 +81,7 @@ namespace EtlManager.Pages
 
             // Get top failed steps
             var topFailedStepsGrouping = await _context.Executions
-                .Where(e => e.CreatedDateTime >= dateStart)
+                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
                 .ToListAsync();
 
             TopFailedSteps = topFailedStepsGrouping
