@@ -1,0 +1,8 @@
+﻿@model EtlManager.Pages.Shared._JobNavigationPartialModel
+
+<nav class="nav nav-pills nav-justified">
+    @foreach (var job in Model.Jobs)
+    {
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
+    }
+</nav>

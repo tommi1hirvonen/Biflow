@@ -7,28 +7,11 @@
 <h3>Jobs</h3>
 <hr />
 
-<nav class="nav nav-pills nav-justified">
-    @foreach (var job in Model.Jobs)
-    {
-        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="./Schedules" asp-route-id="@job.JobId">@job.JobName</a>
-    }
-</nav>
+<partial name="_JobNavigationPartial"
+         model="@(new EtlManager.Pages.Shared._JobNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Schedules" })" />
 <p></p>
 
-<ul class="nav nav-tabs mt-3" role="tablist">
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" asp-page="./Index" asp-route-id="@Model.Job.JobId">Steps</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">Dependencies</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link active" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">Schedules</a>
-    </li>
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" asp-page="./History" asp-route-id="@Model.Job.JobId">History</a>
-    </li>
-</ul>
+<partial name="_JobDetailsNavigationPartial" model="@(new KeyValuePair<Guid, string>(Model.Job.JobId, "Schedules"))" />
 
 <p></p>
 <div class="container-fluid">

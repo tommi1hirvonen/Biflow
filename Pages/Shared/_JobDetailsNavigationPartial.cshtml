@@ -1,0 +1,16 @@
+﻿@model KeyValuePair<Guid, string>
+
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(Model.Value == "Index" ? "active" : null)" asp-page="./Index" asp-route-id="@Model.Key">Steps</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(Model.Value == "Dependencies" ? "active" : null)" asp-page="./Dependencies" asp-route-id="@Model.Key">Dependencies</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(Model.Value == "Schedules" ? "active" : null)" asp-page="./Schedules" asp-route-id="@Model.Key">Schedules</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(Model.Value == "History" ? "active" : null)" asp-page="./History" asp-route-id="@Model.Key">History</a>
+    </li>
+</ul>
