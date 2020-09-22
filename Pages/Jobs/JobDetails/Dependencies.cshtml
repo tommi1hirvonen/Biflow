@@ -4,41 +4,167 @@
     ViewData["Title"] = "Job Dependencies";
 }
 
-<h3>Jobs</h3>
-<hr />
-<partial name="_JobDetailsNavigationPartial"
-         model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
-<p></p>
-<table class="table table-sm table-striped">
-    <thead>
-        <tr>
-            <th>
-                Step
-            </th>
-            <th>
-                Dependant on
-            </th>
-            <th>
-                Strict dependency*
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Dependencies)
-        {
+
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    .dependency-graph {
+        width: 100%;
+        height: 100%;
+    }
+
+    .dependency-graph svg {
+        width: 100%;
+        height: 100%;
+        cursor: move;
+    }
+
+    .dependency-graph .node rect {
+        stroke-width: 1.5px;
+        stroke: #bbb;
+        fill: #666;
+    }
+
+    .dependency-graph .name {
+        margin-top: 4px;
+    }
+
+    .dependency-graph .node g div {
+        color: #fff;
+    }
+
+    .dependency-graph .edgeLabel text {
+        width: 50px;
+        fill: #fff;
+    }
+
+    .dependency-graph .edgePath path {
+        stroke: #999;
+        stroke-width: 1.5px;
+        fill: #999;
+    }
+</style>
+
+<div class="container-fluid h-100 flex-column p-0">
+    <h3>Jobs</h3>
+    <hr />
+    <partial name="_JobDetailsNavigationPartial"
+                model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
+    <p></p>
+    <table class="table table-sm table-striped">
+        <thead>
             <tr>
-                <td>
-                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
-                </td>
-                <td>
-                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StrictDependency)
-                </td>
+                <th>
+                    Step
+                </th>
+                <th>
+                    Dependant on
+                </th>
+                <th>
+                    Strict dependency*
+                </th>
             </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Dependencies)
+            {
+                <tr>
+                    <td>
+                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
+                    </td>
+                    <td>
+                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StrictDependency)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <hr />
+    <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
+
+    <div class="row flex-fill dependency-graph">
+        <svg id="dependency_graph">
+            <g />
+        </svg>
+    </div>
+    
+</div>
+
+@section Scripts{
+    <script src="~/lib/d3/d3.min.js"></script>
+    <script src="~/lib/dagre-d3/dagre-d3.min.js"></script>
+    <script type="text/javascript">
+
+        function draw() {
+
+            var workers = {
+                @Html.Raw(string.Join(',', Model.Steps.Select(step => "\"" + step.StepId + "\": { name: \"" + step.StepName + "\"}")))
+            };
+
+            // Set up zoom support
+            var svg = d3.select("#dependency_graph"),
+                inner = svg.select("g"),
+                zoom = d3.zoom().on("zoom", function () {
+                    inner.attr("transform", d3.event.transform);
+                });
+            svg.call(zoom);
+
+            var render = new dagreD3.render();
+
+            // Left-to-right layout
+            var g = new dagreD3.graphlib.Graph();
+            g.setGraph({
+                nodesep: 70,
+                ranksep: 50,
+                rankdir: "LR",
+                marginx: 20,
+                marginy: 20
+            });
+
+            for (var id in workers) {
+                var worker = workers[id];
+                var html = "<div style=\"text-align: center;\">";
+                html += "<span class=name>" + worker.name + "</span>";
+                html += "</div>";
+                g.setNode(id, {
+                    labelType: "html",
+                    label: html,
+                    rx: 5,
+                    ry: 5
+                });
+            }
+
+            @foreach (var dependency in Model.Dependencies)
+            {
+                @Html.Raw(@"g.setEdge(""" + dependency.DependantOnStepId + @""", """ + dependency.StepId + @""", { width: 40 });")
+                @Html.Raw("\n")
+            }
+
+            inner.call(render, g);
+
+            // Zoom and scale to fit
+            var graphWidth = g.graph().width + 80;
+            var graphHeight = g.graph().height + 100;
+
+            var width = parseInt(svg.style("width").replace(/px/, ""));
+            var height = parseInt(svg.style("height").replace(/px/, ""));
+
+            var zoomScale = Math.min(width / graphWidth, height / graphHeight);
+            var translateX = (width / 2) - ((graphWidth * zoomScale) / 2)
+            var translateY = (height / 2) - ((graphHeight * zoomScale) / 2);
+
+            svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
         }
-    </tbody>
-</table>
-<hr />
-<p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
+
+        $(function () {
+            draw();
+        });
+
+
+    </script>
+}

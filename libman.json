@@ -9,6 +9,14 @@
     {
       "library": "Chart.js@2.9.3",
       "destination": "wwwroot/lib/Chart.js/"
+    },
+    {
+      "library": "dagre-d3@0.6.4",
+      "destination": "wwwroot/lib/dagre-d3/"
+    },
+    {
+      "library": "d3@5.16.0",
+      "destination": "wwwroot/lib/d3/"
     }
   ]
 }
