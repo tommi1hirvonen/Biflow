@@ -9,6 +9,7 @@ using EtlManager.Data;
 using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EtlManager.Pages.Jobs
 {
@@ -17,12 +18,14 @@ namespace EtlManager.Pages.Jobs
         private readonly EtlManagerContext _context;
         private readonly IConfiguration _configuration;
         private readonly HttpContext httpContext;
+        private readonly IAuthorizationService _authorizationService;
 
-        public IndexModel(IConfiguration configuration, EtlManagerContext context, IHttpContextAccessor httpContextAccessor)
+        public IndexModel(IConfiguration configuration, EtlManagerContext context, IHttpContextAccessor httpContextAccessor, IAuthorizationService authorizationService)
         {
             _context = context;
             _configuration = configuration;
             httpContext = httpContextAccessor.HttpContext;
+            _authorizationService = authorizationService;
         }
 
         public IList<Job> Jobs { get;set; }
@@ -49,6 +52,12 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostCopy(Guid id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             string user = httpContext.User?.Identity?.Name;
 
             await Utility.JobCopy(_configuration, id, user);
@@ -58,6 +67,12 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null) return NotFound();
 
             Job job= await _context.Jobs.FindAsync(id);
@@ -72,6 +87,12 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostCreate([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job NewJob)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
                 return Page();
@@ -83,6 +104,12 @@ namespace EtlManager.Pages.Jobs
 
         public async Task<IActionResult> OnPostEdit([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job EditJob)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (!ModelState.IsValid)
             {
                 return Page();

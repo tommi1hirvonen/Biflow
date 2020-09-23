@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EtlManager.Data;
 using EtlManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,12 +19,14 @@ namespace EtlManager.Pages.Jobs.JobDetails
         private readonly EtlManagerContext _context;
         public readonly string WebRootPath;
         private readonly HttpContext httpContext;
+        private readonly IAuthorizationService _authorizationService;
 
-        public SchedulesModel(EtlManagerContext context, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
+        public SchedulesModel(EtlManagerContext context, IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor, IAuthorizationService authorizationService)
         {
             _context = context;
             WebRootPath = webHostEnvironment.WebRootPath;
             httpContext = httpContextAccessor.HttpContext;
+            _authorizationService = authorizationService;
         }
 
         public Job Job { get; set; }
@@ -54,6 +57,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid? id, Guid jobId)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null) return NotFound();
 
             Schedule schedule = await _context.Schedules.FindAsync(id);
@@ -70,6 +79,11 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPost()
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
 
             _context.Schedules.Add(NewSchedule);
             await _context.SaveChangesAsync();

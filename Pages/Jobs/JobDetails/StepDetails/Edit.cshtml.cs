@@ -9,9 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using EtlManager.Data;
 using EtlManager.Models;
 using System.Collections;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
 {
+    [Authorize(Roles = "Admin,Editor")]
     public class EditModel : PageModel
     {
         private readonly EtlManagerContext _context;

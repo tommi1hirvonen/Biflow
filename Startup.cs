@@ -32,6 +32,7 @@ namespace EtlManager
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultForbidScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             }).AddCookie(options =>
             {
                 options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/LogIn");
@@ -49,7 +50,12 @@ namespace EtlManager
             services.AddDbContext<EtlManagerContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
 
-            
+
+            services.AddAuthorization(options => {
+                options.AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"));
+                options.AddPolicy("RequireEditor", policy => policy.RequireRole("Admin", "Editor"));
+                options.AddPolicy("RequireOperator", policy => policy.RequireRole("Admin", "Editor", "Operator"));
+            });
 
             // AJAX requests used in cshtml files send the anti-forgery token in a header called XSRF-TOKEN.
             // Configure the service to listen to it.

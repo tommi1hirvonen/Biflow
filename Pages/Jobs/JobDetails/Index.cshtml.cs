@@ -9,6 +9,7 @@ using EtlManager.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EtlManager.Pages.Jobs.JobDetails
 {
@@ -17,12 +18,14 @@ namespace EtlManager.Pages.Jobs.JobDetails
         private readonly IConfiguration _configuration;
         private readonly Data.EtlManagerContext _context;
         private readonly HttpContext httpContext;
+        private readonly IAuthorizationService _authorizationService;
 
-        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IHttpContextAccessor httpContextAccessor)
+        public IndexModel(IConfiguration configuration, Data.EtlManagerContext context, IHttpContextAccessor httpContextAccessor, IAuthorizationService authorizationService)
         {
             _configuration = configuration;
             _context = context;
             httpContext = httpContextAccessor.HttpContext;
+            _authorizationService = authorizationService;
         }
 
         public IList<Step> Steps { get;set; }
@@ -85,6 +88,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });
@@ -104,6 +113,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostToggleDependencyMode(Guid? id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });
@@ -123,6 +138,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });
@@ -150,6 +171,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostCopy(Guid stepId, Guid targetJobId, Guid sourceJobId)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             string user = httpContext.User?.Identity?.Name;
 
             await Utility.StepCopy(_configuration, stepId, targetJobId, user);
@@ -160,6 +187,11 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public async Task<IActionResult> OnPostCreate()
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
 
             if (!ModelState.IsValid)
             {

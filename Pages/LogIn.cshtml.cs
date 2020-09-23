@@ -35,9 +35,10 @@ namespace EtlManager.Pages
             {
                 if (ModelState.IsValid)
                 {
-                    if (Utility.AuthenticateUser(_configuration, Login.Username, Login.Password))
+                    AuthenticationResult result = Utility.AuthenticateUser(_configuration, Login.Username, Login.Password);
+                    if (result.AuthenticationSuccessful)
                     {
-                        await SignInUser(Login.Username, false);
+                        await SignInUser(Login.Username, result.Role, false);
                         return RedirectToPage("/Index");
                     }
                     else
@@ -54,12 +55,13 @@ namespace EtlManager.Pages
             return Page();
         }
 
-        private async Task SignInUser(string username, bool isPersistent)
+        private async Task SignInUser(string username, string role, bool isPersistent)
         {
             var claims = new List<Claim>();
             try
             {
                 claims.Add(new Claim(ClaimTypes.Name, username));
+                claims.Add(new Claim(ClaimTypes.Role, role));
                 var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimPrincipal = new ClaimsPrincipal(claimIdentity);
                 var authenticationManager = Request.HttpContext;

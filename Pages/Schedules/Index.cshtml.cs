@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using EtlManager.Data;
 using EtlManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -16,11 +17,13 @@ namespace EtlManager.Pages.Schedules
     {
         private readonly EtlManagerContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IAuthorizationService _authorizationService;
 
-        public IndexModel(IConfiguration configuration, EtlManagerContext context)
+        public IndexModel(IConfiguration configuration, EtlManagerContext context, IAuthorizationService authorizationService)
         {
             _context = context;
             _configuration = configuration;
+            _authorizationService = authorizationService;
         }
 
         public IList<Job> Jobs { get; set; }
@@ -35,6 +38,12 @@ namespace EtlManager.Pages.Schedules
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid? id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null) return NotFound();
 
             Schedule schedule = await _context.Schedules.FindAsync(id);
@@ -49,6 +58,12 @@ namespace EtlManager.Pages.Schedules
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             _context.Schedules.Add(NewSchedule);
             await _context.SaveChangesAsync();
 
@@ -57,6 +72,12 @@ namespace EtlManager.Pages.Schedules
 
         public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });

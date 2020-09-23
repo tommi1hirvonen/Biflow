@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
 using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace EtlManager
 {
@@ -232,7 +227,7 @@ namespace EtlManager
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public static bool AuthenticateUser(IConfiguration configuration, string username, string password)
+        public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -242,10 +237,9 @@ namespace EtlManager
             sqlCommand.Parameters.AddWithValue("@Password_", password);
 
             sqlConnection.Open();
-            int result = (int)sqlCommand.ExecuteScalar();
+            string role = (string)sqlCommand.ExecuteScalar();
 
-            if (result > 0) return true;
-            else return false;
+            return new AuthenticationResult(role);
         }
 
         public static bool UpdatePassword(IConfiguration configuration, string username, string password)
@@ -268,6 +262,29 @@ namespace EtlManager
         {
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
+        }
+
+    }
+
+    public class AuthenticationResult
+    {
+        public bool AuthenticationSuccessful { get; }
+        public string Role { get; }
+        public AuthenticationResult(string role)
+        {
+            Role = role;
+            switch (role)
+            {
+                case "Admin":
+                case "Editor":
+                case "Operator":
+                case "Viewer":
+                    AuthenticationSuccessful = true;
+                    return;
+                default:
+                    AuthenticationSuccessful = false;
+                    return;
+            }
         }
     }
     
