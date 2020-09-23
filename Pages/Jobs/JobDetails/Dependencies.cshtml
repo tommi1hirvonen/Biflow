@@ -22,28 +22,19 @@
     }
 
     .dependency-graph .node rect {
-        stroke-width: 1.5px;
-        stroke: #bbb;
-        fill: #666;
+        stroke-width: 2px;
+        stroke: #666;
+        fill: #fff;
     }
 
     .dependency-graph .name {
         margin-top: 4px;
     }
 
-    .dependency-graph .node g div {
-        color: #fff;
-    }
-
-    .dependency-graph .edgeLabel text {
-        width: 50px;
-        fill: #fff;
-    }
-
     .dependency-graph .edgePath path {
-        stroke: #999;
-        stroke-width: 1.5px;
-        fill: #999;
+        stroke: #888;
+        stroke-width: 2px;
+        fill: #888;
     }
 </style>
 
@@ -51,48 +42,59 @@
     <h3>Jobs</h3>
     <hr />
     <partial name="_JobDetailsNavigationPartial"
-                model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
+             model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "./Dependencies" })" />
     <p></p>
-    <table class="table table-sm table-striped">
-        <thead>
-            <tr>
-                <th>
-                    Step
-                </th>
-                <th>
-                    Dependant on
-                </th>
-                <th>
-                    Strict dependency*
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.Dependencies)
-            {
-                <tr>
-                    <td>
-                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
-                    </td>
-                    <td>
-                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.StrictDependency)
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <hr />
-    <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
 
-    <div class="row flex-fill dependency-graph">
+    <div class="btn-toolbar" role="toolbar">
+        <div class="btn-group btn-group-sm mr-2" role="group">
+            <button id="button_toggle_graph" class="btn btn-outline-secondary active" onclick="toggleGraph()">Graph</button>
+            <button id="button_toggle_table" class="btn btn-outline-secondary" onclick="toggleTable()">Table</button>
+        </div>
+    </div>
+    <p></p>
+
+    <div id="div_table" style="display: none;">
+        <table class="table table-sm table-striped">
+            <thead>
+                <tr>
+                    <th>
+                        Step
+                    </th>
+                    <th>
+                        Dependant on
+                    </th>
+                    <th>
+                        Strict dependency*
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Dependencies)
+                {
+                    <tr>
+                        <td>
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
+                        </td>
+                        <td>
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.StrictDependency)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <hr />
+        <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
+    </div>
+
+    <div class="row flex-fill dependency-graph" id="div_dependency_graph">
         <svg id="dependency_graph">
             <g />
         </svg>
     </div>
-    
+
 </div>
 
 @section Scripts{
@@ -129,19 +131,19 @@
             for (var id in workers) {
                 var worker = workers[id];
                 var html = "<div style=\"text-align: center;\">";
-                html += "<span class=name>" + worker.name + "</span>";
+                html += "<a class=\"text-dark\" href='/Jobs/JobDetails/StepDetails/Edit?id=" + id + "'>" + worker.name + "</a>";
                 html += "</div>";
                 g.setNode(id, {
                     labelType: "html",
                     label: html,
-                    rx: 5,
-                    ry: 5
+                    rx: 20,
+                    ry: 20
                 });
             }
 
             @foreach (var dependency in Model.Dependencies)
             {
-                @Html.Raw(@"g.setEdge(""" + dependency.DependantOnStepId + @""", """ + dependency.StepId + @""", { width: 40 });")
+                @Html.Raw(@"g.setEdge(""" + dependency.DependantOnStepId + @""", """ + dependency.StepId + @""", { curve: d3.curveBasis });")
                 @Html.Raw("\n")
             }
 
@@ -165,6 +167,19 @@
             draw();
         });
 
+        function toggleTable() {
+            $('#div_dependency_graph').hide();
+            $('#div_table').show();
+            $('#button_toggle_graph').removeClass('active');
+            $('#button_toggle_table').addClass('active');
+        }
+
+        function toggleGraph() {
+            $('#div_table').hide();
+            $('#div_dependency_graph').show();
+            $('#button_toggle_table').removeClass('active');
+            $('#button_toggle_graph').addClass('active');
+        }
 
     </script>
 }
