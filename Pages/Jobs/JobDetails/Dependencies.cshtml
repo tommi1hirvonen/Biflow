@@ -36,6 +36,13 @@
         stroke-width: 2px;
         fill: #888;
     }
+
+    .dependency-graph .edgePath.non-strict path {
+        stroke-dasharray: 5,5;
+    }
+
+    .dependency-graph .edgePath.strict path {
+    }
 </style>
 
 <div class="container-fluid h-100 flex-column p-0">
@@ -143,7 +150,7 @@
 
             @foreach (var dependency in Model.Dependencies)
             {
-                @Html.Raw(@"g.setEdge(""" + dependency.DependantOnStepId + @""", """ + dependency.StepId + @""", { curve: d3.curveBasis });")
+                @Html.Raw(@"g.setEdge(""" + dependency.DependantOnStepId + @""", """ + dependency.StepId + @""", { curve: d3.curveBasis, class: '" + (!dependency.StrictDependency ? "non-strict" : "strict") + "' });")
                 @Html.Raw("\n")
             }
 
