@@ -36,6 +36,8 @@ namespace EtlManager.Pages.Jobs
 
         public Job EditJob { get; set; }
 
+        public bool IsEditor { get; set; } = false;
+
         public async Task OnGetAsync()
         {
             Jobs = await _context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
@@ -48,6 +50,12 @@ namespace EtlManager.Pages.Jobs
                 })
                 .ToListAsync();
             jobExecutions.ForEach(item => LastExecutions[item.Key] = item.MaxStartTime);
+
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (authorized.Succeeded)
+            {
+                IsEditor = true;
+            }
         }
 
         public async Task<IActionResult> OnPostCopy(Guid id)

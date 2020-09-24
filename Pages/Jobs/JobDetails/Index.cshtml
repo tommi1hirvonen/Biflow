@@ -15,28 +15,39 @@
     <div class="row align-items-center">
 
         <div class="col">
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-                New step
-            </button>
-        </div>
-
-        <div class="col">
-            <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
-                <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
-            </div>
-        </div>
-
-        <div class="col">
-            <div class="btn-group">
-                <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
-                    Execute...
+            @if (Model.IsEditor)
+            {
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                    New step
                 </button>
-            </div>
-            <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
-            <div id="spinner_starting" class="spinner-border text-primary align-middle" hidden role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
+            }
+
+        </div>
+
+        <div class="col">
+            @if (Model.IsEditor)
+            {
+                <div class="custom-control custom-switch">
+                    <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
+                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
+                </div>
+            }
+        </div>
+
+        <div class="col">
+            @if (Model.IsOperator)
+            {
+                <div class="btn-group">
+                    <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
+                        Execute...
+                    </button>
+                </div>
+                <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
+                <div id="spinner_starting" class="spinner-border text-primary align-middle" hidden role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            }
+
         </div>
 
     </div>
@@ -83,7 +94,15 @@
         {
             <tr>
                 <td class="align-middle">
-                    <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.StepName</a>
+                    @if (Model.IsEditor)
+                    {
+                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.StepName</a>
+                    }
+                    else
+                    {
+                        <text>@item.StepName</text>
+                    }
+
                 </td>
                 <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
@@ -101,7 +120,15 @@
                 <td class="align-middle">
                     <form>
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
+                            @if (Model.IsEditor)
+                            {
+                                <input type="checkbox" class="custom-control-input" disabled id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
+                            }
+                            else
+                            {
+                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                            }
+
                             <label class="custom-control-label" style="cursor: pointer;" for="@item.StepId"></label>
                         </div>
                     </form>
@@ -111,41 +138,43 @@
                     <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
                         Details
                     </button>
-                    &nbsp;
-                    <a class="btn btn-sm btn-outline-primary" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
+                    
+                    <a class="btn btn-sm btn-outline-primary ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
                         History
                     </a>
-                    &nbsp;
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Copy to
-                        </button>
-                        <div class="dropdown-menu">
-                            <form method="post">
-                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                    here
-                                </button>
-                            </form>
-                            <div class="dropdown-divider"></div>
-                            @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
-                            {
+                    @if (Model.IsEditor)
+                    {
+                        <div class="btn-group ml-1">
+                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Copy to
+                            </button>
+                            <div class="dropdown-menu">
                                 <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                        @job.JobName
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
+                                        here
                                     </button>
                                 </form>
-                            }
+                                <div class="dropdown-divider"></div>
+                                @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+                                {
+                                    <form method="post">
+                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                            @job.JobName
+                                        </button>
+                                    </form>
+                                }
+                            </div>
                         </div>
-                    </div>
-                    &nbsp;
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Delete
-                        </button>
-                        <div class="dropdown-menu">
-                            <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                        <div class="btn-group ml-1">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                            </div>
                         </div>
-                    </div>
+                    }
+
                 </td>
             </tr>
         }
@@ -153,202 +182,208 @@
 </table>
 
 
-
-@*EXECUTE MODAL*@
-<div class="modal fade" id="modal_execute" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Execute steps</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col mx-5">
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
-                                </div>
-                            </div>
-                            <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
-                        </div>
-                        <table class="table" id="table_executable_steps">
-                            <thead>
-                                <tr>
-                                    <th class="align-top">
-                                        <input type="checkbox" class="form-check-input" id="execute_check_all">
-                                    </th>
-                                    <th>Step name</th>
-                                    <th>
-                                        @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
-                                    </th>
-                                    <th>
-                                        @Html.DisplayNameFor(model => model.Steps[0].StepType)
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var step in Model.Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
-                                {
-                                    <tr id="executable_step_@step.StepId">
-                                        <td>
-                                            <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
-                                        </td>
-                                        <td>
-                                            @step.StepName
-                                        </td>
-                                        <td class="align-middle">
-                                            @Html.DisplayFor(modelItem => step.ExecutionPhase)
-                                        </td>
-                                        <td class="align-middle">
-                                            @if (step.StepType == "SQL")
-                                            {
-                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
-                                            }
-                                            else if (step.StepType == "SSIS")
-                                            {
-                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-@*NEW STEP MODAL*@
-<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" asp-page-handler="Create" autocomplete="off">
+@if (Model.IsOperator)
+{
+    @*EXECUTE MODAL*@
+    <div class="modal fade" id="modal_execute" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">New step</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Execute steps</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col mx-3">
-                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                            <input type="hidden" asp-for="NewStep.JobId" />
-                            <input type="hidden" asp-for="NewStep.IsEnabled" value="true" />
-                            <div class="form-group">
-                                <label asp-for="NewStep.StepName" class="control-label"></label>
-                                <input asp-for="NewStep.StepName" class="form-control" />
-                                <span asp-validation-for="NewStep.StepName" class="text-danger"></span>
+                        <div class="col mx-5">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                    </div>
+                                </div>
+                                <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
                             </div>
-                            <div class="form-row">
-                                <div class="form-group col">
-                                    <label asp-for="NewStep.ExecutionPhase" class="control-label"></label>
-                                    <input asp-for="NewStep.ExecutionPhase" class="form-control" />
-                                    <span asp-validation-for="NewStep.ExecutionPhase" class="text-danger"></span>
-                                </div>
-                                <div class="form-group col">
-                                    <label asp-for="NewStep.StepType" class="control-label"></label>
-                                    <select asp-for="NewStep.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
-                                        <option>SQL</option>
-                                        <option>SSIS</option>
-                                    </select>
-                                    <span asp-validation-for="NewStep.StepType" class="text-danger"></span>
-                                </div>
-                                <div class="form-group col">
-                                    <label asp-for="NewStep.RetryAttempts" class="control-label"></label>
-                                    <input asp-for="NewStep.RetryAttempts" class="form-control" />
-                                    <span asp-validation-for="NewStep.RetryAttempts" class="text-danger"></span>
-                                </div>
-                                <div class="form-group col">
-                                    <label asp-for="NewStep.RetryIntervalMinutes" class="control-label"></label>
-                                    <input asp-for="NewStep.RetryIntervalMinutes" class="form-control" />
-                                    <span asp-validation-for="NewStep.RetryIntervalMinutes" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="form-group" id="sql_statement_div">
-                                <label asp-for="NewStep.SqlStatement" class="control-label"></label>
-                                <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
-                                <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col" id="server_div">
-                                    <label asp-for="NewStep.ServerName" class="control-label"></label>
-                                    <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
-                                    <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group col" id="folder_div">
-                                    <label asp-for="NewStep.FolderName" class="control-label"></label>
-                                    <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
-                                    <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col" id="project_div">
-                                    <label asp-for="NewStep.ProjectName" class="control-label"></label>
-                                    <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
-                                    <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
-                                </div>
-                                <div class="form-group col" id="package_div">
-                                    <label asp-for="NewStep.PackageName" class="control-label"></label>
-                                    <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
-                                    <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="form-group form-check" id="32_bit_mode_div">
-                                <label class="form-check-label">
-                                    <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
-                                </label>
-                            </div>
-
-                            <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
-                            <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
-
-                            <p />
-                            <div id="parameters_div">
-                                <p />
-                                <h5>Parameters</h5>
-                                <p />
-                                <table id="parameters_table" class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>Name</th>
-                                            <th>Value</th>
-                                            <th></th>
+                            <table class="table" id="table_executable_steps">
+                                <thead>
+                                    <tr>
+                                        <th class="align-top">
+                                            <input type="checkbox" class="form-check-input" id="execute_check_all">
+                                        </th>
+                                        <th>Step name</th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Steps[0].StepType)
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var step in Model.Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
+                                    {
+                                        <tr id="executable_step_@step.StepId">
+                                            <td>
+                                                <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
+                                            </td>
+                                            <td>
+                                                @step.StepName
+                                            </td>
+                                            <td class="align-middle">
+                                                @Html.DisplayFor(modelItem => step.ExecutionPhase)
+                                            </td>
+                                            <td class="align-middle">
+                                                @if (step.StepType == "SQL")
+                                                {
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
+                                                }
+                                                else if (step.StepType == "SSIS")
+                                                {
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                                                }
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
-                                    </tbody>
-                                </table>
-                                <div id="duplicate_parameter_error" style="display: none;">
-                                    <text class="text-danger">Duplicate parameter names</text>
-                                    <p />
-                                </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
-                            </div>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
+                    <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+}
+
+
+@if (Model.IsEditor)
+{
+    @*NEW STEP MODAL*@
+    <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post" asp-page-handler="Create" autocomplete="off">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">New step</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col mx-3">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input type="hidden" asp-for="NewStep.JobId" />
+                                <input type="hidden" asp-for="NewStep.IsEnabled" value="true" />
+                                <div class="form-group">
+                                    <label asp-for="NewStep.StepName" class="control-label"></label>
+                                    <input asp-for="NewStep.StepName" class="form-control" />
+                                    <span asp-validation-for="NewStep.StepName" class="text-danger"></span>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col">
+                                        <label asp-for="NewStep.ExecutionPhase" class="control-label"></label>
+                                        <input asp-for="NewStep.ExecutionPhase" class="form-control" />
+                                        <span asp-validation-for="NewStep.ExecutionPhase" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label asp-for="NewStep.StepType" class="control-label"></label>
+                                        <select asp-for="NewStep.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                                            <option>SQL</option>
+                                            <option>SSIS</option>
+                                        </select>
+                                        <span asp-validation-for="NewStep.StepType" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label asp-for="NewStep.RetryAttempts" class="control-label"></label>
+                                        <input asp-for="NewStep.RetryAttempts" class="form-control" />
+                                        <span asp-validation-for="NewStep.RetryAttempts" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label asp-for="NewStep.RetryIntervalMinutes" class="control-label"></label>
+                                        <input asp-for="NewStep.RetryIntervalMinutes" class="form-control" />
+                                        <span asp-validation-for="NewStep.RetryIntervalMinutes" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="sql_statement_div">
+                                    <label asp-for="NewStep.SqlStatement" class="control-label"></label>
+                                    <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                                    <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col" id="server_div">
+                                        <label asp-for="NewStep.ServerName" class="control-label"></label>
+                                        <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
+                                        <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col" id="folder_div">
+                                        <label asp-for="NewStep.FolderName" class="control-label"></label>
+                                        <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
+                                        <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col" id="project_div">
+                                        <label asp-for="NewStep.ProjectName" class="control-label"></label>
+                                        <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
+                                        <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col" id="package_div">
+                                        <label asp-for="NewStep.PackageName" class="control-label"></label>
+                                        <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
+                                        <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="form-group form-check" id="32_bit_mode_div">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
+                                    </label>
+                                </div>
+
+                                <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
+                                <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
+
+                                <p />
+                                <div id="parameters_div">
+                                    <p />
+                                    <h5>Parameters</h5>
+                                    <p />
+                                    <table id="parameters_table" class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Name</th>
+                                                <th>Value</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
+                                        </tbody>
+                                    </table>
+                                    <div id="duplicate_parameter_error" style="display: none;">
+                                        <text class="text-danger">Duplicate parameter names</text>
+                                        <p />
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
 
 @*Generate modal popup windows to display step details*@
 @foreach (var item in Model.Steps)

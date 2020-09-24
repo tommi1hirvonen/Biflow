@@ -31,9 +31,17 @@ namespace EtlManager.Pages.Schedules
         [BindProperty]
         public Schedule NewSchedule { get; set; } = new Schedule { IsEnabled = true };
 
+        public bool IsOperator { get; set; } = false;
+
         public async Task OnGetAsync()
         {
             Jobs = await _context.Jobs.Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (authorized.Succeeded)
+            {
+                IsOperator = true;
+            }
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(Guid? id)
@@ -75,7 +83,7 @@ namespace EtlManager.Pages.Schedules
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
             if (id == null)

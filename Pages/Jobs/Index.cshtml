@@ -8,9 +8,13 @@
 
 <h3>Jobs</h3>
 <hr />
-<button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-    New job
-</button>
+@if (Model.IsEditor)
+{
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+        New job
+    </button>
+}
+
 <p />
 
 <table class="table table-hover">
@@ -55,80 +59,48 @@
                     @GetNextStartTime(item)
                 </td>
                 <td class="align-middle" align="center">
-                    <form method="post">
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
-                            Edit
-                        </button>
-                        &nbsp;
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Copy
+                    @if (Model.IsEditor)
+                    {
+                        <form method="post">
+                            <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                                Edit
                             </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Confirm</button>
+                            &nbsp;
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Copy
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Confirm</button>
+                                </div>
                             </div>
-                        </div>
-                        &nbsp;
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Delete
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
+                            &nbsp;
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Delete
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    }
+
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-@*NEW JOB MODAL*@
-<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" autocomplete="off">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">New job</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-8 mx-auto">
-                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                            <div class="form-group">
-                                <label asp-for="NewJob.JobName" class="control-label"></label>
-                                <input asp-for="NewJob.JobName" class="form-control" />
-                                <span asp-validation-for="NewJob.JobName" class="text-danger"></span>
-                            </div>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="dependency_mode_new" asp-for="NewJob.UseDependencyMode">
-                                <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_new">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@*GENERATE EDIT MODALS*@
-@foreach (var item in Model.Jobs)
+@if (Model.IsEditor)
 {
-    <div class="modal fade" id="modal_edit_@item.JobId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    @*NEW JOB MODAL*@
+    <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="post" autocomplete="off">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">New job</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -137,32 +109,72 @@
                         <div class="row">
                             <div class="col-md-8 mx-auto">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                                <input type="hidden" asp-for="EditJob.JobId" value="@item.JobId" />
-                                <input type="hidden" asp-for="EditJob.CreatedDateTime" value="@item.CreatedDateTime" />
-                                <input type="hidden" asp-for="EditJob.LastModifiedDateTime" value="@item.LastModifiedDateTime" />
-                                <input type="hidden" asp-for="EditJob.LastModifiedBy" value="@item.LastModifiedBy" />
-                                <input type="hidden" asp-for="EditJob.CreatedBy" value="@item.CreatedBy" />
                                 <div class="form-group">
-                                    <label asp-for="EditJob.JobName" class="control-label"></label>
-                                    <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
-                                    <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
+                                    <label asp-for="NewJob.JobName" class="control-label"></label>
+                                    <input asp-for="NewJob.JobName" class="form-control" />
+                                    <span asp-validation-for="NewJob.JobName" class="text-danger"></span>
                                 </div>
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" checked="@(item.UseDependencyMode ? "checked" : null)" class="custom-control-input" id="dependency_mode_edit_@item.JobId" asp-for="EditJob.UseDependencyMode">
-                                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_edit_@item.JobId">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
+                                    <input type="checkbox" class="custom-control-input" id="dependency_mode_new" asp-for="NewJob.UseDependencyMode">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_new">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button class="btn btn-success" asp-page-handler="Create">Create</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @*GENERATE EDIT MODALS*@
+    @foreach (var item in Model.Jobs)
+    {
+        <div class="modal fade" id="modal_edit_@item.JobId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="post" autocomplete="off">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-8 mx-auto">
+                                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                    <input type="hidden" asp-for="EditJob.JobId" value="@item.JobId" />
+                                    <input type="hidden" asp-for="EditJob.CreatedDateTime" value="@item.CreatedDateTime" />
+                                    <input type="hidden" asp-for="EditJob.LastModifiedDateTime" value="@item.LastModifiedDateTime" />
+                                    <input type="hidden" asp-for="EditJob.LastModifiedBy" value="@item.LastModifiedBy" />
+                                    <input type="hidden" asp-for="EditJob.CreatedBy" value="@item.CreatedBy" />
+                                    <div class="form-group">
+                                        <label asp-for="EditJob.JobName" class="control-label"></label>
+                                        <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
+                                        <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
+                                    </div>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" checked="@(item.UseDependencyMode ? "checked" : null)" class="custom-control-input" id="dependency_mode_edit_@item.JobId" asp-for="EditJob.UseDependencyMode">
+                                        <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_edit_@item.JobId">@Html.DisplayNameFor(model => model.NewJob.UseDependencyMode)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
 }
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

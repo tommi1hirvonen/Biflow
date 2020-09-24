@@ -40,6 +40,8 @@ namespace EtlManager.Pages.Jobs.JobDetails
         [BindProperty]
         public Schedule NewSchedule { get; set; }
 
+        public bool IsOperator { get; set; } = false;
+
         public async Task OnGetAsync(Guid id)
         {
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
@@ -52,6 +54,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
             if (Job.Subscriptions.Select(subscription => subscription.Username).Contains(user))
             {
                 Subscribed = true;
+            }
+
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (authorized.Succeeded)
+            {
+                IsOperator = true;
             }
         }
 

@@ -42,17 +42,39 @@ namespace EtlManager.Pages.Jobs.JobDetails
         [BindProperty]
         public IList<ParameterEdit> Parameters { get; set; } = new List<ParameterEdit>();
 
+        public bool IsEditor { get; set; } = false;
+
+        public bool IsOperator { get; set; } = false;
+
         public async Task OnGetAsync(Guid id)
         {
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Steps).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
             NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
+
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (authorized.Succeeded)
+            {
+                IsEditor = true;
+            }
+
+            var authorized2 = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (authorized2.Succeeded)
+            {
+                IsOperator = true;
+            }
         }
 
         
         public async Task<IActionResult> OnPostExecute(Guid id, string stepIds)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });
@@ -91,7 +113,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
             if (id == null)
@@ -116,7 +138,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
             if (id == null)
@@ -141,7 +163,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
             if (id == null)

@@ -12,9 +12,13 @@
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-4">
+            @if (Model.IsOperator)
+            {
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
                 New schedule
             </button>
+            }
+            
         </div>
         <div class="col-4">
             <div class="btn-group">
@@ -62,7 +66,15 @@
                 <td class="align-middle">
                     <form>
                         <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
+                            @if (Model.IsOperator)
+                            {
+                                <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
+                            }
+                            else
+                            {
+                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                            }
+
                             <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
                         </div>
                     </form>
@@ -141,6 +153,8 @@
                     }
                 </td>
                 <td align="center">
+                    @if (Model.IsOperator)
+                    {
                     <form method="post">
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -151,12 +165,15 @@
                             </div>
                         </div>
                     </form>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
+@if (Model.IsOperator)
+{
 <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -247,6 +264,8 @@
         </div>
     </div>
 </div>
+}
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
