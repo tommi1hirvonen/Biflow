@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EtlManager.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -15,14 +16,18 @@ namespace EtlManager.Pages.Executions
     {
         private readonly Data.EtlManagerContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IAuthorizationService _authorizationService;
 
-        public JobDetailsModel(Data.EtlManagerContext context, IConfiguration configuration)
+        public JobDetailsModel(Data.EtlManagerContext context, IConfiguration configuration, IAuthorizationService authorizationService)
         {
             _context = context;
             _configuration = configuration;
+            _authorizationService = authorizationService;
         }
 
         public Guid ExecutionId { get; set; }
+
+        public bool IsOperator { get; set; } = false;
 
         public bool Graph = false;
         public bool Collapsed = false;
@@ -59,6 +64,12 @@ namespace EtlManager.Pages.Executions
 
         public async Task OnGetAsync(Guid id, bool graph = false, bool collapsed = false)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (authorized.Succeeded)
+            {
+                IsOperator = true;
+            }
+
             ExecutionId = id;
             Executions = await _context.Executions
                 .Where(e => e.ExecutionId == id)
@@ -166,6 +177,12 @@ namespace EtlManager.Pages.Executions
 
         public async Task<JsonResult> OnPostStopJobExecution(Guid id)
         {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
+            }
+
             if (id == null)
             {
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });

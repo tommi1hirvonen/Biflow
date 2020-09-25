@@ -28,7 +28,7 @@
     </div>
 </div>
 
-@if (Model.JobExecution.ExecutionStatus == "RUNNING")
+@if (Model.JobExecution.ExecutionStatus == "RUNNING" && Model.IsOperator)
 {
     <p></p>
     <div class="btn-toolbar" role="toolbar">
