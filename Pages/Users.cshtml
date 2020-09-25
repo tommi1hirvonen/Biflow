@@ -50,6 +50,10 @@
                             Edit
                         </button>
                         &nbsp;
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                            Change password
+                        </button>
+                        &nbsp;
                         <div class="btn-group">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 Delete
@@ -140,6 +144,7 @@
                             <div class="col-md-8 mx-auto">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                 <input type="hidden" asp-for="EditUser.Username" value="@user.Username" class="form-control" />
+                                <input type="hidden" asp-for="EditUser.CreatedDateTime" value="@user.CreatedDateTime" class="form-control" />
                                 <div class="form-group">
                                     <label asp-for="EditUser.Role" class="control-label"></label>
                                     <select asp-for="EditUser.Role" class="form-control">
@@ -160,6 +165,46 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@*GENERATE CHANGE PASSWORD MODALS*@
+@foreach (var user in Model.Users)
+{
+    <div class="modal fade" id="modal_change_password_@user.Username" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" autocomplete="off">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">@user.Username</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8 mx-auto">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <div class="form-group">
+                                    <label asp-for="Password" class="control-label"></label>
+                                    <input asp-for="Password" class="form-control" />
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="ConfirmPassword" class="control-label"></label>
+                                    <input asp-for="ConfirmPassword" class="form-control" />
+                                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" asp-page-handler="ChangePassword" asp-route-username="@user.Username">Change</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>

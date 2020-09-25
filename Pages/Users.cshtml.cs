@@ -53,7 +53,7 @@ namespace EtlManager.Pages
             Users = await context.EditableUsers.ToListAsync();
         }
 
-        public IActionResult OnPostCreateAsync([Bind("Username", "Email", "CreatedDateTime", "Role")] RoleUser NewUser)
+        public IActionResult OnPostCreate([Bind("Username", "Email", "CreatedDateTime", "Role")] RoleUser NewUser)
         {
             if (Password.Equals(ConfirmPassword))
             {
@@ -68,6 +68,16 @@ namespace EtlManager.Pages
             context.Attach(EditUser).State = EntityState.Modified;
 
             await context.SaveChangesAsync();
+
+            return RedirectToPage("./Users");
+        }
+
+        public IActionResult OnPostChangePassword(string username)
+        {
+            if (Password.Equals(ConfirmPassword))
+            {
+                Utility.UpdatePassword(configuration, username, Password);
+            }
 
             return RedirectToPage("./Users");
         }
