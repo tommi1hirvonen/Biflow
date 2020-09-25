@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManager.Models
 {
-    public class User
+    public class RoleUser
     {
         [Key]
         [Required]
@@ -18,10 +18,12 @@ namespace EtlManager.Models
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
 
-        [Required]
         public DateTime CreatedDateTime { get; set; }
 
-        [Required]
         public DateTime LastModifiedDateTime { get; set; }
+
+        [Required]
+        public string Role { get; set; }
+
     }
 }

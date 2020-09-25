@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -250,6 +251,32 @@ namespace EtlManager
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);
+
+            sqlConnection.Open();
+            int result = (int)sqlCommand.ExecuteScalar();
+
+            if (result > 0) return true;
+            else return false;
+        }
+
+        public static bool AddUser(IConfiguration configuration, RoleUser user, string password)
+        {
+            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            SqlCommand sqlCommand = new SqlCommand(
+                "EXEC [etlmanager].[UserAdd] @Username = @Username_, @Password = @Password_, @Role = @Role_, @Email = @Email_"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@Username_", user.Username);
+            sqlCommand.Parameters.AddWithValue("@Password_", password);
+            sqlCommand.Parameters.AddWithValue("@Role_", user.Role);
+            if (user.Email != null)
+            {
+                sqlCommand.Parameters.AddWithValue("@Email_", user.Email);
+            }
+            else
+            {
+                sqlCommand.Parameters.AddWithValue("@Email_", DBNull.Value);
+            }
+            
 
             sqlConnection.Open();
             int result = (int)sqlCommand.ExecuteScalar();

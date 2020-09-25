@@ -1,0 +1,173 @@
+﻿@page
+@model EtlManager.Pages.UsersModel
+
+<h3>Users</h3>
+<hr />
+
+<button class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+    New user
+</button>
+<p></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Username
+            </th>
+            <th>
+                Email
+            </th>
+            <th>
+                Role
+            </th>
+            <th>
+                Created
+            </th>
+            <th>
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model.Users)
+        {
+            <tr>
+                <td>
+                    @user.Username
+                </td>
+                <td>
+                    @user.Email
+                </td>
+                <td>
+                    @user.Role
+                </td>
+                <td>
+                    @user.CreatedDateTime
+                </td>
+                <td>
+                    <form method="post">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                            Edit
+                        </button>
+                        &nbsp;
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Delete
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                            </div>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@*NEW USER MODAL*@
+<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" autocomplete="off">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">New user</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mx-auto">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <div class="form-group">
+                                <label asp-for="NewUser.Username" class="control-label"></label>
+                                <input asp-for="NewUser.Username" class="form-control" />
+                                <span asp-validation-for="NewUser.Username" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="NewUser.Role" class="control-label"></label>
+                                <select asp-for="NewUser.Role" class="form-control">
+                                    <option>Viewer</option>
+                                    <option>Operator</option>
+                                    <option>Editor</option>
+                                    <option>Admin</option>
+                                </select>
+                                <span asp-validation-for="NewUser.Role" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="NewUser.Email" class="control-label"></label>
+                                <input asp-for="NewUser.Email" class="form-control" />
+                                <span asp-validation-for="NewUser.Email" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Password" class="control-label"></label>
+                                <input asp-for="Password" class="form-control" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ConfirmPassword" class="control-label"></label>
+                                <input asp-for="ConfirmPassword" class="form-control" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@*GENERATE EDIT MODALS*@
+@foreach (var user in Model.Users)
+{
+    <div class="modal fade" id="modal_edit_@user.Username" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" autocomplete="off">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">@user.Username</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8 mx-auto">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input type="hidden" asp-for="EditUser.Username" value="@user.Username" class="form-control" />
+                                <div class="form-group">
+                                    <label asp-for="EditUser.Role" class="control-label"></label>
+                                    <select asp-for="EditUser.Role" class="form-control">
+                                        <!option @(user.Role == "Viewer" ? "selected" : null)>Viewer</!option>
+                                        <!option @(user.Role == "Operator" ? "selected" : null)>Operator</!option>
+                                        <!option @(user.Role == "Editor" ? "selected" : null)>Editor</!option>
+                                        <!option @(user.Role == "Admin" ? "selected" : null)>Admin</!option>
+                                    </select>
+                                    <span asp-validation-for="EditUser.Role" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="EditUser.Email" class="control-label"></label>
+                                    <input asp-for="EditUser.Email" value="@user.Email" class="form-control" />
+                                    <span asp-validation-for="EditUser.Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

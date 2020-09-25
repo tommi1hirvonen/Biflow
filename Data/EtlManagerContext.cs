@@ -27,6 +27,7 @@ namespace EtlManager.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<RoleUser> EditableUsers { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
 
@@ -79,6 +80,8 @@ namespace EtlManager.Data
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<User>()
                 .ToTable("User");
+            modelBuilder.Entity<RoleUser>()
+                .ToView("vUser");
         }
 
         
