@@ -21,6 +21,10 @@
         cursor: move;
     }
 
+    .dependency-graph .node {
+        cursor: pointer;
+    }
+
     .dependency-graph .node rect {
         stroke-width: 2px;
         stroke: #666;
@@ -142,6 +146,7 @@
                     rx: 20,
                     ry: 20
                 });
+                g.node(id).id = id; // Set the id of the node element. Used for onclick purposes.
             }
 
             @foreach (var dependency in Model.Dependencies)
@@ -165,6 +170,11 @@
 
             svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
         }
+
+        // When a node is clicked, direct the user to the corresponding step's edit page.
+        $(document).on('click', '.node', function () {
+            location.href = "/Jobs/JobDetails/StepDetails/Edit?id=" + this.id;
+        });
 
         $(function () {
             draw();
