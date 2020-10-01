@@ -137,12 +137,8 @@
 
             for (var id in workers) {
                 var worker = workers[id];
-                var html = "<div style=\"text-align: center;\">";
-                html += "<a class=\"text-dark\" href='/Jobs/JobDetails/StepDetails/Edit?id=" + id + "'>" + worker.name + "</a>";
-                html += "</div>";
                 g.setNode(id, {
-                    labelType: "html",
-                    label: html,
+                    label: worker.name,
                     rx: 20,
                     ry: 20
                 });
