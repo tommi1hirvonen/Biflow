@@ -200,6 +200,31 @@ namespace EtlManager.Pages.Executions
             return new JsonResult(new { success = true });
         }
 
+        public async Task<JsonResult> OnPostStopStepExecution(Guid executionId, Guid stepId, int retryAttemptIndex)
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
+            }
+
+            if (executionId == null || stepId == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Invalid arguments" });
+            }
+
+            try
+            {
+                await Utility.StopStepExecution(_configuration, executionId, stepId, retryAttemptIndex);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error stopping step: " + ex.Message });
+            }
+
+            return new JsonResult(new { success = true });
+        }
+
         public class ChartElement
         {
             public string StepExecutionId { get; set; }

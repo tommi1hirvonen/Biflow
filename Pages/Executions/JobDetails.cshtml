@@ -364,6 +364,44 @@
                 }
             });
         }
+
+        function stopStepExecution(elem) {
+            var executionId_ = $(elem).data('execution-id');
+            var stepId_ = $(elem).data('step-id');
+            var retryAttemptIndex_ = $(elem).data('retry-attempt-index');
+
+            $('#button_stop_step_execution').attr("disabled", "true");
+            $('#spinner_stopping_step').removeAttr("hidden");
+
+            $.ajax({
+                url: "./JobDetails?handler=StopStepExecution",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    executionId: executionId_,
+                    stepId: stepId_,
+                    retryAttemptIndex: retryAttemptIndex_
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $('#spinner_stopping_step').attr("hidden", "hidden");
+                        alert('Execution stopped successfully');
+                    } else {
+                        $('#button_stop_step_execution').removeAttr("disabled");
+                        $('#spinner_stopping_step').attr("hidden", "hidden");
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    $('#button_stop_step_execution').removeAttr("disabled");
+                    $('#spinner_stopping_step').attr("hidden", "hidden");
+                    alert('Error stopping execution: AJAX error, try logging in again');
+                }
+            });
+        }
     </script>
 }
 
@@ -384,6 +422,16 @@
                 </div>
                 <div class="modal-body">
                     <partial name="_StepExecutionDetailsPartial" model="item" />
+                    @if (item.ExecutionStatus == "RUNNING" && Model.IsOperator)
+                    {
+                        <p></p>
+                        <div class="btn-toolbar" role="toolbar">
+                            <button id="button_stop_step_execution" class="btn btn-sm btn-danger" onclick="stopStepExecution(this)" data-execution-id="@item.ExecutionId" data-step-id="@item.StepId" data-retry-attempt-index="@item.RetryAttemptIndex">Stop execution</button>
+                            <div id="spinner_stopping_step" class="spinner-border text-primary align-middle ml-3" hidden role="status">
+                                <span class="sr-only">Stopping...</span>
+                            </div>
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
