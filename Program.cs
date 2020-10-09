@@ -110,7 +110,7 @@ namespace EtlManager
 
             long masterOperationId = (long)await fetchMasterOperationId.ExecuteScalarAsync();
 
-            SqlCommand stopMasterOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+            SqlCommand stopMasterOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
             stopMasterOperation.Parameters.AddWithValue("@OperationId", masterOperationId);
             tasks.Add(stopMasterOperation.ExecuteNonQueryAsync());
 
@@ -190,7 +190,7 @@ namespace EtlManager
 
         private async static Task StopSlaveExecution(SqlConnection sqlConnection, long slaveOperationId, string childPackageServerName, long childPackageOperationId)
         {
-            SqlCommand stopSlaveOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+            SqlCommand stopSlaveOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
             stopSlaveOperation.Parameters.AddWithValue("@OperationId", slaveOperationId);
             await stopSlaveOperation.ExecuteNonQueryAsync();
 
@@ -204,7 +204,7 @@ namespace EtlManager
         {
             using SqlConnection sqlConnection = new SqlConnection("Data Source=" + serverName + ";Initial Catalog=SSISDB;Integrated Security=SSPI;");
             await sqlConnection.OpenAsync();
-            SqlCommand stopPackageOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection);
+            SqlCommand stopPackageOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
             stopPackageOperation.Parameters.AddWithValue("@OperationId", operationId);
             await stopPackageOperation.ExecuteNonQueryAsync();
         }

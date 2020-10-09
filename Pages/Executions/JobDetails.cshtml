@@ -32,7 +32,14 @@
 {
     <p></p>
     <div class="btn-toolbar" role="toolbar">
-        <button id="button_stop_execution" class="btn btn-sm btn-danger" onclick="stopExecution()">Stop execution</button>
+        <div class="btn-group">
+            <button id="button_stop_execution" type="button" class="btn btn-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Stop execution
+            </button>
+            <div class="dropdown-menu">
+                <button class="dropdown-item" onclick="stopExecution()">Confirm</button>
+            </div>
+        </div>
         <div id="spinner_stopping" class="spinner-border text-primary align-middle ml-3" hidden role="status">
             <span class="sr-only">Stopping...</span>
         </div>
