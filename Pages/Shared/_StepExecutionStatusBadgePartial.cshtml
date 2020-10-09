@@ -11,6 +11,7 @@
             break;
         case "SKIPPED":
         case "STOPPED":
+        case "DUPLICATE":
         case "AWAIT RETRY":
             <span class="badge badge-warning">@Html.DisplayFor(modelItem => Model.ExecutionStatus)</span>
             break;
