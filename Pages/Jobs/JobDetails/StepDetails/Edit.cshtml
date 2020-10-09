@@ -234,9 +234,7 @@
             $('#' + id).toggleClass('d-none');
         }
 
-    </script>
 
-    <script type="text/javascript">
         $(function () {
             $("#button_submit").click(function () {
                 var stepType = document.getElementById('step_type').value;
@@ -269,9 +267,7 @@
             $('#ssis_error').hide();
             $('#sql_error').hide();
         }
-    </script>
 
-    <script type="text/javascript">
         var parameterCount = @Model.Parameters.Count;
 
         function addParameter() {
@@ -307,14 +303,17 @@
             $(element).closest('tr').find("#input_parameter_value").val("_");
             $(element).closest('tr').hide();
         }
-    </script>
 
-    <script type="text/javascript">
+        @*Validate parameter names for duplicates*@
         $('#button_submit').click(
             function () {
                 var parameterNames = [];
                 $("input[id=input_parameter_name]").each(function () {
-                    parameterNames.push(this.value);
+                    @*Only validate parameters that have not been deleted.*@
+                    var deleted = $(this).closest('tr').find("#input_isdeleted").val();
+                    if (deleted == "false") {
+                        parameterNames.push(this.value);
+                    }
                 });
                 parameterNames = parameterNames.sort();
                 for (var i = 0; i < parameterNames.length - 1; i++) {
@@ -331,6 +330,7 @@
                 $('#duplicate_parameter_error').hide();
             });
         });
+
     </script>
 
 }
