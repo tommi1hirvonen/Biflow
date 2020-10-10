@@ -1,5 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.DashboardModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Dashboard";
 }
@@ -15,7 +17,10 @@
                 <div id="spinner_loading" class="spinner-border text-primary align-middle" hidden role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
-                <input type="submit" value="Load report" class="btn btn-sm btn-primary ml-3" onclick="$('#spinner_loading').removeAttr('hidden');" />
+                <button type="submit" class="btn btn-sm btn-primary ml-3" onclick="$('#spinner_loading').removeAttr('hidden');">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                    Load report
+                </button>
                 <label class="ml-5">Date until:</label>
                 <input asp-for="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
                 <label class="ml-5">Interval (d):</label>

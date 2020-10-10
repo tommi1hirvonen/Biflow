@@ -1,5 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.Executions.StepsModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Executions";
 }
@@ -44,7 +46,10 @@
         </div>
     </div>
     <div class="form-row">
-        <input type="submit" value="Refresh" class="btn btn-primary" />
+        <button type="submit" class="btn btn-primary">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+            Refresh
+        </button>
     </div>
 </form>
 

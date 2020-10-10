@@ -1,6 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.Jobs.JobDetails.StepDetails.EditModel
-
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Edit";
 }
@@ -11,14 +12,17 @@
 
         <ul class="navbar-nav mr-3">
             <li class="nav-item">
-                <input id="button_submit" type="submit" value="Save" class="btn btn-success" />
+                <button id="button_submit" type="submit" class="btn btn-success">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                    Save
+                </button>
             </li>
         </ul>
         <ul class="navbar-nav mr-3">
             <li class="nav-item">
                 <a class="btn btn-secondary" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
             </li>
-        </ul>     
+        </ul>
     </nav>
 
 
@@ -144,7 +148,9 @@
                             <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            </button>
                         </td>
                     </tr>
                 }
@@ -154,7 +160,9 @@
             <text class="text-danger">Duplicate parameter names</text>
             <p />
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+        </button>
     </div>
 
     <div class="col-8">
@@ -206,7 +214,7 @@
 
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 
-    <script type="text/javascript">
+<script type="text/javascript">
 
         function stepTypeSelected() {
             var stepType = document.getElementById('step_type').value;
@@ -288,7 +296,9 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                        </button>
                     </td>
                 </tr>
                 `);
@@ -331,6 +341,6 @@
             });
         });
 
-    </script>
+</script>
 
 }

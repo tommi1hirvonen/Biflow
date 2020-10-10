@@ -1,5 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.UsersModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 
 <h3>Users</h3>
 <hr />
@@ -46,20 +48,18 @@
                 </td>
                 <td>
                     <form method="post">
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
-                            Edit
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         </button>
-                        &nbsp;
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
-                            Change password
+                        <button type="button" class="btn btn-outline-secondary btn-sm ml-1" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                         </button>
-                        &nbsp;
-                        <div class="btn-group">
+                        <div class="btn-group ml-1">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Delete
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </button>
                             <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Delete</button>
                             </div>
                         </div>
                     </form>
@@ -181,7 +181,7 @@
             <div class="modal-content">
                 <form method="post" autocomplete="off">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">@user.Username</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">Change password – @user.Username</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>

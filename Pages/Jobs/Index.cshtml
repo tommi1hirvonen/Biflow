@@ -1,6 +1,8 @@
 ﻿@page
 @model EtlManager.Pages.Jobs.IndexModel
 @using EtlManager;
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 
 @{
     ViewData["Title"] = "Jobs";
@@ -10,9 +12,9 @@
 <hr />
 @if (Model.IsEditor)
 {
-    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-        New job
-    </button>
+<button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+    New job
+</button>
 }
 
 <p />
@@ -62,25 +64,23 @@
                     @if (Model.IsEditor)
                     {
                         <form method="post">
-                            <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
-                                Edit
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                             </button>
-                            &nbsp;
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Copy
+                            <div class="btn-group ml-1">
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                                 </button>
                                 <div class="dropdown-menu">
-                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Confirm</button>
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Copy</button>
                                 </div>
                             </div>
-                            &nbsp;
-                            <div class="btn-group">
+                            <div class="btn-group ml-1">
                                 <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Delete
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                                 </button>
                                 <div class="dropdown-menu">
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Delete</button>
                                 </div>
                             </div>
                         </form>

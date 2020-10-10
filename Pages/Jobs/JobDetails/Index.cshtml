@@ -17,9 +17,9 @@
         <div class="col">
             @if (Model.IsEditor)
             {
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-                    New step
-                </button>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                New step
+            </button>
             }
 
         </div>
@@ -39,6 +39,7 @@
             {
                 <div class="btn-group">
                     <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                         Execute...
                     </button>
                 </div>
@@ -136,18 +137,17 @@
                 </td>
                 <td align="center">
                     @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
-                        Details
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                     </button>
-                    
-                    <a class="btn btn-sm btn-outline-primary ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
-                        History
+                    <a class="btn btn-sm btn-outline-secondary ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                     </a>
                     @if (Model.IsEditor)
                     {
                         <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Copy to
+                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                             </button>
                             <div class="dropdown-menu">
                                 <form method="post">
@@ -168,10 +168,10 @@
                         </div>
                         <div class="btn-group ml-1">
                             <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Delete
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </button>
                             <div class="dropdown-menu">
-                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Delete</button>
                             </div>
                         </div>
                     }
@@ -211,7 +211,10 @@
                                     </div>
                                 </div>
                                 <div class="col-3">
-                                    <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
+                                    <button id="button_execute" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                                        Execute
+                                    </button>
                                 </div>
                             </div>
                             <table class="table mt-3" id="table_executable_steps">
