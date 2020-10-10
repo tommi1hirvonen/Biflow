@@ -100,20 +100,17 @@ namespace EtlManager
             List<Task> tasks = new List<Task>();
 
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            await sqlConnection.OpenAsync();
 
+            // First stop the MasterExecutor operation.
             SqlCommand fetchMasterOperationId = new SqlCommand(
                 "SELECT TOP 1 MasterExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                 , sqlConnection);
             fetchMasterOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
-
-            await sqlConnection.OpenAsync();
-
             long masterOperationId = (long)await fetchMasterOperationId.ExecuteScalarAsync();
+            tasks.Add(StopPackage(sqlConnection, masterOperationId));
 
-            SqlCommand stopMasterOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-            stopMasterOperation.Parameters.AddWithValue("@OperationId", masterOperationId);
-            tasks.Add(stopMasterOperation.ExecuteNonQueryAsync());
-
+            // Fetch all slave operation ids and iterate over them stopping each slave execution.
             SqlCommand fetchSlaveOperationIds = new SqlCommand(
                 @"SELECT SlaveExecutorOperationId, PackageOperationId, ServerName
                 FROM etlmanager.Execution
@@ -132,9 +129,9 @@ namespace EtlManager
 
                 tasks.Add(StopSlaveExecution(sqlConnection, slaveOperationId, packageServerName, packageOperationId));
             }
-
             await slaveOperationReader.CloseAsync();
 
+            // Wait for all stop commands to finish.
             await Task.WhenAll(tasks);
 
             SqlCommand updateStatuses = new SqlCommand(
@@ -190,23 +187,28 @@ namespace EtlManager
 
         private async static Task StopSlaveExecution(SqlConnection sqlConnection, long slaveOperationId, string childPackageServerName, long childPackageOperationId)
         {
-            SqlCommand stopSlaveOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-            stopSlaveOperation.Parameters.AddWithValue("@OperationId", slaveOperationId);
-            await stopSlaveOperation.ExecuteNonQueryAsync();
+            // First stop the SlaveExecutor operation.
+            await StopPackage(sqlConnection, slaveOperationId);
 
+            // If it is an SSIS step, also stop the child package operation.
             if (childPackageOperationId > 0)
             {
-                await StopChildPackage(childPackageServerName, childPackageOperationId);
+                await StopPackage(childPackageServerName, childPackageOperationId);
             }
         }
 
-        private async static Task StopChildPackage(string serverName, long operationId)
+        private async static Task StopPackage(string serverName, long operationId)
         {
             using SqlConnection sqlConnection = new SqlConnection("Data Source=" + serverName + ";Initial Catalog=SSISDB;Integrated Security=SSPI;");
             await sqlConnection.OpenAsync();
-            SqlCommand stopPackageOperation = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-            stopPackageOperation.Parameters.AddWithValue("@OperationId", operationId);
-            await stopPackageOperation.ExecuteNonQueryAsync();
+            await StopPackage(sqlConnection, operationId);
+        }
+
+        private async static Task StopPackage(SqlConnection sqlConnection, long operationId)
+        {
+            SqlCommand stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
+            stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", operationId);
+            await stopPackageOperationCmd.ExecuteNonQueryAsync();
         }
 
         public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)
