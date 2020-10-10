@@ -122,14 +122,15 @@
                         <div class="custom-control custom-switch">
                             @if (Model.IsEditor)
                             {
-                                <input type="checkbox" class="custom-control-input" disabled id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
+                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
+                            <label class="custom-control-label" style="cursor: pointer;" for="@item.StepId"></label>
                             }
                             else
                             {
-                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                            @*If the user is not editor or above, disable the toggle and mouse pointer change*@
+                            <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                            <label class="custom-control-label" for="@item.StepId"></label>
                             }
-
-                            <label class="custom-control-label" style="cursor: pointer;" for="@item.StepId"></label>
                         </div>
                     </form>
                 </td>
