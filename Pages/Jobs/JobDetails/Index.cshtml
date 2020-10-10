@@ -191,6 +191,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Execute steps</h5>
+                    
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -198,15 +199,22 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col mx-5">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                            <div class="row">
+                                <div class="col-9">
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                            </div>
+                                        </div>
+                                        <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
                                     </div>
                                 </div>
-                                <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
+                                <div class="col-3">
+                                    <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
+                                </div>
                             </div>
-                            <table class="table" id="table_executable_steps">
+                            <table class="table mt-3" id="table_executable_steps">
                                 <thead>
                                     <tr>
                                         <th class="align-top">
@@ -252,7 +260,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <input id="button_execute" type="button" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()" value="Execute" />
+                    
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
