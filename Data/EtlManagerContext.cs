@@ -78,8 +78,15 @@ namespace EtlManager.Data
                 .WithMany(job => job.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Subscription>()
+                .HasOne(subscription => subscription.User)
+                .WithMany(user => user.Subscriptions)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<User>()
-                .ToTable("User");
+                .ToTable("User")
+                .HasMany(user => user.Subscriptions)
+                .WithOne(subscription => subscription.User);
             modelBuilder.Entity<RoleUser>()
                 .ToView("vUser");
         }

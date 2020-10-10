@@ -23,5 +23,7 @@ namespace EtlManager.Models
 
         [Required]
         public DateTime LastModifiedDateTime { get; set; }
+
+        public ICollection<Subscription> Subscriptions { get; set; }
     }
 }
