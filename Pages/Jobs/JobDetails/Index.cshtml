@@ -152,7 +152,7 @@
                             <div class="dropdown-menu">
                                 <form method="post">
                                     <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                        here
+                                        Copy here
                                     </button>
                                 </form>
                                 <div class="dropdown-divider"></div>
@@ -160,7 +160,7 @@
                                 {
                                     <form method="post">
                                         <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                            @job.JobName
+                                            To @job.JobName
                                         </button>
                                     </form>
                                 }
@@ -293,13 +293,27 @@
                                 <input type="hidden" asp-for="NewStep.IsEnabled" value="true" />
                                 <div class="form-group">
                                     <label asp-for="NewStep.StepName" class="control-label"></label>
-                                    <input asp-for="NewStep.StepName" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="NewStep.StepName" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="NewStep.StepName" class="text-danger"></span>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col">
                                         <label asp-for="NewStep.ExecutionPhase" class="control-label"></label>
-                                        <input asp-for="NewStep.ExecutionPhase" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.ExecutionPhase" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.ExecutionPhase" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col">
@@ -312,41 +326,90 @@
                                     </div>
                                     <div class="form-group col">
                                         <label asp-for="NewStep.RetryAttempts" class="control-label"></label>
-                                        <input asp-for="NewStep.RetryAttempts" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.RetryAttempts" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.RetryAttempts" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col">
                                         <label asp-for="NewStep.RetryIntervalMinutes" class="control-label"></label>
-                                        <input asp-for="NewStep.RetryIntervalMinutes" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.RetryIntervalMinutes" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.RetryIntervalMinutes" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="form-group" id="sql_statement_div">
                                     <label asp-for="NewStep.SqlStatement" class="control-label"></label>
-                                    <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                                            </div>
+                                        </div>
+                                        <textarea asp-for="NewStep.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                                    </div>
                                     <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col" id="server_div">
                                         <label asp-for="NewStep.ServerName" class="control-label"></label>
-                                        <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col" id="folder_div">
                                         <label asp-for="NewStep.FolderName" class="control-label"></label>
-                                        <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col" id="project_div">
                                         <label asp-for="NewStep.ProjectName" class="control-label"></label>
-                                        <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col" id="package_div">
                                         <label asp-for="NewStep.PackageName" class="control-label"></label>
-                                        <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="NewStep.PackageName" id="package_input" class="form-control" />
+                                        </div>
                                         <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -381,7 +444,9 @@
                                         <text class="text-danger">Duplicate parameter names</text>
                                         <p />
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">Add</button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -793,7 +858,9 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">Remove</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                        </button>
                     </td>
                 </tr>
                 `);

@@ -41,13 +41,27 @@
             <input type="hidden" asp-for="Step.CreatedBy" />
             <div class="form-group">
                 <label asp-for="Step.StepName" class="control-label"></label>
-                <input asp-for="Step.StepName" class="form-control" />
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                        </div>
+                    </div>
+                    <input asp-for="Step.StepName" class="form-control" />
+                </div>
                 <span asp-validation-for="Step.StepName" class="text-danger"></span>
             </div>
             <div class="form-row">
                 <div class="form-group col-3">
                     <label asp-for="Step.ExecutionPhase" class="control-label"></label>
-                    <input asp-for="Step.ExecutionPhase" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.ExecutionPhase" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
                 </div>
                 <div class="form-group col-3">
@@ -60,41 +74,90 @@
                 </div>
                 <div class="form-group col-3">
                     <label asp-for="Step.RetryAttempts" class="control-label"></label>
-                    <input asp-for="Step.RetryAttempts" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.RetryAttempts" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.RetryAttempts" class="text-danger"></span>
                 </div>
                 <div class="form-group col-3">
                     <label asp-for="Step.RetryIntervalMinutes" class="control-label"></label>
-                    <input asp-for="Step.RetryIntervalMinutes" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.RetryIntervalMinutes" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.RetryIntervalMinutes" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-group" id="sql_statement_div" style="@(Model.Step.StepType == "SSIS" ? "display: none;" : null)">
                 <label asp-for="Step.SqlStatement" class="control-label"></label>
-                <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                        </div>
+                    </div>
+                    <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                </div>
                 <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
             </div>
             <div class="form-row">
                 <div class="form-group col" id="server_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
                     <label asp-for="Step.ServerName" class="control-label"></label>
-                    <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.ServerName" class="text-danger"></span>
                 </div>
                 <div class="form-group col" id="folder_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
                     <label asp-for="Step.FolderName" class="control-label"></label>
-                    <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.FolderName" class="text-danger"></span>
                 </div>
                 <div class="form-group col" id="project_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
                     <label asp-for="Step.ProjectName" class="control-label"></label>
-                    <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col" id="package_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
                     <label asp-for="Step.PackageName" class="control-label"></label>
-                    <input asp-for="Step.PackageName" id="package_input" class="form-control" />
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                            </div>
+                        </div>
+                        <input asp-for="Step.PackageName" id="package_input" class="form-control" />
+                    </div>
                     <span asp-validation-for="Step.PackageName" class="text-danger"></span>
                 </div>
             </div>

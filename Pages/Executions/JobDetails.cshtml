@@ -33,11 +33,11 @@
     </div>
     <div id="button_group_graph" style="@(Model.Graph ? "" : "display: none;")" class="btn-group btn-group-sm mr-2" role="group">
         <button id="button_toggle_expanded" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">
-            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/arrows-expand.svg")))
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/maximize-2.svg")))
             Expanded
         </button>
         <button id="button_toggle_collapsed" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">
-            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/arrows-collapse.svg")))
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/minimize-2.svg")))
             Collapsed
         </button>
     </div>
