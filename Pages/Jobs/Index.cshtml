@@ -107,11 +107,18 @@
                     </div>
                     <div class="modal-body">
                         <div class="row">
-                            <div class="col-md-8 mx-auto">
+                            <div class="col-md-10 mx-auto">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                 <div class="form-group">
                                     <label asp-for="NewJob.JobName" class="control-label"></label>
-                                    <input asp-for="NewJob.JobName" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="NewJob.JobName" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="NewJob.JobName" class="text-danger"></span>
                                 </div>
                                 <div class="custom-control custom-switch">
@@ -145,7 +152,7 @@
                         </div>
                         <div class="modal-body">
                             <div class="row">
-                                <div class="col-md-8 mx-auto">
+                                <div class="col-md-10 mx-auto">
                                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                     <input type="hidden" asp-for="EditJob.JobId" value="@item.JobId" />
                                     <input type="hidden" asp-for="EditJob.CreatedDateTime" value="@item.CreatedDateTime" />
@@ -154,7 +161,14 @@
                                     <input type="hidden" asp-for="EditJob.CreatedBy" value="@item.CreatedBy" />
                                     <div class="form-group">
                                         <label asp-for="EditJob.JobName" class="control-label"></label>
-                                        <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                                </div>
+                                            </div>
+                                            <input asp-for="EditJob.JobName" class="form-control" value="@item.JobName" />
+                                        </div>
                                         <span asp-validation-for="EditJob.JobName" class="text-danger"></span>
                                     </div>
                                     <div class="custom-control custom-switch">

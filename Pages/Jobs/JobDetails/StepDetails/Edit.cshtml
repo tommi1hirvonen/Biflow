@@ -66,10 +66,17 @@
                 </div>
                 <div class="form-group col-3">
                     <label asp-for="Step.StepType" class="control-label"></label>
-                    <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
-                        <option>SQL</option>
-                        <option>SSIS</option>
-                    </select>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                            </div>
+                        </div>
+                        <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                            <option>SQL</option>
+                            <option>SSIS</option>
+                        </select>
+                    </div>
                     <span asp-validation-for="Step.StepType" class="text-danger"></span>
                 </div>
                 <div class="form-group col-3">
