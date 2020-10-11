@@ -1,4 +1,6 @@
-﻿@model EtlManager.Pages.Shared._JobDetailsNavigationPartialModel
+﻿@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
+@model EtlManager.Pages.Shared._JobDetailsNavigationPartialModel
 
 <nav class="nav nav-pills nav-justified">
     @foreach (var job in Model.Jobs)
@@ -9,15 +11,27 @@
 <p></p>
 <ul class="nav nav-tabs mt-3" role="tablist">
     <li class="nav-item" role="presentation">
-        <a class="nav-link @(Model.RedirectPage == "./Index" ? "active" : null)" asp-page="./Index" asp-route-id="@Model.Job.JobId">Steps</a>
+        <a class="nav-link @(Model.RedirectPage == "./Index" ? "active" : null)" asp-page="./Index" asp-route-id="@Model.Job.JobId">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+            Steps
+        </a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link @(Model.RedirectPage == "./Dependencies" ? "active" : null)" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">Dependencies</a>
+        <a class="nav-link @(Model.RedirectPage == "./Dependencies" ? "active" : null)" asp-page="./Dependencies" asp-route-id="@Model.Job.JobId">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+            Dependencies
+        </a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link @(Model.RedirectPage == "./Schedules" ? "active" : null)" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">Schedules</a>
+        <a class="nav-link @(Model.RedirectPage == "./Schedules" ? "active" : null)" asp-page="./Schedules" asp-route-id="@Model.Job.JobId">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+            Schedules
+        </a>
     </li>
     <li class="nav-item" role="presentation">
-        <a class="nav-link @(Model.RedirectPage == "./History" ? "active" : null)" asp-page="./History" asp-route-id="@Model.Job.JobId">History</a>
+        <a class="nav-link @(Model.RedirectPage == "./History" ? "active" : null)" asp-page="./History" asp-route-id="@Model.Job.JobId">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+            Executions
+        </a>
     </li>
 </ul>

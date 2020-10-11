@@ -6,7 +6,7 @@
 <h3>Users</h3>
 <hr />
 
-<button class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+<button class="btn btn-primary" data-toggle="modal" data-target="#modal_create">
     New user
 </button>
 <p></p>
@@ -118,7 +118,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <button class="btn btn-primary" asp-page-handler="Create">Create</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                 </div>
             </form>
@@ -164,7 +164,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button class="btn btn-primary" asp-page-handler="Edit">Save</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
@@ -204,7 +204,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-success" asp-page-handler="ChangePassword" asp-route-username="@user.Username">Change</button>
+                        <button class="btn btn-primary" asp-page-handler="ChangePassword" asp-route-username="@user.Username">Change</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>

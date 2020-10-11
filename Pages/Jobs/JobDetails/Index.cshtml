@@ -17,7 +17,7 @@
         <div class="col">
             @if (Model.IsEditor)
             {
-            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_create">
                 New step
             </button>
             }
@@ -108,14 +108,14 @@
                 <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
                 </td>
-                <td class="align-middle">
+                <td class="align-middle" title="@item.StepType">
                     @if (item.StepType == "SQL")
                     {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
                     }
                     else if (item.StepType == "SSIS")
                     {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
                     }
                 </td>
                 <td class="align-middle">
@@ -248,11 +248,11 @@
                                             <td class="align-middle">
                                                 @if (step.StepType == "SQL")
                                                 {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/code-black-48dp.svg")))
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
                                                 }
                                                 else if (step.StepType == "SSIS")
                                                 {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/material/meditation-black-48dp.svg")))
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
                                                 }
                                             </td>
                                         </tr>
@@ -387,7 +387,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
+                        <input id="button_submit" type="submit" class="btn btn-primary" value="Create" />
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>

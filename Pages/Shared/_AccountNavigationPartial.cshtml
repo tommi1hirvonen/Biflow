@@ -1,13 +1,24 @@
-﻿@{ string pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
+﻿@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
+@{ string pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
 
-    <ul class="nav nav-tabs mt-3" role="tablist">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link @(pageRoute.Contains("Email") ? "active" : null)" asp-page="./Email">Email</a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link @(pageRoute.Contains("Password") ? "active" : null)" asp-page="./Password">Password</a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link @(pageRoute.Contains("Subscriptions") ? "active" : null)" asp-page="./Subscriptions">Subscriptions</a>
-        </li>
-    </ul>
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("Email") ? "active" : null)" asp-page="./Email">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+            Email
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("Password") ? "active" : null)" asp-page="./Password">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+            Password
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("Subscriptions") ? "active" : null)" asp-page="./Subscriptions">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
+            Subscriptions
+        </a>
+    </li>
+</ul>

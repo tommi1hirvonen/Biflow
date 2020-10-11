@@ -1,6 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.Executions.JobDetailsModel
-
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Details";
 }
@@ -10,21 +11,35 @@
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group btn-group-sm mr-2" role="group">
         <a id="button_refresh" class="btn btn-primary btn-sm" asp-page="./JobDetails" asp-route-id="@Model.JobExecution.ExecutionId" asp-route-graph="@Model.Graph" asp-route-collapsed="@Model.Collapsed">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
         </a>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
         <button class="btn btn-outline-secondary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
             Job details
         </button>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_table" class="btn btn-outline-secondary @(Model.Graph ? "" : "active")" onclick="toggleTable()">Table</button>
-        <button id="button_toggle_graph" class="btn btn-outline-secondary @(Model.Graph ? "active" : "")" onclick="toggleGraph()">Graph</button>
+        <button id="button_toggle_table" class="btn btn-outline-secondary @(Model.Graph ? "" : "active")" onclick="toggleTable()">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
+            Table
+        </button>
+        <button id="button_toggle_graph" class="btn btn-outline-secondary @(Model.Graph ? "active" : "")" onclick="toggleGraph()">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
+            Graph
+        </button>
     </div>
     <div id="button_group_graph" style="@(Model.Graph ? "" : "display: none;")" class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_expanded" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">Expanded</button>
-        <button id="button_toggle_collapsed" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">Collapsed</button>
+        <button id="button_toggle_expanded" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/arrows-expand.svg")))
+            Expanded
+        </button>
+        <button id="button_toggle_collapsed" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/arrows-collapse.svg")))
+            Collapsed
+        </button>
     </div>
 </div>
 
