@@ -8,6 +8,20 @@
     ViewData["Title"] = "Jobs";
 }
 
+<style>
+    .status.failed svg {
+        color: #dc3545; @*red*@
+    }
+
+    .status.running svg {
+        color: #28a745; @*green*@
+    }
+
+    .status.warning svg {
+        color: #dfa100; @*orange*@
+    }
+</style>
+
 <h3>Jobs</h3>
 <hr />
 @if (Model.IsEditor)
@@ -30,6 +44,9 @@
                 Dependency mode
             </th>
             <th>
+                
+            </th>
+            <th>
                 Last execution
             </th>
             <th>
@@ -41,6 +58,7 @@
     <tbody>
         @foreach (var item in Model.Jobs)
         {
+            var lastExecution = GetLastExecution(item);
             <tr>
                 <td class="align-middle">
                     <a class="font-weight-bold text-decoration-none" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">@item.JobName</a>
@@ -55,14 +73,41 @@
                     </div>
                 </td>
                 <td class="align-middle">
-                    @GetMaxStartTime(item)
+                    @switch (lastExecution?.ExecutionStatus)
+                    {
+                        case "RUNNING":
+                            <div class="status running" title="Running">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                            </div>
+                            break;
+                        case "FAILED":
+                            <div class="status failed" title="Failed">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                            </div>
+                            break;
+                        case "WARNING":
+                        case "STOPPED":
+                        case "SUSPENDED":
+                            <div class="status warning" title="Warning">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
+                            </div>
+                            break;
+                        default:
+                            break;
+                    }
+                </td>
+                <td class="align-middle">
+                    @if (lastExecution != null)
+                    {
+                        <a asp-page="/Executions/JobDetails" asp-route-id="@lastExecution.ExecutionId">@lastExecution.StartDateTime</a>
+                    }
                 </td>
                 <td>
                     @GetNextStartTime(item)
                 </td>
                 <td class="align-middle" align="center">
                     @if (Model.IsEditor)
-                    {
+                            {
                         <form method="post">
                             <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
@@ -93,7 +138,7 @@
 </table>
 
 @if (Model.IsEditor)
-{
+                    {
     @*NEW JOB MODAL*@
     <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -139,7 +184,7 @@
 
     @*GENERATE EDIT MODALS*@
     @foreach (var item in Model.Jobs)
-    {
+                    {
         <div class="modal fade" id="modal_edit_@item.JobId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -192,22 +237,22 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+                    }
 
-@functions {
-    public DateTime? GetMaxStartTime(EtlManager.Models.Job job)
-    {
-        DateTime? dt;
-        Model.LastExecutions.TryGetValue(job.JobId, out dt);
-        return dt;
-    }
+                    @functions {
+    public EtlManager.Models.JobExecution GetLastExecution(EtlManager.Models.Job job)
+                    {
+                        EtlManager.Models.JobExecution execution = null;
+                        Model.LastExecutions.TryGetValue(job.JobId, out execution);
+                        return execution;
+                    }
 
-    public DateTime? GetNextStartTime(EtlManager.Models.Job job)
-    {
-        IEnumerable<DateTime> dateTimes = GetPossibleDateTimes(job.Schedules);
-        dateTimes = dateTimes.Where(dt => dt > DateTime.Now);
-        return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
-    }
+                    public DateTime? GetNextStartTime(EtlManager.Models.Job job)
+                    {
+                        IEnumerable<DateTime> dateTimes = GetPossibleDateTimes(job.Schedules);
+                        dateTimes = dateTimes.Where(dt => dt > DateTime.Now);
+                        return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
+                    }
 
     public List<DateTime> GetPossibleDateTimes(ICollection<EtlManager.Models.Schedule> schedules)
     {

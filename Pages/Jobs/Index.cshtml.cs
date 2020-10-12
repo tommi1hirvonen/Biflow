@@ -32,7 +32,7 @@ namespace EtlManager.Pages.Jobs
 
         public Job NewJob { get; set; }
 
-        public Dictionary<Guid, DateTime?> LastExecutions { get; set; } = new Dictionary<Guid, DateTime?>();
+        public Dictionary<Guid, JobExecution> LastExecutions { get; set; } = new Dictionary<Guid, JobExecution>();
 
         public Job EditJob { get; set; }
 
@@ -41,15 +41,19 @@ namespace EtlManager.Pages.Jobs
         public async Task OnGetAsync()
         {
             Jobs = await _context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
-            var jobExecutions = await _context.JobExecutions
-                .Where(execution => Jobs.Select(job => job.JobId).Contains(execution.JobId))
-                .GroupBy(execution => execution.JobId, (jobId, executions) => new
+            
+            var lastExecutions = await _context.JobExecutions
+                .Where(execution => Jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
+                .Select(execution => execution.JobId)
+                .Distinct()
+                .Select(key => new
                 {
-                    Key = jobId,
-                    MaxStartTime = executions.Max(execution => execution.StartDateTime)
+                    Key = key,
+                    Execution = _context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.StartDateTime).First()
                 })
                 .ToListAsync();
-            jobExecutions.ForEach(item => LastExecutions[item.Key] = item.MaxStartTime);
+
+            lastExecutions.ForEach(item => LastExecutions[item.Key] = item.Execution);
 
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (authorized.Succeeded)
