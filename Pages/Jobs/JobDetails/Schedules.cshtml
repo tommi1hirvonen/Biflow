@@ -16,7 +16,7 @@
         <div class="col-4">
             @if (Model.IsOperator)
             {
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_create">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
                     New schedule
                 </button>
             }
@@ -24,7 +24,7 @@
         </div>
         <div class="col-4">
             <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-light")" onclick="toggleSubscribed()">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-success" : "btn-outline-secondary")" onclick="toggleSubscribed()">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/mail.svg")))
                     <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
                 </button>
@@ -259,7 +259,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <input id="button_submit" type="submit" class="btn btn-primary" value="Create" />
+                        <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
@@ -319,8 +319,8 @@
 
     function toggleSubscribed() {
         var jobId = "@Model.Job.JobId";
-        var activeClass = "btn-outline-primary";
-        var inactiveClass = "btn-light";
+        var activeClass = "btn-outline-success";
+        var inactiveClass = "btn-outline-secondary";
         $.ajax({
             url: "./Schedules?handler=ToggleSubscribed",
             method: "POST",

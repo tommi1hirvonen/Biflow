@@ -13,32 +13,25 @@
 <p></p>
 <div class="container-fluid">
     <div class="row align-items-center">
-
-        <div class="col">
             @if (Model.IsEditor)
             {
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_create">
+            <button type="button" class="btn btn-success mr-5" data-toggle="modal" data-target="#modal_create">
                 New step
             </button>
             }
-
-        </div>
-
-        <div class="col">
+        
             @if (Model.IsEditor)
             {
-                <div class="custom-control custom-switch">
+                <div class="custom-control custom-switch ml-5 mr-5">
                     <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
                     <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
                 </div>
             }
-        </div>
-
-        <div class="col">
+        
             @if (Model.IsOperator)
             {
-                <div class="btn-group">
-                    <button id="button_execute" type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modal_execute">
+                <div class="btn-group ml-5">
+                    <button id="button_execute" type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_execute">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                         Execute...
                     </button>
@@ -48,9 +41,6 @@
                     <span class="sr-only">Loading...</span>
                 </div>
             }
-
-        </div>
-
     </div>
 </div>
 <p />
@@ -61,7 +51,7 @@
     Alert message set in jQuery
 </div>
 
-<div class="row col-4 mt-4 mb-4">
+<div class="row col-9 col-md-6 col-lg-5 mt-4 mb-4">
     <div class="input-group">
         <div class="input-group-prepend">
             <div class="input-group-text">
@@ -451,7 +441,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <input id="button_submit" type="submit" class="btn btn-primary" value="Create" />
+                        <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
