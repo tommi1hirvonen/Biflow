@@ -7,7 +7,7 @@
 <h4>@Model.Job.JobName</h4>
 <h5>@Model.Step.StepName</h5>
 <p></p>
-<a class="btn btn-sm btn-secondary" asp-page="../Index" asp-route-id="@Model.Job.JobId">Back to steps</a>
+<a class="btn btn-sm btn-light" asp-page="../Index" asp-route-id="@Model.Job.JobId">Back to steps</a>
 <p></p>
 <table class="table table-sm table-hover">
     <thead>
@@ -84,7 +84,7 @@
                     <partial name="_StepExecutionDetailsPartial" model="item" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

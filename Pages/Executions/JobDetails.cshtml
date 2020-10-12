@@ -16,27 +16,27 @@
         </a>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
+        <button class="btn btn-light btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
             Job details
         </button>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_table" class="btn btn-outline-secondary @(Model.Graph ? "" : "active")" onclick="toggleTable()">
+        <button id="button_toggle_table" class="btn btn-light @(Model.Graph ? "" : "active")" onclick="toggleTable()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
             Table
         </button>
-        <button id="button_toggle_graph" class="btn btn-outline-secondary @(Model.Graph ? "active" : "")" onclick="toggleGraph()">
+        <button id="button_toggle_graph" class="btn btn-light @(Model.Graph ? "active" : "")" onclick="toggleGraph()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
             Graph
         </button>
     </div>
     <div id="button_group_graph" style="@(Model.Graph ? "" : "display: none;")" class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_expanded" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">
+        <button id="button_toggle_expanded" class="btn btn-light btn-sm @(Model.Collapsed ? "" : "active")" onclick="toggleGraphExpanded()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/maximize-2.svg")))
             Expanded
         </button>
-        <button id="button_toggle_collapsed" class="btn btn-outline-secondary btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">
+        <button id="button_toggle_collapsed" class="btn btn-light btn-sm @(Model.Collapsed ? "active" : "")" onclick="toggleGraphCollapsed()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/minimize-2.svg")))
             Collapsed
         </button>
@@ -457,7 +457,7 @@
                     }
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

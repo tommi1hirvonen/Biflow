@@ -20,7 +20,7 @@
         </ul>
         <ul class="navbar-nav mr-3">
             <li class="nav-item">
-                <a class="btn btn-secondary" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
+                <a class="btn btn-light" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
             </li>
         </ul>
     </nav>
@@ -218,7 +218,7 @@
                             <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
                         </td>
                         <td>
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                            <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </button>
                         </td>
@@ -230,7 +230,7 @@
             <text class="text-danger">Duplicate parameter names</text>
             <p />
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">
+        <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
         </button>
     </div>
@@ -366,7 +366,7 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                        <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                         </button>
                     </td>

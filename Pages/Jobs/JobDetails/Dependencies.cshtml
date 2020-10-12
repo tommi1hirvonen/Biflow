@@ -60,11 +60,11 @@
 
     <div class="btn-toolbar" role="toolbar">
         <div class="btn-group btn-group-sm mr-2" role="group">
-            <button id="button_toggle_graph" class="btn btn-outline-secondary active" onclick="toggleGraph()">
+            <button id="button_toggle_graph" class="btn btn-light active" onclick="toggleGraph()">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                 Graph
             </button>
-            <button id="button_toggle_table" class="btn btn-outline-secondary" onclick="toggleTable()">
+            <button id="button_toggle_table" class="btn btn-light" onclick="toggleTable()">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
                 Table
             </button>

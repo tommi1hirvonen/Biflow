@@ -97,7 +97,7 @@
                 <td class="align-middle">
                     @if (Model.IsEditor)
                     {
-                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.StepName</a>
+                        <a asp-page="./StepDetails/Edit" asp-route-id="@item.StepId"><strong>@item.StepName</strong></a>
                     }
                     else
                     {
@@ -137,16 +137,16 @@
                 </td>
                 <td align="center">
                     @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
+                    <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                     </button>
-                    <a class="btn btn-sm btn-outline-secondary ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
+                    <a class="btn btn-sm btn-light ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                     </a>
                     @if (Model.IsEditor)
                     {
                         <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                             </button>
                             <div class="dropdown-menu">
@@ -167,8 +167,8 @@
                             </div>
                         </div>
                         <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                             </button>
                             <div class="dropdown-menu">
                                 <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Delete</button>
@@ -264,7 +264,7 @@
                 </div>
                 <div class="modal-footer">
                     
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
         </div>
@@ -451,7 +451,7 @@
                                         <text class="text-danger">Duplicate parameter names</text>
                                         <p />
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addParameter()">
+                                    <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
                                     </button>
                                 </div>
@@ -460,7 +460,7 @@
                     </div>
                     <div class="modal-footer">
                         <input id="button_submit" type="submit" class="btn btn-primary" value="Create" />
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -583,7 +583,7 @@
                     </dl>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -865,7 +865,7 @@
                         <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
                     </td>
                     <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeParameter(this)">
+                        <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                         </button>
                     </td>

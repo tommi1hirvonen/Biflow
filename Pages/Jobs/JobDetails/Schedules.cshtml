@@ -24,7 +24,7 @@
         </div>
         <div class="col-4">
             <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-outline-secondary")" onclick="toggleSubscribed()">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-primary" : "btn-light")" onclick="toggleSubscribed()">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/mail.svg")))
                     <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
                 </button>
@@ -159,7 +159,7 @@
                     {
                         <form method="post">
                             <div class="btn-group">
-                                <button type="button" class="btn btn-outline-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                                 </button>
                                 <div class="dropdown-menu">
@@ -260,7 +260,7 @@
                     </div>
                     <div class="modal-footer">
                         <input id="button_submit" type="submit" class="btn btn-primary" value="Create" />
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -320,7 +320,7 @@
     function toggleSubscribed() {
         var jobId = "@Model.Job.JobId";
         var activeClass = "btn-outline-primary";
-        var inactiveClass = "btn-outline-secondary";
+        var inactiveClass = "btn-light";
         $.ajax({
             url: "./Schedules?handler=ToggleSubscribed",
             method: "POST",
