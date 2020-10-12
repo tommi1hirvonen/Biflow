@@ -96,13 +96,13 @@ namespace EtlManager.Pages.Executions
 
             // Calculate chart properties
 
-            ChartHeight = Executions.Count * 40 + ChartPaddingTop;
+            ChartHeight = Executions.Count * 30 + ChartPaddingTop;
 
-            double yInterval = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count;
-            double yIntervalCollapsed = (double)(ChartHeightCollapsed - ChartPaddingTop - ChartPaddingBottomCollapsed) / Executions.Count;
+            double yInterval = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count(e => e.StartDateTime != null);
+            double yIntervalCollapsed = (double)(ChartHeightCollapsed - ChartPaddingTop - ChartPaddingBottomCollapsed) / Executions.Count(e => e.StartDateTime != null);
             
-            BarHeight = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count / 2.0;
-            BarHeightCollapsed = (double)(ChartHeightCollapsed - ChartPaddingTop - ChartPaddingBottomCollapsed) / Executions.Count / 2.0;
+            BarHeight = (double)(ChartHeight - ChartPaddingTop - ChartPaddingBottom) / Executions.Count(e => e.StartDateTime != null) / 2.0;
+            BarHeightCollapsed = (double)(ChartHeightCollapsed - ChartPaddingTop - ChartPaddingBottomCollapsed) / Executions.Count(e => e.StartDateTime != null) / 2.0;
 
             double yLocation = 0;
             double yLocationCollapsed = 0;

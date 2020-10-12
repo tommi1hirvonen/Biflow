@@ -1,5 +1,7 @@
 ﻿@page
 @model EtlManager.Pages.LogInModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
 @{
     ViewData["Title"] = "Log in";
 }
@@ -13,7 +15,7 @@
             <section>
                 <form method="post" role="form" class="form-horizontal" onsubmit="disableLoginbutton()">
                     @Html.AntiForgeryToken()
-                    
+
                     <h4>Log in</h4>
                     <hr />
 
@@ -44,7 +46,11 @@
                     <p />
                     <p />
                     <div class="form-group">
-                        <button id="button_login" asp-page-handler="LogIn" class="btn btn-success btn-block">Log in</button>
+                        <button id="button_login" asp-page-handler="LogIn" class="btn btn-success btn-block">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-in.svg")))
+                            &nbsp;
+                            Log in
+                        </button>
                     </div>
                 </form>
             </section>
