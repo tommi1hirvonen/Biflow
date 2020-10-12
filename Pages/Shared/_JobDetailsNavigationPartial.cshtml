@@ -2,10 +2,10 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @model EtlManager.Pages.Shared._JobDetailsNavigationPartialModel
 
-<nav class="nav nav-pills nav-justified">
+<nav class="nav nav-justified">
     @foreach (var job in Model.Jobs)
     {
-        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active" : null)" asp-page="@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
+        <a class="nav-link @(job.JobId == Model.Job.JobId ? "active disabled" : null) font-weight-bold" asp-page="@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
     }
 </nav>
 <p></p>

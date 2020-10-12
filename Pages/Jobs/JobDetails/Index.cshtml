@@ -97,7 +97,7 @@
                 <td class="align-middle">
                     @if (Model.IsEditor)
                     {
-                        <a asp-page="./StepDetails/Edit" asp-route-id="@item.StepId"><strong>@item.StepName</strong></a>
+                        <a class="font-weight-bold text-decoration-none" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.StepName</a>
                     }
                     else
                     {

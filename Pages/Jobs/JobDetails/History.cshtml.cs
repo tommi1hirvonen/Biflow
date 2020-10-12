@@ -43,7 +43,15 @@ namespace EtlManager.Pages.Jobs.JobDetails
                 .Take(MaxExecutions)
                 .ToListAsync();
 
-            AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
+            if (Executions.Count > 0)
+            {
+                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
+            }
+            else
+            {
+                AverageSuccessRate = 0;
+            }
+            
             AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
         }
     }

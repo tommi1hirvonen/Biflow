@@ -43,7 +43,7 @@
         {
             <tr>
                 <td class="align-middle">
-                    <a asp-page="./JobDetails/Index" asp-route-id="@item.JobId"><strong>@item.JobName</strong></a>
+                    <a class="font-weight-bold text-decoration-none" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">@item.JobName</a>
                 </td>
                 <td class="align-middle">
                     <text>@item.Steps.Count steps</text>
