@@ -82,36 +82,71 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-8 mx-auto">
+                        <div class="col-md-10 mx-auto">
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                             <div class="form-group">
                                 <label asp-for="NewUser.Username" class="control-label"></label>
-                                <input asp-for="NewUser.Username" class="form-control" />
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="NewUser.Username" class="form-control" />
+                                </div>
                                 <span asp-validation-for="NewUser.Username" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="NewUser.Role" class="control-label"></label>
-                                <select asp-for="NewUser.Role" class="form-control">
-                                    <option>Viewer</option>
-                                    <option>Operator</option>
-                                    <option>Editor</option>
-                                    <option>Admin</option>
-                                </select>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+                                        </div>
+                                    </div>
+                                    <select asp-for="NewUser.Role" class="form-control">
+                                        <option>Viewer</option>
+                                        <option>Operator</option>
+                                        <option>Editor</option>
+                                        <option>Admin</option>
+                                    </select>
+                                </div>
                                 <span asp-validation-for="NewUser.Role" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="NewUser.Email" class="control-label"></label>
-                                <input asp-for="NewUser.Email" class="form-control" />
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="NewUser.Email" class="form-control" />
+                                </div>
                                 <span asp-validation-for="NewUser.Email" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="Password" class="control-label"></label>
-                                <input asp-for="Password" class="form-control" />
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="Password" class="form-control" />
+                                </div>
                                 <span asp-validation-for="Password" class="text-danger"></span>
                             </div>
                             <div class="form-group">
                                 <label asp-for="ConfirmPassword" class="control-label"></label>
-                                <input asp-for="ConfirmPassword" class="form-control" />
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="ConfirmPassword" class="form-control" />
+                                </div>
                                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                             </div>
                         </div>
@@ -147,17 +182,31 @@
                                 <input type="hidden" asp-for="EditUser.CreatedDateTime" value="@user.CreatedDateTime" class="form-control" />
                                 <div class="form-group">
                                     <label asp-for="EditUser.Role" class="control-label"></label>
-                                    <select asp-for="EditUser.Role" class="form-control">
-                                        <!option @(user.Role == "Viewer" ? "selected" : null)>Viewer</!option>
-                                        <!option @(user.Role == "Operator" ? "selected" : null)>Operator</!option>
-                                        <!option @(user.Role == "Editor" ? "selected" : null)>Editor</!option>
-                                        <!option @(user.Role == "Admin" ? "selected" : null)>Admin</!option>
-                                    </select>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+                                            </div>
+                                        </div>
+                                        <select asp-for="EditUser.Role" class="form-control">
+                                            <!option @(user.Role == "Viewer" ? "selected" : null)>Viewer</!option>
+                                            <!option @(user.Role == "Operator" ? "selected" : null)>Operator</!option>
+                                            <!option @(user.Role == "Editor" ? "selected" : null)>Editor</!option>
+                                            <!option @(user.Role == "Admin" ? "selected" : null)>Admin</!option>
+                                        </select>
+                                    </div>
                                     <span asp-validation-for="EditUser.Role" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label asp-for="EditUser.Email" class="control-label"></label>
-                                    <input asp-for="EditUser.Email" value="@user.Email" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="EditUser.Email" value="@user.Email" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="EditUser.Email" class="text-danger"></span>
                                 </div>
                             </div>
@@ -192,12 +241,26 @@
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                                 <div class="form-group">
                                     <label asp-for="Password" class="control-label"></label>
-                                    <input asp-for="Password" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="Password" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="Password" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label asp-for="ConfirmPassword" class="control-label"></label>
-                                    <input asp-for="ConfirmPassword" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="ConfirmPassword" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                                 </div>
                             </div>
