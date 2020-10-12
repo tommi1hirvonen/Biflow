@@ -187,11 +187,10 @@
 {
     @*EXECUTE MODAL*@
     <div class="modal fade" id="modal_execute" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Execute steps</h5>
-                    
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -199,23 +198,13 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col mx-5">
-                            <div class="row">
-                                <div class="col-9">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
-                                            </div>
-                                        </div>
-                                        <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
                                     </div>
                                 </div>
-                                <div class="col-3">
-                                    <button id="button_execute" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()">
-                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-                                        Execute
-                                    </button>
-                                </div>
+                                <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
                             </div>
                             <table class="table mt-3" id="table_executable_steps">
                                 <thead>
@@ -263,7 +252,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    
+                    <button id="button_execute" class="btn btn-primary" data-dismiss="modal" onclick="startExecution()">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                        Execute
+                    </button>
                     <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                 </div>
             </div>
