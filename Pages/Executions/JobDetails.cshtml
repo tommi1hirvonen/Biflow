@@ -49,6 +49,7 @@
     <div class="btn-toolbar" role="toolbar">
         <div class="btn-group">
             <button id="button_stop_execution" type="button" class="btn btn-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                 Stop execution
             </button>
             <div class="dropdown-menu">
@@ -449,7 +450,10 @@
                     {
                         <p></p>
                         <div class="btn-toolbar" role="toolbar">
-                            <button id="button_stop_step_execution" class="btn btn-sm btn-danger" onclick="stopStepExecution(this)" data-execution-id="@item.ExecutionId" data-step-id="@item.StepId" data-retry-attempt-index="@item.RetryAttemptIndex">Stop execution</button>
+                            <button id="button_stop_step_execution" class="btn btn-sm btn-danger" onclick="stopStepExecution(this)" data-execution-id="@item.ExecutionId" data-step-id="@item.StepId" data-retry-attempt-index="@item.RetryAttemptIndex">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                Stop execution
+                            </button>
                             <div id="spinner_stopping_step" class="spinner-border text-primary align-middle ml-3" hidden role="status">
                                 <span class="sr-only">Stopping...</span>
                             </div>

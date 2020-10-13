@@ -194,7 +194,14 @@
                                 <input hidden asp-for="NewSchedule.IsEnabled" />
                                 <div class="form-group col-md-4">
                                     <label asp-for="NewSchedule.TimeHours" class="control-label"></label>
-                                    <input asp-for="NewSchedule.TimeHours" class="form-control" />
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="NewSchedule.TimeHours" class="form-control" />
+                                    </div>
                                     <span asp-validation-for="NewSchedule.TimeHours" class="text-danger"></span>
                                 </div>
 

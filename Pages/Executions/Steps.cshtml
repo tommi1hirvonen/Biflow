@@ -18,31 +18,66 @@
     <div class="form-row">
         <div class="form-group col-2">
             <label>Status</label>
-            <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
-                <option value="">ALL</option>
-            </select>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                    </div>
+                </div>
+                <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
+                    <option value="">ALL</option>
+                </select>
+            </div>
         </div>
         <div class="form-group col-5">
             <label>Job</label>
-            <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
-                <option value="">All</option>
-            </select>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    </div>
+                </div>
+                <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
+                    <option value="">All</option>
+                </select>
+            </div>
         </div>
         <div class="form-group col-5">
             <label>Step</label>
-            <select asp-for="StepName" asp-items="Model.StepNames" class="form-control">
-                <option value="">All</option>
-            </select>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                    </div>
+                </div>
+                <select asp-for="StepName" asp-items="Model.StepNames" class="form-control">
+                    <option value="">All</option>
+                </select>
+            </div>
         </div>
     </div>
     <div class="form-row">
         <div class="form-group col-3">
             <label>Date & time until</label>
-            <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                    </div>
+                </div>
+                <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
+            </div>
         </div>
         <div class="form-group col-2">
             <label>Interval (h)</label>
-            <input asp-for="IntervalHours" class="form-control">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                    </div>
+                </div>
+                <input asp-for="IntervalHours" class="form-control">
+            </div>
         </div>
     </div>
     <div class="form-row">
