@@ -6,277 +6,287 @@
     ViewData["Title"] = "Edit";
 }
 
-<form id="form" method="post" autocomplete="off">
+    <form id="form" method="post" autocomplete="off">
 
-    <nav class="navbar border-bottom sticky-top bg-white navbar-expand-md">
+        <nav class="navbar border-bottom sticky-top bg-white navbar-expand-md">
 
-        <ul class="navbar-nav mr-3">
-            <li class="nav-item">
-                <button id="button_submit" type="submit" class="btn btn-success">
-                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                    Save
+            <ul class="navbar-nav mr-3">
+                <li class="nav-item">
+                    <button id="button_submit" type="submit" class="btn btn-success">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                        Save
+                    </button>
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-3">
+                <li class="nav-item">
+                    <a class="btn btn-light" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
+                </li>
+            </ul>
+        </nav>
+        <p></p>
+        <h4>@Model.Job.JobName</h4>
+        <h5>@Model.Step.StepName</h5>
+        <p></p>
+        <div class="btn-toolbar" role="toolbar">
+            <div class="btn-group btn-group-sm mr-2" role="group">
+                <button type="button" id="button_toggle_settings" class="btn btn-light active" onclick="toggleSettings()">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
+                    Settings
                 </button>
-            </li>
-        </ul>
-        <ul class="navbar-nav mr-3">
-            <li class="nav-item">
-                <a class="btn btn-light" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
-            </li>
-        </ul>
-    </nav>
-
-
-    <p />
-    <div class="row">
-        <div class="col-8">
-            <h4>@Model.Job.JobName</h4>
-            <h5>@Model.Step.StepName</h5>
-            <p></p>
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
-            <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
-            <input type="hidden" asp-for="Step.LastModifiedDateTime" />
-            <input type="hidden" asp-for="Step.CreatedDateTime" />
-            <input type="hidden" asp-for="Step.LastModifiedBy" />
-            <input type="hidden" asp-for="Step.CreatedBy" />
-            <div class="form-group">
-                <label asp-for="Step.StepName" class="control-label"></label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
-                        </div>
-                    </div>
-                    <input asp-for="Step.StepName" class="form-control" />
-                </div>
-                <span asp-validation-for="Step.StepName" class="text-danger"></span>
+                <button type="button" id="button_toggle_dependencies" class="btn btn-light" onclick="toggleDependencies()">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                    Dependencies
+                </button>
             </div>
-            <div class="form-row">
-                <div class="form-group col-3">
-                    <label asp-for="Step.ExecutionPhase" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.ExecutionPhase" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
-                </div>
-                <div class="form-group col-3">
-                    <label asp-for="Step.StepType" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
-                            </div>
-                        </div>
-                        <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
-                            <option>SQL</option>
-                            <option>SSIS</option>
-                        </select>
-                    </div>
-                    <span asp-validation-for="Step.StepType" class="text-danger"></span>
-                </div>
-                <div class="form-group col-3">
-                    <label asp-for="Step.RetryAttempts" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.RetryAttempts" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.RetryAttempts" class="text-danger"></span>
-                </div>
-                <div class="form-group col-3">
-                    <label asp-for="Step.RetryIntervalMinutes" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.RetryIntervalMinutes" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.RetryIntervalMinutes" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="form-group" id="sql_statement_div" style="@(Model.Step.StepType == "SSIS" ? "display: none;" : null)">
-                <label asp-for="Step.SqlStatement" class="control-label"></label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-                        </div>
-                    </div>
-                    <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
-                </div>
-                <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
-            </div>
-            <div class="form-row">
-                <div class="form-group col" id="server_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                    <label asp-for="Step.ServerName" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.ServerName" id="server_input" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.ServerName" class="text-danger"></span>
-                </div>
-                <div class="form-group col" id="folder_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                    <label asp-for="Step.FolderName" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.FolderName" class="text-danger"></span>
-                </div>
-                <div class="form-group col" id="project_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                    <label asp-for="Step.ProjectName" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group col" id="package_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                    <label asp-for="Step.PackageName" class="control-label"></label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                            </div>
-                        </div>
-                        <input asp-for="Step.PackageName" id="package_input" class="form-control" />
-                    </div>
-                    <span asp-validation-for="Step.PackageName" class="text-danger"></span>
-                </div>
-            </div>
-
-            <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
-            <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
-
-            <div class="form-group form-check" id="32_bit_mode_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
-                </label>
-            </div>
-            <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="switch1" asp-for="Step.IsEnabled">
-                <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsEnabled)</label>
-            </div>
-            <p></p>
-
         </div>
-    </div>
+        <p></p>
+        <div id="div_settings">
+            <div class="row">
+                <div class="col-md-8">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Step.StepId" value="@Model.Step.StepId" />
+                    <input type="hidden" asp-for="Step.JobId" value="@Model.Step.JobId" />
+                    <input type="hidden" asp-for="Step.LastModifiedDateTime" />
+                    <input type="hidden" asp-for="Step.CreatedDateTime" />
+                    <input type="hidden" asp-for="Step.LastModifiedBy" />
+                    <input type="hidden" asp-for="Step.CreatedBy" />
+                    <div class="form-group">
+                        <label asp-for="Step.StepName" class="control-label"></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                </div>
+                            </div>
+                            <input asp-for="Step.StepName" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Step.StepName" class="text-danger"></span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-3">
+                            <label asp-for="Step.ExecutionPhase" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.ExecutionPhase" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.ExecutionPhase" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-3">
+                            <label asp-for="Step.StepType" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                                    </div>
+                                </div>
+                                <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
+                                    <option>SQL</option>
+                                    <option>SSIS</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="Step.StepType" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-3">
+                            <label asp-for="Step.RetryAttempts" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.RetryAttempts" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.RetryAttempts" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col-3">
+                            <label asp-for="Step.RetryIntervalMinutes" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.RetryIntervalMinutes" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.RetryIntervalMinutes" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-group" id="sql_statement_div" style="@(Model.Step.StepType == "SSIS" ? "display: none;" : null)">
+                        <label asp-for="Step.SqlStatement" class="control-label"></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                                </div>
+                            </div>
+                            <textarea asp-for="Step.SqlStatement" id="sql_input" class="form-control" style="font-family:monospace;" rows="3"></textarea>
+                        </div>
+                        <span asp-validation-for="Step.SqlStatement" class="text-danger"></span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col" id="server_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                            <label asp-for="Step.ServerName" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.ServerName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col" id="folder_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                            <label asp-for="Step.FolderName" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.FolderName" class="text-danger"></span>
+                        </div>
+                        <div class="form-group col" id="project_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                            <label asp-for="Step.ProjectName" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col" id="package_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                            <label asp-for="Step.PackageName" class="control-label"></label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                                    </div>
+                                </div>
+                                <input asp-for="Step.PackageName" id="package_input" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Step.PackageName" class="text-danger"></span>
+                        </div>
+                    </div>
 
-    <div id="parameters_div" class="col-8" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-        <p />
-        <h5>Parameters</h5>
-        <p />
-        <table id="parameters_table" class="table table-sm">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Name</th>
-                    <th>Value</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
-                @for (int index = 0; index < Model.Step.Parameters.Count; index++)
-                {
-                    <tr>
-                        <td>
-                            @Html.HiddenFor(m => m.Parameters[index].ParameterId)
-                            @Html.HiddenFor(m => m.Parameters[index].StepId)
-                            <input id="input_isdeleted" type="hidden" asp-for="Parameters[index].IsDeleted" value="false" />
-                        </td>
-                        <td>
-                            <input id="input_parameter_name" asp-for="Parameters[index].ParameterName" class="form-control form-control-sm" />
-                            <span asp-validation-for="Parameters[index].ParameterName" class="text-danger"></span>
-                        </td>
-                        <td>
-                            <input id="input_parameter_value" asp-for="Parameters[index].ParameterValue" class="form-control form-control-sm" />
-                            <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-        <div id="duplicate_parameter_error" style="display: none;">
-            <text class="text-danger">Duplicate parameter names</text>
-            <p />
+                    <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
+                    <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
+
+                    <div class="form-group form-check" id="32_bit_mode_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                        <label class="form-check-label">
+                            <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
+                        </label>
+                    </div>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="switch1" asp-for="Step.IsEnabled">
+                        <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsEnabled)</label>
+                    </div>
+                    <p></p>
+
+                </div>
+            </div>
+
+            <div id="parameters_div" class="col-md-8" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
+                <p />
+                <h5>Parameters</h5>
+                <p />
+                <table id="parameters_table" class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>@*Dummy row needed for the JS remove logic to work when there are no actual rows left*@</tr>
+                        @for (int index = 0; index < Model.Step.Parameters.Count; index++)
+                        {
+                            <tr>
+                                <td>
+                                    @Html.HiddenFor(m => m.Parameters[index].ParameterId)
+                                    @Html.HiddenFor(m => m.Parameters[index].StepId)
+                                    <input id="input_isdeleted" type="hidden" asp-for="Parameters[index].IsDeleted" value="false" />
+                                </td>
+                                <td>
+                                    <input id="input_parameter_name" asp-for="Parameters[index].ParameterName" class="form-control form-control-sm" />
+                                    <span asp-validation-for="Parameters[index].ParameterName" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <input id="input_parameter_value" asp-for="Parameters[index].ParameterValue" class="form-control form-control-sm" />
+                                    <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div id="duplicate_parameter_error" style="display: none;">
+                    <text class="text-danger">Duplicate parameter names</text>
+                    <p />
+                </div>
+                <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                </button>
+            </div>
         </div>
-        <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
-            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
-        </button>
-    </div>
 
-    <div class="col-8">
-        <p />
-        <h5>Dependencies</h5>
-        <p />
-        <table class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Dependant on
-                    </th>
-                    <th>
-                        Enabled
-                    </th>
-                    <th>
-                        Strict dependency*
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @for (int index = 0; index < Model.DependencyEdits.Count; index++)
-                {
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
-                    @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
+        <div class="col-md-8" id="div_dependencies" style="display: none;">
+            <table class="table table-sm table-hover">
+                <thead>
                     <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
-                        </td>
-                        <td>
-                            <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
-                        </td>
-                        <td>
-                            <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
-                        </td>
+                        <th>
+                            Dependant on
+                        </th>
+                        <th>
+                            Enabled
+                        </th>
+                        <th>
+                            Strict dependency*
+                        </th>
                     </tr>
-                }
-            </tbody>
-        </table>
-        <hr />
-        <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
-    </div>
-</form>
+                </thead>
+                <tbody>
+                    @for (int index = 0; index < Model.DependencyEdits.Count; index++)
+                    {
+                        @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependencyId)
+                        @Html.HiddenFor(modelItem => Model.DependencyEdits[index].StepId)
+                        @Html.HiddenFor(modelItem => Model.DependencyEdits[index].DependantOnStepId)
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
+                            </td>
+                            <td>
+                                <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
+                            </td>
+                            <td>
+                                <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <hr />
+            <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
+        </div>
+    </form>
 
 
 
@@ -286,130 +296,144 @@
 
 <script type="text/javascript">
 
-        function stepTypeSelected() {
+    function stepTypeSelected() {
+        var stepType = document.getElementById('step_type').value;
+        if (stepType == "SQL") {
+            $('#sql_statement_div').show();
+            $('#server_div').hide();
+            $('#folder_div').hide();
+            $('#project_div').hide();
+            $('#package_div').hide();
+            $('#32_bit_mode_div').hide();
+            $('#parameters_div').hide();
+        } else if (stepType == "SSIS") {
+            $('#sql_statement_div').hide();
+            $('#server_div').show();
+            $('#folder_div').show();
+            $('#project_div').show();
+            $('#package_div').show();
+            $('#32_bit_mode_div').show();
+            $('#parameters_div').show();
+        }
+    }
+
+    function toggleSettings() {
+        $('#div_dependencies').hide();
+        $('#div_settings').show();
+        $('#button_toggle_dependencies').removeClass('active');
+        $('#button_toggle_settings').addClass('active');
+    }
+
+    function toggleDependencies() {
+        $('#div_settings').hide();
+        $('#div_dependencies').show();
+        $('#button_toggle_settings').removeClass('active');
+        $('#button_toggle_dependencies').addClass('active');
+    }
+
+    function toggleVisibility(elem) {
+        var id = $(elem).data('id');
+        $('#' + id).toggleClass('d-none');
+    }
+
+
+    $(function () {
+        $("#button_submit").click(function () {
             var stepType = document.getElementById('step_type').value;
-            if (stepType == "SQL") {
-                $('#sql_statement_div').show();
-                $('#server_div').hide();
-                $('#folder_div').hide();
-                $('#project_div').hide();
-                $('#package_div').hide();
-                $('#32_bit_mode_div').hide();
-                $('#parameters_div').hide();
-            } else if (stepType == "SSIS") {
-                $('#sql_statement_div').hide();
-                $('#server_div').show();
-                $('#folder_div').show();
-                $('#project_div').show();
-                $('#package_div').show();
-                $('#32_bit_mode_div').show();
-                $('#parameters_div').show();
+            var sql = document.getElementById('sql_input').value;
+            var server = document.getElementById('server_input').value;
+            var folder = document.getElementById('folder_input').value;
+            var project = document.getElementById('project_input').value;
+            var package = document.getElementById('package_input').value;
+            if (stepType == "SQL" && sql.length == 0) {
+                $('#sql_error').show();
+                return false;
+            } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
+                $('#ssis_error').show();
+                return false;
             }
-        }
+            return true;
+        });
+    });
 
-        function toggleVisibility(elem) {
-            var id = $(elem).data('id');
-            $('#' + id).toggleClass('d-none');
-        }
+    $(function () {
+        $('#step_type').change(function () { hideErrors(); });
+        $('#sql_input').on('input', function () { hideErrors(); });
+        $('#server_input').on('input', function () { hideErrors(); });
+        $('#folder_input').on('input', function () { hideErrors(); });
+        $('#project_input').on('input', function () { hideErrors(); });
+        $('#package_input').on('input', function () { hideErrors(); });
+    });
 
+    function hideErrors() {
+        $('#ssis_error').hide();
+        $('#sql_error').hide();
+    }
 
-        $(function () {
-            $("#button_submit").click(function () {
-                var stepType = document.getElementById('step_type').value;
-                var sql = document.getElementById('sql_input').value;
-                var server = document.getElementById('server_input').value;
-                var folder = document.getElementById('folder_input').value;
-                var project = document.getElementById('project_input').value;
-                var package = document.getElementById('package_input').value;
-                if (stepType == "SQL" && sql.length == 0) {
-                    $('#sql_error').show();
-                    return false;
-                } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
-                    $('#ssis_error').show();
+    var parameterCount = @Model.Parameters.Count;
+
+    function addParameter() {
+        @*Remove the validator from the form...*@
+        $('#form').removeData("validator");
+        $('#form').removeData("unobtrusiveValidation");
+        $('#parameters_table tr:last').after(`
+            <tr>
+                <td>
+                    <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
+                </td>
+                    <td>
+                    <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
+                </td>
+                    <td>
+                    <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
+                    <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                    </button>
+                </td>
+            </tr>
+            `);
+        parameterCount += 1;
+        @*...and add it again to include the newly added fields in the validator.*@
+        $.validator.unobtrusive.parse("form");
+    }
+
+    function removeParameter(element) {
+        $(element).closest('tr').find("#input_isdeleted").val(true);
+        $(element).closest('tr').find("#input_parameter_name").val("_"); @*Set the input values to strings of length = 1 to prevent jQuery validation errors*@
+        $(element).closest('tr').find("#input_parameter_value").val("_");
+        $(element).closest('tr').hide();
+    }
+
+    @*Validate parameter names for duplicates*@
+    $('#button_submit').click(
+        function () {
+            var parameterNames = [];
+            $("input[id=input_parameter_name]").each(function () {
+                @*Only validate parameters that have not been deleted.*@
+                var deleted = $(this).closest('tr').find("#input_isdeleted").val();
+                if (deleted == "false") {
+                    parameterNames.push(this.value);
+                }
+            });
+            parameterNames = parameterNames.sort();
+            for (var i = 0; i < parameterNames.length - 1; i++) {
+                if (parameterNames[i + 1] == parameterNames[i]) {
+                    $('#duplicate_parameter_error').show();
                     return false;
                 }
-                return true;
-            });
+            }
+            return true;
         });
 
-        $(function () {
-            $('#step_type').change(function () { hideErrors(); });
-            $('#sql_input').on('input', function () { hideErrors(); });
-            $('#server_input').on('input', function () { hideErrors(); });
-            $('#folder_input').on('input', function () { hideErrors(); });
-            $('#project_input').on('input', function () { hideErrors(); });
-            $('#package_input').on('input', function () { hideErrors(); });
+    $(function () {
+        $("#parameters_div").on('input', function () {
+            $('#duplicate_parameter_error').hide();
         });
-
-        function hideErrors() {
-            $('#ssis_error').hide();
-            $('#sql_error').hide();
-        }
-
-        var parameterCount = @Model.Parameters.Count;
-
-        function addParameter() {
-            @*Remove the validator from the form...*@
-            $('#form').removeData("validator");
-            $('#form').removeData("unobtrusiveValidation");
-            $('#parameters_table tr:last').after(`
-                <tr>
-                    <td>
-                        <input id="input_isdeleted" type="hidden" value="false" data-val="true" data-val-required="The IsDeleted field is required." name="Parameters[` + parameterCount + `].IsDeleted">
-                    </td>
-                        <td>
-                        <input id="input_parameter_name" class="form-control form-control-sm" type="text" data-val="true" data-val-maxlength="The field Name must be a string or array type with a maximum length of '128'." data-val-maxlength-max="128" data-val-required="The Name field is required." maxlength="128" name="Parameters[` + parameterCount + `].ParameterName">
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterName" data-valmsg-replace="true"></span>
-                    </td>
-                        <td>
-                        <input id="input_parameter_value" class="form-control form-control-sm" type="text" data-val="true" data-val-required="The Value field is required." name="Parameters[` + parameterCount + `].ParameterValue">
-                        <span class="text-danger field-validation-valid" data-valmsg-for="Parameters[` + parameterCount + `].ParameterValue" data-valmsg-replace="true"></span>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                        </button>
-                    </td>
-                </tr>
-                `);
-            parameterCount += 1;
-            @*...and add it again to include the newly added fields in the validator.*@
-            $.validator.unobtrusive.parse("form");
-        }
-
-        function removeParameter(element) {
-            $(element).closest('tr').find("#input_isdeleted").val(true);
-            $(element).closest('tr').find("#input_parameter_name").val("_"); @*Set the input values to strings of length = 1 to prevent jQuery validation errors*@
-            $(element).closest('tr').find("#input_parameter_value").val("_");
-            $(element).closest('tr').hide();
-        }
-
-        @*Validate parameter names for duplicates*@
-        $('#button_submit').click(
-            function () {
-                var parameterNames = [];
-                $("input[id=input_parameter_name]").each(function () {
-                    @*Only validate parameters that have not been deleted.*@
-                    var deleted = $(this).closest('tr').find("#input_isdeleted").val();
-                    if (deleted == "false") {
-                        parameterNames.push(this.value);
-                    }
-                });
-                parameterNames = parameterNames.sort();
-                for (var i = 0; i < parameterNames.length - 1; i++) {
-                    if (parameterNames[i + 1] == parameterNames[i]) {
-                        $('#duplicate_parameter_error').show();
-                        return false;
-                    }
-                }
-                return true;
-            });
-
-        $(function () {
-            $("#parameters_div").on('input', function () {
-                $('#duplicate_parameter_error').hide();
-            });
-        });
+    });
 
 </script>
 
