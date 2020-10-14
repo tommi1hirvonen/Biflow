@@ -67,6 +67,15 @@
     <dd class="col-sm-9">
         <partial name="_StepExecutionStatusBadgePartial" model="Model" />
     </dd>
+    @if (Model.ExecutionStatus == "STOPPED")
+    {
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => Model.StoppedBy)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => Model.StoppedBy)
+        </dd>
+    }
     <dt class="col-sm-3">
         @Html.DisplayNameFor(model => Model.ErrorMessage)
     </dt>

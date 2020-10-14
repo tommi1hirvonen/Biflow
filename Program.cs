@@ -95,7 +95,7 @@ namespace EtlManager
             return executionId;
         }
 
-        public async static Task StopJobExecution(IConfiguration configuration, Guid executionId)
+        public async static Task StopJobExecution(IConfiguration configuration, Guid executionId, string username)
         {
             List<Task> tasks = new List<Task>();
 
@@ -137,14 +137,16 @@ namespace EtlManager
             SqlCommand updateStatuses = new SqlCommand(
               @"UPDATE etlmanager.Execution
                 SET EndDateTime = GETDATE(),
-	                ExecutionStatus = 'STOPPED'
+	                ExecutionStatus = 'STOPPED',
+                    StoppedBy = @Username
                 WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StartDateTime IS NOT NULL"
                 , sqlConnection);
             updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
+            updateStatuses.Parameters.AddWithValue("@Username", username);
             await updateStatuses.ExecuteNonQueryAsync();
         }
 
-        public async static Task StopStepExecution(IConfiguration configuration, Guid executionId, Guid stepId, int retryAttemptIndex)
+        public async static Task StopStepExecution(IConfiguration configuration, Guid executionId, Guid stepId, int retryAttemptIndex, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
 
@@ -175,13 +177,15 @@ namespace EtlManager
             SqlCommand updateStatus = new SqlCommand(
               @"UPDATE etlmanager.Execution
                 SET EndDateTime = GETDATE(),
-	                ExecutionStatus = 'STOPPED'
+	                ExecutionStatus = 'STOPPED',
+                    StoppedBy = @Username
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex
                     AND EndDateTime IS NULL AND StartDateTime IS NOT NULL"
                 , sqlConnection);
             updateStatus.Parameters.AddWithValue("@ExecutionId", executionId);
             updateStatus.Parameters.AddWithValue("@StepId", stepId);
             updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", retryAttemptIndex);
+            updateStatus.Parameters.AddWithValue("@Username", username);
             await updateStatus.ExecuteNonQueryAsync();
         }
 

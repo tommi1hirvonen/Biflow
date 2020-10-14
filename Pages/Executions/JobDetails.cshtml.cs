@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -17,12 +18,14 @@ namespace EtlManager.Pages.Executions
         private readonly Data.EtlManagerContext _context;
         private readonly IConfiguration _configuration;
         private readonly IAuthorizationService _authorizationService;
+        private readonly HttpContext _httpContext;
 
-        public JobDetailsModel(Data.EtlManagerContext context, IConfiguration configuration, IAuthorizationService authorizationService)
+        public JobDetailsModel(Data.EtlManagerContext context, IConfiguration configuration, IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _configuration = configuration;
             _authorizationService = authorizationService;
+            _httpContext = httpContextAccessor.HttpContext;
         }
 
         public Guid ExecutionId { get; set; }
@@ -188,9 +191,11 @@ namespace EtlManager.Pages.Executions
                 return new JsonResult(new { success = false, responseText = "Id argument was null" });
             }
 
+            string username = _httpContext.User?.Identity?.Name;
+
             try
             {
-                await Utility.StopJobExecution(_configuration, id);
+                await Utility.StopJobExecution(_configuration, id, username);
             }
             catch (Exception ex)
             {
@@ -213,9 +218,11 @@ namespace EtlManager.Pages.Executions
                 return new JsonResult(new { success = false, responseText = "Invalid arguments" });
             }
 
+            string username = _httpContext.User?.Identity?.Name;
+
             try
             {
-                await Utility.StopStepExecution(_configuration, executionId, stepId, retryAttemptIndex);
+                await Utility.StopStepExecution(_configuration, executionId, stepId, retryAttemptIndex, username);
             }
             catch (Exception ex)
             {

@@ -48,5 +48,8 @@ namespace EtlManager.Models
         public long? StepExecutorOperationId { get; set; }
 
         public long? PackageOperationId { get; set; }
+
+        [Display(Name = "Stopped by")]
+        public string StoppedBy { get; set; }
     }
 }
