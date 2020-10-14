@@ -43,9 +43,9 @@ namespace EtlManager.Models
 
         public int RetryIntervalMinutes { get; set; }
 
-        public long? MasterExecutorOperationId { get; set; }
+        public long? JobExecutorOperationId { get; set; }
 
-        public long? SlaveExecutorOperationId { get; set; }
+        public long? StepExecutorOperationId { get; set; }
 
         public long? PackageOperationId { get; set; }
     }

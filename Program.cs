@@ -102,34 +102,34 @@ namespace EtlManager
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             await sqlConnection.OpenAsync();
 
-            // First stop the MasterExecutor operation.
-            SqlCommand fetchMasterOperationId = new SqlCommand(
-                "SELECT TOP 1 MasterExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
+            // First stop the JobExecutor operation.
+            SqlCommand fetchJobOperationId = new SqlCommand(
+                "SELECT TOP 1 JobExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                 , sqlConnection);
-            fetchMasterOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
-            long masterOperationId = (long)await fetchMasterOperationId.ExecuteScalarAsync();
-            tasks.Add(StopPackage(sqlConnection, masterOperationId));
+            fetchJobOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
+            long jobOperationId = (long)await fetchJobOperationId.ExecuteScalarAsync();
+            tasks.Add(StopPackage(sqlConnection, jobOperationId));
 
-            // Fetch all slave operation ids and iterate over them stopping each slave execution.
-            SqlCommand fetchSlaveOperationIds = new SqlCommand(
-                @"SELECT SlaveExecutorOperationId, PackageOperationId, ServerName
+            // Fetch all step operation ids and iterate over them stopping each step execution.
+            SqlCommand fetchStepOperationIds = new SqlCommand(
+                @"SELECT StepExecutorOperationId, PackageOperationId, ServerName
                 FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND SlaveExecutorOperationId IS NOT NULL
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StepExecutorOperationId IS NOT NULL
                 ORDER BY RetryAttemptIndex DESC"
                 , sqlConnection);
-            fetchSlaveOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
-            SqlDataReader slaveOperationReader = await fetchSlaveOperationIds.ExecuteReaderAsync();
-            while (slaveOperationReader.Read())
+            fetchStepOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
+            SqlDataReader stepOperationReader = await fetchStepOperationIds.ExecuteReaderAsync();
+            while (stepOperationReader.Read())
             {
-                long slaveOperationId = (long)slaveOperationReader[0];
+                long stepOperationId = (long)stepOperationReader[0];
                 long packageOperationId = 0;
                 string packageServerName = null;
-                if (!slaveOperationReader.IsDBNull(1)) packageOperationId = (long)slaveOperationReader[1];
-                if (!slaveOperationReader.IsDBNull(2)) packageServerName = (string)slaveOperationReader[2];
+                if (!stepOperationReader.IsDBNull(1)) packageOperationId = (long)stepOperationReader[1];
+                if (!stepOperationReader.IsDBNull(2)) packageServerName = (string)stepOperationReader[2];
 
-                tasks.Add(StopSlaveExecution(sqlConnection, slaveOperationId, packageServerName, packageOperationId));
+                tasks.Add(StopStepExecution(sqlConnection, stepOperationId, packageServerName, packageOperationId));
             }
-            await slaveOperationReader.CloseAsync();
+            await stepOperationReader.CloseAsync();
 
             // Wait for all stop commands to finish.
             await Task.WhenAll(tasks);
@@ -149,7 +149,7 @@ namespace EtlManager
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
 
             SqlCommand fetchOperation = new SqlCommand(
-              @"SELECT TOP 1 SlaveExecutorOperationId, PackageOperationId, ServerName
+              @"SELECT TOP 1 StepExecutorOperationId, PackageOperationId, ServerName
                 FROM etlmanager.Execution
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                 , sqlConnection);
@@ -163,13 +163,13 @@ namespace EtlManager
 
             if (reader.HasRows && reader.Read())
             {
-                long slaveOperationId = (long)reader[0];
+                long stepOperationId = (long)reader[0];
                 long packageOperationId = 0;
                 string packageServerName = null;
                 if (!reader.IsDBNull(1)) packageOperationId = (long)reader[1];
                 if (!reader.IsDBNull(2)) packageServerName = (string)reader[2];
 
-                await StopSlaveExecution(sqlConnection, slaveOperationId, packageServerName, packageOperationId);
+                await StopStepExecution(sqlConnection, stepOperationId, packageServerName, packageOperationId);
             }
 
             SqlCommand updateStatus = new SqlCommand(
@@ -185,10 +185,10 @@ namespace EtlManager
             await updateStatus.ExecuteNonQueryAsync();
         }
 
-        private async static Task StopSlaveExecution(SqlConnection sqlConnection, long slaveOperationId, string childPackageServerName, long childPackageOperationId)
+        private async static Task StopStepExecution(SqlConnection sqlConnection, long stepOperationId, string childPackageServerName, long childPackageOperationId)
         {
-            // First stop the SlaveExecutor operation.
-            await StopPackage(sqlConnection, slaveOperationId);
+            // First stop the StepExecutor operation.
+            await StopPackage(sqlConnection, stepOperationId);
 
             // If it is an SSIS step, also stop the child package operation.
             if (childPackageOperationId > 0)
