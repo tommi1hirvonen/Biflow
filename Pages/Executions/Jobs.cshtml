@@ -8,13 +8,19 @@
 
 <h3>Executions</h3>
 <hr />
-<div class="btn-group btn-group-sm">
-    <a class="btn btn-light active">Jobs</a>
-    <a class="btn btn-light" asp-page="./Steps" asp-route-IntervalHours="@Model.IntervalHours"
-       asp-route-Status="@Model.Status" asp-route-JobName="@Model.JobName" asp-route-dateTimeUntilTicks="@Model.DateTimeUntil.Ticks">Steps</a>
-</div>
-<p />
 <form>
+    <div class="btn-toolbar">
+        <button type="submit" class="btn btn-primary btn-sm">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+            Refresh
+        </button>
+        <div class="btn-group btn-group-sm ml-4">
+            <a class="btn btn-light active">Jobs</a>
+            <a class="btn btn-light" asp-page="./Steps" asp-route-IntervalHours="@Model.IntervalHours"
+               asp-route-Status="@Model.Status" asp-route-JobName="@Model.JobName" asp-route-dateTimeUntilTicks="@Model.DateTimeUntil.Ticks">Steps</a>
+        </div>
+    </div>
+    <p />
     <div class="form-row">
         <div class="form-group col-lg-3 col-md-5">
             <label>Status</label>
@@ -24,7 +30,7 @@
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
                     </div>
                 </div>
-                <select asp-for="Status" asp-items="Model.Statuses" class="form-control">
+                <select asp-for="Status" asp-items="Model.Statuses" class="form-control form-control-sm">
                     <option value="">ALL</option>
                 </select>
             </div>
@@ -37,7 +43,7 @@
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                     </div>
                 </div>
-                <select asp-for="JobName" asp-items="Model.JobNames" class="form-control">
+                <select asp-for="JobName" asp-items="Model.JobNames" class="form-control form-control-sm">
                     <option value="">All</option>
                 </select>
             </div>
@@ -52,7 +58,7 @@
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                     </div>
                 </div>
-                <input asp-for="DateTimeUntil" class="form-control" type="datetime-local">
+                <input asp-for="DateTimeUntil" class="form-control form-control-sm" type="datetime-local">
             </div>
         </div>
         <div class="form-group col-lg-2 col-md-4 col-sm-5">
@@ -63,15 +69,9 @@
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
                     </div>
                 </div>
-                <input asp-for="IntervalHours" class="form-control">
+                <input asp-for="IntervalHours" class="form-control form-control-sm">
             </div>
         </div>
-    </div>
-    <div class="form-row">
-        <button type="submit" class="btn btn-primary">
-            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-            Refresh
-        </button>
     </div>
 </form>
 
