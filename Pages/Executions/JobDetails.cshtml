@@ -6,9 +6,10 @@
     ViewData["Title"] = "Details";
 }
 
-<style>
+    <style>
     .vis-item {
         cursor: pointer;
+        font-weight: bold;
     }
 
     .vis-item .vis-item-overflow {
@@ -18,32 +19,39 @@
     .running {
         background-color: @GetFillFromStatus("RUNNING");
         border-color: @GetFillFromStatus("RUNNING", true);
+        color: @GetFillFromStatus("RUNNING", true);
     }
     .completed {
         background-color: @GetFillFromStatus("COMPLETED");
         border-color: @GetFillFromStatus("COMPLETED", true);
+        color: @GetFillFromStatus("COMPLETED", true);
     }
     .failed {
         background-color: @GetFillFromStatus("FAILED");
         border-color: @GetFillFromStatus("FAILED", true);
+        color: @GetFillFromStatus("FAILED", true);
     }
     .skipped {
         background-color: @GetFillFromStatus("SKIPPED");
         border-color: @GetFillFromStatus("SKIPPED", true);
+        color: @GetFillFromStatus("SKIPPED", true);
     }
     .stopped {
         background-color: @GetFillFromStatus("STOPPED");
         border-color: @GetFillFromStatus("STOPPED", true);
+        color: @GetFillFromStatus("STOPPED", true);
     }
     .duplicate {
         background-color: @GetFillFromStatus("DUPLICATE");
         border-color: @GetFillFromStatus("DUPLICATE", true);
+        color: @GetFillFromStatus("DUPLICATE", true);
     }
     .await-retry {
         background-color: @GetFillFromStatus("AWAIT RETRY");
         border-color: @GetFillFromStatus("AWAIT RETRY", true);
+        color: @GetFillFromStatus("AWAIT RETRY", true);
     }
-</style>
+    </style>
 
 <h4>@Model.JobExecution.JobName</h4>
 <p></p>
@@ -207,20 +215,20 @@
 
 
 
-<div id="steps_graph">  
+<div id="steps_graph" style="@(Model.Graph ? "" : "display: none;")">  
 </div>
 
 
 
 @functions {
-    string colorRed = "#dc3545";
-    string colorRedDark = "#bc1525";
-    string colorGreen = "#28a745";
-    string colorGreenDark = "#088725";
-    string colorOrange = "#ffc107";
-    string colorOrangeDark = "#dfa100";
-    string colorBlue = "#007bff";
-    string colorBlueDark = "#005bdf";
+    string colorRed = "#FED3D9";
+    string colorRedDark = "#730015";
+    string colorGreen = "#CCF3DA";
+    string colorGreenDark = "#006621";
+    string colorOrange = "#FDF9CB";
+    string colorOrangeDark = "#736500";
+    string colorBlue = "#CBE1FF";
+    string colorBlueDark = "#290073";
 
     public string GetFillFromStatus(string status, bool dark = false)
     {
@@ -249,13 +257,13 @@
         var graph = @(Model.Graph ? "true" : "false");
 
         var items = new vis.DataSet([
-                @Html.Raw(string.Join(',', Model.Executions.Select(e =>
+                @Html.Raw(string.Join(',', Model.Executions.Where(e => e.StartDateTime != null).Select(e =>
                 @"{ id: '" + e.StepExecutionId +
                 @"', content: '" + e.StepName +
                 @"', title: '" + e.ExecutionStatus + ", " + e.GetDurationInReadableFormat() +
                 @"', className: '" + e.ExecutionStatus.ToLower().Replace(' ', '-') +
                 @"', start: '" + e.StartDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss") +
-                @"', end: '" + e.EndDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss") +
+                @"', end: '" + (e.EndDateTime ?? DateTime.Now).ToString("yyyy-MM-dd HH':'mm':'ss") +
                 "' }")))
             ]);
 
@@ -381,7 +389,7 @@
 @foreach (var item in Model.Executions)
 {
     <div class="modal fade" id="modal_@item.StepExecutionId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">@item.StepName</h5>
