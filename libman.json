@@ -17,6 +17,15 @@
     {
       "library": "d3@5.16.0",
       "destination": "wwwroot/lib/d3/"
+    },
+    {
+      "provider": "unpkg",
+      "library": "vis-timeline@7.4.0",
+      "destination": "wwwroot/lib/vis-timeline/",
+      "files": [
+        "standalone/umd/vis-timeline-graph2d.min.js",
+        "standalone/umd/vis-timeline-graph2d.min.js.map"
+      ]
     }
   ]
 }
