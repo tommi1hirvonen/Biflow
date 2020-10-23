@@ -2,6 +2,6 @@
 {
     interface ISchedulesExecutor
     {
-        void Run(string time);
+        void Run(int hours, int minutes);
     }
 }

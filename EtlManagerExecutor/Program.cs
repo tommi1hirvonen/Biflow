@@ -55,7 +55,7 @@ namespace EtlManagerExecutor
         static int RunSchedules(IHost host, SchedulesExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
-            service.Run(options.Time);
+            service.Run(options.Hours, options.Minutes);
             return 0;
         }
 
@@ -77,24 +77,27 @@ namespace EtlManagerExecutor
     [Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
     class JobExecutorOptions
     {
-        [Value(0, HelpText = "Execution id", Required = true)]
+        [Option('i', "id", HelpText = "Execution id", Required = true)]
         public string ExecutionId { get; set; }
 
-        [Option("notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
+        [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
         public bool Notify { get; set; }
     }
 
-    [Verb("testmail", HelpText = "Send a test mail using email configuration from appsettings.json.")]
+    [Verb("test-mail", HelpText = "Send a test mail using email configuration from appsettings.json.")]
     class MailTestOptions
     {
-        [Value(0, HelpText = "The address where the test email should be sent to", Required = true)]
+        [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
         public string ToAddress { get; set; }
     }
 
-    [Verb("execschedules", HelpText = "Execute schedules for a specific time of day.")]
+    [Verb("exec-schedules", HelpText = "Execute schedules for a specific time of day.")]
     class SchedulesExecutorOptions
     {
-        [Value(0, HelpText = "Time of day in format HHmm", Required = true)]
-        public string Time { get; set; }
+        [Option('h', "hours", HelpText = "Hours of the time of day", Required = true)]
+        public int Hours { get; set; }
+        
+        [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
+        public int Minutes { get; set; }
     }
 }

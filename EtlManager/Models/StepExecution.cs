@@ -43,10 +43,6 @@ namespace EtlManager.Models
 
         public int RetryIntervalMinutes { get; set; }
 
-        public long? JobExecutorOperationId { get; set; }
-
-        public long? StepExecutorOperationId { get; set; }
-
         public long? PackageOperationId { get; set; }
 
         [Display(Name = "Stopped by")]

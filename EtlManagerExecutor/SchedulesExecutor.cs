@@ -17,22 +17,9 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(string time)
+        public void Run(int hours, int minutes)
         {
             string etlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
-
-            int hours;
-            int minutes;
-            try
-            {
-                hours = int.Parse(time.Substring(0, 2));
-                minutes = int.Parse(time.Substring(2, 2));
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error parsing time value {time}", time);
-                return;
-            }
 
             DayOfWeek weekday = DateTime.Now.DayOfWeek;
 
@@ -127,7 +114,7 @@ namespace EtlManagerExecutor
                 ProcessStartInfo executionInfo = new ProcessStartInfo()
                 {
                     FileName = executorFilePath,
-                    Arguments = "execute " + executionId.ToString() + " --notify",
+                    Arguments = "execute --id " + executionId.ToString() + " --notify",
                     // Set WorkingDirectory for the EtlManagerExecutor executable.
                     // This way it reads the configuration file (appsettings.json) from the correct folder.
                     WorkingDirectory = Path.GetDirectoryName(executorFilePath),

@@ -76,8 +76,6 @@
     <Build Include="etlmanager\Stored Procedures\UserAuthenticate.sql" />
     <Build Include="etlmanager\Stored Procedures\UserUpdatePassword.sql" />
     <Build Include="etlmanager\Stored Procedures\ExecutionInitialize.sql" />
-    <Build Include="etlmanager\Stored Procedures\SchedulesExecute.sql" />
-    <Build Include="etlmanager\Stored Procedures\GenerateAgentJobs.sql" />
     <Build Include="Security\etlmanager.sql" />
     <Build Include="etlmanager\Views\vExecutionJob.sql" />
     <Build Include="etlmanager\Stored Procedures\JobCopy.sql" />

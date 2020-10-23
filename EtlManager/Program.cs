@@ -99,7 +99,7 @@ namespace EtlManager
             ProcessStartInfo executionInfo = new ProcessStartInfo()
             {
                 FileName = executorPath,
-                Arguments = "execute " + executionId.ToString(),
+                Arguments = "execute --id " + executionId.ToString(),
                 // Set WorkingDirectory for the EtlManagerExecutor executable.
                 // This way it reads the configuration file (appsettings.json) from the correct folder.
                 WorkingDirectory = Path.GetDirectoryName(executorPath),
