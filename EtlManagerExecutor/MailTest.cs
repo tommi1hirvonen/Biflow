@@ -41,22 +41,40 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            SmtpClient client = new SmtpClient(smtpServer)
+            SmtpClient client;
+            try
             {
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(username, password),
-                EnableSsl = enableSsl,
-                Port = port
-            };
+                client = new SmtpClient(smtpServer)
+                {
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(username, password),
+                    EnableSsl = enableSsl,
+                    Port = port
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error building email SMTP client. Check appsettings.json.");
+                return;
+            }
 
-            MailMessage mailMessage = new MailMessage
+            MailMessage mailMessage;
+            try
             {
-                From = new MailAddress(fromAddress),
-                Subject = "ETL Manager Test Mail",
-                IsBodyHtml = true,
-                Body = "This is a test email sent from ETL Manager."
-            };
-            mailMessage.To.Add(toAddress);
+                mailMessage = new MailMessage
+                {
+                    From = new MailAddress(fromAddress),
+                    Subject = "ETL Manager Test Mail",
+                    IsBodyHtml = true,
+                    Body = "This is a test email sent from ETL Manager."
+                };
+                mailMessage.To.Add(toAddress);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error building message object. Check appsettings.json.");
+                return;
+            }
 
             client.Send(mailMessage);
         }

@@ -127,7 +127,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error building notification email SMTP client", executionId);
+                Log.Error(ex, "{executionId} Error building notification email SMTP client. Check appsettings.json.", executionId);
                 return;
             }
 
@@ -144,7 +144,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error building notification email message object", executionId);
+                Log.Error(ex, "{executionId} Error building notification email message object. Check appsettings.json.", executionId);
                 return;
             }
 
