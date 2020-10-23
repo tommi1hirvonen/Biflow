@@ -6,7 +6,7 @@
     ViewData["Title"] = "Execution details";
 }
 
-    <style>
+<style>
     .vis-item {
         cursor: pointer;
         font-weight: bold;
@@ -16,42 +16,42 @@
         overflow: visible;
     }
 
-    .running {
+    .running, .running.vis-selected {
         background-color: @GetFillFromStatus("RUNNING");
         border-color: @GetFillFromStatus("RUNNING", true);
         color: @GetFillFromStatus("RUNNING", true);
     }
-    .completed {
+    .completed, .completed.vis-selected {
         background-color: @GetFillFromStatus("COMPLETED");
         border-color: @GetFillFromStatus("COMPLETED", true);
         color: @GetFillFromStatus("COMPLETED", true);
     }
-    .failed {
+    .failed, .failed.vis-selected {
         background-color: @GetFillFromStatus("FAILED");
         border-color: @GetFillFromStatus("FAILED", true);
         color: @GetFillFromStatus("FAILED", true);
     }
-    .skipped {
+    .skipped, .skipped.vis-selected {
         background-color: @GetFillFromStatus("SKIPPED");
         border-color: @GetFillFromStatus("SKIPPED", true);
         color: @GetFillFromStatus("SKIPPED", true);
     }
-    .stopped {
+    .stopped, .stopped.vis-selected {
         background-color: @GetFillFromStatus("STOPPED");
         border-color: @GetFillFromStatus("STOPPED", true);
         color: @GetFillFromStatus("STOPPED", true);
     }
-    .duplicate {
+    .duplicate, .duplicate.vis-selected {
         background-color: @GetFillFromStatus("DUPLICATE");
         border-color: @GetFillFromStatus("DUPLICATE", true);
         color: @GetFillFromStatus("DUPLICATE", true);
     }
-    .await-retry {
+    .await-retry, .await-retry.vis-selected {
         background-color: @GetFillFromStatus("AWAIT RETRY");
         border-color: @GetFillFromStatus("AWAIT RETRY", true);
         color: @GetFillFromStatus("AWAIT RETRY", true);
     }
-    </style>
+</style>
 
 <h4>@Model.JobExecution.JobName</h4>
 <p></p>
