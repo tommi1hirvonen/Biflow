@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Text;
+using System.Threading;
 
 namespace EtlManagerExecutor
 {
     class PackageExecution
     {
+        private readonly int pollingIntervalMs;
         public string ServerName { get; set; }
         public string FolderName { get; set; }
         public string ProjectName { get; set; }
@@ -18,7 +21,11 @@ namespace EtlManagerExecutor
         public bool Completed { get; set; } = false;
         public bool Success { get; set; } = false;
 
-        public PackageExecution(string serverName, string folderName, string projectName, string packageName, bool executeIn32BitMode)
+        private const int MaxRefreshRetries = 5;
+
+        private int RefreshRetries { get; set; } = 0;
+
+        public PackageExecution(string serverName, string folderName, string projectName, string packageName, bool executeIn32BitMode, int pollingIntervalMs)
         {
             ServerName = serverName;
             FolderName = folderName;
@@ -26,6 +33,7 @@ namespace EtlManagerExecutor
             PackageName = packageName;
             ExecuteIn32BitMode = executeIn32BitMode;
             ConnectionString = @"Data Source=" + ServerName + ";Initial Catalog=SSISDB;Integrated Security=SSPI;";
+            this.pollingIntervalMs = pollingIntervalMs;
         }
 
         public long StartExecution()
@@ -91,19 +99,37 @@ namespace EtlManagerExecutor
             return OperationId;
         }
 
-        public void RefreshStatus()
+        public void TryRefreshStatus()
         {
-            using SqlConnection sqlConnection = new SqlConnection(ConnectionString);
-            SqlCommand sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@OperationId", OperationId);
-            sqlConnection.Open();
-            int status = (int)sqlCommand.ExecuteScalar();
-            // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
-            if (status == 3 || status == 4 || status == 6 || status == 7 || status == 9)
+            // Try to refresh the operation status until the maximum number of attempts is reached.
+            while (RefreshRetries < MaxRefreshRetries)
             {
-                Completed = true;
-                if (status == 7) Success = true;
+                try
+                {
+                    using SqlConnection sqlConnection = new SqlConnection(ConnectionString);
+                    SqlCommand sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
+                    sqlCommand.Parameters.AddWithValue("@OperationId", OperationId);
+                    sqlConnection.Open();
+                    int status = (int)sqlCommand.ExecuteScalar();
+                    // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
+                    if (status == 3 || status == 4 || status == 6 || status == 7 || status == 9)
+                    {
+                        Completed = true;
+                        if (status == 7) Success = true;
+                    }
+
+                    RefreshRetries = 0; // Reset counter after first successful status query.
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", OperationId);
+                    RefreshRetries++;
+                    Thread.Sleep(pollingIntervalMs);
+                }
             }
+            // The maximum number of attempts was reached. Notify caller with exception.
+            throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
         }
 
         public List<string> GetErrorMessages()

@@ -1,0 +1,61 @@
+﻿CREATE PROCEDURE [etlmanager].[ExecutionStepCopy]
+	@ExecutionId UNIQUEIDENTIFIER,
+	@StepId UNIQUEIDENTIFIER,
+    @RetryAttemptIndex INT
+AS
+
+INSERT INTO etlmanager.Execution (
+	[ExecutionId],
+    [JobId],
+    [JobName],
+    [StepId],
+    [StepName],
+    [CreatedDateTime],
+    [RetryAttemptIndex],
+    [StartDateTime],
+    [ExecutionStatus],
+    [RetryAttempts],
+    [RetryIntervalMinutes],
+    [ExecutionPhase],
+    [DependencyMode],
+    [StepType],
+    [SqlStatement],
+    [ServerName],
+    [FolderName],
+    [ProjectName],
+    [PackageName],
+    [ExecuteIn32BitMode],
+    [PackageOperationId],
+    [CreatedBy],
+    [StoppedBy],
+    [ScheduleId],
+    [ExecutorProcessId]
+)
+SELECT
+	[ExecutionId],
+    [JobId],
+    [JobName],
+    [StepId],
+    [StepName],
+    [CreatedDateTime],
+    [RetryAttemptIndex] = @RetryAttemptIndex,
+    [StartDateTime] = GETDATE(),
+    [ExecutionStatus] = 'RUNNING',
+    [RetryAttempts],
+    [RetryIntervalMinutes],
+    [ExecutionPhase],
+    [DependencyMode],
+    [StepType],
+    [SqlStatement],
+    [ServerName],
+    [FolderName],
+    [ProjectName],
+    [PackageName],
+    [ExecuteIn32BitMode],
+    [PackageOperationId],
+    [CreatedBy],
+    [StoppedBy],
+    [ScheduleId],
+    [ExecutorProcessId]
+FROM etlmanager.Execution
+WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = 0

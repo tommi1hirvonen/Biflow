@@ -100,29 +100,40 @@ namespace EtlManagerExecutor
                     // In case of first execution, update the existing execution row.
                     if (AttemptCounter == 0)
                     {
-                        SqlCommand startUpdate = new SqlCommand(
-                          @"UPDATE etlmanager.Execution
-                            SET StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING'
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                        startUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                        startUpdate.Parameters.AddWithValue("@StepId", StepId);
-                        startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
-                        startUpdate.ExecuteNonQuery();
+                        try
+                        {
+                            SqlCommand startUpdate = new SqlCommand(
+                              @"UPDATE etlmanager.Execution
+                                SET StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING'
+                                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                                , connection);
+                            startUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                            startUpdate.Parameters.AddWithValue("@StepId", StepId);
+                            startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
+                            startUpdate.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "{ExecutionId} {StepId} Error updating step status to RUNNING", ExecutionId, StepId);
+                        }
                     }
                     // In case of later retry execution, insert new execution row based on the first one (RetryAttemptIndex = 0).
                     else
                     {
-                        SqlCommand addNewExecution = new SqlCommand(
-                          @"INSERT INTO etlmanager.Execution (ExecutionId, JobId, JobName, StepId, StepName, CreatedDateTime, RetryAttemptIndex, StartDateTime, ExecutionStatus, RetryAttempts, RetryIntervalMinutes, ExecutionPhase, DependencyMode, StepType, SqlStatement, ServerName, FolderName, ProjectName, PackageName, ExecuteIn32BitMode, CreatedBy, JobExecutorOperationId, StepExecutorOperationId, ScheduleId)
-                            SELECT ExecutionId, JobId, JobName, StepId, StepName, CreatedDateTime, @RetryAttemptIndex, StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING', RetryAttempts, RetryIntervalMinutes, ExecutionPhase, DependencyMode, StepType, SqlStatement, ServerName, FolderName, ProjectName, PackageName, ExecuteIn32BitMode, CreatedBy, JobExecutorOperationId, StepExecutorOperationId, ScheduleId
-                            FROM etlmanager.Execution
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = 0"
-                            , connection);
-                        addNewExecution.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                        addNewExecution.Parameters.AddWithValue("@StepId", StepId);
-                        addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
-                        addNewExecution.ExecuteNonQuery();
+                        try
+                        {
+                            SqlCommand addNewExecution = new SqlCommand(
+                              @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_"
+                                , connection);
+                            addNewExecution.Parameters.AddWithValue("@ExecutionId_", ExecutionId);
+                            addNewExecution.Parameters.AddWithValue("@StepId_", StepId);
+                            addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", AttemptCounter);
+                            addNewExecution.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "{ExecutionId} {StepId} Error copying step execution details for retry attempt", ExecutionId, StepId);
+                        }
                     }
                 }
 
@@ -149,33 +160,51 @@ namespace EtlManagerExecutor
                         Log.Warning("{ExecutionId} {StepId} Error executing step: " + failureResult.ErrorMessage, ExecutionId, StepId);
 
                         // The step failed. Update the execution accordingly.
-                        SqlCommand errorUpdate = new SqlCommand(
-                          @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                        errorUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                        errorUpdate.Parameters.AddWithValue("@StepId", StepId);
-                        errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
+
                         // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-                        errorUpdate.Parameters.AddWithValue("@ExecutionStatus", AttemptCounter >= RetryAttempts ? "FAILED" : "AWAIT RETRY");
-                        errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
-                        errorUpdate.ExecuteNonQuery();
+                        var status = AttemptCounter >= RetryAttempts ? "FAILED" : "AWAIT RETRY";
+
+                        try
+                        {
+                            SqlCommand errorUpdate = new SqlCommand(
+                              @"UPDATE etlmanager.Execution
+                                SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage
+                                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                                , connection);
+                            errorUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                            errorUpdate.Parameters.AddWithValue("@StepId", StepId);
+                            errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
+                            errorUpdate.Parameters.AddWithValue("@ExecutionStatus", status);
+                            errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
+                            errorUpdate.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "{ExecutionId} {StepId} Error updating step status to {status}", ExecutionId, StepId, status);
+                        }
                     }
                     else
                     {
                         Log.Information("{ExecutionId} {StepId} Step executed successfully", ExecutionId, StepId);
-
+                        
                         // The package was executed successfully. Update the execution accordingly.
-                        SqlCommand successUpdate = new SqlCommand(
-                          @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED'
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                        successUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                        successUpdate.Parameters.AddWithValue("@StepId", StepId);
-                        successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
-                        successUpdate.ExecuteNonQuery();
+                        try
+                        {    
+                            SqlCommand successUpdate = new SqlCommand(
+                              @"UPDATE etlmanager.Execution
+                                SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED'
+                                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                                , connection);
+                            successUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                            successUpdate.Parameters.AddWithValue("@StepId", StepId);
+                            successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
+                            successUpdate.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "{ExecutionId} {StepId} Error updating step status to COMPLETED", ExecutionId, StepId);
+                        }
+
                         break; // Break the loop to end this execution.
                     }
                 }
@@ -229,7 +258,7 @@ namespace EtlManagerExecutor
 
             }
 
-            PackageExecution packageExecution = new PackageExecution(ServerNamePackage, FolderName, ProjectName, PackageName, ExecuteIn32BitMode)
+            PackageExecution packageExecution = new PackageExecution(ServerNamePackage, FolderName, ProjectName, PackageName, ExecuteIn32BitMode, PollingIntervalMs)
             {
                 Parameters = parameters
             };
@@ -272,11 +301,11 @@ namespace EtlManagerExecutor
             // Monitor the package's execution.
             try
             {
-                packageExecution.RefreshStatus();
+                packageExecution.TryRefreshStatus();
                 while (!packageExecution.Completed)
                 {
                     Thread.Sleep(PollingIntervalMs);
-                    packageExecution.RefreshStatus();
+                    packageExecution.TryRefreshStatus();
                 }
             }
             catch (Exception ex)
