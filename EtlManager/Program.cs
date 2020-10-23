@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using EtlManager.Models;
@@ -75,7 +76,7 @@ namespace EtlManager
             if (stepIds != null && stepIds.Count > 0)
             {
                 sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_"
+                "EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_"
                 , sqlConnection);
 
                 sqlCommand.Parameters.AddWithValue("@StepIds_", string.Join(',', stepIds));
@@ -83,7 +84,7 @@ namespace EtlManager
             else
             {
                 sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[JobExecute] @JobId = @JobId_, @Username = @Username_"
+                "EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_"
                 , sqlConnection);
             }
 
@@ -92,47 +93,78 @@ namespace EtlManager
 
             await sqlConnection.OpenAsync();
             Guid executionId = (Guid) await sqlCommand.ExecuteScalarAsync();
+
+            string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
+
+            ProcessStartInfo executionInfo = new ProcessStartInfo()
+            {
+                FileName = executorPath,
+                Arguments = "execute " + executionId.ToString(),
+                // Set WorkingDirectory for the EtlManagerExecutor executable.
+                // This way it reads the configuration file (appsettings.json) from the correct folder.
+                WorkingDirectory = Path.GetDirectoryName(executorPath),
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            Process executorProcess = new Process() { StartInfo = executionInfo };
+            executorProcess.Start();
+
+            SqlCommand processIdCmd = new SqlCommand(
+                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+            processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
+            processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
+            await processIdCmd.ExecuteNonQueryAsync();
+
             return executionId;
         }
 
         public async static Task StopJobExecution(IConfiguration configuration, Guid executionId, string username)
         {
-            List<Task> tasks = new List<Task>();
-
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             await sqlConnection.OpenAsync();
 
-            // First stop the JobExecutor operation.
-            SqlCommand fetchJobOperationId = new SqlCommand(
-                "SELECT TOP 1 JobExecutorOperationId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
-                , sqlConnection);
-            fetchJobOperationId.Parameters.AddWithValue("@ExecutionId", executionId);
-            long jobOperationId = (long)await fetchJobOperationId.ExecuteScalarAsync();
-            tasks.Add(StopPackage(sqlConnection, jobOperationId));
+            // First stop the EtlManagerExecutor process.
 
-            // Fetch all step operation ids and iterate over them stopping each step execution.
-            SqlCommand fetchStepOperationIds = new SqlCommand(
-                @"SELECT StepExecutorOperationId, PackageOperationId, ServerName
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StepExecutorOperationId IS NOT NULL
-                ORDER BY RetryAttemptIndex DESC"
+            // Get the process id for the execution.
+            SqlCommand fetchProcessId = new SqlCommand(
+                "SELECT TOP 1 ExecutorProcessId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                 , sqlConnection);
-            fetchStepOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
-            SqlDataReader stepOperationReader = await fetchStepOperationIds.ExecuteReaderAsync();
-            while (stepOperationReader.Read())
+            fetchProcessId.Parameters.AddWithValue("@ExecutionId", executionId);
+            int executorProcessId = (int)await fetchProcessId.ExecuteScalarAsync();
+
+            // Get the process and check that its name matches so that we don't accidentally kill the wrong process.
+            Process executorProcess = Process.GetProcessById(executorProcessId);
+            string processName = executorProcess.ProcessName;
+            if (!processName.Equals("EtlManagerExecutor"))
             {
-                long stepOperationId = (long)stepOperationReader[0];
-                long packageOperationId = 0;
-                string packageServerName = null;
-                if (!stepOperationReader.IsDBNull(1)) packageOperationId = (long)stepOperationReader[1];
-                if (!stepOperationReader.IsDBNull(2)) packageServerName = (string)stepOperationReader[2];
-
-                tasks.Add(StopStepExecution(sqlConnection, stepOperationId, packageServerName, packageOperationId));
+                throw new ArgumentException("Process id does not map to an instance of EtlManagerExecutor");
             }
-            await stepOperationReader.CloseAsync();
+            executorProcess.Kill();
+            executorProcess.WaitForExit();
 
-            // Wait for all stop commands to finish.
-            await Task.WhenAll(tasks);
+            // Fetch all package operation ids for running packages and iterate over them stopping each one.
+
+            List<Task> stopPackageTasks = new List<Task>();
+            SqlCommand fetchPackageOperationIds = new SqlCommand(
+                @"SELECT PackageOperationId, ServerName
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
+                , sqlConnection);
+            fetchPackageOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
+            using (SqlDataReader packageOperationReader = await fetchPackageOperationIds.ExecuteReaderAsync())
+            {
+                while (packageOperationReader.Read())
+                {
+                    long packageOperationId = (long)packageOperationReader[0];
+                    string packageServerName = null;
+                    if (!packageOperationReader.IsDBNull(1)) packageServerName = (string)packageOperationReader[1];
+
+                    stopPackageTasks.Add(StopPackage(packageServerName, packageOperationId));
+                }
+            }
+            await Task.WhenAll(stopPackageTasks); // Wait for all stop commands to finish.
 
             SqlCommand updateStatuses = new SqlCommand(
               @"UPDATE etlmanager.Execution
@@ -148,68 +180,13 @@ namespace EtlManager
 
         public async static Task StopStepExecution(IConfiguration configuration, Guid executionId, Guid stepId, int retryAttemptIndex, string username)
         {
-            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-
-            SqlCommand fetchOperation = new SqlCommand(
-              @"SELECT TOP 1 StepExecutorOperationId, PackageOperationId, ServerName
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                , sqlConnection);
-            fetchOperation.Parameters.AddWithValue("@ExecutionId", executionId);
-            fetchOperation.Parameters.AddWithValue("@StepId", stepId);
-            fetchOperation.Parameters.AddWithValue("@RetryAttemptIndex", retryAttemptIndex);
-
-            await sqlConnection.OpenAsync();
-
-            SqlDataReader reader = await fetchOperation.ExecuteReaderAsync();
-
-            if (reader.HasRows && reader.Read())
-            {
-                long stepOperationId = (long)reader[0];
-                long packageOperationId = 0;
-                string packageServerName = null;
-                if (!reader.IsDBNull(1)) packageOperationId = (long)reader[1];
-                if (!reader.IsDBNull(2)) packageServerName = (string)reader[2];
-
-                await StopStepExecution(sqlConnection, stepOperationId, packageServerName, packageOperationId);
-            }
-
-            SqlCommand updateStatus = new SqlCommand(
-              @"UPDATE etlmanager.Execution
-                SET EndDateTime = GETDATE(),
-	                ExecutionStatus = 'STOPPED',
-                    StoppedBy = @Username
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex
-                    AND EndDateTime IS NULL AND StartDateTime IS NOT NULL"
-                , sqlConnection);
-            updateStatus.Parameters.AddWithValue("@ExecutionId", executionId);
-            updateStatus.Parameters.AddWithValue("@StepId", stepId);
-            updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", retryAttemptIndex);
-            updateStatus.Parameters.AddWithValue("@Username", username);
-            await updateStatus.ExecuteNonQueryAsync();
-        }
-
-        private async static Task StopStepExecution(SqlConnection sqlConnection, long stepOperationId, string childPackageServerName, long childPackageOperationId)
-        {
-            // First stop the StepExecutor operation.
-            await StopPackage(sqlConnection, stepOperationId);
-
-            // If it is an SSIS step, also stop the child package operation.
-            if (childPackageOperationId > 0)
-            {
-                await StopPackage(childPackageServerName, childPackageOperationId);
-            }
+            throw new NotImplementedException("Feature not yet implemented");
         }
 
         private async static Task StopPackage(string serverName, long operationId)
         {
-            using SqlConnection sqlConnection = new SqlConnection("Data Source=" + serverName + ";Initial Catalog=SSISDB;Integrated Security=SSPI;");
+            using SqlConnection sqlConnection = new SqlConnection("Data Source=" + serverName ?? "localhost"  + ";Initial Catalog=SSISDB;Integrated Security=SSPI;");
             await sqlConnection.OpenAsync();
-            await StopPackage(sqlConnection, operationId);
-        }
-
-        private async static Task StopPackage(SqlConnection sqlConnection, long operationId)
-        {
             SqlCommand stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
             stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", operationId);
             await stopPackageOperationCmd.ExecuteNonQueryAsync();
