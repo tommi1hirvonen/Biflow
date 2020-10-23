@@ -8,6 +8,12 @@
         <a asp-page="/Executions/JobDetails" asp-route-id="@Model.ExecutionId">@Html.DisplayFor(model => Model.ExecutionId)</a>
     </dd>
     <dt class="col-sm-3">
+        @Html.DisplayNameFor(model => Model.ExecutorProcessId)
+    </dt>
+    <dd class="col-sm-9">
+        @Html.DisplayFor(model => Model.ExecutorProcessId)
+    </dd>
+    <dt class="col-sm-3">
         @Html.DisplayNameFor(model => Model.JobId)
     </dt>
     <dd class="col-sm-9">

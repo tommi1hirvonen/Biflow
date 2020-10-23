@@ -46,6 +46,9 @@ namespace EtlManager.Models
 
         public int RetryIntervalMinutes { get; set; }
 
+        [Display(Name = "Executor PID")]
+        public int? ExecutorProcessId { get; set; }
+
         public long? PackageOperationId { get; set; }
 
         [Display(Name = "Stopped by")]
