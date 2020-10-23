@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Hosting
 @inject IWebHostEnvironment WebHostEnvironment
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = Model.Step.StepName;
 }
 
 <form id="form" method="post" autocomplete="off">

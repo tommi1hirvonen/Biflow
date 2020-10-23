@@ -2,7 +2,7 @@
   "profiles": {
     "EtlManagerExecutor": {
       "commandName": "Project",
-      "commandLineArgs": "testmail \"tommih_@hotmail.com\""
+      "commandLineArgs": "execute -i \"B3E2FFE2-090E-485D-AFDA-C3298E2488C8\""
     }
   }
 }
