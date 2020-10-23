@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EtlManagerExecutor": {
+      "commandName": "Project",
+      "commandLineArgs": "testmail \"tommih_@hotmail.com\""
+    }
+  }
+}

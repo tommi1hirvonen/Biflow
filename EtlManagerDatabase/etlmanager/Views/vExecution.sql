@@ -1,0 +1,40 @@
+﻿
+
+
+CREATE VIEW [etlmanager].[vExecution] AS
+
+SELECT TOP 1000
+	[StepExecutionId] = CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(a.[ExecutionId], a.[StepId], a.[RetryAttemptIndex])), 2)
+	,a.[ExecutionId]
+	,a.[JobId]
+	,JobName = ISNULL(b.JobName, a.[JobName])
+	,a.[StepId]
+	,StepName = ISNULL(c.StepName, a.[StepName])
+	,a.[CreatedDateTime]
+	,a.[CreatedBy]
+	,a.[StartDateTime]
+	,a.[EndDateTime]
+	,a.[RetryAttemptIndex]
+	,a.[RetryAttempts]
+	,a.[RetryIntervalMinutes]
+	,a.[ExecutionStatus]
+	,a.[ExecutionInSeconds]
+	,a.[ExecutionInMinutes]
+	,a.[ExecutionPhase]
+	,a.[DependencyMode]
+	,a.[StepType]
+	,a.[SqlStatement]
+	,[PackagePath] = NULLIF(CONCAT(a.[ServerName], '\', a.[FolderName], '\', a.[ProjectName], '\', a.[PackageName]), '\\')
+	,a.[FolderName]
+	,a.[ProjectName]
+	,a.[PackageName]
+	,a.[ExecuteIn32BitMode]
+	,a.[ErrorMessage]
+	,a.[PackageOperationId]
+	,a.[ScheduleId]
+	,a.[StoppedBy]
+	,a.[ExecutorProcessId]
+FROM [etlmanager].[Execution] AS a
+	LEFT JOIN etlmanager.Job AS b ON a.JobId = b.JobId
+	LEFT JOIN etlmanager.Step AS c ON a.StepId = c.StepId
+ORDER BY a.CreatedDateTime DESC, a.StartDateTime DESC
