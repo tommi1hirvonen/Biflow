@@ -33,6 +33,8 @@ namespace EtlManagerExecutor
 
         private int AttemptCounter { get; set; } = 0;
 
+        private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
+
         public StepWorker(string executionId, string stepId, string connectionString, int pollingIntervalMs, StepCompletedDelegate stepCompleted)
         {
             ExecutionId = executionId;
@@ -168,7 +170,7 @@ namespace EtlManagerExecutor
                         {
                             SqlCommand errorUpdate = new SqlCommand(
                               @"UPDATE etlmanager.Execution
-                                SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage
+                                SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage, InfoMessage = @InfoMessage
                                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                                 , connection);
                             errorUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
@@ -176,6 +178,7 @@ namespace EtlManagerExecutor
                             errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
                             errorUpdate.Parameters.AddWithValue("@ExecutionStatus", status);
                             errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
+                            errorUpdate.Parameters.AddWithValue("@InfoMessage", InfoMessageBuilder.Length > 0 ? (object)InfoMessageBuilder.ToString() : DBNull.Value);
                             errorUpdate.ExecuteNonQuery();
                         }
                         catch (Exception ex)
@@ -192,12 +195,13 @@ namespace EtlManagerExecutor
                         {    
                             SqlCommand successUpdate = new SqlCommand(
                               @"UPDATE etlmanager.Execution
-                                SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED'
+                                SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED', InfoMessage = @InfoMessage
                                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                                 , connection);
                             successUpdate.Parameters.AddWithValue("@ExecutionId", ExecutionId);
                             successUpdate.Parameters.AddWithValue("@StepId", StepId);
                             successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", AttemptCounter);
+                            successUpdate.Parameters.AddWithValue("@InfoMessage", InfoMessageBuilder.Length > 0 ? (object)InfoMessageBuilder.ToString() : DBNull.Value);
                             successUpdate.ExecuteNonQuery();
                         }
                         catch (Exception ex)
@@ -340,6 +344,7 @@ namespace EtlManagerExecutor
             {
                 Log.Information("{ExecutionId} {StepId} Starting SQL execution", ExecutionId, StepId);
                 using SqlConnection connection = new SqlConnection(EtlManagerConnectionString);
+                connection.InfoMessage += Connection_InfoMessage;
                 connection.OpenIfClosed();
                 SqlCommand sqlCommand = new SqlCommand(SqlStatement, connection) { CommandTimeout = 0 }; // CommandTimeout = 0 => wait indefinitely
                 sqlCommand.ExecuteNonQuery();
@@ -353,6 +358,11 @@ namespace EtlManagerExecutor
             }
 
             return new ExecutionResult.Success();
+        }
+
+        private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)
+        {
+            InfoMessageBuilder.AppendLine(e.Message);
         }
 
         public void OnStepCompleted(object sender, RunWorkerCompletedEventArgs args)

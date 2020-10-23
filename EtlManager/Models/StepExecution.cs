@@ -34,6 +34,9 @@ namespace EtlManager.Models
         [Display(Name = "Error message")]
         public string ErrorMessage { get; set; }
 
+        [Display(Name = "Info message")]
+        public string InfoMessage { get; set; }
+
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 

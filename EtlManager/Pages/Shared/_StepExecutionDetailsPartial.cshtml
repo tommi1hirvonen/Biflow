@@ -90,6 +90,12 @@
         <dd class="col-sm-9">
             <pre><code>@Model.SqlStatement</code></pre>
         </dd>
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => Model.InfoMessage)
+        </dt>
+        <dd class="col-sm-9">
+            <pre><code>@Model.InfoMessage</code></pre>
+        </dd>
     }
     else if (Model.StepType == "SSIS")
     {

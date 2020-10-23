@@ -30,6 +30,7 @@ SELECT TOP 1000
 	,a.[PackageName]
 	,a.[ExecuteIn32BitMode]
 	,a.[ErrorMessage]
+	,a.[InfoMessage]
 	,a.[PackageOperationId]
 	,a.[ScheduleId]
 	,a.[StoppedBy]
