@@ -22,9 +22,9 @@ namespace EtlManagerExecutor
 
         private string SqlStatement { get; set; }
 
-        private string ServerNamePackage { get; set; }
-        private string FolderName { get; set; }
-        private string ProjectName { get; set; }
+        private string PackageServerName { get; set; }
+        private string PackageFolderName { get; set; }
+        private string PackageProjectName { get; set; }
         private string PackageName { get; set; }
         private bool ExecuteIn32BitMode { get; set; } = false;
 
@@ -52,7 +52,8 @@ namespace EtlManagerExecutor
             using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
             {
                 SqlCommand sqlCommand = new SqlCommand(
-                    @"SELECT TOP 1 StepType, SqlStatement, ServerName, FolderName, ProjectName, PackageName, ExecuteIn32BitMode, RetryAttempts, RetryIntervalMinutes
+                    @"SELECT TOP 1 StepType, SqlStatement, PackageServerName, PackageFolderName, PackageProjectName, PackageName,
+                        ExecuteIn32BitMode, RetryAttempts, RetryIntervalMinutes
                     FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
@@ -71,9 +72,9 @@ namespace EtlManagerExecutor
                         }
                         else if (stepType == "SSIS")
                         {
-                            ServerNamePackage = reader["ServerName"].ToString();
-                            FolderName = reader["FolderName"].ToString();
-                            ProjectName = reader["ProjectName"].ToString();
+                            PackageServerName = reader["PackageServerName"].ToString();
+                            PackageFolderName = reader["PackageFolderName"].ToString();
+                            PackageProjectName = reader["PackageProjectName"].ToString();
                             PackageName = reader["PackageName"].ToString();
                             ExecuteIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
                         }
@@ -231,7 +232,7 @@ namespace EtlManagerExecutor
 
         private ExecutionResult StartPackageExecution()
         {
-            Log.Information("{ExecutionId} {StepId} Started building execution for package " + FolderName + "\\" + ProjectName + "\\" + PackageName, ExecutionId, StepId);
+            Log.Information("{ExecutionId} {StepId} Started building execution for package " + PackageFolderName + "\\" + PackageProjectName + "\\" + PackageName, ExecutionId, StepId);
 
             // Get possible parameters.
             Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -262,7 +263,7 @@ namespace EtlManagerExecutor
 
             }
 
-            PackageExecution packageExecution = new PackageExecution(ServerNamePackage, FolderName, ProjectName, PackageName, ExecuteIn32BitMode, PollingIntervalMs)
+            PackageExecution packageExecution = new PackageExecution(PackageServerName, PackageFolderName, PackageProjectName, PackageName, ExecuteIn32BitMode, PollingIntervalMs)
             {
                 Parameters = parameters
             };

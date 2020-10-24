@@ -130,40 +130,40 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group col" id="server_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                        <label asp-for="Step.ServerName" class="control-label"></label>
+                        <label asp-for="Step.PackageServerName" class="control-label"></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
                                 </div>
                             </div>
-                            <input asp-for="Step.ServerName" id="server_input" class="form-control" />
+                            <input asp-for="Step.PackageServerName" id="server_input" class="form-control" />
                         </div>
-                        <span asp-validation-for="Step.ServerName" class="text-danger"></span>
+                        <span asp-validation-for="Step.PackageServerName" class="text-danger"></span>
                     </div>
                     <div class="form-group col" id="folder_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                        <label asp-for="Step.FolderName" class="control-label"></label>
+                        <label asp-for="Step.PackageFolderName" class="control-label"></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
                                 </div>
                             </div>
-                            <input asp-for="Step.FolderName" id="folder_input" class="form-control" />
+                            <input asp-for="Step.PackageFolderName" id="folder_input" class="form-control" />
                         </div>
-                        <span asp-validation-for="Step.FolderName" class="text-danger"></span>
+                        <span asp-validation-for="Step.PackageFolderName" class="text-danger"></span>
                     </div>
                     <div class="form-group col" id="project_div" style="@(Model.Step.StepType == "SQL" ? "display: none;" : null)">
-                        <label asp-for="Step.ProjectName" class="control-label"></label>
+                        <label asp-for="Step.PackageProjectName" class="control-label"></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
                                 </div>
                             </div>
-                            <input asp-for="Step.ProjectName" id="project_input" class="form-control" />
+                            <input asp-for="Step.PackageProjectName" id="project_input" class="form-control" />
                         </div>
-                        <span asp-validation-for="Step.ProjectName" class="text-danger"></span>
+                        <span asp-validation-for="Step.PackageProjectName" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="form-row">

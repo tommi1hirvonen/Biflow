@@ -24,9 +24,9 @@ SELECT TOP 1000
 	,a.[DependencyMode]
 	,a.[StepType]
 	,a.[SqlStatement]
-	,[PackagePath] = NULLIF(CONCAT(a.[ServerName], '\', a.[FolderName], '\', a.[ProjectName], '\', a.[PackageName]), '\\')
-	,a.[FolderName]
-	,a.[ProjectName]
+	,[PackagePath] = NULLIF(CONCAT(a.[PackageServerName], '\', a.[PackageFolderName], '\', a.[PackageProjectName], '\', a.[PackageName]), '\\')
+	,a.[PackageFolderName]
+	,a.[PackageProjectName]
 	,a.[PackageName]
 	,a.[ExecuteIn32BitMode]
 	,a.[ErrorMessage]

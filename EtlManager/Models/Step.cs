@@ -36,15 +36,15 @@ namespace EtlManager.Models
 
         [MaxLength(50)]
         [Display(Name = "Server name")]
-        public string ServerName { get; set; }
+        public string PackageServerName { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Folder name")]
-        public string FolderName { get; set; }
+        public string PackageFolderName { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Project name")]
-        public string ProjectName { get; set; }
+        public string PackageProjectName { get; set; }
 
         [MaxLength(260)]
         [Display(Name = "Package name")]

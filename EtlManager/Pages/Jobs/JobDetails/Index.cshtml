@@ -352,42 +352,42 @@
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col" id="server_div">
-                                        <label asp-for="NewStep.ServerName" class="control-label"></label>
+                                        <label asp-for="NewStep.PackageServerName" class="control-label"></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <div class="input-group-text">
                                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
                                                 </div>
                                             </div>
-                                            <input asp-for="NewStep.ServerName" id="server_input" class="form-control" />
+                                            <input asp-for="NewStep.PackageServerName" id="server_input" class="form-control" />
                                         </div>
-                                        <span asp-validation-for="NewStep.ServerName" class="text-danger"></span>
+                                        <span asp-validation-for="NewStep.PackageServerName" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col" id="folder_div">
-                                        <label asp-for="NewStep.FolderName" class="control-label"></label>
+                                        <label asp-for="NewStep.PackageFolderName" class="control-label"></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <div class="input-group-text">
                                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
                                                 </div>
                                             </div>
-                                            <input asp-for="NewStep.FolderName" id="folder_input" class="form-control" />
+                                            <input asp-for="NewStep.PackageFolderName" id="folder_input" class="form-control" />
                                         </div>
-                                        <span asp-validation-for="NewStep.FolderName" class="text-danger"></span>
+                                        <span asp-validation-for="NewStep.PackageFolderName" class="text-danger"></span>
                                     </div>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group col" id="project_div">
-                                        <label asp-for="NewStep.ProjectName" class="control-label"></label>
+                                        <label asp-for="NewStep.PackageProjectName" class="control-label"></label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <div class="input-group-text">
                                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
                                                 </div>
                                             </div>
-                                            <input asp-for="NewStep.ProjectName" id="project_input" class="form-control" />
+                                            <input asp-for="NewStep.PackageProjectName" id="project_input" class="form-control" />
                                         </div>
-                                        <span asp-validation-for="NewStep.ProjectName" class="text-danger"></span>
+                                        <span asp-validation-for="NewStep.PackageProjectName" class="text-danger"></span>
                                     </div>
                                     <div class="form-group col" id="package_div">
                                         <label asp-for="NewStep.PackageName" class="control-label"></label>
@@ -532,22 +532,22 @@
                         else if (item.StepType == "SSIS")
                         {
                             <dt class="col-sm-3">
-                                @Html.DisplayNameFor(model => item.ServerName)
+                                @Html.DisplayNameFor(model => item.PackageServerName)
                             </dt>
                             <dd class="col-sm-9">
-                                @Html.DisplayFor(model => item.ServerName)
+                                @Html.DisplayFor(model => item.PackageServerName)
                             </dd>
                             <dt class="col-sm-3">
-                                @Html.DisplayNameFor(model => item.FolderName)
+                                @Html.DisplayNameFor(model => item.PackageFolderName)
                             </dt>
                             <dd class="col-sm-9">
-                                @Html.DisplayFor(model => item.FolderName)
+                                @Html.DisplayFor(model => item.PackageFolderName)
                             </dd>
                             <dt class="col-sm-3">
-                                @Html.DisplayNameFor(model => item.ProjectName)
+                                @Html.DisplayNameFor(model => item.PackageProjectName)
                             </dt>
                             <dd class="col-sm-9">
-                                @Html.DisplayFor(model => item.ProjectName)
+                                @Html.DisplayFor(model => item.PackageProjectName)
                             </dd>
                             <dt class="col-sm-3">
                                 @Html.DisplayNameFor(model => item.PackageName)
