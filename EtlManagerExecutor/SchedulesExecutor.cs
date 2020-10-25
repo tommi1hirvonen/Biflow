@@ -90,7 +90,7 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            string executorFilePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+            string executorFilePath = Process.GetCurrentProcess().MainModule.FileName;
 
             foreach (var pair in jobIds)
             {
@@ -145,7 +145,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating executor process is for execution {executionId}", executionId);
+                    Log.Error(ex, "Error updating executor process id for execution {executionId}", executionId);
                 }
             }
         }

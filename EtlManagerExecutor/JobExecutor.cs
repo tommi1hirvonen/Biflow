@@ -21,6 +21,8 @@ namespace EtlManagerExecutor
         private string ExecutionId { get; set; }
         private string JobId { get; set; }
 
+        private bool Notify { get; set; } = false;
+
         private int RunningStepsCounter { get; set; } = 0;
 
         public JobExecutor(ILogger<JobExecutor> logger, IConfiguration configuration)
@@ -36,6 +38,8 @@ namespace EtlManagerExecutor
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
 
             ExecutionId = executionId;
+
+            Notify = notify;
 
             using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
             sqlConnection.Open();
@@ -60,7 +64,7 @@ namespace EtlManagerExecutor
             }
 
             // Execution finished. Notify subscribers of possible errors.
-            if (notify)
+            if (Notify)
             {
                 EmailHelper.SendNotification(configuration, ExecutionId);
             }
@@ -293,7 +297,7 @@ namespace EtlManagerExecutor
 
         private void StartNewStepWorker(string stepId)
         {
-            StepWorker stepWorker = new StepWorker(ExecutionId, stepId, EtlManagerConnectionString, PollingIntervalMs, OnStepCompleted);
+            StepWorker stepWorker = new StepWorker(ExecutionId, stepId, EtlManagerConnectionString, PollingIntervalMs, Notify, OnStepCompleted);
             BackgroundWorker backgroundWorker = new BackgroundWorker();
             backgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(stepWorker.OnStepCompleted);
             backgroundWorker.DoWork += new DoWorkEventHandler(stepWorker.ExecuteStep);

@@ -60,6 +60,8 @@ INSERT INTO etlmanager.Execution (
 	PackageProjectName,
 	PackageName,
 	ExecuteIn32BitMode,
+	JobToExecuteId,
+	JobExecuteSynchronized,
 	CreatedBy,
 	ScheduleId
 )
@@ -85,6 +87,8 @@ SELECT
 	PackageProjectName = a.PackageProjectName,
 	PackageName = a.PackageName,
 	ExecuteIn32BitMode = a.ExecuteIn32BitMode,
+	JobToExecuteId = a.JobToExecuteId,
+	JobExecuteSynchronized = a.JobExecuteSynchronized,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId
 FROM etlmanager.Step AS a

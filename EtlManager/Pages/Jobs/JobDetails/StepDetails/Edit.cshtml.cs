@@ -26,6 +26,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
         [BindProperty]
         public Step Step { get; set; }
 
+        public IList<Job> Jobs { get; set; }
         public Job Job { get; set; }
 
         [BindProperty]
@@ -47,6 +48,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
                 .ThenInclude(dependency => dependency.DependantOnStep)
                 .FirstOrDefaultAsync(m => m.StepId == id);
 
+            Jobs = await _context.Jobs.AsNoTracking().OrderBy(job => job.JobName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Steps).AsNoTracking().FirstOrDefaultAsync(job => job.JobId == Step.JobId);
 
             Parameters = Step.Parameters.Select(parameter => new ParameterEdit(parameter)).ToList();

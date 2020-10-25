@@ -32,6 +32,8 @@ SELECT TOP 1000
 	,a.[ErrorMessage]
 	,a.[InfoMessage]
 	,a.[PackageOperationId]
+	,a.[JobToExecuteId]
+	,a.JobExecuteSynchronized
 	,a.[ScheduleId]
 	,a.[StoppedBy]
 	,a.[ExecutorProcessId]

@@ -23,6 +23,8 @@
     [PackageName]               NVARCHAR(260)       NULL,
     [ExecuteIn32BitMode]        BIT                 NOT NULL,
     [PackageOperationId]        BIGINT              NULL,
+    [JobToExecuteId]            UNIQUEIDENTIFIER    NULL,
+    [JobExecuteSynchronized]    BIT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [CreatedBy]                 NVARCHAR(250)       NULL,
@@ -30,6 +32,6 @@
     [ScheduleId]                UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]         INT                 NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
-    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL')
+    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB')
 );
 

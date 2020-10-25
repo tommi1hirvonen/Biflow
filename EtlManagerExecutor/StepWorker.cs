@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -19,6 +20,7 @@ namespace EtlManagerExecutor
         readonly StepCompletedDelegate StepCompleted;
         readonly string EtlManagerConnectionString;
         readonly int PollingIntervalMs;
+        readonly bool JobStepNotify = false;
 
         private string SqlStatement { get; set; }
 
@@ -28,6 +30,9 @@ namespace EtlManagerExecutor
         private string PackageName { get; set; }
         private bool ExecuteIn32BitMode { get; set; } = false;
 
+        private string JobToExecuteId { get; set; }
+        private bool JobExecuteSynchronized { get; set; } = false;
+
         private int RetryAttempts { get; set; } = 0;
         private int RetryIntervalMinutes { get; set; } = 0;
 
@@ -35,13 +40,14 @@ namespace EtlManagerExecutor
 
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
 
-        public StepWorker(string executionId, string stepId, string connectionString, int pollingIntervalMs, StepCompletedDelegate stepCompleted)
+        public StepWorker(string executionId, string stepId, string connectionString, int pollingIntervalMs, bool jobStepNotify, StepCompletedDelegate stepCompleted)
         {
             ExecutionId = executionId;
             StepId = stepId;
             StepCompleted = stepCompleted;
             EtlManagerConnectionString = connectionString;
             PollingIntervalMs = pollingIntervalMs;
+            JobStepNotify = jobStepNotify;
         }
 
         public void ExecuteStep(object sender, DoWorkEventArgs args)
@@ -53,7 +59,7 @@ namespace EtlManagerExecutor
             {
                 SqlCommand sqlCommand = new SqlCommand(
                     @"SELECT TOP 1 StepType, SqlStatement, PackageServerName, PackageFolderName, PackageProjectName, PackageName,
-                        ExecuteIn32BitMode, RetryAttempts, RetryIntervalMinutes
+                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes
                     FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
@@ -77,6 +83,11 @@ namespace EtlManagerExecutor
                             PackageProjectName = reader["PackageProjectName"].ToString();
                             PackageName = reader["PackageName"].ToString();
                             ExecuteIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
+                        }
+                        else if (stepType == "JOB")
+                        {
+                            JobToExecuteId = reader["JobToExecuteId"].ToString();
+                            JobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
                         }
                         RetryAttempts = (int)reader["RetryAttempts"];
                         RetryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
@@ -149,6 +160,10 @@ namespace EtlManagerExecutor
                 else if (stepType == "SSIS")
                 {
                     executionResult = StartPackageExecution();
+                }
+                else if (stepType == "JOB")
+                {
+                    executionResult = StartJobExecution();
                 }
                 else
                 {
@@ -356,6 +371,79 @@ namespace EtlManagerExecutor
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
                 return new ExecutionResult.Failure(errorMessage);
+            }
+
+            return new ExecutionResult.Success();
+        }
+
+
+        private ExecutionResult StartJobExecution()
+        {
+            Process executorProcess;
+
+            using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
+            {
+                sqlConnection.Open();
+
+                SqlCommand initCommand = new SqlCommand(
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_"
+                        , sqlConnection);
+                initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
+
+                string executionId;
+                try
+                {
+                    executionId = initCommand.ExecuteScalar().ToString();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error initializing execution for job {jobId}", JobToExecuteId);
+                    return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
+                }
+
+                string executorFilePath = Process.GetCurrentProcess().MainModule.FileName;
+                ProcessStartInfo executionInfo = new ProcessStartInfo()
+                {
+                    FileName = executorFilePath,
+                    Arguments = "execute --id " + executionId.ToString() + (JobStepNotify ? " --notify" : ""),
+                    // Set WorkingDirectory for the EtlManagerExecutor executable.
+                    // This way it reads the configuration file (appsettings.json) from the correct folder.
+                    WorkingDirectory = Path.GetDirectoryName(executorFilePath),
+                    UseShellExecute = true,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                };
+
+                executorProcess = new Process() { StartInfo = executionInfo };
+                try
+                {
+                    executorProcess.Start();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error starting executor process for execution {executionId}", executionId);
+                    return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
+                }
+
+                SqlCommand processIdCmd = new SqlCommand(
+                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+                processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
+                processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
+
+                try
+                {
+                    processIdCmd.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error updating executor process id for execution {executionId}", executionId);
+                }
+
+            }
+
+            if (JobExecuteSynchronized)
+            {
+                executorProcess.WaitForExit();
             }
 
             return new ExecutionResult.Success();

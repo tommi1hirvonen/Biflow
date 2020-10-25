@@ -107,6 +107,10 @@
                     {
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
                     }
+                    else if (item.StepType == "JOB")
+                    {
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    }
                 </td>
                 <td class="align-middle">
                     <form>
@@ -233,6 +237,10 @@
                                                 {
                                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
                                                 }
+                                                else if (step.StepType == "JOB")
+                                                {
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                                                }
                                             </td>
                                         </tr>
                                     }
@@ -309,6 +317,7 @@
                                             <select asp-for="NewStep.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
                                                 <option>SQL</option>
                                                 <option>SSIS</option>
+                                                <option>JOB</option>
                                             </select>
                                         </div>
                                         <span asp-validation-for="NewStep.StepType" class="text-danger"></span>
@@ -338,7 +347,7 @@
                                         <span asp-validation-for="NewStep.RetryIntervalMinutes" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="form-group" id="sql_statement_div">
+                                <div class="form-group sql-type-input" id="sql_statement_div">
                                     <label asp-for="NewStep.SqlStatement" class="control-label"></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
@@ -350,7 +359,7 @@
                                     </div>
                                     <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
                                 </div>
-                                <div class="form-row">
+                                <div class="form-row ssis-type-input">
                                     <div class="form-group col" id="server_div">
                                         <label asp-for="NewStep.PackageServerName" class="control-label"></label>
                                         <div class="input-group">
@@ -376,7 +385,7 @@
                                         <span asp-validation-for="NewStep.PackageFolderName" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="form-row">
+                                <div class="form-row ssis-type-input">
                                     <div class="form-group col" id="project_div">
                                         <label asp-for="NewStep.PackageProjectName" class="control-label"></label>
                                         <div class="input-group">
@@ -402,17 +411,43 @@
                                         <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="form-group form-check" id="32_bit_mode_div">
+                                <div class="form-group form-check ssis-type-input" id="32_bit_mode_div">
                                     <label class="form-check-label">
                                         <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
                                     </label>
+                                </div>
+
+                                <div class="form-row job-type-input">
+                                    <div class="form-group">
+                                        <label>Job</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                                                </div>
+                                            </div>
+                                            <select asp-for="NewStep.JobToExecuteId" class="form-control">
+                                                @foreach (var job in Model.Jobs)
+                                                {
+                                                    <option value="@job.JobId">@job.JobName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row job-type-input">
+                                    <div class="form-group form-check">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="NewStep.JobExecuteSynchronized" /> @Html.DisplayNameFor(model => model.NewStep.JobExecuteSynchronized)
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
                                 <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
 
                                 <p />
-                                <div id="parameters_div">
+                                <div class="ssis-type-input">
                                     <p />
                                     <h5>Parameters</h5>
                                     <p />
@@ -772,21 +807,17 @@
         function stepTypeSelected() {
             var stepType = document.getElementById('step_type').value;
             if (stepType == "SQL") {
-                $('#sql_statement_div').show();
-                $('#server_div').hide();
-                $('#folder_div').hide();
-                $('#project_div').hide();
-                $('#package_div').hide();
-                $('#32_bit_mode_div').hide();
-                $('#parameters_div').hide();
+                $('.sql-type-input').show();
+                $('.ssis-type-input').hide();
+                $('.job-type-input').hide();
             } else if (stepType == "SSIS") {
-                $('#sql_statement_div').hide();
-                $('#server_div').show();
-                $('#folder_div').show();
-                $('#project_div').show();
-                $('#package_div').show();
-                $('#32_bit_mode_div').show();
-                $('#parameters_div').show();
+                $('.sql-type-input').hide();
+                $('.ssis-type-input').show();
+                $('.job-type-input').hide();
+            } else if (stepType == "JOB") {
+                $('.sql-type-input').hide();
+                $('.ssis-type-input').hide();
+                $('.job-type-input').show();
             }
         }
 

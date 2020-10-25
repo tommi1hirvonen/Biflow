@@ -40,6 +40,12 @@ namespace EtlManager.Models
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
+        [Display(Name = "Job to execute")]
+        public Guid? JobToExecuteId { get; set; }
+
+        [Display(Name = "Synchronized")]
+        public bool? JobExecuteSynchronized { get; set; }
+
         public int RetryAttemptIndex { get; set; }
 
         public int RetryAttempts { get; set; }

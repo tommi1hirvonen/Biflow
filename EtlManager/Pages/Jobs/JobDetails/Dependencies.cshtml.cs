@@ -32,7 +32,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             Job = Jobs.First(job => job.JobId == id);
 
-            Steps = await _context.Steps.Where(step => step.JobId == Job.JobId).Include(step => step.Dependencies).ToListAsync();
+            Steps = await _context.Steps.Where(step => step.JobId == Job.JobId).ToListAsync();
 
             Dependencies = await _context.Dependencies.Include(d => d.Step).Include(d => d.DependantOnStep)
                 .Where(d => d.Step.JobId == id)
