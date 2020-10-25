@@ -52,6 +52,24 @@ namespace EtlManagerExecutor
             jobIdCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
             JobId = jobIdCommand.ExecuteScalar().ToString();
 
+            string circularExecutions;
+            try
+            {
+                circularExecutions = GetCircularJobExecutions();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "{ExecutionId} Error checking for possible circular job executions", ExecutionId);
+                return;
+            }
+
+            if (circularExecutions != null && circularExecutions.Length > 0)
+            {
+                UpdateErrorMessage("Execution was cancelled because of circular job executions:\n" + circularExecutions);
+                logger.LogError("{ExecutionId} Execution was cancelled because of circular job executions: " + circularExecutions, ExecutionId);
+                return;
+            }
+
             if (dependencyMode)
             {
                 logger.LogInformation("{ExecutionId} Starting execution in dependency mode", ExecutionId);
@@ -123,18 +141,18 @@ namespace EtlManagerExecutor
             string circularDependencies;
             try
             {
-                circularDependencies = GetCircularDependencies();
+                circularDependencies = GetCircularStepDependencies();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "{ExecutionId} Error checking for circular dependencies", ExecutionId);
+                logger.LogError(ex, "{ExecutionId} Error checking for possible circular step dependencies", ExecutionId);
                 return;
             }
 
             if (circularDependencies != null && circularDependencies.Length > 0)
             {
-                UpdateErrorMessage("Execution was cancelled because of circular dependencies:\n" + circularDependencies);
-                logger.LogError("{ExecutionId} Execution was cancelled because of circular dependencies: " + circularDependencies, ExecutionId);
+                UpdateErrorMessage("Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
+                logger.LogError("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, ExecutionId);
                 return;
             }
 
@@ -312,7 +330,7 @@ namespace EtlManagerExecutor
             logger.LogInformation("{ExecutionId} Finished executing step {StepId}", ExecutionId, stepId);
         }
 
-        private string GetCircularDependencies()
+        private string GetCircularStepDependencies()
         {
             using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
             SqlCommand sqlCommand = new SqlCommand(
@@ -362,12 +380,61 @@ namespace EtlManagerExecutor
             return string.Join("\n\n", dependencyPaths);
         }
 
+        private string GetCircularJobExecutions()
+        {
+            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            SqlCommand sqlCommand = new SqlCommand(
+                @"WITH Recursion AS (
+                    SELECT
+                        a.JobId,
+                        a.JobToExecuteId,
+                        CONVERT(NVARCHAR(MAX), b.JobName) AS DependencyPath
+                    FROM etlmanager.Step AS a
+                        INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
+                    WHERE b.JobId = @JobId AND a.StepType = 'JOB'
+                        
+                    UNION ALL
+                        
+                    SELECT
+                        a.JobId,
+                        c.JobToExecuteId,
+                        DependencyPath = CONVERT(NVARCHAR(MAX), a.DependencyPath + ' => ' + b.JobName)
+                    FROM Recursion AS a
+                        INNER JOIN etlmanager.Job AS b ON a.JobToExecuteId = b.JobId
+                        INNER JOIN etlmanager.Step AS c ON b.JobId = c.JobId AND c.StepType = 'JOB'
+                    WHERE a.JobToExecuteId <> a.JobId
+                )
+                SELECT
+                    a.JobId,
+                    a.JobToExecuteId,
+                    DependencyPath = a.DependencyPath + ' => ' + b.JobName
+                FROM Recursion AS a
+                    INNER JOIN etlmanager.Job AS b ON a.JobToExecuteId = b.JobId
+                WHERE a.JobId = a.JobToExecuteId
+                OPTION(MAXRECURSION 1000)"
+                , sqlConnection)
+            {
+                CommandTimeout = 120 // two minutes
+            };
+            sqlCommand.Parameters.AddWithValue("@JobId", JobId);
+            List<string> dependencyPaths = new List<string>();
+            sqlConnection.OpenIfClosed();
+            using (SqlDataReader reader = sqlCommand.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    dependencyPaths.Add(reader["DependencyPath"].ToString());
+                }
+            }
+            return string.Join("\n\n", dependencyPaths);
+        }
+
         private void UpdateErrorMessage(string errorMessage)
         {
             using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
             SqlCommand sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
-                    SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage
+                    SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
                     WHERE ExecutionId = @ExecutionId"
                     , sqlConnection)
             {
