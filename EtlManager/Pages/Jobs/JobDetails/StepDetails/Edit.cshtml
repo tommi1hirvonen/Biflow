@@ -192,7 +192,7 @@
                                 </div>
                             </div>
                             <select asp-for="Step.JobToExecuteId" class="form-control">
-                                @foreach (var job in Model.Jobs)
+                                @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
                                 {
                                     <option value="@job.JobId">@job.JobName</option>
                                 }
