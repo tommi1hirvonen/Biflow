@@ -148,7 +148,7 @@ namespace EtlManager
 
             List<Task> stopPackageTasks = new List<Task>();
             SqlCommand fetchPackageOperationIds = new SqlCommand(
-                @"SELECT PackageOperationId, ServerName
+                @"SELECT PackageOperationId, PackageServerName
                 FROM etlmanager.Execution
                 WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
                 , sqlConnection);
@@ -169,18 +169,14 @@ namespace EtlManager
             SqlCommand updateStatuses = new SqlCommand(
               @"UPDATE etlmanager.Execution
                 SET EndDateTime = GETDATE(),
+                    StartDateTime = ISNULL(StartDateTime, GETDATE()),
 	                ExecutionStatus = 'STOPPED',
                     StoppedBy = @Username
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StartDateTime IS NOT NULL"
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL"
                 , sqlConnection);
             updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
             updateStatuses.Parameters.AddWithValue("@Username", username);
             await updateStatuses.ExecuteNonQueryAsync();
-        }
-
-        public async static Task StopStepExecution(IConfiguration configuration, Guid executionId, Guid stepId, int retryAttemptIndex, string username)
-        {
-            throw new NotImplementedException("Feature not yet implemented");
         }
 
         private async static Task StopPackage(string serverName, long operationId)

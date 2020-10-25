@@ -91,32 +91,5 @@ namespace EtlManager.Pages.Executions
             return new JsonResult(new { success = true });
         }
 
-        public async Task<JsonResult> OnPostStopStepExecution(Guid executionId, Guid stepId, int retryAttemptIndex)
-        {
-            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
-            if (!authorized.Succeeded)
-            {
-                return new JsonResult(new { success = false, responseText = "Unauthorized" });
-            }
-
-            if (executionId == null || stepId == null)
-            {
-                return new JsonResult(new { success = false, responseText = "Invalid arguments" });
-            }
-
-            string username = _httpContext.User?.Identity?.Name;
-
-            try
-            {
-                await Utility.StopStepExecution(_configuration, executionId, stepId, retryAttemptIndex, username);
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, responseText = "Error stopping step: " + ex.Message });
-            }
-
-            return new JsonResult(new { success = true });
-        }
-
     }
 }
