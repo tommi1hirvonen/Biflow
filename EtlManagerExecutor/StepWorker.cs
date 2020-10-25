@@ -380,6 +380,7 @@ namespace EtlManagerExecutor
         private ExecutionResult StartJobExecution()
         {
             Process executorProcess;
+            string executionId;
 
             using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
             {
@@ -390,14 +391,13 @@ namespace EtlManagerExecutor
                         , sqlConnection);
                 initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
 
-                string executionId;
                 try
                 {
                     executionId = initCommand.ExecuteScalar().ToString();
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error initializing execution for job {jobId}", JobToExecuteId);
+                    Log.Error(ex, "{ExecutionId} {StepId} Error initializing execution for job {jobId}", ExecutionId, StepId, JobToExecuteId);
                     return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
                 }
 
@@ -421,7 +421,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error starting executor process for execution {executionId}", executionId);
+                    Log.Error(ex, "{ExecutionId} {StepId} Error starting executor process for execution {executionId}", ExecutionId, StepId, executionId);
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
@@ -436,7 +436,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating executor process id for execution {executionId}", executionId);
+                    Log.Error(ex, "{ExecutionId} {StepId} Error updating executor process id for execution {executionId}", ExecutionId, StepId, executionId);
                 }
 
             }
@@ -444,6 +444,34 @@ namespace EtlManagerExecutor
             if (JobExecuteSynchronized)
             {
                 executorProcess.WaitForExit();
+                try
+                {
+                    using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                    sqlConnection.Open();
+                    SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
+                    sqlCommand.Parameters.AddWithValue("@ExecutionId", executionId);
+                    string status = sqlCommand.ExecuteScalar().ToString();
+                    switch (status)
+                    {
+                        case "COMPLETED":
+                        case "WARNING":
+                            return new ExecutionResult.Success();
+                        case "FAILED":
+                        case "STOPPED":
+                        case "SUSPENDED":
+                        case "NOT STARTED":
+                            return new ExecutionResult.Failure("Sub-execution encountered errors, was stopped or failed to start");
+                        case "RUNNING":
+                            return new ExecutionResult.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing");
+                        default:
+                            return new ExecutionResult.Failure("Unhandled sub-execution status");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {StepId} Error getting sub-execution status for execution id {executionId}", ExecutionId, StepId, executionId);
+                    return new ExecutionResult.Failure("Error getting sub-execution status");
+                }
             }
 
             return new ExecutionResult.Success();
