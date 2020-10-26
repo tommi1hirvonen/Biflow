@@ -290,6 +290,9 @@
             var container = document.getElementById('steps_graph');
 
             var options = {
+                order: function (a, b) {
+                    return b.start - a.start;
+                },
                 editable: false
             };
 
