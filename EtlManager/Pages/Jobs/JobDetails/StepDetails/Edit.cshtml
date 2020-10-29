@@ -204,7 +204,7 @@
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/cpu.svg")))
                                 </div>
                             </div>
-                            <select asp-for="Step.DataFactoryId" class="form-control">
+                            <select asp-for="Step.DataFactoryId" class="form-control" id="data_factory_input">
                                 @foreach (var df in Model.DataFactories)
                                 {
                                     <option value="@df.DataFactoryId">@df.DataFactoryName</option>
@@ -223,7 +223,7 @@
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                                 </div>
                             </div>
-                            <select asp-for="Step.JobToExecuteId" class="form-control">
+                            <select asp-for="Step.JobToExecuteId" class="form-control" id="job_input">
                                 @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
                                 {
                                     <option value="@job.JobId">@job.JobName</option>
@@ -242,7 +242,8 @@
 
                 <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
                 <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
-                <text id="pipeline_error" class="text-danger" style="display: none;">Pipeline name cannot be empty</text>
+                <text id="pipeline_error" class="text-danger" style="display: none;">Pipeline name and Data Factory cannot be empty</text>
+                <text id="job_error" class="text-danger" style="display: none;">Job cannot be empty</text>
 
                 <div class="form-group form-check ssis-type-input" id="32_bit_mode_div" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
                     <label class="form-check-label">
@@ -410,14 +411,19 @@
             var project = document.getElementById('project_input').value;
             var package = document.getElementById('package_input').value;
             var pipeline = document.getElementById('pipeline_input').value;
+            var dataFactory = document.getElementById('data_factory_input').value;
+            var job = document.getElementById('job_input').value;
             if (stepType == "SQL" && sql.length == 0) {
                 $('#sql_error').show();
                 return false;
             } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
                 $('#ssis_error').show();
                 return false;
-            } else if (stepType == "PIPELINE" && pipeline.length == 0) {
+            } else if (stepType == "PIPELINE" && (pipeline.length == 0 || dataFactory.length == 0)) {
                 $('#pipeline_error').show();
+                return false;
+            } else if (stepType == "JOB" && job.length == 0) {
+                $('#job_error').show();
                 return false;
             }
             return true;
@@ -438,6 +444,7 @@
         $('#ssis_error').hide();
         $('#sql_error').hide();
         $('#pipeline_error').hide();
+        $('#job_error').hide();
     }
 
     var parameterCount = @Model.Parameters.Count;
