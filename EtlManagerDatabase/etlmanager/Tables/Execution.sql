@@ -15,7 +15,7 @@
     [ExecutionInMinutes]        AS                  datediff(minute,[StartDateTime],isnull([EndDateTime],getdate())),
     [ExecutionPhase]            INT                 NOT NULL,
     [DependencyMode]            BIT                 NOT NULL,
-    [StepType]                  VARCHAR (4)         NOT NULL,
+    [StepType]                  VARCHAR (20)         NOT NULL,
     [SqlStatement]              NVARCHAR (MAX)      NULL,
     [PackageServerName]         NVARCHAR(50)        NULL,
     [PackageFolderName]         NVARCHAR(128)       NULL,
@@ -23,6 +23,8 @@
     [PackageName]               NVARCHAR(260)       NULL,
     [ExecuteIn32BitMode]        BIT                 NOT NULL,
     [PackageOperationId]        BIGINT              NULL,
+    [DataFactoryId]             UNIQUEIDENTIFIER    NULL,
+    [PipelineName]              NVARCHAR(250)       NULL,
     [JobToExecuteId]            UNIQUEIDENTIFIER    NULL,
     [JobExecuteSynchronized]    BIT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
@@ -32,6 +34,6 @@
     [ScheduleId]                UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]         INT                 NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
-    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB')
+    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE')
 );
 

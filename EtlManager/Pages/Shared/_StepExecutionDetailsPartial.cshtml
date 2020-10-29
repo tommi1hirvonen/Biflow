@@ -118,4 +118,19 @@
             @Html.DisplayFor(model => Model.ExecuteIn32BitMode)
         </dd>
     }
+    else if (Model.StepType == "PIPELINE")
+    {
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => Model.PipelineName)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => Model.PipelineName)
+        </dd>
+        <dt class="col-sm-3">
+            @Html.DisplayNameFor(model => Model.DataFactoryId)
+        </dt>
+        <dd class="col-sm-9">
+            @Html.DisplayFor(model => Model.DataFactoryId)
+        </dd>
+    }
 </dl>

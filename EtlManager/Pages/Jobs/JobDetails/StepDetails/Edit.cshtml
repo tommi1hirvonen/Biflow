@@ -87,6 +87,7 @@
                             <select asp-for="Step.StepType" class="form-control" id="step_type" onchange="stepTypeSelected()">
                                 <option>SQL</option>
                                 <option>SSIS</option>
+                                <option>PIPELINE</option>
                                 <option>JOB</option>
                             </select>
                         </div>
@@ -182,6 +183,37 @@
                     </div>
                 </div>
 
+                <div class="form-row pipeline-type-input" style="@(Model.Step.StepType == "PIPELINE" ? null : "display: none;")">
+                    <div class="form-group col-md">
+                        <label asp-for="Step.PipelineName" class="control-label"></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
+                                </div>
+                            </div>
+                            <input asp-for="Step.PipelineName" id="pipeline_input" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Step.PipelineName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group col-md">
+                        <label>Data Factory</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/cpu.svg")))
+                                </div>
+                            </div>
+                            <select asp-for="Step.DataFactoryId" class="form-control">
+                                @foreach (var df in Model.DataFactories)
+                                {
+                                    <option value="@df.DataFactoryId">@df.DataFactoryName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-row job-type-input" style="@(Model.Step.StepType == "JOB" ? null : "display: none;")">
                     <div class="form-group">
                         <label>Job</label>
@@ -210,6 +242,7 @@
 
                 <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
                 <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
+                <text id="pipeline_error" class="text-danger" style="display: none;">Pipeline name cannot be empty</text>
 
                 <div class="form-group form-check ssis-type-input" id="32_bit_mode_div" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
                     <label class="form-check-label">
@@ -329,14 +362,22 @@
             $('.sql-type-input').show();
             $('.ssis-type-input').hide();
             $('.job-type-input').hide();
+            $('.pipeline-type-input').hide();
         } else if (stepType == "SSIS") {
             $('.sql-type-input').hide();
             $('.ssis-type-input').show();
             $('.job-type-input').hide();
+            $('.pipeline-type-input').hide();
         } else if (stepType == "JOB") {
             $('.sql-type-input').hide();
             $('.ssis-type-input').hide();
             $('.job-type-input').show();
+            $('.pipeline-type-input').hide();
+        } else if (stepType == "PIPELINE") {
+            $('.sql-type-input').hide();
+            $('.ssis-type-input').hide();
+            $('.job-type-input').hide();
+            $('.pipeline-type-input').show();
         }
     }
 
@@ -368,11 +409,15 @@
             var folder = document.getElementById('folder_input').value;
             var project = document.getElementById('project_input').value;
             var package = document.getElementById('package_input').value;
+            var pipeline = document.getElementById('pipeline_input').value;
             if (stepType == "SQL" && sql.length == 0) {
                 $('#sql_error').show();
                 return false;
             } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
                 $('#ssis_error').show();
+                return false;
+            } else if (stepType == "PIPELINE" && pipeline.length == 0) {
+                $('#pipeline_error').show();
                 return false;
             }
             return true;
@@ -386,11 +431,13 @@
         $('#folder_input').on('input', function () { hideErrors(); });
         $('#project_input').on('input', function () { hideErrors(); });
         $('#package_input').on('input', function () { hideErrors(); });
+        $('#pipeline_input').on('input', function () { hideErrors(); });
     });
 
     function hideErrors() {
         $('#ssis_error').hide();
         $('#sql_error').hide();
+        $('#pipeline_error').hide();
     }
 
     var parameterCount = @Model.Parameters.Count;

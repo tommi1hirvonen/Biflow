@@ -28,6 +28,7 @@ namespace EtlManager.Data
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<RoleUser> EditableUsers { get; set; }
+        public DbSet<DataFactory> DataFactories { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
 
@@ -89,6 +90,10 @@ namespace EtlManager.Data
                 .WithOne(subscription => subscription.User);
             modelBuilder.Entity<RoleUser>()
                 .ToView("vUser");
+            modelBuilder.Entity<DataFactory>()
+                .ToTable("DataFactory")
+                .HasMany(df => df.Steps)
+                .WithOne(step => step.DataFactory);
         }
 
         

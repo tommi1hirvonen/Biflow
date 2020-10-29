@@ -60,6 +60,13 @@ namespace EtlManager.Models
         [Display(Name = "Synchronized")]
         public bool JobExecuteSynchronized { get; set; }
 
+
+        public Guid? DataFactoryId { get; set; }
+        
+        [MaxLength(250)]
+        [Display(Name = "Pipeline name")]
+        public string PipelineName { get; set; }
+
         [Required]
         [DataType(DataType.DateTime)]
         [Display(Name = "Created")]
@@ -93,5 +100,7 @@ namespace EtlManager.Models
         public ICollection<Dependency> Dependencies { get; set; }
 
         public IList<Parameter> Parameters { get; set; }
+
+        public DataFactory DataFactory { get; set; }
     }
 }

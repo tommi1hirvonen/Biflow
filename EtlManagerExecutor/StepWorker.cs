@@ -6,8 +6,10 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -29,6 +31,9 @@ namespace EtlManagerExecutor
         private string PackageProjectName { get; set; }
         private string PackageName { get; set; }
         private bool ExecuteIn32BitMode { get; set; } = false;
+
+        private string DataFactoryId { get; set; }
+        private string PipelineName { get; set; }
 
         private string JobToExecuteId { get; set; }
         private bool JobExecuteSynchronized { get; set; } = false;
@@ -59,7 +64,7 @@ namespace EtlManagerExecutor
             {
                 SqlCommand sqlCommand = new SqlCommand(
                     @"SELECT TOP 1 StepType, SqlStatement, PackageServerName, PackageFolderName, PackageProjectName, PackageName,
-                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes
+                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, DataFactoryId, PipelineName
                     FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
@@ -88,6 +93,11 @@ namespace EtlManagerExecutor
                         {
                             JobToExecuteId = reader["JobToExecuteId"].ToString();
                             JobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
+                        }
+                        else if (stepType == "PIPELINE")
+                        {
+                            DataFactoryId = reader["DataFactoryId"].ToString();
+                            PipelineName = reader["PipelineName"].ToString();
                         }
                         RetryAttempts = (int)reader["RetryAttempts"];
                         RetryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
@@ -164,6 +174,10 @@ namespace EtlManagerExecutor
                 else if (stepType == "JOB")
                 {
                     executionResult = StartJobExecution();
+                }
+                else if (stepType == "PIPELINE")
+                {
+                    executionResult = StartPipelineExecution();
                 }
                 else
                 {
@@ -477,6 +491,20 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
+        private ExecutionResult StartPipelineExecution()
+        {
+            try
+            {
+                var pipelineExecution = new PipelineExecution(EtlManagerConnectionString, DataFactoryId, PipelineName);
+                var result = pipelineExecution.Run();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return new ExecutionResult.Failure("Error during pipeline execution: " + ex.Message);
+            }
+        }
+
         private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)
         {
             InfoMessageBuilder.AppendLine(e.Message);
@@ -489,16 +517,5 @@ namespace EtlManagerExecutor
 
     }
 
-    public abstract class ExecutionResult
-    {
-        public class Success : ExecutionResult { }
-        public class Failure : ExecutionResult
-        {
-            public string ErrorMessage { get; } = string.Empty;
-            public Failure(string errorMessage)
-            {
-                ErrorMessage = errorMessage;
-            }
-        }
-    }
+    
 }

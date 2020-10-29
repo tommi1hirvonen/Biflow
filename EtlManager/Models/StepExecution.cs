@@ -46,6 +46,12 @@ namespace EtlManager.Models
         [Display(Name = "Synchronized")]
         public bool? JobExecuteSynchronized { get; set; }
 
+        [Display(Name = "Pipeline name")]
+        public string PipelineName { get; set; }
+
+        [Display(Name = "Data Factory id")]
+        public Guid? DataFactoryId { get; set; }
+
         public int RetryAttemptIndex { get; set; }
 
         public int RetryAttempts { get; set; }

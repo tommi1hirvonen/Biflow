@@ -3,13 +3,15 @@
     [StepId]                    UNIQUEIDENTIFIER NOT NULL,
     [StepName]                  NVARCHAR(250)    NOT NULL,
     [ExecutionPhase]            INT              NOT NULL,
-    [StepType]                  VARCHAR (4)      NOT NULL,
+    [StepType]                  VARCHAR (20)      NOT NULL,
     [SqlStatement]              NVARCHAR (MAX)   NULL,
     [PackageServerName]         NVARCHAR(50)     NULL,
     [PackageFolderName]         NVARCHAR(128)    NULL,
     [PackageProjectName]        NVARCHAR(128)    NULL,
     [PackageName]               NVARCHAR(260)    NULL,
     [ExecuteIn32BitMode]        BIT              CONSTRAINT [DF_Step_ExecuteIn32BitMode] DEFAULT (0) NOT NULL,
+    [DataFactoryId]             UNIQUEIDENTIFIER CONSTRAINT [FK_Step_DataFactory] FOREIGN KEY REFERENCES etlmanager.DataFactory ([DataFactoryId]) NULL,
+    [PipelineName]              NVARCHAR(250)   NULL,
     [JobToExecuteId]            UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_JobToExecute] FOREIGN KEY REFERENCES [etlmanager].[Job] ([JobId]),
     [JobExecuteSynchronized]    BIT              CONSTRAINT [DF_Step_JobExecuteSynchronized] DEFAULT(0) NOT NULL,
     [IsEnabled]                 BIT              CONSTRAINT [DF_Step_IsEnabled] DEFAULT (1) NOT NULL,
@@ -21,7 +23,9 @@
     [LastModifiedBy]            NVARCHAR(250)    NULL,
     CONSTRAINT [PK_Step] PRIMARY KEY CLUSTERED ([StepId] ASC),
     CONSTRAINT [CK_Step_StepType] CHECK ([StepType]='SSIS' AND [PackageServerName] IS NOT NULL AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL
-        OR [StepType]='SQL' AND [SqlStatement] IS NOT NULL OR [StepType]='JOB' AND [JobToExecuteId] IS NOT NULL AND [JobExecuteSynchronized] IS NOT NULL),
+        OR [StepType]='SQL' AND [SqlStatement] IS NOT NULL
+        OR [StepType]='JOB' AND [JobToExecuteId] IS NOT NULL AND [JobExecuteSynchronized] IS NOT NULL
+        OR [StepType]='PIPELINE' AND [DataFactoryId] IS NOT NULL AND [PipelineName] IS NOT NULL),
     CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)
 );
 

@@ -27,6 +27,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
         public Step Step { get; set; }
 
         public IList<Job> Jobs { get; set; }
+        public IList<DataFactory> DataFactories { get; set; }
         public Job Job { get; set; }
 
         [BindProperty]
@@ -43,6 +44,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
             }
 
             Step = await _context.Steps
+                .Include(step => step.DataFactory)
                 .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
                 .ThenInclude(dependency => dependency.DependantOnStep)
@@ -50,6 +52,8 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
 
             Jobs = await _context.Jobs.AsNoTracking().OrderBy(job => job.JobName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Steps).AsNoTracking().FirstOrDefaultAsync(job => job.JobId == Step.JobId);
+
+            DataFactories = await _context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
 
             Parameters = Step.Parameters.Select(parameter => new ParameterEdit(parameter)).ToList();
 
