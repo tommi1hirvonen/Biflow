@@ -1,4 +1,8 @@
-﻿using Serilog;
+﻿using Microsoft.Azure.Management.DataFactory;
+using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Rest;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -69,113 +73,72 @@ namespace EtlManagerExecutor
             // Check if the current access token is valid and get a new one if not.
             CheckAccessTokenValidity(tenantId, clientId, clientSecret);
 
-            // Create and start the pipeline execution.
-            string runId;
+            var credentials = new TokenCredentials(AccessToken);
+            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = subscriptionId };
+
+            CreateRunResponse createRunResponse;
             try
             {
-                using HttpClient httpClient = new HttpClient();
-                httpClient.BaseAddress = new Uri("https://management.azure.com");
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
-                var result = httpClient.PostAsync("/subscriptions/" + subscriptionId +
-                    "/resourceGroups/" + resourceGroupName + "/providers/Microsoft.DataFactory/factories/" + dataFactoryName +
-                    "/pipelines/" + PipelineName + "/createRun?api-version=2018-06-01", null).Result;
-                if (result.IsSuccessStatusCode)
-                {
-                    string resultContent = result.Content.ReadAsStringAsync().Result;
-                    var json = JsonSerializer.Deserialize<object>(resultContent) as JsonElement?;
-                    runId = json.Value.GetProperty("runId").GetString();
-                }
-                else
-                {
-                    return new ExecutionResult.Failure("Error starting pipeline execution: " + result.ReasonPhrase);
-                }
+                createRunResponse = client.Pipelines.CreateRun(resourceGroupName, dataFactoryName, PipelineName);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error starting pipeline {PipelineName} for Data Factory id {DataFactoryId}", PipelineName, DataFactoryId);
+                Log.Error(ex, "Error creating pipeline for Data Factory id {DataFactoryId} and pipeline {PipelineName}", DataFactoryId, PipelineName);
                 throw ex;
             }
 
-            // Loop and query the status until the pipeline has completed (end datetime is available).
-            string runEnd = null;
-            while (runEnd == null)
-            {
-                // During long running pipelines the access token may be expired. Check the token validity again.
-                CheckAccessTokenValidity(tenantId, clientId, clientSecret);
+            string runId = createRunResponse.RunId;
 
-                string status;
-                string message;
+            PipelineRun pipelineRun;
+            while (true)
+            {
+                if (!CheckAccessTokenValidity(tenantId, clientId, clientSecret))
+                {
+                    credentials = new TokenCredentials(AccessToken);
+                    client = new DataFactoryManagementClient(credentials) { SubscriptionId = subscriptionId };
+                }
+
                 try
                 {
-                    using HttpClient httpClient = new HttpClient
-                    {
-                        BaseAddress = new Uri("https://management.azure.com")
-                    };
-                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken);
-                    var result = httpClient.GetAsync("/subscriptions/" + subscriptionId +
-                        "/resourceGroups/" + resourceGroupName + "/providers/Microsoft.DataFactory/factories/" + dataFactoryName +
-                        "/pipelineruns/" + runId + "?api-version=2018-06-01").Result;
-                    if (result.IsSuccessStatusCode)
-                    {
-                        string resultContent = result.Content.ReadAsStringAsync().Result;
-                        var json = JsonSerializer.Deserialize<object>(resultContent) as JsonElement?;
-                        runEnd = json.Value.GetProperty("runEnd").GetString();
-                        status = json.Value.GetProperty("status").GetString();
-                        message = json.Value.GetProperty("message").GetString();
-                    }
-                    else
-                    {
-                        return new ExecutionResult.Failure("Error getting pipeline status: " + result.ReasonPhrase);
-                    }
+                    pipelineRun = client.PipelineRuns.Get(resourceGroupName, dataFactoryName, runId);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting pipeline {PipelineName} status for Data Factory id {DataFactoryId}", PipelineName, DataFactoryId);
-                    return new ExecutionResult.Failure("Error getting pipeline status: " + ex.Message);
+                    Log.Error(ex, "Error getting pipeline run status for Data Factory id {DataFactoryId}, pipeline {PipelineName}, run id {runId}", DataFactoryId, PipelineName, runId);
+                    throw ex;
                 }
 
-                if (runEnd != null)
+                if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                 {
-                    if (status == "Succeeded")
-                    {
-                        return new ExecutionResult.Success();
-                    }
-                    else
-                    {
-                        return new ExecutionResult.Failure(message);
-                    }
+                    Thread.Sleep(5000);
                 }
-
-                Thread.Sleep(5000);
+                else
+                {
+                    break;
+                }
             }
 
-            return new ExecutionResult.Failure("Pipeline execution finished but no status information was fetched");
+            if (pipelineRun.Status == "Succeeded")
+            {
+                return new ExecutionResult.Success();
+            }
+            else
+            {
+                return new ExecutionResult.Failure(pipelineRun.Message);
+            }
         }
 
-        private void CheckAccessTokenValidity(string tenantId, string clientId, string clientSecret)
+        private bool CheckAccessTokenValidity(string tenantId, string clientId, string clientSecret)
         {
             if (AccessTokenExpiresOn == null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
-                string expiresOnUnixTimestamp;
                 try
                 {
-                    using HttpClient httpClient = new HttpClient
-                    {
-                        BaseAddress = new Uri("https://login.microsoftonline.com")
-                    };
-                    var content = new FormUrlEncodedContent(new[]
-                    {
-                        new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                        new KeyValuePair<string, string>("client_id", clientId),
-                        new KeyValuePair<string, string>("client_secret", clientSecret),
-                        new KeyValuePair<string, string>("resource", "https://management.azure.com/")
-                    });
-
-                    var result = httpClient.PostAsync("/" + tenantId + "/oauth2/token", content).Result;
-                    string resultContent = result.Content.ReadAsStringAsync().Result;
-                    var json = JsonSerializer.Deserialize<object>(resultContent) as JsonElement?;
-                    AccessToken = json.Value.GetProperty("access_token").GetString();
-                    expiresOnUnixTimestamp = json.Value.GetProperty("expires_on").GetString();
+                    var context = new AuthenticationContext("https://login.microsoftonline.com/" + tenantId);
+                    var clientCredential = new ClientCredential(clientId, clientSecret);
+                    var result = context.AcquireTokenAsync("https://management.azure.com/", clientCredential).Result;
+                    AccessToken = result.AccessToken;
+                    AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
                 catch (Exception ex)
                 {
@@ -183,9 +146,7 @@ namespace EtlManagerExecutor
                     throw ex;
                 }
 
-                DateTime unixBase = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-                AccessTokenExpiresOn = unixBase.AddSeconds(long.Parse(expiresOnUnixTimestamp)).ToLocalTime();
-
+                // Update the token and its expiration time to the database for later use.
                 try
                 {
                     using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
@@ -205,6 +166,11 @@ namespace EtlManagerExecutor
                     Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
                     throw ex;
                 }
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
 
