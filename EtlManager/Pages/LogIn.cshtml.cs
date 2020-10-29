@@ -47,9 +47,9 @@ namespace EtlManager.Pages
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.Write(ex);
+                ModelState.AddModelError(string.Empty, "Login error");
             }
 
             return Page();

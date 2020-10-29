@@ -264,9 +264,15 @@ namespace EtlManager
             sqlCommand.Parameters.AddWithValue("@Password_", password);
 
             sqlConnection.Open();
-            string role = (string)sqlCommand.ExecuteScalar();
-
-            return new AuthenticationResult(role);
+            object result = sqlCommand.ExecuteScalar();
+            if (result is string role)
+            {
+                return new AuthenticationResult(role);
+            }
+            else
+            {
+                return new AuthenticationResult(null);
+            }
         }
 
         public static bool UpdatePassword(IConfiguration configuration, string username, string password)
