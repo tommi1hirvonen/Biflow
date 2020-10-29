@@ -18,15 +18,21 @@ namespace EtlManager.Models
         
         [Required]
         [Display(Name = "Tenant id")]
-        public Guid TenantId { get; set; }
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string TenantId { get; set; }
        
         [Required]
         [Display(Name = "Subscription id")]
-        public Guid SubscriptionId { get; set; }
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string SubscriptionId { get; set; }
        
         [Required]
         [Display(Name = "Client id")]
-        public Guid ClientId { get; set; }
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string ClientId { get; set; }
         
         [Required]
         [Display(Name = "Client secret")]

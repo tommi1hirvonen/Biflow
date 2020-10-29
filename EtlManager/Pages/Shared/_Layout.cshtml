@@ -91,6 +91,15 @@
                                     </a>
                                 </li>
                             }
+                            @if ((await AuthorizationService.AuthorizeAsync(User, "RequireEditor")).Succeeded)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(pageRoute.Left(8) == "/Settings" ? "active" : "")" asp-page="/Settings/DataFactories">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
+                                        Settings
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item mt-3">
                                 <form method="post">
                                     <a class="nav-link" asp-page="/LogOut">
