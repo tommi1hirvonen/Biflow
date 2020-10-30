@@ -352,7 +352,28 @@
                                         <span asp-validation-for="NewStep.RetryIntervalMinutes" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="form-group sql-type-input" id="sql_statement_div">
+
+                                <div class="form-row sql-type-input ssis-type-input">
+                                    <div class="form-group col-lg-6">
+                                        <label>Connection</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                                </div>
+                                            </div>
+                                            <select asp-for="NewStep.ConnectionId" class="form-control" id="connection_input">
+                                                @foreach (var connection in Model.Connections)
+                                                {
+                                                    <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+
+                                <div class="form-group sql-type-input">
                                     <label asp-for="NewStep.SqlStatement" class="control-label"></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
@@ -365,18 +386,6 @@
                                     <span asp-validation-for="NewStep.SqlStatement" class="text-danger"></span>
                                 </div>
                                 <div class="form-row ssis-type-input">
-                                    <div class="form-group col" id="server_div">
-                                        <label asp-for="NewStep.PackageServerName" class="control-label"></label>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <div class="input-group-text">
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
-                                                </div>
-                                            </div>
-                                            <input asp-for="NewStep.PackageServerName" id="server_input" class="form-control" />
-                                        </div>
-                                        <span asp-validation-for="NewStep.PackageServerName" class="text-danger"></span>
-                                    </div>
                                     <div class="form-group col" id="folder_div">
                                         <label asp-for="NewStep.PackageFolderName" class="control-label"></label>
                                         <div class="input-group">
@@ -389,8 +398,6 @@
                                         </div>
                                         <span asp-validation-for="NewStep.PackageFolderName" class="text-danger"></span>
                                     </div>
-                                </div>
-                                <div class="form-row ssis-type-input">
                                     <div class="form-group col" id="project_div">
                                         <label asp-for="NewStep.PackageProjectName" class="control-label"></label>
                                         <div class="input-group">
@@ -403,6 +410,8 @@
                                         </div>
                                         <span asp-validation-for="NewStep.PackageProjectName" class="text-danger"></span>
                                     </div>
+                                </div>
+                                <div class="form-row ssis-type-input">
                                     <div class="form-group col" id="package_div">
                                         <label asp-for="NewStep.PackageName" class="control-label"></label>
                                         <div class="input-group">
@@ -479,8 +488,8 @@
                                     </div>
                                 </div>
 
-                                <text id="sql_error" class="text-danger" style="display: none;">SQL statement cannot be empty</text>
-                                <text id="ssis_error" class="text-danger" style="display: none;">Folder, project and package names cannot be empty</text>
+                                <text id="sql_error" class="text-danger" style="display: none;">SQL statement and connection cannot be empty</text>
+                                <text id="ssis_error" class="text-danger" style="display: none;">Connection, folder, project and package names cannot be empty</text>
                                 <text id="pipeline_error" class="text-danger" style="display: none;">Pipeline name and Data Factory cannot be empty</text>
                                 <text id="job_error" class="text-danger" style="display: none;">Job cannot be empty</text>
 
@@ -619,12 +628,6 @@
                         }
                         else if (item.StepType == "SSIS")
                         {
-                            <dt class="col-sm-3">
-                                @Html.DisplayNameFor(model => item.PackageServerName)
-                            </dt>
-                            <dd class="col-sm-9">
-                                @Html.DisplayFor(model => item.PackageServerName)
-                            </dd>
                             <dt class="col-sm-3">
                                 @Html.DisplayNameFor(model => item.PackageFolderName)
                             </dt>
@@ -860,10 +863,10 @@
         function stepTypeSelected() {
             var stepType = document.getElementById('step_type').value;
             if (stepType == "SQL") {
-                $('.sql-type-input').show();
                 $('.ssis-type-input').hide();
                 $('.job-type-input').hide();
                 $('.pipeline-type-input').hide();
+                $('.sql-type-input').show();
             } else if (stepType == "SSIS") {
                 $('.sql-type-input').hide();
                 $('.ssis-type-input').show();
@@ -888,17 +891,17 @@
             $("#button_submit").click(function () {
                 var stepType = document.getElementById('step_type').value;
                 var sql = document.getElementById('sql_input').value;
-                var server = document.getElementById('server_input').value;
                 var folder = document.getElementById('folder_input').value;
                 var project = document.getElementById('project_input').value;
                 var package = document.getElementById('package_input').value;
                 var pipeline = document.getElementById('pipeline_input').value;
                 var dataFactory = document.getElementById('data_factory_input').value;
                 var job = document.getElementById('job_input').value;
-                if (stepType == "SQL" && sql.length == 0) {
+                var connection = document.getElementById('connection_input').value;
+                if (stepType == "SQL" && (sql.length == 0 || connection.length == 0)) {
                     $('#sql_error').show();
                     return false;
-                } else if (stepType == "SSIS" && (server.length == 0 || folder.length == 0 || project.length == 0 || package.length == 0)) {
+                } else if (stepType == "SSIS" && (folder.length == 0 || project.length == 0 || package.length == 0 || connection.length == 0)) {
                     $('#ssis_error').show();
                     return false;
                 } else if (stepType == "PIPELINE" && (pipeline.length == 0 || dataFactory.length == 0)) {

@@ -86,6 +86,7 @@
     <Build Include="etlmanager\Stored Procedures\GetNotificationMessageBody.sql" />
     <Build Include="etlmanager\Stored Procedures\ExecutionStepCopy.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
+    <Build Include="etlmanager\Tables\Connection_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

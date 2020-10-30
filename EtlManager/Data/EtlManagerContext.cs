@@ -29,6 +29,7 @@ namespace EtlManager.Data
         public DbSet<User> Users { get; set; }
         public DbSet<RoleUser> EditableUsers { get; set; }
         public DbSet<DataFactory> DataFactories { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
 
@@ -94,6 +95,10 @@ namespace EtlManager.Data
                 .ToTable("DataFactory")
                 .HasMany(df => df.Steps)
                 .WithOne(step => step.DataFactory);
+            modelBuilder.Entity<Connection>()
+                .ToTable("Connection")
+                .HasMany(connection => connection.Steps)
+                .WithOne(step => step.Connection);
         }
 
         

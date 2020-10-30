@@ -148,9 +148,10 @@ namespace EtlManager
 
             List<Task> stopPackageTasks = new List<Task>();
             SqlCommand fetchPackageOperationIds = new SqlCommand(
-                @"SELECT PackageOperationId, PackageServerName
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
+                @"SELECT A.PackageOperationId, B.ConnectionString
+                FROM etlmanager.Execution AS A
+                    LEFT JOIN etlmanager.Connection AS B ON A.ConnectionId = B.ConnectionId
+                WHERE A.ExecutionId = @ExecutionId AND A.EndDateTime IS NULL AND A.PackageOperationId IS NOT NULL"
                 , sqlConnection);
             fetchPackageOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
             using (SqlDataReader packageOperationReader = await fetchPackageOperationIds.ExecuteReaderAsync())
@@ -158,10 +159,10 @@ namespace EtlManager
                 while (packageOperationReader.Read())
                 {
                     long packageOperationId = (long)packageOperationReader[0];
-                    string packageServerName = null;
-                    if (!packageOperationReader.IsDBNull(1)) packageServerName = (string)packageOperationReader[1];
+                    string packageConnectionString = null;
+                    if (!packageOperationReader.IsDBNull(1)) packageConnectionString = (string)packageOperationReader[1];
 
-                    stopPackageTasks.Add(StopPackage(packageServerName, packageOperationId));
+                    stopPackageTasks.Add(StopPackage(packageConnectionString, packageOperationId));
                 }
             }
             await Task.WhenAll(stopPackageTasks); // Wait for all stop commands to finish.
@@ -179,9 +180,9 @@ namespace EtlManager
             await updateStatuses.ExecuteNonQueryAsync();
         }
 
-        private async static Task StopPackage(string serverName, long operationId)
+        private async static Task StopPackage(string connectionString, long operationId)
         {
-            using SqlConnection sqlConnection = new SqlConnection("Data Source=" + serverName ?? "localhost"  + ";Initial Catalog=SSISDB;Integrated Security=SSPI;");
+            using SqlConnection sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
             SqlCommand stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
             stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", operationId);

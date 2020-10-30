@@ -10,13 +10,12 @@ namespace EtlManagerExecutor
     class PackageExecution
     {
         private readonly int pollingIntervalMs;
-        public string ServerName { get; set; }
+        public string ConnectionString { get; set; }
         public string FolderName { get; set; }
         public string ProjectName { get; set; }
         public string PackageName { get; set; }
         public bool ExecuteIn32BitMode { get; set; } = false;
         public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
-        private string ConnectionString { get; set; }
         public long OperationId { get; set; }
         public bool Completed { get; set; } = false;
         public bool Success { get; set; } = false;
@@ -25,14 +24,13 @@ namespace EtlManagerExecutor
 
         private int RefreshRetries { get; set; } = 0;
 
-        public PackageExecution(string serverName, string folderName, string projectName, string packageName, bool executeIn32BitMode, int pollingIntervalMs)
+        public PackageExecution(string connectionString, string folderName, string projectName, string packageName, bool executeIn32BitMode, int pollingIntervalMs)
         {
-            ServerName = serverName;
+            ConnectionString = connectionString;
             FolderName = folderName;
             ProjectName = projectName;
             PackageName = packageName;
             ExecuteIn32BitMode = executeIn32BitMode;
-            ConnectionString = @"Data Source=" + ServerName + ";Initial Catalog=SSISDB;Integrated Security=SSPI;";
             this.pollingIntervalMs = pollingIntervalMs;
         }
 

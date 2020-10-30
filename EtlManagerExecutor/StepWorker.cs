@@ -26,7 +26,8 @@ namespace EtlManagerExecutor
 
         private string SqlStatement { get; set; }
 
-        private string PackageServerName { get; set; }
+        private string ConnectionString { get; set; }
+
         private string PackageFolderName { get; set; }
         private string PackageProjectName { get; set; }
         private string PackageName { get; set; }
@@ -63,9 +64,10 @@ namespace EtlManagerExecutor
             using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
             {
                 SqlCommand sqlCommand = new SqlCommand(
-                    @"SELECT TOP 1 StepType, SqlStatement, PackageServerName, PackageFolderName, PackageProjectName, PackageName,
-                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, DataFactoryId, PipelineName
-                    FROM etlmanager.Execution
+                    @"SELECT TOP 1 A.StepType, A.SqlStatement, A.ConnectionId, B.ConnectionString, A.PackageFolderName, A.PackageProjectName, A.PackageName,
+                        A.ExecuteIn32BitMode, A.JobToExecuteId, A.JobExecuteSynchronized, A.RetryAttempts, A.RetryIntervalMinutes, A.DataFactoryId, A.PipelineName
+                    FROM etlmanager.Execution AS A
+                        LEFT JOIN etlmanager.Connection AS B ON A.ConnectionId = B.ConnectionId
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
@@ -80,10 +82,11 @@ namespace EtlManagerExecutor
                         if (stepType == "SQL")
                         {
                             SqlStatement = reader["SqlStatement"].ToString();
+                            ConnectionString = reader["ConnectionString"].ToString();
                         }
                         else if (stepType == "SSIS")
                         {
-                            PackageServerName = reader["PackageServerName"].ToString();
+                            ConnectionString = reader["ConnectionString"].ToString();
                             PackageFolderName = reader["PackageFolderName"].ToString();
                             PackageProjectName = reader["PackageProjectName"].ToString();
                             PackageName = reader["PackageName"].ToString();
@@ -292,7 +295,7 @@ namespace EtlManagerExecutor
 
             }
 
-            PackageExecution packageExecution = new PackageExecution(PackageServerName, PackageFolderName, PackageProjectName, PackageName, ExecuteIn32BitMode, PollingIntervalMs)
+            PackageExecution packageExecution = new PackageExecution(ConnectionString, PackageFolderName, PackageProjectName, PackageName, ExecuteIn32BitMode, PollingIntervalMs)
             {
                 Parameters = parameters
             };
@@ -373,7 +376,7 @@ namespace EtlManagerExecutor
             try
             {
                 Log.Information("{ExecutionId} {StepId} Starting SQL execution", ExecutionId, StepId);
-                using SqlConnection connection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection connection = new SqlConnection(ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 connection.OpenIfClosed();
                 SqlCommand sqlCommand = new SqlCommand(SqlStatement, connection) { CommandTimeout = 0 }; // CommandTimeout = 0 => wait indefinitely

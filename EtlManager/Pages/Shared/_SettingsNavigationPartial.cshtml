@@ -1,0 +1,18 @@
+﻿@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
+@{ string pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
+
+<ul class="nav nav-tabs mt-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("Connections") ? "active" : null)" asp-page="./Connections">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+            Connections
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("DataFactories") ? "active" : null)" asp-page="./DataFactories">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/cpu.svg")))
+            Data Factories
+        </a>
+    </li>
+</ul>

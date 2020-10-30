@@ -34,6 +34,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
         
         public IList<Job> Jobs { get; set; }
 
+        public IList<Connection> Connections { get; set; }
         public IList<DataFactory> DataFactories { get; set; }
 
         public bool Subscribed { get; set; }
@@ -52,6 +53,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
         {
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             DataFactories = await _context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
+            Connections = await _context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
             Job = await _context.Jobs.Include(job => job.Steps).ThenInclude(step => step.DataFactory).FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
             NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };

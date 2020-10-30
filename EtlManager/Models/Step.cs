@@ -34,9 +34,7 @@ namespace EtlManager.Models
         [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 
-        [MaxLength(50)]
-        [Display(Name = "Server name")]
-        public string PackageServerName { get; set; }
+        public Guid? ConnectionId { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Folder name")]
@@ -102,5 +100,7 @@ namespace EtlManager.Models
         public IList<Parameter> Parameters { get; set; }
 
         public DataFactory DataFactory { get; set; }
+
+        public Connection Connection { get; set; }
     }
 }

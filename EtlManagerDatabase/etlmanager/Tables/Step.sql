@@ -5,7 +5,7 @@
     [ExecutionPhase]            INT              NOT NULL,
     [StepType]                  VARCHAR (20)      NOT NULL,
     [SqlStatement]              NVARCHAR (MAX)   NULL,
-    [PackageServerName]         NVARCHAR(50)     NULL,
+    [ConnectionId]              UNIQUEIDENTIFIER CONSTRAINT [FK_Step_Connection] FOREIGN KEY REFERENCES etlmanager.Connection ([ConnectionId]) NULL,
     [PackageFolderName]         NVARCHAR(128)    NULL,
     [PackageProjectName]        NVARCHAR(128)    NULL,
     [PackageName]               NVARCHAR(260)    NULL,
@@ -22,8 +22,8 @@
     [LastModifiedDateTime]      DATETIME2 (7)    NOT NULL,
     [LastModifiedBy]            NVARCHAR(250)    NULL,
     CONSTRAINT [PK_Step] PRIMARY KEY CLUSTERED ([StepId] ASC),
-    CONSTRAINT [CK_Step_StepType] CHECK ([StepType]='SSIS' AND [PackageServerName] IS NOT NULL AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL
-        OR [StepType]='SQL' AND [SqlStatement] IS NOT NULL
+    CONSTRAINT [CK_Step_StepType] CHECK ([StepType]='SSIS' AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL AND [ConnectionId] IS NOT NULL
+        OR [StepType]='SQL' AND [SqlStatement] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='JOB' AND [JobToExecuteId] IS NOT NULL AND [JobExecuteSynchronized] IS NOT NULL
         OR [StepType]='PIPELINE' AND [DataFactoryId] IS NOT NULL AND [PipelineName] IS NOT NULL),
     CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)

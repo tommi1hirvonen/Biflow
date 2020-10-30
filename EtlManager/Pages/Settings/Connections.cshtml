@@ -1,0 +1,179 @@
+﻿@page
+@model EtlManager.Pages.Settings.ConnectionsModel
+@using Microsoft.AspNetCore.Hosting
+@inject IWebHostEnvironment WebHostEnvironment
+@{
+    ViewData["Title"] = "Connections";
+}
+
+<h3>Settings</h3>
+<hr />
+<partial name="_SettingsNavigationPartial" />
+<p></p>
+
+<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modal_create">
+    New connection
+</button>
+<p></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Connection string
+            </th>
+            <th>
+
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var connection in Model.Connections)
+        {
+            <tr>
+                <td>
+                    @connection.ConnectionName
+                </td>
+                <td>
+                    @connection.ConnectionString
+                </td>
+                <td>
+                    <form method="post">
+                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@connection.ConnectionId">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                        </button>
+                        <div class="btn-group ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@connection.ConnectionId">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
+@*NEW DATA FACTORY MODAL*@
+<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" autocomplete="off">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">New connection</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col mx-3">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                            <div class="form-group">
+                                <label asp-for="NewConnection.ConnectionName" class="control-label"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="NewConnection.ConnectionName" class="form-control" />
+                                </div>
+                                <span asp-validation-for="NewConnection.ConnectionName" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="NewConnection.ConnectionString" class="control-label"></label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                        </div>
+                                    </div>
+                                    <input asp-for="NewConnection.ConnectionString" class="form-control" />
+                                </div>
+                                <span asp-validation-for="NewConnection.ConnectionString" class="text-danger"></span>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@*GENERATE EDIT MODALS*@
+@foreach (var item in Model.Connections)
+{
+    <div class="modal fade" id="modal_edit_@item.ConnectionId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post" autocomplete="off">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col mx-3">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input type="hidden" asp-for="EditConnection.ConnectionId" value="@item.ConnectionId" />
+
+                                <div class="form-group">
+                                    <label asp-for="EditConnection.ConnectionName" class="control-label"></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="EditConnection.ConnectionName" value="@item.ConnectionName" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="EditConnection.ConnectionName" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label asp-for="EditConnection.ConnectionString" class="control-label"></label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                            </div>
+                                        </div>
+                                        <input asp-for="EditConnection.ConnectionString" value="@item.ConnectionString" class="form-control" />
+                                    </div>
+                                    <span asp-validation-for="EditConnection.ConnectionString" class="text-danger"></span>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

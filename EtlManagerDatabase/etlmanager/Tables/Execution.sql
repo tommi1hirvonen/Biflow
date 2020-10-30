@@ -17,7 +17,7 @@
     [DependencyMode]            BIT                 NOT NULL,
     [StepType]                  VARCHAR (20)         NOT NULL,
     [SqlStatement]              NVARCHAR (MAX)      NULL,
-    [PackageServerName]         NVARCHAR(50)        NULL,
+    [ConnectionId]              UNIQUEIDENTIFIER    NULL,
     [PackageFolderName]         NVARCHAR(128)       NULL,
     [PackageProjectName]        NVARCHAR(128)       NULL,
     [PackageName]               NVARCHAR(260)       NULL,
