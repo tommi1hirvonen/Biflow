@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Settings
 {
+    [Authorize(Policy = "RequireAdmin")]
     public class ConnectionsModel : PageModel
     {
         private readonly EtlManagerContext context;
@@ -35,12 +36,6 @@ namespace EtlManager.Pages.Settings
 
         public async Task<IActionResult> OnPostCreate([Bind("ConnectionId", "ConnectionName", "ConnectionString")] Connection NewConnection)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./Connections");
@@ -53,12 +48,6 @@ namespace EtlManager.Pages.Settings
 
         public async Task<IActionResult> OnPostEdit([Bind("ConnectionId", "ConnectionName", "ConnectionString")] Connection EditConnection)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./Connections");
@@ -72,12 +61,6 @@ namespace EtlManager.Pages.Settings
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (id == null) return NotFound();
 
             Connection connection = await context.Connections.FindAsync(id);

@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Pages.Settings
 {
+    [Authorize(Policy = "RequireAdmin")]
     public class DataFactoriesModel : PageModel
     {
         private readonly EtlManagerContext context;
@@ -37,12 +38,6 @@ namespace EtlManager.Pages.Settings
         public async Task<IActionResult> OnPostCreate([Bind("DataFactoryId", "DataFactoryName", "TenantId", "SubscriptionId",
             "ClientId", "ClientSecret", "ResourceGroupName", "ResourceName")] DataFactory NewDataFactory)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./DataFactories");
@@ -56,12 +51,6 @@ namespace EtlManager.Pages.Settings
         public async Task<IActionResult> OnPostEdit([Bind("DataFactoryId", "DataFactoryName", "TenantId", "SubscriptionId",
             "ClientId", "ClientSecret", "ResourceGroupName", "ResourceName")] DataFactory EditDataFactory)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./DataFactories");
@@ -75,12 +64,6 @@ namespace EtlManager.Pages.Settings
 
         public async Task<IActionResult> OnPostDelete(Guid id)
         {
-            var authorized = await authorizationService.AuthorizeAsync(User, "RequireEditor");
-            if (!authorized.Succeeded)
-            {
-                return Forbid();
-            }
-
             if (id == null) return NotFound();
 
             DataFactory dataFactory = await context.DataFactories.FindAsync(id);

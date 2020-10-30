@@ -4,6 +4,12 @@
 
 <ul class="nav nav-tabs mt-3" role="tablist">
     <li class="nav-item" role="presentation">
+        <a class="nav-link @(pageRoute.Contains("Users") ? "active" : null)" asp-page="./Users">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+            Users
+        </a>
+    </li>
+    <li class="nav-item" role="presentation">
         <a class="nav-link @(pageRoute.Contains("Connections") ? "active" : null)" asp-page="./Connections">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
             Connections

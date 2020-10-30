@@ -85,16 +85,7 @@
                             @if ((await AuthorizationService.AuthorizeAsync(User, "RequireAdmin")).Succeeded)
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link @(pageRoute.Left(8) == "/Users" ? "active" : "")" asp-page="/Users">
-                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
-                                        Users
-                                    </a>
-                                </li>
-                            }
-                            @if ((await AuthorizationService.AuthorizeAsync(User, "RequireEditor")).Succeeded)
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link @(pageRoute.Left(9) == "/Settings" ? "active" : "")" asp-page="/Settings/Connections">
+                                    <a class="nav-link @(pageRoute.Left(9) == "/Settings" ? "active" : "")" asp-page="/Settings/Users">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                                         Settings
                                     </a>
