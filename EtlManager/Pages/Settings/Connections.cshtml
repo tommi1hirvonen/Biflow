@@ -38,7 +38,7 @@
                     @connection.ConnectionName
                 </td>
                 <td>
-                    @connection.ConnectionString
+                    <pre><code>@connection.ConnectionString</code></pre>
                 </td>
                 <td>
                     <form method="post">
@@ -61,7 +61,7 @@
 </table>
 
 
-@*NEW DATA FACTORY MODAL*@
+@*NEW CONNECTION MODAL*@
 <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -98,7 +98,7 @@
                                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                                         </div>
                                     </div>
-                                    <input asp-for="NewConnection.ConnectionString" class="form-control" />
+                                    <input asp-for="NewConnection.ConnectionString" style="font-family:monospace;" class="form-control" />
                                 </div>
                                 <span asp-validation-for="NewConnection.ConnectionString" class="text-danger"></span>
                             </div>
@@ -155,7 +155,7 @@
                                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                                             </div>
                                         </div>
-                                        <input asp-for="EditConnection.ConnectionString" value="@item.ConnectionString" class="form-control" />
+                                        <input asp-for="EditConnection.ConnectionString" value="@item.ConnectionString" style="font-family:monospace;" class="form-control" />
                                     </div>
                                     <span asp-validation-for="EditConnection.ConnectionString" class="text-danger"></span>
                                 </div>
