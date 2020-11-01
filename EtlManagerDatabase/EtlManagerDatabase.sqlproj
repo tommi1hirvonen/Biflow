@@ -63,6 +63,7 @@
     <Folder Include="etlmanager\Views\" />
     <Folder Include="etlmanager\Stored Procedures\" />
     <Folder Include="Security\" />
+    <Folder Include="etlmanager\Functions" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="etlmanager\Tables\Execution.sql" />
@@ -87,6 +88,9 @@
     <Build Include="etlmanager\Stored Procedures\ExecutionStepCopy.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
     <Build Include="etlmanager\Tables\Connection.sql" />
+    <Build Include="etlmanager\Functions\GetConnectionStringDecrypted.sql" />
+    <Build Include="etlmanager\Stored Procedures\ConnectionAdd.sql" />
+    <Build Include="etlmanager\Stored Procedures\ConnectionUpdate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages.Settings
 {
@@ -15,12 +16,12 @@ namespace EtlManager.Pages.Settings
     public class ConnectionsModel : PageModel
     {
         private readonly EtlManagerContext context;
-        private readonly IAuthorizationService authorizationService;
+        private readonly IConfiguration configuration;
 
-        public ConnectionsModel(EtlManagerContext context, IAuthorizationService authorizationService)
+        public ConnectionsModel(EtlManagerContext context, IConfiguration configuration)
         {
             this.context = context;
-            this.authorizationService = authorizationService;
+            this.configuration = configuration;
         }
 
         public IList<Connection> Connections { get; set; }
@@ -34,27 +35,43 @@ namespace EtlManager.Pages.Settings
             Connections = context.Connections.OrderBy(conn => conn.ConnectionName).ToList();
         }
 
-        public async Task<IActionResult> OnPostCreate([Bind("ConnectionId", "ConnectionName", "ConnectionString")] Connection NewConnection)
+        public async Task<IActionResult> OnPostCreate([Bind("ConnectionId", "ConnectionName", "ConnectionString", "IsSensitive")] Connection NewConnection)
         {
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./Connections");
             }
 
-            context.Connections.Add(NewConnection);
-            await context.SaveChangesAsync();
+            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+
+            await context.Database.ExecuteSqlRawAsync("ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
+            {
+                NewConnection.ConnectionName,
+                NewConnection.ConnectionString,
+                NewConnection.IsSensitive ? "1" : "0",
+                encryptionPassword
+            });
+
             return RedirectToPage("./Connections");
         }
 
-        public async Task<IActionResult> OnPostEdit([Bind("ConnectionId", "ConnectionName", "ConnectionString")] Connection EditConnection)
+        public async Task<IActionResult> OnPostEdit([Bind("ConnectionId", "ConnectionName", "ConnectionString", "IsSensitive")] Connection EditConnection)
         {
             if (!ModelState.IsValid)
             {
                 return RedirectToPage("./Connections");
             }
 
-            context.Attach(EditConnection).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+
+            await context.Database.ExecuteSqlRawAsync("ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            {
+                EditConnection.ConnectionId.ToString(),
+                EditConnection.ConnectionName,
+                EditConnection.ConnectionString,
+                EditConnection.IsSensitive ? "1" : "0",
+                encryptionPassword
+            });
 
             return RedirectToPage("./Connections");
         }

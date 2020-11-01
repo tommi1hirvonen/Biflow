@@ -17,10 +17,12 @@ namespace EtlManager.Models
         [Display(Name = "Connection name")]
         public string ConnectionName { get; set; }
 
-        [Required]
-        [MaxLength(2000)]
         [Display(Name = "Connection string")]
         public string ConnectionString { get; set; }
+
+        [Required]
+        [Display(Name = "Sensitive")]
+        public bool IsSensitive { get; set; }
 
         public IList<Step> Steps { get; set; }
     }

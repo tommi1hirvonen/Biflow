@@ -23,6 +23,7 @@ namespace EtlManagerExecutor
         readonly string EtlManagerConnectionString;
         readonly int PollingIntervalMs;
         readonly bool JobStepNotify = false;
+        readonly string EncryptionPassword;
 
         private string SqlStatement { get; set; }
 
@@ -46,7 +47,7 @@ namespace EtlManagerExecutor
 
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
 
-        public StepWorker(string executionId, string stepId, string connectionString, int pollingIntervalMs, bool jobStepNotify, StepCompletedDelegate stepCompleted)
+        public StepWorker(string executionId, string stepId, string connectionString, int pollingIntervalMs, bool jobStepNotify, StepCompletedDelegate stepCompleted, string encryptionPassword)
         {
             ExecutionId = executionId;
             StepId = stepId;
@@ -54,6 +55,7 @@ namespace EtlManagerExecutor
             EtlManagerConnectionString = connectionString;
             PollingIntervalMs = pollingIntervalMs;
             JobStepNotify = jobStepNotify;
+            EncryptionPassword = encryptionPassword;
         }
 
         public void ExecuteStep(object sender, DoWorkEventArgs args)
@@ -64,14 +66,15 @@ namespace EtlManagerExecutor
             using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
             {
                 SqlCommand sqlCommand = new SqlCommand(
-                    @"SELECT TOP 1 A.StepType, A.SqlStatement, A.ConnectionId, B.ConnectionString, A.PackageFolderName, A.PackageProjectName, A.PackageName,
-                        A.ExecuteIn32BitMode, A.JobToExecuteId, A.JobExecuteSynchronized, A.RetryAttempts, A.RetryIntervalMinutes, A.DataFactoryId, A.PipelineName
-                    FROM etlmanager.Execution AS A
-                        LEFT JOIN etlmanager.Connection AS B ON A.ConnectionId = B.ConnectionId
+                    @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, dbo.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
+                        PackageFolderName, PackageProjectName, PackageName,
+                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, DataFactoryId, PipelineName
+                    FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
                 sqlCommand.Parameters.AddWithValue("@StepId", StepId);
+                sqlCommand.Parameters.AddWithValue("@EncryptionPassword", EncryptionPassword);
                 try
                 {
                     sqlConnection.Open();

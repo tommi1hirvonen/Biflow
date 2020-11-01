@@ -38,7 +38,7 @@
                     @connection.ConnectionName
                 </td>
                 <td>
-                    <pre><code>@connection.ConnectionString</code></pre>
+                    <pre><code>@(connection.IsSensitive ? "****************************************" : connection.ConnectionString)</code></pre>
                 </td>
                 <td>
                     <form method="post">
@@ -103,6 +103,12 @@
                                 <span asp-validation-for="NewConnection.ConnectionString" class="text-danger"></span>
                             </div>
 
+                            <div class="form-group form-check">
+                                <label class="form-check-label">
+                                    <input class="form-check-input" asp-for="NewConnection.IsSensitive" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
+                                </label>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -158,6 +164,12 @@
                                         <input asp-for="EditConnection.ConnectionString" value="@item.ConnectionString" style="font-family:monospace;" class="form-control" />
                                     </div>
                                     <span asp-validation-for="EditConnection.ConnectionString" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group form-check">
+                                    <label class="form-check-label">
+                                        <input class="form-check-input" asp-for="EditConnection.IsSensitive" checked="@(item.IsSensitive ? "checked" : null)" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
+                                    </label>
                                 </div>
 
                             </div>

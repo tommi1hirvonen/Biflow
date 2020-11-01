@@ -17,6 +17,7 @@ namespace EtlManagerExecutor
         private string EtlManagerConnectionString { get; set; }
         private int PollingIntervalMs { get; set; }
         private int MaximumParallelSteps { get; set; }
+        private string EncryptionPassword { get; set; }
 
         private string ExecutionId { get; set; }
         private string JobId { get; set; }
@@ -36,6 +37,7 @@ namespace EtlManagerExecutor
             EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             PollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
+            EncryptionPassword = configuration.GetValue<string>("EncryptionPassword");
 
             ExecutionId = executionId;
 
@@ -315,7 +317,7 @@ namespace EtlManagerExecutor
 
         private void StartNewStepWorker(string stepId)
         {
-            StepWorker stepWorker = new StepWorker(ExecutionId, stepId, EtlManagerConnectionString, PollingIntervalMs, Notify, OnStepCompleted);
+            StepWorker stepWorker = new StepWorker(ExecutionId, stepId, EtlManagerConnectionString, PollingIntervalMs, Notify, OnStepCompleted, EncryptionPassword);
             BackgroundWorker backgroundWorker = new BackgroundWorker();
             backgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(stepWorker.OnStepCompleted);
             backgroundWorker.DoWork += new DoWorkEventHandler(stepWorker.ExecuteStep);
