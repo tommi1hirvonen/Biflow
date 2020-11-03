@@ -91,6 +91,8 @@
     <Build Include="etlmanager\Functions\GetConnectionStringDecrypted.sql" />
     <Build Include="etlmanager\Stored Procedures\ConnectionAdd.sql" />
     <Build Include="etlmanager\Stored Procedures\ConnectionUpdate.sql" />
+    <Build Include="etlmanager\Stored Procedures\DataFactoryAdd.sql" />
+    <Build Include="etlmanager\Stored Procedures\DataFactoryUpdate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

@@ -20,16 +20,18 @@ namespace EtlManagerExecutor
     {
         private string EtlManagerConnectionString { get; set; }
         private string DataFactoryId { get; set; }
+        private string EncryptionKey { get; set; }
 
         private string AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
 
         private string PipelineName { get; set; }
 
-        public PipelineExecution(string etlManagerConnectionString, string dataFactoryId, string pipelineName)
+        public PipelineExecution(string etlManagerConnectionString, string dataFactoryId, string encryptionKey, string pipelineName)
         {
             EtlManagerConnectionString = etlManagerConnectionString;
             DataFactoryId = dataFactoryId;
+            EncryptionKey = encryptionKey;
             PipelineName = pipelineName;
         }
 
@@ -48,11 +50,13 @@ namespace EtlManagerExecutor
                 using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
                 sqlConnection.Open();
                 SqlCommand sqlCommand = new SqlCommand(
-                    @"SELECT [TenantId], [SubscriptionId], [ClientId], [ClientSecret],
+                    @"SELECT [TenantId], [SubscriptionId], [ClientId], CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@EncryptionKey, ClientSecret)) AS ClientSecret,
                         [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
                 FROM etlmanager.DataFactory
                 WHERE DataFactoryId = @DataFactoryId", sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@DataFactoryId", DataFactoryId);
+                sqlCommand.Parameters.AddWithValue("@EncryptionKey", EncryptionKey);
+
                 using var reader = sqlCommand.ExecuteReader();
                 reader.Read();
                 tenantId = reader["TenantId"].ToString();

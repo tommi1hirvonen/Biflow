@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Pages.Settings
 {
@@ -16,12 +17,12 @@ namespace EtlManager.Pages.Settings
     public class DataFactoriesModel : PageModel
     {
         private readonly EtlManagerContext context;
-        private readonly IAuthorizationService authorizationService;
+        private readonly IConfiguration configuration;
 
-        public DataFactoriesModel(EtlManagerContext context, IAuthorizationService authorizationService)
+        public DataFactoriesModel(EtlManagerContext context, IConfiguration configuration)
         {
             this.context = context;
-            this.authorizationService = authorizationService;
+            this.configuration = configuration;
         }
 
         public IList<DataFactory> DataFactories { get; set; }
@@ -43,8 +44,19 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./DataFactories");
             }
 
-            context.DataFactories.Add(NewDataFactory);
-            await context.SaveChangesAsync();
+            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryAdd {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", parameters: new string[]
+            {
+                NewDataFactory.DataFactoryName,
+                NewDataFactory.TenantId,
+                NewDataFactory.SubscriptionId,
+                NewDataFactory.ClientId,
+                NewDataFactory.ClientSecret,
+                NewDataFactory.ResourceGroupName,
+                NewDataFactory.ResourceName,
+                encryptionPassword
+            });
             return RedirectToPage("./DataFactories");
         }
 
@@ -56,8 +68,20 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./DataFactories");
             }
 
-            context.Attach(EditDataFactory).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string[]
+            {
+                EditDataFactory.DataFactoryId.ToString(),
+                EditDataFactory.DataFactoryName,
+                EditDataFactory.TenantId,
+                EditDataFactory.SubscriptionId,
+                EditDataFactory.ClientId,
+                EditDataFactory.ClientSecret,
+                EditDataFactory.ResourceGroupName,
+                EditDataFactory.ResourceName,
+                encryptionPassword
+            });
 
             return RedirectToPage("./DataFactories");
         }

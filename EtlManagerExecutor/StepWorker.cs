@@ -66,7 +66,7 @@ namespace EtlManagerExecutor
             using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
             {
                 SqlCommand sqlCommand = new SqlCommand(
-                    @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, dbo.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
+                    @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
                         PackageFolderName, PackageProjectName, PackageName,
                         ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, DataFactoryId, PipelineName
                     FROM etlmanager.Execution
@@ -501,7 +501,7 @@ namespace EtlManagerExecutor
         {
             try
             {
-                var pipelineExecution = new PipelineExecution(EtlManagerConnectionString, DataFactoryId, PipelineName);
+                var pipelineExecution = new PipelineExecution(EtlManagerConnectionString, DataFactoryId, EncryptionPassword, PipelineName);
                 var result = pipelineExecution.Run();
                 return result;
             }

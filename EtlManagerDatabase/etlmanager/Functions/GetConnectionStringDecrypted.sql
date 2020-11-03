@@ -1,4 +1,4 @@
-﻿CREATE FUNCTION [dbo].[GetConnectionStringDecrypted]
+﻿CREATE FUNCTION [etlmanager].[GetConnectionStringDecrypted]
 (
 	@ConnectionId UNIQUEIDENTIFIER,
 	@EncryptionKey NVARCHAR(128)
