@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[ConnectionAdd]
+﻿CREATE PROCEDURE [etlmanager].[ConnectionAdd]
 	@ConnectionName NVARCHAR(250),
 	@ConnectionString NVARCHAR(MAX),
 	@IsSensitive BIT = 0,

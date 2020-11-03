@@ -44,7 +44,7 @@ namespace EtlManager.Pages.Settings
 
             string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
 
-            await context.Database.ExecuteSqlRawAsync("ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
             {
                 NewConnection.ConnectionName,
                 NewConnection.ConnectionString,
@@ -64,7 +64,7 @@ namespace EtlManager.Pages.Settings
 
             string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
 
-            await context.Database.ExecuteSqlRawAsync("ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
             {
                 EditConnection.ConnectionId.ToString(),
                 EditConnection.ConnectionName,

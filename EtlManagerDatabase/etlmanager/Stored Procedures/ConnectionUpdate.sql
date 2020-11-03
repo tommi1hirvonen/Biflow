@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[ConnectionUpdate]
+﻿CREATE PROCEDURE [etlmanager].[ConnectionUpdate]
 	@ConnectionId UNIQUEIDENTIFIER,
 	@ConnectionName NVARCHAR(250),
 	@ConnectionString NVARCHAR(MAX),
