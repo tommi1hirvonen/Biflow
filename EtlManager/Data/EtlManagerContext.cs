@@ -96,7 +96,7 @@ namespace EtlManager.Data
                 .HasMany(df => df.Steps)
                 .WithOne(step => step.DataFactory);
             modelBuilder.Entity<Connection>()
-                .ToTable("Connection")
+                .ToView("vConnection")
                 .HasMany(connection => connection.Steps)
                 .WithOne(step => step.Connection);
         }

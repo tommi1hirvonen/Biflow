@@ -14,7 +14,7 @@
 @if (!Model.IsEncryptionKeySet)
 {
     <div class="alert alert-warning show" role="alert">
-        Encryption key is not set. Sensitive connections cannot be added.
+        Encryption key is not set. Sensitive connections cannot be added and previously created sensitive connections will not work.
     </div>
 }
 
@@ -45,7 +45,7 @@
                     @connection.ConnectionName
                 </td>
                 <td>
-                    <pre><code>@(connection.IsSensitive ? "****************************************" : connection.ConnectionString)</code></pre>
+                    <pre><code>@connection.ConnectionString</code></pre>
                 </td>
                 <td>
                     <form method="post">
@@ -112,10 +112,10 @@
 
                             <div class="form-group form-check">
                                 <label class="form-check-label">
-                                    <input class="form-check-input" asp-for="NewConnection.IsSensitive" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
+                                    <input class="form-check-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" asp-for="NewConnection.IsSensitive" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
                                 </label>
                             </div>
-
+                            
                         </div>
                     </div>
                 </div>
@@ -175,7 +175,7 @@
 
                                 <div class="form-group form-check">
                                     <label class="form-check-label">
-                                        <input class="form-check-input" asp-for="EditConnection.IsSensitive" checked="@(item.IsSensitive ? "checked" : null)" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
+                                        <input class="form-check-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" asp-for="EditConnection.IsSensitive" checked="@(item.IsSensitive ? "checked" : null)" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
                                     </label>
                                 </div>
 

@@ -17,6 +17,7 @@ namespace EtlManager.Models
         [Display(Name = "Connection name")]
         public string ConnectionName { get; set; }
 
+        [Required]
         [Display(Name = "Connection string")]
         public string ConnectionString { get; set; }
 

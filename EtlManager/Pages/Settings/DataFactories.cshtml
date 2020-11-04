@@ -14,7 +14,7 @@
 @if (!Model.IsEncryptionKeySet)
 {
     <div class="alert alert-danger show" role="alert">
-        Encryption key is not set. Data Factories cannot be added.
+        Encryption key is not set. Data Factories cannot be added and previously created Data Factories will not work.
     </div>
 }
 else
@@ -23,64 +23,69 @@ else
         New Data Factory
     </button>
     <p></p>
+}
 
-    <table class="table">
-        <thead>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th>
+                Tenant id
+            </th>
+            <th>
+                Resource group name
+            </th>
+            <th>
+                Data Factory resource name
+            </th>
+            <th>
+
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var df in Model.DataFactories)
+        {
             <tr>
-                <th>
-                    Name
-                </th>
-                <th>
-                    Tenant id
-                </th>
-                <th>
-                    Resource group name
-                </th>
-                <th>
-                    Data Factory resource name
-                </th>
-                <th>
-
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var df in Model.DataFactories)
-            {
-                <tr>
-                    <td>
-                        @df.DataFactoryName
-                    </td>
-                    <td>
-                        @df.TenantId
-                    </td>
-                    <td>
-                        @df.ResourceGroupName
-                    </td>
-                    <td>
-                        @df.ResourceName
-                    </td>
-                    <td>
-                        <form method="post">
+                <td>
+                    @df.DataFactoryName
+                </td>
+                <td>
+                    @df.TenantId
+                </td>
+                <td>
+                    @df.ResourceGroupName
+                </td>
+                <td>
+                    @df.ResourceName
+                </td>
+                <td>
+                    <form method="post">
+                        @if (Model.IsEncryptionKeySet)
+                        {
                             <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                             </button>
-                            <div class="btn-group ml-1">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                </button>
-                                <div class="dropdown-menu">
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Delete</button>
-                                </div>
+                        }
+                        <div class="btn-group ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Delete</button>
                             </div>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
 
-
+@if (Model.IsEncryptionKeySet)
+{
     @*NEW DATA FACTORY MODAL*@
     <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -237,7 +242,6 @@ else
         </div>
     }
 }
-
 
 
 @section Scripts {
