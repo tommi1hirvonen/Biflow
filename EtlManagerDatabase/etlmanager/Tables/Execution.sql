@@ -25,6 +25,7 @@
     [PackageOperationId]        BIGINT              NULL,
     [DataFactoryId]             UNIQUEIDENTIFIER    NULL,
     [PipelineName]              NVARCHAR(250)       NULL,
+    [PipelineRunId]             NVARCHAR(250)       NULL,
     [JobToExecuteId]            UNIQUEIDENTIFIER    NULL,
     [JobExecuteSynchronized]    BIT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,

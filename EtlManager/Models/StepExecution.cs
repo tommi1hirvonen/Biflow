@@ -52,6 +52,9 @@ namespace EtlManager.Models
         [Display(Name = "Data Factory id")]
         public Guid? DataFactoryId { get; set; }
 
+        [Display(Name = "Pipeline run id")]
+        public string PipelineRunId { get; set; }
+
         public int RetryAttemptIndex { get; set; }
 
         public int RetryAttempts { get; set; }

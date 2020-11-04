@@ -501,7 +501,7 @@ namespace EtlManagerExecutor
         {
             try
             {
-                var pipelineExecution = new PipelineExecution(EtlManagerConnectionString, DataFactoryId, EncryptionPassword, PipelineName);
+                var pipelineExecution = new PipelineExecution(ExecutionId, StepId, AttemptCounter, EtlManagerConnectionString, DataFactoryId, EncryptionPassword, PipelineName);
                 var result = pipelineExecution.Run();
                 return result;
             }

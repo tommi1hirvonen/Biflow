@@ -148,14 +148,17 @@ namespace EtlManager
 
             // Fetch all package operation ids for running packages and iterate over them stopping each one.
 
-            List<Task> stopPackageTasks = new List<Task>();
+            List<Task> stopTasks = new List<Task>();
+
+            string encryptionKey = GetEncryptionKey(configuration);
             SqlCommand fetchPackageOperationIds = new SqlCommand(
-                @"SELECT A.PackageOperationId, B.ConnectionString
-                FROM etlmanager.Execution AS A
-                    LEFT JOIN etlmanager.Connection AS B ON A.ConnectionId = B.ConnectionId
-                WHERE A.ExecutionId = @ExecutionId AND A.EndDateTime IS NULL AND A.PackageOperationId IS NOT NULL"
+                @"SELECT PackageOperationId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionKey) AS ConnectionString
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
                 , sqlConnection);
             fetchPackageOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
+            fetchPackageOperationIds.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
+
             using (SqlDataReader packageOperationReader = await fetchPackageOperationIds.ExecuteReaderAsync())
             {
                 while (packageOperationReader.Read())
@@ -164,10 +167,11 @@ namespace EtlManager
                     string packageConnectionString = null;
                     if (!packageOperationReader.IsDBNull(1)) packageConnectionString = (string)packageOperationReader[1];
 
-                    stopPackageTasks.Add(StopPackage(packageConnectionString, packageOperationId));
+                    stopTasks.Add(StopPackage(packageConnectionString, packageOperationId));
                 }
             }
-            await Task.WhenAll(stopPackageTasks); // Wait for all stop commands to finish.
+
+            await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
 
             SqlCommand updateStatuses = new SqlCommand(
               @"UPDATE etlmanager.Execution

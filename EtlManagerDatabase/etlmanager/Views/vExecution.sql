@@ -34,9 +34,10 @@ SELECT TOP 1000
 	,a.[InfoMessage]
 	,a.[PackageOperationId]
 	,a.[JobToExecuteId]
-	,a.JobExecuteSynchronized
-	,a.PipelineName
-	,a.DataFactoryId
+	,a.[JobExecuteSynchronized]
+	,a.[PipelineName]
+	,a.[DataFactoryId]
+	,a.[PipelineRunId]
 	,a.[ScheduleId]
 	,a.[StoppedBy]
 	,a.[ExecutorProcessId]
