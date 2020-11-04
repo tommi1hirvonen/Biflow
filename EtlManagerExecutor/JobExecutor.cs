@@ -37,7 +37,7 @@ namespace EtlManagerExecutor
             EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             PollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
-            EncryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+            EncryptionPassword = Utility.GetEncryptionKey(EtlManagerConnectionString);
 
             ExecutionId = executionId;
 

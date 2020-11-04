@@ -11,6 +11,13 @@
 <partial name="_SettingsNavigationPartial" />
 <p></p>
 
+@if (!Model.IsEncryptionKeySet)
+{
+    <div class="alert alert-warning show" role="alert">
+        Encryption key is not set. Sensitive connections cannot be added.
+    </div>
+}
+
 <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modal_create">
     New connection
 </button>

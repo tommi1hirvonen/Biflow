@@ -11,153 +11,83 @@
 <partial name="_SettingsNavigationPartial" />
 <p></p>
 
-<button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modal_create">
-    New Data Factory
-</button>
-<p></p>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Name
-            </th>
-            <th>
-                Tenant id
-            </th>
-            <th>
-                Resource group name
-            </th>
-            <th>
-                Data Factory resource name
-            </th>
-            <th>
-
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var df in Model.DataFactories)
-        {
-            <tr>
-                <td>
-                    @df.DataFactoryName
-                </td>
-                <td>
-                    @df.TenantId
-                </td>
-                <td>
-                    @df.ResourceGroupName
-                </td>
-                <td>
-                    @df.ResourceName
-                </td>
-                <td>
-                    <form method="post">
-                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        </button>
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Delete</button>
-                            </div>
-                        </div>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-
-@*NEW DATA FACTORY MODAL*@
-<div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" autocomplete="off">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">New Data Factory</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col mx-3">
-                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                            <div class="form-group">
-                                <label asp-for="NewDataFactory.DataFactoryName" class="control-label"></label>
-                                <input asp-for="NewDataFactory.DataFactoryName" class="form-control" />
-                                <span asp-validation-for="NewDataFactory.DataFactoryName" class="text-danger"></span>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.TenantId" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.TenantId" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.TenantId" class="text-danger"></span>
-                                </div>
-
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.SubscriptionId" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.SubscriptionId" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.SubscriptionId" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.ResourceGroupName" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.ResourceGroupName" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.ResourceGroupName" class="text-danger"></span>
-                                </div>
-
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.ResourceName" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.ResourceName" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.ResourceName" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.ClientId" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.ClientId" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.ClientId" class="text-danger"></span>
-                                </div>
-
-                                <div class="form-group col-md">
-                                    <label asp-for="NewDataFactory.ClientSecret" class="control-label"></label>
-                                    <input asp-for="NewDataFactory.ClientSecret" class="form-control" />
-                                    <span asp-validation-for="NewDataFactory.ClientSecret" class="text-danger"></span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success" asp-page-handler="Create">Create</button>
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@*GENERATE EDIT MODALS*@
-@foreach (var item in Model.DataFactories)
+@if (!Model.IsEncryptionKeySet)
 {
-    <div class="modal fade" id="modal_edit_@item.DataFactoryId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="alert alert-danger show" role="alert">
+        Encryption key is not set. Data Factories cannot be added.
+    </div>
+}
+else
+{
+    <button class="btn btn-success btn-sm" data-toggle="modal" data-target="#modal_create">
+        New Data Factory
+    </button>
+    <p></p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Tenant id
+                </th>
+                <th>
+                    Resource group name
+                </th>
+                <th>
+                    Data Factory resource name
+                </th>
+                <th>
+
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var df in Model.DataFactories)
+            {
+                <tr>
+                    <td>
+                        @df.DataFactoryName
+                    </td>
+                    <td>
+                        @df.TenantId
+                    </td>
+                    <td>
+                        @df.ResourceGroupName
+                    </td>
+                    <td>
+                        @df.ResourceName
+                    </td>
+                    <td>
+                        <form method="post">
+                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                            </button>
+                            <div class="btn-group ml-1">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                </button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Delete</button>
+                                </div>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+    @*NEW DATA FACTORY MODAL*@
+    <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="post" autocomplete="off">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">New Data Factory</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -166,53 +96,52 @@
                         <div class="row">
                             <div class="col mx-3">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                                <input type="hidden" asp-for="EditDataFactory.DataFactoryId" value="@item.DataFactoryId" />
 
                                 <div class="form-group">
-                                    <label asp-for="EditDataFactory.DataFactoryName" class="control-label"></label>
-                                    <input asp-for="EditDataFactory.DataFactoryName" value="@item.DataFactoryName" class="form-control" />
-                                    <span asp-validation-for="EditDataFactory.DataFactoryName" class="text-danger"></span>
+                                    <label asp-for="NewDataFactory.DataFactoryName" class="control-label"></label>
+                                    <input asp-for="NewDataFactory.DataFactoryName" class="form-control" />
+                                    <span asp-validation-for="NewDataFactory.DataFactoryName" class="text-danger"></span>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.TenantId" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.TenantId" value="@item.TenantId" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.TenantId" class="text-danger"></span>
+                                        <label asp-for="NewDataFactory.TenantId" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.TenantId" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.TenantId" class="text-danger"></span>
                                     </div>
 
                                     <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.SubscriptionId" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.SubscriptionId" value="@item.SubscriptionId" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.SubscriptionId" class="text-danger"></span>
-                                    </div>
-                                </div>
-
-                                <div class="form-row">
-                                    <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.ResourceGroupName" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.ResourceGroupName" value="@item.ResourceGroupName" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.ResourceGroupName" class="text-danger"></span>
-                                    </div>
-
-                                    <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.ResourceName" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.ResourceName" value="@item.ResourceName" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.ResourceName" class="text-danger"></span>
+                                        <label asp-for="NewDataFactory.SubscriptionId" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.SubscriptionId" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.SubscriptionId" class="text-danger"></span>
                                     </div>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.ClientId" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.ClientId" value="@item.ClientId" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.ClientId" class="text-danger"></span>
+                                        <label asp-for="NewDataFactory.ResourceGroupName" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.ResourceGroupName" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.ResourceGroupName" class="text-danger"></span>
                                     </div>
 
                                     <div class="form-group col-md">
-                                        <label asp-for="EditDataFactory.ClientSecret" class="control-label"></label>
-                                        <input asp-for="EditDataFactory.ClientSecret" placeholder="Encrypted" class="form-control" />
-                                        <span asp-validation-for="EditDataFactory.ClientSecret" class="text-danger"></span>
+                                        <label asp-for="NewDataFactory.ResourceName" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.ResourceName" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.ResourceName" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group col-md">
+                                        <label asp-for="NewDataFactory.ClientId" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.ClientId" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.ClientId" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="form-group col-md">
+                                        <label asp-for="NewDataFactory.ClientSecret" class="control-label"></label>
+                                        <input asp-for="NewDataFactory.ClientSecret" class="form-control" />
+                                        <span asp-validation-for="NewDataFactory.ClientSecret" class="text-danger"></span>
                                     </div>
                                 </div>
 
@@ -220,14 +149,95 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                        <button class="btn btn-success" asp-page-handler="Create">Create</button>
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    @*GENERATE EDIT MODALS*@
+    @foreach (var item in Model.DataFactories)
+    {
+        <div class="modal fade" id="modal_edit_@item.DataFactoryId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form method="post" autocomplete="off">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Edit</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col mx-3">
+                                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                    <input type="hidden" asp-for="EditDataFactory.DataFactoryId" value="@item.DataFactoryId" />
+
+                                    <div class="form-group">
+                                        <label asp-for="EditDataFactory.DataFactoryName" class="control-label"></label>
+                                        <input asp-for="EditDataFactory.DataFactoryName" value="@item.DataFactoryName" class="form-control" />
+                                        <span asp-validation-for="EditDataFactory.DataFactoryName" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.TenantId" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.TenantId" value="@item.TenantId" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.TenantId" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.SubscriptionId" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.SubscriptionId" value="@item.SubscriptionId" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.SubscriptionId" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.ResourceGroupName" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.ResourceGroupName" value="@item.ResourceGroupName" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.ResourceGroupName" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.ResourceName" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.ResourceName" value="@item.ResourceName" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.ResourceName" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.ClientId" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.ClientId" value="@item.ClientId" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.ClientId" class="text-danger"></span>
+                                        </div>
+
+                                        <div class="form-group col-md">
+                                            <label asp-for="EditDataFactory.ClientSecret" class="control-label"></label>
+                                            <input asp-for="EditDataFactory.ClientSecret" placeholder="Encrypted" class="form-control" />
+                                            <span asp-validation-for="EditDataFactory.ClientSecret" class="text-danger"></span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-success" asp-page-handler="Edit">Save</button>
+                            <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
 }
+
 
 
 @section Scripts {

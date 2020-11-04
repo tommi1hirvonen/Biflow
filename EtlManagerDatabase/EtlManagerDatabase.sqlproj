@@ -93,6 +93,8 @@
     <Build Include="etlmanager\Stored Procedures\ConnectionUpdate.sql" />
     <Build Include="etlmanager\Stored Procedures\DataFactoryAdd.sql" />
     <Build Include="etlmanager\Stored Procedures\DataFactoryUpdate.sql" />
+    <Build Include="etlmanager\Tables\EncryptionKey.sql" />
+    <Build Include="etlmanager\Stored Procedures\EncryptionKeySet.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

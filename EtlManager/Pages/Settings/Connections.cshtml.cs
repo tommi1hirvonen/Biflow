@@ -24,6 +24,8 @@ namespace EtlManager.Pages.Settings
             this.configuration = configuration;
         }
 
+        public bool IsEncryptionKeySet { get; set; } = false;
+
         public IList<Connection> Connections { get; set; }
 
         public Connection NewConnection { get; set; }
@@ -32,6 +34,7 @@ namespace EtlManager.Pages.Settings
 
         public void OnGet()
         {
+            IsEncryptionKeySet = Utility.IsEncryptionKeySet(configuration);
             Connections = context.Connections.OrderBy(conn => conn.ConnectionName).ToList();
         }
 
@@ -42,7 +45,7 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./Connections");
             }
 
-            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+            string encryptionPassword = Utility.GetEncryptionKey(configuration);
 
             await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
             {
@@ -62,7 +65,7 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./Connections");
             }
 
-            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+            string encryptionPassword = Utility.GetEncryptionKey(configuration);
 
             await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
             {

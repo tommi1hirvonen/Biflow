@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Hosting;
@@ -253,6 +255,73 @@ namespace EtlManager
 
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
+        }
+
+        public static bool IsEncryptionKeySet(IConfiguration configuration)
+        {
+            string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            using SqlConnection sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
+            SqlCommand sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey", sqlConnection);
+            var reader = sqlCommand.ExecuteReader();
+            if (reader.HasRows)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static string GetEncryptionKey(IConfiguration configuration)
+        {
+            string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            using SqlConnection sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
+            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey", sqlConnection);
+            var reader = getKeyCmd.ExecuteReader();
+            if (reader.Read())
+            {
+                byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
+                byte[] entropy = (byte[])reader["Entropy"];
+
+                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.CurrentUser);
+                return Encoding.ASCII.GetString(output);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static void SetEncryptionKey(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
+        {
+            string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            using SqlConnection sqlConnection = new SqlConnection(connectionString);
+            sqlConnection.Open();
+
+            // Create random entropy
+            byte[] entropy = new byte[16];
+            new RNGCryptoServiceProvider().GetBytes(entropy);
+
+            byte[] newEncryptionKeyBinary = Encoding.ASCII.GetBytes(newEncryptionKey);
+            byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.CurrentUser);
+
+            SqlCommand updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
+                    @OldEncryptionKey = @OldEncryptionKey_,
+                    @NewEncryptionKey = @NewEncryptionKey_,
+                    @NewEncryptionKeyEncrypted = @NewEncryptionKeyEncrypted_,
+                    @Entropy = @Entropy_", sqlConnection);
+            
+            if (oldEncryptionKey != null) updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", oldEncryptionKey);
+            else updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", DBNull.Value);
+
+            updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKey_", newEncryptionKey);
+            updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKeyEncrypted_", newEncryptionKeyEncrypted);
+            updateKeyCmd.Parameters.AddWithValue("@Entropy_", entropy);
+
+            updateKeyCmd.ExecuteNonQuery();
         }
 
         public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)

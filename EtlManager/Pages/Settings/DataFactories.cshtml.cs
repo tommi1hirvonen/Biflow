@@ -25,6 +25,8 @@ namespace EtlManager.Pages.Settings
             this.configuration = configuration;
         }
 
+        public bool IsEncryptionKeySet { get; set; } = false;
+
         public IList<DataFactory> DataFactories { get; set; }
 
         public DataFactory NewDataFactory { get; set; }
@@ -33,6 +35,7 @@ namespace EtlManager.Pages.Settings
 
         public void OnGet()
         {
+            IsEncryptionKeySet = Utility.IsEncryptionKeySet(configuration);
             DataFactories = context.DataFactories.OrderBy(df => df.DataFactoryName).ToList();
         }
 
@@ -44,7 +47,7 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./DataFactories");
             }
 
-            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+            string encryptionPassword = Utility.GetEncryptionKey(configuration);
 
             await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryAdd {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", parameters: new string[]
             {
@@ -68,7 +71,7 @@ namespace EtlManager.Pages.Settings
                 return RedirectToPage("./DataFactories");
             }
 
-            string encryptionPassword = configuration.GetValue<string>("EncryptionPassword");
+            string encryptionPassword = Utility.GetEncryptionKey(configuration);
 
             await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string[]
             {
