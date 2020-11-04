@@ -81,7 +81,10 @@ namespace EtlManager.Pages.Executions
 
             try
             {
-                await Utility.StopJobExecution(_configuration, id, username);
+                if (!Utility.StopJobExecution(_configuration, id, username))
+                {
+                    return new JsonResult(new { success = false, responseText = "Error when stopping execution. See Executor logs for details." });
+                }
             }
             catch (Exception ex)
             {

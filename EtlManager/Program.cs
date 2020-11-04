@@ -122,77 +122,27 @@ namespace EtlManager
             return executionId;
         }
 
-        public async static Task StopJobExecution(IConfiguration configuration, Guid executionId, string username)
+        public static bool StopJobExecution(IConfiguration configuration, Guid executionId, string username)
         {
-            using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.OpenAsync();
+            string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
 
-            // First stop the EtlManagerExecutor process.
-
-            // Get the process id for the execution.
-            SqlCommand fetchProcessId = new SqlCommand(
-                "SELECT TOP 1 ExecutorProcessId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
-                , sqlConnection);
-            fetchProcessId.Parameters.AddWithValue("@ExecutionId", executionId);
-            int executorProcessId = (int)await fetchProcessId.ExecuteScalarAsync();
-
-            // Get the process and check that its name matches so that we don't accidentally kill the wrong process.
-            Process executorProcess = Process.GetProcessById(executorProcessId);
-            string processName = executorProcess.ProcessName;
-            if (!processName.Equals("EtlManagerExecutor"))
+            ProcessStartInfo executionInfo = new ProcessStartInfo()
             {
-                throw new ArgumentException("Process id does not map to an instance of EtlManagerExecutor");
-            }
-            executorProcess.Kill();
+                FileName = executorPath,
+                Arguments = "cancel --id " + executionId.ToString() + " --username " + username,
+                // Set WorkingDirectory for the EtlManagerExecutor executable.
+                // This way it reads the configuration file (appsettings.json) from the correct folder.
+                WorkingDirectory = Path.GetDirectoryName(executorPath),
+                UseShellExecute = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            Process executorProcess = new Process() { StartInfo = executionInfo };
+            executorProcess.Start();
             executorProcess.WaitForExit();
-
-            // Fetch all package operation ids for running packages and iterate over them stopping each one.
-
-            List<Task> stopTasks = new List<Task>();
-
-            string encryptionKey = GetEncryptionKey(configuration);
-            SqlCommand fetchPackageOperationIds = new SqlCommand(
-                @"SELECT PackageOperationId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionKey) AS ConnectionString
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
-                , sqlConnection);
-            fetchPackageOperationIds.Parameters.AddWithValue("@ExecutionId", executionId);
-            fetchPackageOperationIds.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
-
-            using (SqlDataReader packageOperationReader = await fetchPackageOperationIds.ExecuteReaderAsync())
-            {
-                while (packageOperationReader.Read())
-                {
-                    long packageOperationId = (long)packageOperationReader[0];
-                    string packageConnectionString = null;
-                    if (!packageOperationReader.IsDBNull(1)) packageConnectionString = (string)packageOperationReader[1];
-
-                    stopTasks.Add(StopPackage(packageConnectionString, packageOperationId));
-                }
-            }
-
-            await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
-
-            SqlCommand updateStatuses = new SqlCommand(
-              @"UPDATE etlmanager.Execution
-                SET EndDateTime = GETDATE(),
-                    StartDateTime = ISNULL(StartDateTime, GETDATE()),
-	                ExecutionStatus = 'STOPPED',
-                    StoppedBy = @Username
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL"
-                , sqlConnection);
-            updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
-            updateStatuses.Parameters.AddWithValue("@Username", username);
-            await updateStatuses.ExecuteNonQueryAsync();
-        }
-
-        private async static Task StopPackage(string connectionString, long operationId)
-        {
-            using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            await sqlConnection.OpenAsync();
-            SqlCommand stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-            stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", operationId);
-            await stopPackageOperationCmd.ExecuteNonQueryAsync();
+            int result = executorProcess.ExitCode;
+            return result == 0;
         }
 
         public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)

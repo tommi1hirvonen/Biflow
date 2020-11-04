@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -30,15 +31,17 @@ namespace EtlManagerExecutor
                 {
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<ISchedulesExecutor, SchedulesExecutor>();
+                    services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
                 })
                 .UseSerilog()
                 .Build();
 
-            Parser.Default.ParseArguments<JobExecutorOptions, SchedulesExecutorOptions, MailTestOptions>(args)
+            Parser.Default.ParseArguments<JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecution(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
+                    (CancelOptions options) => CancelExecution(host, options).Result,
                     (MailTestOptions options) => RunMailTest(host, options),
                     errors => HandleParseError(errors)
                 );
@@ -56,6 +59,20 @@ namespace EtlManagerExecutor
         {
             var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
             service.Run(options.Hours, options.Minutes);
+            return 0;
+        }
+        
+        static async Task<int> CancelExecution(IHost host, CancelOptions options)
+        {
+            var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
+            try
+            {
+                await service.Run(options.ExecutionId, options.Username);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
             return 0;
         }
 
@@ -99,5 +116,15 @@ namespace EtlManagerExecutor
         
         [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
         public int Minutes { get; set; }
+    }
+
+    [Verb("cancel", HelpText = "Cancel a running execution.")]
+    class CancelOptions
+    {
+        [Option('i', "id", HelpText = "Execution id", Required = true)]
+        public string ExecutionId { get; set; }
+
+        [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
+        public string Username { get; set; }
     }
 }
