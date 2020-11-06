@@ -113,12 +113,6 @@ namespace EtlManager
             Process executorProcess = new Process() { StartInfo = executionInfo };
             executorProcess.Start();
 
-            SqlCommand processIdCmd = new SqlCommand(
-                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-            processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
-            processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-            await processIdCmd.ExecuteNonQueryAsync();
-
             return executionId;
         }
 
