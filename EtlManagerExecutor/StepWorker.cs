@@ -423,7 +423,12 @@ namespace EtlManagerExecutor
                 ProcessStartInfo executionInfo = new ProcessStartInfo()
                 {
                     FileName = executorFilePath,
-                    Arguments = "execute --id " + executionId.ToString() + (JobStepNotify ? " --notify" : ""),
+                    ArgumentList = {
+                        "execute",
+                        "--id",
+                        executionId.ToString(),
+                        JobStepNotify ? "--notify" : ""
+                    },
                     // Set WorkingDirectory for the EtlManagerExecutor executable.
                     // This way it reads the configuration file (appsettings.json) from the correct folder.
                     WorkingDirectory = Path.GetDirectoryName(executorFilePath),

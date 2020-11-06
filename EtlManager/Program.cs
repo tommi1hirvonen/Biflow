@@ -101,7 +101,11 @@ namespace EtlManager
             ProcessStartInfo executionInfo = new ProcessStartInfo()
             {
                 FileName = executorPath,
-                Arguments = "execute --id " + executionId.ToString(),
+                ArgumentList = {
+                    "execute",
+                    "--id",
+                    executionId.ToString()
+                },
                 // Set WorkingDirectory for the EtlManagerExecutor executable.
                 // This way it reads the configuration file (appsettings.json) from the correct folder.
                 WorkingDirectory = Path.GetDirectoryName(executorPath),
@@ -123,7 +127,13 @@ namespace EtlManager
             ProcessStartInfo executionInfo = new ProcessStartInfo()
             {
                 FileName = executorPath,
-                Arguments = "cancel --id " + executionId.ToString() + " --username " + username,
+                ArgumentList = {
+                    "cancel",
+                    "--id",
+                    executionId.ToString(),
+                    "--username",
+                    username
+                },
                 // Set WorkingDirectory for the EtlManagerExecutor executable.
                 // This way it reads the configuration file (appsettings.json) from the correct folder.
                 WorkingDirectory = Path.GetDirectoryName(executorPath),
