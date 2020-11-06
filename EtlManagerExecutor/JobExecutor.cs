@@ -32,12 +32,22 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(string executionId, bool notify)
+        public void Run(string executionId, bool notify, string encryptionKey)
         {
             EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             PollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
-            EncryptionPassword = Utility.GetEncryptionKey(EtlManagerConnectionString);
+
+            // If the encryption key was provided, use that. Otherwise try to read it from the database.
+            if (encryptionKey != null)
+            {
+                EncryptionPassword = encryptionKey;
+            }
+            else
+            {
+                EncryptionPassword = Utility.GetEncryptionKey(EtlManagerConnectionString);
+            }
+            
 
             ExecutionId = executionId;
 

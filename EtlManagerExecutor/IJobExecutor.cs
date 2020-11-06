@@ -2,6 +2,6 @@
 {
     interface IJobExecutor
     {
-        void Run(string executionId, bool notify);
+        void Run(string executionId, bool notify, string encryptionKey);
     }
 }

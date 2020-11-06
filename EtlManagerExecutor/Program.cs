@@ -51,14 +51,14 @@ namespace EtlManagerExecutor
         static int RunExecution(IHost host, JobExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-            service.Run(options.ExecutionId, options.Notify);
+            service.Run(options.ExecutionId, options.Notify, options.EncryptionKey);
             return 0;
         }
 
         static int RunSchedules(IHost host, SchedulesExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
-            service.Run(options.Hours, options.Minutes);
+            service.Run(options.Hours, options.Minutes, options.EncryptionKey);
             return 0;
         }
         
@@ -67,13 +67,13 @@ namespace EtlManagerExecutor
             var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
             try
             {
-                await service.Run(options.ExecutionId, options.Username);
+                var result = await service.Run(options.ExecutionId, options.Username, options.EncryptionKey);
+                return result ? 0 : -1;
             }
             catch (Exception)
             {
                 return -1;
             }
-            return 0;
         }
 
         static int RunMailTest(IHost host, MailTestOptions options)
@@ -97,6 +97,9 @@ namespace EtlManagerExecutor
         [Option('i', "id", HelpText = "Execution id", Required = true)]
         public string ExecutionId { get; set; }
 
+        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
+        public string EncryptionKey { get; set; }
+
         [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
         public bool Notify { get; set; }
     }
@@ -116,6 +119,9 @@ namespace EtlManagerExecutor
         
         [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
         public int Minutes { get; set; }
+
+        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
+        public string EncryptionKey { get; set; }
     }
 
     [Verb("cancel", HelpText = "Cancel a running execution.")]
@@ -126,5 +132,8 @@ namespace EtlManagerExecutor
 
         [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
         public string Username { get; set; }
+
+        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
+        public string EncryptionKey { get; set; }
     }
 }

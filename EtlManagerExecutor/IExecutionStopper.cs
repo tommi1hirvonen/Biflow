@@ -4,6 +4,6 @@ namespace EtlManagerExecutor
 {
     interface IExecutionStopper
     {
-        Task Run(string executionId, string username);
+        Task<bool> Run(string executionId, string username, string encryptionKey);
     }
 }
