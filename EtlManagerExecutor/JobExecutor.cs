@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -13,7 +12,6 @@ namespace EtlManagerExecutor
 {
     class JobExecutor : IJobExecutor
     {
-        private readonly ILogger<JobExecutor> logger;
         private readonly IConfiguration configuration;
 
         private string EtlManagerConnectionString { get; set; }
@@ -28,9 +26,8 @@ namespace EtlManagerExecutor
 
         private int RunningStepsCounter { get; set; } = 0;
 
-        public JobExecutor(ILogger<JobExecutor> logger, IConfiguration configuration)
+        public JobExecutor(IConfiguration configuration)
         {
-            this.logger = logger;
             this.configuration = configuration;
         }
 
@@ -81,26 +78,26 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "{ExecutionId} Error checking for possible circular job executions", ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error checking for possible circular job executions", ExecutionId);
                 return;
             }
 
             if (circularExecutions != null && circularExecutions.Length > 0)
             {
                 UpdateErrorMessage("Execution was cancelled because of circular job executions:\n" + circularExecutions);
-                logger.LogError("{ExecutionId} Execution was cancelled because of circular job executions: " + circularExecutions, ExecutionId);
+                Log.Error("{ExecutionId} Execution was cancelled because of circular job executions: " + circularExecutions, ExecutionId);
                 return;
             }
 
             
             if (dependencyMode)
             {
-                logger.LogInformation("{ExecutionId} Starting execution in dependency mode", ExecutionId);
+                Log.Information("{ExecutionId} Starting execution in dependency mode", ExecutionId);
                 ExecuteInDependencyMode();
             }
             else
             {
-                logger.LogInformation("{ExecutionId} Starting execution in execution phase mode", ExecutionId);
+                Log.Information("{ExecutionId} Starting execution in execution phase mode", ExecutionId);
                 ExecuteInExecutionPhaseMode();
             }
 
@@ -146,7 +143,7 @@ namespace EtlManagerExecutor
 
                     StartNewStepWorker(stepId);
 
-                    logger.LogInformation("{ExecutionId} Started step worker for step {stepId}", ExecutionId, stepId);
+                    Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionId, stepId);
 
                 }
 
@@ -168,14 +165,14 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "{ExecutionId} Error checking for possible circular step dependencies", ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", ExecutionId);
                 return;
             }
 
             if (circularDependencies != null && circularDependencies.Length > 0)
             {
                 UpdateErrorMessage("Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
-                logger.LogError("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, ExecutionId);
+                Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, ExecutionId);
                 return;
             }
 
@@ -283,7 +280,7 @@ namespace EtlManagerExecutor
 
                         stepsToExecute.Remove(stepId);
 
-                        logger.LogInformation("{ExecutionId} Marked step {stepId} as SKIPPED", ExecutionId, stepId);
+                        Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", ExecutionId, stepId);
                     }
 
                     // Mark the steps that have a duplicate currently running under a different execution as DUPLICATE.
@@ -304,7 +301,7 @@ namespace EtlManagerExecutor
 
                         stepsToExecute.Remove(stepId);
 
-                        logger.LogInformation("{ExecutionId} Marked step {stepId} as DUPLICATE", ExecutionId, stepId);
+                        Log.Warning("{ExecutionId} {stepId} Marked step as DUPLICATE", ExecutionId, stepId);
 
                     }
 
@@ -321,7 +318,7 @@ namespace EtlManagerExecutor
 
                         stepsToExecute.Remove(stepId);
 
-                        logger.LogInformation("{ExecutionId} Started execution for step {stepId}", ExecutionId, stepId);
+                        Log.Information("{ExecutionId} {stepId} Started step execution", ExecutionId, stepId);
 
                     }
 
@@ -350,7 +347,7 @@ namespace EtlManagerExecutor
         {
             RunningStepsCounter--;
 
-            logger.LogInformation("{ExecutionId} Finished executing step {StepId}", ExecutionId, stepId);
+            Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionId, stepId);
         }
 
         private string GetCircularStepDependencies()
@@ -472,7 +469,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "{ExecutionId} Error updating error message", ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error updating error message", ExecutionId);
             }
         }
     }

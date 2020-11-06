@@ -1,18 +1,10 @@
 ﻿using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Serilog;
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
