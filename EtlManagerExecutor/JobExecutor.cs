@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
@@ -54,14 +55,25 @@ namespace EtlManagerExecutor
             using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
             sqlConnection.Open();
 
+            // Update this Executor process's PID for the execution.
+            Process process = Process.GetCurrentProcess();
+            SqlCommand processIdCmd = new SqlCommand(
+                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+            processIdCmd.Parameters.AddWithValue("@ProcessId", process.Id);
+            processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
+            processIdCmd.ExecuteNonQuery();
+
+            // Get whether the execution should be run in dependency mode or in execution phase mode.
             SqlCommand dependencyModeCommand = new SqlCommand("SELECT TOP 1 DependencyMode FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             dependencyModeCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
             bool dependencyMode = (bool)dependencyModeCommand.ExecuteScalar();
 
+            // Get the job id of the execution.
             SqlCommand jobIdCommand = new SqlCommand("SELECT TOP 1 JobId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             jobIdCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
             JobId = jobIdCommand.ExecuteScalar().ToString();
 
+            // Check whether there are circular dependencies between jobs (through steps executing another jobs).
             string circularExecutions;
             try
             {
@@ -80,6 +92,7 @@ namespace EtlManagerExecutor
                 return;
             }
 
+            
             if (dependencyMode)
             {
                 logger.LogInformation("{ExecutionId} Starting execution in dependency mode", ExecutionId);
