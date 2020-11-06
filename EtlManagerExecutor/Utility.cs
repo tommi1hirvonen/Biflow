@@ -95,7 +95,7 @@ namespace EtlManagerExecutor
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
                 byte[] entropy = (byte[])reader["Entropy"];
 
-                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.CurrentUser);
+                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
                 return Encoding.ASCII.GetString(output);
             }
             else

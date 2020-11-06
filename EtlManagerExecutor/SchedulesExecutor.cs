@@ -17,7 +17,7 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(int hours, int minutes, string encryptionKey)
+        public void Run(int hours, int minutes)
         {
             string etlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
 
@@ -111,18 +111,10 @@ namespace EtlManagerExecutor
                     continue;
                 }
 
-                string arguments = "execute --id " + executionId.ToString() + " --notify";
-                
-                // If the encryption key was provided, add it to the execution arguments.
-                if (encryptionKey != null)
-                {
-                    arguments += " --encryption-key " + encryptionKey;
-                }
-
                 ProcessStartInfo executionInfo = new ProcessStartInfo()
                 {
                     FileName = executorFilePath,
-                    Arguments = arguments,
+                    Arguments = "execute --id " + executionId.ToString() + " --notify",
                     // Set WorkingDirectory for the EtlManagerExecutor executable.
                     // This way it reads the configuration file (appsettings.json) from the correct folder.
                     WorkingDirectory = Path.GetDirectoryName(executorFilePath),

@@ -307,7 +307,7 @@ namespace EtlManagerExecutor
             long operationId;
             try
             {
-                Log.Information("{ExecutionId} {StepId} Starting package executio", ExecutionId, StepId);
+                Log.Information("{ExecutionId} {StepId} Starting package execution", ExecutionId, StepId);
 
                 operationId = packageExecution.StartExecution();
             }

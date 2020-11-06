@@ -28,7 +28,7 @@ namespace EtlManagerExecutor
 
         string EtlManagerConnectionString { get; set; }
 
-        public async Task<bool> Run(string executionId, string username, string encryptionKey)
+        public async Task<bool> Run(string executionId, string username)
         {
             ExecutionId = executionId;
             Username = username;
@@ -73,22 +73,16 @@ namespace EtlManagerExecutor
             }
 
             // Get encryption key for package and pipeline stopping.
-            if (encryptionKey == null)
+            try
             {
-                try
-                {
-                    EncryptionKey = Utility.GetEncryptionKey(EtlManagerConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} Error getting encryption key to stop packages and pipelines", ExecutionId);
-                    return false;
-                }
+                EncryptionKey = Utility.GetEncryptionKey(EtlManagerConnectionString);
             }
-            else
+            catch (Exception ex)
             {
-                EncryptionKey = encryptionKey;
+                Log.Error(ex, "{ExecutionId} Error getting encryption key to stop packages and pipelines", ExecutionId);
+                return false;
             }
+            
 
             // Start package and pipeline stopping simultaneously.
             var stopPackagesTask = StopPackageExecutions();

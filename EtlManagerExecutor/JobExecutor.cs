@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,26 +33,23 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(string executionId, bool notify, string encryptionKey)
+        public void Run(string executionId, bool notify)
         {
             EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             PollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
+            ExecutionId = executionId;
+            Notify = notify;
 
-            // If the encryption key was provided, use that. Otherwise try to read it from the database.
-            if (encryptionKey != null)
-            {
-                EncryptionPassword = encryptionKey;
-            }
-            else
+            try
             {
                 EncryptionPassword = Utility.GetEncryptionKey(EtlManagerConnectionString);
             }
-            
-
-            ExecutionId = executionId;
-
-            Notify = notify;
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting encryption password", ExecutionId);
+                return;
+            }
 
             using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
             sqlConnection.Open();

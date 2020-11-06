@@ -260,7 +260,7 @@ namespace EtlManager
             new RNGCryptoServiceProvider().GetBytes(entropy);
 
             byte[] newEncryptionKeyBinary = Encoding.ASCII.GetBytes(newEncryptionKey);
-            byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.CurrentUser);
+            byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
 
             SqlCommand updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
                     @OldEncryptionKey = @OldEncryptionKey_,

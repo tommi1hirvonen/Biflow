@@ -13,7 +13,7 @@ namespace EtlManagerExecutor
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Console.WriteLine(Directory.GetCurrentDirectory());
             var configuration = new ConfigurationBuilder()
@@ -37,28 +37,31 @@ namespace EtlManagerExecutor
                 .UseSerilog()
                 .Build();
 
+            int result = 0;
+
             Parser.Default.ParseArguments<JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
-                    (JobExecutorOptions options) => RunExecution(host, options),
+                    (JobExecutorOptions options) => result = RunExecution(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
-                    (CancelOptions options) => CancelExecution(host, options).Result,
+                    (CancelOptions options) => result = CancelExecution(host, options).Result,
                     (MailTestOptions options) => RunMailTest(host, options),
                     errors => HandleParseError(errors)
                 );
-            
+
+            return result;
         }
 
         static int RunExecution(IHost host, JobExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-            service.Run(options.ExecutionId, options.Notify, options.EncryptionKey);
+            service.Run(options.ExecutionId, options.Notify);
             return 0;
         }
 
         static int RunSchedules(IHost host, SchedulesExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
-            service.Run(options.Hours, options.Minutes, options.EncryptionKey);
+            service.Run(options.Hours, options.Minutes);
             return 0;
         }
         
@@ -67,7 +70,7 @@ namespace EtlManagerExecutor
             var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
             try
             {
-                var result = await service.Run(options.ExecutionId, options.Username, options.EncryptionKey);
+                var result = await service.Run(options.ExecutionId, options.Username);
                 return result ? 0 : -1;
             }
             catch (Exception)
@@ -97,9 +100,6 @@ namespace EtlManagerExecutor
         [Option('i', "id", HelpText = "Execution id", Required = true)]
         public string ExecutionId { get; set; }
 
-        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
-        public string EncryptionKey { get; set; }
-
         [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
         public bool Notify { get; set; }
     }
@@ -119,9 +119,6 @@ namespace EtlManagerExecutor
         
         [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
         public int Minutes { get; set; }
-
-        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
-        public string EncryptionKey { get; set; }
     }
 
     [Verb("cancel", HelpText = "Cancel a running execution.")]
@@ -132,8 +129,5 @@ namespace EtlManagerExecutor
 
         [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
         public string Username { get; set; }
-
-        [Option('e', "encryption-key", HelpText = "Encryption key must be provided if the calling user account is not the service account.", Required = false)]
-        public string EncryptionKey { get; set; }
     }
 }
