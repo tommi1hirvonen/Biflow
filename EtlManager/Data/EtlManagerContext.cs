@@ -106,18 +106,55 @@ namespace EtlManager.Data
         {
             string user = HttpContext.User?.Identity?.Name;
 
-            // If there are Jobs or Steps that have been edited, set the LastModified date.
-            var editedJobs = ChangeTracker.Entries()
+            // Get new and modified steps
+            var stepEntities = ChangeTracker
+                .Entries()
+                .Where(entity => entity.Entity is Step && (entity.State == EntityState.Modified || entity.State == EntityState.Added))
+                .ToList();
+
+            // Reset data for steps that is not needed to prevent confusion in DB tables.
+            foreach (var stepEntity in stepEntities)
+            {
+                Step step = (Step)stepEntity.Entity;
+                if (step.StepType != "SQL")
+                {
+                    step.SqlStatement = null;
+                }
+                if (step.StepType != "SSIS")
+                {
+                    step.PackageFolderName = null;
+                    step.PackageProjectName = null;
+                    step.PackageName = null;
+                }
+                if (step.StepType != "SQL" && step.StepType != "SSIS")
+                {
+                    step.ConnectionId = null;
+                }
+                if (step.StepType != "PIPELINE")
+                {
+                    step.PipelineName = null;
+                    step.DataFactoryId = null;
+                }
+                if (step.StepType != "JOB")
+                {
+                    step.JobToExecuteId = null;
+                }
+            }
+
+
+            // If there are Jobs or Steps that have been edited, set the audit fields.
+            var editedJobsAndSteps = ChangeTracker.Entries()
                 .Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Modified)
                 .ToList();
-            editedJobs.ForEach(entity =>
+            editedJobsAndSteps.ForEach(entity =>
             {
                 entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("LastModifiedBy").CurrentValue = user;
              });
 
-            var addedJobs = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
-            addedJobs.ForEach(entity =>
+            // If there are Jobs or Steps that have been added, set the audit fields.
+            var addedJobsAndSteps = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
+            addedJobsAndSteps.ForEach(entity =>
             {
                 entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
@@ -125,6 +162,7 @@ namespace EtlManager.Data
                 entity.Property("LastModifiedBy").CurrentValue = user;
             });
 
+            // Set the audit fields for new dependencies and schedules.
             var addedDependenciesAndSchedules = ChangeTracker
                 .Entries()
                 .Where(entity => (entity.Entity is Dependency || entity.Entity is Schedule) && entity.State == EntityState.Added)
@@ -136,6 +174,7 @@ namespace EtlManager.Data
                 entity.Property("CreatedBy").CurrentValue = user;
             });
 
+            // Set the audit fields for edited users.
             var editedUsers = ChangeTracker.Entries().Where(entity => entity.Entity is User && entity.State == EntityState.Modified).ToList();
             editedUsers.ForEach(user => user.Property("LastModifiedDateTime").CurrentValue = DateTime.Now);
 
