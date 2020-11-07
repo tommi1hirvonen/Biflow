@@ -15,8 +15,8 @@
     <div class="row align-items-center">
             @if (Model.IsEditor)
             {
-            <button type="button" class="btn btn-success mr-5" data-toggle="modal" data-target="#modal_create">
-                New step
+            <button type="button" class="btn btn-light mr-5" data-toggle="modal" data-target="#modal_create">
+                Add step
             </button>
             }
         
@@ -148,17 +148,17 @@
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                             </button>
                             <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Copy to</h6>
                                 <form method="post">
                                     <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                        Copy here
+                                        here
                                     </button>
                                 </form>
-                                <div class="dropdown-divider"></div>
                                 @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
                                 {
                                     <form method="post">
                                         <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                            To @job.JobName
+                                            @job.JobName
                                         </button>
                                     </form>
                                 }

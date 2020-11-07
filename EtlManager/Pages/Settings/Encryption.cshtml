@@ -57,9 +57,9 @@
                     @Html.ValidationMessageFor(m => m.ConfirmEncryptionKey, "", new { @class = "text-danger" })
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-success btn-sm">
+                    <button type="submit" class="btn btn-success">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                        Save encryption key
+                        Save
                     </button>
                 </div>
             </form>
