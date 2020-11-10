@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>EtlManager</AssemblyName>
     <RootNamespace>EtlManager</RootNamespace>
+    <UserSecretsId>57e4487d-9d6a-4653-9cbf-02d0630a10a5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
