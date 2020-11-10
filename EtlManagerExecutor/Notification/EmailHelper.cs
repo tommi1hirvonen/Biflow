@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using EtlManagerExecutor.Notification;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -90,22 +91,10 @@ namespace EtlManagerExecutor
                 // Do not return. The notification can be sent even without a body.
             }
 
-            IConfigurationSection emailSettings;
-            string smtpServer;
-            bool enableSsl;
-            int port;
-            string fromAddress;
-            string username;
-            string password;
+            EmailSettings emailSettings;
             try
             {
-                emailSettings = configuration.GetSection("EmailSettings");
-                smtpServer = emailSettings.GetValue<string>("SmtpServer");
-                enableSsl = emailSettings.GetValue<bool>("EnableSsl");
-                port = emailSettings.GetValue<int>("Port");
-                fromAddress = emailSettings.GetValue<string>("FromAddress");
-                username = emailSettings.GetValue<string>("Username");
-                password = emailSettings.GetValue<string>("Password");
+                emailSettings = EmailSettings.FromConfiguration(configuration);
             }
             catch (Exception ex)
             {
@@ -113,17 +102,10 @@ namespace EtlManagerExecutor
                 return;
             }
 
-
             SmtpClient client;
             try
             {
-                client = new SmtpClient(smtpServer)
-                {
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(username, password),
-                    EnableSsl = enableSsl,
-                    Port = port
-                };
+                client = emailSettings.GetSmtpClient();
             }
             catch (Exception ex)
             {
@@ -136,7 +118,7 @@ namespace EtlManagerExecutor
             {
                 mailMessage = new MailMessage
                 {
-                    From = new MailAddress(fromAddress),
+                    From = new MailAddress(emailSettings.FromAddress),
                     Subject = "ETL Manager Alert: " + jobName + " failed",
                     IsBodyHtml = true,
                     Body = messageBody
