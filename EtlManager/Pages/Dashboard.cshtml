@@ -94,19 +94,6 @@
         <script src="~/lib/Chart.js/Chart.bundle.js"></script>
         <script type="text/javascript">
 
-        var stringToColour = function (str) {
-            var hash = 0;
-            for (var i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            var colour = '#';
-            for (var i = 0; i < 3; i++) {
-                var value = (hash >> (i * 8)) & 0xFF;
-                colour += ('00' + value.toString(16)).substr(-2);
-            }
-            return colour;
-        }
-
         $(function () {
 
             // Average execution duration in minutes by date
@@ -153,7 +140,7 @@
                         ],
                         lineTension: 0,
                         backgroundColor: [
-                            @Html.Raw(string.Join(',', Model.Jobs.Select(job => "stringToColour('" + job.JobName + "')")))
+                            @Html.Raw(string.Join(',', Model.Jobs.Select(job => "'" + Model.JobColors[job.JobName] + "'")))
                         ]
                     }]
                 },
@@ -215,22 +202,22 @@
 
 }
 
-@functions {
-    public string GetDurationDatasetString()
+@{
+    string GetDurationDatasetString()
     {
         return string.Join(',',
-            Model.TimeSeriesItems.Select(e =>
-                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+            Model.TimeSeriesItems.Select((e, index) =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: '" + Model.JobColors[e.Key] + "', borderColor: '" + Model.JobColors[e.Key] + "', data: [" +
                     string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.DurationInMinutes.ToString().Replace(',', '.') + @"}")) +
                 "]}")
             );
     }
 
-    public string GetNoOfExecutionsDatasetString()
+    string GetNoOfExecutionsDatasetString()
     {
         return string.Join(',',
-            Model.TimeSeriesItems.Select(e =>
-                "{label: '" + e.Key + "', fill: false, backgroundColor: stringToColour('" + e.Key + "'), borderColor: stringToColour('" + e.Key + "'), data: [" +
+            Model.TimeSeriesItems.Select((e, index) =>
+                "{label: '" + e.Key + "', fill: false, backgroundColor: '" + Model.JobColors[e.Key] + "', borderColor: '" + Model.JobColors[e.Key] + "', data: [" +
                     string.Join(',', e.Value.Select(v => @"{t: new Date(""" + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @"""), y: " + v.NumberOfExecutions + @"}")) +
                 "]}")
             );

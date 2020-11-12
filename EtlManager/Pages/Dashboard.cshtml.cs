@@ -22,8 +22,23 @@ namespace EtlManager.Pages
             _context = context;
         }
 
+        public List<string> colors = new List<string>
+        {
+            "#007bff", // blue
+            "#dc3545", // red
+            "#ffc107", // yellow
+            "#28a745", // green
+            "#fd7e14", // orange
+            "#6f42c1", // purple
+            "#17a2b8", // cyan
+            "#e83e8c", // pink
+            "#6610f2", // indigo
+            "#20c997" // teal
+        };
+
         public Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
 
+        public Dictionary<string, string> JobColors = new Dictionary<string, string>();
         public List<ReportingJob> Jobs { get; set; }
 
         public List<TopStep> TopFailedSteps { get; set; }
@@ -78,6 +93,11 @@ namespace EtlManager.Pages
                 .OrderByDescending(order => order.SuccessPercent)
                 .ToListAsync();
 
+            // Get a temporary list of all job names to retrieve their colors.
+            var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
+            JobColors = jobNames
+                .Select((name, index) => new { Item = name, Index = index })
+                .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Count]);
 
             // Get top failed steps
             var topFailedStepsGrouping = await _context.Executions
