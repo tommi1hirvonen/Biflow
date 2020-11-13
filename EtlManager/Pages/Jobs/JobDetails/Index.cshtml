@@ -217,7 +217,7 @@
                                 <tbody>
                                     @foreach (var step in Model.Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
                                     {
-                                        <tr id="executable_step_@step.StepId">
+                                        <tr id="executable_step_@step.StepId" onclick="toggleCheckbox(this)">
                                             <td>
                                                 <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
                                             </td>
@@ -684,6 +684,12 @@
                     }
                 }
             }
+        }
+
+        function toggleCheckbox(elem) {
+            var checkbox = $(elem).find('input[type="checkbox"]');
+            var checked = checkbox.prop('checked');
+            checkbox.prop('checked', !checked);
         }
 
         function toggleDependencyMode(elem) {

@@ -70,9 +70,6 @@
                     @item.JobName
                 </td>
                 <td class="align-middle">
-                    <a class="btn btn-sm btn-light mr-2" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                    </a>
                     <text>@item.Steps.Count step(s)</text>
                 </td>
                 <td class="align-middle">
@@ -115,10 +112,12 @@
                     @GetNextStartTime(item)
                 </td>
                 <td class="align-middle" align="center">
+                    <a class="btn btn-sm btn-light" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                    </a>
                     @if (Model.IsEditor)
                     {
-                        
-                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                        <button type="button" class="btn btn-light btn-sm ml-1" data-toggle="modal" data-target="#modal_edit_@item.JobId">
                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         </button>
                         <div class="btn-group ml-1">
