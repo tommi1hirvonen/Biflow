@@ -126,16 +126,9 @@
                     </form>
                 </td>
                 <td align="center">
-                    @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                    </button>
-                    <a class="btn btn-sm btn-light ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
-                    </a>
                     @if (Model.IsEditor)
                     {
-                        <a class="btn btn-sm btn-light ml-4" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
+                        <a class="btn btn-sm btn-light" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         </a>
                         <div class="btn-group ml-1">
@@ -159,7 +152,7 @@
                                 }
                             </div>
                         </div>
-                        <div class="btn-group ml-1">
+                        <div class="btn-group ml-1 mr-3">
                             <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                             </button>
@@ -168,7 +161,10 @@
                             </div>
                         </div>
                     }
-
+                    @*Open corresponding modal popup to display step execution details*@
+                    <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                    </button>
                 </td>
             </tr>
         }
@@ -651,6 +647,10 @@
                     </dl>
                 </div>
                 <div class="modal-footer">
+                    <a class="btn btn-light ml-1" asp-page="./StepDetails/StepHistory" asp-route-id="@item.StepId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                        History
+                    </a>
                     <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
                 </div>
             </div>

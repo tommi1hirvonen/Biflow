@@ -34,7 +34,7 @@
     <li class="nav-item" role="presentation">
         <a class="nav-link @(Model.RedirectPage == "History" ? "active" : null)" asp-page="./History" asp-route-id="@Model.Job.JobId">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
-            Executions
+            History
         </a>
     </li>
 </ul>
