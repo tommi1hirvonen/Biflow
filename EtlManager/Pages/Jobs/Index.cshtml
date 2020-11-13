@@ -65,7 +65,7 @@
         @foreach (var item in Model.Jobs)
         {
             var lastExecution = GetLastExecution(item);
-            <tr>
+            <tr id="@item.JobId" style="cursor: pointer;">
                 <td class="align-middle">
                     @item.JobName
                 </td>
@@ -112,12 +112,9 @@
                     @GetNextStartTime(item)
                 </td>
                 <td class="align-middle" align="center">
-                    <a class="btn btn-sm btn-light" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
-                    </a>
                     @if (Model.IsEditor)
                     {
-                        <button type="button" class="btn btn-light btn-sm ml-1" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         </button>
                         <div class="btn-group ml-1">
@@ -247,9 +244,19 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-                    }
 
-                    @functions {
+    <script type="text/javascript">
+        $('tr').click(function (e) {
+            var target = e.target.tagName.toLowerCase();
+            if (target == "td" || target == "text" || target == "label" || target == "div") {
+                var id = e.target.closest('tr').id;
+                location.href = "Jobs/JobDetails/Index?id=" + id;
+            }
+        });
+    </script>
+}
+
+@functions {
     public EtlManager.Models.JobExecution GetLastExecution(EtlManager.Models.Job job)
                     {
                         EtlManager.Models.JobExecution execution = null;
