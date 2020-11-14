@@ -157,16 +157,9 @@
                 <td align="center">
                     @if (Model.IsOperator)
                     {
-                        <form method="post">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                </button>
-                                <div class="dropdown-menu">
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.ScheduleId" asp-route-jobId="@item.JobId">Delete</button>
-                                </div>
-                            </div>
-                        </form>
+                        <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                        </button>
                     }
                 </td>
             </tr>
@@ -296,6 +289,30 @@
             $("#weekdaysError").hide();
         });
     });
+
+    function deleteSchedule(element, id) {
+        $.ajax({
+            url: "./Schedules?handler=Delete",
+            method: "POST",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+            data: {
+                id: id
+            },
+            success: function (response) {
+                if (response.success) {
+                    $(element).closest('tr').remove();
+                } else {
+                    alert(response.responseText);
+                }
+            },
+            error: function (response) {
+                alert("AJAX error, try logging in again");
+            }
+        });
+    }
 
     function toggleEnabled(elem) {
         var id_ = $(elem).data('schedule-id');

@@ -63,26 +63,37 @@ namespace EtlManager.Pages.Jobs.JobDetails
             }
         }
 
-        public async Task<IActionResult> OnPostDeleteAsync(Guid? id, Guid jobId)
+        public async Task<IActionResult> OnPostDelete(Guid id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
 
             Schedule schedule = await _context.Schedules.FindAsync(id);
 
-            if (schedule == null) return NotFound();
+            if (schedule == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No schedule found for id " + id });
+            }
 
-            _context.Schedules.Remove(schedule);
-            await _context.SaveChangesAsync();
-            
-            Job = await _context.Jobs.Include(job => job.Schedules).FirstOrDefaultAsync(job => job.JobId == schedule.JobId);
-            Schedules = Job.Schedules.OrderBy(s => s.TimeHours).ToList();
-            return RedirectToPage("./Schedules", new { id = jobId });
+            try
+            {
+                _context.Schedules.Remove(schedule);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error deleting schedule: " + ex.Message });
+            }
+
+            return new JsonResult(new { success = true });
         }
 
         public async Task<IActionResult> OnPost()

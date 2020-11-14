@@ -47,27 +47,40 @@ namespace EtlManager.Pages.Schedules
             }
         }
 
-        public async Task<IActionResult> OnPostDeleteAsync(Guid? id)
+        public async Task<IActionResult> OnPostDelete(Guid id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)
             {
-                return Forbid();
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
             }
 
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
 
             Schedule schedule = await _context.Schedules.FindAsync(id);
 
-            if (schedule == null) return NotFound();
+            if (schedule == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No schedule found for id " + id });
+            }
 
-            _context.Schedules.Remove(schedule);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Schedules.Remove(schedule);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error deleting schedule: " + ex.Message });
+            }
 
-            return RedirectToPage("./Index");
+            return new JsonResult(new { success = true });
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostCreate()
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)

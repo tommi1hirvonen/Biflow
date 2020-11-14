@@ -137,18 +137,10 @@
                     <td align="center">
                         @if (Model.IsOperator)
                         {
-                            <form method="post">
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                    </button>
-                                    <div class="dropdown-menu">
-                                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@schedule.ScheduleId">Delete</button>
-                                    </div>
-                                </div>
-                            </form>
+                            <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@schedule.ScheduleId')">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            </button>
                         }
-
                     </td>
                 </tr>
             }
@@ -263,7 +255,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <input id="button_submit" type="submit" class="btn btn-success" value="Create" />
+                        <button id="button_submit" asp-page-handler="Create" class="btn btn-success">Create</button>
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>
@@ -436,6 +428,30 @@
                 $('.input-minutes').show();
                 $('.input-hours').hide();
             }
+        }
+
+        function deleteSchedule(element, id) {
+            $.ajax({
+                url: "./Schedules/Index?handler=Delete",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $(element).closest('tr').remove();
+                    } else {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
         }
 
         function toggleEnabled(elem) {
