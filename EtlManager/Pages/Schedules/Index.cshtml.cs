@@ -31,6 +31,9 @@ namespace EtlManager.Pages.Schedules
         [BindProperty]
         public Schedule NewSchedule { get; set; } = new Schedule { IsEnabled = true };
 
+        [BindProperty]
+        public ScheduleGeneration ScheduleGeneration { get; set; }
+
         public bool IsOperator { get; set; } = false;
 
         public async Task OnGetAsync()
@@ -78,6 +81,70 @@ namespace EtlManager.Pages.Schedules
             return RedirectToPage("./Index");
         }
 
+        public async Task<IActionResult> OnPostGenerate()
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
+            var startHours = int.Parse(ScheduleGeneration.StartTime.Split(':')[0]);
+            var startMinutes = int.Parse(ScheduleGeneration.StartTime.Split(':')[1]);
+            var endHours = int.Parse(ScheduleGeneration.EndTime.Split(':')[0]);
+            var endMinutes = int.Parse(ScheduleGeneration.EndTime.Split(':')[1]);
+
+            if (ScheduleGeneration.IntervalType == "Hours")
+            {
+                for (int hour = startHours; hour <= endHours; hour += ScheduleGeneration.IntervalValueHours)
+                {
+                    var schedule = new Schedule()
+                    {
+                        IsEnabled = true,
+                        JobId = ScheduleGeneration.JobId,
+                        TimeHours = hour,
+                        TimeMinutes = startMinutes,
+                        Monday = ScheduleGeneration.Monday,
+                        Tuesday = ScheduleGeneration.Tuesday,
+                        Wednesday = ScheduleGeneration.Wednesday,
+                        Thursday = ScheduleGeneration.Thursday,
+                        Friday = ScheduleGeneration.Friday,
+                        Saturday = ScheduleGeneration.Saturday,
+                        Sunday = ScheduleGeneration.Sunday
+                    };
+                    _context.Schedules.Add(schedule);
+                }
+            }
+            else if (ScheduleGeneration.IntervalType == "Minutes")
+            {
+                var timeSpan = new TimeSpan(startHours, startMinutes, 0);
+                var endTimeSpan = new TimeSpan(endHours, endMinutes, 0);
+                while (timeSpan <= endTimeSpan)
+                {
+                    var schedule = new Schedule()
+                    {
+                        IsEnabled = true,
+                        JobId = ScheduleGeneration.JobId,
+                        TimeHours = timeSpan.Hours,
+                        TimeMinutes = timeSpan.Minutes,
+                        Monday = ScheduleGeneration.Monday,
+                        Tuesday = ScheduleGeneration.Tuesday,
+                        Wednesday = ScheduleGeneration.Wednesday,
+                        Thursday = ScheduleGeneration.Thursday,
+                        Friday = ScheduleGeneration.Friday,
+                        Saturday = ScheduleGeneration.Saturday,
+                        Sunday = ScheduleGeneration.Sunday
+                    };
+                    _context.Schedules.Add(schedule);
+                    timeSpan = timeSpan.Add(new TimeSpan(0, ScheduleGeneration.IntervalValueMinutes, 0));
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index");
+        }
+
         public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
@@ -102,5 +169,19 @@ namespace EtlManager.Pages.Schedules
 
             return new JsonResult(new { success = true });
         }
+    }
+
+    public class ScheduleGenerationOptions
+    {
+        public Interval IntervalType { get; set; }
+        public int IntevalValue { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+    }
+
+    public enum Interval
+    {
+        Minute,
+        Hour
     }
 }
