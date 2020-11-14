@@ -13,14 +13,16 @@
 <p></p>
 <div class="container-fluid">
     <div class="row align-items-center">
-        <div class="col-4">
+        <div class="col-6">
             @if (Model.IsOperator)
             {
                 <button type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_create">
                     Add schedule
                 </button>
+                <button type="button" class="btn btn-light ml-3" data-toggle="modal" data-target="#modal_generate">
+                    Generate schedules
+                </button>
             }
-
         </div>
         <div class="col-4">
             <div class="btn-group">
@@ -266,6 +268,123 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modal_generate" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Generate schedules</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8 mx-auto">
+                                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input hidden asp-for="ScheduleGeneration.JobId" value="@Model.Job.JobId" />
+                                <div class="form-row">
+                                    <div class="form-group col">
+                                        <label asp-for="ScheduleGeneration.IntervalType" class="control-label"></label>
+                                        <select id="interval_type_select" asp-for="ScheduleGeneration.IntervalType" class="form-control" onchange="intervalTypeSelected()">
+                                            <option>Hours</option>
+                                            <option>Minutes</option>
+                                        </select>
+                                        <span asp-validation-for="ScheduleGeneration.IntervalType" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col input-hours">
+                                        <label asp-for="ScheduleGeneration.IntervalValueHours" class="control-label"></label>
+                                        <select asp-for="ScheduleGeneration.IntervalValueHours" class="form-control">
+                                            @for (int value = 1; value <= 12; value++)
+                                            {
+                                                <option>@value</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="ScheduleGeneration.IntervalValueHours" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col input-minutes" style="display: none;">
+                                        <label asp-for="ScheduleGeneration.IntervalValueMinutes" class="control-label"></label>
+                                        <select asp-for="ScheduleGeneration.IntervalValueMinutes" class="form-control">
+                                            <option>15</option>
+                                            <option>30</option>
+                                            <option>45</option>
+                                        </select>
+                                        <span asp-validation-for="ScheduleGeneration.IntervalValueMinutes" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col">
+                                        <label asp-for="ScheduleGeneration.StartTime" class="control-label"></label>
+                                        <select asp-for="ScheduleGeneration.StartTime" class="form-control">
+                                            @foreach (var value in GetTimeValues())
+                                            {
+                                                <option>@value</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="ScheduleGeneration.StartTime" class="text-danger"></span>
+                                    </div>
+                                    <div class="form-group col">
+                                        <label asp-for="ScheduleGeneration.EndTime" class="control-label"></label>
+                                        <select asp-for="ScheduleGeneration.EndTime" class="form-control">
+                                            @foreach (var value in GetTimeValues())
+                                            {
+                                                <option>@value</option>
+                                            }
+                                        </select>
+                                        <span asp-validation-for="ScheduleGeneration.EndTime" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <div id="weekdays" class="form-group">
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Monday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Monday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Tuesday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Tuesday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Wednesday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Wednesday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Thursday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Thursday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Friday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Friday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Saturday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Saturday)
+                                        </label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <label class="form-check-label">
+                                            <input class="form-check-input" asp-for="ScheduleGeneration.Sunday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Sunday)
+                                        </label>
+                                    </div>
+                                </div>
+                                <text id="weekdaysError" class="text-danger" style="display: none;">Select at least one weekday</text>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="button_submit" class="btn btn-success" asp-page-handler="Generate">Generate</button>
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 
 
@@ -377,4 +496,21 @@
         });
     }
     </script>
+}
+
+@functions {
+    public List<string> GetTimeValues()
+    {
+        List<string> timeValues = new List<string>();
+        for (int hours = 0; hours < 24; hours++)
+        {
+            for (int minutes = 0; minutes < 60; minutes += 15)
+            {
+                string hourString = hours.ToString().Length > 1 ? hours.ToString() : "0" + hours;
+                string minuteString = minutes.ToString().Length > 1 ? minutes.ToString() : "0" + minutes;
+                timeValues.Add(hourString + ":" + minuteString);
+            }
+        }
+        return timeValues;
+    }
 }
