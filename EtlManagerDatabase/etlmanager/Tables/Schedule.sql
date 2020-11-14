@@ -20,3 +20,54 @@
     CONSTRAINT [UQ_Schedule] UNIQUE ([JobId], [Monday], [Tuesday], [Wednesday], [Thursday], [Friday], [Saturday], [Sunday], [TimeHours], [TimeMinutes])
 );
 
+
+GO
+
+CREATE TRIGGER [etlmanager].[Trigger_Schedule]
+    ON [etlmanager].[Schedule]
+    INSTEAD OF INSERT
+    AS
+    BEGIN
+        
+        INSERT INTO etlmanager.Schedule (
+            ScheduleId,
+            JobId,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday,
+            TimeHours,
+            TimeMinutes,
+            IsEnabled,
+            CreatedDateTime,
+            CreatedBy
+        )
+        SELECT
+            ScheduleId,
+            JobId,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday,
+            Sunday,
+            TimeHours,
+            TimeMinutes,
+            IsEnabled,
+            CreatedDateTime,
+            CreatedBy
+        FROM inserted AS A
+        WHERE NOT EXISTS (
+            SELECT *
+            FROM etlmanager.Schedule AS X
+            WHERE A.JobId = X.JobId AND A.TimeHours = X.TimeHours AND A.TimeMinutes = X.TimeMinutes
+                AND A.Monday = X.Monday AND A.Tuesday = X.Tuesday AND A.Wednesday = X.Wednesday
+                AND A.Thursday = X.Thursday AND A.Friday = X.Friday
+                AND A.Saturday = X.Saturday AND A.Sunday = X.Sunday
+        )
+
+    END
