@@ -409,6 +409,17 @@
         });
     });
 
+    function intervalTypeSelected() {
+        var intervalType = document.getElementById('interval_type_select').value;
+        if (intervalType == "Hours") {
+            $('.input-minutes').hide();
+            $('.input-hours').show();
+        } else if (intervalType == "Minutes") {
+            $('.input-minutes').show();
+            $('.input-hours').hide();
+        }
+    }
+
     function deleteSchedule(element, id) {
         $.ajax({
             url: "./Schedules?handler=Delete",

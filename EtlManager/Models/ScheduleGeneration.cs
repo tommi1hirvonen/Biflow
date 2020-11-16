@@ -17,11 +17,11 @@ namespace EtlManager.Models
 
         [Required]
         [Range(1, 12)]
-        [Display(Name = "Hours")]
+        [Display(Name = "Value")]
         public int IntervalValueHours { get; set; }
 
         [Required]
-        [Display(Name = "Minutes")]
+        [Display(Name = "Value")]
         public int IntervalValueMinutes { get; set; }
 
         [Required]
