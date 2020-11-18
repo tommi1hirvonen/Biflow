@@ -65,9 +65,11 @@
         @foreach (var item in Model.Jobs)
         {
             var lastExecution = GetLastExecution(item);
-            <tr id="@item.JobId" style="cursor: pointer;">
+            <tr id="@item.JobId">
                 <td class="align-middle">
-                    @item.JobName
+                    <a class="text-dark" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
+                        @item.JobName
+                    </a>
                 </td>
                 <td class="align-middle">
                     <text>@item.Steps.Count step(s)</text>
@@ -241,20 +243,6 @@
     }
 }
 
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-
-    <script type="text/javascript">
-        $('tr').click(function (e) {
-            var target = e.target.tagName.toLowerCase();
-            if (target == "td" || target == "text" || target == "label" || target == "div") {
-                var id = e.target.closest('tr').id;
-                location.href = "Jobs/JobDetails/Index?id=" + id;
-            }
-        });
-    </script>
-}
 
 @functions {
     public EtlManager.Models.JobExecution GetLastExecution(EtlManager.Models.Job job)

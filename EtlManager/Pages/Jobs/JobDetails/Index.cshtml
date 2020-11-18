@@ -85,7 +85,16 @@
         {
             <tr>
                 <td class="align-middle">
-                    @item.StepName
+                    @if (Model.IsEditor)
+                    {
+                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
+                            @item.StepName
+                        </a>
+                    }
+                    else
+                    {
+                        <text>@item.StepName</text>
+                    }
                 </td>
                 <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
@@ -128,9 +137,6 @@
                 <td align="center">
                     @if (Model.IsEditor)
                     {
-                        <a class="btn btn-sm btn-light" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        </a>
                         <div class="btn-group ml-1">
                             <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
