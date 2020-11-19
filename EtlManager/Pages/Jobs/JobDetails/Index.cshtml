@@ -696,7 +696,7 @@
             var id_ = $(elem).data('job-id');
 
             $.ajax({
-                url: "./Index?handler=ToggleDependencyMode",
+                url: "./JobDetails/Index?handler=ToggleDependencyMode",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -721,7 +721,7 @@
             //alert(id);
 
             $.ajax({
-                url: "./Index?handler=ToggleEnabled",
+                url: "./JobDetails/Index?handler=ToggleEnabled",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -744,7 +744,7 @@
 
         function deleteStep(element, id) {
             $.ajax({
-                url: "./Index?handler=Delete",
+                url: "./JobDetails/Index?handler=Delete",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
@@ -794,7 +794,7 @@
             $('#spinner_starting').removeAttr("hidden");
 
             $.ajax({
-                url: "./Index?handler=Execute",
+                url: "./JobDetails/Index?handler=Execute",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",
