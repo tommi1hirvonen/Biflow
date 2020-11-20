@@ -25,31 +25,36 @@ namespace EtlManagerExecutor
 
             StringBuilder commandBuilder = new StringBuilder();
 
-            commandBuilder.Append("SELECT ScheduleId, JobId FROM etlmanager.Schedule WHERE IsEnabled = 1 ");
-            commandBuilder.AppendFormat("AND TimeHours = '{0}' AND TimeMinutes = '{1}' ", hours, minutes);
+            commandBuilder.Append(
+                @"SELECT A.ScheduleId, A.JobId
+                FROM etlmanager.Schedule AS A
+                    INNER JOIN etlmanager.Job AS B ON A.JobId = B.JobId
+                WHERE A.IsEnabled = 1 AND B.IsEnabled = 1 "
+            );
+            commandBuilder.AppendFormat("AND A.TimeHours = '{0}' AND A.TimeMinutes = '{1}' ", hours, minutes);
 
             switch (weekday)
             {
                 case DayOfWeek.Sunday:
-                    commandBuilder.Append("AND Sunday = 1 ");
+                    commandBuilder.Append("AND A.Sunday = 1 ");
                     break;
                 case DayOfWeek.Monday:
-                    commandBuilder.Append("AND Monday = 1 ");
+                    commandBuilder.Append("AND A.Monday = 1 ");
                     break;
                 case DayOfWeek.Tuesday:
-                    commandBuilder.Append("AND Tuesday = 1 ");
+                    commandBuilder.Append("AND A.Tuesday = 1 ");
                     break;
                 case DayOfWeek.Wednesday:
-                    commandBuilder.Append("AND Wednesday = 1 ");
+                    commandBuilder.Append("AND A.Wednesday = 1 ");
                     break;
                 case DayOfWeek.Thursday:
-                    commandBuilder.Append("AND Thursday = 1 ");
+                    commandBuilder.Append("AND A.Thursday = 1 ");
                     break;
                 case DayOfWeek.Friday:
-                    commandBuilder.Append("AND Friday = 1 ");
+                    commandBuilder.Append("AND A.Friday = 1 ");
                     break;
                 case DayOfWeek.Saturday:
-                    commandBuilder.Append("AND Saturday = 1 ");
+                    commandBuilder.Append("AND A.Saturday = 1 ");
                     break;
             }
 

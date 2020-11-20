@@ -47,9 +47,6 @@
             </th>
             <th></th>
             <th>
-                Dependency mode
-            </th>
-            <th>
                 
             </th>
             <th>
@@ -58,6 +55,9 @@
             <th>
                 Next execution
             </th>
+            <th>
+                Enabled
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -65,7 +65,7 @@
         @foreach (var item in Model.Jobs)
         {
             var lastExecution = GetLastExecution(item);
-            <tr id="@item.JobId">
+            <tr>
                 <td class="align-middle">
                     <a class="text-dark" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
                         @item.JobName
@@ -73,12 +73,6 @@
                 </td>
                 <td class="align-middle">
                     <text>@item.Steps.Count step(s)</text>
-                </td>
-                <td class="align-middle">
-                    <div class="custom-control custom-switch">
-                        <input type="checkbox" class="custom-control-input" id="dependency_mode_@item.JobId" asp-for="@item.UseDependencyMode" disabled>
-                        <label class="custom-control-label" for="dependency_mode_@item.JobId"></label>
-                    </div>
                 </td>
                 <td class="align-middle">
                     @switch (lastExecution?.ExecutionStatus)
@@ -112,6 +106,23 @@
                 </td>
                 <td>
                     @GetNextStartTime(item)
+                </td>
+                <td class="align-middle">
+                    <form>
+                        <div class="custom-control custom-switch">
+                            @if (Model.IsEditor)
+                            {
+                                <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" asp-for="@item.IsEnabled" onchange="toggleJobEnabled(this)" data-job-id="@item.JobId">
+                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId"></label>
+                            }
+                            else
+                            {
+                                @*If the user is not editor or above, disable the toggle and mouse pointer change*@
+                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                                <label class="custom-control-label" for="@item.JobId"></label>
+                            }
+                        </div>
+                    </form>
                 </td>
                 <td class="align-middle" align="center">
                     @if (Model.IsEditor)
@@ -163,6 +174,7 @@
                         <div class="row">
                             <div class="col-md-10 mx-auto">
                                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                                <input asp-for="NewJob.IsEnabled" value="true" />
                                 <div class="form-group">
                                     <label asp-for="NewJob.JobName" class="control-label"></label>
                                     <div class="input-group">
@@ -213,6 +225,7 @@
                                     <input type="hidden" asp-for="EditJob.LastModifiedDateTime" value="@item.LastModifiedDateTime" />
                                     <input type="hidden" asp-for="EditJob.LastModifiedBy" value="@item.LastModifiedBy" />
                                     <input type="hidden" asp-for="EditJob.CreatedBy" value="@item.CreatedBy" />
+                                    <input type="hidden" asp-for="EditJob.IsEnabled" value="@item.IsEnabled" />
                                     <div class="form-group">
                                         <label asp-for="EditJob.JobName" class="control-label"></label>
                                         <div class="input-group">
@@ -243,6 +256,33 @@
     }
 }
 
+@section Scripts {
+    <script type="text/javascript">
+        function toggleJobEnabled(elem) {
+            var id_ = $(elem).data('job-id');
+
+            $.ajax({
+                url: "./Jobs/Index?handler=ToggleJobEnabled",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id_
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
+    </script>
+}
 
 @functions {
     public EtlManager.Models.JobExecution GetLastExecution(EtlManager.Models.Job job)

@@ -11,38 +11,40 @@
 <partial name="_JobDetailsNavigationPartial"
          model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Index" })" />
 <p></p>
-<div class="container-fluid">
-    <div class="row align-items-center">
-            @if (Model.IsEditor)
-            {
-            <button type="button" class="btn btn-light mr-5" data-toggle="modal" data-target="#modal_create">
-                Add step
-            </button>
-            }
-        
-            @if (Model.IsEditor)
-            {
-                <div class="custom-control custom-switch ml-5 mr-5">
-                    <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
-                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
-                </div>
-            }
-        
-            @if (Model.IsOperator)
-            {
-                <div class="btn-group ml-5">
+
+@if (Model.IsOperator || Model.IsEditor)
+{
+    <div class="row">
+        <div class="col align-items-center">
+            <div class="form-row align-items-center">
+                @if (Model.IsEditor) @*Editor is also operator*@
+                {
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="job_enabled_toggle" asp-for="@Model.Job.IsEnabled" onchange="toggleJobEnabled(this)" data-job-id="@Model.Job.JobId">
+                        <label class="custom-control-label" style="cursor: pointer;" for="job_enabled_toggle">Enabled</label>
+                    </div>
+                    <div class="custom-control custom-switch ml-5">
+                        <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
+                        <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
+                    </div>
+                    <button type="button" class="btn btn-light ml-5" data-toggle="modal" data-target="#modal_create">
+                        Add step
+                    </button>
+                }
+                <div class="btn-group ml-3">
                     <button id="button_execute" type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_execute">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                         Execute...
                     </button>
                 </div>
-                <text>&nbsp;&nbsp;&nbsp;&nbsp;</text>
-                <div id="spinner_starting" class="spinner-border text-primary align-middle" hidden role="status">
+                <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden role="status">
                     <span class="sr-only">Loading...</span>
                 </div>
-            }
+            </div>
+        </div>
     </div>
-</div>
+}
+
 <p />
 <div id="alert_execution">
 
@@ -122,14 +124,14 @@
                         <div class="custom-control custom-switch">
                             @if (Model.IsEditor)
                             {
-                            <input type="checkbox" class="custom-control-input" id="@item.StepId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-step-id="@item.StepId">
-                            <label class="custom-control-label" style="cursor: pointer;" for="@item.StepId"></label>
+                                <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" asp-for="@item.IsEnabled" onchange="toggleStepEnabled(this)" data-step-id="@item.StepId">
+                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId"></label>
                             }
                             else
                             {
-                            @*If the user is not editor or above, disable the toggle and mouse pointer change*@
-                            <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
-                            <label class="custom-control-label" for="@item.StepId"></label>
+                                @*If the user is not editor or above, disable the toggle and mouse pointer change*@
+                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                                <label class="custom-control-label" for="@item.StepId"></label>
                             }
                         </div>
                     </form>
@@ -367,7 +369,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                 </div>
 
                                 <div class="form-group sql-type-input">
@@ -716,12 +718,36 @@
             });
         }
 
-        function toggleEnabled(elem) {
+        function toggleJobEnabled(elem) {
+            var id_ = $(elem).data('job-id');
+
+            $.ajax({
+                url: "./JobDetails/Index?handler=ToggleJobEnabled",
+                method: "POST",
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("XSRF-TOKEN",
+                        $('input:hidden[name="__RequestVerificationToken"]').val());
+                },
+                data: {
+                    id: id_
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        alert(response.responseText);
+                    }
+                },
+                error: function (response) {
+                    alert("AJAX error, try logging in again");
+                }
+            });
+        }
+
+        function toggleStepEnabled(elem) {
             var id_ = $(elem).data('step-id');
             //alert(id);
 
             $.ajax({
-                url: "./JobDetails/Index?handler=ToggleEnabled",
+                url: "./JobDetails/Index?handler=ToggleStepEnabled",
                 method: "POST",
                 beforeSend: function (xhr) {
                     xhr.setRequestHeader("XSRF-TOKEN",

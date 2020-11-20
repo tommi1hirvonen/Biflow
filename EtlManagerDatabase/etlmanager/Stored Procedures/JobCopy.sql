@@ -16,6 +16,7 @@ INSERT INTO etlmanager.Job (
 	CreatedDateTime,
 	LastModifiedDateTime,
 	UseDependencyMode,
+	IsEnabled,
 	CreatedBy
 )
 SELECT @JobIdNew,
@@ -23,6 +24,7 @@ SELECT @JobIdNew,
 	GETDATE(),
 	GETDATE(),
 	UseDependencyMode,
+	IsEnabled,
 	@Username
 FROM etlmanager.Job
 WHERE JobId = @JobId

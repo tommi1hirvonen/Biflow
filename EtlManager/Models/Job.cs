@@ -31,6 +31,10 @@ namespace EtlManager.Models
         [Display(Name = "Use dependency mode")]
         public bool UseDependencyMode { get; set; }
 
+        [Required]
+        [Display(Name = "Enabled")]
+        public bool IsEnabled { get; set; }
+
         public ICollection<Step> Steps { get; set; }
         public ICollection<Schedule> Schedules { get; set; }
 

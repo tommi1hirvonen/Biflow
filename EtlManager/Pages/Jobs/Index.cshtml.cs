@@ -148,6 +148,31 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
+        public async Task<IActionResult> OnPostToggleJobEnabled(Guid? id)
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
+            }
+
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
+
+            Job job = await _context.Jobs.FindAsync(id);
+
+            if (job == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No job found for id " + id });
+            }
+
+            await Utility.ToggleJobEnabled(_configuration, job);
+
+            return new JsonResult(new { success = true });
+        }
+
         private bool JobExists(Guid id)
         {
             return _context.Jobs.Any(e => e.JobId == id);

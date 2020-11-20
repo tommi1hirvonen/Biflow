@@ -113,7 +113,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             return new JsonResult(new { success = true, responseText = "Job started successfully", executionId = executionId_ });
         }
 
-        public async Task<IActionResult> OnPostToggleEnabled(Guid? id)
+        public async Task<IActionResult> OnPostToggleStepEnabled(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
@@ -134,6 +134,31 @@ namespace EtlManager.Pages.Jobs.JobDetails
             }
 
             await Utility.ToggleStepEnabled(_configuration, step);
+
+            return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostToggleJobEnabled(Guid? id)
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return new JsonResult(new { success = false, responseText = "Unauthorized" });
+            }
+
+            if (id == null)
+            {
+                return new JsonResult(new { success = false, responseText = "Id argument was null" });
+            }
+
+            Job job = await _context.Jobs.FindAsync(id);
+
+            if (job == null)
+            {
+                return new JsonResult(new { success = false, responseText = "No job found for id " + id });
+            }
+
+            await Utility.ToggleJobEnabled(_configuration, job);
 
             return new JsonResult(new { success = true });
         }
