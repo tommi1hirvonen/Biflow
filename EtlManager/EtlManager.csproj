@@ -5,6 +5,11 @@
     <AssemblyName>EtlManager</AssemblyName>
     <RootNamespace>EtlManager</RootNamespace>
     <UserSecretsId>57e4487d-9d6a-4653-9cbf-02d0630a10a5</UserSecretsId>
+    <Version>1.0.0-beta</Version>
+    <Copyright>Copyright (C) 2020 Tommi Hirvonen</Copyright>
+    <Product>ETL Manager</Product>
+    <Company>Tommi Hirvonen</Company>
+    <Authors>Tommi Hirvonen</Authors>
   </PropertyGroup>
 
   <ItemGroup>

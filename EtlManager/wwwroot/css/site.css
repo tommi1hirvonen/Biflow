@@ -97,7 +97,8 @@ for details on configuring this project to bundle and minify static web assets. 
 }
     /* change the brand and text color */
     .navbar-custom .navbar-brand,
-    .navbar-custom .navbar-text {
+    .navbar-custom .navbar-text,
+    .navbar-custom .navbar-nav {
         color: #fff;
     }
 

@@ -3,6 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>1.0.0-beta</Version>
+    <Copyright>Copyright (C) 2020 Tommi Hirvonen</Copyright>
+    <Authors>Tommi Hirvonen</Authors>
+    <Company>Tommi Hirvonen</Company>
+    <Product>ETL Manager</Product>
   </PropertyGroup>
 
   <ItemGroup>

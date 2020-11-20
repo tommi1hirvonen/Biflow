@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Hosting
 @using Microsoft.AspNetCore.Authorization
+@using System.Reflection
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IAuthorizationService AuthorizationService
 
@@ -37,6 +38,11 @@
                 <button class="navbar-toggler position-absolute d-lg-none collapsed" type="button" data-toggle="collapse" data-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                <ul class="navbar-nav px-3">
+                    <li class="nav-item text-nowrap">
+                        v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion)
+                    </li>
+                </ul>
             </nav>
         </header>
 
