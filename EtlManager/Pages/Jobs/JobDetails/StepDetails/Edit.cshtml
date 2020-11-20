@@ -193,18 +193,6 @@
 
                 <div class="form-row pipeline-type-input" style="@(Model.Step.StepType == "PIPELINE" ? null : "display: none;")">
                     <div class="form-group col-md">
-                        <label asp-for="Step.PipelineName" class="control-label"></label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
-                                </div>
-                            </div>
-                            <input asp-for="Step.PipelineName" id="pipeline_input" class="form-control" />
-                        </div>
-                        <span asp-validation-for="Step.PipelineName" class="text-danger"></span>
-                    </div>
-                    <div class="form-group col-md">
                         <label>Data Factory</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
@@ -219,6 +207,18 @@
                                 }
                             </select>
                         </div>
+                    </div>
+                    <div class="form-group col-md">
+                        <label asp-for="Step.PipelineName" class="control-label"></label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
+                                </div>
+                            </div>
+                            <input asp-for="Step.PipelineName" id="pipeline_input" class="form-control" />
+                        </div>
+                        <span asp-validation-for="Step.PipelineName" class="text-danger"></span>
                     </div>
                 </div>
 
