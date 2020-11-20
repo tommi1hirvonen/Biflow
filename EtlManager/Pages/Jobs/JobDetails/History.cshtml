@@ -4,8 +4,6 @@
     ViewData["Title"] = Model.Job.JobName;
 }
 
-<h3>Jobs</h3>
-<hr />
 <partial name="_JobDetailsNavigationPartial"
          model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "History" })" />
 <p></p>
