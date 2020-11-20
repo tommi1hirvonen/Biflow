@@ -9,9 +9,11 @@ Do {
 
     $trigger = New-ScheduledTaskTrigger -Daily -At $time
 
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
+
     $taskName = 'ETLMANAGER_' + $time.ToShortTimeString()
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $taskName -TaskPath "\ETL Manager" `        -User 'Domain\User' -Password 'password'
+    Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName $taskName -TaskPath "\ETL Manager" `        -User 'Domain\User' -Password 'password'
 
     $time = $time.AddMinutes(15)
 
