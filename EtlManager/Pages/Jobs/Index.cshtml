@@ -145,8 +145,9 @@
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                             </button>
                             <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Delete?</h6>
                                 <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Delete</button>
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
                                 </form>
                             </div>
                         </div>

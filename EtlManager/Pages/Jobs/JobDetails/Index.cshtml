@@ -164,7 +164,8 @@
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                             </button>
                             <div class="dropdown-menu">
-                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Delete</button>
+                                <h6 class="dropdown-header">Delete?</h6>
+                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
                             </div>
                         </div>
                     }
