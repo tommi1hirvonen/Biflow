@@ -49,6 +49,9 @@ namespace EtlManager.Pages.Jobs.JobDetails
 
         public bool IsOperator { get; set; } = false;
 
+        [BindProperty]
+        public string NewJobName { get; set; }
+
         public async Task OnGetAsync(Guid id)
         {
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
@@ -266,6 +269,29 @@ namespace EtlManager.Pages.Jobs.JobDetails
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index", new { id = NewStep.JobId });
+        }
+
+        public async Task<IActionResult> OnPostRenameJob(Guid id)
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
+            var job = _context.Jobs.Find(id);
+
+            if (job == null)
+            {
+                return NotFound();
+            }
+
+            job.JobName = NewJobName;
+
+            _context.Attach(job).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Index", new { id });
         }
 
     }

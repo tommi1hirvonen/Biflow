@@ -2,20 +2,50 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @model EtlManager.Pages.Shared._JobDetailsNavigationPartialModel
 
-
-<div class="btn-group">
-    <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-        @Model.Job.JobName
-    </button>
-    <div class="dropdown-menu">
-        <h6 class="dropdown-header">Go to</h6>
-        @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
-        {
-            <a class="btn dropdown-item" asp-page="/Jobs/JobDetails/@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
-        }
+<div class="btn-toolbar">
+    <div class="btn-group">
+        <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+            @Model.Job.JobName
+        </button>
+        <div class="dropdown-menu">
+            <h6 class="dropdown-header">Show</h6>
+            @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+            {
+                <a class="btn dropdown-item" asp-page="/Jobs/JobDetails/@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
+            }
+        </div>
     </div>
+    @if (Model.IsEditor)
+    {
+        <div class="btn-group dropleft ml-auto">
+            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                Rename
+            </button>
+            <div class="dropdown-menu p-4" style="min-width: 25rem;">
+                <form method="post">
+                    <input type="text" class="form-control form-control-sm" asp-for="NewJobName" value="@Model.Job.JobName" autocomplete="off">
+                    <span asp-validation-for="NewJobName" class="text-danger"></span>
+                    <button type="submit" class="btn btn-sm btn-success mt-3" asp-page="/Jobs/JobDetails/@Model.RedirectPage" asp-page-handler="RenameJob" asp-route-id="@Model.Job.JobId">Save</button>
+                </form>
+            </div>
+        </div>
+        <div class="btn-group ml-3 dropleft">
+            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                Delete
+            </button>
+            <div class="dropdown-menu">
+                <h6 class="dropdown-header">Delete job?</h6>
+                <form method="post">
+                    <button class="dropdown-item" asp-page="/Jobs/Index" asp-page-handler="Delete" asp-route-id="@Model.Job.JobId">Confirm</button>
+                </form>
+            </div>
+        </div>
+    }
 </div>
+
 <hr />
 <p></p>
 <ul class="nav nav-tabs mt-3" role="tablist">

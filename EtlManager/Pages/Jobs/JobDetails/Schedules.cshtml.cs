@@ -41,9 +41,13 @@ namespace EtlManager.Pages.Jobs.JobDetails
         public Schedule NewSchedule { get; set; }
 
         public bool IsOperator { get; set; } = false;
+        public bool IsEditor { get; set; } = false;
 
         [BindProperty]
         public ScheduleGeneration ScheduleGeneration { get; set; }
+
+        [BindProperty]
+        public string NewJobName { get; set; }
 
         public async Task OnGetAsync(Guid id)
         {
@@ -63,6 +67,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
             if (authorized.Succeeded)
             {
                 IsOperator = true;
+            }
+
+            var authorized2 = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (authorized2.Succeeded)
+            {
+                IsEditor = true;
             }
         }
 
@@ -203,6 +213,29 @@ namespace EtlManager.Pages.Jobs.JobDetails
             }
 
             return new JsonResult(new { success = true });
+        }
+
+        public async Task<IActionResult> OnPostRenameJob(Guid id)
+        {
+            var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
+            if (!authorized.Succeeded)
+            {
+                return Forbid();
+            }
+
+            var job = _context.Jobs.Find(id);
+
+            if (job == null)
+            {
+                return NotFound();
+            }
+
+            job.JobName = NewJobName;
+
+            _context.Attach(job).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return RedirectToPage("./Schedules", new { id });
         }
     }
 }

@@ -53,7 +53,8 @@
 
 <div class="container-fluid h-100 flex-column p-0">
     <partial name="_JobDetailsNavigationPartial"
-             model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel { Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Dependencies" })" />
+             model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel {
+                    Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Dependencies", NewJobName = Model.NewJobName, IsEditor = Model.IsEditor })" />
     <p></p>
 
     <div class="btn-toolbar" role="toolbar">
