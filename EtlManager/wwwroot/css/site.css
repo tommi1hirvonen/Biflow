@@ -44,7 +44,7 @@ for details on configuring this project to bundle and minify static web assets. 
 /*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
 @media (max-width: 992px) {
     .sidebar {
-        top: 2rem;
+        top: 5rem;
     }
 }
 
@@ -97,9 +97,12 @@ for details on configuring this project to bundle and minify static web assets. 
 }
     /* change the brand and text color */
     .navbar-custom .navbar-brand,
-    .navbar-custom .navbar-text,
     .navbar-custom .navbar-nav {
         color: #fff;
+    }
+
+    .navbar-custom .navbar-text {
+        color: #ccc;
     }
 
 .navbar-brand {
