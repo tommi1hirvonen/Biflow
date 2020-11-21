@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Schema;
 using EtlManager.Data;
-using EtlManager.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace EtlManager.Pages
 {
@@ -25,15 +22,15 @@ namespace EtlManager.Pages
         public List<string> colors = new List<string>
         {
             "#007bff", // blue
-            "#dc3545", // red
+            "#6f42c1", // purple
+            "#20c997", // teal
+            "#e83e8c", // pink
             "#ffc107", // yellow
+            "#dc3545", // red
             "#28a745", // green
             "#fd7e14", // orange
-            "#6f42c1", // purple
             "#17a2b8", // cyan
-            "#e83e8c", // pink
-            "#6610f2", // indigo
-            "#20c997" // teal
+            "#6610f2" // indigo
         };
 
         public Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();

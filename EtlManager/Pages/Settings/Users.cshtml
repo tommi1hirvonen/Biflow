@@ -44,19 +44,21 @@
                 </td>
                 <td>
                     <form method="post">
-                        <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_edit_@user.Username">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        </button>
-                        <button type="button" class="btn btn-light btn-sm btn-row ml-1" data-toggle="modal" data-target="#modal_change_password_@user.Username">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                        </button>
-                        <div class="btn-group btn-row ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                        <div class="btn-group btn-row">
+                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                             </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Delete?</h6>
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                            </button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                </button>
+                                <div class="dropdown-menu">
+                                    <h6 class="dropdown-header">Delete?</h6>
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                                </div>
                             </div>
                         </div>
                     </form>

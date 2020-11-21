@@ -33,7 +33,7 @@
                 <div class="btn-group ml-3">
                     <button id="button_execute" type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_execute">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-                        Execute...
+                        Execute
                     </button>
                 </div>
                 <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden role="status">
@@ -98,43 +98,46 @@
                     }
                 </td>
                 <td align="center">
-                    @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                    </button>
-                    @if (Model.IsEditor)
-                    {
-                        <div class="btn-group btn-row ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Copy to</h6>
-                                <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                        here
-                                    </button>
-                                </form>
-                                @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
-                                {
+                    <div class="btn-group btn-row">
+                        @*Open corresponding modal popup to display step execution details*@
+                        <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                        </button>
+                        @if (Model.IsEditor)
+                        {
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                </button>
+                                <div class="dropdown-menu">
+                                    <h6 class="dropdown-header">Copy to</h6>
                                     <form method="post">
-                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                            @job.JobName
+                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
+                                            here
                                         </button>
                                     </form>
-                                }
+                                    @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+                                    {
+                                        <form method="post">
+                                            <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                                @job.JobName
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                        <div class="btn-group btn-row ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Delete?</h6>
-                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                </button>
+                                <div class="dropdown-menu">
+                                    <h6 class="dropdown-header">Delete?</h6>
+                                    <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                                </div>
                             </div>
-                        </div>
-                    }
+
+                        }
+                    </div>
                 </td>
                 <td class="align-middle">
                     @Html.DisplayFor(modelItem => item.ExecutionPhase)
