@@ -46,8 +46,9 @@
                 @Html.DisplayNameFor(model => model.Jobs[0].JobName)
             </th>
             <th></th>
+            <th></th>
             <th>
-                
+
             </th>
             <th>
                 Last execution
@@ -58,7 +59,6 @@
             <th>
                 Enabled
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -70,6 +70,35 @@
                     <a class="text-dark" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
                         @item.JobName
                     </a>
+                </td>
+                <td class="align-middle" align="center">
+                    @if (Model.IsEditor)
+                    {
+                        <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_edit_@item.JobId">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                        </button>
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <form method="post">
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Copy</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Delete?</h6>
+                                <form method="post">
+                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
                 </td>
                 <td class="align-middle">
                     <text>@item.Steps.Count step(s)</text>
@@ -123,35 +152,6 @@
                             }
                         </div>
                     </form>
-                </td>
-                <td class="align-middle" align="center">
-                    @if (Model.IsEditor)
-                    {
-                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@item.JobId">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        </button>
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-id="@item.JobId">Copy</button>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Delete?</h6>
-                                <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@item.JobId">Confirm</button>
-                                </form>
-                            </div>
-                        </div>
-                    }
                 </td>
             </tr>
         }

@@ -25,23 +25,18 @@ else
     <p></p>
 }
 
-<table class="table">
+<table class="table table-hover">
     <thead>
         <tr>
             <th>
                 Name
             </th>
-            <th>
-                Tenant id
-            </th>
+            <th></th>
             <th>
                 Resource group name
             </th>
             <th>
                 Data Factory resource name
-            </th>
-            <th>
-
             </th>
         </tr>
     </thead>
@@ -53,31 +48,29 @@ else
                     @df.DataFactoryName
                 </td>
                 <td>
-                    @df.TenantId
+                    <form method="post">
+                        @if (Model.IsEncryptionKeySet)
+                        {
+                            <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                            </button>
+                        }
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Delete?</h6>
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Confirm</button>
+                            </div>
+                        </div>
+                    </form>
                 </td>
                 <td>
                     @df.ResourceGroupName
                 </td>
                 <td>
                     @df.ResourceName
-                </td>
-                <td>
-                    <form method="post">
-                        @if (Model.IsEncryptionKeySet)
-                        {
-                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                            </button>
-                        }
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Delete</button>
-                            </div>
-                        </div>
-                    </form>
                 </td>
             </tr>
         }

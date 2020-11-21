@@ -16,11 +16,13 @@
 </button>
 <p></p>
 
-<table class="table">
+<table class="table table-hover">
     <thead>
         <tr>
             <th>
                 Username
+            </th>
+            <th>
             </th>
             <th>
                 Email
@@ -30,8 +32,6 @@
             </th>
             <th>
                 Created
-            </th>
-            <th>
             </th>
         </tr>
     </thead>
@@ -43,6 +43,25 @@
                     @user.Username
                 </td>
                 <td>
+                    <form method="post">
+                        <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                        </button>
+                        <button type="button" class="btn btn-light btn-sm btn-row ml-1" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                        </button>
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Delete?</h6>
+                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                            </div>
+                        </div>
+                    </form>
+                </td>
+                <td>
                     @user.Email
                 </td>
                 <td>
@@ -50,24 +69,6 @@
                 </td>
                 <td>
                     @user.CreatedDateTime
-                </td>
-                <td>
-                    <form method="post">
-                        <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        </button>
-                        <button type="button" class="btn btn-light btn-sm ml-1" data-toggle="modal" data-target="#modal_change_password_@user.Username">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                        </button>
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Delete</button>
-                            </div>
-                        </div>
-                    </form>
                 </td>
             </tr>
         }

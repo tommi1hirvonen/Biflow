@@ -2,6 +2,18 @@
 for details on configuring this project to bundle and minify static web assets. */
 
 
+/* Class used for buttons which are placed inside a table row */
+.btn-row {
+    visibility: hidden;
+}
+
+tr:hover .btn-row,
+.show,
+.show button {
+    visibility: visible;
+}
+
+
 /*
  * Branding
  */

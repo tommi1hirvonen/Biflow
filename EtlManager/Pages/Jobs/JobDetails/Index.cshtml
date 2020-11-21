@@ -69,6 +69,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.Steps[0].StepName)
             </th>
+            <th></th>
             <th>
                 @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
             </th>
@@ -78,7 +79,6 @@
             <th>
                 @Html.DisplayNameFor(model => model.Steps[0].IsEnabled)
             </th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
@@ -95,6 +95,45 @@
                     else
                     {
                         <text>@item.StepName</text>
+                    }
+                </td>
+                <td align="center">
+                    @*Open corresponding modal popup to display step execution details*@
+                    <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
+                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                    </button>
+                    @if (Model.IsEditor)
+                    {
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Copy to</h6>
+                                <form method="post">
+                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
+                                        here
+                                    </button>
+                                </form>
+                                @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+                                {
+                                    <form method="post">
+                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                            @job.JobName
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                        <div class="btn-group btn-row ml-1">
+                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            </button>
+                            <div class="dropdown-menu">
+                                <h6 class="dropdown-header">Delete?</h6>
+                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                            </div>
+                        </div>
                     }
                 </td>
                 <td class="align-middle">
@@ -134,45 +173,6 @@
                             }
                         </div>
                     </form>
-                </td>
-                <td align="center">
-                    @if (Model.IsEditor)
-                    {
-                        <div class="btn-group ml-1">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Copy to</h6>
-                                <form method="post">
-                                    <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                        here
-                                    </button>
-                                </form>
-                                @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
-                                {
-                                    <form method="post">
-                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                            @job.JobName
-                                        </button>
-                                    </form>
-                                }
-                            </div>
-                        </div>
-                        <div class="btn-group ml-1 mr-3">
-                            <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                            </button>
-                            <div class="dropdown-menu">
-                                <h6 class="dropdown-header">Delete?</h6>
-                                <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
-                            </div>
-                        </div>
-                    }
-                    @*Open corresponding modal popup to display step execution details*@
-                    <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_@item.StepId">
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                    </button>
                 </td>
             </tr>
         }
