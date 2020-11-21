@@ -26,12 +26,12 @@
                         <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" asp-for="@Model.Job.UseDependencyMode" onchange="toggleDependencyMode(this)" data-job-id="@Model.Job.JobId">
                         <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
                     </div>
-                    <button type="button" class="btn btn-light ml-5" data-toggle="modal" data-target="#modal_create">
+                    <button type="button" class="btn btn-success ml-5" data-toggle="modal" data-target="#modal_create">
                         Add step
                     </button>
                 }
                 <div class="btn-group ml-3">
-                    <button id="button_execute" type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_execute">
+                    <button id="button_execute" type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_execute">
                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                         Execute
                     </button>

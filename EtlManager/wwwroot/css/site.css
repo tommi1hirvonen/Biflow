@@ -1,8 +1,102 @@
 ﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+/*
+    Primary button customization
+*/
+.btn-primary {
+    color: #fff;
+    background-color: #6610f2;
+    border-color: #590bd5;
+}
 
-/* Class used for buttons which are placed inside a table row */
+.btn-primary:hover {
+    color: #fff;
+    background-color: #590bd5;
+    border-color: #510ac2;
+}
+
+.btn-primary:focus, .btn-primary.focus {
+    box-shadow: 0 0 0 0.2rem rgba(89, 11, 213, 0.5);
+}
+
+.btn-primary.disabled, .btn-primary:disabled {
+    color: #fff;
+    background-color: #772af4;
+    border-color: #772af4;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active, .btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+    color: #fff;
+    background-color: #510ac2;
+    border-color: #510ac2;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active:focus, .btn-primary:not(:disabled):not(.disabled).active:focus,
+.show > .btn-primary.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.2rem rgba(89, 11, 213, 0.5);
+}
+
+
+/*
+    Secondary button customization
+*/
+.btn-success {
+    color: #fff;
+    background-color: #1cb084;
+    border-color: #168d69;
+}
+
+.btn-success:hover {
+    color: #fff;
+    background-color: #168d69;
+    border-color: #137c5c;
+}
+
+.btn-success:focus, .btn-success.focus {
+    box-shadow: 0 0 0 0.2rem rgba(22,141,105, 0.5);
+}
+
+.btn-success.disabled, .btn-success:disabled {
+    color: #fff;
+    background-color: #1ec291;
+    border-color: #1ec291;
+}
+
+.btn-success:not(:disabled):not(.disabled):active, .btn-success:not(:disabled):not(.disabled).active,
+.show > .btn-success.dropdown-toggle {
+    color: #fff;
+    background-color: #137c5c;
+    border-color: #137c5c;
+}
+
+.btn-success:not(:disabled):not(.disabled):active:focus, .btn-success:not(:disabled):not(.disabled).active:focus,
+.show > .btn-success.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.2rem rgba(22,141,105, 0.5);
+}
+
+
+/*
+    Light button customization
+*/
+
+.btn-light {
+    border-width: 1px;
+    border-color: #ccc;
+}
+
+.btn-light:hover {
+    border-width: 1px;
+    border-color: #ccc;
+}
+
+
+
+
+/*
+    Class used for buttons which are placed inside a table row
+*/
 .btn-row {
     visibility: hidden;
 }
@@ -13,7 +107,9 @@ tr:hover .btn-row,
     visibility: visible;
 }
 
-/*No-wrap buttons of btn-group in a table*/
+/*
+    No-wrap buttons of btn-group in a table
+*/
 .table .btn-group {
     white-space: nowrap;
 }
@@ -27,36 +123,22 @@ tr:hover .btn-row,
     margin-left: -5px;
 }
 
-/*
- * Branding
- */
-
-.btn-light {
-    border-width: 1px;
-    border-color: #ccc;
-}
-
-.btn-light:hover {
-    border-width: 1px;
-    border-color: #ccc;
-}
 
 
 /*
- * Feather icons
- */
-
+    Feather icons
+*/
 .feather {
     width: 16px;
     height: 16px;
     vertical-align: text-bottom;
 }
 
+
 /*
  * Sidebar
  */
-
-.sidebar {
+    .sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
@@ -90,8 +172,9 @@ tr:hover .btn-row,
 }
 
 .sidebar .nav-link {
+    font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: #444;
 }
 
 .sidebar .nav-link .feather {

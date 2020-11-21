@@ -63,37 +63,37 @@
                     <div class="sidebar-sticky">
                         <ul class="nav flex-column pt-3">
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">
+                                <a class="nav-link d-flex align-items-center @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/home.svg")))
                                     Home
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute == "/Dashboard" ? "active" : "")" asp-page="/Dashboard">
+                                <a class="nav-link d-flex align-items-center @(pageRoute == "/Dashboard" ? "active" : "")" asp-page="/Dashboard">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
                                     Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Left(5) == "/Jobs" ? "active" : "")" asp-page="/Jobs/Index">
+                                <a class="nav-link d-flex align-items-center @(pageRoute.Left(5) == "/Jobs" ? "active" : "")" asp-page="/Jobs/Index">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                                     Jobs
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Left(10) == "/Schedules" ? "active" : "")" asp-page="/Schedules/Index">
+                                <a class="nav-link d-flex align-items-center @(pageRoute.Left(10) == "/Schedules" ? "active" : "")" asp-page="/Schedules/Index">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                                     Schedules
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Left(11) == "/Executions" ? "active" : "")" asp-page="/Executions/Jobs">
+                                <a class="nav-link d-flex align-items-center @(pageRoute.Left(11) == "/Executions" ? "active" : "")" asp-page="/Executions/Jobs">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                                     Executions
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(pageRoute.Left(8) == "/Account" ? "active" : "")" asp-page="/Account/Email">
+                                <a class="nav-link d-flex align-items-center @(pageRoute.Left(8) == "/Account" ? "active" : "")" asp-page="/Account/Email">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                                     Account
                                 </a>
@@ -101,7 +101,7 @@
                             @if ((await AuthorizationService.AuthorizeAsync(User, "RequireAdmin")).Succeeded)
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link @(pageRoute.Left(9) == "/Settings" ? "active" : "")" asp-page="/Settings/Users">
+                                    <a class="nav-link d-flex align-items-center @(pageRoute.Left(9) == "/Settings" ? "active" : "")" asp-page="/Settings/Users">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                                         Settings
                                     </a>
@@ -109,7 +109,7 @@
                             }
                             <li class="nav-item mt-3">
                                 <form method="post">
-                                    <a class="nav-link" asp-page="/LogOut">
+                                    <a class="nav-link d-flex align-items-center" asp-page="/LogOut">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-out.svg")))
                                         Log out
                                     </a>
