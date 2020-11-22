@@ -111,12 +111,11 @@
                                 <span asp-validation-for="NewConnection.ConnectionString" class="text-danger"></span>
                             </div>
 
-                            <div class="form-group form-check">
-                                <label class="form-check-label">
-                                    <input class="form-check-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" asp-for="NewConnection.IsSensitive" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
-                                </label>
+                            <div class="custom-control custom-checkbox custom-control-inline">
+                                <input type="checkbox" class="custom-control-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" asp-for="NewConnection.IsSensitive">
+                                <label class="custom-control-label" asp-for="NewConnection.IsSensitive"></label>
                             </div>
-                            
+
                         </div>
                     </div>
                 </div>
@@ -174,10 +173,9 @@
                                     <span asp-validation-for="EditConnection.ConnectionString" class="text-danger"></span>
                                 </div>
 
-                                <div class="form-group form-check">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" asp-for="EditConnection.IsSensitive" checked="@(item.IsSensitive ? "checked" : null)" /> @Html.DisplayNameFor(model => model.NewConnection.IsSensitive)
-                                    </label>
+                                <div class="custom-control custom-checkbox custom-control-inline">
+                                    <input type="checkbox" class="custom-control-input" disabled="@(Model.IsEncryptionKeySet ? null : "disabled")" id="edit_sensitive_@item.ConnectionId" asp-for="EditConnection.IsSensitive" checked="@(item.IsSensitive ? "checked" : null)">
+                                    <label class="custom-control-label" for="edit_sensitive_@item.ConnectionId">@Html.DisplayNameFor(m => m.EditConnection.IsSensitive)</label>
                                 </div>
 
                             </div>

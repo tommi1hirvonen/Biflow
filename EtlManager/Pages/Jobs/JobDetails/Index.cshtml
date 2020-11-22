@@ -210,7 +210,10 @@
                                 <thead>
                                     <tr>
                                         <th class="align-top">
-                                            <input type="checkbox" class="form-check-input" id="execute_check_all">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="execute_check_all">
+                                                <label class="custom-control-label" for="execute_check_all"></label>
+                                            </div>
                                         </th>
                                         <th>Step name</th>
                                         <th>
@@ -226,7 +229,10 @@
                                     {
                                         <tr id="executable_step_@step.StepId">
                                             <td>
-                                                <input type="checkbox" class="form-check-input" name="execute_checkbox" id="@step.StepId">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input" name="execute_checkbox" id="@step.StepId">
+                                                    <label class="custom-control-label" for="@step.StepId"></label>
+                                                </div>
                                             </td>
                                             <td>
                                                 @step.StepName
@@ -427,10 +433,9 @@
                                         <span asp-validation-for="NewStep.PackageName" class="text-danger"></span>
                                     </div>
                                 </div>
-                                <div class="form-group form-check ssis-type-input" id="32_bit_mode_div">
-                                    <label class="form-check-label">
-                                        <input class="form-check-input" asp-for="NewStep.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)
-                                    </label>
+                                <div class="custom-control custom-checkbox custom-control-inline ssis-type-input" id="32_bit_mode_div">
+                                    <input type="checkbox" class="custom-control-input" asp-for="NewStep.ExecuteIn32BitMode">
+                                    <label class="custom-control-label" asp-for="NewStep.ExecuteIn32BitMode">@Html.DisplayNameFor(model => model.NewStep.ExecuteIn32BitMode)</label>
                                 </div>
 
                                 <div class="form-row pipeline-type-input">
@@ -483,10 +488,9 @@
                                     </div>
                                 </div>
                                 <div class="form-row job-type-input">
-                                    <div class="form-group form-check">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewStep.JobExecuteSynchronized" /> @Html.DisplayNameFor(model => model.NewStep.JobExecuteSynchronized)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewStep.JobExecuteSynchronized">
+                                        <label class="custom-control-label" asp-for="NewStep.JobExecuteSynchronized">@Html.DisplayNameFor(model => model.NewStep.JobExecuteSynchronized)</label>
                                     </div>
                                 </div>
 

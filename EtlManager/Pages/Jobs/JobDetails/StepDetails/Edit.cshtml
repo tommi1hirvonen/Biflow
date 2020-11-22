@@ -241,10 +241,9 @@
                     </div>
                 </div>
                 <div class="form-row job-type-input" style="@(Model.Step.StepType == "JOB" ? null : "display: none;")">
-                    <div class="form-group form-check">
-                        <label class="form-check-label">
-                            <input class="form-check-input" asp-for="Step.JobExecuteSynchronized" /> @Html.DisplayNameFor(model => model.Step.JobExecuteSynchronized)
-                        </label>
+                    <div class="custom-control custom-checkbox custom-control-inline">
+                        <input type="checkbox" class="custom-control-input" asp-for="Step.JobExecuteSynchronized">
+                        <label class="custom-control-label" asp-for="Step.JobExecuteSynchronized">@Html.DisplayNameFor(model => model.Step.JobExecuteSynchronized)</label>
                     </div>
                 </div>
 
@@ -253,10 +252,9 @@
                 <text id="pipeline_error" class="text-danger" style="display: none;">Pipeline name and Data Factory cannot be empty</text>
                 <text id="job_error" class="text-danger" style="display: none;">Job cannot be empty</text>
 
-                <div class="form-group form-check ssis-type-input" id="32_bit_mode_div" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
-                    <label class="form-check-label">
-                        <input class="form-check-input" asp-for="Step.ExecuteIn32BitMode" /> @Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)
-                    </label>
+                <div class="custom-control custom-checkbox custom-control-inline ssis-type-input" id="32_bit_mode_div" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
+                    <input type="checkbox" class="custom-control-input" asp-for="Step.ExecuteIn32BitMode">
+                    <label class="custom-control-label" asp-for="Step.ExecuteIn32BitMode">@Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)</label>
                 </div>
                 <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="switch1" asp-for="Step.IsEnabled">
@@ -343,10 +341,16 @@
                             @Html.DisplayFor(modelItem => Model.DependencyEdits[index].DependantOnStep.StepName)
                         </td>
                         <td>
-                            <input class="form-check-input" onchange="toggleVisibility(this)" data-id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled" />
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input dependency-toggle" onchange="toggleVisibility(this)" id="step_@Model.DependencyEdits[index].DependantOnStepId" data-id="strict_div_@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].Enabled">
+                                <label class="custom-control-label" for="step_@Model.DependencyEdits[index].DependantOnStepId"></label>
+                            </div>
                         </td>
                         <td>
-                            <input class="form-check-input @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency" />
+                            <div class="custom-control custom-checkbox @(Model.DependencyEdits[index].Enabled?"":"d-none")" id="strict_div_@Model.DependencyEdits[index].DependantOnStepId">
+                                <input type="checkbox" class="custom-control-input" id="strict_@Model.DependencyEdits[index].DependantOnStepId" asp-for="DependencyEdits[index].StrictDependency">
+                                <label class="custom-control-label" for="strict_@Model.DependencyEdits[index].DependantOnStepId"></label>
+                            </div>
                         </td>
                     </tr>
                 }
