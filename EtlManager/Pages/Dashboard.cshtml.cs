@@ -21,16 +21,16 @@ namespace EtlManager.Pages
 
         public List<string> colors = new List<string>
         {
-            "#007bff", // blue
-            "#6f42c1", // purple
+            "#6610f2", // indigo
             "#20c997", // teal
+            "#007bff", // blue
             "#e83e8c", // pink
             "#ffc107", // yellow
             "#dc3545", // red
             "#28a745", // green
             "#fd7e14", // orange
             "#17a2b8", // cyan
-            "#6610f2" // indigo
+            "#6f42c1" // purple
         };
 
         public Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
