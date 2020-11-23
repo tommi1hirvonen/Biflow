@@ -5,6 +5,7 @@ for details on configuring this project to bundle and minify static web assets. 
     --color-primary: #6610f2;
     --color-primary-dark: #590bd5;
     --color-primary-extra-dark: #510ac2;
+    --color-primary-super-dark: #40089b;
     --color-primary-light: #772af4;
     --color-primary-extra-light: #cdaeff;
     --color-primary-shadow: rgba(89, 11, 213, 0.5);
@@ -185,6 +186,10 @@ tr:hover .btn-row,
 */
 .nav-link {
     color: var(--color-primary);
+}
+
+.nav-link:hover {
+    color: var(--color-primary-super-dark);
 }
 
 /*
