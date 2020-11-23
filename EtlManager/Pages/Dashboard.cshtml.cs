@@ -21,15 +21,15 @@ namespace EtlManager.Pages
 
         public List<string> colors = new List<string>
         {
-            "#6610f2", // indigo
-            "#20c997", // teal
+            "#727cf5", // indigo
+            "#0acf97", // teal
             "#007bff", // blue
-            "#e83e8c", // pink
+            "#fa5c7c", // red
             "#ffc107", // yellow
-            "#dc3545", // red
             "#28a745", // green
             "#fd7e14", // orange
             "#17a2b8", // cyan
+            "#e83e8c", // pink
             "#6f42c1" // purple
         };
 

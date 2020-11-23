@@ -76,7 +76,7 @@ for details on configuring this project to bundle and minify static web assets. 
 
 
 /*
-    Secondary button customization
+    Success button customization
 */
 .btn-success {
     color: #fff;
@@ -213,6 +213,13 @@ tr:hover .btn-row,
     margin-left: -5px;
 }
 
+/*
+    Spinner
+*/
+
+.spinner-border.text-primary {
+    color: var(--color-primary) !important;
+}
 
 
 /*
@@ -245,7 +252,7 @@ tr:hover .btn-row,
     left: 0;
     z-index: 100; /* Behind the navbar */
     padding: 48px 0 0; /* Height of navbar */
-    background-color: #fafafa;
+    background-color: #fefefe;
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
 

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
-<body>
+<body class="bg-light">
     @{ String pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
 
     @if (!User.Identity.IsAuthenticated)
