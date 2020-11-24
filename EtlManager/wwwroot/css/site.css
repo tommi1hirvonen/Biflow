@@ -269,8 +269,8 @@ tr:hover .btn-row,
     left: 0;
     z-index: 100; /* Behind the navbar */
     padding: 48px 0 0; /* Height of navbar */
-    background-color: #fefefe;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    background-color: #fff;
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
 /*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
