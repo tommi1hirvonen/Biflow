@@ -7,27 +7,19 @@
 }
 
 <form id="form" method="post" autocomplete="off">
-
-    <nav class="navbar border-bottom bg-white navbar-expand-md">
-
-        <ul class="navbar-nav mr-3">
-            <li class="nav-item">
-                <button id="button_submit" type="submit" class="btn btn-success">
-                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                    Save
-                </button>
-            </li>
-        </ul>
-        <ul class="navbar-nav mr-3">
-            <li class="nav-item">
-                <a class="btn btn-light" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
-            </li>
-        </ul>
-    </nav>
+    <div class="btn-toolbar">
+        <button id="button_submit" type="submit" class="btn btn-success">
+            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+            Save
+        </button>
+        <a class="btn btn-light ml-4" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
+    </div>
+    
     <p></p>
     <h4>@Model.Job.JobName</h4>
     <h5>@Model.Step.StepName</h5>
     <p></p>
+    
     <div class="btn-toolbar" role="toolbar">
         <div class="btn-group btn-group-sm mr-2" role="group">
             <button type="button" id="button_toggle_settings" class="btn btn-light active" onclick="toggleSettings()">
@@ -40,7 +32,9 @@
             </button>
         </div>
     </div>
+    
     <p></p>
+    
     <div id="div_settings">
         <div class="row">
             <div class="col-lg-8 col-md-12">
@@ -256,7 +250,7 @@
                     <input type="checkbox" class="custom-control-input" asp-for="Step.ExecuteIn32BitMode">
                     <label class="custom-control-label" asp-for="Step.ExecuteIn32BitMode">@Html.DisplayNameFor(model => model.Step.ExecuteIn32BitMode)</label>
                 </div>
-                <div class="custom-control custom-switch">
+                <div class="custom-control custom-switch mt-2">
                     <input type="checkbox" class="custom-control-input" id="switch1" asp-for="Step.IsEnabled">
                     <label class="custom-control-label" for="switch1">@Html.DisplayNameFor(model => model.Step.IsEnabled)</label>
                 </div>
@@ -265,7 +259,7 @@
             </div>
         </div>
 
-        <div id="parameters_div" class="col-lg-8 col-md-12 pb-3 ssis-type-input" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
+        <div id="parameters_div" class="card shadow-sm col-lg-8 col-md-12 pb-3 ssis-type-input" style="@(Model.Step.StepType == "SSIS" ? null : "display: none;")">
             <p />
             <h5>Parameters</h5>
             <p />
@@ -309,13 +303,16 @@
                 <text class="text-danger">Duplicate parameter names</text>
                 <p />
             </div>
-            <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
-                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
-            </button>
+            <div>
+                <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
+                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                </button>
+            </div>
+            
         </div>
     </div>
 
-    <div class="col-lg-8 col-md-12" id="div_dependencies" style="display: none;">
+    <div class="card shadow-sm pt-2 mt-4 col-lg-8 col-md-12" id="div_dependencies" style="display: none;">
         <table class="table table-sm table-hover">
             <thead>
                 <tr>
@@ -356,9 +353,12 @@
                 }
             </tbody>
         </table>
-        <hr />
-        <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
+        <div class="px-3">
+            <hr />
+            <p class="text-secondary">*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</p>
+        </div>
     </div>
+    
 </form>
 
 

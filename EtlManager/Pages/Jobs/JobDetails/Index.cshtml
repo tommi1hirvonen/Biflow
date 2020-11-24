@@ -63,124 +63,127 @@
     </div>
 </div>
 
-<table id="steps_table" class="table table-sm table-hover">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Steps[0].StepName)
-            </th>
-            <th></th>
-            <th>
-                @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Steps[0].StepType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Steps[0].IsEnabled)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Steps)
-        {
+<div class="card shadow-sm pt-2 mt-4">
+    <table id="steps_table" class="table table-sm table-hover">
+        <thead>
             <tr>
-                <td class="align-middle">
-                    @if (Model.IsEditor)
-                    {
-                        <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
-                            @item.StepName
-                        </a>
-                    }
-                    else
-                    {
-                        <text>@item.StepName</text>
-                    }
-                </td>
-                <td align="center">
-                    <div class="btn-group btn-row">
-                        @*Open corresponding modal popup to display step execution details*@
-                        <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                        </button>
+                <th>
+                    @Html.DisplayNameFor(model => model.Steps[0].StepName)
+                </th>
+                <th></th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Steps[0].StepType)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Steps[0].IsEnabled)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Steps)
+            {
+                <tr>
+                    <td class="align-middle">
                         @if (Model.IsEditor)
                         {
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                </button>
-                                <div class="dropdown-menu">
-                                    <h6 class="dropdown-header">Copy to</h6>
-                                    <form method="post">
-                                        <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
-                                            here
-                                        </button>
-                                    </form>
-                                    @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
-                                    {
-                                        <form method="post">
-                                            <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
-                                                @job.JobName
-                                            </button>
-                                        </form>
-                                    }
-                                </div>
-                            </div>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                </button>
-                                <div class="dropdown-menu">
-                                    <h6 class="dropdown-header">Delete?</h6>
-                                    <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
-                                </div>
-                            </div>
-
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
+                                @item.StepName
+                            </a>
                         }
-                    </div>
-                </td>
-                <td class="align-middle">
-                    @Html.DisplayFor(modelItem => item.ExecutionPhase)
-                </td>
-                <td class="align-middle" title="@item.StepType">
-                    @if (item.StepType == "SQL")
-                    {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-                    }
-                    else if (item.StepType == "SSIS")
-                    {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                    }
-                    else if (item.StepType == "PIPELINE")
-                    {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
-                    }
-                    else if (item.StepType == "JOB")
-                    {
-                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                    }
-                </td>
-                <td class="align-middle">
-                    <form>
-                        <div class="custom-control custom-switch">
+                        else
+                        {
+                            <text>@item.StepName</text>
+                        }
+                    </td>
+                    <td align="center">
+                        <div class="btn-group btn-row">
+                            @*Open corresponding modal popup to display step execution details*@
+                            <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                            </button>
                             @if (Model.IsEditor)
                             {
-                                <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" asp-for="@item.IsEnabled" onchange="toggleStepEnabled(this)" data-step-id="@item.StepId">
-                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId"></label>
-                            }
-                            else
-                            {
-                                @*If the user is not editor or above, disable the toggle and mouse pointer change*@
-                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
-                                <label class="custom-control-label" for="@item.StepId"></label>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <h6 class="dropdown-header">Copy to</h6>
+                                        <form method="post">
+                                            <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@item.JobId" asp-route-sourceJobId="@item.JobId">
+                                                here
+                                            </button>
+                                        </form>
+                                        @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+                                        {
+                                            <form method="post">
+                                                <button class="dropdown-item" asp-page-handler="Copy" asp-route-stepId="@item.StepId" asp-route-targetJobId="@job.JobId" asp-route-sourceJobId="@item.JobId">
+                                                    @job.JobName
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <h6 class="dropdown-header">Delete?</h6>
+                                        <button class="dropdown-item" onclick="deleteStep(this, '@item.StepId')">Confirm</button>
+                                    </div>
+                                </div>
+
                             }
                         </div>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                    </td>
+                    <td class="align-middle">
+                        @Html.DisplayFor(modelItem => item.ExecutionPhase)
+                    </td>
+                    <td class="align-middle" title="@item.StepType">
+                        @if (item.StepType == "SQL")
+                        {
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                        }
+                        else if (item.StepType == "SSIS")
+                        {
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                        }
+                        else if (item.StepType == "PIPELINE")
+                        {
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
+                        }
+                        else if (item.StepType == "JOB")
+                        {
+                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                        }
+                    </td>
+                    <td class="align-middle">
+                        <form>
+                            <div class="custom-control custom-switch">
+                                @if (Model.IsEditor)
+                                {
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" asp-for="@item.IsEnabled" onchange="toggleStepEnabled(this)" data-step-id="@item.StepId">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId"></label>
+                                }
+                                else
+                                {
+                                    @*If the user is not editor or above, disable the toggle and mouse pointer change*@
+                                    <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                                    <label class="custom-control-label" for="@item.StepId"></label>
+                                }
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
 
 
 @if (Model.IsOperator)

@@ -15,17 +15,17 @@
         <div class="col-6">
             @if (Model.IsOperator)
             {
-                <button type="button" class="btn btn-light" data-toggle="modal" data-target="#modal_create">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
                     Add schedule
                 </button>
-                <button type="button" class="btn btn-light ml-3" data-toggle="modal" data-target="#modal_generate">
+                <button type="button" class="btn btn-primary ml-5" data-toggle="modal" data-target="#modal_generate">
                     Generate schedules
                 </button>
             }
         </div>
         <div class="col-4">
             <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-outline-success" : "btn-outline-secondary")" onclick="toggleSubscribed()">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-light")" onclick="toggleSubscribed()">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/mail.svg")))
                     <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
                 </button>
@@ -35,138 +35,141 @@
 </div>
 
 <p></p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                Enabled
-            </th>
-            <th>
-                Time
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-            <th>
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Schedules)
-        {
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table">
+        <thead>
             <tr>
-                <td class="align-middle">
-                    <form>
-                        <div class="custom-control custom-switch">
-                            @if (Model.IsOperator)
-                            {
-                                <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
-                            }
-                            else
-                            {
-                                <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
-                            }
-
-                            <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
-                        </div>
-                    </form>
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
-                </td>
-                <td>
-                    @if (item.Monday)
-                    {
-                        <span class="badge badge-primary">Monday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Monday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Tuesday)
-                    {
-                        <span class="badge badge-primary">Tuesday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Tuesday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Wednesday)
-                    {
-                        <span class="badge badge-primary">Wednesday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Wednesday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Thursday)
-                    {
-                        <span class="badge badge-primary">Thursday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Thursday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Friday)
-                    {
-                        <span class="badge badge-primary">Friday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Friday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Saturday)
-                    {
-                        <span class="badge badge-primary">Saturday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Saturday</span>
-                    }
-                </td>
-                <td>
-                    @if (item.Sunday)
-                    {
-                        <span class="badge badge-primary">Sunday</span>
-                    }
-                    else
-                    {
-                        <span class="badge badge-secondary">Sunday</span>
-                    }
-                </td>
-                <td align="center">
-                    @if (Model.IsOperator)
-                    {
-                        <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')">
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                        </button>
-                    }
-                </td>
+                <th>
+                    Enabled
+                </th>
+                <th>
+                    Time
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
+                <th>
+                </th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Schedules)
+            {
+                <tr>
+                    <td class="align-middle">
+                        <form>
+                            <div class="custom-control custom-switch">
+                                @if (Model.IsOperator)
+                                {
+                                    <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" asp-for="@item.IsEnabled" onchange="toggleEnabled(this)" data-schedule-id="@item.ScheduleId">
+                                }
+                                else
+                                {
+                                    <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
+                                }
+
+                                <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
+                            </div>
+                        </form>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.TimeHours):@item.GetMinutesText()
+                    </td>
+                    <td>
+                        @if (item.Monday)
+                        {
+                            <span class="badge badge-custom">Monday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Monday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Tuesday)
+                        {
+                            <span class="badge badge-custom">Tuesday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Tuesday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Wednesday)
+                        {
+                            <span class="badge badge-custom">Wednesday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Wednesday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Thursday)
+                        {
+                            <span class="badge badge-custom">Thursday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Thursday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Friday)
+                        {
+                            <span class="badge badge-custom">Friday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Friday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Saturday)
+                        {
+                            <span class="badge badge-custom">Saturday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Saturday</span>
+                        }
+                    </td>
+                    <td>
+                        @if (item.Sunday)
+                        {
+                            <span class="badge badge-custom">Sunday</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary">Sunday</span>
+                        }
+                    </td>
+                    <td align="center">
+                        @if (Model.IsOperator)
+                        {
+                            <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')">
+                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
 
 @if (Model.IsOperator)
 {
@@ -472,8 +475,8 @@
 
     function toggleSubscribed() {
         var jobId = "@Model.Job.JobId";
-        var activeClass = "btn-outline-success";
-        var inactiveClass = "btn-outline-secondary";
+        var activeClass = "btn-success";
+        var inactiveClass = "btn-light";
         $.ajax({
             url: "./Schedules?handler=ToggleSubscribed",
             method: "POST",

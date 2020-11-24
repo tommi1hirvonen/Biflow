@@ -71,7 +71,7 @@
     </div>
     <p></p>
 
-    <div id="div_table" style="display: none;">
+    <div class="card shadow-sm pt-2 mt-4" id="div_table" style="display: none;">
         <table class="table table-sm table-striped">
             <thead>
                 <tr>
@@ -103,11 +103,13 @@
                 }
             </tbody>
         </table>
-        <hr />
-        <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
+        <div class="px-3">
+            <hr />
+            <p class="text-secondary"><small>*Strict dependency means that the step will be skipped if any one of the strict dependencies has failed or has been skipped.</small></p>
+        </div>
     </div>
 
-    <div class="row flex-fill dependency-graph" id="div_dependency_graph">
+    <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
         <svg id="dependency_graph">
             <g />
         </svg>
