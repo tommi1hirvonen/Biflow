@@ -244,8 +244,13 @@ tr:hover .btn-row,
 }
 
 /*
-
+    Nav
 */
+
+.nav-pills .nav-link.active {
+    background-color: var(--color-primary);
+}
+
 .nav-link {
     color: var(--color-primary);
 }

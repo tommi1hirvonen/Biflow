@@ -12,7 +12,7 @@
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
             Save
         </button>
-        <a class="btn btn-light ml-4" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
+        <a class="btn btn-secondary ml-4" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
     </div>
     
     <p></p>
