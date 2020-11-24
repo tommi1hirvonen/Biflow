@@ -5,46 +5,45 @@
 }
 
 
-<h3>Account</h3>
-<hr />
-<div class="row">
-    <div class="col-md-8 col-lg-6">
-        <h4>@Model.User_.Username</h4>
+<h4>Account</h4>
 
-        <partial name="_AccountNavigationPartial" />
+<partial name="_AccountNavigationPartial" />
 
-        <table class="table table-striped mt-3">
-            <thead>
+<div class="card shadow-sm mt-3 pt-3 col-md-8 col-lg-6">
+    <h6>@Model.User_.Username</h6>
+
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>
+                    Job
+                </th>
+                <th>
+                    Subscribed
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var job in Model.Jobs)
+            {
                 <tr>
-                    <th>
-                        Job
-                    </th>
-                    <th>
-                        Subscribed
-                    </th>
+                    <td>
+                        @job.JobName
+                    </td>
+                    <td>
+                        @{ bool toggled = Model.User_.Subscriptions.Select(s => s.JobId).Contains(job.JobId); }
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="@job.JobId" asp-for="@toggled" onchange="toggleSubscribed(this, '@job.JobId')">
+                            <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
+                        </div>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var job in Model.Jobs)
-                {
-                    <tr>
-                        <td>
-                            @job.JobName
-                        </td>
-                        <td>
-                            @{ bool toggled = Model.User_.Subscriptions.Select(s => s.JobId).Contains(job.JobId); }
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="@job.JobId" asp-for="@toggled" onchange="toggleSubscribed(this, '@job.JobId')">
-                                <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            }
+        </tbody>
+    </table>
 
-    </div>
 </div>
+
 
 @section Scripts {
     <script type="text/javascript">

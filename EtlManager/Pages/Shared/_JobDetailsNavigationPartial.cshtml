@@ -10,9 +10,9 @@
         </button>
         <div class="dropdown-menu">
             <h6 class="dropdown-header">Show</h6>
-            @foreach (var job in Model.Jobs.Where(job => job.JobId != Model.Job.JobId))
+            @foreach (var job in Model.Jobs)
             {
-                <a class="btn dropdown-item" asp-page="/Jobs/JobDetails/@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
+                <a class="btn dropdown-item @(job.JobId == Model.Job.JobId ? "disabled" : null)" asp-page="/Jobs/JobDetails/@Model.RedirectPage" asp-route-id="@job.JobId">@job.JobName</a>
             }
         </div>
     </div>
