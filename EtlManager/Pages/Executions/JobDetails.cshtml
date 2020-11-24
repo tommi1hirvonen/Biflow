@@ -54,8 +54,8 @@
 </style>
 
 <h4>@Model.JobExecution.JobName</h4>
-<p></p>
-<div class="btn-toolbar" role="toolbar">
+
+<div class="btn-toolbar mt-3" role="toolbar">
     <div class="btn-group btn-group-sm mr-2" role="group">
         <a id="button_refresh" class="btn btn-primary btn-sm" asp-page="./JobDetails" asp-route-id="@Model.JobExecution.ExecutionId" asp-route-graph="@Model.Graph">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
@@ -82,8 +82,7 @@
 
 @if (Model.JobExecution.ExecutionStatus == "RUNNING" && Model.IsOperator)
 {
-    <p></p>
-    <div class="btn-toolbar" role="toolbar">
+    <div class="btn-toolbar mt-2" role="toolbar">
         <div class="btn-group">
             <button id="button_stop_execution" type="button" class="btn btn-danger btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
@@ -99,8 +98,11 @@
     </div>
 }
 
-<p />
-<div class="collapse" id="jobDetails">
+<div class="row my-1">
+    <p></p>
+</div>
+
+<div class="collapse shadow-sm" id="jobDetails">
     <div class="card card-body">
         <dl class="row">
             <dt class="col-sm-3">
@@ -167,52 +169,62 @@
     </div>
 </div>
 
-<table id="steps_table" class="table table-sm table-hover" style="@(Model.Graph ? "display: none;" : "")">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].StepName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
-            </th>
-            <th>
-                Duration
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Executions)
-        {
-            <tr style="cursor: pointer;" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
-                <td>
-                    @Html.DisplayFor(modelItem => item.StepName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StartDateTime)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.EndDateTime)
-                </td>
-                <td>
-                    <text>@item.GetDurationInReadableFormat()</text>
-                </td>
-                <td>
-                    <partial name="_StepExecutionStatusBadgePartial" model="item" />
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
-
-<div id="steps_graph" style="@(Model.Graph ? "" : "display: none;")">  
+<div class="row my-1">
+    <p></p>
 </div>
+
+<div class="card shadow-sm pt-2" id="steps_table_div" style="@(Model.Graph ? "display: none;" : "")">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].StepName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
+                </th>
+                <th>
+                    Duration
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Executions)
+            {
+                <tr style="cursor: pointer;" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StepName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StartDateTime)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EndDateTime)
+                    </td>
+                    <td>
+                        <text>@item.GetDurationInReadableFormat()</text>
+                    </td>
+                    <td>
+                        <partial name="_StepExecutionStatusBadgePartial" model="item" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="card shadow-sm p-4" id="steps_graph_div" style="@(Model.Graph ? "" : "display: none;")">
+    <div id="steps_graph">
+    </div>
+</div>
+
+
 
 @functions {
     string colorRed = "#FED3D9";
@@ -266,8 +278,8 @@
         }
 
         function toggleTable() {
-            $('#steps_graph').hide();
-            $('#steps_table').show();
+            $('#steps_graph_div').hide();
+            $('#steps_table_div').show();
             $('#button_toggle_graph').removeClass('active');
             $('#button_toggle_table').addClass('active');
             $('#button_group_graph').hide();
@@ -276,8 +288,8 @@
         }
 
         function toggleGraph() {
-            $('#steps_table').hide();
-            $('#steps_graph').show();
+            $('#steps_table_div').hide();
+            $('#steps_graph_div').show();
             $('#button_toggle_table').removeClass('active');
             $('#button_toggle_graph').addClass('active');
             $('#button_group_graph').show();

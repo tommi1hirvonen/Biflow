@@ -197,6 +197,10 @@ tr:hover .btn-row,
     visibility: visible;
 }
 
+.table th {
+    border-top: none;
+}
+
 /*
     No-wrap buttons of btn-group in a table
 */
@@ -219,6 +223,14 @@ tr:hover .btn-row,
 
 .spinner-border.text-primary {
     color: var(--color-primary) !important;
+}
+
+/*
+    Badge
+*/
+.badge-custom {
+    color: #fff;
+    background-color: var(--color-primary);
 }
 
 

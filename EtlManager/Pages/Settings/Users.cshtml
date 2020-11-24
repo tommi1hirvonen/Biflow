@@ -6,76 +6,77 @@
     ViewData["Title"] = "Users";
 }
 
-<h3>Settings</h3>
-<hr />
-<partial name="_SettingsNavigationPartial" />
-<p></p>
+<h4>Settings</h4>
 
-<button class="btn btn-light" data-toggle="modal" data-target="#modal_create">
+<partial name="_SettingsNavigationPartial" />
+
+<button class="btn btn-success" data-toggle="modal" data-target="#modal_create">
     Add user
 </button>
-<p></p>
 
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>
-                Username
-            </th>
-            <th>
-            </th>
-            <th>
-                Email
-            </th>
-            <th>
-                Role
-            </th>
-            <th>
-                Created
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model.Users)
-        {
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
             <tr>
-                <td>
-                    @user.Username
-                </td>
-                <td>
-                    <form method="post">
-                        <div class="btn-group btn-row">
-                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                            </button>
-                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                            </button>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                <th>
+                    Username
+                </th>
+                <th>
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Role
+                </th>
+                <th>
+                    Created
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>
+                        @user.Username
+                    </td>
+                    <td>
+                        <form method="post">
+                            <div class="btn-group btn-row">
+                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </button>
-                                <div class="dropdown-menu">
-                                    <h6 class="dropdown-header">Delete?</h6>
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                </button>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <h6 class="dropdown-header">Delete?</h6>
+                                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-username="@user.Username">Confirm</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </td>
-                <td>
-                    @user.Email
-                </td>
-                <td>
-                    @user.Role
-                </td>
-                <td>
-                    @user.CreatedDateTime
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                        </form>
+                    </td>
+                    <td>
+                        @user.Email
+                    </td>
+                    <td>
+                        @user.Role
+                    </td>
+                    <td>
+                        @user.CreatedDateTime
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
 
 @*NEW USER MODAL*@
 <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

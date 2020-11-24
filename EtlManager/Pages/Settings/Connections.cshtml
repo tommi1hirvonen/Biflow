@@ -6,10 +6,9 @@
     ViewData["Title"] = "Connections";
 }
 
-<h3>Settings</h3>
-<hr />
+<h4>Settings</h4>
+
 <partial name="_SettingsNavigationPartial" />
-<p></p>
 
 @if (!Model.IsEncryptionKeySet)
 {
@@ -18,55 +17,56 @@
     </div>
 }
 
-<button class="btn btn-light" data-toggle="modal" data-target="#modal_create">
+<button class="btn btn-success" data-toggle="modal" data-target="#modal_create">
     Add connection
 </button>
-<p></p>
 
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>
-                Name
-            </th>
-            <th></th>
-            <th>
-                Connection string
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var connection in Model.Connections)
-        {
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
             <tr>
-                <td>
-                    @connection.ConnectionName
-                </td>
-                <td>
-                    <form method="post">
-                        <div class="btn-group btn-row">
-                            <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@connection.ConnectionId">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                            </button>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Connection string
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var connection in Model.Connections)
+            {
+                <tr>
+                    <td class="align-middle">
+                        @connection.ConnectionName
+                    </td>
+                    <td class="align-middle">
+                        <form method="post">
+                            <div class="btn-group btn-row">
+                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@connection.ConnectionId">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </button>
-                                <div class="dropdown-menu">
-                                    <h6 class="dropdown-header">Delete?</h6>
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@connection.ConnectionId">Confirm</button>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <h6 class="dropdown-header">Delete?</h6>
+                                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@connection.ConnectionId">Confirm</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </td>
-                <td>
-                    <pre><code>@connection.ConnectionString</code></pre>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                        </form>
+                    </td>
+                    <td class="align-middle">
+                        <pre><code>@connection.ConnectionString</code></pre>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 
 @*NEW CONNECTION MODAL*@

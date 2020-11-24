@@ -6,10 +6,9 @@
     ViewData["Title"] = "Data Factories";
 }
 
-<h3>Settings</h3>
-<hr />
+<h4>Settings</h4>
+
 <partial name="_SettingsNavigationPartial" />
-<p></p>
 
 @if (!Model.IsEncryptionKeySet)
 {
@@ -19,65 +18,67 @@
 }
 else
 {
-    <button class="btn btn-light" data-toggle="modal" data-target="#modal_create">
+    <button class="btn btn-success" data-toggle="modal" data-target="#modal_create">
         Add Data Factory
     </button>
     <p></p>
 }
 
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>
-                Name
-            </th>
-            <th></th>
-            <th>
-                Resource group name
-            </th>
-            <th>
-                Data Factory resource name
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var df in Model.DataFactories)
-        {
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
             <tr>
-                <td>
-                    @df.DataFactoryName
-                </td>
-                <td>
-                    <form method="post">
-                        <div class="btn-group btn-row">
-                            @if (Model.IsEncryptionKeySet)
-                            {
-                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </button>
-                            }
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                </button>
-                                <div class="dropdown-menu">
-                                    <h6 class="dropdown-header">Delete?</h6>
-                                    <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Confirm</button>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Resource group name
+                </th>
+                <th>
+                    Data Factory resource name
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var df in Model.DataFactories)
+            {
+                <tr>
+                    <td class="align-middle">
+                        @df.DataFactoryName
+                    </td>
+                    <td class="align-middle">
+                        <form method="post">
+                            <div class="btn-group btn-row">
+                                @if (Model.IsEncryptionKeySet)
+                                {
+                                    <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@df.DataFactoryId">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </button>
+                                }
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <h6 class="dropdown-header">Delete?</h6>
+                                        <button class="dropdown-item" asp-page-handler="Delete" asp-route-id="@df.DataFactoryId">Confirm</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </td>
-                <td>
-                    @df.ResourceGroupName
-                </td>
-                <td>
-                    @df.ResourceName
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                        </form>
+                    </td>
+                    <td class="align-middle">
+                        @df.ResourceGroupName
+                    </td>
+                    <td class="align-middle">
+                        @df.ResourceName
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 @if (Model.IsEncryptionKeySet)
 {

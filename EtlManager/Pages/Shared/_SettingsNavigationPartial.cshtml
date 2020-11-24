@@ -2,7 +2,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @{ string pageRoute = ViewContext.RouteData.Values["page"].ToString(); }
 
-<ul class="nav nav-tabs mt-3" role="tablist">
+<ul class="nav nav-tabs mt-3 mb-4" role="tablist">
     <li class="nav-item" role="presentation">
         <a class="nav-link @(pageRoute.Contains("Users") ? "active" : null)" asp-page="./Users">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))

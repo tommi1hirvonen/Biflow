@@ -6,9 +6,9 @@
     ViewData["Title"] = "Executions";
 }
 
-<h3>Executions</h3>
-<hr />
-<form>
+<h4>Executions</h4>
+
+<form class="mt-3">
     <div class="btn-toolbar">
         <button type="submit" class="btn btn-primary btn-sm">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
@@ -75,66 +75,66 @@
     </div>
 </form>
 
-<p />
-
-<table class="table table-sm table-hover">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].JobName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].CreatedDateTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
-            </th>
-            <th>
-                Duration
-            </th>
-            <th>
-                Number of steps
-            </th>
-            <th>
-                Success percent
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
-            </th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Executions)
-        {
-            <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)')">
-                <td>
-                    @Html.DisplayFor(modelItem => item.JobName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.CreatedDateTime)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.StartDateTime)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.EndDateTime)
-                </td>
-                <td>
-                    <text>@item.GetDurationInReadableFormat()</text>
-                </td>
-                <td style="text-align: right;">
-                    @Html.DisplayFor(modelItem => item.NumberOfSteps)
-                </td>
-                <td style="text-align: right;">
-                    @Html.DisplayFor(modelItem => item.SuccessPercent)
-                </td>
-                <td>
-                    <partial name="_JobExecutionStatusBadgePartial" model="item" />
-                </td>
+<div class="card shadow-sm pt-2 mt-2">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].JobName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].CreatedDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].EndDateTime)
+                </th>
+                <th>
+                    Duration
+                </th>
+                <th>
+                    Number of steps
+                </th>
+                <th>
+                    Success percent
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].ExecutionStatus)
+                </th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Executions)
+            {
+                <tr style="cursor: pointer;" onclick="window.open('@("/Executions/JobDetails?id=" + item.ExecutionId)')">
+                    <td>
+                        @Html.DisplayFor(modelItem => item.JobName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.CreatedDateTime)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.StartDateTime)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.EndDateTime)
+                    </td>
+                    <td>
+                        <text>@item.GetDurationInReadableFormat()</text>
+                    </td>
+                    <td style="text-align: right;">
+                        @Html.DisplayFor(modelItem => item.NumberOfSteps)
+                    </td>
+                    <td style="text-align: right;">
+                        @Html.DisplayFor(modelItem => item.SuccessPercent)
+                    </td>
+                    <td>
+                        <partial name="_JobExecutionStatusBadgePartial" model="item" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
