@@ -267,6 +267,7 @@ tr:hover .btn-row,
     top: 0;
     bottom: 0;
     left: 0;
+    width: 200px;
     z-index: 100; /* Behind the navbar */
     padding: 48px 0 0; /* Height of navbar */
     background-color: #fff;
@@ -279,6 +280,14 @@ tr:hover .btn-row,
         top: 5rem;
     }
 }
+
+@media (min-width: 992px) {
+    .main {
+        padding-right: 10px !important;
+        padding-left: 210px !important; /* (sidebar width) + (padding right) */
+    }
+}
+
 
 .sidebar-sticky {
     position: relative;
@@ -344,6 +353,13 @@ tr:hover .btn-row,
     padding-top: .75rem;
     padding-bottom: .75rem;
     font-weight: bold;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .navbar-brand {
+        width: 200px;
+    }
 }
 
 .navbar-brand-bg {
