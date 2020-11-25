@@ -212,12 +212,11 @@
                                 <thead>
                                     <tr>
                                         <th class="align-top">
-                                            <div class="custom-control custom-checkbox">
+                                            <div class="custom-control custom-control-inline custom-checkbox">
                                                 <input type="checkbox" class="custom-control-input" id="execute_check_all">
-                                                <label class="custom-control-label" for="execute_check_all"></label>
+                                                <label class="custom-control-label" for="execute_check_all">Step name</label>
                                             </div>
                                         </th>
-                                        <th>Step name</th>
                                         <th>
                                             @Html.DisplayNameFor(model => model.Steps[0].ExecutionPhase)
                                         </th>
@@ -231,13 +230,10 @@
                                     {
                                         <tr id="executable_step_@step.StepId">
                                             <td>
-                                                <div class="custom-control custom-checkbox">
+                                                <div class="custom-control custom-control-inline custom-checkbox">
                                                     <input type="checkbox" class="custom-control-input" name="execute_checkbox" id="@step.StepId">
-                                                    <label class="custom-control-label" for="@step.StepId"></label>
+                                                    <label class="custom-control-label" for="@step.StepId">@step.StepName</label>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                @step.StepName
                                             </td>
                                             <td class="align-middle">
                                                 @Html.DisplayFor(modelItem => step.ExecutionPhase)
