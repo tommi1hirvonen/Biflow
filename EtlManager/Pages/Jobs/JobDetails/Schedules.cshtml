@@ -25,7 +25,7 @@
         </div>
         <div class="col-4">
             <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-light")" onclick="toggleSubscribed()">
+                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-secondary")" onclick="toggleSubscribed()">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/mail.svg")))
                     <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
                 </button>
@@ -476,7 +476,7 @@
     function toggleSubscribed() {
         var jobId = "@Model.Job.JobId";
         var activeClass = "btn-success";
-        var inactiveClass = "btn-light";
+        var inactiveClass = "btn-secondary";
         $.ajax({
             url: "./Schedules?handler=ToggleSubscribed",
             method: "POST",
