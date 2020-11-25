@@ -196,7 +196,7 @@
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
                                     </div>
                                 </div>
-                                <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 1)" placeholder="Search" autocomplete="off" />
+                                <input type="text" id="executable_steps_search_input" class="form-control" onkeyup="filterSteps('executable_steps_search_input', 'table_executable_steps', 0)" placeholder="Search" autocomplete="off" />
                             </div>
                             <table class="table mt-3" id="table_executable_steps">
                                 <thead>
