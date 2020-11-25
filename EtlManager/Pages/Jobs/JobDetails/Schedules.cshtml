@@ -9,7 +9,7 @@
 <partial name="_JobDetailsNavigationPartial"
          model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel {
                 Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Schedules", NewJobName = Model.NewJobName, IsEditor = Model.IsEditor })" />
-<p></p>
+
 <div class="container-fluid">
     <div class="row align-items-center">
         <div class="col-6">
@@ -89,7 +89,7 @@
                     <td>
                         @if (item.Monday)
                         {
-                            <span class="badge badge-custom">Monday</span>
+                            <span class="badge badge-primary">Monday</span>
                         }
                         else
                         {
@@ -99,7 +99,7 @@
                     <td>
                         @if (item.Tuesday)
                         {
-                            <span class="badge badge-custom">Tuesday</span>
+                            <span class="badge badge-primary">Tuesday</span>
                         }
                         else
                         {
@@ -109,7 +109,7 @@
                     <td>
                         @if (item.Wednesday)
                         {
-                            <span class="badge badge-custom">Wednesday</span>
+                            <span class="badge badge-primary">Wednesday</span>
                         }
                         else
                         {
@@ -119,7 +119,7 @@
                     <td>
                         @if (item.Thursday)
                         {
-                            <span class="badge badge-custom">Thursday</span>
+                            <span class="badge badge-primary">Thursday</span>
                         }
                         else
                         {
@@ -129,7 +129,7 @@
                     <td>
                         @if (item.Friday)
                         {
-                            <span class="badge badge-custom">Friday</span>
+                            <span class="badge badge-primary">Friday</span>
                         }
                         else
                         {
@@ -139,7 +139,7 @@
                     <td>
                         @if (item.Saturday)
                         {
-                            <span class="badge badge-custom">Saturday</span>
+                            <span class="badge badge-primary">Saturday</span>
                         }
                         else
                         {
@@ -149,7 +149,7 @@
                     <td>
                         @if (item.Sunday)
                         {
-                            <span class="badge badge-custom">Sunday</span>
+                            <span class="badge badge-primary">Sunday</span>
                         }
                         else
                         {

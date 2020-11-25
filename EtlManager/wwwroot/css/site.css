@@ -34,7 +34,7 @@ for details on configuring this project to bundle and minify static web assets. 
 }
 
 .dropdown-menu {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
 .btn-group .btn {
@@ -273,8 +273,7 @@ tr:hover .btn-row,
 /*
     Badge
 */
-.badge-custom {
-    color: #fff;
+.badge-primary {
     background-color: var(--color-primary);
 }
 .badge-success {
@@ -282,6 +281,9 @@ tr:hover .btn-row,
 }
 .badge-danger {
     background-color: var(--color-danger);
+}
+.badge-warning {
+    color: #fff;
 }
 
 /*
