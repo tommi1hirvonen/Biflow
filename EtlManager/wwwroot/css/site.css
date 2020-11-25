@@ -13,8 +13,14 @@ for details on configuring this project to bundle and minify static web assets. 
     --color-success-dark: #08af80;
     --color-success-extra-dark: #079c72;
     --color-success-light: #0beaab;
-    --color-success-extra-light: #aaf1dd;
+    --color-success-extra-light: #cef5ea;
     --color-success-shadow: rgba(10, 207, 151, 0.5);
+    --color-danger: #fa5c7c;
+    --color-danger-dark: #f9395f;
+    --color-danger-extra-dark: #f82550;
+    --color-danger-light: #fb748f;
+    --color-danger-extra-light: #fedee5;
+    --color-danger-shadow: rgba(250, 92, 124, 0.5);
 }
 
 .btn {
@@ -26,7 +32,7 @@ for details on configuring this project to bundle and minify static web assets. 
 }
 
 .dropdown-menu {
-    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15), 0 5px 15px 0 rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 4px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
 .btn-group .btn {
@@ -112,6 +118,43 @@ for details on configuring this project to bundle and minify static web assets. 
     box-shadow: 0 0 0 0.2rem var(--color-success-shadow);
 }
 
+
+/*
+    Danger button customization
+*/
+.btn-danger {
+    color: #fff;
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+    .btn-danger:hover {
+        color: #fff;
+        background-color: var(--color-danger-dark);
+        border-color: var(--color-danger-dark);
+    }
+
+    .btn-danger:focus, .btn-danger.focus {
+        box-shadow: 0 0 0 0.2rem var(--color-danger-shadow);
+    }
+
+    .btn-danger.disabled, .btn-danger:disabled {
+        color: #fff;
+        background-color: var(--color-danger-light);
+        border-color: var(--color-danger-light);
+    }
+
+    .btn-danger:not(:disabled):not(.disabled):active, .btn-danger:not(:disabled):not(.disabled).active,
+    .show > .btn-danger.dropdown-toggle {
+        color: #fff;
+        background-color: var(--color-danger-extra-dark);
+        border-color: var(--color-danger-extra-dark);
+    }
+
+        .btn-danger:not(:disabled):not(.disabled):active:focus, .btn-danger:not(:disabled):not(.disabled).active:focus,
+        .show > .btn-danger.dropdown-toggle:focus {
+            box-shadow: 0 0 0 0.2rem var(--color-danger-shadow);
+        }
 
 /*
     Light button customization
@@ -231,6 +274,35 @@ tr:hover .btn-row,
 .badge-custom {
     color: #fff;
     background-color: var(--color-primary);
+}
+.badge-success {
+    background-color: var(--color-success);
+}
+.badge-danger {
+    background-color: var(--color-danger);
+}
+
+/*
+    Text
+*/
+
+.text-success {
+    color: var(--color-success);
+}
+.text-danger {
+    color: var(--color-danger);
+}
+
+/*
+    Alert
+*/
+.alert-success {
+    background-color: var(--color-success-extra-light);
+    border-color: var(--color-success-extra-light);
+}
+.alert-danger {
+    background-color: var(--color-danger-extra-light);
+    border-color: var(--color-danger-extra-light);
 }
 
 
