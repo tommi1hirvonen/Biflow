@@ -41,7 +41,7 @@ namespace EtlManager.Pages
                 Console.Write(ex);
             }
 
-            return Page();
+            return RedirectToPage("/Jobs/Index");
         }
 
     }

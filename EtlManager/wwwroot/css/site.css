@@ -7,19 +7,21 @@ for details on configuring this project to bundle and minify static web assets. 
     --color-primary-extra-dark: #404ff2;
     --color-primary-super-dark: #0f1fd2;
     --color-primary-light: #8d95f7;
-    --color-primary-extra-light: #a0a7f8;
+    --color-primary-extra-light: #b8bdfa;
+    --color-primary-super-light: #e3e5fd;
     --color-primary-shadow: rgba(114, 124, 245, 0.5);
     --color-success: #0acf97;
     --color-success-dark: #08af80;
     --color-success-extra-dark: #079c72;
     --color-success-light: #0beaab;
-    --color-success-extra-light: #cef5ea;
+    --color-success-extra-light: #aaf1dd;
+    --color-success-super-light: #cef5ea;
     --color-success-shadow: rgba(10, 207, 151, 0.5);
     --color-danger: #fa5c7c;
     --color-danger-dark: #f9395f;
     --color-danger-extra-dark: #f82550;
     --color-danger-light: #fb748f;
-    --color-danger-extra-light: #fedee5;
+    --color-danger-super-light: #fedee5;
     --color-danger-shadow: rgba(250, 92, 124, 0.5);
 }
 
@@ -297,12 +299,12 @@ tr:hover .btn-row,
     Alert
 */
 .alert-success {
-    background-color: var(--color-success-extra-light);
-    border-color: var(--color-success-extra-light);
+    background-color: var(--color-success-super-light);
+    border-color: var(--color-success-super-light);
 }
 .alert-danger {
-    background-color: var(--color-danger-extra-light);
-    border-color: var(--color-danger-extra-light);
+    background-color: var(--color-danger-super-light);
+    border-color: var(--color-danger-super-light);
 }
 
 
@@ -341,7 +343,7 @@ tr:hover .btn-row,
     left: 0;
     width: 200px;
     z-index: 100; /* Behind the navbar */
-    padding: 48px 0 0; /* Height of navbar */
+    padding: 55px 0 0; /* Height of navbar */
     background-color: #fff;
     box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
@@ -349,7 +351,7 @@ tr:hover .btn-row,
 /*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
 @media (max-width: 992px) {
     .sidebar {
-        padding: 130px 0 0;
+        padding: 135px 0 0;
     }
 }
 

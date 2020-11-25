@@ -63,18 +63,6 @@
                     <div class="sidebar-sticky">
                         <ul class="nav flex-column pt-3">
                             <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center @(pageRoute == "/Index" ? "active" : "")" asp-page="/Index">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/home.svg")))
-                                    Home
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link d-flex align-items-center @(pageRoute == "/Dashboard" ? "active" : "")" asp-page="/Dashboard">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
-                                    Dashboard
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link d-flex align-items-center @(pageRoute.Left(5) == "/Jobs" ? "active" : "")" asp-page="/Jobs/Index">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                                     Jobs
@@ -90,6 +78,12 @@
                                 <a class="nav-link d-flex align-items-center @(pageRoute.Left(11) == "/Executions" ? "active" : "")" asp-page="/Executions/Jobs">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                                     Executions
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link d-flex align-items-center @(pageRoute == "/Dashboard" ? "active" : "")" asp-page="/Dashboard">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+                                    Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
