@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using EtlManager.Data;
 using EtlManager.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -15,11 +16,13 @@ namespace EtlManager.Pages.Jobs.JobDetails
     public class HistoryModel : PageModel
     {
         private readonly EtlManagerContext _context;
+        private readonly HttpContext httpContext;
         private readonly IAuthorizationService _authorizationService;
-        public HistoryModel(EtlManagerContext context, IAuthorizationService authorizationService)
+        public HistoryModel(EtlManagerContext context, IAuthorizationService authorizationService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _authorizationService = authorizationService;
+            httpContext = httpContextAccessor.HttpContext;
         }
 
         public Job Job { get; set; }
@@ -36,18 +39,26 @@ namespace EtlManager.Pages.Jobs.JobDetails
         public decimal AverageSuccessRate { get; set; }
         public int AverageDurationInSeconds { get; set; }
 
+        public bool Subscribed { get; set; }
+
         [BindProperty]
         public string NewJobName { get; set; }
 
         public async Task OnGetAsync(Guid id)
         {
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-            Job = Jobs.First(job => job.JobId == id);
+            Job = await _context.Jobs.Include(job => job.Subscriptions).FirstOrDefaultAsync(job => job.JobId == id);
 
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (authorized.Succeeded)
             {
                 IsEditor = true;
+            }
+
+            string user = httpContext.User?.Identity?.Name;
+            if (Job.Subscriptions.Select(subscription => subscription.Username).Contains(user))
+            {
+                Subscribed = true;
             }
 
             Executions = await _context.JobExecutions

@@ -8,31 +8,21 @@
 
 <partial name="_JobDetailsNavigationPartial"
          model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel {
-                Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Schedules", NewJobName = Model.NewJobName, IsEditor = Model.IsEditor })" />
+                Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Schedules", NewJobName = Model.NewJobName, IsEditor = Model.IsEditor, Subscribed = Model.Subscribed })" />
 
-<div class="container-fluid">
-    <div class="row align-items-center">
-        <div class="col-6">
-            @if (Model.IsOperator)
-            {
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-                    Add schedule
-                </button>
-                <button type="button" class="btn btn-primary ml-5" data-toggle="modal" data-target="#modal_generate">
-                    Generate schedules
-                </button>
-            }
-        </div>
-        <div class="col-4">
-            <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-secondary")" onclick="toggleSubscribed()">
-                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(Model.WebRootPath, "icons/feather/mail.svg")))
-                    <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
-                </button>
-            </div>
+@if (Model.IsOperator)
+{
+    <div class="row">
+        <div class="col">
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+                Add schedule
+            </button>
+            <button type="button" class="btn btn-primary ml-4" data-toggle="modal" data-target="#modal_generate">
+                Generate schedules
+            </button>
         </div>
     </div>
-</div>
+}
 
 <p></p>
 <div class="card shadow-sm pt-2 mt-4">
@@ -471,43 +461,6 @@
         });
     }
 
-    var subscribed = @Model.Subscribed.ToString().ToLower();
-
-    function toggleSubscribed() {
-        var jobId = "@Model.Job.JobId";
-        var activeClass = "btn-success";
-        var inactiveClass = "btn-secondary";
-        $.ajax({
-            url: "./Schedules?handler=ToggleSubscribed",
-            method: "POST",
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("XSRF-TOKEN",
-                    $('input:hidden[name="__RequestVerificationToken"]').val());
-            },
-            data: {
-                id: jobId
-            },
-            success: function (response) {
-                if (!response.success) {
-                    alert(response.responseText);
-                } else {
-                    if (subscribed) {
-                        $('#button_toggle_subscribed').removeClass(activeClass);
-                        $('#button_toggle_subscribed').addClass(inactiveClass);
-                        $('#span_toggle_subscribed').text('Subscribe');
-                    } else {
-                        $('#button_toggle_subscribed').addClass(activeClass);
-                        $('#button_toggle_subscribed').removeClass(inactiveClass);
-                        $('#span_toggle_subscribed').text('Unsubscribe');
-                    }
-                    subscribed = !subscribed;
-                }
-            },
-            error: function (response) {
-                alert("AJAX error, try logging in again");
-            }
-        });
-    }
     </script>
 }
 

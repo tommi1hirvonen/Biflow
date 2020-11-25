@@ -187,34 +187,6 @@ namespace EtlManager.Pages.Jobs.JobDetails
             return RedirectToPage("./Schedules", new { id = ScheduleGeneration.JobId });
         }
 
-        public async Task<IActionResult> OnPostToggleSubscribed(Guid id)
-        {
-            string username = httpContext.User?.Identity?.Name;
-
-            var subscription = await _context.Subscriptions
-                .Where(subscription => subscription.JobId == id && subscription.Username == username)
-                .FirstOrDefaultAsync();
-
-            try
-            {
-                if (subscription != null)
-                {
-                    _context.Subscriptions.Remove(subscription);
-                }
-                else
-                {
-                    _context.Subscriptions.Add(new Subscription { JobId = id, Username = username });
-                }
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { success = false, responseText = "Error toggling subscription: " + ex.Message });
-            }
-
-            return new JsonResult(new { success = true });
-        }
-
         public async Task<IActionResult> OnPostRenameJob(Guid id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");

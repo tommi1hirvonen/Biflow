@@ -14,6 +14,8 @@ namespace EtlManager.Pages.Shared
 
         public bool IsEditor { get; set; }
 
+        public bool Subscribed { get; set; }
+
         [Required]
         [MaxLength(250)]
         public string NewJobName { get; set; }

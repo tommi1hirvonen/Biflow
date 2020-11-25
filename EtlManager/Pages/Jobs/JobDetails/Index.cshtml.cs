@@ -57,7 +57,11 @@ namespace EtlManager.Pages.Jobs.JobDetails
             Jobs = await _context.Jobs.OrderBy(job => job.JobName).ToListAsync();
             DataFactories = await _context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
             Connections = await _context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
-            Job = await _context.Jobs.Include(job => job.Steps).ThenInclude(step => step.DataFactory).FirstOrDefaultAsync(job => job.JobId == id);
+            Job = await _context.Jobs
+                .Include(job => job.Steps)
+                .ThenInclude(step => step.DataFactory)
+                .Include(job => job.Subscriptions)
+                .FirstOrDefaultAsync(job => job.JobId == id);
             Steps = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
             NewStep = new Step { JobId = id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
 
@@ -71,6 +75,12 @@ namespace EtlManager.Pages.Jobs.JobDetails
             if (authorized2.Succeeded)
             {
                 IsOperator = true;
+            }
+
+            string user = httpContext.User?.Identity?.Name;
+            if (Job.Subscriptions.Select(subscription => subscription.Username).Contains(user))
+            {
+                Subscribed = true;
             }
         }
 
@@ -269,6 +279,34 @@ namespace EtlManager.Pages.Jobs.JobDetails
             await _context.SaveChangesAsync();
 
             return RedirectToPage("./Index", new { id = NewStep.JobId });
+        }
+
+        public async Task<IActionResult> OnPostToggleSubscribed(Guid id)
+        {
+            string username = httpContext.User?.Identity?.Name;
+
+            var subscription = await _context.Subscriptions
+                .Where(subscription => subscription.JobId == id && subscription.Username == username)
+                .FirstOrDefaultAsync();
+
+            try
+            {
+                if (subscription != null)
+                {
+                    _context.Subscriptions.Remove(subscription);
+                }
+                else
+                {
+                    _context.Subscriptions.Add(new Subscription { JobId = id, Username = username });
+                }
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, responseText = "Error toggling subscription: " + ex.Message });
+            }
+
+            return new JsonResult(new { success = true });
         }
 
         public async Task<IActionResult> OnPostRenameJob(Guid id)
