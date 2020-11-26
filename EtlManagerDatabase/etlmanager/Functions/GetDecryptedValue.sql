@@ -1,0 +1,10 @@
+﻿CREATE FUNCTION [etlmanager].[GetDecryptedValue]
+(
+	@EncryptionKey NVARCHAR(128),
+	@Data VARBINARY(MAX)
+)
+RETURNS NVARCHAR(MAX)
+AS
+BEGIN
+	RETURN CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@EncryptionKey, @Data))
+END

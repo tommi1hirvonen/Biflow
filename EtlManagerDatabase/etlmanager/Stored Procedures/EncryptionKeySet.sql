@@ -1,4 +1,5 @@
 ﻿CREATE PROCEDURE [etlmanager].[EncryptionKeySet]
+	@EncryptionId NVARCHAR(50),
 	@OldEncryptionKey NVARCHAR(MAX) = NULL,
 	@NewEncryptionKey NVARCHAR(MAX),
 	@NewEncryptionKeyEncrypted VARBINARY(MAX),
@@ -21,10 +22,10 @@ BEGIN
 
 END
 
-TRUNCATE TABLE etlmanager.EncryptionKey
+DELETE FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId
 
-INSERT INTO etlmanager.EncryptionKey (EncryptionKey, Entropy)
-SELECT @NewEncryptionKeyEncrypted, @Entropy
+INSERT INTO etlmanager.EncryptionKey (EncryptionId, EncryptionKey, Entropy)
+SELECT @EncryptionId, @NewEncryptionKeyEncrypted, @Entropy
 
 
 COMMIT TRANSACTION

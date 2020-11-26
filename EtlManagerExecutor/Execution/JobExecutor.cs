@@ -38,10 +38,11 @@ namespace EtlManagerExecutor
             MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
             ExecutionId = executionId;
             Notify = notify;
+            string encryptionId = configuration.GetValue<string>("EncryptionId");
 
             try
             {
-                EncryptionPassword = Utility.GetEncryptionKey(EtlManagerConnectionString);
+                EncryptionPassword = Utility.GetEncryptionKey(encryptionId, EtlManagerConnectionString);
             }
             catch (Exception ex)
             {

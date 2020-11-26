@@ -82,11 +82,12 @@ namespace EtlManagerExecutor
 
     public static class Utility
     {
-        public static string GetEncryptionKey(string connectionString)
+        public static string GetEncryptionKey(string encryptionId, string connectionString)
         {
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
-            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey", sqlConnection);
+            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
+            getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
             var reader = getKeyCmd.ExecuteReader();
             if (reader.Read())
             {
@@ -107,7 +108,7 @@ namespace EtlManagerExecutor
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
             SqlCommand sqlCommand = new SqlCommand(
-                @"SELECT [TenantId], [SubscriptionId], [ClientId], CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@EncryptionKey, ClientSecret)) AS ClientSecret,
+                @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
                         [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
                 FROM etlmanager.DataFactory
                 WHERE DataFactoryId = @DataFactoryId", sqlConnection);

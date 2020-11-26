@@ -32,6 +32,7 @@ namespace EtlManagerExecutor
             ExecutionId = executionId;
             Username = username;
             EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
+            string encryptionId = configuration.GetValue<string>("EncryptionId");
 
             // First stop the EtlManagerExecutor process. This stops SQL executions as well.
             try
@@ -74,7 +75,7 @@ namespace EtlManagerExecutor
             // Get encryption key for package and pipeline stopping.
             try
             {
-                EncryptionKey = Utility.GetEncryptionKey(EtlManagerConnectionString);
+                EncryptionKey = Utility.GetEncryptionKey(encryptionId, EtlManagerConnectionString);
             }
             catch (Exception ex)
             {

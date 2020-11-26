@@ -209,9 +209,11 @@ namespace EtlManager
         public static bool IsEncryptionKeySet(IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
-            SqlCommand sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey", sqlConnection);
+            SqlCommand sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@EncryptionId", encryptionId);
             var reader = sqlCommand.ExecuteReader();
             if (reader.HasRows)
             {
@@ -226,16 +228,18 @@ namespace EtlManager
         public static string GetEncryptionKey(IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
-            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey", sqlConnection);
+            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
+            getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
             var reader = getKeyCmd.ExecuteReader();
             if (reader.Read())
             {
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
                 byte[] entropy = (byte[])reader["Entropy"];
 
-                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.CurrentUser);
+                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
                 return Encoding.ASCII.GetString(output);
             }
             else
@@ -247,6 +251,7 @@ namespace EtlManager
         public static void SetEncryptionKey(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
+            string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
 
@@ -258,10 +263,13 @@ namespace EtlManager
             byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
 
             SqlCommand updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
+                    @EncryptionId = @EncryptionId_,
                     @OldEncryptionKey = @OldEncryptionKey_,
                     @NewEncryptionKey = @NewEncryptionKey_,
                     @NewEncryptionKeyEncrypted = @NewEncryptionKeyEncrypted_,
                     @Entropy = @Entropy_", sqlConnection);
+
+            updateKeyCmd.Parameters.AddWithValue("@EncryptionId_", encryptionId);
 
             if (oldEncryptionKey != null) updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", oldEncryptionKey);
             else updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", DBNull.Value);
