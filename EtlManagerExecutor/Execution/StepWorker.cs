@@ -480,10 +480,13 @@ namespace EtlManagerExecutor
                         case "WARNING":
                             return new ExecutionResult.Success();
                         case "FAILED":
+                            return new ExecutionResult.Failure("Sub-execution failed");
                         case "STOPPED":
+                            return new ExecutionResult.Failure("Sub-execution was stopped");
                         case "SUSPENDED":
+                            return new ExecutionResult.Failure("Sub-execution was suspended");
                         case "NOT STARTED":
-                            return new ExecutionResult.Failure("Sub-execution encountered errors, was stopped or failed to start");
+                            return new ExecutionResult.Failure("Sub-execution failed to start");
                         case "RUNNING":
                             return new ExecutionResult.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing");
                         default:
