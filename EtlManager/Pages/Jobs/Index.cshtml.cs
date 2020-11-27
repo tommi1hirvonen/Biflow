@@ -49,7 +49,7 @@ namespace EtlManager.Pages.Jobs
                 .Select(key => new
                 {
                     Key = key,
-                    Execution = _context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.StartDateTime).First()
+                    Execution = _context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
                 })
                 .ToListAsync();
 
