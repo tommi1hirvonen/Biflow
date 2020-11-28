@@ -44,14 +44,14 @@
                     <td>
                         <form method="post">
                             <div class="btn-group btn-row">
-                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username">
+                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_edit_@user.Username" aria-label="edit">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </button>
-                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username">
+                                <button type="button" class="btn btn-light btn-sm" data-toggle="modal" data-target="#modal_change_password_@user.Username" aria-label="change password">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                 </button>
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="delete">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                                     </button>
                                     <div class="dropdown-menu">
@@ -173,12 +173,12 @@
 @*GENERATE EDIT MODALS*@
 @foreach (var user in Model.Users)
 {
-    <div class="modal fade" id="modal_edit_@user.Username" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="modal_edit_@user.Username" tabindex="-1" aria-labelledby="exampleModalLabel2" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form method="post" autocomplete="off">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">@user.Username</h5>
+                        <h5 class="modal-title" id="exampleModalLabel2">@user.Username</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>

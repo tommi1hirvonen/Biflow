@@ -36,18 +36,25 @@
                     Time
                 </th>
                 <th>
+                    <text class="sr-only">Monday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Tuesday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Wednesday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Thursday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Friday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Saturday</text>
                 </th>
                 <th>
+                    <text class="sr-only">Sunday</text>
                 </th>
                 <th>
                 </th>
@@ -79,77 +86,77 @@
                     <td>
                         @if (item.Monday)
                         {
-                            <span class="badge badge-primary">Monday</span>
+                            <span class="badge badge-primary" aria-label="on">Monday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Monday</span>
+                            <span class="badge badge-secondary" aria-label="off">Monday</span>
                         }
                     </td>
                     <td>
                         @if (item.Tuesday)
                         {
-                            <span class="badge badge-primary">Tuesday</span>
+                            <span class="badge badge-primary" aria-label="on">Tuesday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Tuesday</span>
+                            <span class="badge badge-secondary" aria-label="off">Tuesday</span>
                         }
                     </td>
                     <td>
                         @if (item.Wednesday)
                         {
-                            <span class="badge badge-primary">Wednesday</span>
+                            <span class="badge badge-primary" aria-label="on">Wednesday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Wednesday</span>
+                            <span class="badge badge-secondary" aria-label="off">Wednesday</span>
                         }
                     </td>
                     <td>
                         @if (item.Thursday)
                         {
-                            <span class="badge badge-primary">Thursday</span>
+                            <span class="badge badge-primary" aria-label="on">Thursday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Thursday</span>
+                            <span class="badge badge-secondary" aria-label="off">Thursday</span>
                         }
                     </td>
                     <td>
                         @if (item.Friday)
                         {
-                            <span class="badge badge-primary">Friday</span>
+                            <span class="badge badge-primary" aria-label="on">Friday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Friday</span>
+                            <span class="badge badge-secondary" aria-label="off">Friday</span>
                         }
                     </td>
                     <td>
                         @if (item.Saturday)
                         {
-                            <span class="badge badge-primary">Saturday</span>
+                            <span class="badge badge-primary" aria-label="on">Saturday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Saturday</span>
+                            <span class="badge badge-secondary" aria-label="off">Saturday</span>
                         }
                     </td>
                     <td>
                         @if (item.Sunday)
                         {
-                            <span class="badge badge-primary">Sunday</span>
+                            <span class="badge badge-primary" aria-label="on">Sunday</span>
                         }
                         else
                         {
-                            <span class="badge badge-secondary">Sunday</span>
+                            <span class="badge badge-secondary" aria-label="off">Sunday</span>
                         }
                     </td>
                     <td align="center">
                         @if (Model.IsOperator)
                         {
-                            <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')">
+                            <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')" aria-label="delete">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </button>
                         }
@@ -261,12 +268,12 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modal_generate" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="modal_generate" tabindex="-1" aria-labelledby="exampleModalLabel2" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="post">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Generate schedules</h5>
+                        <h5 class="modal-title" id="exampleModalLabel2">Generate schedules</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>

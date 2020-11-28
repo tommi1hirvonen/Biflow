@@ -291,7 +291,7 @@
                                 <span asp-validation-for="Parameters[index].ParameterValue" class="text-danger"></span>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)">
+                                <button type="button" class="btn btn-light btn-sm" onclick="removeParameter(this)" aria-label="remove parameter">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                                 </button>
                             </td>
@@ -304,7 +304,7 @@
                 <p />
             </div>
             <div>
-                <button type="button" class="btn btn-light btn-sm" onclick="addParameter()">
+                <button type="button" class="btn btn-light btn-sm" onclick="addParameter()" aria-label="add parameter">
                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
                 </button>
             </div>

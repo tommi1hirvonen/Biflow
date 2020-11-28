@@ -43,6 +43,7 @@
 
 <div class="row col-9 col-md-6 col-lg-5 mt-4 mb-4">
     <div class="input-group">
+        <label class="sr-only">Search</label>
         <div class="input-group-prepend">
             <div class="input-group-text">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
@@ -90,13 +91,13 @@
                     <td align="center">
                         <div class="btn-group btn-row">
                             @*Open corresponding modal popup to display step execution details*@
-                            <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId">
+                            <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId" aria-label="info">
                                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                             </button>
                             @if (Model.IsEditor)
                             {
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="copy">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                                     </button>
                                     <div class="dropdown-menu">
@@ -117,7 +118,7 @@
                                     </div>
                                 </div>
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <button type="button" class="btn btn-light btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="delete">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                                     </button>
                                     <div class="dropdown-menu">
@@ -132,7 +133,7 @@
                     <td class="align-middle">
                         @Html.DisplayFor(modelItem => item.ExecutionPhase)
                     </td>
-                    <td class="align-middle" title="@item.StepType">
+                    <td class="align-middle" title="@item.StepType" aria-label="@item.StepType">
                         @if (item.StepType == "SQL")
                         {
                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
@@ -156,13 +157,13 @@
                                 @if (Model.IsEditor)
                                 {
                                     <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" asp-for="@item.IsEnabled" onchange="toggleStepEnabled(this)" data-step-id="@item.StepId">
-                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId"></label>
+                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
                                 }
                                 else
                                 {
                                     @*If the user is not editor or above, disable the toggle and mouse pointer change*@
                                     <input type="checkbox" class="custom-control-input" disabled asp-for="@item.IsEnabled">
-                                    <label class="custom-control-label" for="@item.StepId"></label>
+                                    <label class="custom-control-label" for="@item.StepId" aria-label="enabled"></label>
                                 }
                             </div>
                         </form>
@@ -191,6 +192,7 @@
                     <div class="row">
                         <div class="col mx-5">
                             <div class="input-group">
+                                <label class="sr-only">Search</label>
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">
                                         @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
@@ -228,7 +230,7 @@
                                             <td class="align-middle">
                                                 @Html.DisplayFor(modelItem => step.ExecutionPhase)
                                             </td>
-                                            <td class="align-middle">
+                                            <td class="align-middle" aria-label="@step.StepType">
                                                 @if (step.StepType == "SQL")
                                                 {
                                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
@@ -265,12 +267,12 @@
 @if (Model.IsEditor)
 {
     @*NEW STEP MODAL*@
-    <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="modal_create" tabindex="-1" aria-labelledby="exampleModalLabel2" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form method="post" asp-page-handler="Create" autocomplete="off">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">New step</h5>
+                        <h5 class="modal-title" id="exampleModalLabel2">New step</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -530,11 +532,11 @@
 @*Generate modal popup windows to display step details*@
 @foreach (var item in Model.Steps)
 {
-    <div class="modal fade" id="modal_@item.StepId" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="modal_@item.StepId" tabindex="-1" aria-labelledby="exampleModalLabel3" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">@item.StepName</h5>
+                    <h5 class="modal-title" id="exampleModalLabel3">@item.StepName</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>

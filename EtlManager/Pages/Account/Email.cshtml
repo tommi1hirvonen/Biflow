@@ -23,6 +23,7 @@
             <div class="form-group">
                 <input hidden asp-for="User_.Username" value="@Model.User_.Username" />
                 <div class="input-group">
+                    <label class="sr-only">Email</label>
                     <div class="input-group-prepend">
                         <div class="input-group-text">
                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))

@@ -26,13 +26,27 @@
                 <th>Job</th>
                 <th>Enabled</th>
                 <th>Time</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
+                <th>
+                    <text class="sr-only">Monday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Tuesday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Wednesday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Thursday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Friday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Saturday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Sunday</text>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -57,7 +71,7 @@
                                         <input type="checkbox" class="custom-control-input" disabled asp-for="@schedule.IsEnabled">
                                     }
 
-                                    <label class="custom-control-label" style="cursor: pointer;" for="@schedule.ScheduleId"></label>
+                                    <label class="custom-control-label" style="cursor: pointer;" for="@schedule.ScheduleId" aria-label="enabled"></label>
                                 </div>
                             </form>
                         </td>
@@ -67,77 +81,77 @@
                         <td>
                             @if (schedule.Monday)
                             {
-                                <span class="badge badge-primary">Monday</span>
+                                <span class="badge badge-primary" aria-label="on">Monday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Monday</span>
+                                <span class="badge badge-secondary" aria-label="off">Monday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Tuesday)
                             {
-                                <span class="badge badge-primary">Tuesday</span>
+                                <span class="badge badge-primary" aria-label="on">Tuesday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Tuesday</span>
+                                <span class="badge badge-secondary" aria-label="off">Tuesday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Wednesday)
                             {
-                                <span class="badge badge-primary">Wednesday</span>
+                                <span class="badge badge-primary" aria-label="on">Wednesday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Wednesday</span>
+                                <span class="badge badge-secondary" aria-label="off">Wednesday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Thursday)
                             {
-                                <span class="badge badge-primary">Thursday</span>
+                                <span class="badge badge-primary" aria-label="on">Thursday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Thursday</span>
+                                <span class="badge badge-secondary" aria-label="off">Thursday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Friday)
                             {
-                                <span class="badge badge-primary">Friday</span>
+                                <span class="badge badge-primary" aria-label="on">Friday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Friday</span>
+                                <span class="badge badge-secondary" aria-label="off">Friday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Saturday)
                             {
-                                <span class="badge badge-primary">Saturday</span>
+                                <span class="badge badge-primary" aria-label="on">Saturday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Saturday</span>
+                                <span class="badge badge-secondary" aria-label="off">Saturday</span>
                             }
                         </td>
                         <td>
                             @if (schedule.Sunday)
                             {
-                                <span class="badge badge-primary">Sunday</span>
+                                <span class="badge badge-primary" aria-label="on">Sunday</span>
                             }
                             else
                             {
-                                <span class="badge badge-secondary">Sunday</span>
+                                <span class="badge badge-secondary" aria-label="off">Sunday</span>
                             }
                         </td>
                         <td align="center">
                             @if (Model.IsOperator)
                             {
-                                <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@schedule.ScheduleId')">
+                                <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@schedule.ScheduleId')" aria-label="delete">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                                 </button>
                             }
