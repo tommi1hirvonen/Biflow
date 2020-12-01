@@ -25,7 +25,7 @@
                                 <div class="input-group">
                                     <label class="sr-only" asp-for="Login.Username"></label>
                                     <div class="input-group-prepend">
-                                        <div class="input-group-text">
+                                        <div class="input-group-text rounded-left">
                                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                                         </div>
                                     </div>
@@ -38,7 +38,7 @@
                                 <div class="input-group">
                                     <label class="sr-only" asp-for="Login.Password"></label>
                                     <div class="input-group-prepend">
-                                        <div class="input-group-text">
+                                        <div class="input-group-text rounded-left">
                                             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                         </div>
                                     </div>
