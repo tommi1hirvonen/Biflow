@@ -232,13 +232,13 @@ for details on configuring this project to bundle and minify static web assets. 
 /*
     Class used for buttons which are placed inside a table row
 */
-.btn-row {
+.table-hover tbody tr .btn-row {
     visibility: hidden;
 }
 
-tr:hover .btn-row,
-.show,
-.show button {
+.table-hover tbody tr:hover .btn-row,
+.table-hover tbody .show,
+.table-hover tbody .show button {
     visibility: visible;
 }
 
