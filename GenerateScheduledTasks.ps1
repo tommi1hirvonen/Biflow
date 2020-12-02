@@ -11,7 +11,7 @@ Do {
 
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
 
-    $taskName = 'ETLMANAGER_' + $time.ToShortTimeString()
+    $taskName = 'ETLMANAGER_' + $time.ToShortTimeString().Replace(':', '_')
 
     Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName $taskName -TaskPath "\ETL Manager" `        -User 'Domain\User' -Password 'password'
 
