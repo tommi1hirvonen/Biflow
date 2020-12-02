@@ -97,7 +97,7 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
-        public async Task<IActionResult> OnPostCreate([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job NewJob)
+        public async Task<IActionResult> OnPostCreate([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode", "IsEnabled")] Job NewJob)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
@@ -114,7 +114,7 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
-        public async Task<IActionResult> OnPostEdit([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode")] Job EditJob)
+        public async Task<IActionResult> OnPostEdit([Bind("JobId", "JobName", "CreatedDateTime", "LastModifiedDateTime", "UseDependencyMode", "IsEnabled")] Job EditJob)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)
