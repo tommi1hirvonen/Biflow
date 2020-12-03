@@ -99,6 +99,9 @@
                     @Html.DisplayNameFor(model => model.Executions[0].StepName)
                 </th>
                 <th>
+                    @Html.DisplayNameFor(model => model.Executions[0].StepType)
+                </th>
+                <th>
                     @Html.DisplayNameFor(model => model.Executions[0].StartDateTime)
                 </th>
                 <th>
@@ -118,6 +121,9 @@
                 <tr style="cursor: pointer;" data-toggle="modal" data-target="#modal_@item.StepExecutionId">
                     <td>
                         @Html.DisplayFor(modelItem => item.StepName)
+                    </td>
+                    <td>
+                        <partial name="_StepTypeIconPartial" model="@(new EtlManager.Pages.Shared._StepTypeIconPartialModel { StepType = item.StepType })" />
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.StartDateTime)

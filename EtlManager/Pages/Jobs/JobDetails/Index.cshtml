@@ -134,22 +134,7 @@
                         @Html.DisplayFor(modelItem => item.ExecutionPhase)
                     </td>
                     <td class="align-middle" title="@item.StepType" aria-label="@item.StepType">
-                        @if (item.StepType == "SQL")
-                        {
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-                        }
-                        else if (item.StepType == "SSIS")
-                        {
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                        }
-                        else if (item.StepType == "PIPELINE")
-                        {
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
-                        }
-                        else if (item.StepType == "JOB")
-                        {
-                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                        }
+                        <partial name="_StepTypeIconPartial" model="@(new EtlManager.Pages.Shared._StepTypeIconPartialModel { StepType = item.StepType })"/>
                     </td>
                     <td class="align-middle">
                         <form>
@@ -231,22 +216,7 @@
                                                 @Html.DisplayFor(modelItem => step.ExecutionPhase)
                                             </td>
                                             <td class="align-middle" aria-label="@step.StepType">
-                                                @if (step.StepType == "SQL")
-                                                {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-                                                }
-                                                else if (step.StepType == "SSIS")
-                                                {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                                                }
-                                                else if (step.StepType == "PIPELINE")
-                                                {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
-                                                }
-                                                else if (step.StepType == "JOB")
-                                                {
-                                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                                                }
+                                                <partial name="_StepTypeIconPartial" model="@(new EtlManager.Pages.Shared._StepTypeIconPartialModel { StepType = step.StepType })" />
                                             </td>
                                         </tr>
                                     }
