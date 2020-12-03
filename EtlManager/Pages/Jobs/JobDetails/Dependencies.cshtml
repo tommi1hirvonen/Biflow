@@ -181,7 +181,7 @@
 
         // When a node is clicked, direct the user to the corresponding step's edit page.
         $(document).on('click', '.node', function () {
-            location.href = "/Jobs/JobDetails/StepDetails/Edit?id=" + this.id;
+            location.href = "/Jobs/JobDetails/StepDetails/Edit?id=" + this.id + "&DependenciesRedirect=true";
         });
 
         $(function () {

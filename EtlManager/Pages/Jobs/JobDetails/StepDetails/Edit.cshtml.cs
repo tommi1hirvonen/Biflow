@@ -37,12 +37,17 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
         [BindProperty]
         public IList<ParameterEdit> Parameters { get; set; } = new List<ParameterEdit>();
 
-        public async Task<IActionResult> OnGetAsync(Guid? id)
+        [BindProperty]
+        public bool DependenciesRedirect { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(Guid? id, bool dependenciesRedirect = false)
         {
             if (id == null)
             {
                 return NotFound();
             }
+
+            DependenciesRedirect = dependenciesRedirect;
 
             Step = await _context.Steps
                 .Include(step => step.DataFactory)
@@ -189,7 +194,14 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
                 }
             }
 
-            return RedirectToPage("../Index", new { id = Step.JobId});
+            if (DependenciesRedirect)
+            {
+                return RedirectToPage("../Dependencies", new { id = Step.JobId });
+            }
+            else
+            {
+                return RedirectToPage("../Index", new { id = Step.JobId });
+            }
         }
 
         private bool StepExists(Guid id)

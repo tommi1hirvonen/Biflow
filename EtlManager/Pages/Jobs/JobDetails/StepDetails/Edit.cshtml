@@ -7,12 +7,13 @@
 }
 
 <form id="form" method="post" autocomplete="off">
+    <input type="hidden" asp-for="DependenciesRedirect"/>
     <div class="btn-toolbar">
         <button id="button_submit" type="submit" class="btn btn-success">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
             Save
         </button>
-        <a class="btn btn-secondary ml-4" asp-page="../Index" asp-route-id="@Model.Step.JobId">Back</a>
+        <a class="btn btn-secondary ml-4" asp-page="@(Model.DependenciesRedirect ? "../Dependencies" : "../Index")" asp-route-id="@Model.Step.JobId">Back</a>
     </div>
     
     <p></p>
@@ -22,11 +23,11 @@
     
     <div class="btn-toolbar" role="toolbar">
         <div class="btn-group btn-group-sm mr-2" role="group">
-            <button type="button" id="button_toggle_settings" class="btn btn-light active" onclick="toggleSettings()">
+            <button type="button" id="button_toggle_settings" class="btn btn-light @(!Model.DependenciesRedirect ? "active" : null)" onclick="toggleSettings()">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                 Settings
             </button>
-            <button type="button" id="button_toggle_dependencies" class="btn btn-light" onclick="toggleDependencies()">
+            <button type="button" id="button_toggle_dependencies" class="btn btn-light @(Model.DependenciesRedirect ? "active" : null)" onclick="toggleDependencies()">
                 @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                 Dependencies
             </button>
@@ -35,7 +36,7 @@
     
     <p></p>
     
-    <div id="div_settings">
+    <div id="div_settings" @(Model.DependenciesRedirect ? Html.Raw(@"style=""display: none;""") : null)>
         <div class="row">
             <div class="col-lg-8 col-md-12">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -312,7 +313,7 @@
         </div>
     </div>
 
-    <div class="card shadow-sm pt-2 mt-4 col-lg-8 col-md-12" id="div_dependencies" style="display: none;">
+    <div class="card shadow-sm pt-2 mt-4 col-lg-8 col-md-12" id="div_dependencies" @(!Model.DependenciesRedirect ? Html.Raw(@"style=""display: none;""") : null)>
         <table class="table table-sm table-hover">
             <thead>
                 <tr>
