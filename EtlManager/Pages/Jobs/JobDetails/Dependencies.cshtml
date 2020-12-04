@@ -90,10 +90,14 @@
                 {
                     <tr>
                         <td>
-                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">@item.Step.StepName</a>
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId" asp-route-dependenciesRedirect="True">
+                                @item.Step.StepName
+                            </a>
                         </td>
                         <td>
-                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId">@item.DependantOnStep.StepName</a>
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.DependantOnStep.StepId" asp-route-dependenciesRedirect="True">
+                                @item.DependantOnStep.StepName
+                            </a>
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.StrictDependency)
