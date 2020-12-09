@@ -92,6 +92,7 @@ namespace EtlManagerExecutor
 
             if (jobIds.Count == 0)
             {
+                Log.Information("No active jobs to execute on weekday: {weekday}, hours: {hours}, minutes: {minutes}", weekday, hours, minutes);
                 return;
             }
 
