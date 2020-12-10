@@ -10,26 +10,22 @@
          model="@(new EtlManager.Pages.Shared._JobDetailsNavigationPartialModel {
                 Job = Model.Job, Jobs = Model.Jobs, RedirectPage = "Index", NewJobName = Model.NewJobName, IsEditor = Model.IsEditor, Subscribed = Model.Subscribed })" />
 
-@if (Model.IsOperator || Model.IsEditor)
+
+
+@if (Model.IsEditor)
 {
-    <div class="row">
-        <div class="col">
-            @if (Model.IsEditor) @*Editor is also operator*@
-            {
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
-                    Add step
-                </button>
-            }
-            <div class="btn-group ml-4">
-                <button id="button_execute" type="button" class="btn btn-primary" data-toggle="modal" data-target="#modal_execute">
-                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-                    Execute
-                </button>
-            </div>
-            <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_create">
+        Add step
+    </button>
+}
+@if (Model.IsOperator)
+{
+    <button id="button_execute" type="button" class="btn btn-primary ml-4" data-toggle="modal" data-target="#modal_execute">
+        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+        Execute
+    </button>
+    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden role="status">
+        <span class="sr-only">Loading...</span>
     </div>
 }
 
@@ -134,7 +130,7 @@
                         @Html.DisplayFor(modelItem => item.ExecutionPhase)
                     </td>
                     <td class="align-middle" title="@item.StepType" aria-label="@item.StepType">
-                        <partial name="_StepTypeIconPartial" model="@(new EtlManager.Pages.Shared._StepTypeIconPartialModel { StepType = item.StepType })"/>
+                        <partial name="_StepTypeIconPartial" model="@(new EtlManager.Pages.Shared._StepTypeIconPartialModel { StepType = item.StepType })" />
                     </td>
                     <td class="align-middle">
                         <form>

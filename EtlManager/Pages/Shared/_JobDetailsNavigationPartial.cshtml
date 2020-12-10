@@ -20,12 +20,10 @@
     </div>
     <div class="col-xl d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
         <div class="btn-toolbar">
-            <div class="btn-group">
-                <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-secondary")" onclick="toggleSubscribed()">
-                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
-                    <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
-                </button>
-            </div>
+            <button type="button" id="button_toggle_subscribed" class="btn @(Model.Subscribed ? "btn-success" : "btn-secondary")" onclick="toggleSubscribed()">
+                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
+                <span id="span_toggle_subscribed">@(Model.Subscribed ? "Unsubscribe" : "Subscribe")</span>
+            </button>
             @if (Model.IsEditor)
             {
                 <div class="btn-group dropleft ml-3">
