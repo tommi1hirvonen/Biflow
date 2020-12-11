@@ -64,7 +64,7 @@ namespace EtlManager.Pages.Executions
 
         }
 
-        public async Task<JsonResult> OnPostStopJobExecution(Guid id)
+        public async Task<JsonResult> OnPostStopJobExecution(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)
@@ -81,7 +81,7 @@ namespace EtlManager.Pages.Executions
 
             try
             {
-                if (!Utility.StopJobExecution(_configuration, id, username))
+                if (!Utility.StopJobExecution(_configuration, (Guid)id, username))
                 {
                     return new JsonResult(new { success = false, responseText = "Error when stopping execution. See Executor logs for details." });
                 }

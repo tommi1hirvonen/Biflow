@@ -76,7 +76,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             }
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDelete(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)

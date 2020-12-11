@@ -77,7 +77,7 @@ namespace EtlManager.Pages.Jobs
             return RedirectToPage("./Index");
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDelete(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)

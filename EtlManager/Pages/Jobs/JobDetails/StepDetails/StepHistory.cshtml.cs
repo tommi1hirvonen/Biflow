@@ -32,7 +32,7 @@ namespace EtlManager.Pages.Jobs.JobDetails.StepDetails
         public decimal AverageSuccessRate { get; set; }
         public int AverageDurationInSeconds { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(Guid id)
+        public async Task<IActionResult> OnGetAsync(Guid? id)
         {
 
             if (id == null)

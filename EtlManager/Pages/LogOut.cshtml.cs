@@ -18,9 +18,9 @@ namespace EtlManager.Pages
                 var authenticationManager = Request.HttpContext;
                 await authenticationManager.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw ex;
+                throw;
             }
             return RedirectToPage("/LogIn");
         }

@@ -85,7 +85,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
         }
 
         
-        public async Task<IActionResult> OnPostExecute(Guid id, string stepIds)
+        public async Task<IActionResult> OnPostExecute(Guid? id, string stepIds)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireOperator");
             if (!authorized.Succeeded)
@@ -201,7 +201,7 @@ namespace EtlManager.Pages.Jobs.JobDetails
             return new JsonResult(new { success = true });
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDelete(Guid? id)
         {
             var authorized = await _authorizationService.AuthorizeAsync(User, "RequireEditor");
             if (!authorized.Succeeded)

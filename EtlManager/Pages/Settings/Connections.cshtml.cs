@@ -79,7 +79,7 @@ namespace EtlManager.Pages.Settings
             return RedirectToPage("./Connections");
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDelete(Guid? id)
         {
             if (id == null) return NotFound();
 

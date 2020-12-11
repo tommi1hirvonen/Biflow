@@ -239,7 +239,10 @@ namespace EtlManager
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
                 byte[] entropy = (byte[])reader["Entropy"];
 
+                #pragma warning disable CA1416 // Validate platform compatibility
                 byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
+                #pragma warning restore CA1416 // Validate platform compatibility
+                
                 return Encoding.ASCII.GetString(output);
             }
             else
@@ -260,7 +263,10 @@ namespace EtlManager
             new RNGCryptoServiceProvider().GetBytes(entropy);
 
             byte[] newEncryptionKeyBinary = Encoding.ASCII.GetBytes(newEncryptionKey);
+            
+            #pragma warning disable CA1416 // Validate platform compatibility
             byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
+            #pragma warning restore CA1416 // Validate platform compatibility
 
             SqlCommand updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
                     @EncryptionId = @EncryptionId_,

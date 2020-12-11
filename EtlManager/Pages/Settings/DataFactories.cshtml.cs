@@ -89,9 +89,12 @@ namespace EtlManager.Pages.Settings
             return RedirectToPage("./DataFactories");
         }
 
-        public async Task<IActionResult> OnPostDelete(Guid id)
+        public async Task<IActionResult> OnPostDelete(Guid? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
             DataFactory dataFactory = await context.DataFactories.FindAsync(id);
 
