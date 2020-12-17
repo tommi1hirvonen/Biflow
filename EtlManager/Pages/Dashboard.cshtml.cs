@@ -50,6 +50,9 @@ namespace EtlManager.Pages
         [DataType(DataType.Date)]
         public DateTime DateTimeUntil { get; set; } = DateTime.Now.Date.Trim(TimeSpan.TicksPerMinute).AddHours(1);
 
+        [BindProperty(SupportsGet = true)]
+        public bool IncludeDeleted { get; set; } = false;
+
         public async Task OnGetAsync()
         {
             if (!LoadReport) return;
@@ -57,8 +60,15 @@ namespace EtlManager.Pages
             var dateTimeStart = DateTimeUntil.AddDays(-IntervalDays);
 
             // Get duration executions
-            var executions = await _context.JobExecutions
-                .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
+            var executionsQuery = _context.JobExecutions
+                .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+            
+            if (!IncludeDeleted)
+            {
+                executionsQuery = executionsQuery.Where(e => _context.Jobs.Where(job => job.JobId == e.JobId).Any());
+            }
+            
+            var executions = await executionsQuery
                 .OrderBy(e => e.CreatedDateTime)
                 .GroupBy(group => new
                 {
@@ -79,8 +89,15 @@ namespace EtlManager.Pages
 
 
             // Job success rates
-            Jobs = await _context.JobExecutions
-                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
+            var jobsQuery = _context.JobExecutions
+                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+
+            if (!IncludeDeleted)
+            {
+                jobsQuery = jobsQuery.Where(e => _context.Jobs.Where(job => job.JobId == e.JobId).Any());
+            }
+
+            Jobs = await jobsQuery
                 .GroupBy(group => group.JobName)
                 .Select(select => new ReportingJob
                 {
@@ -96,10 +113,17 @@ namespace EtlManager.Pages
                 .Select((name, index) => new { Item = name, Index = index })
                 .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Count]);
 
+
             // Get top failed steps
-            var topFailedStepsGrouping = await _context.Executions
-                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil)
-                .ToListAsync();
+            var topFailedStepsQuery = _context.Executions
+                .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+
+            if (!IncludeDeleted)
+            {
+                topFailedStepsQuery = topFailedStepsQuery.Where(e => _context.Steps.Where(step => step.StepId == e.StepId).Any());
+            }
+
+            var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
 
             TopFailedSteps = topFailedStepsGrouping
                 .GroupBy(group => new { group.StepId, group.StepName, group.JobId, group.JobName })

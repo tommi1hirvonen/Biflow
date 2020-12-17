@@ -25,6 +25,10 @@
                 <input asp-for="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
                 <label class="ml-5">Interval (d):</label>
                 <input asp-for="IntervalDays" class="form-control form-control-sm col-1 ml-2">
+                <div class="custom-control custom-checkbox custom-control-inline ml-5">
+                    <input type="checkbox" class="custom-control-input" asp-for="IncludeDeleted">
+                    <label class="custom-control-label" asp-for="IncludeDeleted">Include deleted jobs/steps</label>
+                </div>
             </form>
         </div>
     </div>
