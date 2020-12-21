@@ -24,7 +24,7 @@ namespace EtlManagerExecutor
 
         private bool Notify { get; set; } = false;
 
-        private int RunningStepsCounter { get; set; } = 0;
+        private int RunningStepsCounter = 0;
 
         public JobExecutor(IConfiguration configuration)
         {
@@ -341,12 +341,12 @@ namespace EtlManagerExecutor
             backgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(stepWorker.OnStepCompleted);
             backgroundWorker.DoWork += new DoWorkEventHandler(stepWorker.ExecuteStep);
             backgroundWorker.RunWorkerAsync();
-            RunningStepsCounter++;
+            Interlocked.Increment(ref RunningStepsCounter);
         }
 
         void OnStepCompleted(string stepId)
         {
-            RunningStepsCounter--;
+            Interlocked.Decrement(ref RunningStepsCounter);
 
             Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionId, stepId);
         }
