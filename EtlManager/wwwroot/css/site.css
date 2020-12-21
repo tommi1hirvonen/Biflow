@@ -159,19 +159,7 @@ for details on configuring this project to bundle and minify static web assets. 
             box-shadow: 0 0 0 0.2rem var(--color-danger-shadow);
         }
 
-/*
-    Light button customization
-*/
 
-/*.btn-light {
-    border-width: 1px;
-    border-color: #ccc;
-}
-
-.btn-light:hover {
-    border-width: 1px;
-    border-color: #ccc;
-}*/
 
 
 /*
@@ -233,15 +221,16 @@ for details on configuring this project to bundle and minify static web assets. 
 /*
     Class used for buttons which are placed inside a table row
 */
-.table-hover tbody tr .btn-row {
-    visibility: hidden;
+
+.btn-row {
+    box-shadow: none;
 }
 
-.table-hover tbody tr:hover .btn-row,
-.table-hover tbody .show,
-.table-hover tbody .show button {
-    visibility: visible;
+.btn-row .btn-light {
+    background-color: #fff;
+    border-color: #fff;
 }
+
 
 .table th {
     border-top: none;

@@ -26,7 +26,7 @@
 
 <p></p>
 <div class="card shadow-sm pt-2 mt-4">
-    <table class="table">
+    <table class="table table-hover">
         <thead>
             <tr>
                 <th>
@@ -156,9 +156,11 @@
                     <td align="center">
                         @if (Model.IsOperator)
                         {
-                            <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')" aria-label="delete">
-                                @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                            </button>
+                            <div class="btn-group btn-row">
+                                <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@item.ScheduleId')" aria-label="delete">
+                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                </button>
+                            </div>
                         }
                     </td>
                 </tr>
@@ -219,40 +221,33 @@
                                 </div>
 
                                 <div id="weekdays" class="form-group">
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Monday" /> @Html.DisplayNameFor(model => model.NewSchedule.Monday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Monday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Monday">@Html.DisplayNameFor(model => model.NewSchedule.Monday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Tuesday" /> @Html.DisplayNameFor(model => model.NewSchedule.Tuesday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Tuesday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Tuesday">@Html.DisplayNameFor(model => model.NewSchedule.Tuesday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Wednesday" /> @Html.DisplayNameFor(model => model.NewSchedule.Wednesday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Wednesday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Wednesday">@Html.DisplayNameFor(model => model.NewSchedule.Wednesday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Thursday" /> @Html.DisplayNameFor(model => model.NewSchedule.Thursday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Thursday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Thursday">@Html.DisplayNameFor(model => model.NewSchedule.Thursday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Friday" /> @Html.DisplayNameFor(model => model.NewSchedule.Friday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Friday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Friday">@Html.DisplayNameFor(model => model.NewSchedule.Friday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Saturday" /> @Html.DisplayNameFor(model => model.NewSchedule.Saturday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Saturday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Saturday">@Html.DisplayNameFor(model => model.NewSchedule.Saturday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="NewSchedule.Sunday" /> @Html.DisplayNameFor(model => model.NewSchedule.Sunday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="NewSchedule.Sunday">
+                                        <label class="custom-control-label" asp-for="NewSchedule.Sunday">@Html.DisplayNameFor(model => model.NewSchedule.Sunday)</label>
                                     </div>
                                 </div>
                                 <text id="weekdaysError" class="text-danger" style="display: none;">Select at least one weekday</text>
@@ -336,40 +331,33 @@
                                 </div>
 
                                 <div id="weekdays" class="form-group">
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Monday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Monday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Monday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Monday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Monday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Tuesday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Tuesday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Tuesday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Tuesday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Tuesday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Wednesday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Wednesday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Wednesday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Wednesday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Wednesday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Thursday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Thursday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Thursday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Thursday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Thursday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Friday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Friday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Friday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Friday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Friday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Saturday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Saturday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Saturday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Saturday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Saturday)</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <label class="form-check-label">
-                                            <input class="form-check-input" asp-for="ScheduleGeneration.Sunday" /> @Html.DisplayNameFor(model => model.ScheduleGeneration.Sunday)
-                                        </label>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" asp-for="ScheduleGeneration.Sunday">
+                                        <label class="custom-control-label" asp-for="ScheduleGeneration.Sunday">@Html.DisplayNameFor(model => model.ScheduleGeneration.Sunday)</label>
                                     </div>
                                 </div>
                                 <text id="weekdaysError" class="text-danger" style="display: none;">Select at least one weekday</text>
@@ -377,7 +365,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button id="button_submit" class="btn btn-success" asp-page-handler="Generate">Generate</button>
+                        <button id="button_submit" class="btn btn-primary" asp-page-handler="Generate">Generate</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>

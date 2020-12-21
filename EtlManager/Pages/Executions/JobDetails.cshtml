@@ -63,17 +63,17 @@
         </a>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button class="btn btn-light btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
+        <button class="btn btn-secondary btn-sm" type="button" data-toggle="collapse" data-target="#jobDetails" aria-expanded="false" aria-controls="jobDetails">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
             Job details
         </button>
     </div>
     <div class="btn-group btn-group-sm mr-2" role="group">
-        <button id="button_toggle_graph" class="btn btn-light @(Model.Graph ? "active" : "")" onclick="toggleGraph()">
+        <button id="button_toggle_graph" class="btn btn-secondary @(Model.Graph ? "active" : "")" onclick="toggleGraph()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
             Graph
         </button>
-        <button id="button_toggle_table" class="btn btn-light @(Model.Graph ? "" : "active")" onclick="toggleTable()">
+        <button id="button_toggle_table" class="btn btn-secondary @(Model.Graph ? "" : "active")" onclick="toggleTable()">
             @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
             Table
         </button>
@@ -385,7 +385,7 @@
                     <partial name="_StepExecutionDetailsPartial" model="item" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

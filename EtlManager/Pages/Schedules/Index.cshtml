@@ -151,9 +151,11 @@
                         <td align="center">
                             @if (Model.IsOperator)
                             {
-                                <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@schedule.ScheduleId')" aria-label="delete">
-                                    @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                </button>
+                                <div class="btn-group btn-row">
+                                    <button type="button" class="btn btn-light btn-sm" onclick="deleteSchedule(this, '@schedule.ScheduleId')" aria-label="delete">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                    </button>
+                                </div>
                             }
                         </td>
                     </tr>
@@ -390,7 +392,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button id="button_submit" class="btn btn-success" asp-page-handler="Generate">Generate</button>
+                        <button id="button_submit" class="btn btn-primary" asp-page-handler="Generate">Generate</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     </div>
                 </form>

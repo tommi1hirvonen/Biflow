@@ -15,9 +15,9 @@
             Refresh
         </button>
         <div class="btn-group btn-group-sm ml-4">
-            <a class="btn btn-light" asp-page="./Jobs" asp-route-IntervalHours="@Model.IntervalHours"
+            <a class="btn btn-secondary" asp-page="./Jobs" asp-route-IntervalHours="@Model.IntervalHours"
                asp-route-Status="@Model.Status" asp-route-JobName="@Model.JobName" asp-route-dateTimeUntilTicks="@Model.DateTimeUntil.Ticks">Jobs</a>
-            <a class="btn btn-light active">Steps</a>
+            <a class="btn btn-secondary active">Steps</a>
         </div>
     </div>
     <p />
@@ -159,7 +159,7 @@
                     <partial name="_StepExecutionDetailsPartial" model="item" />
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
