@@ -227,8 +227,13 @@ for details on configuring this project to bundle and minify static web assets. 
 }
 
 .btn-row .btn-light {
-    background-color: #fff;
-    border-color: #fff;
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.btn-row .btn-light:hover {
+    background-color: #e2e6ea;
+  border-color: #dae0e5;
 }
 
 
