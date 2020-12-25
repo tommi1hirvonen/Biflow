@@ -1,0 +1,307 @@
+﻿@page "/jobs"
+
+@inject IWebHostEnvironment WebHostEnvironment
+@inject WeatherForecastService ForecastService
+@inject EtlManagerContext context
+@inject IConfiguration configuration
+@inject IJSRuntime JsRuntime
+@inject IModalService Modal 
+
+<style>
+    .status.failed svg {
+        width: 20px;
+        height: 20px;
+        color: #fa5c7c; @*red*@
+    }
+
+    .status.running svg {
+        width: 20px;
+        height: 20px;
+        color: #0acf97; @*green*@
+    }
+
+    .status.warning svg {
+        width: 20px;
+        height: 20px;
+        color: #dfa100; @*orange*@
+    }
+</style>
+
+<h4>Jobs</h4>
+
+<BSDropdown Class="mb-3 mt-3">
+    <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
+    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+        <BSForm Model="NewJob" OnValidSubmit="AddJob">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <BSFormGroup>
+                <BSLabel for="name">Job name</BSLabel>
+                <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
+            </BSFormGroup>
+            <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
+        </BSForm>
+    </BSDropdownMenu>
+</BSDropdown>
+
+@if (jobs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Job name
+                </th>
+                <th></th>
+                <th></th>
+                <th>
+
+                </th>
+                <th>
+                    Last execution
+                </th>
+                <th>
+                    Next execution
+                </th>
+                <th>
+                    Enabled
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in jobs)
+            {
+                <tr>
+                    <td class="align-middle">
+                        <a class="text-dark" asp-page="./JobDetails/Index" asp-route-id="@item.JobId">
+                            @item.JobName
+                        </a>
+                    </td>
+                    <td class="align-middle" align="center">
+
+                        <BSButtonGroup Size="Size.Small">
+                            
+                            <BSDropdown>
+                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                </BSDropdownToggle>
+                                <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                                    <BSForm Model="item" OnValidSubmit="() => UpdateJob(item)">
+                                        <DataAnnotationsValidator />
+                                        <ValidationSummary />
+                                        <BSFormGroup>
+                                            <BSLabel for="name">New name</BSLabel>
+                                            <BSInput id="name" InputType="InputType.Text" @bind-Value="item.JobName" autocomplete="off"></BSInput>
+                                        </BSFormGroup>
+                                        <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
+                                    </BSForm>
+                                </BSDropdownMenu>
+                            </BSDropdown>
+
+                            <BSDropdown IsGroup="true">
+                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                </BSDropdownToggle>
+                                <BSDropdownMenu>
+                                    <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
+                                </BSDropdownMenu>
+                            </BSDropdown>
+
+                            <BSDropdown IsGroup="true">
+                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                </BSDropdownToggle>
+                                <BSDropdownMenu>
+                                    <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                    <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
+                                </BSDropdownMenu>
+                            </BSDropdown>
+
+                        </BSButtonGroup>
+
+                    </td>
+                    <td class="align-middle">
+                        <text>@item.Steps.Count step(s)</text>
+                    </td>
+                    <td class="align-middle">
+                        @switch (GetLastExecution(item)?.ExecutionStatus)
+                        {
+                            case "RUNNING":
+                                <div class="status running" title="Running" aria-label="running">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                                </div>
+                                break;
+                            case "FAILED":
+                                <div class="status failed" title="Failed" aria-label="failed">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                                </div>
+                                break;
+                            case "WARNING":
+                            case "STOPPED":
+                            case "SUSPENDED":
+                                <div class="status warning" title="Warning" aria-label="warning">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
+                                </div>
+                                break;
+                            default:
+                                break;
+                        }
+                    </td>
+                    <td class="align-middle">
+                        @if (GetLastExecution(item) != null)
+                        {
+                            <a class="text-dark" asp-page="/Executions/JobDetails" asp-route-id="@GetLastExecution(item).ExecutionId">@GetLastExecution(item).StartDateTime</a>
+                        }
+                    </td>
+                    <td>
+                        @GetNextStartTime(item)
+                    </td>
+                    <td class="align-middle">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                            <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+@code {
+    private IList<Job> jobs;
+    private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = new();
+    private Job NewJob { get; set; } = new() { IsEnabled = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+
+        var lastExecutions = await context.JobExecutions
+                .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
+                .Select(execution => execution.JobId)
+                .Distinct()
+                .Select(key => new
+                {
+                    Key = key,
+                    Execution = context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
+                })
+                .ToListAsync();
+
+        lastExecutions.ForEach(item => LastExecutions[item.Key] = item.Execution);
+    }
+
+    private JobExecution GetLastExecution(Job job)
+    {
+        JobExecution execution = null;
+        LastExecutions?.TryGetValue(job.JobId, out execution);
+        return execution;
+    }
+
+    private DateTime? GetNextStartTime(Job job)
+    {
+        IEnumerable<DateTime> dateTimes = GetPossibleDateTimes(job.Schedules);
+        dateTimes = dateTimes.Where(dt => dt > DateTime.Now);
+        return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
+    }
+
+    private List<DateTime> GetPossibleDateTimes(ICollection<Schedule> schedules)
+    {
+        List<DateTime> dateTimes = new List<DateTime>();
+        foreach (var schedule in schedules.Where(schedule => schedule.IsEnabled))
+        {
+            List<DateTime> dateTimesTemp = new List<DateTime>();
+            DateTime startOfWeek = DateTime.Now.StartOfWeek(DayOfWeek.Monday);
+            startOfWeek = startOfWeek.AddHours(schedule.TimeHours).AddMinutes(schedule.TimeMinutes);
+            if (schedule.Monday) dateTimesTemp.Add(startOfWeek);
+            if (schedule.Tuesday) dateTimesTemp.Add(startOfWeek.AddDays(1));
+            if (schedule.Wednesday) dateTimesTemp.Add(startOfWeek.AddDays(2));
+            if (schedule.Thursday) dateTimesTemp.Add(startOfWeek.AddDays(3));
+            if (schedule.Friday) dateTimesTemp.Add(startOfWeek.AddDays(4));
+            if (schedule.Saturday) dateTimesTemp.Add(startOfWeek.AddDays(5));
+            if (schedule.Sunday) dateTimesTemp.Add(startOfWeek.AddDays(6));
+            // Current week
+            dateTimesTemp.ForEach(dt => dateTimes.Add(dt));
+            // Add next week in case current has no match
+            dateTimesTemp.ForEach(dt => dateTimes.Add(dt.AddDays(7)));
+        }
+        return dateTimes;
+    }
+
+    private async Task ToggleEnabled(Job job)
+    {
+        try
+        {
+            await Utility.ToggleJobEnabled(configuration, job);
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job");
+        }
+    }
+
+    private async Task UpdateJob(Job job)
+    {
+        try
+        {
+            var job_ = await context.Jobs.FindAsync(job.JobId);
+            job_.JobName = job.JobName;
+            context.Attach(job_).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error updating job");
+        }
+    }
+
+    private async Task AddJob()
+    {
+        try
+        {
+            context.Jobs.Add(NewJob);
+            await context.SaveChangesAsync();
+            NewJob.Steps = new List<Step>();
+            NewJob.Schedules = new List<Schedule>();
+            jobs.Add(NewJob);
+            NewJob = new() { IsEnabled = true };
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error adding job");
+        }
+    }
+
+    private async Task CopyJob(Job job)
+    {
+        try
+        {
+            await Utility.JobCopy(configuration, job.JobId, "admin");
+            jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error copying job");
+        }
+
+    }
+
+    private async Task DeleteJob(Job job)
+    {
+        try
+        {
+            context.Jobs.Remove(job);
+            await context.SaveChangesAsync();
+            jobs.Remove(job);
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job");
+        }
+    }
+}
