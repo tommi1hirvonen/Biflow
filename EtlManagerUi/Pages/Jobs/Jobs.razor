@@ -37,7 +37,14 @@
             <ValidationSummary />
             <BSFormGroup>
                 <BSLabel for="name">Job name</BSLabel>
-                <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                        </div>
+                    </div>
+                    <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
+                </div>
             </BSFormGroup>
             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
         </BSForm>
@@ -86,16 +93,16 @@ else
                         <BSButtonGroup Size="Size.Small">
                             
                             <BSDropdown>
-                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </BSDropdownToggle>
                                 <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                    <BSForm Model="item" OnValidSubmit="() => UpdateJob(item)">
+                                    <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)">
                                         <DataAnnotationsValidator />
                                         <ValidationSummary />
                                         <BSFormGroup>
                                             <BSLabel for="name">New name</BSLabel>
-                                            <BSInput id="name" InputType="InputType.Text" @bind-Value="item.JobName" autocomplete="off"></BSInput>
+                                            <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
                                         </BSFormGroup>
                                         <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                                     </BSForm>
@@ -177,6 +184,7 @@ else
     private IList<Job> jobs;
     private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = new();
     private Job NewJob { get; set; } = new() { IsEnabled = true };
+    private Job EditJob { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -250,7 +258,7 @@ else
         try
         {
             var job_ = await context.Jobs.FindAsync(job.JobId);
-            job_.JobName = job.JobName;
+            job_.JobName = EditJob.JobName;
             context.Attach(job_).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
