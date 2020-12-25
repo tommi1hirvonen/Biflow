@@ -2,73 +2,11 @@
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IConfiguration configuration 
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager 
 
-@if (Jobs == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div class="row">
-        <div class="col">
-
-            <BSDropdown>
-                <BSDropdownToggle Color="Color.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                    @Job.JobName
-                </BSDropdownToggle>
-                <BSDropdownMenu>
-                    <BSDropdownHeader>Show</BSDropdownHeader>
-                    @foreach (var job in Jobs)
-                    {
-                        <NavLink class="btn dropdown-item" href="@("jobs/steps/" + job.JobId)">@job.JobName</NavLink>
-                    }
-                </BSDropdownMenu>
-            </BSDropdown>
-
-        </div>
-    </div>
-    <div class="col-xl d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
-        <div class="btn-toolbar">
-            <BSButton Color="Color.Secondary">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
-                Subscribe
-            </BSButton>
-
-            <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
-                <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                    Rename
-                </BSDropdownToggle>
-                <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                    <BSForm Model="EditJob" OnValidSubmit="UpdateJob">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-                        <BSFormGroup>
-                            <BSLabel for="name">New name</BSLabel>
-                            <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
-                        </BSFormGroup>
-                        <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                    </BSForm>
-                </BSDropdownMenu>
-            </BSDropdown>
-
-            <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
-                <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                    Delete
-                </BSDropdownToggle>
-                <BSDropdownMenu>
-                    <BSDropdownHeader>Delete job?</BSDropdownHeader>
-                    <BSDropdownItem @onclick="DeleteJob">Confirm</BSDropdownItem>
-                </BSDropdownMenu>
-            </BSDropdown>
-        </div>
-    </div>
-}
-
+<JobDetailsComponent CurrentJob="Job" Jobs="Jobs" />
 
 @code {
 
@@ -91,36 +29,6 @@ else
     protected override void OnParametersSet()
     {
         Job = Jobs.First(job => job.JobId == Id);
-    }
-
-    private async Task UpdateJob()
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            Job.JobName = EditJob.JobName;
-            context.Attach(Job).State = EntityState.Modified;
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            await JsRuntime.InvokeVoidAsync("alert", "Error updating job");
-        }
-    }
-
-    private async Task DeleteJob()
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            context.Jobs.Remove(Job);
-            await context.SaveChangesAsync();
-            NavigationManager.NavigateTo("jobs");
-        }
-        catch (Exception)
-        {
-            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job");
-        }
     }
 
 }
