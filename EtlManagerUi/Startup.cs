@@ -26,10 +26,10 @@ namespace EtlManagerUi
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
             services.AddHttpContextAccessor();
-            services.AddDbContext<EtlManagerContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
+            //services.AddDbContext<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
+            services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
+            services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
             services.AddBootstrapCss();
             services.AddBlazoredModal();
         }

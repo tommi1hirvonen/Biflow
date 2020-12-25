@@ -24,7 +24,7 @@
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="jobs">
+            <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                 &nbsp;
                 Jobs
@@ -38,7 +38,7 @@
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="executions">
+            <NavLink class="nav-link" href="executions" Match="NavLinkMatch.Prefix">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                 &nbsp;
                 Executions
@@ -52,14 +52,14 @@
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="account">
+            <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                 &nbsp;
                 Account
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="settings">
+            <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                 &nbsp;
                 Settings
