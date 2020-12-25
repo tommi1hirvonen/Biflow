@@ -2,11 +2,105 @@
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IConfiguration configuration 
+@inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
-@inject NavigationManager NavigationManager 
+@inject NavigationManager NavigationManager
 
-<JobDetailsComponent CurrentJob="Job" Jobs="Jobs" />
+@if (Job == null || Jobs == null)
+{
+    <p><em>Loading jobs...</em></p>
+}
+else
+{
+    <JobDetailsComponent CurrentJob="Job" Jobs="Jobs" />
+}
+
+
+@if (Steps_ == null)
+{
+    <p><em>Loading steps...</em></p>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-4">
+        <table id="steps_table" class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Step name
+                    </th>
+                    <th></th>
+                    <th>
+                        Execution phase
+                    </th>
+                    <th>
+                        Step type
+                    </th>
+                    <th>
+                        Enabled
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Steps_)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <a class="text-dark" asp-page="./StepDetails/Edit" asp-route-id="@item.StepId">
+                                @item.StepName
+                            </a>
+                        </td>
+                        <td align="left">
+                            <div class="btn-group btn-row">
+                                @*Open corresponding modal popup to display step execution details*@
+                                <button type="button" class="btn btn-light btn-sm btn-row" data-toggle="modal" data-target="#modal_@item.StepId" aria-label="info">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                                </button>
+
+                                <BSDropdown IsGroup="true">
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Copy to</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
+                                        <BSDropdownItem IsDivider="true"></BSDropdownItem>
+                                        @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                        {
+                                            <BSDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</BSDropdownItem>
+                                        }
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+
+                                <BSDropdown IsGroup="true">
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </div>
+                        </td>
+                        <td class="align-middle">
+                            @item.ExecutionPhase
+                        </td>
+                        <td class="align-middle" title="@item.StepType" aria-label="@item.StepType">
+                            <StepTypeIconComponent Step="item" />
+                        </td>
+                        <td class="align-middle">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
 
 @code {
 
@@ -16,19 +110,94 @@
     private Job Job { get; set; }
     private IList<Job> Jobs { get; set; }
 
-    private Job EditJob { get; set; }
+    private IList<Step> Steps_ { get; set; }
+
+    private IList<Connection> Connections { get; set; }
+    private IList<DataFactory> DataFactories { get; set; }
+
+    private Step NewStep { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
+
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-        Job = Jobs.First(job => job.JobId == Id);
-        EditJob = new() { JobName = Job.JobName };
+
+        DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
+        Connections = await context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
+
+        await LoadData(context);
     }
 
-    protected override void OnParametersSet()
+    private async Task LoadData(EtlManagerContext context)
     {
-        Job = Jobs.First(job => job.JobId == Id);
+        Job = await context.Jobs
+                .Include(job => job.Steps)
+                .ThenInclude(step => step.DataFactory)
+                .Include(job => job.Subscriptions)
+                .FirstOrDefaultAsync(job => job.JobId == Id);
+        Steps_ = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+        NewStep = new() { JobId = Id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // The child component can navigate between jobs.
+        // If the job is changed, the Id parameter of this component will change
+        // and this method will be called.
+        using var context = DbFactory.CreateDbContext();
+        await LoadData(context);
+    }
+
+    private async Task ToggleEnabled(Step step)
+    {
+        try
+        {
+            await Utility.ToggleStepEnabled(configuration, step);
+            step.IsEnabled = !step.IsEnabled;
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling step");
+        }
+    }
+
+    private async Task DeleteStep(Step step)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Steps.Remove(step);
+            await context.SaveChangesAsync();
+            Steps_.Remove(step);
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error deleting step");
+        }
+    }
+
+    private async Task CopyStep(Step step, Job job)
+    {
+        try
+        {
+            await Utility.StepCopy(configuration, step.StepId, job.JobId, "admin");
+            // If the steps was copied to this job, reload steps.
+            if (Job.JobId == job.JobId)
+            {
+                using var context = DbFactory.CreateDbContext();
+                Steps_ = await context.Steps
+                    .Where(step => step.JobId == Job.JobId)
+                    .Include(step => step.DataFactory)
+                    .OrderBy(step => step.ExecutionPhase)
+                    .ThenBy(step => step.StepName)
+                    .ToListAsync();
+            }
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error copying step");
+        }
     }
 
 }
