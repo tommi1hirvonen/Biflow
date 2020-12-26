@@ -1,13 +1,14 @@
 using Blazored.Modal;
 using BlazorStrap;
 using EtlManagerUi.Data;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
+using System;
 
 namespace EtlManagerUi
 {
@@ -24,10 +25,14 @@ namespace EtlManagerUi
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(15.0);
+            });
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddHttpContextAccessor();
-            //services.AddDbContext<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
             services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
             services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
             services.AddBootstrapCss();
@@ -47,9 +52,9 @@ namespace EtlManagerUi
             }
 
             app.UseStaticFiles();
-
             app.UseRouting();
-
+            app.UseCookiePolicy();
+            app.UseAuthentication();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

@@ -1,15 +1,33 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
-<div class="sidebar">
-    <NavMenu />
-</div>
+<AuthorizeView>
+    <Authorized>
+        <div class="sidebar">
+            <NavMenu />
+        </div>
 
-<div class="main">
-    <div class="top-row px-4">
-        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-    </div>
+        <div class="main">
+            <div class="top-row bg-dark px-4">
+            </div>
 
-    <div class="content px-4">
-        @Body
-    </div>
-</div>
+            <div class="content px-4">
+                @Body
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        var user = (await AuthStat).User;
+        if (!user.Identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+        }
+    }
+}

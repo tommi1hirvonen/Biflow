@@ -29,7 +29,7 @@
 
 <h4>Jobs</h4>
 
-<BSDropdown Class="mb-3 mt-3">
+<BSDropdown Class="mt-3">
     <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
     <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
         <BSForm Model="NewJob" OnValidSubmit="AddJob">
@@ -57,125 +57,126 @@
 }
 else
 {
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>
-                    Job name
-                </th>
-                <th></th>
-                <th></th>
-                <th>
-
-                </th>
-                <th>
-                    Last execution
-                </th>
-                <th>
-                    Next execution
-                </th>
-                <th>
-                    Enabled
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in jobs)
-            {
+    <div class="card shadow-sm pt-2 mt-4">
+        <table class="table table-hover">
+            <thead>
                 <tr>
-                    <td class="align-middle">
-                        <NavLink href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</NavLink>
-                    </td>
-                    <td class="align-middle" align="center">
+                    <th>
+                        Job name
+                    </th>
+                    <th></th>
+                    <th></th>
+                    <th>
 
-                        <BSButtonGroup Size="Size.Small">
-
-                            <BSDropdown>
-                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSDropdownToggle>
-                                <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                    <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)">
-                                        <DataAnnotationsValidator />
-                                        <ValidationSummary />
-                                        <BSFormGroup>
-                                            <BSLabel for="name">New name</BSLabel>
-                                            <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
-                                        </BSFormGroup>
-                                        <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                                    </BSForm>
-                                </BSDropdownMenu>
-                            </BSDropdown>
-
-                            <BSDropdown IsGroup="true">
-                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                </BSDropdownToggle>
-                                <BSDropdownMenu>
-                                    <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
-                                </BSDropdownMenu>
-                            </BSDropdown>
-
-                            <BSDropdown IsGroup="true">
-                                <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                </BSDropdownToggle>
-                                <BSDropdownMenu>
-                                    <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                    <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
-                                </BSDropdownMenu>
-                            </BSDropdown>
-
-                        </BSButtonGroup>
-
-                    </td>
-                    <td class="align-middle">
-                        <text>@item.Steps.Count step(s)</text>
-                    </td>
-                    <td class="align-middle">
-                        @switch (GetLastExecution(item)?.ExecutionStatus)
-                        {
-                            case "RUNNING":
-                                <div class="status running" title="Running" aria-label="running">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-                                </div>
-                                break;
-                            case "FAILED":
-                                <div class="status failed" title="Failed" aria-label="failed">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
-                                </div>
-                                break;
-                            case "WARNING":
-                            case "STOPPED":
-                            case "SUSPENDED":
-                                <div class="status warning" title="Warning" aria-label="warning">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
-                                </div>
-                                break;
-                            default:
-                                break;
-                        }
-                    </td>
-                    <td class="align-middle">
-                        @if (GetLastExecution(item) != null)
-                        {
-                            <a class="text-dark" asp-page="/Executions/JobDetails" asp-route-id="@GetLastExecution(item).ExecutionId">@GetLastExecution(item).StartDateTime</a>
-                        }
-                    </td>
-                    <td>
-                        @GetNextStartTime(item)
-                    </td>
-                    <td class="align-middle">
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
-                            <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
-                        </div>
-                    </td>
+                    </th>
+                    <th>
+                        Last execution
+                    </th>
+                    <th>
+                        Next execution
+                    </th>
+                    <th>
+                        Enabled
+                    </th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in jobs)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <NavLink href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</NavLink>
+                        </td>
+                        <td class="align-middle" align="center">
 
+                            <BSButtonGroup Size="Size.Small">
+
+                                <BSDropdown>
+                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                                        <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)">
+                                            <DataAnnotationsValidator />
+                                            <ValidationSummary />
+                                            <BSFormGroup>
+                                                <BSLabel for="name">New name</BSLabel>
+                                                <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                            </BSFormGroup>
+                                            <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
+                                        </BSForm>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+
+                                <BSDropdown IsGroup="true">
+                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+
+                                <BSDropdown IsGroup="true">
+                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+
+                            </BSButtonGroup>
+
+                        </td>
+                        <td class="align-middle">
+                            <text>@item.Steps.Count step(s)</text>
+                        </td>
+                        <td class="align-middle">
+                            @switch (GetLastExecution(item)?.ExecutionStatus)
+                            {
+                                case "RUNNING":
+                                    <div class="status running" title="Running" aria-label="running">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                                    </div>
+                                    break;
+                                case "FAILED":
+                                    <div class="status failed" title="Failed" aria-label="failed">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                                    </div>
+                                    break;
+                                case "WARNING":
+                                case "STOPPED":
+                                case "SUSPENDED":
+                                    <div class="status warning" title="Warning" aria-label="warning">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
+                                    </div>
+                                    break;
+                                default:
+                                    break;
+                            }
+                        </td>
+                        <td class="align-middle">
+                            @if (GetLastExecution(item) != null)
+                            {
+                                <a class="text-dark" asp-page="/Executions/JobDetails" asp-route-id="@GetLastExecution(item).ExecutionId">@GetLastExecution(item).StartDateTime</a>
+                            }
+                        </td>
+                        <td>
+                            @GetNextStartTime(item)
+                        </td>
+                        <td class="align-middle">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 @code {
