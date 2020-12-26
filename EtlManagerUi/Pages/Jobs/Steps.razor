@@ -15,6 +15,18 @@ else
     <JobDetailsComponent CurrentJob="Job" Jobs="Jobs" />
 }
 
+<AuthorizeView Roles="Admin, Editor">
+    <BSButton Color="Color.Success" @onclick="() => ModalAddStep.Show()">Add step</BSButton>
+</AuthorizeView>
+<AuthorizeView Roles="Admin, Editor, Operator">
+    <BSButton Class="ml-3">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+        Execute
+    </BSButton>
+    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden="@SpinnerHidden" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</AuthorizeView>
 
 @if (Steps_ == null)
 {
@@ -112,6 +124,142 @@ else
     </div>
 }
 
+@if (NewStep != null)
+{
+    <AuthorizeView Roles="Admin, Editor">
+        <BSModal @ref="ModalAddStep" Size="Size.Large">
+            <BSModalHeader OnClick="() => ModalAddStep.Hide()">New step</BSModalHeader>
+            <BSForm Model="NewStep" OnValidSubmit="AddStep" Context="_context">
+                <BSModalBody>
+                    <div class="row">
+                        <div class="col mx-3">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <BSFormGroup>
+                                <BSLabel>Step name</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="NewStep.StepName"></BSInput>
+                            </BSFormGroup>
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Execution phase</BSLabel>
+                                    <BSInput InputType="InputType.Number" @bind-Value="NewStep.ExecutionPhase"></BSInput>
+                                </BSFormGroup>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Step type</BSLabel>
+                                    <BSInput InputType="InputType.Select" @bind-Value="NewStep.StepType" @oninput="ResetNewStepError">
+                                        <option>SQL</option>
+                                        <option>SSIS</option>
+                                        <option>PIPELINE</option>
+                                        <option>JOB</option>
+                                    </BSInput>
+                                </BSFormGroup>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Retry attempts</BSLabel>
+                                    <BSInput InputType="InputType.Number" @bind-Value="NewStep.RetryAttempts"></BSInput>
+                                </BSFormGroup>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Retry interval (min)</BSLabel>
+                                    <BSInput InputType="InputType.Number" @bind-Value="NewStep.RetryIntervalMinutes"></BSInput>
+                                </BSFormGroup>
+                            </BSFormRow>
+                            @if (NewStep.StepType == "SQL" || NewStep.StepType == "SSIS")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup Class="col-lg-6">
+                                        <BSLabel>Connection</BSLabel>
+                                        <BSInput InputType="InputType.Select" @bind-Value="NewStep.ConnectionId">
+                                            @foreach (var connection in Connections)
+                                            {
+                                                <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                                            }
+                                        </BSInput>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                            }
+                            @if (NewStep.StepType == "SQL")
+                            {
+                                <BSFormGroup>
+                                    <BSLabel>SQL statement</BSLabel>
+                                    <BSInput InputType="InputType.TextArea" @bind-Value="NewStep.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetNewStepError"></BSInput>
+                                </BSFormGroup>
+                            }
+                            @if (NewStep.StepType == "SSIS")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Folder name</BSLabel>
+                                        <BSInput InputType="InputType.Text" @bind-Value="NewStep.PackageFolderName" @onchange="ResetNewStepError"></BSInput>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Project name</BSLabel>
+                                        <BSInput InputType="InputType.Text" @bind-Value="NewStep.PackageProjectName" @oninput="ResetNewStepError"></BSInput>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Package name</BSLabel>
+                                        <BSInput InputType="InputType.Text" @bind-Value="NewStep.PackageName" @oninput="ResetNewStepError"></BSInput>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode" @bind-value="NewStep.ExecuteIn32BitMode">
+                                        <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+                                    </div>
+                                </BSFormRow>
+                            }
+                            @if (NewStep.StepType == "PIPELINE")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Data Factory</BSLabel>
+                                        <BSInput InputType="InputType.Select" @bind-Value="NewStep.DataFactoryId">
+                                            @foreach (var dataFactory in DataFactories)
+                                            {
+                                                <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
+                                            }
+                                        </BSInput>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Pipeline name</BSLabel>
+                                        <BSInput InputType="InputType.Text" @bind-Value="NewStep.PipelineName" @oninput="ResetNewStepError"></BSInput>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                            }
+                            @if (NewStep.StepType == "JOB")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup>
+                                        <BSLabel>Job</BSLabel>
+                                        <BSInput InputType="InputType.Select" @bind-Value="NewStep.JobToExecuteId">
+                                            @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                            {
+                                                <option value="@job.JobId">@job.JobName</option>
+                                            }
+                                        </BSInput>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <div class="custom-control custom-checkbox custom-control-inline">
+                                        <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized" @bind-value="NewStep.JobExecuteSynchronized">
+                                        <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
+                                    </div>
+                                </BSFormRow>
+                            }
+                            <p class="text-danger">@NewStepError</p>
+                        </div>
+                    </div>
+                </BSModalBody>
+                <BSModalFooter>
+                    <BSButton ButtonType="ButtonType.Submit" Color="Color.Success">Create</BSButton>
+                    <BSButton Color="Color.Secondary" @onclick="() => ModalAddStep.Hide()">Cancel</BSButton>
+                </BSModalFooter>
+            </BSForm>
+        </BSModal>
+    </AuthorizeView>
+}
+
+
 @code {
 
     [Parameter]
@@ -126,6 +274,12 @@ else
     private IList<DataFactory> DataFactories { get; set; }
 
     private Step NewStep { get; set; }
+
+    private string SpinnerHidden { get; set; } = "hidden";
+
+    private BSModal ModalAddStep { get; set; }
+
+    private string NewStepError { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,7 +301,7 @@ else
                 .Include(job => job.Subscriptions)
                 .FirstOrDefaultAsync(job => job.JobId == Id);
         Steps_ = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
-        NewStep = new() { JobId = Id, RetryAttempts = 0, RetryIntervalMinutes = 0 };
+        InitializeNewStep();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -208,6 +362,67 @@ else
         {
             await JsRuntime.InvokeVoidAsync("alert", "Error copying step");
         }
+    }
+
+    private async Task AddStep()
+    {
+        NewStepError = string.Empty;
+
+        if (NewStep.StepType == "SQL" && (string.IsNullOrEmpty(NewStep.SqlStatement) || NewStep.ConnectionId == null))
+        {
+            NewStepError = "SQL statement and connection cannot be empty";
+            return;
+        }
+        else if (NewStep.StepType == "SSIS" && (string.IsNullOrEmpty(NewStep.PackageFolderName)
+            || string.IsNullOrEmpty(NewStep.PackageProjectName) || string.IsNullOrEmpty(NewStep.PackageName)
+            || NewStep.ConnectionId == null))
+        {
+            NewStepError = "Connection, folder, project and package names cannot be empty";
+            return;
+        }
+        else if (NewStep.StepType == "PIPELINE" && (string.IsNullOrEmpty(NewStep.PipelineName) || NewStep.DataFactoryId == null))
+        {
+            NewStepError = "Pipeline name and Data Factory cannot be empty";
+            return;
+        }
+        else if (NewStep.StepType == "JOB" && NewStep.JobToExecuteId == null)
+        {
+            NewStepError = "Job cannot be empty";
+            return;
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Steps.Add(NewStep);
+            await context.SaveChangesAsync();
+            Steps_.Add(NewStep);
+            Steps_ = Steps_.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+            InitializeNewStep();
+            ModalAddStep?.Hide();
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error adding step");
+        }
+    }
+
+    private void InitializeNewStep()
+    {
+        NewStep = new() {
+            JobId = Id,
+            RetryAttempts = 0,
+            RetryIntervalMinutes = 0,
+            StepType = "SQL",
+            IsEnabled = true,
+            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            DataFactoryId = DataFactories?.FirstOrDefault()?.DataFactoryId
+        };
+    }
+
+    private void ResetNewStepError()
+    {
+        NewStepError = string.Empty;
     }
 
 }
