@@ -3,6 +3,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor 
 
 @if (Jobs == null)
 {
@@ -29,39 +30,41 @@ else
 
         <div class="col-xl d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
             <div class="btn-toolbar">
-                <BSButton Color="Color.Secondary">
+                <BSButton Color="Subscribed ? Color.Success : Color.Secondary" @onclick="ToggleSubscription">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
                     Subscribe
                 </BSButton>
 
-                <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
-                    <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        Rename
-                    </BSDropdownToggle>
-                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                        <BSForm Model="EditJob" OnValidSubmit="UpdateJob">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
-                            <BSFormGroup>
-                                <BSLabel for="name">New name</BSLabel>
-                                <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
-                            </BSFormGroup>
-                            <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                        </BSForm>
-                    </BSDropdownMenu>
-                </BSDropdown>
+                <AuthorizeView Roles="Admin, Editor">
+                    <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
+                        <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                            Rename
+                        </BSDropdownToggle>
+                        <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                            <BSForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+                                <BSFormGroup>
+                                    <BSLabel for="name">New name</BSLabel>
+                                    <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                </BSFormGroup>
+                                <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
+                            </BSForm>
+                        </BSDropdownMenu>
+                    </BSDropdown>
 
-                <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
-                    <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                        Delete
-                    </BSDropdownToggle>
-                    <BSDropdownMenu>
-                        <BSDropdownHeader>Delete job?</BSDropdownHeader>
-                        <BSDropdownItem @onclick="DeleteJob">Confirm</BSDropdownItem>
-                    </BSDropdownMenu>
-                </BSDropdown>
+                    <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
+                        <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                            Delete
+                        </BSDropdownToggle>
+                        <BSDropdownMenu>
+                            <BSDropdownHeader>Delete job?</BSDropdownHeader>
+                            <BSDropdownItem @onclick="DeleteJob">Confirm</BSDropdownItem>
+                        </BSDropdownMenu>
+                    </BSDropdown>
+                </AuthorizeView>
             </div>
         </div>
     </div>
@@ -97,14 +100,26 @@ else
         </div>
         <div class="col-xl-5 d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
             <div class="btn-toolbar align-items-center">
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" class="custom-control-input" id="job_enabled_toggle" checked="@(CurrentJob.IsEnabled ? "checked" : null)" @onchange="ToggleJobEnabled">
-                    <label class="custom-control-label" style="cursor: pointer;" for="job_enabled_toggle">Enabled</label>
-                </div>
-                <div class="custom-control custom-switch ml-4">
-                    <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" checked="@(CurrentJob.UseDependencyMode ? "checked" : null)" @onchange="ToggleDependencyMode">
-                    <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
-                </div>
+                <AuthorizeView Roles="Admin, Editor">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" id="job_enabled_toggle" checked="@(CurrentJob.IsEnabled ? "checked" : null)" @onchange="ToggleJobEnabled">
+                        <label class="custom-control-label" style="cursor: pointer;" for="job_enabled_toggle">Enabled</label>
+                    </div>
+                    <div class="custom-control custom-switch ml-4">
+                        <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" checked="@(CurrentJob.UseDependencyMode ? "checked" : null)" @onchange="ToggleDependencyMode">
+                        <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
+                    </div>
+                </AuthorizeView>
+                <AuthorizeView Roles="Operator, Viewer">
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" class="custom-control-input" disabled id="job_enabled_toggle" checked="@(CurrentJob.IsEnabled ? "checked" : null)">
+                        <label class="custom-control-label" for="job_enabled_toggle">Enabled</label>
+                    </div>
+                    <div class="custom-control custom-switch ml-4">
+                        <input type="checkbox" class="custom-control-input" disabled id="dependency_mode_toggle" checked="@(CurrentJob.UseDependencyMode ? "checked" : null)">
+                        <label class="custom-control-label" for="dependency_mode_toggle">Dependency mode</label>
+                    </div>
+                </AuthorizeView>
             </div>
         </div>
     </div>
@@ -121,6 +136,17 @@ else
     public IList<Job> Jobs { get; set; }
 
     private Job EditJob { get; set; } = new();
+
+    private bool Subscribed { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        var user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+        if (CurrentJob.Subscriptions != null && CurrentJob.Subscriptions.Select(subscription => subscription.Username).Contains(user))
+        {
+            Subscribed = true;
+        }
+    }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -183,6 +209,32 @@ else
         catch (Exception)
         {
             await JsRuntime.InvokeVoidAsync("alert", "Error toggling job dependency mode");
+        }
+    }
+
+    private async Task ToggleSubscription()
+    {
+        var username = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+        using var context = DbFactory.CreateDbContext();
+        var subscription = await context.Subscriptions
+            .Where(subscription => subscription.JobId == CurrentJob.JobId && subscription.Username == username)
+            .FirstOrDefaultAsync();
+        try
+        {
+            if (subscription != null)
+            {
+                context.Subscriptions.Remove(subscription);
+            }
+            else
+            {
+                context.Subscriptions.Add(new Subscription { JobId = CurrentJob.JobId, Username = username });
+            }
+            await context.SaveChangesAsync();
+            Subscribed = !Subscribed;
+        }
+        catch (Exception)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error toggling subscription");
         }
     }
 

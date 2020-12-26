@@ -44,12 +44,14 @@
                 Account
             </NavLink>
         </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
-                Settings
-            </NavLink>
-        </li>
+        <AuthorizeView Roles="Admin">
+            <li class="nav-item">
+                <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
+                    Settings
+                </NavLink>
+            </li>
+        </AuthorizeView>
         <li class="nav-item mt-3">
             <NavLink class="nav-link" href="logout?returnUrl=/">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-out.svg")))

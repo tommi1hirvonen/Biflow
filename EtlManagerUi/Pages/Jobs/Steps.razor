@@ -57,30 +57,32 @@ else
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                                 </button>
 
-                                <BSDropdown IsGroup="true">
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Copy to</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
-                                        <BSDropdownItem IsDivider="true"></BSDropdownItem>
-                                        @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                        {
-                                            <BSDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</BSDropdownItem>
-                                        }
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Copy to</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
+                                            <BSDropdownItem IsDivider="true"></BSDropdownItem>
+                                            @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                            {
+                                                <BSDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</BSDropdownItem>
+                                            }
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
 
-                                <BSDropdown IsGroup="true">
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+                                </AuthorizeView>
                             </div>
                         </td>
                         <td class="align-middle">
@@ -90,10 +92,18 @@ else
                             <StepTypeIconComponent Step="item" />
                         </td>
                         <td class="align-middle">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
-                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
-                            </div>
+                            <AuthorizeView Roles="Admin, Editor">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                </div>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Operator, Viewer">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
+                                    <label class="custom-control-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                </div>
+                            </AuthorizeView>
                         </td>
                     </tr>
                 }

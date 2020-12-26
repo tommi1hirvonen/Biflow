@@ -29,27 +29,29 @@
 
 <h4>Jobs</h4>
 
-<BSDropdown Class="mt-3">
-    <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
-    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-        <BSForm Model="NewJob" OnValidSubmit="AddJob">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <BSFormGroup>
-                <BSLabel for="name">Job name</BSLabel>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+<AuthorizeView Roles="Admin, Editor">
+    <BSDropdown Class="mt-3">
+        <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
+        <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+            <BSForm Model="NewJob" OnValidSubmit="AddJob" Context="_context">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <BSFormGroup>
+                    <BSLabel for="name">Job name</BSLabel>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                            </div>
                         </div>
+                        <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
                     </div>
-                    <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
-                </div>
-            </BSFormGroup>
-            <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
-        </BSForm>
-    </BSDropdownMenu>
-</BSDropdown>
+                </BSFormGroup>
+                <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
+            </BSForm>
+        </BSDropdownMenu>
+    </BSDropdown>
+</AuthorizeView>
 
 @if (jobs == null)
 {
@@ -89,45 +91,47 @@ else
                         </td>
                         <td class="align-middle" align="center">
 
-                            <BSButtonGroup Class="btn-row" Size="Size.Small">
+                            <AuthorizeView Roles="Admin, Editor">
+                                <BSButtonGroup Class="btn-row" Size="Size.Small">
 
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                        <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)">
-                                            <DataAnnotationsValidator />
-                                            <ValidationSummary />
-                                            <BSFormGroup>
-                                                <BSLabel for="name">New name</BSLabel>
-                                                <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
-                                            </BSFormGroup>
-                                            <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                                        </BSForm>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                    <BSDropdown>
+                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                                            <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)" Context="_context">
+                                                <DataAnnotationsValidator />
+                                                <ValidationSummary />
+                                                <BSFormGroup>
+                                                    <BSLabel for="name">New name</BSLabel>
+                                                    <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                                </BSFormGroup>
+                                                <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
+                                            </BSForm>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
 
-                                <BSDropdown IsGroup="true">
-                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
 
-                                <BSDropdown IsGroup="true">
-                                    <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
 
-                            </BSButtonGroup>
+                                </BSButtonGroup>
+                            </AuthorizeView>
 
                         </td>
                         <td class="align-middle">
@@ -167,10 +171,19 @@ else
                             @GetNextStartTime(item)
                         </td>
                         <td class="align-middle">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
-                                <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
-                            </div>
+                            <AuthorizeView Roles="Admin, Editor">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                </div>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Operator, Viewer">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)">
+                                    <label class="custom-control-label" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                </div>
+                            </AuthorizeView>
+                            
                         </td>
                     </tr>
                 }
