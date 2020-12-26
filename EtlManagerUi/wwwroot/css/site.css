@@ -1,103 +1,458 @@
-a, .btn-link {
-    color: #0366d6;
+:root {
+    --color-primary: #727cf5;
+    --color-primary-dark: #5361f3;
+    --color-primary-extra-dark: #404ff2;
+    --color-primary-super-dark: #0f1fd2;
+    --color-primary-light: #8d95f7;
+    --color-primary-extra-light: #b8bdfa;
+    --color-primary-super-light: #e3e5fd;
+    --color-primary-shadow: rgba(114, 124, 245, 0.5);
+    --color-success: #0acf97;
+    --color-success-dark: #08af80;
+    --color-success-extra-dark: #079c72;
+    --color-success-light: #0beaab;
+    --color-success-extra-light: #aaf1dd;
+    --color-success-super-light: #cef5ea;
+    --color-success-shadow: rgba(10, 207, 151, 0.5);
+    --color-danger: #fa5c7c;
+    --color-danger-dark: #f9395f;
+    --color-danger-extra-dark: #f82550;
+    --color-danger-light: #fb748f;
+    --color-danger-super-light: #fedee5;
+    --color-danger-shadow: rgba(250, 92, 124, 0.5);
 }
 
+.btn {
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-group {
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.dropdown-menu {
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.btn-group .btn {
+    box-shadow: none;
+}
+
+.btn-group .btn-group {
+    box-shadow: none;
+}
+
+/*
+    Primary button customization
+*/
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
-app {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-.top-row {
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-}
-
-.main {
-    flex: 1;
-}
-
-    .main .top-row {
-        background-color: #f7f7f7;
-        border-bottom: 1px solid #d6d5d5;
-        justify-content: flex-end;
+    .btn-primary:hover {
+        color: #fff;
+        background-color: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
     }
 
-        .main .top-row > a, .main .top-row .btn-link {
-            white-space: nowrap;
-            margin-left: 1.5rem;
+    .btn-primary:focus, .btn-primary.focus {
+        box-shadow: 0 0 0 0.2rem var(--color-primary-shadow);
+    }
+
+    .btn-primary.disabled, .btn-primary:disabled {
+        color: #fff;
+        background-color: var(--color-primary-light);
+        border-color: var(--color-primary-light);
+    }
+
+    .btn-primary:not(:disabled):not(.disabled):active, .btn-primary:not(:disabled):not(.disabled).active,
+    .show > .btn-primary.dropdown-toggle {
+        color: #fff;
+        background-color: var(--color-primary-extra-dark);
+        border-color: var(--color-primary-extra-dark);
+    }
+
+        .btn-primary:not(:disabled):not(.disabled):active:focus, .btn-primary:not(:disabled):not(.disabled).active:focus,
+        .show > .btn-primary.dropdown-toggle:focus {
+            box-shadow: 0 0 0 0.2rem var(--color-primary-shadow);
         }
 
-.main .top-row a:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+
+/*
+    Success button customization
+*/
+.btn-success {
+    color: #fff;
+    background-color: var(--color-success);
+    border-color: var(--color-success);
 }
 
+    .btn-success:hover {
+        color: #fff;
+        background-color: var(--color-success-dark);
+        border-color: var(--color-success-dark);
+    }
+
+    .btn-success:focus, .btn-success.focus {
+        box-shadow: 0 0 0 0.2rem var(--color-success-shadow);
+    }
+
+    .btn-success.disabled, .btn-success:disabled {
+        color: #fff;
+        background-color: var(--color-success-light);
+        border-color: var(--color-success-light);
+    }
+
+    .btn-success:not(:disabled):not(.disabled):active, .btn-success:not(:disabled):not(.disabled).active,
+    .show > .btn-success.dropdown-toggle {
+        color: #fff;
+        background-color: var(--color-success-extra-dark);
+        border-color: var(--color-success-extra-dark);
+    }
+
+        .btn-success:not(:disabled):not(.disabled):active:focus, .btn-success:not(:disabled):not(.disabled).active:focus,
+        .show > .btn-success.dropdown-toggle:focus {
+            box-shadow: 0 0 0 0.2rem var(--color-success-shadow);
+        }
+
+
+/*
+    Danger button customization
+*/
+.btn-danger {
+    color: #fff;
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+    .btn-danger:hover {
+        color: #fff;
+        background-color: var(--color-danger-dark);
+        border-color: var(--color-danger-dark);
+    }
+
+    .btn-danger:focus, .btn-danger.focus {
+        box-shadow: 0 0 0 0.2rem var(--color-danger-shadow);
+    }
+
+    .btn-danger.disabled, .btn-danger:disabled {
+        color: #fff;
+        background-color: var(--color-danger-light);
+        border-color: var(--color-danger-light);
+    }
+
+    .btn-danger:not(:disabled):not(.disabled):active, .btn-danger:not(:disabled):not(.disabled).active,
+    .show > .btn-danger.dropdown-toggle {
+        color: #fff;
+        background-color: var(--color-danger-extra-dark);
+        border-color: var(--color-danger-extra-dark);
+    }
+
+        .btn-danger:not(:disabled):not(.disabled):active:focus, .btn-danger:not(:disabled):not(.disabled).active:focus,
+        .show > .btn-danger.dropdown-toggle:focus {
+            box-shadow: 0 0 0 0.2rem var(--color-danger-shadow);
+        }
+
+
+
+
+/*
+    Checkbox, radio and other form customizations
+*/
+
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+}
+
+.custom-control-input:checked:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-primary-shadow);
+}
+
+.custom-control-input:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-primary-shadow);
+    border-color: var(--color-primary) !important;
+}
+
+.form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--color-primary-shadow);
+}
+
+.custom-checkbox .custom-control-input:active ~ .custom-control-label::before {
+    background-color: var(--color-primary-extra-light);
+    border-color: var(--color-primary-extra-light);
+}
+
+.custom-radio .custom-control-input:active ~ .custom-control-label::before {
+    background-color: var(--color-primary-extra-light);
+    border-color: var(--color-primary-extra-light);
+}
+
+/*
+    Switch customization
+*/
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+}
+
+.custom-switch .custom-control-input:checked:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-success-shadow);
+}
+
+.custom-switch .custom-control-input:focus ~ .custom-control-label::before {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-success-shadow);
+    border-color: var(--color-success) !important;
+}
+
+.custom-switch .custom-control-input:active ~ .custom-control-label::before {
+    background-color: var(--color-success-extra-light);
+    border-color: var(--color-success-extra-light);
+}
+
+
+/*
+    Class used for buttons which are placed inside a table row
+*/
+
+.btn-row {
+    box-shadow: none;
+}
+
+    .btn-row .btn-light {
+        background-color: transparent;
+        border-color: transparent;
+    }
+
+        .btn-row .btn-light:hover {
+            background-color: #e2e6ea;
+            border-color: #dae0e5;
+        }
+
+
+.table th {
+    border-top: none;
+}
+
+/*
+    No-wrap buttons of btn-group in a table
+*/
+.table .btn-group {
+    white-space: nowrap;
+}
+
+    .table .btn-group .btn {
+        display: inline-block;
+        float: none;
+    }
+
+        .table .btn-group .btn + .btn {
+            margin-left: -5px;
+        }
+
+/*
+    Spinner
+*/
+
+.spinner-border.text-primary {
+    color: var(--color-primary) !important;
+}
+
+/*
+    Badge
+*/
+.badge-primary {
+    background-color: var(--color-primary);
+}
+
+.badge-success {
+    background-color: var(--color-success);
+}
+
+.badge-danger {
+    background-color: var(--color-danger);
+}
+
+.badge-warning {
+    color: #fff;
+}
+
+/*
+    Text
+*/
+
+.text-success {
+    color: var(--color-success);
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+/*
+    Alert
+*/
+.alert-success {
+    background-color: var(--color-success-super-light);
+    border-color: var(--color-success-super-light);
+}
+
+.alert-danger {
+    background-color: var(--color-danger-super-light);
+    border-color: var(--color-danger-super-light);
+}
+
+
+/*
+    Feather icons
+*/
+.feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+/*
+    Nav
+*/
+
+.nav-pills .nav-link.active {
+    background-color: var(--color-primary);
+}
+
+.nav-link {
+    color: var(--color-primary);
+}
+
+    .nav-link:hover {
+        color: var(--color-primary-super-dark);
+    }
+
+/*
+ * Sidebar
+ */
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    z-index: 100; /* Behind the navbar */
+    padding: 55px 0 0; /* Height of navbar */
+    background-color: #fff;
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
-    .sidebar .top-row {
-        background-color: rgba(0,0,0,0.4);
+/*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
+@media (max-width: 992px) {
+    .sidebar {
+        padding: 135px 0 0;
     }
-
-    .sidebar .navbar-brand {
-        font-size: 1.1rem;
-    }
-
-    .sidebar .oi {
-        width: 2rem;
-        font-size: 1.1rem;
-        vertical-align: text-top;
-        top: -2px;
-    }
-
-    .sidebar .nav-item {
-        font-size: 0.9rem;
-        padding-bottom: 0.5rem;
-    }
-
-        .sidebar .nav-item:first-of-type {
-            padding-top: 1rem;
-        }
-
-        .sidebar .nav-item:last-of-type {
-            padding-bottom: 1rem;
-        }
-
-        .sidebar .nav-item a {
-            color: #d7d7d7;
-            border-radius: 4px;
-            height: 3rem;
-            display: flex;
-            align-items: center;
-            line-height: 3rem;
-        }
-
-            .sidebar .nav-item a.active {
-                background-color: rgba(255,255,255,0.25);
-                color: white;
-            }
-
-            .sidebar .nav-item a:hover {
-                background-color: rgba(255,255,255,0.1);
-                color: white;
-            }
-
-.content {
-    padding-top: 1.1rem;
 }
 
-.navbar-toggler {
-    background-color: rgba(255, 255, 255, 0.1);
+@media (min-width: 992px) {
+    .main {
+        padding-right: 10px !important;
+        padding-left: 210px !important; /* (sidebar width) + (padding right) */
+    }
 }
+
+
+.sidebar-sticky {
+    position: relative;
+    top: 0;
+    height: calc(100vh - 48px);
+    /*padding-top: .5rem;*/
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+    .sidebar-sticky {
+        position: -webkit-sticky;
+        position: sticky;
+    }
+}
+
+.sidebar .nav-link {
+    font-size: 16px;
+    font-weight: 500;
+    color: #444;
+}
+
+    .sidebar .nav-link .feather {
+        margin-right: 4px;
+        color: #999;
+    }
+
+    .sidebar .nav-link.active {
+        color: var(--color-primary);
+    }
+
+        .sidebar .nav-link:hover .feather,
+        .sidebar .nav-link.active .feather {
+            color: inherit;
+        }
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/*
+ * Navbar
+ */
+
+.navbar-custom {
+    /*background-color: #414b58;*/
+    background-image: linear-gradient(90deg, #727CF5 0%, #8F75DA 100%);
+}
+
+    /* change the brand and text color */
+    .navbar-custom .navbar-brand,
+    .navbar-custom .navbar-nav {
+        color: #fff;
+    }
+
+    .navbar-custom .navbar-text {
+        color: #eee;
+    }
+
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    font-weight: bold;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .navbar-brand {
+        width: 200px;
+    }
+
+    /* Never collapse the sidebar for wide screens */
+    .sidebar.collapse {
+        display: block;
+    }
+}
+
+.navbar-brand-bg {
+    background-color: rgba(0, 0, 0, .2);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .2);
+}
+
+.navbar .navbar-toggler {
+    top: .25rem;
+    right: 1rem;
+}
+
+
+
+
 
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
@@ -128,59 +483,4 @@ app {
     position: absolute;
     right: 0.75rem;
     top: 0.5rem;
-}
-
-@media (max-width: 767.98px) {
-    .main .top-row:not(.auth) {
-        display: none;
-    }
-
-    .main .top-row.auth {
-        justify-content: space-between;
-    }
-
-    .main .top-row a, .main .top-row .btn-link {
-        margin-left: 0;
-    }
-}
-
-@media (min-width: 768px) {
-    app {
-        flex-direction: row;
-    }
-
-    .sidebar {
-        width: 200px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-    }
-
-    .main .top-row {
-        position: sticky;
-        top: 0;
-    }
-
-    .main > div {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
-    }
-
-    .navbar-toggler {
-        display: none;
-    }
-
-    .sidebar .collapse {
-        /* Never collapse the sidebar for wide screens */
-        display: block;
-    }
-}
-
-/*
-    Feather icons
-*/
-.feather {
-    width: 16px;
-    height: 16px;
-    vertical-align: text-bottom;
 }

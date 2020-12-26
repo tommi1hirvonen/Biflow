@@ -85,11 +85,11 @@ else
                 {
                     <tr>
                         <td class="align-middle">
-                            <NavLink href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</NavLink>
+                            <a class="text-dark" href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</a>
                         </td>
                         <td class="align-middle" align="center">
 
-                            <BSButtonGroup Size="Size.Small">
+                            <BSButtonGroup Class="btn-row" Size="Size.Small">
 
                                 <BSDropdown>
                                     <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
