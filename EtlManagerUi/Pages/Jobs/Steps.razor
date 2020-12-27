@@ -5,6 +5,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
 
 @if (Job == null || Jobs == null)
 {
@@ -19,14 +20,16 @@ else
     <BSButton Color="Color.Success" @onclick="() => ModalAddStep.Show()">Add step</BSButton>
 </AuthorizeView>
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <BSButton Class="ml-3">
+    <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
         Execute
     </BSButton>
-    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden="@SpinnerHidden" role="status">
+    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
         <span class="sr-only">Loading...</span>
     </div>
 </AuthorizeView>
+
+<BSAlert Class="mt-3" Color="@ExecuteAlertColor" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">@ExecuteMessage</BSAlert>
 
 @if (Steps_ == null)
 {
@@ -298,6 +301,67 @@ else
 
 <StepDetailsModal @ref="StepDetailsModal" Step="ModalStep" />
 
+@if (Steps_ != null)
+{
+    <AuthorizeView Roles="Admin, Editor, Operator">
+        <BSModal @ref="ExecuteModal" Size="Size.Large">
+            <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
+            <BSModalBody>
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="align-top">
+                                    <div class="custom-control custom-control-inline custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="execute_check_all"
+                                               checked=@(Steps_.Count == StepsToExecute.Count)
+                                               @onchange="eventArgs => ToggleStepsExecuteAll(eventArgs.Value)">
+                                        <label class="custom-control-label" for="execute_check_all">Step name</label>
+                                    </div>
+                                </th>
+                                <th>
+                                    Execution phase
+                                </th>
+                                <th>
+                                    Step type
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var step in Steps_)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="custom-control custom-control-inline custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="execute_checkbox" id="execute_@step.StepId"
+                                                   checked=@(StepsToExecute.Contains(step.StepId))
+                                                   @onchange="eventArgs => ToggleStepExecute(step, eventArgs.Value)">
+                                            <label class="custom-control-label" for="execute_@step.StepId">@step.StepName</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @step.ExecutionPhase
+                                    </td>
+                                    <td>
+                                        <StepTypeIconComponent Step="step" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </BSModalBody>
+            <BSModalFooter>
+                <BSButton Color="Color.Primary" @onclick="Execute">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                    Execute
+                </BSButton>
+                <BSButton Color="Color.Secondary" @onclick="() => ExecuteModal.Hide()">Cancel</BSButton>
+            </BSModalFooter>
+        </BSModal>
+    </AuthorizeView>
+}
+
 
 @code {
 
@@ -315,14 +379,19 @@ else
     private Step NewStep { get; set; }
     private IList<Parameter> NewStepParameters { get; set; } = new List<Parameter>();
 
-    private string SpinnerHidden { get; set; } = "hidden";
-
     private BSModal ModalAddStep { get; set; }
 
     private string NewStepError { get; set; } = string.Empty;
 
     private StepDetailsModal StepDetailsModal { get; set; }
     private Step ModalStep { get; set; }
+
+    private BSModal ExecuteModal { get; set; }
+    private List<Guid> StepsToExecute { get; set; } = new();
+    private bool ExecuteButtonDisabled { get; set; } = false;
+    private Color ExecuteAlertColor { get; set; } = Color.Success;
+    private bool ExecuteAlertOpen { get; set; } = false;
+    private MarkupString ExecuteMessage { get; set; } = new MarkupString(string.Empty);
 
     protected override async Task OnInitializedAsync()
     {
@@ -514,6 +583,61 @@ else
     {
         ModalStep = step;
         StepDetailsModal.Modal.Show();
+    }
+
+    private void ToggleStepExecute(Step step, object checkedValue)
+    {
+        var execute = (bool)checkedValue;
+        if (!execute && StepsToExecute.Contains(step.StepId))
+        {
+            StepsToExecute.Remove(step.StepId);
+        }
+        else if (execute && !StepsToExecute.Contains(step.StepId))
+        {
+            StepsToExecute.Add(step.StepId);
+        }
+    }
+
+    private void ToggleStepsExecuteAll(object checkedValue)
+    {
+        var execute = (bool)checkedValue;
+        StepsToExecute.Clear();
+        if (execute)
+        {
+            foreach (var step in Steps_)
+            {
+                StepsToExecute.Add(step.StepId);
+            }
+        }
+    }
+
+    private async Task Execute()
+    {
+        if (StepsToExecute.Count == 0)
+        {
+            return;
+        }
+
+        ExecuteModal.Hide();
+
+        ExecuteButtonDisabled = true;
+        string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+        Guid executionId;
+        try
+        {
+            executionId = await Utility.StartExecution(configuration, Job, user, StepsToExecute.Select(id => id.ToString()).ToList());
+            ExecuteAlertColor = Color.Success;
+            ExecuteMessage = new(@"Job started successfully - <a class=""alert-link"" href=""/"">monitor execution</a>");
+        }
+        catch (Exception ex)
+        {
+            ExecuteAlertColor = Color.Danger;
+            ExecuteMessage = new("Error starting execution:" + ex.Message);
+        }
+
+        StepsToExecute.Clear();
+        ExecuteAlertOpen = true;
+        ExecuteButtonDisabled = false;
     }
 
 }
