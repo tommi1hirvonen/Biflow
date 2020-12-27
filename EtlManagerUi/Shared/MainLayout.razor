@@ -45,7 +45,6 @@
 
     protected async override Task OnInitializedAsync()
     {
-        base.OnInitialized();
         var user = (await AuthStat).User;
         if (!user.Identity.IsAuthenticated)
         {
