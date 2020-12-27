@@ -35,11 +35,9 @@
     box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
 
-.btn-group .btn {
-    box-shadow: none;
-}
-
-.btn-group .btn-group {
+.btn-group .btn,
+.btn-group .btn-group,
+.btn.dropdown-item {
     box-shadow: none;
 }
 
