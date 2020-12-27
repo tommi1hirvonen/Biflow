@@ -24,8 +24,16 @@ namespace EtlManagerUi.Pages
         [BindProperty]
         public Login Login { get; set; }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (HttpContext?.User?.Identity?.IsAuthenticated == true)
+            {
+                return LocalRedirect(Url.Content("~/"));
+            }
+            else
+            {
+                return Page();
+            }
         }
 
         public async Task<IActionResult> OnPostLogIn()
@@ -63,8 +71,9 @@ namespace EtlManagerUi.Pages
                 claims.Add(new Claim(ClaimTypes.Role, role));
                 var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimPrincipal = new ClaimsPrincipal(claimIdentity);
+                var authenticationProperties = new AuthenticationProperties() { IsPersistent = isPersistent, ExpiresUtc = DateTime.UtcNow.AddDays(1) };
 
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, new AuthenticationProperties() { IsPersistent = isPersistent });
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, authenticationProperties);
             }
             catch (Exception)
             {

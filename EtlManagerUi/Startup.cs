@@ -25,11 +25,7 @@ namespace EtlManagerUi
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
-            {
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(15.0);
-            });
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddHttpContextAccessor();
