@@ -33,10 +33,22 @@ else
 
 @if (Steps_ == null)
 {
-    <p><em>Loading steps...</em></p>
+    <p class="mt-4"><em>Loading steps...</em></p>
 }
 else
 {
+    <div class="row col-9 col-md-6 col-lg-5 mt-4 mb-4">
+        <div class="input-group">
+            <label class="sr-only">Search</label>
+            <div class="input-group-prepend">
+                <div class="input-group-text rounded-left">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                </div>
+            </div>
+            <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search" />
+        </div>
+    </div>
+
     <div class="card shadow-sm pt-2 mt-4">
         <table id="steps_table" class="table table-sm table-hover">
             <thead>
@@ -57,7 +69,7 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Steps_)
+                @foreach (var item in Steps_.Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText)))
                 {
                     <tr>
                         <td class="align-middle">
@@ -130,6 +142,7 @@ else
 
 @if (NewStep != null)
 {
+    // New step modal
     <AuthorizeView Roles="Admin, Editor">
         <BSModal @ref="ModalAddStep" Size="Size.Large">
             <BSModalHeader OnClick="() => ModalAddStep.Hide()">New step</BSModalHeader>
@@ -303,11 +316,21 @@ else
 
 @if (Steps_ != null)
 {
+    // Execute modal
     <AuthorizeView Roles="Admin, Editor, Operator">
         <BSModal @ref="ExecuteModal" Size="Size.Large">
             <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
             <BSModalBody>
                 <div class="row">
+                    <div class="input-group mx-5">
+                        <label class="sr-only">Search</label>
+                        <div class="input-group-prepend">
+                            <div class="input-group-text rounded-left">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                            </div>
+                        </div>
+                        <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+                    </div>
                     <table class="table">
                         <thead>
                             <tr>
@@ -328,7 +351,7 @@ else
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var step in Steps_)
+                            @foreach (var step in Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)))
                             {
                                 <tr>
                                     <td>
@@ -392,6 +415,9 @@ else
     private Color ExecuteAlertColor { get; set; } = Color.Success;
     private bool ExecuteAlertOpen { get; set; } = false;
     private MarkupString ExecuteMessage { get; set; } = new MarkupString(string.Empty);
+
+    private string StepsFilterText { get; set; } = string.Empty;
+    private string ExecuteFilterText { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -563,7 +589,8 @@ else
 
     private void InitializeNewStep()
     {
-        NewStep = new() {
+        NewStep = new()
+        {
             JobId = Id,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
@@ -613,7 +640,11 @@ else
 
     private async Task Execute()
     {
-        if (StepsToExecute.Count == 0)
+        // Filter the list based on user input (StepsFilterText).
+        var stepsFiltered = Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)).ToList();
+        var stepsToExecuteFiltered = StepsToExecute.Where(id => stepsFiltered.Where(step => step.StepId == id).Any()).ToList();
+
+        if (stepsToExecuteFiltered.Count == 0)
         {
             return;
         }
@@ -625,7 +656,7 @@ else
         Guid executionId;
         try
         {
-            executionId = await Utility.StartExecution(configuration, Job, user, StepsToExecute.Select(id => id.ToString()).ToList());
+            executionId = await Utility.StartExecution(configuration, Job, user, stepsToExecuteFiltered.Select(id => id.ToString()).ToList());
             ExecuteAlertColor = Color.Success;
             ExecuteMessage = new(@"Job started successfully - <a class=""alert-link"" href=""/"">monitor execution</a>");
         }

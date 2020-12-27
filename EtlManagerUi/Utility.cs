@@ -48,6 +48,11 @@ namespace EtlManagerUi
             return new DateTime(value);
         }
 
+        public static bool ContainsIgnoreCase(this string source, string toCheck)
+        {
+            return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
