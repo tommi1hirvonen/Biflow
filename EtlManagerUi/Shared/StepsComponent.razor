@@ -1,20 +1,10 @@
-﻿@page "/jobs/steps/{Id:guid}"
-
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-@if (Job == null || Jobs == null)
-{
-    <p><em>Loading jobs...</em></p>
-}
-else
-{
-    <JobDetailsComponent CurrentJob="Job" Jobs="Jobs" />
-}
 
 <AuthorizeView Roles="Admin, Editor">
     <BSButton Color="Color.Success" @onclick="() => ModalAddStep.Show()">Add step</BSButton>
@@ -140,7 +130,7 @@ else
 
 }
 
-@if (NewStep != null)
+@if (NewStep != null && Connections != null && DataFactories != null)
 {
     // New step modal
     <AuthorizeView Roles="Admin, Editor">

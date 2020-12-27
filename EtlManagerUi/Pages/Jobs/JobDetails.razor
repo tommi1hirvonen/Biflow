@@ -1,4 +1,6 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@page "/jobs/{DetailsPage}/{Id:guid}"
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
@@ -22,7 +24,7 @@ else
                     <BSDropdownHeader>Show</BSDropdownHeader>
                     @foreach (var job in Jobs)
                     {
-                        <NavLink class="btn dropdown-item" href="@("jobs/steps/" + job.JobId)">@job.JobName</NavLink>
+                        <NavLink class="btn dropdown-item" href="@("jobs/" + DetailsPage + "/" + job.JobId)">@job.JobName</NavLink>
                     }
                 </BSDropdownMenu>
             </BSDropdown>
@@ -91,7 +93,7 @@ else
                     </NavLink>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="@("jobs/history/" + CurrentJob.JobId)">
+                    <NavLink class="nav-link" href="@("jobs/jobhistory/" + CurrentJob.JobId)">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                         History
                     </NavLink>
@@ -126,33 +128,60 @@ else
 
 }
 
+@if (DetailsPage == "steps")
+{
+    <StepsComponent Id="Id" />
+}
+else if (DetailsPage == "jobhistory")
+{
+    <JobHistoryComponent Id="Id" />
+}
+else
+{
+    <p>No component to show.</p>
+}
+
 
 @code {
+    [Parameter]
+    public string DetailsPage { get; set; }
 
     [Parameter]
+    public Guid Id { get; set; }
+
     public Job CurrentJob { get; set; }
 
-    [Parameter]
     public IList<Job> Jobs { get; set; }
 
     private Job EditJob { get; set; } = new();
 
     private bool Subscribed { get; set; } = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        using var context = DbFactory.CreateDbContext();
+        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+        await LoadData(context);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        await LoadData(context);
+    }
+
+    private async Task LoadData(EtlManagerContext context)
+    {
+        CurrentJob = await context.Jobs.Include(job => job.Subscriptions).FirstOrDefaultAsync(job => job.JobId == Id);
+        EditJob.JobName = CurrentJob.JobName;
         var user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
         if (CurrentJob.Subscriptions != null && CurrentJob.Subscriptions.Select(subscription => subscription.Username).Contains(user))
         {
             Subscribed = true;
         }
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
+        else
         {
-            EditJob.JobName = CurrentJob.JobName;
+            Subscribed = false;
         }
     }
 
