@@ -1,0 +1,106 @@
+﻿<BSModal @ref="Modal" Size="Size.Large">
+    @if (Step != null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@Step.StepName</BSModalHeader>
+        <BSModalBody>
+            <dl class="row">
+                <dt class="col-sm-3">
+                    Step name
+                </dt>
+                <dd class="col-sm-9">
+                    @Step.StepName
+                </dd>
+                <dt class="col-sm-3">
+                    Execution phase
+                </dt>
+                <dd class="col-sm-9">
+                    @Step.ExecutionPhase
+                </dd>
+                <dt class="col-sm-3">
+                    Step type
+                </dt>
+                <dd class="col-sm-9">
+                    @Step.StepType
+                </dd>
+                <dt class="col-sm-3">
+                    Retry attempts
+                </dt>
+                <dd class="col-sm-9">
+                    @Step.RetryAttempts
+                </dd>
+                <dt class="col-sm-3">
+                    Retry interval (min)
+                </dt>
+                <dd class="col-sm-9">
+                    @Step.RetryIntervalMinutes
+                </dd>
+                @if (Step.StepType == "SQL")
+                {
+                    <dt class="col-sm-3">
+                        SQL statement
+                    </dt>
+                    <dd class="col-sm-9">
+                        <pre><code>@Step.SqlStatement</code></pre>
+                    </dd>
+                }
+                else if (Step.StepType == "PIPELINE")
+                {
+                    <dt class="col-sm-3">
+                        Pipeline name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.PipelineName
+                    </dd>
+                    <dt class="col-sm-3">
+                        Data Factory name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.DataFactory?.DataFactoryName
+                    </dd>
+                }
+                else if (Step.StepType == "SSIS")
+                {
+                    <dt class="col-sm-3">
+                        Package folder
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.PackageFolderName
+                    </dd>
+                    <dt class="col-sm-3">
+                        Package project
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.PackageProjectName
+                    </dd>
+                    <dt class="col-sm-3">
+                        Package name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.PackageName
+                    </dd>
+                    <dt class="col-sm-3">
+                        32 bit mode
+                    </dt>
+                    <dd class="col-sm-9">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" disabled checked="@(Step.ExecuteIn32BitMode ? "checked" : null)">
+                            <label class="custom-control-label"></label>
+                        </div>
+                    </dd>
+                }
+            </dl>
+            
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+
+@code {
+    public BSModal Modal { get; set; }
+
+    [Parameter]
+    public Step Step { get; set; }
+}
