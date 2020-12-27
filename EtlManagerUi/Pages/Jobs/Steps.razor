@@ -169,9 +169,9 @@ else
                                         <BSLabel>Connection</BSLabel>
                                         <BSInput InputType="InputType.Select" @bind-Value="NewStep.ConnectionId">
                                             @foreach (var connection in Connections)
-                                            {
+                                                    {
                                                 <option value="@connection.ConnectionId">@connection.ConnectionName</option>
-                                            }
+                                                    }
                                         </BSInput>
                                     </BSFormGroup>
                                 </BSFormRow>
@@ -215,9 +215,9 @@ else
                                         <BSLabel>Data Factory</BSLabel>
                                         <BSInput InputType="InputType.Select" @bind-Value="NewStep.DataFactoryId">
                                             @foreach (var dataFactory in DataFactories)
-                                            {
+                                                    {
                                                 <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
-                                            }
+                                                    }
                                         </BSInput>
                                     </BSFormGroup>
                                     <BSFormGroup Class="col">
@@ -233,9 +233,9 @@ else
                                         <BSLabel>Job</BSLabel>
                                         <BSInput InputType="InputType.Select" @bind-Value="NewStep.JobToExecuteId">
                                             @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                            {
+                                                    {
                                                 <option value="@job.JobId">@job.JobName</option>
-                                            }
+                                                    }
                                         </BSInput>
                                     </BSFormGroup>
                                 </BSFormRow>
@@ -247,6 +247,42 @@ else
                                 </BSFormRow>
                             }
                             <p class="text-danger">@NewStepError</p>
+
+                            @if (NewStep.StepType == "SSIS")
+                            {
+                                <p />
+                                <h5>Parameters</h5>
+                                <table id="parameters_table" class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Value</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var param in NewStepParameters)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+                                                </td>
+                                                <td>
+                                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterValue"></BSBasicInput>
+                                                </td>
+                                                <td>
+                                                    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => NewStepParameters.Remove(param)">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                                    </BSButton>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => NewStepParameters.Add(new Parameter())">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                                </BSButton>
+                            }
                         </div>
                     </div>
                 </BSModalBody>
@@ -274,6 +310,7 @@ else
     private IList<DataFactory> DataFactories { get; set; }
 
     private Step NewStep { get; set; }
+    private IList<Parameter> NewStepParameters { get; set; } = new List<Parameter>();
 
     private string SpinnerHidden { get; set; } = "hidden";
 
@@ -391,20 +428,62 @@ else
             return;
         }
 
+        if (NewStep.StepType == "SSIS" && !ParametersCheck())
+        {
+            return;
+        }
+
         try
         {
+            if (NewStep.StepType == "SSIS")
+            {
+                NewStep.Parameters = new List<Parameter>();
+                foreach (var param in NewStepParameters)
+                {
+                    NewStep.Parameters.Add(param);
+                }
+            }
+
             using var context = DbFactory.CreateDbContext();
             context.Steps.Add(NewStep);
             await context.SaveChangesAsync();
+
             Steps_.Add(NewStep);
             Steps_ = Steps_.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+
             InitializeNewStep();
+
             ModalAddStep?.Hide();
         }
         catch (Exception)
         {
             await JsRuntime.InvokeVoidAsync("alert", "Error adding step");
         }
+    }
+
+    private bool ParametersCheck()
+    {
+        var parameters = NewStepParameters.OrderBy(param => param.ParameterName).ToList();
+
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName) || string.IsNullOrEmpty(param.ParameterValue))
+            {
+                NewStepError = "Parameter name and value cannot be empty";
+                return false;
+            }
+        }
+
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                NewStepError = "Duplicate parameter names";
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void InitializeNewStep()
