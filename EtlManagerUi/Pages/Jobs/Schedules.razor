@@ -1,18 +1,24 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@page "/schedules"
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
 @inject IConfiguration configuration
 @inject IWebHostEnvironment WebHostEnvironment
 
+<h4>Schedules</h4>
+
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()">
-        Add schedule
-    </BSButton>
-    <BSButton Color="Color.Primary" Class="ml-3" @onclick="() => GenerateModal.Show()">
-        Generate schedules
-    </BSButton>
+    <div class="btn-toolbar mt-3">
+        <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()" IsDisabled="Jobs?.Count == 0">
+            Add schedule
+        </BSButton>
+        <BSButton Color="Color.Primary" Class="ml-3" @onclick="() => GenerateModal.Show()" IsDisabled="Jobs?.Count == 0">
+            Generate schedules
+        </BSButton>
+    </div>
 </AuthorizeView>
 
-@if (Schedules == null)
+@if (Schedules_ == null)
 {
     <p class="mt-4"><em>Loading...</em></p>
 }
@@ -22,6 +28,9 @@ else
         <table class="table table-hover">
             <thead>
                 <tr>
+                    <th>
+                        Job
+                    </th>
                     <th>
                         Enabled
                     </th>
@@ -54,9 +63,14 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Schedules)
+                @foreach (var item in Schedules_)
                 {
                     <tr>
+                        <td class="align-middle">
+                            <a class="text-dark" href="@("jobs/schedules/" + item.JobId)">
+                                @item.Job.JobName
+                            </a>
+                        </td>
                         <td class="align-middle">
                             <div class="custom-control custom-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
@@ -167,6 +181,22 @@ else
                         <div class="col-md-8 mx-auto">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
+                            <BSFormGroup Class="col">
+                                <BSLabel>Job</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Select" @bind-Value="NewSchedule.JobId">
+                                        @foreach (var job in Jobs)
+                                            {
+                                            <option value="@job.JobId">@job.JobName</option>
+                                            }
+                                    </BSInput>
+                                </div>
+                            </BSFormGroup>
                             <BSFormGroup Class="col-md-4">
                                 <BSLabel>Hours</BSLabel>
                                 <div class="input-group">
@@ -258,6 +288,22 @@ else
                         <div class="col-md-8 mx-auto">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
+                            <BSFormGroup Class="col">
+                                <BSLabel>Job</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.JobId">
+                                        @foreach (var job in Jobs)
+                                            {
+                                            <option value="@job.JobId">@job.JobName</option>
+                                            }
+                                    </BSInput>
+                                </div>
+                            </BSFormGroup>
                             <BSFormRow>
                                 <BSFormGroup class="col">
                                     <BSLabel>Interval</BSLabel>
@@ -295,18 +341,18 @@ else
                                     <BSLabel>Start time</BSLabel>
                                     <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.StartTime">
                                         @foreach (var value in GetTimeValues())
-                                        {
+                                            {
                                             <option>@value</option>
-                                        }
+                                            }
                                     </BSInput>
                                 </BSFormGroup>
                                 <BSFormGroup class="col">
                                     <BSLabel>End time</BSLabel>
                                     <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.EndTime">
                                         @foreach (var value in GetTimeValues())
-                                        {
+                                            {
                                             <option>@value</option>
-                                        }
+                                            }
                                     </BSInput>
                                 </BSFormGroup>
                             </BSFormRow>
@@ -354,10 +400,10 @@ else
 }
 
 @code {
-    [Parameter]
-    public Guid Id { get; set; }
 
-    private List<Schedule> Schedules { get; set; }
+    private List<Job> Jobs { get; set; }
+
+    private List<Schedule> Schedules_ { get; set; }
 
     private Schedule NewSchedule { get; set; }
 
@@ -376,21 +422,37 @@ else
         await LoadData();
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadData();
-    }
-
     private async Task LoadData()
     {
         using var context = DbFactory.CreateDbContext();
-        Schedules = await context.Schedules
-            .Where(schedule => schedule.JobId == Id)
-            .OrderBy(schedule => schedule.TimeHours)
+        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+        Schedules_ = await context.Schedules
+            .Include(schedule => schedule.Job)
+            .OrderBy(schedule => schedule.Job.JobName)
+            .ThenBy(schedule => schedule.TimeHours)
             .ThenBy(schedule => schedule.TimeMinutes)
             .ToListAsync();
-        NewSchedule = new() { JobId = Id, IsEnabled = true };
-        ScheduleGeneration = new() { JobId = Id, IntervalType = "Hours", IntervalValueHours = 1, IntervalValueMinutes = 15, StartTime = "00:00", EndTime = "00:00" };
+
+        if (Jobs?.Count == 0)
+        {
+            return;
+        }
+
+        NewSchedule = new()
+        {
+            JobId = Jobs.Select(job => job.JobId).First(),
+            IsEnabled = true
+        };
+
+        ScheduleGeneration = new()
+        {
+            JobId = Jobs.Select(job => job.JobId).First(),
+            IntervalType = "Hours",
+            IntervalValueHours = 1,
+            IntervalValueMinutes = 15,
+            StartTime = "00:00",
+            EndTime = "00:00"
+        };
     }
 
     private async Task ToggleEnabled(Schedule schedule)
@@ -420,9 +482,15 @@ else
             using var context = DbFactory.CreateDbContext();
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
-            Schedules.Add(NewSchedule);
-            Schedules = Schedules.OrderBy(sched => sched.TimeHours).ThenBy(sched => sched.TimeMinutes).ToList();
-            NewSchedule = new() { JobId = Id, IsEnabled = true };
+            NewSchedule.Job = Jobs.First(job => job.JobId == NewSchedule.JobId);
+            Schedules_.Add(NewSchedule);
+            Schedules_ = Schedules_.OrderBy(sched => sched.Job.JobName).ThenBy(sched => sched.TimeHours).ThenBy(sched => sched.TimeMinutes).ToList();
+
+            NewSchedule = new()
+            {
+                JobId = Jobs.Select(job => job.JobId).First(),
+                IsEnabled = true
+            };
         }
         catch (Exception)
         {
@@ -437,7 +505,7 @@ else
             using var context = DbFactory.CreateDbContext();
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
-            Schedules.Remove(schedule);
+            Schedules_.Remove(schedule);
         }
         catch (Exception)
         {
@@ -526,4 +594,5 @@ else
         }
         return timeValues;
     }
+
 }
