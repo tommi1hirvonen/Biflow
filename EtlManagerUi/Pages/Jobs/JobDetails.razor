@@ -128,9 +128,9 @@ else
 
 }
 
-@if (DetailsPage == "steps")
+@if (DetailsPage == "steps" && CurrentJob != null)
 {
-    <StepsComponent Id="Id" />
+    <StepsComponent Job="CurrentJob" />
 }
 else if (DetailsPage == "jobhistory")
 {

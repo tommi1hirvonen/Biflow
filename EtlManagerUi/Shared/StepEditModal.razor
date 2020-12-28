@@ -263,7 +263,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var step in Steps)
+                            @foreach (var step in Steps.Where(step => step.StepId != StepId))
                             {
                                 <tr>
                                     <td>@step.StepName</td>
@@ -311,9 +311,11 @@
 
     private Step Step { get; set; }
 
-    private IList<Job> Jobs { get; set; }
+    [Parameter]
+    public IList<Job> Jobs { get; set; }
 
-    private IList<Step> Steps { get; set; }
+    [Parameter]
+    public IList<Step> Steps { get; set; }
 
     private IList<Connection> Connections { get; set; }
 
@@ -329,7 +331,6 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs.ToListAsync();
         Connections = await context.Connections.ToListAsync();
         DataFactories = await context.DataFactories.ToListAsync();
         await LoadData(context);
@@ -365,8 +366,6 @@
                 Dependencies = new List<Dependency>()
             };
         }
-
-        Steps = await context.Steps.Where(step => step.JobId == JobId && step.StepId != StepId).ToListAsync();
     }
 
     private void ResetStepError()

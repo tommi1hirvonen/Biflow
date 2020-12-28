@@ -132,7 +132,7 @@ else
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <StepEditModal @ref="StepEditModal" JobId="Id" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <StepEditModal @ref="StepEditModal" JobId="Job.JobId" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps_" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
@@ -211,11 +211,9 @@ else
 
 
 @code {
-
     [Parameter]
-    public Guid Id { get; set; }
+    public Job Job { get; set; }
 
-    private Job Job { get; set; }
     private List<Job> Jobs { get; set; }
 
     private List<Step> Steps_ { get; set; }
@@ -239,19 +237,17 @@ else
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-
         await LoadData(context);
     }
 
     private async Task LoadData(EtlManagerContext context)
     {
-        Job = await context.Jobs
-                .Include(job => job.Steps)
-                .Include(job => job.Subscriptions)
-                .FirstOrDefaultAsync(job => job.JobId == Id);
-        Steps_ = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+        Steps_ = await context.Steps
+            .Where(step => step.JobId == Job.JobId)
+            .OrderBy(step => step.ExecutionPhase)
+            .ThenBy(step => step.StepName)
+            .ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
