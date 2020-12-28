@@ -7,7 +7,7 @@
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(NewStep)">Add step</BSButton>
+    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">Add step</BSButton>
 </AuthorizeView>
 <AuthorizeView Roles="Admin, Editor, Operator">
     <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
@@ -132,7 +132,7 @@ else
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <StepEditModal @ref="StepEditModal" Step="EditModalStep" Jobs="Jobs" Connections="Connections" DataFactories="DataFactories" OnStepSubmit="OnStepSubmit" />
+    <StepEditModal @ref="StepEditModal" JobId="Id" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
@@ -142,7 +142,7 @@ else
 {
     // Execute modal
     <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSModal @ref="ExecuteModal" Size="Size.Large">
+        <BSModal @ref="ExecuteModal" Size="Size.Large" IsScrollable="true">
             <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
             <BSModalBody>
                 <div class="row">
@@ -220,12 +220,8 @@ else
 
     private List<Step> Steps_ { get; set; }
 
-    private List<Connection> Connections { get; set; }
-    private List<DataFactory> DataFactories { get; set; }
-
     private StepEditModal StepEditModal { get; set; }
-    private Step EditModalStep { get; set; }
-    private Step NewStep { get; set; }
+    private Guid EditModalStepId { get; set; }
 
     private StepDetailsModal StepDetailsModal { get; set; }
     private Step DetailsModalStep { get; set; }
@@ -246,9 +242,6 @@ else
 
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
 
-        DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
-        Connections = await context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
-
         await LoadData(context);
     }
 
@@ -256,14 +249,9 @@ else
     {
         Job = await context.Jobs
                 .Include(job => job.Steps)
-                .ThenInclude(step => step.Parameters)
-                .Include(job => job.Steps)
-                .ThenInclude(step => step.Dependencies)
-                .ThenInclude(dep => dep.DependantOnStep)
                 .Include(job => job.Subscriptions)
                 .FirstOrDefaultAsync(job => job.JobId == Id);
         Steps_ = Job.Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
-        InitializeNewStep();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -277,7 +265,7 @@ else
 
     private void ShowEditModal(Step step)
     {
-        EditModalStep = step;
+        EditModalStepId = step?.StepId ?? Guid.Empty;
         StepEditModal.Show();
     }
 
@@ -318,12 +306,7 @@ else
             if (Job.JobId == job.JobId)
             {
                 using var context = DbFactory.CreateDbContext();
-                Steps_ = await context.Steps
-                    .Where(step => step.JobId == Job.JobId)
-                    .Include(step => step.DataFactory)
-                    .OrderBy(step => step.ExecutionPhase)
-                    .ThenBy(step => step.StepName)
-                    .ToListAsync();
+                await LoadData(context);
             }
         }
         catch (Exception)
@@ -342,17 +325,19 @@ else
             }
 
             using var context = DbFactory.CreateDbContext();
-            if (Steps_.Where(step_ => step_.StepId == step.StepId).Any())
+            var existingStep = Steps_.FirstOrDefault(step_ => step_.StepId == step.StepId);
+            if (existingStep != null)
             {
                 context.Attach(step).State = EntityState.Modified;
                 context.SaveChanges();
+                Steps_.Remove(existingStep);
+                Steps_.Add(step);
             }
             else
             {
                 context.Steps.Add(step);
                 context.SaveChanges();
                 Steps_.Add(step);
-                InitializeNewStep();
             }
 
             Steps_ = Steps_.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
@@ -362,22 +347,6 @@ else
             JsRuntime.InvokeVoidAsync("alert", "Error adding/editing step");
         }
     }
-
-    private void InitializeNewStep()
-    {
-        NewStep = new()
-        {
-            JobId = Id,
-            RetryAttempts = 0,
-            RetryIntervalMinutes = 0,
-            StepType = "SQL",
-            IsEnabled = true,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-            DataFactoryId = DataFactories?.FirstOrDefault()?.DataFactoryId,
-            Parameters = new List<Parameter>()
-        };
-    }
-
 
     private void ShowStepDetailsModal(Step step)
     {

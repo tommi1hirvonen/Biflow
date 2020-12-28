@@ -1,8 +1,8 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
-
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <BSModal @ref="Modal" Size="Size.Large">
-    @if (Step != null && Jobs != null && Connections != null && DataFactories != null)
+    @if (Step != null && Jobs != null && Connections != null && DataFactories != null && Steps != null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
         <BSForm Model="Step" OnValidSubmit="SubmitStep" Context="_context">
@@ -252,6 +252,45 @@
                         }
                     </div>
                 </div>
+                <div class="row">
+                    <h5>Dependencies</h5>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Step name</th>
+                                <th>Dependent on</th>
+                                <th>Strict dependency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var step in Steps)
+                            {
+                                <tr>
+                                    <td>@step.StepName</td>
+                                    <td>
+                                        <div class="custom-control custom-control-inline custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="dependency_@step.StepId"
+                                                   checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any())
+                                                   @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
+                                            <label class="custom-control-label" for="dependency_@step.StepId"></label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any())
+                                        {
+                                            <div class="custom-control custom-control-inline custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="strict_@step.StepId"
+                                                       checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Where(dep => dep.StrictDependency).Any())
+                                                       @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
+                                                <label class="custom-control-label" for="strict_@step.StepId"></label>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </BSModalBody>
             <BSModalFooter>
                 <BSButton ButtonType="ButtonType.Submit" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
@@ -265,16 +304,20 @@
 
 @code {
     [Parameter]
-    public Step Step { get; set; }
+    public Guid StepId { get; set; }
 
     [Parameter]
-    public IList<Job> Jobs { get; set; }
+    public Guid JobId { get; set; }
 
-    [Parameter]
-    public IList<Connection> Connections { get; set; }
+    private Step Step { get; set; }
 
-    [Parameter]
-    public IList<DataFactory> DataFactories { get; set; }
+    private IList<Job> Jobs { get; set; }
+
+    private IList<Step> Steps { get; set; }
+
+    private IList<Connection> Connections { get; set; }
+
+    private IList<DataFactory> DataFactories { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -283,9 +326,47 @@
 
     private string StepError { get; set; } = string.Empty;
 
-    protected override void OnParametersSet()
+    protected override async Task OnInitializedAsync()
     {
-        StateHasChanged();
+        using var context = DbFactory.CreateDbContext();
+        Jobs = await context.Jobs.ToListAsync();
+        Connections = await context.Connections.ToListAsync();
+        DataFactories = await context.DataFactories.ToListAsync();
+        await LoadData(context);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        await LoadData(context);
+    }
+
+    private async Task LoadData(EtlManagerContext context)
+    {
+        if (StepId != Guid.Empty)
+        {
+            Step = await context.Steps
+                .Include(step => step.Parameters)
+                .Include(step => step.Dependencies)
+                .FirstOrDefaultAsync(step => step.StepId == StepId);
+        }
+        else
+        {
+            Step = new()
+            {
+                JobId = JobId,
+                RetryAttempts = 0,
+                RetryIntervalMinutes = 0,
+                StepType = "SQL",
+                IsEnabled = true,
+                ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+                DataFactoryId = DataFactories?.FirstOrDefault()?.DataFactoryId,
+                Parameters = new List<Parameter>(),
+                Dependencies = new List<Dependency>()
+            };
+        }
+
+        Steps = await context.Steps.Where(step => step.JobId == JobId && step.StepId != StepId).ToListAsync();
     }
 
     private void ResetStepError()
@@ -327,8 +408,6 @@
 
         await OnStepSubmit.InvokeAsync(Step);
         Modal.Hide();
-        Step = null;
-        StateHasChanged();
     }
 
     private bool ParametersCheck()
@@ -354,6 +433,30 @@
         }
 
         return true;
+    }
+
+    private void ToggleDependency(Step step, object checkedValue)
+    {
+        var dependent = (bool)checkedValue;
+        var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
+        if (!dependent && dependency != null)
+        {
+            Step.Dependencies.Remove(dependency);
+        }
+        else if (dependent && dependency == null)
+        {
+            Step.Dependencies.Add(new() { StepId = Step.StepId, DependantOnStepId = step.StepId });
+        }
+    }
+
+    private void ToggleStrictDependency(Step step, object checkedValue)
+    {
+        var strict = (bool)checkedValue;
+        var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
+        if (dependency != null)
+        {
+            dependency.StrictDependency = strict;
+        }
     }
 
     public void Show()
