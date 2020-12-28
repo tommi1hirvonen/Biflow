@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="git rev-parse HEAD &gt; &quot;$(ProjectDir)\CurrentCommit.txt&quot;" />
+    <Exec Command="git rev-parse HEAD &gt; &quot;$(ProjectDir.TrimEnd('\'))\CurrentCommit.txt&quot;" />
   </Target>
 
 </Project>
