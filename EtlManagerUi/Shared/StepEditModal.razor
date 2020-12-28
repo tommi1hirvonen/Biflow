@@ -1,0 +1,363 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+
+
+<BSModal @ref="Modal" Size="Size.Large">
+    @if (Step != null && Jobs != null && Connections != null && DataFactories != null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
+        <BSForm Model="Step" OnValidSubmit="SubmitStep" Context="_context">
+            <BSModalBody>
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <BSFormGroup>
+                            <BSLabel>Step name</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Text" @bind-Value="Step.StepName"></BSInput>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormRow>
+                            <BSFormGroup Class="col">
+                                <BSLabel>Execution phase</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Number" @bind-Value="Step.ExecutionPhase"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col">
+                                <BSLabel>Step type</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Select" @bind-Value="Step.StepType" @oninput="ResetStepError">
+                                        <option>SQL</option>
+                                        <option>SSIS</option>
+                                        <option>PIPELINE</option>
+                                        <option>JOB</option>
+                                    </BSInput>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col">
+                                <BSLabel>Retry attempts</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Number" @bind-Value="Step.RetryAttempts"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col">
+                                <BSLabel>Retry interval (min)</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Number" @bind-Value="Step.RetryIntervalMinutes"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                        </BSFormRow>
+                        @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
+                        {
+                            <BSFormRow>
+                                <BSFormGroup Class="col-lg-6">
+                                    <BSLabel>Connection</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Select" @bind-Value="Step.ConnectionId">
+                                            @foreach (var connection in Connections)
+                                                    {
+                                                <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                                                    }
+                                        </BSInput>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                        }
+                        @if (Step.StepType == "SQL")
+                        {
+                            <BSFormGroup>
+                                <BSLabel>SQL statement</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.TextArea" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                        }
+                        @if (Step.StepType == "SSIS")
+                        {
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Folder name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Text" @bind-Value="Step.PackageFolderName" @onchange="ResetStepError"></BSInput>
+                                    </div>
+                                </BSFormGroup>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Project name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Text" @bind-Value="Step.PackageProjectName" @oninput="ResetStepError"></BSInput>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Package name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Text" @bind-Value="Step.PackageName" @oninput="ResetStepError"></BSInput>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                            <BSFormRow>
+                                <div class="custom-control custom-checkbox custom-control-inline">
+                                    <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode" @bind-value="Step.ExecuteIn32BitMode">
+                                    <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+                                </div>
+                            </BSFormRow>
+                        }
+                        @if (Step.StepType == "PIPELINE")
+                        {
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Data Factory</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/cpu.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Select" @bind-Value="Step.DataFactoryId">
+                                            @foreach (var dataFactory in DataFactories)
+                                                    {
+                                                <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
+                                                    }
+                                        </BSInput>
+                                    </div>
+                                </BSFormGroup>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Pipeline name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Text" @bind-Value="Step.PipelineName" @oninput="ResetStepError"></BSInput>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                        }
+                        @if (Step.StepType == "JOB")
+                        {
+                            <BSFormRow>
+                                <BSFormGroup>
+                                    <BSLabel>Job</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                                            </div>
+                                        </div>
+                                        <BSInput InputType="InputType.Select" @bind-Value="Step.JobToExecuteId">
+                                            @foreach (var job in Jobs.Where(job => job.JobId != Step.JobId))
+                                                    {
+                                                <option value="@job.JobId">@job.JobName</option>
+                                                    }
+                                        </BSInput>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                            <BSFormRow>
+                                <div class="custom-control custom-checkbox custom-control-inline">
+                                    <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized" @bind-value="Step.JobExecuteSynchronized">
+                                    <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
+                                </div>
+                            </BSFormRow>
+                        }
+                        <p class="text-danger">@StepError</p>
+
+                        @if (Step.StepType == "SSIS")
+                        {
+                            <p />
+                            <h5>Parameters</h5>
+                            <table id="parameters_table" class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Value</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var param in Step.Parameters)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+                                            </td>
+                                            <td>
+                                                <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterValue"></BSBasicInput>
+                                            </td>
+                                            <td>
+                                                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Remove(param)">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                                </BSButton>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Add(new Parameter())">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                            </BSButton>
+                        }
+                    </div>
+                </div>
+            </BSModalBody>
+            <BSModalFooter>
+                <BSButton ButtonType="ButtonType.Submit" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
+                <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+            </BSModalFooter>
+        </BSForm>
+    }
+</BSModal>
+
+
+
+@code {
+    [Parameter]
+    public Step Step { get; set; }
+
+    [Parameter]
+    public IList<Job> Jobs { get; set; }
+
+    [Parameter]
+    public IList<Connection> Connections { get; set; }
+
+    [Parameter]
+    public IList<DataFactory> DataFactories { get; set; }
+
+    [Parameter]
+    public EventCallback<Step> OnStepSubmit { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    private string StepError { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        StateHasChanged();
+    }
+
+    private void ResetStepError()
+    {
+        StepError = string.Empty;
+    }
+
+    private async Task SubmitStep()
+    {
+        StepError = string.Empty;
+
+        if (Step.StepType == "SQL" && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId == null))
+        {
+            StepError = "SQL statement and connection cannot be empty";
+            return;
+        }
+        else if (Step.StepType == "SSIS" && (string.IsNullOrEmpty(Step.PackageFolderName)
+            || string.IsNullOrEmpty(Step.PackageProjectName) || string.IsNullOrEmpty(Step.PackageName)
+            || Step.ConnectionId == null))
+        {
+            StepError = "Connection, folder, project and package names cannot be empty";
+            return;
+        }
+        else if (Step.StepType == "PIPELINE" && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId == null))
+        {
+            StepError = "Pipeline name and Data Factory cannot be empty";
+            return;
+        }
+        else if (Step.StepType == "JOB" && Step.JobToExecuteId == null)
+        {
+            StepError = "Job cannot be empty";
+            return;
+        }
+
+        if (Step.StepType == "SSIS" && !ParametersCheck())
+        {
+            return;
+        }
+
+        await OnStepSubmit.InvokeAsync(Step);
+        Modal.Hide();
+        Step = null;
+        StateHasChanged();
+    }
+
+    private bool ParametersCheck()
+    {
+        var parameters = Step.Parameters.OrderBy(param => param.ParameterName).ToList();
+
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName) || string.IsNullOrEmpty(param.ParameterValue))
+            {
+                StepError = "Parameter name and value cannot be empty";
+                return false;
+            }
+        }
+
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                StepError = "Duplicate parameter names";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public void Show()
+    {
+        Modal.Show();
+    }
+}
