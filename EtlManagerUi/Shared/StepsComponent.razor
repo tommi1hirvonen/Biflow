@@ -63,18 +63,19 @@ else
                 {
                     <tr>
                         <td class="align-middle">
-                            <a class="text-dark" @onclick="() => ShowEditModal(item)">
-                                @item.StepName
-                            </a>
+                            @item.StepName
                         </td>
                         <td align="left">
                             <div class="btn-group btn-row">
-                                @*Open corresponding modal popup to display step execution details*@
                                 <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepDetailsModal(item)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                                 </BSButton>
 
                                 <AuthorizeView Roles="Admin, Editor">
+                                    <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowEditModal(item)">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </BSButton>
+
                                     <BSDropdown IsGroup="true">
                                         <BSDropdownToggle Size="Size.Small" Color="Color.Light">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
@@ -214,7 +215,8 @@ else
     [Parameter]
     public Job Job { get; set; }
 
-    private List<Job> Jobs { get; set; }
+    [Parameter]
+    public IList<Job> Jobs { get; set; }
 
     private List<Step> Steps_ { get; set; }
 
@@ -234,15 +236,9 @@ else
     private string StepsFilterText { get; set; } = string.Empty;
     private string ExecuteFilterText { get; set; } = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    private async Task LoadData()
     {
         using var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-        await LoadData(context);
-    }
-
-    private async Task LoadData(EtlManagerContext context)
-    {
         Steps_ = await context.Steps
             .Where(step => step.JobId == Job.JobId)
             .OrderBy(step => step.ExecutionPhase)
@@ -252,11 +248,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        // The child component can navigate between jobs.
-        // If the job is changed, the Id parameter of this component will change
-        // and this method will be called.
-        using var context = DbFactory.CreateDbContext();
-        await LoadData(context);
+        await LoadData();
     }
 
     private void ShowEditModal(Step step)
@@ -301,8 +293,7 @@ else
             // If the steps was copied to this job, reload steps.
             if (Job.JobId == job.JobId)
             {
-                using var context = DbFactory.CreateDbContext();
-                await LoadData(context);
+                await LoadData();
             }
         }
         catch (Exception)

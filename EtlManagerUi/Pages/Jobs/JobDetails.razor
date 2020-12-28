@@ -128,9 +128,9 @@ else
 
 }
 
-@if (DetailsPage == "steps" && CurrentJob != null)
+@if (DetailsPage == "steps" && CurrentJob != null && Jobs!= null)
 {
-    <StepsComponent Job="CurrentJob" />
+    <StepsComponent Job="CurrentJob" Jobs="Jobs" />
 }
 else if (DetailsPage == "jobhistory")
 {
@@ -159,7 +159,7 @@ else
 
     public Job CurrentJob { get; set; }
 
-    public IList<Job> Jobs { get; set; }
+    public List<Job> Jobs { get; set; }
 
     private Job EditJob { get; set; } = new();
 
