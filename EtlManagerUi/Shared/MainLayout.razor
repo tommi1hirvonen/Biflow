@@ -22,7 +22,11 @@
                             v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion)
                         </text>
                     </li>
-
+                    <li>
+                        <text class="navbar-text px-3">
+                            @EtlManagerUi.Properties.Resources.CurrentCommit
+                        </text>
+                    </li>
                 </ul>
             </nav>
         </header>
