@@ -1,0 +1,97 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IJSRuntime JS
+
+<style>
+    html, body {
+        height: 100%;
+    }
+
+    .dependency-graph {
+        width: 100%;
+        height: 100%;
+    }
+
+        .dependency-graph svg {
+            width: 100%;
+            height: 100%;
+            cursor: move;
+        }
+
+        .dependency-graph .node {
+            cursor: pointer;
+        }
+
+            .dependency-graph .node rect {
+                stroke-width: 2px;
+                stroke: #666;
+                fill: #fff;
+            }
+
+        .dependency-graph .name {
+            margin-top: 4px;
+        }
+
+        .dependency-graph .edgePath path {
+            stroke: #888;
+            stroke-width: 2px;
+            fill: #888;
+        }
+
+        .dependency-graph .edgePath.non-strict path {
+            stroke-dasharray: 5,5;
+        }
+
+        .dependency-graph .edgePath.strict path {
+        }
+</style>
+
+<div class="container-fluid h-100 flex-column p-0">
+    <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
+        <svg id="dependency_graph" viewBox="0 0 1920 1080">
+            <g />
+        </svg>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private List<Step> Steps { get; set; }
+    private List<Dependency> Dependencies { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadGraph();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadGraph();
+        }
+    }
+
+    private async Task LoadGraph()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Dependencies = await context.Dependencies
+            .Include(d => d.Step)
+            .Include(d => d.DependantOnStep)
+            .Where(d => d.Step.JobId == Id)
+            .OrderBy(d => d.Step.StepName)
+            .ThenBy(d => d.DependantOnStep.StepName)
+            .AsNoTracking()
+            .ToListAsync();
+        Steps = await context.Steps.Where(step => step.JobId == Id).AsNoTracking().ToListAsync();
+
+        //var workersJson = string.Join(',', Steps.Select(step => "\"" + step.StepId + "\": { name: \"" + step.StepName + "\"}"));
+        var workers = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
+        var workersJson = JsonSerializer.Serialize(workers);
+        var dependencies = Dependencies.Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+        var dependenciesJson = JsonSerializer.Serialize(dependencies);
+        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson);
+    }
+
+}
