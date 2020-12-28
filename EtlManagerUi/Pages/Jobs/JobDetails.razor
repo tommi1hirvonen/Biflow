@@ -163,34 +163,26 @@ else
 
     private Job EditJob { get; set; } = new();
 
-    private bool Subscribed { get; set; } = false;
+    private string Username => HttpContextAccessor.HttpContext.User?.Identity?.Name;
+
+    private bool Subscribed => CurrentJob.Subscriptions.Where(sub => sub.Username == Username).Any();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
-        await LoadData(context);
+        Jobs = await context.Jobs.Include(job => job.Subscriptions).OrderBy(job => job.JobName).ToListAsync();
+        LoadData();
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        using var context = DbFactory.CreateDbContext();
-        await LoadData(context);
+        LoadData();
     }
 
-    private async Task LoadData(EtlManagerContext context)
+    private void LoadData()
     {
-        CurrentJob = await context.Jobs.Include(job => job.Subscriptions).FirstOrDefaultAsync(job => job.JobId == Id);
+        CurrentJob = Jobs.First(job => job.JobId == Id);
         EditJob.JobName = CurrentJob.JobName;
-        var user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
-        if (CurrentJob.Subscriptions != null && CurrentJob.Subscriptions.Select(subscription => subscription.Username).Contains(user))
-        {
-            Subscribed = true;
-        }
-        else
-        {
-            Subscribed = false;
-        }
     }
 
     private async Task UpdateJob()
@@ -251,23 +243,22 @@ else
 
     private async Task ToggleSubscription()
     {
-        var username = HttpContextAccessor.HttpContext.User?.Identity?.Name;
         using var context = DbFactory.CreateDbContext();
-        var subscription = await context.Subscriptions
-            .Where(subscription => subscription.JobId == CurrentJob.JobId && subscription.Username == username)
-            .FirstOrDefaultAsync();
+        var subscription = CurrentJob.Subscriptions.FirstOrDefault(sub => sub.Username == Username);
         try
         {
             if (subscription != null)
             {
                 context.Subscriptions.Remove(subscription);
+                CurrentJob.Subscriptions.Remove(subscription);
             }
             else
             {
-                context.Subscriptions.Add(new Subscription { JobId = CurrentJob.JobId, Username = username });
+                var newSub = new Subscription { JobId = CurrentJob.JobId, Username = Username };
+                context.Subscriptions.Add(newSub);
+                CurrentJob.Subscriptions.Add(newSub);
             }
             await context.SaveChangesAsync();
-            Subscribed = !Subscribed;
         }
         catch (Exception)
         {
