@@ -1,0 +1,95 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IConfiguration configuration
+
+<BSModal @ref="Modal" Size="Size.Large">
+    @if (DataFactory != null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory.DataFactoryName)</BSModalHeader>
+        <BSModalBody>
+            <BSForm Model="DataFactory" id="df_edit_form" OnValidSubmit="SubmitDataFactory">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <BSFormGroup>
+                            <BSLabel>Data Factory name</BSLabel>
+                            <BSInput InputType="InputType.Text" @bind-Value="DataFactory.DataFactoryName"></BSInput>
+                        </BSFormGroup>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Tenant id</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.TenantId"></BSInput>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Subscription id</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.SubscriptionId"></BSInput>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Resource group name</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ResourceGroupName"></BSInput>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Resource name</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ResourceName"></BSInput>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Client id</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ClientId"></BSInput>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-md">
+                                <BSLabel>Client secret</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ClientSecret" placeholder="@(DataFactoryId == Guid.Empty ? null : "Encrypted")"></BSInput>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                    </div>
+                </div>
+            </BSForm>
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="df_edit_form" Color="Color.Success">@(DataFactoryId == Guid.Empty ? "Create" : "Save")</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public Guid DataFactoryId { get; set; }
+
+    [Parameter]
+    public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
+
+    private DataFactory DataFactory { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (DataFactoryId != Guid.Empty)
+        {
+            var context = DbFactory.CreateDbContext();
+            DataFactory = await context.DataFactories.FindAsync(DataFactoryId);
+        }
+        else
+        {
+            DataFactory = new();
+        }
+    }
+
+    private async Task SubmitDataFactory()
+    {
+        await OnDataFactorySubmit.InvokeAsync(DataFactory);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}

@@ -1,0 +1,155 @@
+﻿@inject IConfiguration configuration
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+
+@if (!IsEncryptionKeySet)
+{
+    <div class="alert alert-danger show" role="alert">
+        Encryption key is not set. Data Factories cannot be added and previously created Data Factories will not work.
+    </div>
+}
+else
+{
+    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+        Add Data Factory
+    </BSButton>
+}
+
+@if (DataFactories == null)
+{
+    <p class="mt-4"><em>Loading...</em></p>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-4">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Name
+                    </th>
+                    <th></th>
+                    <th>
+                        Resource group name
+                    </th>
+                    <th>
+                        Data Factory resource name
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var df in DataFactories)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @df.DataFactoryName
+                        </td>
+                        <td class="align-middle">
+                                <BSButtonGroup Class="btn-row">
+                                    @if (IsEncryptionKeySet)
+                                    {
+                                        <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                        </BSButton>
+                                    }
+                                    <BSDropdown>
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => DeleteDataFactory(df)">Confirm</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+                                </BSButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @df.ResourceGroupName
+                        </td>
+                        <td class="align-middle">
+                            @df.ResourceName
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" OnDataFactorySubmit="OnDataFactorySubmit" />
+
+@code {
+    private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
+
+    private List<DataFactory> DataFactories { get; set; }
+
+    private Guid EditDataFactoryId { get; set; }
+    private DataFactoryEditModal DataFactoryEditModal { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+        DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
+    }
+
+    private async Task DeleteDataFactory(DataFactory df)
+    {
+        var context = DbFactory.CreateDbContext();
+        context.Remove(df);
+        await context.SaveChangesAsync();
+        DataFactories.Remove(df);
+    }
+
+    private async void OnDataFactorySubmit(DataFactory dataFactory)
+    {
+        var context = DbFactory.CreateDbContext();
+        var existingDf = DataFactories.FirstOrDefault(df => df.DataFactoryId == dataFactory.DataFactoryId);
+        string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
+
+        if (existingDf != null)
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string[]
+            {
+                dataFactory.DataFactoryId.ToString(),
+                dataFactory.DataFactoryName,
+                dataFactory.TenantId,
+                dataFactory.SubscriptionId,
+                dataFactory.ClientId,
+                dataFactory.ClientSecret,
+                dataFactory.ResourceGroupName,
+                dataFactory.ResourceName,
+                encryptionPassword
+            });
+        }
+        else
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryAdd {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", parameters: new string[]
+            {
+                dataFactory.DataFactoryName,
+                dataFactory.TenantId,
+                dataFactory.SubscriptionId,
+                dataFactory.ClientId,
+                dataFactory.ClientSecret,
+                dataFactory.ResourceGroupName,
+                dataFactory.ResourceName,
+                encryptionPassword
+            });
+        }
+
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private void ShowEditModal(DataFactory dataFactory)
+    {
+        EditDataFactoryId = dataFactory?.DataFactoryId ?? Guid.Empty;
+        DataFactoryEditModal.Show();
+    }
+}

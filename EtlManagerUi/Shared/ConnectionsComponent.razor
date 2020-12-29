@@ -104,7 +104,7 @@ else
 
         if (existingConnection != null)
         {
-            context.Database.ExecuteSqlRaw("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
             {
                 connection.ConnectionId.ToString(),
                 connection.ConnectionName,
@@ -112,11 +112,10 @@ else
                 connection.IsSensitive ? "1" : "0",
                 encryptionPassword
             });
-            Connections.Remove(existingConnection);
         }
         else
         {
-            context.Database.ExecuteSqlRaw("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
             {
                 connection.ConnectionName,
                 connection.ConnectionString,
