@@ -1,23 +1,23 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 
-@if (Step.StepType == "SQL")
+@if (StepType == "SQL")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
 }
-else if (Step.StepType == "SSIS")
+else if (StepType == "SSIS")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
 }
-else if (Step.StepType == "PIPELINE")
+else if (StepType == "PIPELINE")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/git-commit.svg")))
 }
-else if (Step.StepType == "JOB")
+else if (StepType == "JOB")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
 }
 
 @code {
     [Parameter]
-    public Step Step { get; set; }
+    public string StepType { get; set; }
 }

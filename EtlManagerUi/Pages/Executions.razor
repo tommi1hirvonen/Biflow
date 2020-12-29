@@ -1,0 +1,332 @@
+﻿@page "/executions/{Level}"
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+
+<h4>Executions</h4>
+
+<form @onsubmit="LoadData">
+    <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mt-3">
+        <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+            Refresh
+        </BSButton>
+        <BSButtonGroup Size="Size.Small" Class="ml-3">
+            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(Level == "jobs" ? "active" : null)"
+                      @onclick="@(async () => { Level = "jobs"; await LoadData(); })">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                Jobs
+            </BSButton>
+            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(Level == "steps" ? "active" : null)"
+                      @onclick="@(async () => { Level = "steps"; await LoadData(); })">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                Steps
+            </BSButton>
+        </BSButtonGroup>
+    </BSButtonGroup>
+
+    <div class="form-row mt-2">
+        <div class="form-group col-lg-3">
+            <label>Status</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                    </div>
+                </div>
+                <select class="form-control form-control-sm" @bind="Status">
+                    <option value="">ALL</option>
+                    @foreach (var status in Statuses.OrderBy(status => status))
+                    {
+                        <option value="@status">@status</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="form-group col-lg-4 col-md-5">
+            <label>Job</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    </div>
+                </div>
+                <select class="form-control form-control-sm" @bind="JobName">
+                    <option value="">All</option>
+                    @foreach (var jobName in JobNames.OrderBy(name => name))
+                    {
+                        <option value="@jobName">@jobName</option>
+                    }
+                </select>
+            </div>
+        </div>
+        @if (Level == "steps")
+        {
+            <div class="form-group col-lg-4 col-md-7">
+                <label>Step</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                        </div>
+                    </div>
+                    <select class="form-control form-control-sm" @bind="StepName">
+                        <option value="">All</option>
+                        @foreach (var stepName in StepNames.OrderBy(name => name))
+                        {
+                            <option value="@stepName">@stepName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        }
+    </div>
+    <div class="form-row">
+        <div class="form-group col-lg-3 col-md-5 col-sm-7">
+            <label>Date & time until</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                    </div>
+                </div>
+                <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
+            </div>
+        </div>
+        <div class="form-group col-lg-2 col-md-4 col-sm-5">
+            <label>Interval (h)</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                    </div>
+                </div>
+                <input @bind-value="IntervalHours" class="form-control form-control-sm">
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (Level == "jobs")
+{
+    @if (JobExecutions == null)
+    {
+        <p class="mt-2"><em>Loading...</em></p>
+    }
+    else
+    {
+        <div class="card shadow-sm pt-2 mt-2">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            Job
+                        </th>
+                        <th>
+                            Created
+                        </th>
+                        <th>
+                            Started
+                        </th>
+                        <th>
+                            Ended
+                        </th>
+                        <th>
+                            Duration
+                        </th>
+                        <th>
+                            Number of steps
+                        </th>
+                        <th>
+                            Success percent
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in JobExecutions)
+                    {
+                        <tr>
+                            <td>
+                                @item.JobName
+                            </td>
+                            <td>
+                                @item.CreatedDateTime
+                            </td>
+                            <td>
+                                @item.StartDateTime
+                            </td>
+                            <td>
+                                @item.EndDateTime
+                            </td>
+                            <td>
+                                <text>@item.GetDurationInReadableFormat()</text>
+                            </td>
+                            <td style="text-align: right;">
+                                @item.NumberOfSteps
+                            </td>
+                            <td style="text-align: right;">
+                                @item.SuccessPercent
+                            </td>
+                            <td>
+                                <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else if (Level == "steps")
+{
+    @if (StepExecutions == null)
+    {
+        <p class="mt-2"><em>Loading...</em></p>
+    }
+    else
+    {
+        <div class="card shadow-sm pt-2 mt-2">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            Step
+                        </th>
+                        <th>
+                            Step type
+                        </th>
+                        <th>
+                            Started
+                        </th>
+                        <th>
+                            Ended
+                        </th>
+                        <th>
+                            Duration
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in StepExecutions)
+                    {
+                        <tr>
+                            <td>
+                                @item.StepName
+                            </td>
+                            <td>
+                                <StepTypeIconComponent StepType="@item.StepType" />
+                            </td>
+                            <td>
+                                @item.StartDateTime
+                            </td>
+                            <td>
+                                @item.EndDateTime
+                            </td>
+                            <td>
+                                <text>@item.GetDurationInReadableFormat()</text>
+                            </td>
+                            <td>
+                                <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public string Level { get; set; }
+
+    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+
+    private int IntervalHours { get; set; } = 300;
+
+    private List<string> JobNames { get; set; } = new();
+    private string JobName { get; set; } = string.Empty;
+
+    private List<string> Statuses { get; set; } = new();
+    private string Status { get; set; } = string.Empty;
+
+    private List<string> StepNames { get; set; } = new();
+    private string StepName { get; set; } = string.Empty;
+
+    private List<JobExecution> JobExecutions { get; set; }
+
+    private List<StepExecution> StepExecutions { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+
+        if (Level == "jobs")
+        {
+            IQueryable<JobExecution> jobExecutions = context.JobExecutions;
+            jobExecutions = jobExecutions
+                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
+                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
+
+            JobNames = await jobExecutions.Select(e => e.JobName).Distinct().ToListAsync();
+            Statuses = await jobExecutions.Select(e => e.ExecutionStatus).Distinct().ToListAsync();
+
+            if (!string.IsNullOrEmpty(JobName))
+            {
+                jobExecutions = jobExecutions.Where(e => e.JobName == JobName);
+            }
+
+            if (!string.IsNullOrEmpty(Status))
+            {
+                jobExecutions = jobExecutions.Where(e => e.ExecutionStatus == Status);
+            }
+
+            JobExecutions = await jobExecutions
+                .OrderByDescending(execution => execution.CreatedDateTime)
+                .ThenByDescending(execution => execution.StartDateTime)
+                .ToListAsync();
+        }
+        else if (Level == "steps")
+        {
+            IQueryable<StepExecution> stepExecutions = context.Executions;
+            stepExecutions = stepExecutions
+                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
+                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
+
+            JobNames = await stepExecutions.Select(e => e.JobName).Distinct().ToListAsync();
+            Statuses = await stepExecutions.Select(e => e.ExecutionStatus).Distinct().ToListAsync();
+            StepNames = await stepExecutions.Select(e => e.StepName).Distinct().ToListAsync();
+
+            if (!string.IsNullOrEmpty(JobName))
+            {
+                stepExecutions = stepExecutions.Where(e => e.JobName == JobName);
+            }
+
+            if (!string.IsNullOrEmpty(Status))
+            {
+                stepExecutions = stepExecutions.Where(e => e.ExecutionStatus == Status);
+            }
+
+            if (!string.IsNullOrEmpty(StepName))
+            {
+                stepExecutions = stepExecutions.Where(e => e.StepName == StepName);
+            }
+
+            StepExecutions = await stepExecutions
+                .OrderByDescending(e => e.CreatedDateTime)
+                .ThenByDescending(e => e.StartDateTime)
+                .ToListAsync();
+        }
+    }
+}

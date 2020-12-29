@@ -107,7 +107,7 @@ else
                             @item.ExecutionPhase
                         </td>
                         <td class="align-middle" title="@item.StepType" aria-label="@item.StepType">
-                            <StepTypeIconComponent Step="item" />
+                            <StepTypeIconComponent StepType="@item.StepType" />
                         </td>
                         <td class="align-middle">
                             <AuthorizeView Roles="Admin, Editor">
@@ -191,7 +191,7 @@ else
                                         @step.ExecutionPhase
                                     </td>
                                     <td>
-                                        <StepTypeIconComponent Step="step" />
+                                        <StepTypeIconComponent StepType="@step.StepType" />
                                     </td>
                                 </tr>
                             }

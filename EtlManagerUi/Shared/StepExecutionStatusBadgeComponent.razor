@@ -1,0 +1,28 @@
+﻿@{
+    switch (ExecutionStatus)
+    {
+        case "COMPLETED":
+            <span class="badge badge-success">@ExecutionStatus</span>
+            break;
+        case "FAILED":
+            <span class="badge badge-danger">@ExecutionStatus</span>
+            break;
+        case "SKIPPED":
+        case "STOPPED":
+        case "DUPLICATE":
+        case "AWAIT RETRY":
+            <span class="badge badge-warning">@ExecutionStatus</span>
+            break;
+        case "RUNNING":
+            <span class="badge badge-primary">@ExecutionStatus</span>
+            break;
+        default:
+            <span class="badge badge-secondary">@ExecutionStatus</span>
+            break;
+    }
+}
+
+@code {
+    [Parameter]
+    public string ExecutionStatus { get; set; }
+} 
