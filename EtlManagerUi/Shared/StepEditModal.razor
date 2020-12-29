@@ -1,12 +1,12 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<BSModal @ref="Modal" Size="Size.Large">
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
     @if (Step != null && Jobs != null && Connections != null && DataFactories != null && Steps != null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
-        <BSForm Model="Step" OnValidSubmit="SubmitStep" Context="_context">
-            <BSModalBody>
+        <BSModalBody>
+            <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
                 <div class="row">
                     <div class="col mx-3">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
@@ -306,12 +306,12 @@
                         }
                     </div>
                 </div>
-            </BSModalBody>
-            <BSModalFooter>
-                <BSButton ButtonType="ButtonType.Submit" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
-                <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-            </BSModalFooter>
-        </BSForm>
+            </BSForm>
+        </BSModalBody>
+        <BSModalFooter>
+            <BSButton ButtonType="ButtonType.Submit" form="step_edit_form" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
+            <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+        </BSModalFooter>
     }
 </BSModal>
 
