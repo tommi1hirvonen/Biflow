@@ -1,0 +1,257 @@
+﻿@page "/dashboard"
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS 
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-3 d-flex align-items-center">
+            <h4>Dashboard</h4>
+        </div>
+        <div class="col-lg-9 d-flex justify-content-end">
+            <div class="form-inline">
+                <button type="submit" class="btn btn-sm btn-primary ml-3" @onclick="LoadData">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                    Load report
+                </button>
+                <label class="ml-5">Date until:</label>
+                <input @bind-value="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
+                <label class="ml-5">Interval (d):</label>
+                <input @bind-value="IntervalDays" class="form-control form-control-sm col-1 ml-2">
+                <div class="custom-control custom-checkbox custom-control-inline ml-5">
+                    <input type="checkbox" class="custom-control-input" id="include_deleted" @bind-value="IncludeDeleted">
+                    <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="card shadow-sm col-lg mr-lg-3 mb-lg-3 mb-3 pt-3">
+            <h6>Average execution duration</h6>
+            <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
+        </div>
+        <div class="card shadow-sm col-lg ml-lg-3 mb-lg-3 mt-lg-0 my-3 pt-3">
+            <h6>Job success rate</h6>
+            <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
+        </div>
+    </div>
+    <div class="row">
+        <div class="card shadow-sm col-lg mr-lg-3 mt-lg-3 my-3 pt-3">
+            <h6>Number of executions</h6>
+            <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
+        </div>
+        <div class="card shadow-sm col-lg ml-lg-3 mt-lg-3 my-3 pt-3">
+            <h6>Top 5 failing steps</h6>
+            <div class="row mt-4">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Step</th>
+                            <th>Job</th>
+                            <th>Success %</th>
+                            <th># of executions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (TopFailedSteps != null)
+                        {
+                            @for (int i = 0; i < TopFailedSteps.Count; i++)
+                            {
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>
+                                        @TopFailedSteps[i].StepName
+                                    </td>
+                                    <td>
+                                        @TopFailedSteps[i].JobName
+                                    </td>
+                                    <td>@TopFailedSteps[i].SuccessPercent</td>
+                                    <td>@TopFailedSteps[i].NoOfExecutions</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
+
+    private Dictionary<string, string> JobColors = new Dictionary<string, string>();
+    private List<ReportingJob> Jobs { get; set; }
+
+    private List<TopStep> TopFailedSteps { get; set; }
+
+    private int IntervalDays { get; set; } = 90;
+
+    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Date.Trim(TimeSpan.TicksPerMinute).AddHours(1);
+
+    private bool IncludeDeleted { get; set; } = false;
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+
+        var dateTimeStart = DateTimeUntil.AddDays(-IntervalDays);
+
+        // Get duration executions
+        var executionsQuery = context.JobExecutions
+            .Where(e => e.ExecutionInSeconds > 0 && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+
+        if (!IncludeDeleted)
+        {
+            executionsQuery = executionsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
+        }
+
+        var executions = await executionsQuery
+            .OrderBy(e => e.CreatedDateTime)
+            .GroupBy(group => new
+            {
+                group.JobName,
+                ((DateTime)group.CreatedDateTime).Date
+            })
+            .Select(select => new TimeSeriesItem
+            {
+                DurationInMinutes = select.Average(total => (decimal)total.ExecutionInSeconds / 60),
+                JobName = select.Key.JobName,
+                Date = select.Key.Date,
+                NumberOfExecutions = select.Count()
+            }).ToListAsync();
+
+        TimeSeriesItems = executions
+            .GroupBy(e => e.JobName)
+            .ToDictionary(e => e.Key, e => e.ToList());
+
+
+        // Job success rates
+        var jobsQuery = context.JobExecutions
+            .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+
+        if (!IncludeDeleted)
+        {
+            jobsQuery = jobsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
+        }
+
+        Jobs = await jobsQuery
+            .GroupBy(group => group.JobName)
+            .Select(select => new ReportingJob
+            {
+                SuccessPercent = select.Average(total => total.SuccessPercent),
+                JobName = select.Key
+            })
+            .OrderByDescending(order => order.SuccessPercent)
+            .ToListAsync();
+
+        // Get a temporary list of all job names to retrieve their colors.
+        var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
+        JobColors = jobNames
+            .Select((name, index) => new { Item = name, Index = index })
+            .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Count]);
+
+
+        // Get top failed steps
+        var topFailedStepsQuery = context.Executions
+            .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime <= DateTimeUntil);
+
+        if (!IncludeDeleted)
+        {
+            topFailedStepsQuery = topFailedStepsQuery.Where(e => context.Steps.Where(step => step.StepId == e.StepId).Any());
+        }
+
+        var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
+
+        TopFailedSteps = topFailedStepsGrouping
+            .GroupBy(group => new { group.StepId, group.StepName, group.JobId, group.JobName })
+            .Select(select => new TopStep
+            {
+                StepName = select.Key.StepName,
+                StepId = select.Key.StepId,
+                JobName = select.Key.JobName,
+                JobId = select.Key.JobId,
+                NoOfExecutions = select.Count(),
+                SuccessPercent = (decimal)select.Count(e => e.ExecutionStatus == "COMPLETED") / select.Count() * 100
+            })
+            .OrderBy(order => order.SuccessPercent)
+            .Where(e => e.SuccessPercent < 100)
+            .Take(5)
+            .ToList();
+
+        await JS.InvokeVoidAsync("drawDurationGraph", GetDurationDatasetString());
+        await JS.InvokeVoidAsync("drawNoOfExecutionsGraph", GetNoOfExecutionsDatasetString());
+        await JS.InvokeVoidAsync("drawSuccessRateGraph", SuccessRateLabels, SuccessRateData, SuccessRateColors);
+    }
+
+    string GetDurationDatasetString()
+    {
+        return "[" + string.Join(',',
+            TimeSeriesItems.Select((e, index) =>
+                "{\"label\": \"" + e.Key + "\", \"fill\": false, \"backgroundColor\": \"" + JobColors[e.Key] + "\", \"borderColor\": \"" + JobColors[e.Key] + "\", \"data\": [" +
+                    string.Join(',', e.Value.Select(v => @"{""t"": """ + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @""", ""y"": " + v.DurationInMinutes.ToString().Replace(',', '.') + @"}")) +
+                "]}")
+            ) + "]";
+    }
+
+    string GetNoOfExecutionsDatasetString()
+    {
+        return "[" + string.Join(',',
+            TimeSeriesItems.Select((e, index) =>
+                "{\"label\": \"" + e.Key + "\", \"fill\": false, \"backgroundColor\": \"" + JobColors[e.Key] + "\", \"borderColor\": \"" + JobColors[e.Key] + "\", \"data\": [" +
+                    string.Join(',', e.Value.Select(v => @"{""t"": """ + v.Date.ToString("yyyy-M-d")?.Replace('.', ':') + @""", ""y"": " + v.NumberOfExecutions + @"}")) +
+                "]}")
+            ) + "]";
+    }
+
+    string SuccessRateLabels => string.Join(',', Jobs.Select(job => "'" + job.JobName + "'"));
+    string SuccessRateData => string.Join(',', Jobs.Select(job => decimal.Round(job.SuccessPercent, 2).ToString().Replace(',', '.')));
+    string SuccessRateColors => string.Join(',', Jobs.Select(job =>  JobColors[job.JobName]));
+
+    private List<string> colors = new List<string>
+        {
+            "#727cf5", // indigo
+            "#0acf97", // teal
+            "#007bff", // blue
+            "#fa5c7c", // red
+            "#ffc107", // yellow
+            "#28a745", // green
+            "#fd7e14", // orange
+            "#17a2b8", // cyan
+            "#e83e8c", // pink
+            "#6f42c1" // purple
+        };
+
+    public class TimeSeriesItem
+    {
+        public string JobName { get; set; }
+        public DateTime Date { get; set; }
+        public decimal DurationInMinutes { get; set; }
+        public int NumberOfExecutions { get; set; }
+    }
+
+    public class ReportingJob
+    {
+        [DisplayFormat(DataFormatString = "{0:N0}%")]
+        public decimal SuccessPercent { get; set; }
+        public string JobName { get; set; }
+    }
+
+    public class TopStep
+    {
+        [DisplayFormat(DataFormatString = "{0:N0}%")]
+        public decimal SuccessPercent { get; set; }
+        public string StepName { get; set; }
+        public Guid StepId { get; set; }
+        public string JobName { get; set; }
+        public Guid JobId { get; set; }
+        public int NoOfExecutions { get; set; }
+    }
+
+}

@@ -54,3 +54,104 @@
 
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 }
+
+function drawDurationGraph(datasets_) {
+
+    var datasets1 = JSON.parse(datasets_);
+
+    var ctx1 = document.getElementById('myChart1')
+
+    var myChart1 = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            datasets: datasets1
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'min'
+                    }
+                }],
+                xAxes: [{
+                    type: 'time'
+                }]
+            }
+        }
+    })
+}
+
+function drawNoOfExecutionsGraph(datasets_) {
+
+    var datasets3 = JSON.parse(datasets_);
+
+    var ctx3 = document.getElementById('myChart3')
+
+    var myChart3 = new Chart(ctx3, {
+        type: 'line',
+        data: {
+            datasets: datasets3
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        stepSize: 1
+                    }
+                }],
+                xAxes: [{
+                    type: 'time'
+                }]
+            }
+        }
+    })
+
+}
+
+function drawSuccessRateGraph(labels_, data_, colors_) {
+
+    var labels1 = labels_.split(",");
+    var data1 = data_.split(",");
+    var colors1 = colors_.split(",");
+
+    // Job success rates
+    var ctx2 = document.getElementById('myChart2')
+    var myChart2 = new Chart(ctx2, {
+        type: 'horizontalBar',
+        data: {
+            labels: labels1,
+            datasets: [{
+                data: data1,
+                lineTension: 0,
+                backgroundColor: colors1
+            }]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        max: 100,
+                        min: 0,
+                        stepSize: 10,
+                        callback: function (value, index, values) {
+                            return value + '%';
+                        }
+                    }
+                }]
+            },
+            legend: {
+                display: false
+            }
+        }
+    })
+
+
+    
+
+}
