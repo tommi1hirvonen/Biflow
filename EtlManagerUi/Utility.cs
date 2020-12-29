@@ -325,7 +325,7 @@ namespace EtlManagerUi
             else return false;
         }
 
-        public static bool AddUser(IConfiguration configuration, RoleUser user, string password)
+        public static async Task<bool> AddUserAsync(IConfiguration configuration, RoleUser user, string password)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -344,8 +344,8 @@ namespace EtlManagerUi
             }
 
 
-            sqlConnection.Open();
-            int result = (int)sqlCommand.ExecuteScalar();
+            await sqlConnection.OpenAsync();
+            int result = (int)(await sqlCommand.ExecuteScalarAsync());
 
             if (result > 0) return true;
             else return false;

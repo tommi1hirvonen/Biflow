@@ -1,0 +1,60 @@
+﻿@page "/settings/{Page}"
+
+@attribute [Authorize(Roles = "Admin")]
+
+@inject IWebHostEnvironment WebHostEnvironment
+
+<h4>Settings</h4>
+
+<ul class="nav nav-pills mt-3 mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/users">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+            Users
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/encryption">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+            Encryption
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/connections">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+            Connections
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/datafactories">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/cpu.svg")))
+            Data Factories
+        </NavLink>
+    </li>
+</ul>
+
+@if (Page == "users")
+{
+    <UsersComponent />
+}
+else if (Page == "encryption")
+{
+    <p>Not yet implemented</p>
+}
+else if (Page == "connections")
+{
+    <p>Not yet implemented</p>
+}
+else if (Page == "datafactories")
+{
+    <p>Not yet implemented</p>
+}
+else
+{
+    <p>Sorry, nothing at this address.</p>
+}
+
+@code {
+    [Parameter]
+    public string Page { get; set; }
+}

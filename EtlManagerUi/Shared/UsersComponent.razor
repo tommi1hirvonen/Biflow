@@ -1,0 +1,123 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IConfiguration configuration
+@inject IJSRuntime JS
+
+<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+    Add user
+</BSButton>
+
+@if (Users == null)
+{
+    <p class="mt-4"><em>Loading...</em></p>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-4">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Username
+                    </th>
+                    <th>
+                    </th>
+                    <th>
+                        Email
+                    </th>
+                    <th>
+                        Role
+                    </th>
+                    <th>
+                        Created
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Users)
+                {
+                    <tr>
+                        <td>
+                            @user.Username
+                        </td>
+                        <td>
+                            <BSButtonGroup Class="btn-row">
+                                <BSButton Color="Color.Light" Size="Size.Small" aria-label="edit" @onclick="() => ShowEditModal(user)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                </BSButton>
+                                <BSButton Color="Color.Light" Size="Size.Small" aria-label="change password">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                </BSButton>
+                                <BSDropdown>
+                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="delete">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeleteUser(user)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </BSButtonGroup>
+                        </td>
+                        <td>
+                            @user.Email
+                        </td>
+                        <td>
+                            @user.Role
+                        </td>
+                        <td>
+                            @user.CreatedDateTime
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<UserEditModal @ref="UserEditModal" Username="@EditModalUsername" OnUserSubmit="OnUserSubmit" />
+
+
+@code {
+    private List<RoleUser> Users { get; set; }
+
+    private UserEditModal UserEditModal { get; set; }
+    private string EditModalUsername { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var context = DbFactory.CreateDbContext();
+        Users = await context.EditableUsers.OrderBy(user => user.Username).ToListAsync();
+    }
+
+    private async Task DeleteUser(RoleUser user)
+    {
+        try
+        {
+            var context = DbFactory.CreateDbContext();
+            context.EditableUsers.Remove(user);
+            await context.SaveChangesAsync();
+            Users.Remove(user);
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "Error deleting user");
+        }
+    }
+
+    private void OnUserSubmit(RoleUser user)
+    {
+        var existingUser = Users.FirstOrDefault(u => u.Username == user.Username);
+        if (existingUser != null)
+        {
+            Users.Remove(existingUser);
+        }
+        Users.Add(user);
+    }
+
+    private void ShowEditModal(RoleUser user)
+    {
+        EditModalUsername = user?.Username;
+        UserEditModal.Show();
+    }
+}

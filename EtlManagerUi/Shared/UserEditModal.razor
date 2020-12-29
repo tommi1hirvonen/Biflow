@@ -1,0 +1,177 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+@inject IConfiguration configuration
+
+<BSModal @ref="Modal">
+    <BSModalHeader OnClick="() => Modal.Hide()">@(Username == null ? "New user" : "Edit " + Username)</BSModalHeader>
+    @if (User != null)
+    {
+        <BSModalBody>
+            <BSForm Model="User" id="user_edit_form" OnValidSubmit="SubmitUser">
+                <div class="row">
+                    <div class="col-md-10 mx-auto">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <BSFormGroup>
+                            <BSLabel>Username</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                    </div>
+                                </div>
+                                <BSInput IsDisabled="@(Username != null)" InputType="InputType.Text" @bind-Value="User.Username"></BSInput>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSLabel>Role</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Select" @bind-Value="User.Role">
+                                    <option>Viewer</option>
+                                    <option>Operator</option>
+                                    <option>Editor</option>
+                                    <option>Admin</option>
+                                </BSInput>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSLabel>Email</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Email" @bind-Value="User.Email"></BSInput>
+                            </div>
+                        </BSFormGroup>
+                        @if (Username == null)
+                        {
+                            <BSFormGroup>
+                                <BSLabel>Password</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Password" @bind-Value="Password"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Confirm password</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.Password" @bind-Value="ConfirmPassword"></BSInput>
+                                </div>
+                            </BSFormGroup>
+                        }
+                    </div>
+                </div>
+            </BSForm>
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="user_edit_form" Color="Color.Success">@(Username == null ? "Create" : "Save")</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public string Username { get; set; }
+
+    [Parameter]
+    public EventCallback<RoleUser> OnUserSubmit { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    private RoleUser User { get; set; }
+
+    private string Password { get; set; }
+    private string ConfirmPassword { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Username == null)
+        {
+            User = new() { Role = "Viewer" };
+        }
+        else
+        {
+            var context = DbFactory.CreateDbContext();
+            User = await context.EditableUsers.FirstOrDefaultAsync(user => user.Username == Username);
+        }
+    }
+
+    private async Task SubmitUser()
+    {
+        // New user
+        if (Username == null)
+        {
+            if (!Password.Equals(ConfirmPassword))
+            {
+                await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+                return;
+            }
+            else if (Password.Length == 0 || Password.Length > 250)
+            {
+                await JS.InvokeVoidAsync("alert", "Password must be between 0 and 250 characters in length");
+                return;
+            }
+
+            try
+            {
+                var result = await Utility.AddUserAsync(configuration, User, Password);
+                if (result)
+                {
+                    Password = null;
+                    ConfirmPassword = null;
+                    await OnUserSubmit.InvokeAsync(User);
+                    Modal.Hide();
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("alert", "Error creating user");
+                }
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", "Error creating user: " + ex.Message);
+            }
+        }
+        // Existing user
+        else
+        {
+            try
+            {
+                var context = DbFactory.CreateDbContext();
+                context.Attach(User).State = EntityState.Modified;
+                await context.SaveChangesAsync();
+                await OnUserSubmit.InvokeAsync(User);
+                Modal.Hide();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", "Error updating user: " + ex.Message);
+            }
+        }
+    }
+
+    public void Show()
+    {
+        Modal.Show();
+    }
+
+
+}

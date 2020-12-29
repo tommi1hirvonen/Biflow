@@ -90,7 +90,7 @@ namespace EtlManagerUi.Data
                 .HasMany(user => user.Subscriptions)
                 .WithOne(subscription => subscription.User);
             modelBuilder.Entity<RoleUser>()
-                .ToView("vUser");
+                .ToTable("vUser");
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory")
                 .HasMany(df => df.Steps)

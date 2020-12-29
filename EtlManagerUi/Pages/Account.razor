@@ -168,6 +168,8 @@ else
             if (Utility.UpdatePassword(configuration, Username, PasswordModel_.Password))
             {
                 await JS.InvokeVoidAsync("alert", "Password updated successfully");
+                PasswordModel_.Password = null;
+                PasswordModel_.ConfirmPassword = null;
             }
             else
             {
