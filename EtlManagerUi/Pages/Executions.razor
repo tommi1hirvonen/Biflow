@@ -248,7 +248,7 @@ else if (Level == "steps")
 
     private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
-    private int IntervalHours { get; set; } = 300;
+    private int IntervalHours { get; set; } = 3;
 
     private List<string> JobNames { get; set; } = new();
     private string JobName { get; set; } = string.Empty;
