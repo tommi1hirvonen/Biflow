@@ -45,9 +45,42 @@ else
                                 <BSButton Color="Color.Light" Size="Size.Small" aria-label="edit" @onclick="() => ShowEditModal(user)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </BSButton>
+                                
+                                <BSDropdown>
+                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="change password" @onclick="ResetPassword">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                                        <BSFormGroup>
+                                            <BSLabel>New password</BSLabel>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                                    </div>
+                                                </div>
+                                                <BSBasicInput InputType="InputType.Password" @bind-Value="Password"></BSBasicInput>
+                                            </div>
+                                        </BSFormGroup>
+                                        <BSFormGroup>
+                                            <BSLabel>Confirm password</BSLabel>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                                    </div>
+                                                </div>
+                                                <BSBasicInput InputType="InputType.Password" @bind-Value="ConfirmPassword"></BSBasicInput>
+                                            </div>
+                                        </BSFormGroup>
+                                        <BSButton Size="Size.Small" Color="Color.Success" @onclick="() => UpdatePassword(user)">Save</BSButton>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                                
                                 <BSButton Color="Color.Light" Size="Size.Small" aria-label="change password">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                 </BSButton>
+                                
                                 <BSDropdown>
                                     <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
@@ -84,6 +117,9 @@ else
     private UserEditModal UserEditModal { get; set; }
     private string EditModalUsername { get; set; }
 
+    private string Password { get; set; }
+    private string ConfirmPassword { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         var context = DbFactory.CreateDbContext();
@@ -119,5 +155,48 @@ else
     {
         EditModalUsername = user?.Username;
         UserEditModal.Show();
+    }
+
+    private async Task UpdatePassword(RoleUser user)
+    {
+        if (!(await PasswordCheck()))
+        {
+            return;
+        }
+
+        var result = await Utility.UpdatePasswordAsync(configuration, user.Username, Password);
+        if (result)
+        {
+            ResetPassword();
+            await JS.InvokeVoidAsync("alert", "Password updated successfully");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error updating password");
+        }
+    }
+
+    private void ResetPassword()
+    {
+        Password = null;
+        ConfirmPassword = null;
+    }
+
+    private async Task<bool> PasswordCheck()
+    {
+        if (!Password.Equals(ConfirmPassword))
+        {
+            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+            return false;
+        }
+        else if (Password.Length == 0 || Password.Length > 250)
+        {
+            await JS.InvokeVoidAsync("alert", "The password must be between 0 and 250 characters in length");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 }

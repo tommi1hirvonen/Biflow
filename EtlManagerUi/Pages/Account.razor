@@ -164,8 +164,8 @@ else
     {
         if (PasswordModel_.Password.Equals(PasswordModel_.ConfirmPassword))
         {
-
-            if (Utility.UpdatePassword(configuration, Username, PasswordModel_.Password))
+            var result = await Utility.UpdatePasswordAsync(configuration, Username, PasswordModel_.Password);
+            if (result)
             {
                 await JS.InvokeVoidAsync("alert", "Password updated successfully");
                 PasswordModel_.Password = null;

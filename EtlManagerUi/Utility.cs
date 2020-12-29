@@ -309,7 +309,7 @@ namespace EtlManagerUi
             }
         }
 
-        public static bool UpdatePassword(IConfiguration configuration, string username, string password)
+        public static async Task<bool> UpdatePasswordAsync(IConfiguration configuration, string username, string password)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -319,7 +319,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Password_", password);
 
             sqlConnection.Open();
-            int result = (int)sqlCommand.ExecuteScalar();
+            int result = (int)(await sqlCommand.ExecuteScalarAsync());
 
             if (result > 0) return true;
             else return false;
