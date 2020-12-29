@@ -1,4 +1,4 @@
-﻿@page "/account/{Page}"
+﻿@page "/account"
 
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IHttpContextAccessor HttpContextAccessor
@@ -7,130 +7,127 @@
 @inject IConfiguration configuration  
 
 <h4>Account</h4>
+<p></p>
+<h5>@Username</h5>
 
-<ul class="nav nav-pills mt-4 mb-4" role="tablist">
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="account/email/">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
-            Email
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="account/password">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-            Password
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="account/subscriptions">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
-            Subscriptions
-        </NavLink>
-    </li>
-</ul>
-
-<div class="card shadow-sm mt-3 pt-3 col-md-8 col-lg-6">
-    <h6>@Username</h6>
-    @if (Page == "email" && User != null)
-    {
-        <BSForm Class="mt-3" Model="User" OnValidSubmit="SubmitEmail">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-            <BSFormGroup>
-                <BSLabel Class="sr-only">Email</BSLabel>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text rounded-left">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
-                        </div>
-                    </div>
-                    <BSInput InputType="InputType.Email" @bind-Value="User.Email" placeholder="Email"></BSInput>
-                </div>
-            </BSFormGroup>
-            <BSFormGroup>
-                <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                    Save
-                </BSButton>
-            </BSFormGroup>
-        </BSForm>
-    }
-    else if (Page == "password")
-    {
-        <section class="mt-3">
-            <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <BSFormGroup>
-                    <BSLabel>New password</BSLabel>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text rounded-left">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+@if (User == null || Jobs == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row mt-3">
+        <div class="col-md col-lg-5">
+            <div class="card shadow-sm pt-3 px-3">
+                <h6>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                    Email
+                </h6>
+                <BSForm Class="mt-3" Model="User" OnValidSubmit="SubmitEmail">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <BSFormGroup>
+                        <BSLabel Class="sr-only">Email</BSLabel>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text rounded-left">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                </div>
                             </div>
+                            <BSInput InputType="InputType.Email" @bind-Value="User.Email" placeholder="Email"></BSInput>
                         </div>
-                        <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.Password"></BSInput>
-                    </div>
-                </BSFormGroup>
-                <BSFormGroup>
-                    <BSLabel>Confirm new password</BSLabel>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text rounded-left">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                    </BSFormGroup>
+                    <BSFormGroup>
+                        <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                            Save
+                        </BSButton>
+                    </BSFormGroup>
+                </BSForm>
+            </div>
+            <div class="card shadow-sm pt-3 px-3 mt-4">
+                <h6>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                    Password
+                </h6>
+                <section class="mt-3">
+                    <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <BSFormGroup>
+                            <BSLabel>New password</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.Password"></BSInput>
                             </div>
-                        </div>
-                        <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.ConfirmPassword"></BSInput>
-                    </div>
-                </BSFormGroup>
-                <BSFormGroup>
-                    <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                        Save
-                    </BSButton>
-                </BSFormGroup>
-            </BSForm>
-        </section>
-    }
-    else if (Page == "subscriptions" && User != null && Jobs != null)
-    {
-        <table class="table table-striped mt-3">
-            <thead>
-                <tr>
-                    <th>
-                        Job
-                    </th>
-                    <th>
-                        Subscribed
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var job in Jobs)
-                {
-                    <tr>
-                        <td>
-                            @job.JobName
-                        </td>
-                        <td>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="@job.JobId"
-                                       checked=@User.Subscriptions.Where(sub => sub.JobId == job.JobId).Any()
-                                       @onchange="() => ToggleSubscription(job)">
-                                <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSLabel>Confirm new password</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.ConfirmPassword"></BSInput>
                             </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                                Save
+                            </BSButton>
+                        </BSFormGroup>
+                    </BSForm>
+                </section>
+            </div>
+        </div>
+        <div class="col-md col-lg-7">
+            <div class="card shadow-sm pt-3 mt-4 mt-md-0">
+                <h6 class="mx-3">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
+                    Subscriptions
+                </h6>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>
+                                Job
+                            </th>
+                            <th>
+                                Subscribed
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in Jobs)
+                        {
+                            <tr>
+                                <td>
+                                    @job.JobName
+                                </td>
+                                <td>
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="@job.JobId"
+                                               checked=@User.Subscriptions.Where(sub => sub.JobId == job.JobId).Any()
+                                               @onchange="() => ToggleSubscription(job)">
+                                        <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    [Parameter]
-    public string Page { get; set; }
-
     private string Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
     private User User { get; set; }
@@ -141,7 +138,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Page = Page ?? "email";
         var context = DbFactory.CreateDbContext();
         User = await context.Users
             .Include(user => user.Subscriptions)
