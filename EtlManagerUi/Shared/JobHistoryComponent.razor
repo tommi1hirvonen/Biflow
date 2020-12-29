@@ -91,17 +91,7 @@ else
     public decimal AverageSuccessRate { get; set; }
     public int AverageDurationInSeconds { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-    }
-
     protected override async Task OnParametersSetAsync()
-    {
-        await LoadData();
-    }
-
-    private async Task LoadData()
     {
         using var context = DbFactory.CreateDbContext();
         Executions = await context.JobExecutions

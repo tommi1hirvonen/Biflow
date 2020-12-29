@@ -371,11 +371,6 @@ else
 
     private string GenerateErrorMessage { get; set; } = string.Empty;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-    }
-
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();

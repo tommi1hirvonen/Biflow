@@ -333,7 +333,6 @@
         using var context = DbFactory.CreateDbContext();
         Connections = await context.Connections.ToListAsync();
         DataFactories = await context.DataFactories.ToListAsync();
-        await LoadData(context);
     }
 
     protected override async Task OnParametersSetAsync()

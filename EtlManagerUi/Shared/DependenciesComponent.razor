@@ -62,17 +62,9 @@
     private List<Step> Steps { get; set; }
     private List<Dependency> Dependencies { get; set; }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadGraph();
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await LoadGraph();
-        }
+        await LoadGraph();
     }
 
     private async Task LoadGraph()
