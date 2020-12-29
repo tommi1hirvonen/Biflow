@@ -211,15 +211,15 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public static bool IsEncryptionKeySet(IConfiguration configuration)
+        public static async Task<bool> IsEncryptionKeySetAsync(IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
+            await sqlConnection.OpenAsync();
             SqlCommand sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             sqlCommand.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            var reader = sqlCommand.ExecuteReader();
+            var reader = await sqlCommand.ExecuteReaderAsync();
             if (reader.HasRows)
             {
                 return true;
@@ -230,22 +230,24 @@ namespace EtlManagerUi
             }
         }
 
-        public static string GetEncryptionKey(IConfiguration configuration)
+        public static async Task<string> GetEncryptionKeyAsync(IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
+            await sqlConnection.OpenAsync();
             SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            var reader = getKeyCmd.ExecuteReader();
+            var reader = await getKeyCmd.ExecuteReaderAsync();
             if (reader.Read())
             {
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
                 byte[] entropy = (byte[])reader["Entropy"];
-#pragma warning disable CA1416 // Validate platform compatibility
+                
+                #pragma warning disable CA1416 // Validate platform compatibility
                 byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
-#pragma warning restore CA1416 // Validate platform compatibility
+                #pragma warning restore CA1416 // Validate platform compatibility
+                
                 return Encoding.ASCII.GetString(output);
             }
             else
@@ -254,21 +256,23 @@ namespace EtlManagerUi
             }
         }
 
-        public static void SetEncryptionKey(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
+        public static async Task SetEncryptionKeyAsync(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
             using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
+            await sqlConnection.OpenAsync();
 
             // Create random entropy
             byte[] entropy = new byte[16];
             new RNGCryptoServiceProvider().GetBytes(entropy);
 
             byte[] newEncryptionKeyBinary = Encoding.ASCII.GetBytes(newEncryptionKey);
-#pragma warning disable CA1416 // Validate platform compatibility
+            
+            #pragma warning disable CA1416 // Validate platform compatibility
             byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
-#pragma warning restore CA1416 // Validate platform compatibility
+            #pragma warning restore CA1416 // Validate platform compatibility
+            
             SqlCommand updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
                     @EncryptionId = @EncryptionId_,
                     @OldEncryptionKey = @OldEncryptionKey_,
@@ -285,7 +289,7 @@ namespace EtlManagerUi
             updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKeyEncrypted_", newEncryptionKeyEncrypted);
             updateKeyCmd.Parameters.AddWithValue("@Entropy_", entropy);
 
-            updateKeyCmd.ExecuteNonQuery();
+            await updateKeyCmd.ExecuteNonQueryAsync();
         }
 
         public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)
@@ -318,7 +322,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);
 
-            sqlConnection.Open();
+            await sqlConnection.OpenAsync();
             int result = (int)(await sqlCommand.ExecuteScalarAsync());
 
             if (result > 0) return true;

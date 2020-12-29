@@ -1,0 +1,99 @@
+﻿@inject IConfiguration configuration
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+
+<div class="card shadow-sm col-md-8 col-lg-5 pt-3">
+    @if (!IsEncryptionKeySet)
+    {
+        <div class="alert alert-danger show" role="alert">
+            Encryption key is not set.
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success show" role="alert">
+            Encryption key is set.
+        </div>
+    }
+    <section>
+        <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+            <BSFormGroup>
+                <BSLabel>New encryption key</BSLabel>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text rounded-left">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                        </div>
+                    </div>
+                    <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.Password"></BSInput>
+                </div>
+            </BSFormGroup>
+            <BSFormGroup>
+                <BSLabel>Confirm encryption key</BSLabel>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text rounded-left">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                        </div>
+                    </div>
+                    <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.ConfirmPassword"></BSInput>
+                </div>
+            </BSFormGroup>
+            <BSFormGroup>
+                <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                    Save
+                </BSButton>
+            </BSFormGroup>
+        </BSForm>
+    </section>
+</div>
+
+@code {
+    private bool IsEncryptionKeySet { get; set; }
+
+    private PasswordModel PasswordModel_ { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+    }
+
+    private async Task UpdatePassword()
+    {
+        PasswordModel_.Password = PasswordModel_.Password ?? string.Empty;
+        PasswordModel_.ConfirmPassword = PasswordModel_.ConfirmPassword ?? string.Empty;
+
+        if (PasswordModel_.Password.Length < 1 || PasswordModel_.Password.Length > 250)
+        {
+            await JS.InvokeVoidAsync("alert", "The password length must be between 1 and 250");
+            return;
+        }
+
+        if (!PasswordModel_.Password.Equals(PasswordModel_.ConfirmPassword))
+        {
+            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+            return;
+        }
+
+        try
+        {
+            string oldEncryptionKey = await Utility.GetEncryptionKeyAsync(configuration);
+            await Utility.SetEncryptionKeyAsync(configuration, oldEncryptionKey, PasswordModel_.Password);
+            await JS.InvokeVoidAsync("alert", "Encryption key set successfully");
+            PasswordModel_.Password = null;
+            PasswordModel_.ConfirmPassword = null;
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error setting encryption key: " + ex.Message);
+        }
+    }
+
+    private class PasswordModel
+    {
+        public string Password { get; set; }
+
+        public string ConfirmPassword { get; set; }
+    }
+}
