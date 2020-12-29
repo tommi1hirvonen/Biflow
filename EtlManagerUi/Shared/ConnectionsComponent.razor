@@ -1,0 +1,137 @@
+﻿@inject IConfiguration configuration
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment 
+
+@if (!IsEncryptionKeySet)
+{
+    <div class="alert alert-warning show" role="alert">
+        Encryption key is not set. Sensitive connections cannot be added and previously created sensitive connections will not work.
+    </div>
+}
+
+<BSButton Color="Color.Success" @onclick="() => ShowConnectionEditModal(null)">
+    Add connection
+</BSButton>
+
+@if (Connections == null)
+{
+    <p class="mt-4">Loading...<em></em></p>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-4">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Name
+                    </th>
+                    <th></th>
+                    <th>
+                        Connection string
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var connection in Connections)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @connection.ConnectionName
+                        </td>
+                        <td class="align-middle">
+                            <BSButtonGroup Class="btn-row">
+                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowConnectionEditModal(connection)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                </BSButton>
+                                <BSDropdown>
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </BSButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            <pre><code>@connection.ConnectionString</code></pre>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<ConnectionEditModal @ref="ConnectionEditModal" ConnectionId="EditConnectionId" OnConnectionSubmit="OnConnectionSubmit" />
+
+@code {
+    private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
+    private List<Connection> Connections { get; set; }
+
+    private Guid EditConnectionId { get; set; }
+    private ConnectionEditModal ConnectionEditModal { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+        Connections = await context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
+    }
+
+    private async Task DeleteConnection(Connection connection)
+    {
+        var context = DbFactory.CreateDbContext();
+        var conn = await context.Connections.FindAsync(connection.ConnectionId);
+        context.Connections.Remove(conn);
+        await context.SaveChangesAsync();
+        Connections.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+    }
+
+    private async void OnConnectionSubmit(Connection connection)
+    {
+        var context = DbFactory.CreateDbContext();
+        var existingConnection = Connections.FirstOrDefault(conn => conn.ConnectionId == connection.ConnectionId);
+        string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
+
+        if (existingConnection != null)
+        {
+            context.Database.ExecuteSqlRaw("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            {
+                connection.ConnectionId.ToString(),
+                connection.ConnectionName,
+                connection.ConnectionString,
+                connection.IsSensitive ? "1" : "0",
+                encryptionPassword
+            });
+            Connections.Remove(existingConnection);
+        }
+        else
+        {
+            context.Database.ExecuteSqlRaw("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}", parameters: new string[]
+            {
+                connection.ConnectionName,
+                connection.ConnectionString,
+                connection.IsSensitive ? "1" : "0",
+                encryptionPassword
+            });
+        }
+
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private void ShowConnectionEditModal(Connection connection)
+    {
+        EditConnectionId = connection?.ConnectionId ?? Guid.Empty;
+        ConnectionEditModal.Show();
+    }
+}

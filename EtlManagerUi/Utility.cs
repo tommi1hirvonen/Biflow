@@ -219,7 +219,7 @@ namespace EtlManagerUi
             await sqlConnection.OpenAsync();
             SqlCommand sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             sqlCommand.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            var reader = await sqlCommand.ExecuteReaderAsync();
+            var reader = sqlCommand.ExecuteReader();
             if (reader.HasRows)
             {
                 return true;
@@ -238,7 +238,7 @@ namespace EtlManagerUi
             await sqlConnection.OpenAsync();
             SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            var reader = await getKeyCmd.ExecuteReaderAsync();
+            var reader = getKeyCmd.ExecuteReader();
             if (reader.Read())
             {
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];

@@ -1,0 +1,93 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+@inject IConfiguration configuration
+
+<BSModal @ref="Modal" Size="Size.Large">
+    @if (Connection != null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection.ConnectionName)</BSModalHeader>
+        <BSModalBody>
+            <BSForm Model="Connection" id="connection_edit_form" OnValidSubmit="SubmitConnection">
+                <div class="row">
+                    <div class="col-md-10 mx-auto">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <BSFormGroup>
+                            <BSLabel>Connection name</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Text" @bind-Value="Connection.ConnectionName"></BSInput>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSLabel>Connection string</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                    </div>
+                                </div>
+                                <BSInput InputType="InputType.Text" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></BSInput>
+                            </div>
+                        </BSFormGroup>
+                        <div class="custom-control custom-checkbox custom-control-inline">
+                            <input type="checkbox" class="custom-control-input" id="chk_sensitive" disabled=@(!IsEncryptionKeySet)
+                                   checked=@Connection.IsSensitive
+                                   @bind-value="Connection.IsSensitive">
+                            <label class="custom-control-label" for="chk_sensitive">Sensitive</label>
+                        </div>
+                    </div>
+                </div>
+            </BSForm>
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="connection_edit_form" Color="Color.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public Guid ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<Connection> OnConnectionSubmit { get; set; }
+
+    private Connection Connection { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    private bool IsEncryptionKeySet { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ConnectionId != Guid.Empty)
+        {
+            var context = DbFactory.CreateDbContext();
+            Connection = await context.Connections.FindAsync(ConnectionId);
+        }
+        else
+        {
+            Connection = new();
+        }
+    }
+
+    private async Task SubmitConnection()
+    {
+        await OnConnectionSubmit.InvokeAsync(Connection);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}
