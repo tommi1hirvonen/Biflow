@@ -1,0 +1,224 @@
+﻿@page "/account/{Page}"
+
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IJSRuntime JS
+@inject IConfiguration configuration  
+
+<h4>Account</h4>
+
+<ul class="nav nav-pills mt-4 mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="account/email/">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+            Email
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="account/password">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+            Password
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="account/subscriptions">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
+            Subscriptions
+        </NavLink>
+    </li>
+</ul>
+
+<div class="card shadow-sm mt-3 pt-3 col-md-8 col-lg-6">
+    <h6>@Username</h6>
+    @if (Page == "email" && User != null)
+    {
+        <BSForm Class="mt-3" Model="User" OnValidSubmit="SubmitEmail">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <BSFormGroup>
+                <BSLabel Class="sr-only">Email</BSLabel>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text rounded-left">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                        </div>
+                    </div>
+                    <BSInput InputType="InputType.Email" @bind-Value="User.Email" placeholder="Email"></BSInput>
+                </div>
+            </BSFormGroup>
+            <BSFormGroup>
+                <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                    Save
+                </BSButton>
+            </BSFormGroup>
+        </BSForm>
+    }
+    else if (Page == "password")
+    {
+        <section class="mt-3">
+            <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <BSFormGroup>
+                    <BSLabel>New password</BSLabel>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text rounded-left">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                            </div>
+                        </div>
+                        <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.Password"></BSInput>
+                    </div>
+                </BSFormGroup>
+                <BSFormGroup>
+                    <BSLabel>Confirm new password</BSLabel>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text rounded-left">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                            </div>
+                        </div>
+                        <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.ConfirmPassword"></BSInput>
+                    </div>
+                </BSFormGroup>
+                <BSFormGroup>
+                    <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                        Save
+                    </BSButton>
+                </BSFormGroup>
+            </BSForm>
+        </section>
+    }
+    else if (Page == "subscriptions" && User != null && Jobs != null)
+    {
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Subscribed
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var job in Jobs)
+                {
+                    <tr>
+                        <td>
+                            @job.JobName
+                        </td>
+                        <td>
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="@job.JobId"
+                                       checked=@User.Subscriptions.Where(sub => sub.JobId == job.JobId).Any()
+                                       @onchange="() => ToggleSubscription(job)">
+                                <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Page { get; set; }
+
+    private string Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+
+    private User User { get; set; }
+
+    private IList<Job> Jobs { get; set; }
+
+    private PasswordModel PasswordModel_ { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Page = Page ?? "email";
+        var context = DbFactory.CreateDbContext();
+        User = await context.Users
+            .Include(user => user.Subscriptions)
+            .FirstOrDefaultAsync(user => user.Username == Username);
+        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+    }
+
+    private async Task SubmitEmail()
+    {
+        try
+        {
+            var context = DbFactory.CreateDbContext();
+            context.Attach(User).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+            await JS.InvokeVoidAsync("alert", "Email updated successfully");
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "Error saving email");
+        }
+    }
+
+    private async Task UpdatePassword()
+    {
+        if (PasswordModel_.Password.Equals(PasswordModel_.ConfirmPassword))
+        {
+
+            if (Utility.UpdatePassword(configuration, Username, PasswordModel_.Password))
+            {
+                await JS.InvokeVoidAsync("alert", "Password updated successfully");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Error updating password");
+            }
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+        }
+    }
+
+    private async Task ToggleSubscription(Job job)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
+        try
+        {
+            if (subscription != null)
+            {
+                context.Subscriptions.Remove(subscription);
+                User.Subscriptions.Remove(subscription);
+            }
+            else
+            {
+                var newSub = new Subscription { JobId = job.JobId, Username = Username };
+                context.Subscriptions.Add(newSub);
+                User.Subscriptions.Add(newSub);
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
+        }
+    }
+
+    private class PasswordModel
+    {
+        [Required]
+        [MaxLength(250)]
+        [MinLength(1)]
+        public string Password { get; set; }
+
+        [Required]
+        [MaxLength(250)]
+        [MinLength(1)]
+        public string ConfirmPassword { get; set; }
+    }
+}
