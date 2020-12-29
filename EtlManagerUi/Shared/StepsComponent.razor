@@ -147,7 +147,7 @@ else
             <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
             <BSModalBody>
                 <div class="row">
-                    <div class="input-group mx-5">
+                    <div class="input-group input-group-sm mx-5 mb-2">
                         <label class="sr-only">Search</label>
                         <div class="input-group-prepend">
                             <div class="input-group-text rounded-left">
@@ -156,7 +156,7 @@ else
                         </div>
                         <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
                     </div>
-                    <table class="table">
+                    <table class="table table-sm mx-5">
                         <thead>
                             <tr>
                                 <th class="align-top">
