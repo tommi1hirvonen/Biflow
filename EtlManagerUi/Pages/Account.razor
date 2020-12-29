@@ -52,8 +52,6 @@ else
                 </h6>
                 <section class="mt-3">
                     <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
                         <BSFormGroup>
                             <BSLabel>New password</BSLabel>
                             <div class="input-group">
@@ -162,23 +160,31 @@ else
 
     private async Task UpdatePassword()
     {
-        if (PasswordModel_.Password.Equals(PasswordModel_.ConfirmPassword))
+        PasswordModel_.Password = PasswordModel_.Password ?? string.Empty;
+        PasswordModel_.ConfirmPassword = PasswordModel_.ConfirmPassword ?? string.Empty;
+
+        if (PasswordModel_.Password.Length < 1 || PasswordModel_.Password.Length > 250)
         {
-            var result = await Utility.UpdatePasswordAsync(configuration, Username, PasswordModel_.Password);
-            if (result)
-            {
-                await JS.InvokeVoidAsync("alert", "Password updated successfully");
-                PasswordModel_.Password = null;
-                PasswordModel_.ConfirmPassword = null;
-            }
-            else
-            {
-                await JS.InvokeVoidAsync("alert", "Error updating password");
-            }
+            await JS.InvokeVoidAsync("alert", "The password length must be between 1 and 250");
+            return;
+        }
+
+        if (!PasswordModel_.Password.Equals(PasswordModel_.ConfirmPassword))
+        {
+            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+            return;
+        }
+
+        var result = await Utility.UpdatePasswordAsync(configuration, Username, PasswordModel_.Password);
+        if (result)
+        {
+            await JS.InvokeVoidAsync("alert", "Password updated successfully");
+            PasswordModel_.Password = null;
+            PasswordModel_.ConfirmPassword = null;
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+            await JS.InvokeVoidAsync("alert", "Error updating password");
         }
     }
 
@@ -209,14 +215,8 @@ else
 
     private class PasswordModel
     {
-        [Required]
-        [MaxLength(250)]
-        [MinLength(1)]
         public string Password { get; set; }
 
-        [Required]
-        [MaxLength(250)]
-        [MinLength(1)]
         public string ConfirmPassword { get; set; }
     }
 }

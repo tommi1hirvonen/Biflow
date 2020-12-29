@@ -76,11 +76,7 @@ else
                                         <BSButton Size="Size.Small" Color="Color.Success" @onclick="() => UpdatePassword(user)">Save</BSButton>
                                     </BSDropdownMenu>
                                 </BSDropdown>
-                                
-                                <BSButton Color="Color.Light" Size="Size.Small" aria-label="change password">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                </BSButton>
-                                
+                                                                
                                 <BSDropdown>
                                     <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
@@ -184,16 +180,21 @@ else
 
     private async Task<bool> PasswordCheck()
     {
+        Password = Password ?? string.Empty;
+        ConfirmPassword = ConfirmPassword ?? string.Empty;
+
+        if (Password.Length < 1 || Password.Length > 250)
+        {
+            await JS.InvokeVoidAsync("alert", "The password must be between 1 and 250 characters in length");
+            return false;
+        }
+
         if (!Password.Equals(ConfirmPassword))
         {
             await JS.InvokeVoidAsync("alert", "The two passwords do not match");
             return false;
         }
-        else if (Password.Length == 0 || Password.Length > 250)
-        {
-            await JS.InvokeVoidAsync("alert", "The password must be between 0 and 250 characters in length");
-            return false;
-        }
+
         else
         {
             return true;

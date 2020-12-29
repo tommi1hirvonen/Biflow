@@ -119,14 +119,18 @@
         // New user
         if (Username == null)
         {
+            Password = Password ?? string.Empty;
+            ConfirmPassword = ConfirmPassword ?? string.Empty;
+
+            if (Password.Length < 1 || Password.Length > 250)
+            {
+                await JS.InvokeVoidAsync("alert", "Password must be between 1 and 250 characters in length");
+                return;
+            }
+
             if (!Password.Equals(ConfirmPassword))
             {
                 await JS.InvokeVoidAsync("alert", "The two passwords do not match");
-                return;
-            }
-            else if (Password.Length == 0 || Password.Length > 250)
-            {
-                await JS.InvokeVoidAsync("alert", "Password must be between 0 and 250 characters in length");
                 return;
             }
 
