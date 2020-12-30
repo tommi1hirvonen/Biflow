@@ -148,7 +148,7 @@
                 <tbody>
                     @foreach (var item in JobExecutions)
                     {
-                        <tr>
+                        <tr @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                             <td>
                                 @item.JobName
                             </td>
@@ -242,6 +242,8 @@ else if (Level == "steps")
     }
 }
 
+<JobExecutionModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+
 @code {
     [Parameter]
     public string Level { get; set; }
@@ -262,6 +264,9 @@ else if (Level == "steps")
     private List<JobExecution> JobExecutions { get; set; }
 
     private List<StepExecution> StepExecutions { get; set; }
+
+    private JobExecutionModal JobExecutionModal { get; set; }
+    private Guid SelectedJobExecutionId { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -328,5 +333,11 @@ else if (Level == "steps")
                 .ThenByDescending(e => e.StartDateTime)
                 .ToListAsync();
         }
+    }
+
+    private void OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        JobExecutionModal.Show();
     }
 }

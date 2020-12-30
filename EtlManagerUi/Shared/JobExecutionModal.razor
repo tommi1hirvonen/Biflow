@@ -1,0 +1,212 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+
+<BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
+    <BSModalHeader @onclick="() => Modal.Hide()"></BSModalHeader>
+    <BSModalBody>
+
+        <BSButtonGroup IsToolbar="true">
+            <BSButton Size="Size.Small" Color="Color.Primary">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                Refresh
+            </BSButton>
+
+            <BSButton Size="Size.Small" Color="Color.Secondary" Class="ml-3" @onclick="ToggleJobExecutionDetails">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                Job details
+            </BSButton>
+
+            <BSButtonGroup Class="ml-3">
+                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowGraph ? "active" : null)"
+                          @onclick="() => ShowGraph = true">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
+                    Graph
+                </BSButton>
+                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowGraph ? "active" : null)"
+                          @onclick="() => ShowGraph = false">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
+                    Table
+                </BSButton>
+            </BSButtonGroup>
+        </BSButtonGroup>
+
+        <div class="row my-1">
+            <p></p>
+        </div>
+
+        @if (JobExecution != null)
+        {
+            <BSCollapse IsOpen="JobExecutionDetailsOpen">
+                <BSCard CardType="CardType.Card">
+                    <BSCard CardType="CardType.Body">
+                        <dl class="row">
+                            <dt class="col-sm-3">
+                                Execution id
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.ExecutionId
+                            </dd>
+                            <dt class="col-sm-3">
+                                Dependency model
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.DependencyMode
+                            </dd>
+                            <dt class="col-sm-3">
+                                Created by
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.CreatedBy
+                            </dd>
+                            <dt class="col-sm-3">
+                                Created
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.CreatedDateTime
+                            </dd>
+                            <dt class="col-sm-3">
+                                Started
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.StartDateTime
+                            </dd>
+                            <dt class="col-sm-3">
+                                Ended
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.EndDateTime
+                            </dd>
+                            <dt class="col-sm-3">
+                                Number of steps
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.NumberOfSteps
+                            </dd>
+                            <dt class="col-sm-3">
+                                Success percent
+                            </dt>
+                            <dd class="col-sm-9">
+                                @JobExecution.SuccessPercent.FormatPercentage(0)
+                            </dd>
+                            <dt class="col-sm-3">
+                                Duration
+                            </dt>
+                            <dd class="col-sm-9">
+                                <text>@JobExecution.GetDurationInReadableFormat()</text>
+                            </dd>
+                            <dt class="col-sm-3">
+                                Status
+                            </dt>
+                            <dd class="col-sm-9">
+                                <JobExecutionStatusBadgeComponent ExecutionStatus="@JobExecution.ExecutionStatus" />
+                            </dd>
+                        </dl>
+                    </BSCard>
+                </BSCard>
+            </BSCollapse>
+        }
+
+        @if (Executions == null)
+        {
+            <p><em>Loading...</em></p>
+        }
+        else if (!ShowGraph)
+        {
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            Step
+                        </th>
+                        <th>
+                            Step type
+                        </th>
+                        <th>
+                            Started
+                        </th>
+                        <th>
+                            Ended
+                        </th>
+                        <th>
+                            Duration
+                        </th>
+                        <th>
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Executions)
+                    {
+                        <tr>
+                            <td>
+                                @item.StepName
+                            </td>
+                            <td>
+                                <StepTypeIconComponent StepType="@item.StepType" />
+                            </td>
+                            <td>
+                                @item.StartDateTime
+                            </td>
+                            <td>
+                                @item.EndDateTime
+                            </td>
+                            <td>
+                                <text>@item.GetDurationInReadableFormat()</text>
+                            </td>
+                            <td>
+                                <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>Graph is not yet implemented.</p>
+        }
+
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+        [Parameter]
+        public Guid ExecutionId { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    private JobExecution JobExecution { get; set; }
+
+    private List<StepExecution> Executions { get; set; }
+
+    private bool ShowGraph { get; set; } = false;
+
+    private bool JobExecutionDetailsOpen { get; set; } = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ExecutionId != Guid.Empty)
+        {
+            var context = DbFactory.CreateDbContext();
+            JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            Executions = await context.Executions
+                .Where(e => e.ExecutionId == ExecutionId)
+                .OrderBy(e => e.CreatedDateTime)
+                .ThenBy(e => e.StartDateTime)
+                .ToListAsync();
+        }
+    }
+
+    private void ToggleJobExecutionDetails()
+    {
+        JobExecutionDetailsOpen = !JobExecutionDetailsOpen;
+        StateHasChanged();
+    }
+
+    public void Show() => Modal.Show();
+    
+}
