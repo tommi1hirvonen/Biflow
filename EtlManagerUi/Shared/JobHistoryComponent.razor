@@ -46,7 +46,7 @@ else
             <tbody>
                 @foreach (var item in Executions)
                 {
-                    <tr style="cursor: pointer;" @onclick="@(() => NavigationManager.NavigateTo("/"))">
+                    <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                         <td>
                             @item.CreatedDateTime
                         </td>
@@ -79,6 +79,8 @@ else
     </div>
 }
 
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+
 @code {
     [Parameter]
     public Guid Id { get; set; }
@@ -87,9 +89,11 @@ else
 
     public int MaxExecutions { get; set; } = 50;
 
-    [DisplayFormat(DataFormatString = "{0:N0}%")]
     public decimal AverageSuccessRate { get; set; }
     public int AverageDurationInSeconds { get; set; }
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private Guid SelectedJobExecutionId { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -111,6 +115,12 @@ else
         }
 
         AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
+    }
+
+    private void OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        JobExecutionModal.Show();
     }
 
 }
