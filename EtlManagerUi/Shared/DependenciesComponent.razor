@@ -1,4 +1,6 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@implements IDisposable 
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
 
 <style>
@@ -71,7 +73,7 @@
     private List<Job> Jobs { get; set; }
     private List<Step> Steps { get; set; }
 
-    private MethodInvokeHelper helper;
+    private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
 
     private StepEditModal StepEditModal { get; set; }
     private Guid EditModalStepId { get; set; }
@@ -80,7 +82,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        helper = new MethodInvokeHelper(OpenStepEditModal);
+        var helper = new MethodInvokeHelper(OpenStepEditModal);
+        ObjectReference = DotNetObjectReference.Create(helper);
         var context = DbFactory.CreateDbContext();
         Jobs = await context.Jobs.ToListAsync();
     }
@@ -119,8 +122,7 @@
             .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
         var dependenciesJson = JsonSerializer.Serialize(dependencies);
 
-        var dotNetReference = DotNetObjectReference.Create(helper);
-        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson, dotNetReference);
+        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson, ObjectReference);
     }
 
     private void OpenStepEditModal(string id)
@@ -140,6 +142,11 @@
         Steps.Add(step);
         GraphShouldRender = true;
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ObjectReference?.Dispose();
     }
 
 }
