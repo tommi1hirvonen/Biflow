@@ -1,4 +1,6 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@implements IDisposable 
+
+@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS 
 
@@ -319,6 +321,8 @@
 
 
 @code {
+    private EtlManagerContext Context { get; set; }
+
     [Parameter]
     public Guid StepId { get; set; }
 
@@ -348,22 +352,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Connections = await context.Connections.ToListAsync();
-        DataFactories = await context.DataFactories.ToListAsync();
+        Context = DbFactory.CreateDbContext();
+        Connections = await Context.Connections.AsNoTracking().ToListAsync();
+        DataFactories = await Context.DataFactories.AsNoTracking().ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        await LoadData(context);
+        await LoadData();
     }
 
-    private async Task LoadData(EtlManagerContext context)
+    private async Task LoadData()
     {
         if (StepId != Guid.Empty)
         {
-            Step = await context.Steps
+            Step = await Context.Steps
                 .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
@@ -430,17 +433,16 @@
                 Step.Parameters.Clear();
             }
 
-            using var context = DbFactory.CreateDbContext();
-            var existingStep = context.Steps.AsNoTracking().FirstOrDefault(step_ => step_.StepId == Step.StepId);
+            var existingStep = Context.Steps.AsNoTracking().FirstOrDefault(step_ => step_.StepId == Step.StepId);
             if (existingStep != null)
             {
-                context.Attach(Step).State = EntityState.Modified;
-                context.SaveChanges();
+                Context.Attach(Step).State = EntityState.Modified;
+                Context.SaveChanges();
             }
             else
             {
-                context.Steps.Add(Step);
-                context.SaveChanges();
+                Context.Steps.Add(Step);
+                Context.SaveChanges();
             }
         }
         catch (Exception ex)
@@ -505,5 +507,10 @@
     {
         ShowDependencies = showDependencies;
         Modal.Show();
+    }
+
+    public void Dispose()
+    {
+        Context.Dispose();
     }
 }
