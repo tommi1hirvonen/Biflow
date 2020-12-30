@@ -20,18 +20,6 @@
             @StepExecution.JobName
         </dd>
         <dt class="col-sm-3">
-            Step
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.StepName
-        </dd>
-        <dt class="col-sm-3">
-            Step type
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.StepType
-        </dd>
-        <dt class="col-sm-3">
             Created by
         </dt>
         <dd class="col-sm-9">
@@ -42,30 +30,6 @@
         </dt>
         <dd class="col-sm-9">
             @StepExecution.CreatedDateTime
-        </dd>
-        <dt class="col-sm-3">
-            Started
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.StartDateTime
-        </dd>
-        <dt class="col-sm-3">
-            Ended
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.EndDateTime
-        </dd>
-        <dt class="col-sm-3">
-            <text>Duration</text>
-        </dt>
-        <dd class="col-sm-9">
-            <text>@StepExecution.GetDurationInReadableFormat()</text>
-        </dd>
-        <dt class="col-sm-3">
-            Status
-        </dt>
-        <dd class="col-sm-9">
-            <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
         </dd>
         @if (StepExecution.ExecutionStatus == "STOPPED")
         {

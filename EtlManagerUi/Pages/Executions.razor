@@ -7,7 +7,7 @@
 
 <form @onsubmit="LoadData">
     <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mt-3">
-        <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary">
+        <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" IsDisabled="Loading">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
         </BSButton>
@@ -23,6 +23,12 @@
                 Steps
             </BSButton>
         </BSButtonGroup>
+        @if (Loading)
+        {
+            <div class="spinner-border text-primary align-middle ml-3" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        }
     </BSButtonGroup>
 
     <div class="form-row mt-2">
@@ -269,6 +275,8 @@ else if (Level == "steps")
     private List<string> StepNames { get; set; } = new();
     private string StepName { get; set; } = string.Empty;
 
+    private bool Loading { get; set; } = false;
+
     private List<JobExecution> JobExecutions { get; set; }
 
     private List<StepExecution> StepExecutions { get; set; }
@@ -285,6 +293,8 @@ else if (Level == "steps")
 
     private async Task LoadData()
     {
+        Loading = true;
+
         var context = DbFactory.CreateDbContext();
 
         if (Level == "jobs")
@@ -343,6 +353,8 @@ else if (Level == "steps")
                 .ThenByDescending(e => e.StartDateTime)
                 .ToListAsync();
         }
+
+        Loading = false;
     }
 
     private void ToggleSelectedStepExecution(StepExecution execution)
