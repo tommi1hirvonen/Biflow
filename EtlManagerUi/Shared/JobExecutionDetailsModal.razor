@@ -6,7 +6,7 @@
     <BSModalBody>
 
         <BSButtonGroup IsToolbar="true">
-            <BSButton Size="Size.Small" Color="Color.Primary" @onclick="LoadData">
+            <BSButton Size="Size.Small" Color="Color.Primary" @onclick="LoadData" IsDisabled="Loading">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
                 Refresh
             </BSButton>
@@ -28,6 +28,13 @@
                     Table
                 </BSButton>
             </BSButtonGroup>
+
+            @if (Loading)
+            {
+                <div class="spinner-border text-primary align-middle ml-3" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            }
         </BSButtonGroup>
 
         <div class="row my-1">
@@ -193,6 +200,8 @@
 
     private bool ShowGraph { get; set; } = false;
 
+    private bool Loading { get; set; } = false;
+
     private bool JobExecutionDetailsOpen { get; set; } = false;
 
     private StepExecution SelectedStepExecution { get; set; }
@@ -208,6 +217,7 @@
     {
         if (ExecutionId != Guid.Empty)
         {
+            Loading = true;
             var context = DbFactory.CreateDbContext();
             JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             Executions = await context.Executions
@@ -215,6 +225,8 @@
                 .OrderBy(e => e.CreatedDateTime)
                 .ThenBy(e => e.StartDateTime)
                 .ToListAsync();
+            StateHasChanged();
+            Loading = false;
         }
     }
 

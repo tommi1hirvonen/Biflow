@@ -19,7 +19,16 @@
     </div>
 </AuthorizeView>
 
-<BSAlert Class="mt-3" Color="@ExecuteAlertColor" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">@ExecuteMessage</BSAlert>
+<BSAlert Class="mt-3" Color="@(ExecuteSuccess ? Color.Success : Color.Danger)" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">
+    @if (ExecuteSuccess)
+    {
+        <text>Execution started successfully - <a class="alert-link" href="javascript:void(0)" @onclick="OpenJobExecutionModal">monitor execution</a></text>
+    }
+    else
+    {
+        <text>Error starting execution: @ExecuteErrorMessage</text>
+    }
+</BSAlert>
 
 @if (Steps_ == null)
 {
@@ -210,6 +219,7 @@ else
     </AuthorizeView>
 }
 
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
 
 @code {
     [Parameter]
@@ -229,12 +239,16 @@ else
     private BSModal ExecuteModal { get; set; }
     private List<Guid> StepsToExecute { get; set; } = new();
     private bool ExecuteButtonDisabled { get; set; } = false;
-    private Color ExecuteAlertColor { get; set; } = Color.Success;
+
+    private bool ExecuteSuccess { get; set; } = false;
     private bool ExecuteAlertOpen { get; set; } = false;
-    private MarkupString ExecuteMessage { get; set; } = new MarkupString(string.Empty);
+    private string ExecuteErrorMessage { get; set; } = string.Empty;
 
     private string StepsFilterText { get; set; } = string.Empty;
     private string ExecuteFilterText { get; set; } = string.Empty;
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private Guid SelectedJobExecutionId { get; set; }
 
     private async Task LoadData()
     {
@@ -382,22 +396,25 @@ else
 
         ExecuteButtonDisabled = true;
         string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
-        Guid executionId;
         try
         {
-            executionId = await Utility.StartExecution(configuration, Job, user, stepsToExecuteFiltered.Select(id => id.ToString()).ToList());
-            ExecuteAlertColor = Color.Success;
-            ExecuteMessage = new(@"Job started successfully - <a class=""alert-link"" href=""/"">monitor execution</a>");
+            SelectedJobExecutionId = await Utility.StartExecution(configuration, Job, user, stepsToExecuteFiltered.Select(id => id.ToString()).ToList());
+            ExecuteSuccess = true;
         }
         catch (Exception ex)
         {
-            ExecuteAlertColor = Color.Danger;
-            ExecuteMessage = new("Error starting execution:" + ex.Message);
+            ExecuteSuccess = false;
+            ExecuteErrorMessage = ex.Message;
         }
 
         StepsToExecute.Clear();
         ExecuteAlertOpen = true;
         ExecuteButtonDisabled = false;
+    }
+
+    private void OpenJobExecutionModal()
+    {
+        JobExecutionModal.Show();
     }
 
 }
