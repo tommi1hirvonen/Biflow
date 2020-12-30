@@ -2,11 +2,11 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()"></BSModalHeader>
+    <BSModalHeader @onclick="() => Modal.Hide()">@(JobExecution != null ? JobExecution.JobName : null)</BSModalHeader>
     <BSModalBody>
 
         <BSButtonGroup IsToolbar="true">
-            <BSButton Size="Size.Small" Color="Color.Primary">
+            <BSButton Size="Size.Small" Color="Color.Primary" @onclick="LoadData">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
                 Refresh
             </BSButton>
@@ -138,7 +138,7 @@
                 <tbody>
                     @foreach (var item in Executions)
                     {
-                        <tr>
+                        <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                             <td>
                                 @item.StepName
                             </td>
@@ -158,6 +158,14 @@
                                 <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                             </td>
                         </tr>
+                        @if (SelectedStepExecution == item)
+                        {
+                            <tr class="table-borderless">
+                                <td colspan="6" class="bg-light">
+                                    <StepExecutionDetailsComponent StepExecution="item" />
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -174,8 +182,8 @@
 </BSModal>
 
 @code {
-        [Parameter]
-        public Guid ExecutionId { get; set; }
+    [Parameter]
+    public Guid ExecutionId { get; set; }
 
     private BSModal Modal { get; set; }
 
@@ -187,7 +195,16 @@
 
     private bool JobExecutionDetailsOpen { get; set; } = false;
 
+    private StepExecution SelectedStepExecution { get; set; }
+
     protected override async Task OnParametersSetAsync()
+    {
+        JobExecution = null;
+        Executions = null;
+        await LoadData();
+    }
+
+    private async Task LoadData()
     {
         if (ExecutionId != Guid.Empty)
         {
@@ -207,6 +224,12 @@
         StateHasChanged();
     }
 
+    private void ToggleSelectedStepExecution(StepExecution execution)
+    {
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
     public void Show() => Modal.Show();
-    
+
 }

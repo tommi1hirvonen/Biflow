@@ -1,0 +1,143 @@
+﻿@if (StepExecution != null)
+{
+    <dl class="row">
+        <dt class="col-sm-3">
+            Execution id
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.ExecutionId
+        </dd>
+        <dt class="col-sm-3">
+            Executor PID
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.ExecutorProcessId
+        </dd>
+        <dt class="col-sm-3">
+            Job
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.JobName
+        </dd>
+        <dt class="col-sm-3">
+            Step
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.StepName
+        </dd>
+        <dt class="col-sm-3">
+            Step type
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.StepType
+        </dd>
+        <dt class="col-sm-3">
+            Created by
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.CreatedBy
+        </dd>
+        <dt class="col-sm-3">
+            Created
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.CreatedDateTime
+        </dd>
+        <dt class="col-sm-3">
+            Started
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.StartDateTime
+        </dd>
+        <dt class="col-sm-3">
+            Ended
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.EndDateTime
+        </dd>
+        <dt class="col-sm-3">
+            <text>Duration</text>
+        </dt>
+        <dd class="col-sm-9">
+            <text>@StepExecution.GetDurationInReadableFormat()</text>
+        </dd>
+        <dt class="col-sm-3">
+            Status
+        </dt>
+        <dd class="col-sm-9">
+            <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
+        </dd>
+        @if (StepExecution.ExecutionStatus == "STOPPED")
+        {
+            <dt class="col-sm-3">
+                Stopped by
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.StoppedBy
+            </dd>
+        }
+        <dt class="col-sm-3">
+            Error message
+        </dt>
+        <dd class="col-sm-9">
+            <text class="text-danger" style="white-space: pre-wrap">@StepExecution.ErrorMessage</text>
+        </dd>
+        @if (StepExecution.StepType == "SQL")
+        {
+            <dt class="col-sm-3">
+                SQL statement
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@StepExecution.SqlStatement</code></pre>
+            </dd>
+            <dt class="col-sm-3">
+                Info message
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@StepExecution.InfoMessage</code></pre>
+            </dd>
+        }
+        else if (StepExecution.StepType == "SSIS")
+        {
+            <dt class="col-sm-3">
+                Package path
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PackagePath
+            </dd>
+            <dt class="col-sm-3">
+                32 bit mode
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExecuteIn32BitMode
+            </dd>
+        }
+        else if (StepExecution.StepType == "PIPELINE")
+        {
+            <dt class="col-sm-3">
+                Pipeline name
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PipelineName
+            </dd>
+            <dt class="col-sm-3">
+                Pipeline run id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PipelineRunId
+            </dd>
+            <dt class="col-sm-3">
+                Data Factory id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.DataFactoryId
+            </dd>
+        }
+    </dl>
+}
+
+
+@code {
+    [Parameter]
+    public StepExecution StepExecution { get; set; }
+}

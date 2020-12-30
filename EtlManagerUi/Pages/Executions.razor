@@ -148,7 +148,7 @@
                 <tbody>
                     @foreach (var item in JobExecutions)
                     {
-                        <tr @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                        <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                             <td>
                                 @item.JobName
                             </td>
@@ -215,7 +215,7 @@ else if (Level == "steps")
                 <tbody>
                     @foreach (var item in StepExecutions)
                     {
-                        <tr>
+                        <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                             <td>
                                 @item.StepName
                             </td>
@@ -235,6 +235,14 @@ else if (Level == "steps")
                                 <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                             </td>
                         </tr>
+                        @if (SelectedStepExecution == item)
+                        {
+                            <tr class="table-borderless">
+                                <td colspan="6" class="bg-light">
+                                    <StepExecutionDetailsComponent StepExecution="item" />
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -242,7 +250,7 @@ else if (Level == "steps")
     }
 }
 
-<JobExecutionModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
 
 @code {
     [Parameter]
@@ -265,8 +273,10 @@ else if (Level == "steps")
 
     private List<StepExecution> StepExecutions { get; set; }
 
-    private JobExecutionModal JobExecutionModal { get; set; }
+    private JobExecutionDetailsModal JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
+
+    private StepExecution SelectedStepExecution { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -335,9 +345,16 @@ else if (Level == "steps")
         }
     }
 
+    private void ToggleSelectedStepExecution(StepExecution execution)
+    {
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
     private void OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
         JobExecutionModal.Show();
     }
+
 }
