@@ -1,5 +1,53 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IJSRuntime JS 
+
+<style>
+    .vis-item {
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .vis-item .vis-item-overflow {
+        overflow: visible;
+    }
+
+    .running, .running.vis-selected {
+        background-color: @GetFillFromStatus("RUNNING");
+        border-color: @GetFillFromStatus("RUNNING", true);
+        color: @GetFillFromStatus("RUNNING", true);
+    }
+    .completed, .completed.vis-selected {
+        background-color: @GetFillFromStatus("COMPLETED");
+        border-color: @GetFillFromStatus("COMPLETED", true);
+        color: @GetFillFromStatus("COMPLETED", true);
+    }
+    .failed, .failed.vis-selected {
+        background-color: @GetFillFromStatus("FAILED");
+        border-color: @GetFillFromStatus("FAILED", true);
+        color: @GetFillFromStatus("FAILED", true);
+    }
+    .skipped, .skipped.vis-selected {
+        background-color: @GetFillFromStatus("SKIPPED");
+        border-color: @GetFillFromStatus("SKIPPED", true);
+        color: @GetFillFromStatus("SKIPPED", true);
+    }
+    .stopped, .stopped.vis-selected {
+        background-color: @GetFillFromStatus("STOPPED");
+        border-color: @GetFillFromStatus("STOPPED", true);
+        color: @GetFillFromStatus("STOPPED", true);
+    }
+    .duplicate, .duplicate.vis-selected {
+        background-color: @GetFillFromStatus("DUPLICATE");
+        border-color: @GetFillFromStatus("DUPLICATE", true);
+        color: @GetFillFromStatus("DUPLICATE", true);
+    }
+    .await-retry, .await-retry.vis-selected {
+        background-color: @GetFillFromStatus("AWAIT RETRY");
+        border-color: @GetFillFromStatus("AWAIT RETRY", true);
+        color: @GetFillFromStatus("AWAIT RETRY", true);
+    }
+</style>
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
     <BSModalHeader @onclick="() => Modal.Hide()">@(JobExecution != null ? JobExecution.JobName : null)</BSModalHeader>
@@ -177,10 +225,9 @@
                 </tbody>
             </table>
         }
-        else
-        {
-            <p>Graph is not yet implemented.</p>
-        }
+        
+        <div id="steps_graph" hidden=@(!ShowGraph)>
+        </div>
 
     </BSModalBody>
     <BSModalFooter>
@@ -227,6 +274,20 @@
                 .ToListAsync();
             StateHasChanged();
             Loading = false;
+
+            var dataset = Executions.Where(e => e.StartDateTime != null).Select(e =>
+            new
+            {
+                id = e.StepExecutionId,
+                content = e.StepName,
+                title = e.ExecutionStatus + ", " + e.GetDurationInReadableFormat(),
+                className = e.ExecutionStatus.ToLower().Replace(' ', '-'),
+                start = e.StartDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss"),
+                end = (e.EndDateTime ?? DateTime.Now).ToString("yyyy-MM-dd HH':'mm':'ss")
+            }
+            );
+            var datasetJson = JsonSerializer.Serialize(dataset);
+            await JS.InvokeVoidAsync("drawStepsTimeline", datasetJson);
         }
     }
 
@@ -243,5 +304,34 @@
     }
 
     public void Show() => Modal.Show();
+
+
+    private string colorRed = "#FEDEE5";
+    private string colorRedDark = "#823040";
+    private string colorGreen = "#CEF5EA";
+    private string colorGreenDark = "#056C4F";
+    private string colorOrange = "#FFF2CC";
+    private string colorOrangeDark = "#856200";
+    private string colorBlue = "#E3E5FD";
+    private string colorBlueDark = "#3B40A7";
+
+    public string GetFillFromStatus(string status, bool dark = false)
+    {
+        switch (status)
+        {
+            case "COMPLETED":
+                return dark ? colorGreenDark : colorGreen;
+            case "FAILED":
+                return dark ? colorRedDark : colorRed;
+            case "SKIPPED":
+            case "STOPPED":
+            case "DUPLICATE":
+            case "AWAIT RETRY":
+                return dark ? colorOrangeDark : colorOrange;
+            case "RUNNING":
+            default:
+                return dark ? colorBlueDark : colorBlue;
+        }
+    }
 
 }

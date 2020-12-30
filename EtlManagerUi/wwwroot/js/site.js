@@ -160,7 +160,32 @@ function drawSuccessRateGraph(datasets_) {
         }
     })
 
+}
 
-    
+function drawStepsTimeline(dataset_) {
+
+    var dataset = JSON.parse(dataset_);
+
+    var items = new vis.DataSet(dataset);
+
+    var container = document.getElementById('steps_graph');
+
+    // Clear all other previous content
+    container.innerHTML = '';
+
+    var options = {
+        order: function (a, b) {
+            return b.start - a.start;
+        },
+        editable: false
+    };
+
+    var timeline = new vis.Timeline(container, items, options);
+
+    timeline.on('select', function (properties) {
+        var item = items.get(properties.items[0]);
+        var id = 'modal_' + item.id;
+        $('#' + id).modal();
+    });
 
 }
