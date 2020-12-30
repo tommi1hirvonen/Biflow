@@ -4,90 +4,109 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IJSRuntime JS 
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-3 d-flex align-items-center">
-            <h4>Dashboard</h4>
+<h4>Dashboard</h4>
+
+<div class="btn-toolbar mt-3">
+    <button type="submit" class="btn btn-sm btn-primary" @onclick="LoadData">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+        Load report
+    </button>
+    @if (Loading)
+    {
+        <div class="spinner-border text-primary align-middle ml-3" role="status">
+            <span class="sr-only">Loading...</span>
         </div>
-        <div class="col-lg-9 d-flex justify-content-end">
-            <div class="form-inline">
-                @if (Loading)
-                {
-                    <div class="spinner-border text-primary align-middle" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                }
-                <button type="submit" class="btn btn-sm btn-primary ml-3" @onclick="LoadData">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-                    Load report
-                </button>
-                <label class="ml-5">Date until:</label>
-                <input @bind-value="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
-                <label class="ml-5">Interval (d):</label>
-                <input @bind-value="IntervalDays" class="form-control form-control-sm col-1 ml-2">
-                <div class="custom-control custom-checkbox custom-control-inline ml-5">
-                    <input type="checkbox" class="custom-control-input" id="include_deleted" @bind-value="IncludeDeleted">
-                    <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
-                </div>
-                <div class="custom-control custom-checkbox custom-control-inline ml-5">
-                    <input type="checkbox" class="custom-control-input" id="only_schedule" @bind-value="OnlyScheduled">
-                    <label class="custom-control-label" for="only_schedule">Only scheduled executions</label>
-                </div>
-            </div>
-        </div>
+    }
+</div>
+
+<div class="form-inline mt-3">
+    <label>Date until:</label>
+    <input @bind-value="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
+    <label class="ml-5">Interval (d):</label>
+    <input @bind-value="IntervalDays" class="form-control form-control-sm ml-2">
+</div>
+
+<div class="form-inline mt-3">
+    <div class="custom-control custom-checkbox custom-control-inline">
+        <input type="checkbox" class="custom-control-input" id="include_deleted" @bind-value="IncludeDeleted">
+        <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
+    </div>
+    <div class="custom-control custom-checkbox custom-control-inline ml-5">
+        <input type="checkbox" class="custom-control-input" id="only_schedule" @bind-value="OnlyScheduled">
+        <label class="custom-control-label" for="only_schedule">Only scheduled executions</label>
     </div>
 </div>
+
 
 <div class="container-fluid mt-4">
     <div class="row">
         <div class="card shadow-sm col-lg mr-lg-3 mb-lg-3 mb-3 pt-3">
             <h6>Average execution duration</h6>
+            @if (!ReportLoaded)
+            {
+                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+            }
             <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
         </div>
         <div class="card shadow-sm col-lg ml-lg-3 mb-lg-3 mt-lg-0 my-3 pt-3">
             <h6>Job success rate</h6>
+            @if (!ReportLoaded)
+            {
+        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+            }
             <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
         </div>
     </div>
     <div class="row">
         <div class="card shadow-sm col-lg mr-lg-3 mt-lg-3 my-3 pt-3">
             <h6>Number of executions</h6>
+            @if (!ReportLoaded)
+            {
+                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+            }
             <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
         </div>
         <div class="card shadow-sm col-lg ml-lg-3 mt-lg-3 my-3 pt-3">
             <h6>Top 5 failing steps</h6>
-            <div class="row mt-4">
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th></th>
-                            <th>Step</th>
-                            <th>Job</th>
-                            <th>Success %</th>
-                            <th># of executions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (TopFailedSteps != null)
-                        {
-                            @for (int i = 0; i < TopFailedSteps.Count; i++)
+            @if (!ReportLoaded)
+            {
+                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+            }
+            else
+            {
+                <div class="row mt-4">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Step</th>
+                                <th>Job</th>
+                                <th>Success %</th>
+                                <th># of executions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (TopFailedSteps != null)
                             {
-                                <tr>
-                                    <td>@(i + 1)</td>
-                                    <td>
-                                        @TopFailedSteps[i].StepName
-                                    </td>
-                                    <td>
-                                        @TopFailedSteps[i].JobName
-                                    </td>
-                                    <td>@TopFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
-                                    <td>@TopFailedSteps[i].NoOfExecutions</td>
-                                </tr>
+                                @for (int i = 0; i < TopFailedSteps.Count; i++)
+                                {
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td>
+                                            @TopFailedSteps[i].StepName
+                                        </td>
+                                        <td>
+                                            @TopFailedSteps[i].JobName
+                                        </td>
+                                        <td>@TopFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
+                                        <td>@TopFailedSteps[i].NoOfExecutions</td>
+                                    </tr>
+                                }
                             }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -110,6 +129,11 @@
     private bool OnlyScheduled { get; set; } = false;
 
     private bool Loading { get; set; }
+
+    private bool ReportLoaded { get; set; } = false;
+
+    private const string ReportNotLoadedMessage = "Load report to show data.";
+    private const string ReportNotLoadedClass = "text-secondary small font-italic";
 
     private async Task LoadData()
     {
@@ -247,6 +271,8 @@
         }
         );
         var successRateDatasetJson = JsonSerializer.Serialize(successRateDataset);
+
+        ReportLoaded = true;
 
         await JS.InvokeVoidAsync("drawDurationGraph", durationDatasetJson);
         await JS.InvokeVoidAsync("drawNoOfExecutionsGraph", noOfExecutionsJson);
