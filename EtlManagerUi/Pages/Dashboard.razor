@@ -29,6 +29,10 @@
                     <input type="checkbox" class="custom-control-input" id="include_deleted" @bind-value="IncludeDeleted">
                     <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
                 </div>
+                <div class="custom-control custom-checkbox custom-control-inline ml-5">
+                    <input type="checkbox" class="custom-control-input" id="only_schedule" @bind-value="OnlyScheduled">
+                    <label class="custom-control-label" for="only_schedule">Only scheduled executions</label>
+                </div>
             </div>
         </div>
     </div>
@@ -103,6 +107,8 @@
 
     private bool IncludeDeleted { get; set; } = false;
 
+    private bool OnlyScheduled { get; set; } = false;
+
     private bool Loading { get; set; }
 
     private async Task LoadData()
@@ -120,6 +126,11 @@
         if (!IncludeDeleted)
         {
             executionsQuery = executionsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
+        }
+
+        if (OnlyScheduled)
+        {
+            executionsQuery = executionsQuery.Where(e => e.ScheduleId != null);
         }
 
         var executions = await executionsQuery
@@ -151,15 +162,20 @@
             jobsQuery = jobsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
         }
 
+        if (OnlyScheduled)
+        {
+            jobsQuery = jobsQuery.Where(e => e.ScheduleId != null);
+        }
+
         Jobs = await jobsQuery
-            .GroupBy(group => group.JobName)
-            .Select(select => new ReportingJob
-            {
-                SuccessPercent = select.Average(total => total.SuccessPercent),
-                JobName = select.Key
-            })
-            .OrderByDescending(order => order.SuccessPercent)
-            .ToListAsync();
+        .GroupBy(group => group.JobName)
+        .Select(select => new ReportingJob
+        {
+            SuccessPercent = select.Average(total => total.SuccessPercent),
+            JobName = select.Key
+        })
+        .OrderByDescending(order => order.SuccessPercent)
+        .ToListAsync();
 
         // Get a temporary list of all job names to retrieve their colors.
         var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
@@ -175,6 +191,11 @@
         if (!IncludeDeleted)
         {
             topFailedStepsQuery = topFailedStepsQuery.Where(e => context.Steps.Where(step => step.StepId == e.StepId).Any());
+        }
+
+        if (OnlyScheduled)
+        {
+            topFailedStepsQuery = topFailedStepsQuery.Where(e => e.ScheduleId != null);
         }
 
         var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
