@@ -168,7 +168,7 @@
                                 @item.NumberOfSteps
                             </td>
                             <td style="text-align: right;">
-                                @item.SuccessPercent
+                                @item.SuccessPercent.FormatPercentage(2)
                             </td>
                             <td>
                                 <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />

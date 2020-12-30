@@ -113,11 +113,20 @@ function drawNoOfExecutionsGraph(datasets_) {
 
 }
 
-function drawSuccessRateGraph(labels_, data_, colors_) {
+function drawSuccessRateGraph(datasets_) {
 
-    var labels1 = labels_.split(",");
-    var data1 = data_.split(",");
-    var colors1 = colors_.split(",");
+    var dataset = JSON.parse(datasets_);
+
+    var labels1 = [];
+    var data1 = [];
+    var colors1 = [];
+
+    for (var id in dataset) {
+        var item = dataset[id];
+        labels1.push(item.label);
+        data1.push(item.data);
+        colors1.push(item.color);
+    }
 
     // Job success rates
     var ctx2 = document.getElementById('myChart2')

@@ -39,7 +39,7 @@ else
                     <th></th>
                     <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
                     <th></th>
-                    <th style="text-align: right;">@AverageSuccessRate</th>
+                    <th style="text-align: right;">@AverageSuccessRate.FormatPercentage(2)</th>
                     <th></th>
                 </tr>
             </thead>
@@ -63,7 +63,7 @@ else
                             @item.NumberOfSteps
                         </td>
                         <td style="text-align: right;">
-                            @item.SuccessPercent
+                            @item.SuccessPercent.FormatPercentage(2)
                         </td>
                         <td>
                             <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
