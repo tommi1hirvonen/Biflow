@@ -55,37 +55,91 @@
     </div>
 </div>
 
+@if (Jobs != null && Steps != null)
+{
+    <AuthorizeView Roles="Admin, Editor">
+        <StepEditModal @ref="StepEditModal" JobId="Id" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
+    </AuthorizeView>
+}
+
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
+    public Guid PreviousId { get; set; }
+
+    private List<Job> Jobs { get; set; }
     private List<Step> Steps { get; set; }
-    private List<Dependency> Dependencies { get; set; }
+
+    private MethodInvokeHelper helper;
+
+    private StepEditModal StepEditModal { get; set; }
+    private Guid EditModalStepId { get; set; }
+
+    private bool GraphShouldRender { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        helper = new MethodInvokeHelper(OpenStepEditModal);
+        var context = DbFactory.CreateDbContext();
+        Jobs = await context.Jobs.ToListAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == Guid.Empty)
+        {
+            return;
+        }
+
+        using var context = DbFactory.CreateDbContext();
+        Steps = await context.Steps
+            .Where(step => step.JobId == Id)
+            .Include(step => step.Dependencies)
+            .AsNoTracking()
+            .ToListAsync();
+
+        GraphShouldRender = true;
+        StateHasChanged();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadGraph();
+        if (GraphShouldRender) await LoadGraph();
     }
 
     private async Task LoadGraph()
     {
-        using var context = DbFactory.CreateDbContext();
-        Dependencies = await context.Dependencies
-            .Include(d => d.Step)
-            .Include(d => d.DependantOnStep)
-            .Where(d => d.Step.JobId == Id)
-            .OrderBy(d => d.Step.StepName)
-            .ThenBy(d => d.DependantOnStep.StepName)
-            .AsNoTracking()
-            .ToListAsync();
-        Steps = await context.Steps.Where(step => step.JobId == Id).AsNoTracking().ToListAsync();
+        GraphShouldRender = false;
 
-        //var workersJson = string.Join(',', Steps.Select(step => "\"" + step.StepId + "\": { name: \"" + step.StepName + "\"}"));
         var workers = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
         var workersJson = JsonSerializer.Serialize(workers);
-        var dependencies = Dependencies.Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+        var dependencies = Steps
+            .SelectMany(step => step.Dependencies)
+            .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
         var dependenciesJson = JsonSerializer.Serialize(dependencies);
-        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson);
+
+        var dotNetReference = DotNetObjectReference.Create(helper);
+        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson, dotNetReference);
+    }
+
+    private void OpenStepEditModal(string id)
+    {
+        EditModalStepId = Guid.Parse(id);
+        StateHasChanged();
+        StepEditModal.Show(showDependencies: true);
+    }
+
+    private void OnStepSubmit(Step step)
+    {
+        var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
+        if (existingStep != null)
+        {
+            Steps.Remove(existingStep);
+        }
+        Steps.Add(step);
+        GraphShouldRender = true;
+        StateHasChanged();
     }
 
 }

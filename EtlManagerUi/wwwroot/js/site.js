@@ -1,4 +1,4 @@
-﻿function drawDependencyGraph(workers_, dependencies_) {
+﻿function drawDependencyGraph(workers_, dependencies_, dotNetObject) {
 
     var workers = JSON.parse(workers_);
     var dependencies = JSON.parse(dependencies_);
@@ -53,6 +53,15 @@
     var translateY = (height / 2) - ((graphHeight * zoomScale) / 2);
 
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
+
+    // Set event listeners to all node class elements.
+    var elements = document.getElementsByClassName("node");
+    var myFunction = function (event) {
+        dotNetObject.invokeMethodAsync('HelperInvokeCaller', this.id);
+    };
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener('click', myFunction, false);
+    }
 }
 
 function drawDurationGraph(datasets_) {
@@ -188,4 +197,9 @@ function drawStepsTimeline(dataset_) {
         $('#' + id).modal();
     });
 
+}
+
+function updateMessageCallerJS(dotnetHelper) {
+    dotnetHelper.invokeMethodAsync('EtlManagerUi', 'UpdateMessageCaller');
+    dotnetHelper.dispose();
 }

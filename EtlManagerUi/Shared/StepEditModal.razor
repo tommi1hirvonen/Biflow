@@ -1,5 +1,6 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IJSRuntime JS 
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
     @if (Step != null && Jobs != null && Connections != null && DataFactories != null && Steps != null)
@@ -382,6 +383,7 @@
                 Dependencies = new List<Dependency>()
             };
         }
+        StateHasChanged();
     }
 
     private void ResetStepError()
@@ -419,6 +421,31 @@
         if (Step.StepType == "SSIS" && !ParametersCheck())
         {
             return;
+        }
+
+        try
+        {
+            if (Step.StepType != "SSIS")
+            {
+                Step.Parameters.Clear();
+            }
+
+            using var context = DbFactory.CreateDbContext();
+            var existingStep = context.Steps.AsNoTracking().FirstOrDefault(step_ => step_.StepId == Step.StepId);
+            if (existingStep != null)
+            {
+                context.Attach(Step).State = EntityState.Modified;
+                context.SaveChanges();
+            }
+            else
+            {
+                context.Steps.Add(Step);
+                context.SaveChanges();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error adding/editing step:" + ex.Message);
         }
 
         await OnStepSubmit.InvokeAsync(Step);
@@ -474,9 +501,9 @@
         }
     }
 
-    public void Show()
+    public void Show(bool showDependencies = false)
     {
-        ShowDependencies = false;
+        ShowDependencies = showDependencies;
         Modal.Show();
     }
 }
