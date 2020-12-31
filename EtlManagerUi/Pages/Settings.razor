@@ -1,4 +1,4 @@
-﻿@page "/settings/{Page}"
+﻿@page "/settings/{Page?}"
 
 @attribute [Authorize(Roles = "Admin")]
 
@@ -8,7 +8,7 @@
 
 <ul class="nav nav-pills mt-3 mb-4" role="tablist">
     <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/users">
+        <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
             Users
         </NavLink>
@@ -57,4 +57,9 @@ else
 @code {
     [Parameter]
     public string Page { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Page = Page ?? "users";
+    }
 }

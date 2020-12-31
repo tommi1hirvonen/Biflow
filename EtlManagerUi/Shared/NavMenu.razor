@@ -46,7 +46,7 @@
         </li>
         <AuthorizeView Roles="Admin">
             <li class="nav-item">
-                <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.Prefix">
+                <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                     Settings
                 </NavLink>
