@@ -41,6 +41,12 @@
     box-shadow: none;
 }
 
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--color-primary);
+}
+
+
 /*
     Primary button customization
 */
