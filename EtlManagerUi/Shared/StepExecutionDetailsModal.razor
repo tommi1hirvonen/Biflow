@@ -1,0 +1,18 @@
+﻿<BSModal @ref="Modal" Size="Size.Large" NoBackdrop="true">
+    <BSModalHeader @onclick="() => Modal.Hide()">@StepExecution?.StepName</BSModalHeader>
+    <BSModalBody>
+        <StepExecutionDetailsComponent StepExecution="StepExecution" ShowExtraDetails="true" />
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public StepExecution StepExecution { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    public void Show() => Modal.Show();
+}

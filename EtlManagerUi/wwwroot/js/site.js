@@ -54,7 +54,7 @@
 
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
-    // Set event listeners to all node class elements.
+    // Set event listeners to pass the clicked node's id back to Blazor.
     var elements = document.getElementsByClassName("node");
     var myFunction = function (event) {
         dotNetObject.invokeMethodAsync('HelperInvokeCaller', this.id);
@@ -171,7 +171,7 @@ function drawSuccessRateGraph(datasets_) {
 
 }
 
-function drawStepsTimeline(dataset_) {
+function drawStepsTimeline(dataset_, dotNetObject) {
 
     var dataset = JSON.parse(dataset_);
 
@@ -191,15 +191,14 @@ function drawStepsTimeline(dataset_) {
 
     var timeline = new vis.Timeline(container, items, options);
 
+    // Set event listeners to pass the clicked item's id back to Blazor.
+    var myFunction = function (id) {
+        dotNetObject.invokeMethodAsync('HelperInvokeCaller', id);
+    };
+
     timeline.on('select', function (properties) {
         var item = items.get(properties.items[0]);
-        var id = 'modal_' + item.id;
-        $('#' + id).modal();
+        myFunction(item.id);
     });
 
-}
-
-function updateMessageCallerJS(dotnetHelper) {
-    dotnetHelper.invokeMethodAsync('EtlManagerUi', 'UpdateMessageCaller');
-    dotnetHelper.dispose();
 }

@@ -1,4 +1,6 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@implements IDisposable
+
+@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS 
 @inject IConfiguration configuration
@@ -267,6 +269,8 @@
     </BSModalFooter>
 </BSModal>
 
+<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecution="SelectedStepExecutionModal" />
+
 @code {
     [Parameter]
     public Guid ExecutionId { get; set; }
@@ -288,6 +292,16 @@
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
     private List<Guid> StoppingExecutions { get; set; } = new();
+
+    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; }
+    private StepExecution SelectedStepExecutionModal { get; set; }
+    private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
+
+    protected override void OnInitialized()
+    {
+        var helper = new MethodInvokeHelper(ShowStepExecutionModal);
+        ObjectReference = DotNetObjectReference.Create(helper);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -323,7 +337,7 @@
             }
             );
             var datasetJson = JsonSerializer.Serialize(dataset);
-            await JS.InvokeVoidAsync("drawStepsTimeline", datasetJson);
+            await JS.InvokeVoidAsync("drawStepsTimeline", datasetJson, ObjectReference);
         }
     }
 
@@ -365,19 +379,34 @@
         await LoadData();
     }
 
+    private void ShowStepExecutionModal(string text)
+    {
+        var execution = Executions.FirstOrDefault(e => e.StepExecutionId == text);
+        if (execution != null)
+        {
+            SelectedStepExecutionModal = execution;
+            StateHasChanged();
+            StepExecutionDetailsModal.Show();
+        }
+    }
+
     public void Show() => Modal.Show();
 
+    public void Dispose()
+    {
+        ObjectReference?.Dispose();
+    }
 
-    private string colorRed = "#FEDEE5";
-    private string colorRedDark = "#823040";
-    private string colorGreen = "#CEF5EA";
-    private string colorGreenDark = "#056C4F";
-    private string colorOrange = "#FFF2CC";
-    private string colorOrangeDark = "#856200";
-    private string colorBlue = "#E3E5FD";
-    private string colorBlueDark = "#3B40A7";
+    private static string colorRed = "#FEDEE5";
+    private static string colorRedDark = "#823040";
+    private static string colorGreen = "#CEF5EA";
+    private static string colorGreenDark = "#056C4F";
+    private static string colorOrange = "#FFF2CC";
+    private static string colorOrangeDark = "#856200";
+    private static string colorBlue = "#E3E5FD";
+    private static string colorBlueDark = "#3B40A7";
 
-    public string GetFillFromStatus(string status, bool dark = false)
+    public static string GetFillFromStatus(string status, bool dark = false)
     {
         switch (status)
         {
