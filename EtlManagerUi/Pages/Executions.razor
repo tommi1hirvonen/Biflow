@@ -23,6 +23,19 @@
                 Steps
             </BSButton>
         </BSButtonGroup>
+        <BSDropdown>
+            <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
+                Presets
+            </BSDropdownToggle>
+            <BSDropdownMenu>
+                <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
+            </BSDropdownMenu>
+        </BSDropdown>
         @if (Loading)
         {
             <div class="spinner-border text-primary align-middle ml-3" role="status">
@@ -88,7 +101,7 @@
         }
     </div>
     <div class="form-row">
-        <div class="form-group col-lg-3 col-md-5 col-sm-7">
+        <div class="form-group col-lg-3 col-md-4 col-sm-5">
             <label>Date & time until</label>
             <div class="input-group">
                 <div class="input-group-prepend">
@@ -99,7 +112,7 @@
                 <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
             </div>
         </div>
-        <div class="form-group col-lg-2 col-md-4 col-sm-5">
+        <div class="form-group col-lg-2 col-md-4 col-sm-4">
             <label>Interval (h)</label>
             <div class="input-group">
                 <div class="input-group-prepend">
@@ -355,6 +368,13 @@ else if (Level == "steps")
         }
 
         Loading = false;
+    }
+
+    private async Task SelectPreset(int hours)
+    {
+        DateTimeUntil = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+        IntervalHours = hours;
+        await LoadData();
     }
 
     private void ToggleSelectedStepExecution(StepExecution execution)
