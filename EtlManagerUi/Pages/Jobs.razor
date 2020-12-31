@@ -36,14 +36,14 @@
                     <DataAnnotationsValidator />
                     <ValidationSummary />
                     <BSFormGroup>
-                        <BSLabel for="name">Job name</BSLabel>
+                        <BSLabel>Job name</BSLabel>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
                                 </div>
                             </div>
-                            <BSInput id="name" InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
+                            <BSInput InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
                         </div>
                     </BSFormGroup>
                     <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
@@ -114,8 +114,8 @@ else
                                                 <DataAnnotationsValidator />
                                                 <ValidationSummary />
                                                 <BSFormGroup>
-                                                    <BSLabel for="name">New name</BSLabel>
-                                                    <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                                    <BSLabel>New name</BSLabel>
+                                                    <BSInput InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
                                                 </BSFormGroup>
                                                 <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                                             </BSForm>
