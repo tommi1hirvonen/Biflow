@@ -33,7 +33,7 @@
     </li>
 </ul>
 
-@if (Page == "users")
+@if (Page == null)
 {
     <UsersComponent />
 }
@@ -57,9 +57,4 @@ else
 @code {
     [Parameter]
     public string Page { get; set; }
-
-    protected override void OnParametersSet()
-    {
-        Page = Page ?? "users";
-    }
 }

@@ -1,4 +1,4 @@
-﻿@page "/executions/{Level}"
+﻿@page "/executions/{Level?}"
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
@@ -12,16 +12,14 @@
             Refresh
         </BSButton>
         <BSButtonGroup Size="Size.Small" Class="ml-3">
-            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(Level == "jobs" ? "active" : null)"
-                      @onclick="@(async () => { Level = "jobs"; await LoadData(); })">
+            <NavLink class="btn btn-sm btn-secondary" href="executions" Match="NavLinkMatch.All">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                 Jobs
-            </BSButton>
-            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(Level == "steps" ? "active" : null)"
-                      @onclick="@(async () => { Level = "steps"; await LoadData(); })">
+            </NavLink>
+            <NavLink class="btn btn-sm btn-secondary" href="executions/steps">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
                 Steps
-            </BSButton>
+            </NavLink>
         </BSButtonGroup>
         <BSDropdown>
             <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
@@ -126,7 +124,7 @@
     </div>
 </form>
 
-@if (Level == "jobs")
+@if (Level == null)
 {
     @if (JobExecutions == null)
     {
@@ -310,7 +308,7 @@ else if (Level == "steps")
 
         var context = DbFactory.CreateDbContext();
 
-        if (Level == "jobs")
+        if (Level == null)
         {
             IQueryable<JobExecution> jobExecutions = context.JobExecutions;
             jobExecutions = jobExecutions
