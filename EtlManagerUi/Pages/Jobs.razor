@@ -97,6 +97,7 @@ else
             <tbody>
                 @foreach (var item in jobs)
                 {
+                    var lastExecution = GetLastExecution(item);
                     <tr>
                         <td class="align-middle">
                             <a class="text-dark" href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</a>
@@ -150,7 +151,7 @@ else
                             <text>@item.Steps.Count step(s)</text>
                         </td>
                         <td class="align-middle">
-                            @switch (GetLastExecution(item)?.ExecutionStatus)
+                            @switch (lastExecution?.ExecutionStatus)
                             {
                                 case "RUNNING":
                                     <div class="status running" title="Running" aria-label="running">
@@ -174,9 +175,9 @@ else
                             }
                         </td>
                         <td class="align-middle">
-                            @if (GetLastExecution(item) != null)
+                            @if (lastExecution != null)
                             {
-                                <a class="text-dark" asp-page="/Executions/JobDetails" asp-route-id="@GetLastExecution(item).ExecutionId">@GetLastExecution(item).StartDateTime</a>
+                                <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime</a>
                             }
                         </td>
                         <td>
@@ -195,7 +196,7 @@ else
                                     <label class="custom-control-label" for="enabled_@item.JobId" aria-label="enabled"></label>
                                 </div>
                             </AuthorizeView>
-                            
+
                         </td>
                     </tr>
                 }
@@ -204,11 +205,17 @@ else
     </div>
 }
 
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+
+
 @code {
     private IList<Job> jobs { get; set; }
     private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = new();
     private Job NewJob { get; set; } = new() { IsEnabled = true };
     private Job EditJob { get; set; } = new();
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private Guid SelectedJobExecutionId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -348,5 +355,9 @@ else
         }
     }
 
-
+    private void OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        JobExecutionModal.Show();
+    }
 }
