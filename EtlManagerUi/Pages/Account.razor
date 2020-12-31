@@ -111,7 +111,7 @@ else
                                 <td>
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="@job.JobId"
-                                               checked=@User.Subscriptions.Where(sub => sub.JobId == job.JobId).Any()
+                                               checked=@User.Subscriptions.Any(sub => sub.JobId == job.JobId)
                                                @onchange="() => ToggleSubscription(job)">
                                         <label class="custom-control-label" style="cursor: pointer;" for="@job.JobId"></label>
                                     </div>

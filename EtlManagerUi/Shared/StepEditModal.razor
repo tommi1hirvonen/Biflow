@@ -300,7 +300,7 @@
                                     @foreach (var step in Steps
                                        .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
                                        .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                       .Where(step => Step.Dependencies.Where(d => d.DependantOnStepId == step.StepId).Any() || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                       .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
                                        .OrderBy(step => step.StepName))
                                     {
                                         <tr>
@@ -308,17 +308,17 @@
                                             <td class="align-middle">
                                                 <div class="custom-control custom-control-inline custom-checkbox">
                                                     <input type="checkbox" class="custom-control-input" id="dependency_@step.StepId"
-                                                           checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any())
+                                                           checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
                                                            @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
                                                     <label class="custom-control-label" for="dependency_@step.StepId"></label>
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                @if (Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any())
+                                                @if (Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
                                                 {
                                                     <div class="custom-control custom-control-inline custom-checkbox">
                                                         <input type="checkbox" class="custom-control-input" id="strict_@step.StepId"
-                                                               checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Where(dep => dep.StrictDependency).Any())
+                                                               checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
                                                                @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
                                                         <label class="custom-control-label" for="strict_@step.StepId"></label>
                                                     </div>

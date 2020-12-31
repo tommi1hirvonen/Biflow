@@ -165,7 +165,7 @@ else
 
     private string Username => HttpContextAccessor.HttpContext.User?.Identity?.Name;
 
-    private bool Subscribed => CurrentJob.Subscriptions.Where(sub => sub.Username == Username).Any();
+    private bool Subscribed => CurrentJob.Subscriptions.Any(sub => sub.Username == Username);
 
     protected override async Task OnInitializedAsync()
     {

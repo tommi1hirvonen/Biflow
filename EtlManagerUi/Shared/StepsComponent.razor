@@ -392,7 +392,7 @@ else
     {
         // Filter the list based on user input (StepsFilterText).
         var stepsFiltered = Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)).ToList();
-        var stepsToExecuteFiltered = StepsToExecute.Where(id => stepsFiltered.Where(step => step.StepId == id).Any()).ToList();
+        var stepsToExecuteFiltered = StepsToExecute.Where(id => stepsFiltered.Any(step => step.StepId == id)).ToList();
 
         if (stepsToExecuteFiltered.Count == 0)
         {
