@@ -270,7 +270,25 @@
                         }
                         else
                         {
-                            <table class="table table-sm table-striped">
+                            <div class="row mt-2 align-items-center">
+                                <div class="input-group input-group-sm col">
+                                    <label class="sr-only">Search</label>
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text rounded-left">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                        </div>
+                                    </div>
+                                    <input type="text" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+                                </div>
+                                <div class="custom-control custom-control-inline custom-checkbox col ml-3">
+                                    <input type="checkbox" class="custom-control-input" id="only_active"
+                                           checked=@ShowOnlyActiveDependencies
+                                           @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
+                                    <label class="custom-control-label" for="only_active">Show only active</label>
+                                </div>
+                            </div>
+                            
+                            <table class="table table-sm table-striped mt-3">
                                 <thead>
                                     <tr>
                                         <th>Step name</th>
@@ -279,7 +297,11 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach (var step in Steps.Where(step => step.StepId != StepId))
+                                    @foreach (var step in Steps
+                                       .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                       .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                       .Where(step => Step.Dependencies.Where(d => d.DependantOnStepId == step.StepId).Any() || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                       .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
@@ -349,6 +371,8 @@
     private string StepError { get; set; } = string.Empty;
 
     private bool ShowDependencies { get; set; } = false;
+    private string DependenciesFilterText { get; set; } = string.Empty;
+    private bool ShowOnlyActiveDependencies { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
