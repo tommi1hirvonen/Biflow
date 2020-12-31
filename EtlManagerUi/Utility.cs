@@ -108,7 +108,7 @@ namespace EtlManagerUi
             return executionId;
         }
 
-        public static bool StopJobExecution(IConfiguration configuration, Guid executionId, string username)
+        public static async Task<bool> StopJobExecutionAsync(IConfiguration configuration, Guid executionId, string username)
         {
             string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
 
@@ -132,7 +132,7 @@ namespace EtlManagerUi
 
             Process executorProcess = new Process() { StartInfo = executionInfo };
             executorProcess.Start();
-            executorProcess.WaitForExit();
+            await executorProcess.WaitForExitAsync();
             int result = executorProcess.ExitCode;
             return result == 0;
         }

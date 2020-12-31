@@ -1,6 +1,8 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS 
+@inject IConfiguration configuration
+@inject IHttpContextAccessor HttpContextAccessor
 
 <style>
     .vis-item {
@@ -84,6 +86,29 @@
                 </div>
             }
         </BSButtonGroup>
+
+        <AuthorizeView Roles="Admin, Editor, Operator">
+            @if (JobExecution != null && JobExecution.ExecutionStatus == "RUNNING")
+            {
+                <BSButtonGroup IsToolbar="true" Class="mt-3">
+                    <BSDropdown>
+                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger" Class="@(Stopping ? "disabled" : null)">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                            Stop
+                        </BSDropdownToggle>
+                        <BSDropdownMenu>
+                            <BSDropdownItem @onclick="StopJobExecution" IsDisabled="Stopping">Confirm</BSDropdownItem>
+                        </BSDropdownMenu>
+                    </BSDropdown>
+                    @if (Stopping)
+                    {
+                        <div class="spinner-border text-primary align-middle ml-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    }
+                </BSButtonGroup>
+            }
+        </AuthorizeView>
 
         <div class="row my-1">
             <p></p>
@@ -225,7 +250,7 @@
                 </tbody>
             </table>
         }
-        
+
         <div id="steps_graph" hidden=@(!ShowGraph)>
         </div>
 
@@ -252,6 +277,10 @@
     private bool JobExecutionDetailsOpen { get; set; } = false;
 
     private StepExecution SelectedStepExecution { get; set; }
+
+    private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
+
+    private List<Guid> StoppingExecutions { get; set; } = new();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -301,6 +330,32 @@
     {
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
+    }
+
+    private async Task StopJobExecution()
+    {
+        if (Stopping)
+        {
+            await JS.InvokeVoidAsync("alert", "Execution is already stopping");
+            return;
+        }
+
+        StoppingExecutions.Add(ExecutionId);
+        try
+        {
+            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            var result = await Utility.StopJobExecutionAsync(configuration, ExecutionId, username);
+            if (!result)
+            {
+                await JS.InvokeVoidAsync("alert", "Error when stopping execution. See Executor logs for details.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+        }
+        StoppingExecutions.RemoveAll(id => id == ExecutionId);
+        await LoadData();
     }
 
     public void Show() => Modal.Show();
