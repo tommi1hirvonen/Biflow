@@ -1,4 +1,3 @@
-using Blazored.Modal;
 using BlazorStrap;
 using EtlManagerUi.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -32,7 +31,6 @@ namespace EtlManagerUi
             services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
             services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
             services.AddBootstrapCss();
-            services.AddBlazoredModal();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

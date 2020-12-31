@@ -1,11 +1,9 @@
 ﻿@page "/jobs"
 
-
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
-@inject IModalService Modal
 
 <style>
     .status.failed svg {
