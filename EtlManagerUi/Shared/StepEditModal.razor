@@ -343,10 +343,11 @@
 
 
 @code {
+    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
     private EtlManagerContext Context { get; set; }
 
     [Parameter]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; set; } // empty Guid => new step
 
     [Parameter]
     public Guid JobId { get; set; }

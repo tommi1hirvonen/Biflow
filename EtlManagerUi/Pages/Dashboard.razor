@@ -157,6 +157,7 @@
             executionsQuery = executionsQuery.Where(e => e.ScheduleId != null);
         }
 
+        // Group job executions by job names to day level and calculate each job's average duration as well as the number of executions.
         var executions = await executionsQuery
             .OrderBy(e => e.CreatedDateTime)
             .GroupBy(group => new
@@ -191,6 +192,7 @@
             jobsQuery = jobsQuery.Where(e => e.ScheduleId != null);
         }
 
+        // Group job executions by job name and calculate average success percentage.
         Jobs = await jobsQuery
         .GroupBy(group => group.JobName)
         .Select(select => new ReportingJob
@@ -224,6 +226,8 @@
 
         var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
 
+        // Group step executions by step and job and calculate success percentages
+        // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
             .GroupBy(group => new { group.StepId, group.StepName, group.JobId, group.JobName })
             .Select(select => new TopStep
@@ -240,6 +244,7 @@
             .Take(5)
             .ToList();
 
+        // Create JSON dataset objects that are passed to the JS code in site.js via JSInterop.
         var durationDataset = TimeSeriesItems.Select((e, index) =>
         new
         {

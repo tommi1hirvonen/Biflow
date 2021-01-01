@@ -1,6 +1,6 @@
-﻿function drawDependencyGraph(workers_, dependencies_, dotNetObject) {
+﻿function drawDependencyGraph(steps_, dependencies_, dotNetObject) {
 
-    var workers = JSON.parse(workers_);
+    var steps = JSON.parse(steps_);
     var dependencies = JSON.parse(dependencies_);
 
     // Set up zoom support
@@ -23,14 +23,14 @@
         marginy: 20
     });
 
-    for (var id in workers) {
-        var worker = workers[id];
-        g.setNode(worker.Id, {
-            label: worker.Name,
+    for (var id in steps) {
+        var step = steps[id];
+        g.setNode(step.Id, {
+            label: step.Name,
             rx: 20,
             ry: 20
         });
-        g.node(worker.Id).id = worker.Id; // Set the id of the node element. Used for onclick purposes.
+        g.node(step.Id).id = step.Id; // Set the id of the node element. Used for onclick purposes.
     }
 
     for (var id in dependencies) {

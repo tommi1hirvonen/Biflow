@@ -53,7 +53,7 @@
 
 @code {
     [Parameter]
-    public Guid ConnectionId { get; set; }
+    public Guid ConnectionId { get; set; } // empty Guid => new connection
 
     [Parameter]
     public EventCallback<Connection> OnConnectionSubmit { get; set; }

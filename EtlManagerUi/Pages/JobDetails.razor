@@ -35,13 +35,14 @@
             </BSButton>
 
             <AuthorizeView Roles="Admin, Editor">
+                @*Dropdown to change the current job's name*@
                 <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
                     <BSDropdownToggle Color="Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         Rename
                     </BSDropdownToggle>
                     <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                        <BSForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
+                        <BSForm Model="EditJob" OnValidSubmit="UpdateJobName" Context="_context">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <BSFormGroup>
@@ -53,6 +54,7 @@
                     </BSDropdownMenu>
                 </BSDropdown>
 
+                @*Dropdown to delete the current job*@
                 <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
                     <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
@@ -99,6 +101,7 @@
     </div>
     <div class="col-xl-5 d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
         <div class="btn-toolbar align-items-center">
+            @*Show switches to display whether the jos is enabled or disabled and whether the job uses dependency mode or not.*@
             <AuthorizeView Roles="Admin, Editor">
                 <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
@@ -181,7 +184,7 @@ else
         EditJob.JobName = CurrentJob.JobName;
     }
 
-    private async Task UpdateJob()
+    private async Task UpdateJobName()
     {
         try
         {

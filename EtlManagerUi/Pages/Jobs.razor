@@ -5,6 +5,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
 
+@*CSS definitions for the status icons for each job's last execution*@
 <style>
     .status.failed svg {
         width: 20px;
@@ -29,6 +30,7 @@
 
 <div class="btn-toolbar mt-3">
     <AuthorizeView Roles="Admin, Editor">
+        @*Dropdown to create new jobs*@
         <BSDropdown>
             <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
             <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
@@ -110,12 +112,13 @@
                             <AuthorizeView Roles="Admin, Editor">
                                 <BSButtonGroup Class="btn-row" Size="Size.Small">
 
+                                    @*Dropdown to edit the job's name*@
                                     <BSDropdown>
                                         <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                         </BSDropdownToggle>
                                         <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                            <BSForm Model="EditJob" OnValidSubmit="() => UpdateJob(item)" Context="_context">
+                                            <BSForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context">
                                                 <DataAnnotationsValidator />
                                                 <ValidationSummary />
                                                 <BSFormGroup>
@@ -230,6 +233,8 @@
     {
         using var context = DbFactory.CreateDbContext();
         jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+        
+        // Get each job's last execution.
         var lastExecutions = await context.JobExecutions
             .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
@@ -239,12 +244,14 @@
                 Key = key,
                 Execution = context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
             })
-        .ToListAsync();
-        LastExecutions.Clear();
-        lastExecutions.ForEach(item => LastExecutions[item.Key] = item.Execution);
+            .ToListAsync();
+        
+        LastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
+        
         StateHasChanged();
     }
 
+    // Helper method for Dictionary TryGet access
     private JobExecution GetLastExecution(Job job)
     {
         JobExecution execution = null;
@@ -259,6 +266,7 @@
         return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
     }
 
+    // Takes a list of Schedules and converts them to a list of DateTimes for the current and next week.
     private List<DateTime> GetPossibleDateTimes(ICollection<Schedule> schedules)
     {
         List<DateTime> dateTimes = new List<DateTime>();
@@ -295,7 +303,7 @@
         }
     }
 
-    private async Task UpdateJob(Job job)
+    private async Task UpdateJobName(Job job)
     {
         try
         {

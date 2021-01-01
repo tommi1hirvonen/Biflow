@@ -63,7 +63,7 @@
 
 @code {
     [Parameter]
-    public Guid DataFactoryId { get; set; }
+    public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
 
     [Parameter]
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }

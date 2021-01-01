@@ -31,6 +31,7 @@
                     Presets
                 </BSDropdownToggle>
                 <BSDropdownMenu>
+                    @*List predefined hour intervals*@
                     <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
@@ -38,6 +39,7 @@
                     <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
                 </BSDropdownMenu>
             </BSDropdown>
+            @*If executions are being (re)loaded, show spinner.*@
             @if (Loading)
             {
                 <div class="spinner-border text-primary align-middle ml-3" role="status">
@@ -59,7 +61,7 @@
                         <option value="" selected=@string.IsNullOrEmpty(Status)>ALL</option>
                         @foreach (var status in Statuses.OrderBy(status => status))
                         {
-                            // Disable value options that are filtered out by current filter values.
+                            // Disable value options that are filtered out by current filter values in other select inputs.
                             <option value="@status"
                                     selected=@(status == Status)
                                     disabled=@(!string.IsNullOrEmpty(JobName) && ShowSteps && !StepExecutions.Any(e => e.JobName == JobName && e.ExecutionStatus == status)
@@ -83,7 +85,7 @@
                         <option value="" selected=@string.IsNullOrEmpty(JobName)>All</option>
                         @foreach (var jobName in JobNames.OrderBy(name => name))
                         {
-                            // Disable value options that are filtered out by current filter values.
+                            // Disable value options that are filtered out by current filter values in other select inputs.
                             <option value="@jobName"
                                     selected=@(jobName == JobName)
                                     disabled=@(!string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions.Any(e => e.JobName == jobName && e.StepName == StepName)
@@ -109,7 +111,7 @@
                             <option value="" selected=@string.IsNullOrEmpty(StepName)>All</option>
                             @foreach (var stepName in StepNames.OrderBy(name => name))
                             {
-                                // Disable value options that are filtered out by current filter values.
+                                // Disable value options that are filtered out by current filter values in other select inputs.
                                 <option value="@stepName"
                                         selected=@(stepName == StepName)
                                         disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions.Any(e => e.JobName == JobName && e.StepName == stepName)
@@ -305,6 +307,7 @@
 @code {
     private bool SessionStorageValuesRetrieved { get; set; } = false;
 
+    // If false, jobs executions will be shown.
     private bool ShowSteps { get; set; } = false;
 
     private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
@@ -312,13 +315,13 @@
     private int IntervalHours { get; set; } = 3;
 
     private List<string> JobNames { get; set; } = new();
-    private string JobName { get; set; } = string.Empty;
+    private string JobName { get; set; } = string.Empty; // used to filter executions results
 
     private List<string> Statuses { get; set; } = new();
-    private string Status { get; set; } = string.Empty;
+    private string Status { get; set; } = string.Empty; // used to filter executions results
 
     private List<string> StepNames { get; set; } = new();
-    private string StepName { get; set; } = string.Empty;
+    private string StepName { get; set; } = string.Empty; // used to filter executions results
 
     private bool Loading { get; set; } = false;
 
@@ -335,6 +338,8 @@
     {
         if (firstRender)
         {
+            // Try getting previously used filter values from the user's sessionStorage.
+            // This is non-critical, so ignore any errors.
             try
             {
                 await GetSessionStorageValues();
@@ -343,6 +348,7 @@
             {
             }
 
+            // sessionStorage values have been retrieved. The filter inputs can now be rendered.
             SessionStorageValuesRetrieved = true;
             await LoadData();
         }
@@ -428,6 +434,8 @@
         Loading = false;
         StateHasChanged();
 
+        // Try to save the filter values to the user's sessionStorage.
+        // This is non-critical, so ignore any errors.
         try
         {
             await SetSessionStorageValues();
@@ -471,6 +479,8 @@
 
     private void ToggleSelectedStepExecution(StepExecution execution)
     {
+        // If the selected execution is the same that was previously selected, set to null
+        // => hides step execution details component.
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
     }
@@ -482,6 +492,7 @@
     }
 
 #nullable enable
+    // Helper method for reading sessionStorage values from the browser through JSInterop
     private async Task<T?> TryGetSessionStorageValueAsync<T>(string key, Func<string, T> converter)
     {
         var valueString = await JS.InvokeAsync<string>("sessionStorage.getItem", key);

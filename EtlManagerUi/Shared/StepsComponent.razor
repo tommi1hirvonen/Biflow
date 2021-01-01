@@ -322,35 +322,6 @@
 
     private void OnStepSubmit(Step step)
     {
-        //try
-        //{
-        //    if (step.StepType != "SSIS")
-        //    {
-        //        step.Parameters.Clear();
-        //    }
-
-        //    using var context = DbFactory.CreateDbContext();
-        //    var existingStep = Steps_.FirstOrDefault(step_ => step_.StepId == step.StepId);
-        //    if (existingStep != null)
-        //    {
-        //        context.Attach(step).State = EntityState.Modified;
-        //        context.SaveChanges();
-        //        Steps_.Remove(existingStep);
-        //        Steps_.Add(step);
-        //    }
-        //    else
-        //    {
-        //        context.Steps.Add(step);
-        //        context.SaveChanges();
-        //        Steps_.Add(step);
-        //    }
-
-        //    Steps_ = Steps_.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
-        //}
-        //catch (Exception)
-        //{
-        //    JsRuntime.InvokeVoidAsync("alert", "Error adding/editing step");
-        //}
         var existingStep = Steps_.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep != null)
         {

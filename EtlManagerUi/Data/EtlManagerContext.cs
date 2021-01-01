@@ -36,16 +36,21 @@ namespace EtlManagerUi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasDefaultSchema("etlmanager");
+            
+            // Map executions to views, which have additional logic implemented.
+            // We never save or modify the executions via UI, so this is no problem.
             modelBuilder.Entity<StepExecution>()
                 .ToView("vExecution");
             modelBuilder.Entity<JobExecution>()
                 .ToView("vExecutionJob");
+            
             modelBuilder.Entity<Dependency>()
                 .ToTable("Dependency")
                 .HasOne(dependency => dependency.Step)
                 .WithMany(step => step.Dependencies)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<Job>()
                 .ToTable("Job")
                 .HasMany(job => job.Steps)
@@ -56,24 +61,28 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<Job>()
                 .HasMany(job => job.Subscriptions)
                 .WithOne(subscription => subscription.Job);
+            
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
                 .HasOne(step => step.Job)
                 .WithMany(job => job.Steps)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<Schedule>()
                 .ToTable("Schedule")
                 .HasOne(schedule => schedule.Job)
                 .WithMany(job => job.Schedules)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<Parameter>()
                 .ToTable("Parameter")
                 .HasOne(parameter => parameter.Step)
                 .WithMany(step => step.Parameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<Subscription>()
                 .ToTable("Subscription")
                 .HasOne(subscription => subscription.Job)
@@ -85,16 +94,26 @@ namespace EtlManagerUi.Data
                 .WithMany(user => user.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            
             modelBuilder.Entity<User>()
                 .ToTable("User")
                 .HasMany(user => user.Subscriptions)
                 .WithOne(subscription => subscription.User);
+
+            // Map a secondary user class RoleUser to an additional vUser view that is based on User table.
+            // We cannot map two entity types (i.e. User and RoleUser) to the same table, which is why this is needed.
+
+            // The reason for separating User and RoleUser is a legacy one from the times of the Razor Pages app.
+            // There we couldn't expose RoleUser to the end user in HTML forms, because the user may have been able to edit their own role.
             modelBuilder.Entity<RoleUser>()
                 .ToTable("vUser");
+
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory")
                 .HasMany(df => df.Steps)
                 .WithOne(step => step.DataFactory);
+            
+            // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
                 .ToTable("vConnection")
                 .HasMany(connection => connection.Steps)
@@ -106,7 +125,7 @@ namespace EtlManagerUi.Data
         {
             string user = HttpContext.User?.Identity?.Name;
 
-            // Get new and modified steps
+            // Get new and modified steps.
             var stepEntities = ChangeTracker
                 .Entries()
                 .Where(entity => entity.Entity is Step && (entity.State == EntityState.Modified || entity.State == EntityState.Added))

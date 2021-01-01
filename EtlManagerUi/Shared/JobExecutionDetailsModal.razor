@@ -6,6 +6,7 @@
 @inject IConfiguration configuration
 @inject IHttpContextAccessor HttpContextAccessor
 
+@*CSS styling for the vis-timeline object drawn using JSInterop in site.js*@
 <style>
     .vis-item {
         cursor: pointer;
@@ -298,6 +299,10 @@
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
+    // Maintain a list executions that are being stopped.
+    // This same component instance can be used to switch between different job executions.
+    // This list allows for stopping multiple executions concurrently
+    // and to modify the view based on which job execution is being shown.
     private List<Guid> StoppingExecutions { get; set; } = new();
 
     private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; }
@@ -306,6 +311,9 @@
 
     protected override void OnInitialized()
     {
+        // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
+        // This will allow JS to call back to a specific instance of this component.
+        // This needs to be done, because multiple users might be using this component concurrently.
         var helper = new MethodInvokeHelper(ShowStepExecutionModal);
         ObjectReference = DotNetObjectReference.Create(helper);
     }
@@ -323,6 +331,7 @@
         {
             Loading = true;
             var context = DbFactory.CreateDbContext();
+
             JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             Executions = await context.Executions
                 .Where(e => e.ExecutionId == ExecutionId)
@@ -332,6 +341,7 @@
             StateHasChanged();
             Loading = false;
 
+            // Create a JSON dataset that is passed to the JS method used to draw the steps graph via JSInterop.
             var dataset = Executions.Where(e => e.StartDateTime != null).Select(e =>
             new
             {

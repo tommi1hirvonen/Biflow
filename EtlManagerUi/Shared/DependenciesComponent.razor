@@ -3,6 +3,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
 
+@*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
     html, body {
         height: 100%;
@@ -82,8 +83,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
+        // This will allow JS to call back to a specific instance of this component.
+        // This needs to be done, because multiple users might be using this component concurrently.
         var helper = new MethodInvokeHelper(OpenStepEditModal);
         ObjectReference = DotNetObjectReference.Create(helper);
+        
         var context = DbFactory.CreateDbContext();
         Jobs = await context.Jobs.ToListAsync();
     }
@@ -108,23 +113,27 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GraphShouldRender) await LoadGraph();
+        if (GraphShouldRender)
+            await LoadGraph();
     }
 
     private async Task LoadGraph()
     {
         GraphShouldRender = false;
 
-        var workers = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
-        var workersJson = JsonSerializer.Serialize(workers);
+        // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+        var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
+        var stepsJson = JsonSerializer.Serialize(steps);
         var dependencies = Steps
             .SelectMany(step => step.Dependencies)
             .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
         var dependenciesJson = JsonSerializer.Serialize(dependencies);
 
-        await JS.InvokeVoidAsync("drawDependencyGraph", workersJson, dependenciesJson, ObjectReference);
+        // Also pass the reference to this component instance using ObjectReference.
+        await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
     }
 
+    // Step edit modals can be opened from JS using JSInterop by calling this method. See site.js => drawDependencyGraph().
     private void OpenStepEditModal(string id)
     {
         EditModalStepId = Guid.Parse(id);
