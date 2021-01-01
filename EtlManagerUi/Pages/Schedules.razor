@@ -79,7 +79,7 @@
                         <td class="align-middle">
                             <div class="custom-control custom-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
-                                    <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="() => ToggleEnabled(item)">
+                                    <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
                                     <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Viewer">
@@ -461,11 +461,12 @@
         };
     }
 
-    private async Task ToggleEnabled(Schedule schedule)
+    private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
+        bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleScheduleEnabled(configuration, schedule);
+            await Utility.ToggleScheduleEnabled(configuration, schedule, value);
         }
         catch (Exception)
         {

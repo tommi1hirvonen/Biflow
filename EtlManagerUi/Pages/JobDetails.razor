@@ -211,11 +211,12 @@ else
         }
     }
 
-    private async Task ToggleJobEnabled()
+    private async Task ToggleJobEnabled(ChangeEventArgs args)
     {
+        bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobEnabled(configuration, CurrentJob);
+            await Utility.ToggleJobEnabled(configuration, CurrentJob, value);
             CurrentJob.IsEnabled = !CurrentJob.IsEnabled;
         }
         catch (Exception)
@@ -224,11 +225,12 @@ else
         }
     }
 
-    private async Task ToggleDependencyMode()
+    private async Task ToggleDependencyMode(ChangeEventArgs args)
     {
+        bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobDependencyMode(configuration, CurrentJob);
+            await Utility.ToggleJobDependencyMode(configuration, CurrentJob, value);
             CurrentJob.UseDependencyMode = !CurrentJob.UseDependencyMode;
         }
         catch (Exception)

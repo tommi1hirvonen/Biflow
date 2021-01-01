@@ -137,54 +137,62 @@ namespace EtlManagerUi
             return result == 0;
         }
 
-        public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job)
+        public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job, bool enabled)
         {
+            int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 @"UPDATE [etlmanager].[Job]
-                SET [UseDependencyMode] = CASE [UseDependencyMode] WHEN 1 THEN 0 ELSE 1 END
+                SET [UseDependencyMode] = @Value
                 WHERE [JobId] = @JobId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Value", value);
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleJobEnabled(IConfiguration configuration, Job job)
+        public async static Task ToggleJobEnabled(IConfiguration configuration, Job job, bool enabled)
         {
+            int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 @"UPDATE [etlmanager].[Job]
-                SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END
+                SET [IsEnabled] = @Value
                 WHERE [JobId] = @JobId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Value", value);
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleStepEnabled(IConfiguration configuration, Step step)
+        public async static Task ToggleStepEnabled(IConfiguration configuration, Step step, bool enabled)
         {
+            int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 @"UPDATE [etlmanager].[Step]
-                SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END
+                SET [IsEnabled] = @Value
                 WHERE [StepId] = @StepId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Value", value);
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleScheduleEnabled(IConfiguration configuration, Schedule schedule)
+        public async static Task ToggleScheduleEnabled(IConfiguration configuration, Schedule schedule, bool enabled)
         {
+            int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
                 @"UPDATE [etlmanager].[Schedule]
-                SET [IsEnabled] = CASE [IsEnabled] WHEN 1 THEN 0 ELSE 1 END
+                SET [IsEnabled] = @Value
                 WHERE [ScheduleId] = @ScheduleId"
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@ScheduleId", schedule.ScheduleId.ToString());
+            sqlCommand.Parameters.AddWithValue("@Value", value);
             await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
         }

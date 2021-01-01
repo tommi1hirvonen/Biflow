@@ -125,7 +125,7 @@
                         <td class="align-middle">
                             <AuthorizeView Roles="Admin, Editor">
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                     <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
                                 </div>
                             </AuthorizeView>
@@ -274,11 +274,12 @@
         StepEditModal.Show();
     }
 
-    private async Task ToggleEnabled(Step step)
+    private async Task ToggleEnabled(ChangeEventArgs args, Step step)
     {
+        bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleStepEnabled(configuration, step);
+            await Utility.ToggleStepEnabled(configuration, step, value);
             step.IsEnabled = !step.IsEnabled;
         }
         catch (Exception)

@@ -189,7 +189,7 @@
                         <td class="align-middle">
                             <AuthorizeView Roles="Admin, Editor">
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="() => ToggleEnabled(item)">
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                     <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
                                 </div>
                             </AuthorizeView>
@@ -282,11 +282,12 @@
         return dateTimes;
     }
 
-    private async Task ToggleEnabled(Job job)
+    private async Task ToggleEnabled(ChangeEventArgs args, Job job)
     {
+        bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobEnabled(configuration, job);
+            await Utility.ToggleJobEnabled(configuration, job, value);
         }
         catch (Exception)
         {
