@@ -155,64 +155,72 @@
 {
     // Execute modal
     <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSModal @ref="ExecuteModal" Size="Size.Large" IsScrollable="true">
+        <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true">
             <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
             <BSModalBody>
                 <div class="row">
-                    <div class="input-group input-group-sm mx-5 mb-2">
-                        <label class="sr-only">Search</label>
-                        <div class="input-group-prepend">
-                            <div class="input-group-text rounded-left">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                    <div class="col-md">
+
+                        <div class="input-group input-group-sm">
+                            <label class="sr-only">Search</label>
+                            <div class="input-group-prepend">
+                                <div class="input-group-text rounded-left">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                </div>
                             </div>
+                            <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
                         </div>
-                        <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
-                    </div>
-                    <table class="table table-sm mx-5">
-                        <thead>
-                            <tr>
-                                <th class="align-top">
-                                    <div class="custom-control custom-control-inline custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="execute_check_all"
-                                               checked=@(Steps_.Count == StepsToExecute.Count)
-                                               @onchange="eventArgs => ToggleStepsExecuteAll(eventArgs.Value)">
-                                        <label class="custom-control-label" for="execute_check_all">Step name</label>
-                                    </div>
-                                </th>
-                                <th>
-                                    Execution phase
-                                </th>
-                                <th>
-                                    Step type
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var step in Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)))
-                            {
+
+                        <table class="table table-hover table-sm mt-2">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <div class="custom-control custom-control-inline custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" name="execute_checkbox" id="execute_@step.StepId"
-                                                   checked=@(StepsToExecute.Contains(step.StepId))
-                                                   @onchange="eventArgs => ToggleStepExecute(step, eventArgs.Value)">
-                                            <label class="custom-control-label" for="execute_@step.StepId">@step.StepName</label>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        @step.ExecutionPhase
-                                    </td>
-                                    <td>
-                                        <StepTypeIconComponent StepType="@step.StepType" />
-                                    </td>
+                                    <th>Available steps</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach (var step in Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
+                                {
+                                    <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Add(step)">
+                                        <td>
+                                            @step.StepName
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+
+                    <div class="col-md">
+
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Selected steps</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var step in StepsToExecute.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
+                                {
+                                    <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
+                                        <td>@step.StepName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+                    
                 </div>
             </BSModalBody>
             <BSModalFooter>
-                <BSButton Color="Color.Primary" @onclick="Execute">
+                <BSButton Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                    Select all
+                </BSButton>
+                <BSButton Color="Color.Secondary" @onclick="() => StepsToExecute.Clear()">
+                    Deselect all
+                </BSButton>
+                <BSButton Color="Color.Primary" Class="ml-5" @onclick="Execute">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                     Execute
                 </BSButton>
@@ -240,7 +248,7 @@
     private Step DetailsModalStep { get; set; }
 
     private BSModal ExecuteModal { get; set; }
-    private List<Guid> StepsToExecute { get; set; } = new();
+    private List<Step> StepsToExecute { get; set; } = new();
     private bool ExecuteButtonDisabled { get; set; } = false;
 
     private bool ExecuteSuccess { get; set; } = false;
@@ -337,19 +345,6 @@
         StepDetailsModal.Modal.Show();
     }
 
-    private void ToggleStepExecute(Step step, object checkedValue)
-    {
-        var execute = (bool)checkedValue;
-        if (!execute && StepsToExecute.Contains(step.StepId))
-        {
-            StepsToExecute.Remove(step.StepId);
-        }
-        else if (execute && !StepsToExecute.Contains(step.StepId))
-        {
-            StepsToExecute.Add(step.StepId);
-        }
-    }
-
     private void ToggleStepsExecuteAll(object checkedValue)
     {
         var execute = (bool)checkedValue;
@@ -358,18 +353,14 @@
         {
             foreach (var step in Steps_)
             {
-                StepsToExecute.Add(step.StepId);
+                StepsToExecute.Add(step);
             }
         }
     }
 
     private async Task Execute()
     {
-        // Filter the list based on user input (StepsFilterText).
-        var stepsFiltered = Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)).ToList();
-        var stepsToExecuteFiltered = StepsToExecute.Where(id => stepsFiltered.Any(step => step.StepId == id)).ToList();
-
-        if (stepsToExecuteFiltered.Count == 0)
+        if (StepsToExecute.Count == 0)
         {
             return;
         }
@@ -380,7 +371,8 @@
         string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
         try
         {
-            SelectedJobExecutionId = await Utility.StartExecution(configuration, Job, user, stepsToExecuteFiltered.Select(id => id.ToString()).ToList());
+            var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
+            SelectedJobExecutionId = await Utility.StartExecution(configuration, Job, user, stepIds);
             ExecuteSuccess = true;
         }
         catch (Exception ex)
