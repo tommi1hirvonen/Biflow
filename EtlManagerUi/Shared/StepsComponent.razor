@@ -76,7 +76,12 @@
                 {
                     <tr>
                         <td class="align-middle">
-                            @item.StepName
+                            <AuthorizeView Roles="Admin, Editor">
+                                <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">@item.StepName</a>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Operator, Viewer">
+                                @item.StepName
+                            </AuthorizeView>
                         </td>
                         <td align="left">
                             <div class="btn-group btn-row">
@@ -85,10 +90,6 @@
                                 </BSButton>
 
                                 <AuthorizeView Roles="Admin, Editor">
-                                    <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowEditModal(item)">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                    </BSButton>
-
                                     <BSDropdown IsGroup="true">
                                         <BSDropdownToggle Size="Size.Small" Color="Color.Light">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
