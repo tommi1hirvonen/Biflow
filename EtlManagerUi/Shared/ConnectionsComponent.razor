@@ -13,26 +13,31 @@
     Add connection
 </BSButton>
 
-@if (Connections == null)
-{
-    <p class="mt-4">Loading...<em></em></p>
-}
-else
-{
-    <div class="card shadow-sm pt-2 mt-4">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Name
-                    </th>
-                    <th></th>
-                    <th>
-                        Connection string
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
+
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Connection string
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Connections == null)
+            {
+                <tr><td colspan="3">Loading...</td></tr>
+            }
+            else if (Connections.Count == 0)
+            {
+                <tr><td colspan="3">No connections</td></tr>
+            }
+            else
+            {
                 @foreach (var connection in Connections)
                 {
                     <tr>
@@ -60,10 +65,10 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
 
 <ConnectionEditModal @ref="ConnectionEditModal" ConnectionId="EditConnectionId" OnConnectionSubmit="OnConnectionSubmit" />
 

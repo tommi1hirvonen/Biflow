@@ -1,49 +1,53 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject NavigationManager NavigationManager
 
-@if (Executions == null)
-{
-    <p class="mt-2"><em>Loading...</em></p>
-}
-else
-{
-    <div class="card shadow-sm pt-2">
-        <table class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Created
-                    </th>
-                    <th>
-                        Started
-                    </th>
-                    <th>
-                        Ended
-                    </th>
-                    <th>
-                        Duration
-                    </th>
-                    <th>
-                        Number of steps
-                    </th>
-                    <th>
-                        Success percent
-                    </th>
-                    <th>
-                        Status
-                    </th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
-                    <th></th>
-                    <th style="text-align: right;">@AverageSuccessRate.FormatPercentage(2)</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card shadow-sm pt-2">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Created
+                </th>
+                <th>
+                    Started
+                </th>
+                <th>
+                    Ended
+                </th>
+                <th>
+                    Duration
+                </th>
+                <th>
+                    Number of steps
+                </th>
+                <th>
+                    Success percent
+                </th>
+                <th>
+                    Status
+                </th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
+                <th></th>
+                <th style="text-align: right;">@AverageSuccessRate.FormatPercentage(2)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Executions == null)
+            {
+                <tr><td colspan="7">Loading...</td></tr>
+            }
+            else if (Executions.Count == 0)
+            {
+                <tr><td colspan="7">No executions</td></tr>
+            }
+            else
+            {
                 @foreach (var item in Executions)
                 {
                     <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
@@ -70,14 +74,14 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-        <div class="px-3">
-            <hr />
-            <p class="text-secondary">Showing @MaxExecutions latest executions</p>
-        </div>
+            }
+        </tbody>
+    </table>
+    <div class="px-3">
+        <hr />
+        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
     </div>
-}
+</div>
 
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
 

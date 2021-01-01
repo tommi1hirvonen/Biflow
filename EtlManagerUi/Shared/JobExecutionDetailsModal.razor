@@ -195,11 +195,7 @@
             </BSCollapse>
         }
 
-        @if (Executions == null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (!ShowGraph)
+        @if (!ShowGraph)
         {
             <table class="table table-sm table-hover">
                 <thead>
@@ -225,35 +221,46 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Executions)
+                    @if (Executions == null)
                     {
-                        <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
-                            <td>
-                                @item.StepName
-                            </td>
-                            <td>
-                                <StepTypeIconComponent StepType="@item.StepType" />
-                            </td>
-                            <td>
-                                @item.StartDateTime
-                            </td>
-                            <td>
-                                @item.EndDateTime
-                            </td>
-                            <td>
-                                <text>@item.GetDurationInReadableFormat()</text>
-                            </td>
-                            <td>
-                                <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
-                            </td>
-                        </tr>
-                        @if (SelectedStepExecution == item)
+                        <tr><td colspan="6">Loading...</td></tr>
+                    }
+                    else if (Executions.Count == 0)
+                    {
+                        <tr><td colspan="6">No executions</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Executions)
                         {
-                            <tr class="table-borderless">
-                                <td colspan="6" class="bg-light">
-                                    <StepExecutionDetailsComponent StepExecution="item" />
+                            <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                                <td>
+                                    @item.StepName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType="@item.StepType" />
+                                </td>
+                                <td>
+                                    @item.StartDateTime
+                                </td>
+                                <td>
+                                    @item.EndDateTime
+                                </td>
+                                <td>
+                                    <text>@item.GetDurationInReadableFormat()</text>
+                                </td>
+                                <td>
+                                    <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                                 </td>
                             </tr>
+                            @if (SelectedStepExecution == item)
+                            {
+                                <tr class="table-borderless">
+                                    <td colspan="6" class="bg-light">
+                                        <StepExecutionDetailsComponent StepExecution="item" />
+                                    </td>
+                                </tr>
+                            }
                         }
                     }
                 </tbody>

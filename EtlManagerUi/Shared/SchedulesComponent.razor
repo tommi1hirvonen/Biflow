@@ -12,48 +12,52 @@
     </BSButton>
 </AuthorizeView>
 
-@if (Schedules == null)
-{
-    <p class="mt-4"><em>Loading...</em></p>
-}
-else
-{
-    <div class="card shadow-sm pt-2 mt-4">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Enabled
-                    </th>
-                    <th>
-                        Time
-                    </th>
-                    <th>
-                        <text class="sr-only">Monday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Tuesday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Wednesday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Thursday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Friday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Saturday</text>
-                    </th>
-                    <th>
-                        <text class="sr-only">Sunday</text>
-                    </th>
-                    <th>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Enabled
+                </th>
+                <th>
+                    Time
+                </th>
+                <th>
+                    <text class="sr-only">Monday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Tuesday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Wednesday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Thursday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Friday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Saturday</text>
+                </th>
+                <th>
+                    <text class="sr-only">Sunday</text>
+                </th>
+                <th>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Schedules == null)
+            {
+                <tr><td colspan="10">Loading...</td></tr>
+            }
+            else if (Schedules.Count == 0)
+            {
+                <tr><td colspan="10">No schedules</td></tr>
+            }
+            else
+            {
                 @foreach (var item in Schedules)
                 {
                     <tr>
@@ -151,10 +155,10 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
 
 @if (NewSchedule != null)
 {

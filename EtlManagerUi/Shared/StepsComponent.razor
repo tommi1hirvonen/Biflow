@@ -30,44 +30,48 @@
     }
 </BSAlert>
 
-@if (Steps_ == null)
-{
-    <p class="mt-4"><em>Loading steps...</em></p>
-}
-else
-{
-    <div class="row col-9 col-md-6 col-lg-5 mt-4 mb-4">
-        <div class="input-group">
-            <label class="sr-only">Search</label>
-            <div class="input-group-prepend">
-                <div class="input-group-text rounded-left">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
-                </div>
+<div class="row col-9 col-md-6 col-lg-5 mt-4 mb-4">
+    <div class="input-group">
+        <label class="sr-only">Search</label>
+        <div class="input-group-prepend">
+            <div class="input-group-text rounded-left">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
             </div>
-            <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search" />
         </div>
+        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search" />
     </div>
+</div>
 
-    <div class="card shadow-sm pt-2 mt-4">
-        <table id="steps_table" class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Step name
-                    </th>
-                    <th></th>
-                    <th>
-                        Execution phase
-                    </th>
-                    <th>
-                        Step type
-                    </th>
-                    <th>
-                        Enabled
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card shadow-sm pt-2 mt-4">
+    <table id="steps_table" class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Step name
+                </th>
+                <th></th>
+                <th>
+                    Execution phase
+                </th>
+                <th>
+                    Step type
+                </th>
+                <th>
+                    Enabled
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Steps_ == null)
+            {
+                <tr><td colspan="5">Loading...</td></tr>
+            }
+            else if (Steps_.Count == 0)
+            {
+                <tr><td colspan="5">No steps</td></tr>
+            }
+            else
+            {
                 @foreach (var item in Steps_.Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText)))
                 {
                     <tr>
@@ -134,11 +138,10 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-
-}
+            }
+        </tbody>
+    </table>
+</div>
 
 
 <AuthorizeView Roles="Admin, Editor">

@@ -7,33 +7,37 @@
     Add user
 </BSButton>
 
-@if (Users == null)
-{
-    <p class="mt-4"><em>Loading...</em></p>
-}
-else
-{
-    <div class="card shadow-sm pt-2 mt-4">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Username
-                    </th>
-                    <th>
-                    </th>
-                    <th>
-                        Email
-                    </th>
-                    <th>
-                        Role
-                    </th>
-                    <th>
-                        Created
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Username
+                </th>
+                <th>
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Role
+                </th>
+                <th>
+                    Created
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Users == null)
+            {
+                <tr><td colspan="5">Loading...</td></tr>
+            }
+            else if (Users.Count == 0)
+            {
+                <tr><td colspan="5">No users</td></tr>
+            }
+            else
+            {
                 @foreach (var user in Users)
                 {
                     <tr>
@@ -45,7 +49,7 @@ else
                                 <BSButton Color="Color.Light" Size="Size.Small" aria-label="edit" @onclick="() => ShowEditModal(user)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </BSButton>
-                                
+
                                 <BSDropdown>
                                     <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="change password" @onclick="ResetPassword">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
@@ -76,7 +80,7 @@ else
                                         <BSButton Size="Size.Small" Color="Color.Success" @onclick="() => UpdatePassword(user)">Save</BSButton>
                                     </BSDropdownMenu>
                                 </BSDropdown>
-                                                                
+
                                 <BSDropdown>
                                     <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
@@ -99,10 +103,10 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
 
 <UserEditModal @ref="UserEditModal" Username="@EditModalUsername" OnUserSubmit="OnUserSubmit" />
 

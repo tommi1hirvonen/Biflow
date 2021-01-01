@@ -63,36 +63,41 @@
     </AuthorizeView>
 </div>
 
-@if (jobs == null)
-{
-    <p class="mt-4"><em>Loading...</em></p>
-}
-else
-{
-    <div class="card shadow-sm pt-2 mt-4">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>
-                        Job name
-                    </th>
-                    <th></th>
-                    <th></th>
-                    <th>
 
-                    </th>
-                    <th>
-                        Last execution
-                    </th>
-                    <th>
-                        Next execution
-                    </th>
-                    <th>
-                        Enabled
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="card shadow-sm pt-2 mt-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Job name
+                </th>
+                <th></th>
+                <th></th>
+                <th>
+
+                </th>
+                <th>
+                    Last execution
+                </th>
+                <th>
+                    Next execution
+                </th>
+                <th>
+                    Enabled
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (jobs == null)
+            {
+                <tr><td colspan="7">Loading...</td></tr>
+            }
+            else if (jobs.Count == 0)
+            {
+                <tr><td colspan="7">No jobs</td></tr>
+            }
+            else
+            {
                 @foreach (var item in jobs)
                 {
                     var lastExecution = GetLastExecution(item);
@@ -198,10 +203,11 @@ else
                         </td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-}
+            }
+        </tbody>
+    </table>
+</div>
+
 
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
 

@@ -126,43 +126,47 @@
 
 @if (Level == null)
 {
-    @if (JobExecutions == null)
-    {
-        <p class="mt-2"><em>Loading...</em></p>
-    }
-    else
-    {
-        <div class="card shadow-sm pt-2 mt-2">
-            <table class="table table-sm table-hover">
-                <thead>
-                    <tr>
-                        <th>
-                            Job
-                        </th>
-                        <th>
-                            Created
-                        </th>
-                        <th>
-                            Started
-                        </th>
-                        <th>
-                            Ended
-                        </th>
-                        <th>
-                            Duration
-                        </th>
-                        <th>
-                            Number of steps
-                        </th>
-                        <th>
-                            Success percent
-                        </th>
-                        <th>
-                            Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="card shadow-sm pt-2 mt-2">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Created
+                    </th>
+                    <th>
+                        Started
+                    </th>
+                    <th>
+                        Ended
+                    </th>
+                    <th>
+                        Duration
+                    </th>
+                    <th>
+                        Number of steps
+                    </th>
+                    <th>
+                        Success percent
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (JobExecutions == null)
+                {
+                    <tr><td colspan="8">Loading...</td></tr>
+                }
+                else if (JobExecutions.Count == 0)
+                {
+                    <tr><td colspan="8">No executions</td></tr>
+                }
+                else
+                {
                     @foreach (var item in JobExecutions)
                     {
                         <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
@@ -192,44 +196,48 @@
                             </td>
                         </tr>
                     }
-                </tbody>
-            </table>
-        </div>
-    }
+                }
+            </tbody>
+        </table>
+    </div>
 }
 else if (Level == "steps")
 {
-    @if (StepExecutions == null)
-    {
-        <p class="mt-2"><em>Loading...</em></p>
-    }
-    else
-    {
-        <div class="card shadow-sm pt-2 mt-2">
-            <table class="table table-sm table-hover">
-                <thead>
-                    <tr>
-                        <th>
-                            Step
-                        </th>
-                        <th>
-                            Step type
-                        </th>
-                        <th>
-                            Started
-                        </th>
-                        <th>
-                            Ended
-                        </th>
-                        <th>
-                            Duration
-                        </th>
-                        <th>
-                            Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
+    <div class="card shadow-sm pt-2 mt-2">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Step
+                    </th>
+                    <th>
+                        Step type
+                    </th>
+                    <th>
+                        Started
+                    </th>
+                    <th>
+                        Ended
+                    </th>
+                    <th>
+                        Duration
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (StepExecutions == null)
+                {
+                    <tr><td colspan="6">Loading...</td></tr>
+                }
+                else if (StepExecutions.Count == 0)
+                {
+                    <tr><td colspan="6">No executions</td></tr>
+                }
+                else
+                {
                     @foreach (var item in StepExecutions)
                     {
                         <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
@@ -261,10 +269,10 @@ else if (Level == "steps")
                             </tr>
                         }
                     }
-                </tbody>
-            </table>
-        </div>
-    }
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
