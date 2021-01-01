@@ -1,5 +1,4 @@
-﻿@using System.Reflection
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 
@@ -16,16 +15,6 @@
                         <strong class="navbar-text px-3">
                             @(Configuration.GetValue<string>("EnvironmentName"))
                         </strong>
-                    </li>
-                    <li>
-                        <text class="navbar-text px-3">
-                            v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion)
-                        </text>
-                    </li>
-                    <li>
-                        <text class="navbar-text px-3">
-                            @EtlManagerUi.Properties.Resources.CurrentCommit
-                        </text>
                     </li>
                 </ul>
             </nav>
