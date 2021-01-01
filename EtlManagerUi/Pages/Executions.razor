@@ -59,7 +59,14 @@
                         <option value="" selected=@string.IsNullOrEmpty(Status)>ALL</option>
                         @foreach (var status in Statuses.OrderBy(status => status))
                         {
-                            <option value="@status" selected=@(status == Status)>@status</option>
+                            // Disable value options that are filtered out by current filter values.
+                            <option value="@status"
+                                    selected=@(status == Status)
+                                    disabled=@(!string.IsNullOrEmpty(JobName) && ShowSteps && !StepExecutions.Any(e => e.JobName == JobName && e.ExecutionStatus == status)
+                                               || !string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions.Any(e => e.StepName == StepName && e.ExecutionStatus == status)
+                                               || !string.IsNullOrEmpty(JobName) &&!ShowSteps && !JobExecutions.Any(e => e.JobName == JobName && e.ExecutionStatus == status))>
+                                @status
+                            </option>
                         }
                     </select>
                 </div>
@@ -76,7 +83,14 @@
                         <option value="" selected=@string.IsNullOrEmpty(JobName)>All</option>
                         @foreach (var jobName in JobNames.OrderBy(name => name))
                         {
-                            <option value="@jobName" selected=@(jobName == JobName)>@jobName</option>
+                            // Disable value options that are filtered out by current filter values.
+                            <option value="@jobName"
+                                    selected=@(jobName == JobName)
+                                    disabled=@(!string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions.Any(e => e.JobName == jobName && e.StepName == StepName)
+                                                   || !string.IsNullOrEmpty(Status) && ShowSteps && !StepExecutions.Any(e => e.JobName == jobName && e.ExecutionStatus == Status)
+                                                   || !string.IsNullOrEmpty(Status) && !ShowSteps && !JobExecutions.Any(e => e.JobName == jobName && e.ExecutionStatus == Status))>
+                                @jobName
+                            </option>
                         }
                     </select>
                 </div>
@@ -95,7 +109,13 @@
                             <option value="" selected=@string.IsNullOrEmpty(StepName)>All</option>
                             @foreach (var stepName in StepNames.OrderBy(name => name))
                             {
-                                <option value="@stepName" selected=@(stepName == StepName)>@stepName</option>
+                                // Disable value options that are filtered out by current filter values.
+                                <option value="@stepName"
+                                        selected=@(stepName == StepName)
+                                        disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions.Any(e => e.JobName == JobName && e.StepName == stepName)
+                                                   || !string.IsNullOrEmpty(Status) && !StepExecutions.Any(e => e.StepName == stepName && e.ExecutionStatus == Status))>
+                                    @stepName
+                                </option>
                             }
                         </select>
                     </div>
