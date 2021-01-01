@@ -160,6 +160,10 @@
             <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
             <BSModalBody>
                 <div class="row">
+                    <p class="col font-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</p>    
+                </div>
+                
+                <div class="row">
                     <div class="col-md">
 
                         <div class="input-group input-group-sm">
@@ -182,7 +186,7 @@
                                 @foreach (var step in Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Add(step)">
-                                        <td>
+                                        <td class="@(step.IsEnabled ? null : "text-secondary")">
                                             @step.StepName
                                         </td>
                                     </tr>
@@ -193,8 +197,20 @@
                     </div>
 
                     <div class="col-md">
-
-                        <table class="table table-hover table-sm">
+                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
+                            Select enabled
+                        </BSButton>
+                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
+                            Select all
+                        </BSButton>
+                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.Clear()">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-left.svg")))
+                            Deselect all
+                        </BSButton>
+                        
+                        <table class="table table-hover table-sm mt-2">
                             <thead>
                                 <tr>
                                     <th>Selected steps</th>
@@ -215,12 +231,6 @@
                 </div>
             </BSModalBody>
             <BSModalFooter>
-                <BSButton Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)))">
-                    Select all
-                </BSButton>
-                <BSButton Color="Color.Secondary" @onclick="() => StepsToExecute.Clear()">
-                    Deselect all
-                </BSButton>
                 <BSButton Color="Color.Primary" Class="ml-5" @onclick="Execute">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                     Execute
