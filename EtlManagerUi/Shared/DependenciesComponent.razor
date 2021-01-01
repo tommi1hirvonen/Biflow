@@ -138,7 +138,7 @@
     {
         EditModalStepId = Guid.Parse(id);
         StateHasChanged();
-        StepEditModal.Show(showDependencies: true);
+        StepEditModal?.Show(showDependencies: true);
     }
 
     private void OnStepSubmit(Step step)
