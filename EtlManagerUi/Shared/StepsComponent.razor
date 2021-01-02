@@ -197,11 +197,15 @@
                     </div>
 
                     <div class="col-md">
-                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                        @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                        <BSButton Size="Size.Small" Color="Color.Secondary"
+                                  @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
                             Select enabled
                         </BSButton>
-                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                        @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                        <BSButton Size="Size.Small" Color="Color.Secondary"
+                                  @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
                             Select all
                         </BSButton>
@@ -209,7 +213,7 @@
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-left.svg")))
                             Deselect all
                         </BSButton>
-                        
+
                         <table class="table table-hover table-sm mt-2">
                             <thead>
                                 <tr>
@@ -220,7 +224,9 @@
                                 @foreach (var step in StepsToExecute.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
-                                        <td>@step.StepName</td>
+                                        <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                            @step.StepName
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
