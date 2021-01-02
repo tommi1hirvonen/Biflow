@@ -39,12 +39,13 @@ namespace EtlManagerExecutor
 
             int result = 0;
 
-            Parser.Default.ParseArguments<JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
+            Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => result = RunExecution(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
                     (CancelOptions options) => result = CancelExecution(host, options).Result,
                     (MailTestOptions options) => RunMailTest(host, options),
+                    (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
                 );
 
@@ -92,6 +93,13 @@ namespace EtlManagerExecutor
             return 1;
         }
 
+        static int PrintCommit()
+        {
+            var commit = Properties.Resources.CurrentCommit;
+            Console.WriteLine(commit);
+            return 1;
+        }
+
     }
 
     [Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
@@ -129,5 +137,10 @@ namespace EtlManagerExecutor
 
         [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
         public string Username { get; set; }
+    }
+
+    [Verb("get-commit", HelpText = "Return the current version's Git commit checksum.")]
+    class CommitOptions
+    {
     }
 }
