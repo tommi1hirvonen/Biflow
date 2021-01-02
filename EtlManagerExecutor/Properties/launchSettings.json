@@ -2,7 +2,7 @@
   "profiles": {
     "EtlManagerExecutor": {
       "commandName": "Project",
-      "commandLineArgs": "cancel -i \"2111cd98-1d93-4b02-9e59-093a31d58a66\""
+      "commandLineArgs": "cancel -i \"722497cd-4206-423e-9577-b4563e9b5ad3\""
     }
   }
 }

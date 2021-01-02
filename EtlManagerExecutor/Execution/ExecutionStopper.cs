@@ -108,7 +108,13 @@ namespace EtlManagerExecutor
                     "SELECT TOP 1 ExecutorProcessId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                     , sqlConnection);
                 fetchProcessId.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                executorProcessId = (int)fetchProcessId.ExecuteScalar();
+                var result = fetchProcessId.ExecuteScalar();
+                if (result == null)
+                {
+                    Log.Warning("{ExecutionId} No Executor process id for given execution id. Execution stopping canceled.", ExecutionId);
+                    return false;
+                }
+                executorProcessId = (int)result;
             }
             catch (Exception ex)
             {
