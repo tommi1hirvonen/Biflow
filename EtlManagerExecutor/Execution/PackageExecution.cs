@@ -22,8 +22,6 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 5;
 
-        private int RefreshRetries { get; set; } = 0;
-
         public PackageExecution(string connectionString, string folderName, string projectName, string packageName, bool executeIn32BitMode, int pollingIntervalMs)
         {
             ConnectionString = connectionString;
@@ -99,8 +97,9 @@ namespace EtlManagerExecutor
 
         public void TryRefreshStatus()
         {
+            int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
-            while (RefreshRetries < MaxRefreshRetries)
+            while (refreshRetries < MaxRefreshRetries)
             {
                 try
                 {
@@ -116,13 +115,12 @@ namespace EtlManagerExecutor
                         if (status == 7) Success = true;
                     }
 
-                    RefreshRetries = 0; // Reset counter after first successful status query.
                     return;
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", OperationId);
-                    RefreshRetries++;
+                    refreshRetries++;
                     Thread.Sleep(pollingIntervalMs);
                 }
             }

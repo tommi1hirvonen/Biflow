@@ -16,10 +16,10 @@ namespace EtlManagerExecutor
         private string EtlManagerConnectionString { get; set; }
         private string DataFactoryId { get; set; }
         private string EncryptionKey { get; set; }
-
-        private DataFactory DataFactory { get; set; }
-
         private string PipelineName { get; set; }
+
+        private const int PollingIntervalMs = 5000;
+        private const int MaxRefreshRetries = 5;
 
         public PipelineExecution(string executionId, string stepId, int attemptCounter, string etlManagerConnectionString, string dataFactoryId, string encryptionKey, string pipelineName)
         {
@@ -34,10 +34,12 @@ namespace EtlManagerExecutor
 
         public ExecutionResult Run()
         {
+            DataFactory dataFactory;
+
             // Get the target Data Factory information from the database.
             try
             {
-                DataFactory = Utility.GetDataFactory(EtlManagerConnectionString, DataFactoryId, EncryptionKey);
+                dataFactory = Utility.GetDataFactory(EtlManagerConnectionString, DataFactoryId, EncryptionKey);
             }
             catch (Exception ex)
             {
@@ -46,15 +48,15 @@ namespace EtlManagerExecutor
             }
 
             // Check if the current access token is valid and get a new one if not.
-            DataFactory.CheckAccessTokenValidity(EtlManagerConnectionString);
+            dataFactory.CheckAccessTokenValidity(EtlManagerConnectionString);
 
-            var credentials = new TokenCredentials(DataFactory.AccessToken);
-            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
+            var credentials = new TokenCredentials(dataFactory.AccessToken);
+            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
 
             CreateRunResponse createRunResponse;
             try
             {
-                createRunResponse = client.Pipelines.CreateRun(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName);
+                createRunResponse = client.Pipelines.CreateRun(dataFactory.ResourceGroupName, dataFactory.ResourceName, PipelineName);
             }
             catch (Exception ex)
             {
@@ -86,15 +88,15 @@ namespace EtlManagerExecutor
             PipelineRun pipelineRun;
             while (true)
             {
-                if (!DataFactory.CheckAccessTokenValidity(EtlManagerConnectionString))
+                if (!dataFactory.CheckAccessTokenValidity(EtlManagerConnectionString))
                 {
-                    credentials = new TokenCredentials(DataFactory.AccessToken);
-                    client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
+                    credentials = new TokenCredentials(dataFactory.AccessToken);
+                    client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
                 }
 
                 try
                 {
-                    pipelineRun = client.PipelineRuns.Get(DataFactory.ResourceGroupName, DataFactory.ResourceName, runId);
+                    pipelineRun = TryGetPipelineRun(dataFactory, client, runId);
                 }
                 catch (Exception ex)
                 {
@@ -120,6 +122,25 @@ namespace EtlManagerExecutor
             {
                 return new ExecutionResult.Failure(pipelineRun.Message);
             }
+        }
+
+        private static PipelineRun TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
+        {
+            int refreshRetries = 0;
+            while (refreshRetries < MaxRefreshRetries)
+            {
+                try
+                {
+                    return client.PipelineRuns.Get(dataFactory.ResourceGroupName, dataFactory.ResourceName, runId);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error getting pipeline run status for run id {runId}", runId);
+                    refreshRetries++;
+                    Thread.Sleep(PollingIntervalMs);
+                }
+            }
+            throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
         }
 
     }
