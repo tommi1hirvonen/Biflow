@@ -1,4 +1,4 @@
-﻿<BSModal @ref="Modal" Size="Size.Large" NoBackdrop="true">
+﻿<BSModal @ref="Modal" Size="Size.Large" NoBackdrop="true" IsScrollable="true">
     <BSModalHeader @onclick="() => Modal.Hide()">@StepExecution?.StepName</BSModalHeader>
     <BSModalBody>
         <StepExecutionDetailsComponent StepExecution="StepExecution" ShowExtraDetails="true" />

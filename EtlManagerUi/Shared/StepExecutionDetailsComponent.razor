@@ -31,6 +31,7 @@
         <dd class="col-sm-9">
             @StepExecution.CreatedDateTime
         </dd>
+        
         @if (ShowExtraDetails)
         {
             <dt class="col-sm-3">
@@ -58,6 +59,7 @@
                 <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
             </dd>
         }
+        
         @if (StepExecution.ExecutionStatus == "STOPPED")
         {
             <dt class="col-sm-3">
@@ -67,12 +69,7 @@
                 @StepExecution.StoppedBy
             </dd>
         }
-        <dt class="col-sm-3">
-            Error message
-        </dt>
-        <dd class="col-sm-9">
-            <text class="text-danger" style="white-space: pre-wrap">@StepExecution.ErrorMessage</text>
-        </dd>
+        
         @if (StepExecution.StepType == "SQL")
         {
             <dt class="col-sm-3">
@@ -124,6 +121,13 @@
                 @StepExecution.DataFactoryId
             </dd>
         }
+
+        <dt class="col-sm-3">
+            Error message
+        </dt>
+        <dd class="col-sm-9">
+            <text class="text-danger" style="white-space: pre-wrap">@StepExecution.ErrorMessage</text>
+        </dd>
     </dl>
 }
 
