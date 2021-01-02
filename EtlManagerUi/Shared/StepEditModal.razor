@@ -4,7 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS 
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
     @if (Step != null && Jobs != null && Connections != null && DataFactories != null && Steps != null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
@@ -417,6 +417,16 @@
     private void ResetStepError()
     {
         StepError = string.Empty;
+    }
+
+    private void IsModalOpenChanged(bool isOpen)
+    {
+        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
+        // If the user saves their changes, SubmitStep() is called first and changes are saved.
+        if (!isOpen)
+        {
+            Context.ChangeTracker.Entries().Where(e => e.Entity != null).ToList().ForEach(e => e.State = EntityState.Detached);
+        }
     }
 
     private async Task SubmitStep()
