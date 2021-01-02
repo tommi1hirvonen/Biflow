@@ -60,7 +60,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}", DataFactoryId, PipelineName);
+                Log.Error(ex, "{ExecutionId} {StepId} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}", ExecutionId, StepId, DataFactoryId, PipelineName);
                 throw;
             }
 
@@ -82,7 +82,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "Error updating pipeline run id");
+                Log.Warning(ex, "{ExecutionId} {StepId} Error updating pipeline run id", ExecutionId, StepId);
             }
 
             PipelineRun pipelineRun;
@@ -94,15 +94,7 @@ namespace EtlManagerExecutor
                     client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
                 }
 
-                try
-                {
-                    pipelineRun = TryGetPipelineRun(dataFactory, client, runId);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error getting pipeline run status for Data Factory id {DataFactoryId}, pipeline {PipelineName}, run id {runId}", DataFactoryId, PipelineName, runId);
-                    throw;
-                }
+                pipelineRun = TryGetPipelineRun(dataFactory, client, runId);
 
                 if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                 {
@@ -124,7 +116,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private static PipelineRun TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
+        private PipelineRun TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
         {
             int refreshRetries = 0;
             while (refreshRetries < MaxRefreshRetries)
@@ -135,7 +127,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting pipeline run status for run id {runId}", runId);
+                    Log.Warning(ex, "{ExecutionId} {StepId} Error getting pipeline run status for run id {runId}", ExecutionId, StepId, runId);
                     refreshRetries++;
                     Thread.Sleep(PollingIntervalMs);
                 }
