@@ -474,24 +474,16 @@ namespace EtlManagerExecutor
                     SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", executionId);
                     string status = sqlCommand.ExecuteScalar().ToString();
-                    switch (status)
+                    return status switch
                     {
-                        case "COMPLETED":
-                        case "WARNING":
-                            return new ExecutionResult.Success();
-                        case "FAILED":
-                            return new ExecutionResult.Failure("Sub-execution failed");
-                        case "STOPPED":
-                            return new ExecutionResult.Failure("Sub-execution was stopped");
-                        case "SUSPENDED":
-                            return new ExecutionResult.Failure("Sub-execution was suspended");
-                        case "NOT STARTED":
-                            return new ExecutionResult.Failure("Sub-execution failed to start");
-                        case "RUNNING":
-                            return new ExecutionResult.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing");
-                        default:
-                            return new ExecutionResult.Failure("Unhandled sub-execution status");
-                    }
+                        "COMPLETED" or "WARNING" => new ExecutionResult.Success(),
+                        "FAILED" => new ExecutionResult.Failure("Sub-execution failed"),
+                        "STOPPED" => new ExecutionResult.Failure("Sub-execution was stopped"),
+                        "SUSPENDED" => new ExecutionResult.Failure("Sub-execution was suspended"),
+                        "NOT STARTED" => new ExecutionResult.Failure("Sub-execution failed to start"),
+                        "RUNNING" => new ExecutionResult.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing"),
+                        _ => new ExecutionResult.Failure("Unhandled sub-execution status"),
+                    };
                 }
                 catch (Exception ex)
                 {

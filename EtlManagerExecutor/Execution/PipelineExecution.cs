@@ -42,7 +42,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "Error getting Data Factory information for id {DataFactoryId}", DataFactoryId);
-                throw ex;
+                throw;
             }
 
             // Check if the current access token is valid and get a new one if not.
@@ -59,7 +59,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}", DataFactoryId, PipelineName);
-                throw ex;
+                throw;
             }
 
             string runId = createRunResponse.RunId;
@@ -99,7 +99,7 @@ namespace EtlManagerExecutor
                 catch (Exception ex)
                 {
                     Log.Error(ex, "Error getting pipeline run status for Data Factory id {DataFactoryId}, pipeline {PipelineName}, run id {runId}", DataFactoryId, PipelineName, runId);
-                    throw ex;
+                    throw;
                 }
 
                 if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
