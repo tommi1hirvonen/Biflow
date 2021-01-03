@@ -323,6 +323,13 @@ namespace EtlManagerExecutor
 
                     }
 
+                    // Wait before doing another progress and dependencies check.
+                    // This way we aren't constantly looping and querying the status.
+                    if (stepsToExecute.Count > 0)
+                    {
+                        Thread.Sleep(PollingIntervalMs);
+                    }
+
                 }
 
             }
