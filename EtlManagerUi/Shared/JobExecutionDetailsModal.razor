@@ -225,23 +225,34 @@
             <table class="table table-sm table-hover mt-2">
                 <thead>
                     <tr>
+                        @{ string Decorate(SortOption sortOption) => sortOption == SortOption_ ? "text-decoration: underline;" : null; }
                         <th>
-                            Step
+                            <a style="@Decorate(SortOption.Name)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Name">
+                                Step
+                            </a>
                         </th>
                         <th>
                             Step type
                         </th>
                         <th>
-                            Started
+                            <a style="@Decorate(SortOption.StartTime)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.StartTime">
+                                Started
+                            </a>
                         </th>
                         <th>
-                            Ended
+                            <a style="@Decorate(SortOption.EndTime)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.EndTime">
+                                Ended
+                            </a>
                         </th>
                         <th>
-                            Duration
+                            <a style="@Decorate(SortOption.Duration)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Duration">
+                                Duration
+                            </a>
                         </th>
                         <th>
-                            Status
+                            <a style="@Decorate(SortOption.Status)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Status">
+                                Status
+                            </a>
                         </th>
                     </tr>
                 </thead>
@@ -325,6 +336,27 @@
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
+    private SortOption _SortOption = SortOption.StartTime;
+    private bool SortAscending = true;
+    private SortOption SortOption_
+    {
+        get { return _SortOption; }
+        set
+        {
+            if (value == _SortOption)
+            {
+                SortAscending = !SortAscending;
+                Executions.Reverse();
+            }
+            else
+            {
+                SortAscending = true;
+                _SortOption = value;
+                SortExecutions();
+            }
+        }
+    }
+
     // Maintain a list executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
     // This list allows for stopping multiple executions concurrently
@@ -361,9 +393,8 @@
             JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             Executions = await context.Executions
                 .Where(e => e.ExecutionId == ExecutionId)
-                .OrderBy(e => e.CreatedDateTime)
-                .ThenBy(e => e.StartDateTime)
                 .ToListAsync();
+            SortExecutions();
             StateHasChanged();
             Loading = false;
 
@@ -381,6 +412,53 @@
             );
             var datasetJson = JsonSerializer.Serialize(dataset);
             await JS.InvokeVoidAsync("drawStepsTimeline", datasetJson, ObjectReference);
+        }
+    }
+
+    private void SortExecutions()
+    {
+        if (SortAscending)
+        {
+            switch (SortOption_)
+            {
+                case SortOption.Duration:
+                    Executions = Executions.OrderBy(e => e.ExecutionInSeconds).ToList();
+                    break;
+                case SortOption.StartTime:
+                    // false sorts before true => not started steps are placed last
+                    Executions = Executions.OrderBy(e => e.StartDateTime == null).ThenBy(e => e.StartDateTime).ThenBy(e => e.EndDateTime == null).ThenBy(e => e.EndDateTime).ToList();
+                    break;
+                case SortOption.EndTime:
+                    Executions = Executions.OrderBy(e => e.EndDateTime).ToList();
+                    break;
+                case SortOption.Name:
+                    Executions = Executions.OrderBy(e => e.StepName).ToList();
+                    break;
+                case SortOption.Status:
+                    Executions = Executions.OrderBy(e => e.ExecutionStatus).ToList();
+                    break;
+            }
+        }
+        else
+        {
+            switch (SortOption_)
+            {
+                case SortOption.Duration:
+                    Executions = Executions.OrderByDescending(e => e.ExecutionInSeconds).ToList();
+                    break;
+                case SortOption.StartTime:
+                    Executions = Executions.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
+                    break;
+                case SortOption.EndTime:
+                    Executions = Executions.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
+                    break;
+                case SortOption.Name:
+                    Executions = Executions.OrderByDescending(e => e.StepName).ToList();
+                    break;
+                case SortOption.Status:
+                    Executions = Executions.OrderByDescending(e => e.ExecutionStatus).ToList();
+                    break;
+            }
         }
     }
 
@@ -438,6 +516,15 @@
     public void Dispose()
     {
         ObjectReference?.Dispose();
+    }
+
+    private enum SortOption
+    {
+        StartTime,
+        EndTime,
+        Duration,
+        Name,
+        Status
     }
 
     private static string colorRed = "#FEDEE5";
