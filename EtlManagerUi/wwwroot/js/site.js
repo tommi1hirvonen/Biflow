@@ -186,7 +186,13 @@ function drawStepsTimeline(dataset_, dotNetObject) {
         order: function (a, b) {
             return b.start - a.start;
         },
-        editable: false
+        editable: false,
+        margin: {
+            item: 2
+        },
+        orientation: {
+            axis: 'both'
+        }
     };
 
     var timeline = new vis.Timeline(container, items, options);
