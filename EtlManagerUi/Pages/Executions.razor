@@ -32,11 +32,13 @@
                 </BSDropdownToggle>
                 <BSDropdownMenu>
                     @*List predefined hour intervals*@
+                    <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
                     <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
                 </BSDropdownMenu>
             </BSDropdown>
             @*If executions are being (re)loaded, show spinner.*@
