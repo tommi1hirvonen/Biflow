@@ -16,7 +16,10 @@ namespace EtlManagerUi.Models
         [MaxLength(250)]
         [Display(Name = "Job name")]
         public string JobName { get; set; }
-        
+
+        [Display(Name = "Description")]
+        public string JobDescription { get; set; }
+
         [Required]
         [DataType(DataType.DateTime)]
         [Display(Name = "Created")]

@@ -39,6 +39,17 @@
                                     <BSInput InputType="InputType.Text" @bind-Value="Step.StepName"></BSInput>
                                 </div>
                             </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Description</BSLabel>
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/book-open.svg")))
+                                        </div>
+                                    </div>
+                                    <BSInput InputType="InputType.TextArea" @bind-Value="Step.StepDescription" rows="2"></BSInput>
+                                </div>
+                            </BSFormGroup>
                             <BSFormRow>
                                 <BSFormGroup Class="col">
                                     <BSLabel>Execution phase</BSLabel>
@@ -287,7 +298,7 @@
                                     <label class="custom-control-label" for="only_active">Show only active</label>
                                 </div>
                             </div>
-                            
+
                             <table class="table table-sm table-striped mt-3">
                                 <thead>
                                     <tr>
@@ -298,10 +309,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                       .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                       .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                       .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                       .OrderBy(step => step.StepName))
+                                      .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                      .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                      .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                      .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>

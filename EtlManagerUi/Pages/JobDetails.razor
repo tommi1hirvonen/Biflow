@@ -5,10 +5,10 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
-@inject IHttpContextAccessor HttpContextAccessor 
+@inject IHttpContextAccessor HttpContextAccessor
 
 <div class="row">
-    <div class="col">
+    <div class="col-auto">
         <BSDropdown>
             <BSDropdownToggle Color="Color.Secondary">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
@@ -39,15 +39,19 @@
                 <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
                     <BSDropdownToggle Color="Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                        Rename
+                        Edit
                     </BSDropdownToggle>
-                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                        <BSForm Model="EditJob" OnValidSubmit="UpdateJobName" Context="_context">
+                    <BSDropdownMenu Class="p-4" style="min-width: 30rem;">
+                        <BSForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <BSFormGroup>
-                                <BSLabel for="name">New name</BSLabel>
-                                <BSInput id="name" InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                <BSLabel>Name</BSLabel>
+                                <BSInput InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                            </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Description</BSLabel>
+                                <BSInput Size="Size.Small" InputType="InputType.TextArea" @bind-Value="EditJob.JobDescription" rows="2"></BSInput>
                             </BSFormGroup>
                             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                         </BSForm>
@@ -69,6 +73,17 @@
         </div>
     </div>
 </div>
+
+
+@if (!string.IsNullOrWhiteSpace(CurrentJob?.JobDescription))
+{
+    <div class="row">
+        <div class="col mt-3">
+            <p class="text-secondary font-italic" style="white-space: pre-line;">@CurrentJob?.JobDescription</p>
+        </div>
+    </div>
+}
+
 
 <div class="row flex-column-reverse flex-xl-row align-items-center">
     <div class="col-xl-7">
@@ -127,7 +142,7 @@
 </div>
 
 
-@if (DetailsPage == "steps" && CurrentJob != null && Jobs!= null)
+@if (DetailsPage == "steps" && CurrentJob != null && Jobs != null)
 {
     <StepsComponent Job="CurrentJob" Jobs="Jobs" />
 }
@@ -182,14 +197,16 @@ else
     {
         CurrentJob = Jobs.First(job => job.JobId == Id);
         EditJob.JobName = CurrentJob.JobName;
+        EditJob.JobDescription = CurrentJob.JobDescription;
     }
 
-    private async Task UpdateJobName()
+    private async Task UpdateJob()
     {
         try
         {
             using var context = DbFactory.CreateDbContext();
             CurrentJob.JobName = EditJob.JobName;
+            CurrentJob.JobDescription = EditJob.JobDescription;
             context.Attach(CurrentJob).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }

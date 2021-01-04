@@ -13,6 +13,7 @@ DECLARE @JobIdNew UNIQUEIDENTIFIER = NEWID()
 INSERT INTO etlmanager.Job (
 	JobId,
 	JobName,
+	JobDescription,
 	CreatedDateTime,
 	LastModifiedDateTime,
 	UseDependencyMode,
@@ -21,6 +22,7 @@ INSERT INTO etlmanager.Job (
 )
 SELECT @JobIdNew,
 	JobName + ' - Copy',
+	JobDescription,
 	GETDATE(),
 	GETDATE(),
 	UseDependencyMode,
@@ -77,6 +79,7 @@ INSERT INTO etlmanager.Step (
 	JobId,
 	StepId,
 	StepName,
+	StepDescription,
 	ExecutionPhase,
 	StepType,
 	SqlStatement,
@@ -99,6 +102,7 @@ INSERT INTO etlmanager.Step (
 SELECT @JobIdNew,
 	B.StepIdNew,
 	A.StepName,
+	A.StepDescription,
 	A.ExecutionPhase,
 	A.StepType,
 	A.SqlStatement,

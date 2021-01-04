@@ -1,6 +1,7 @@
 ﻿CREATE TABLE [etlmanager].[Job] (
     [JobId]                UNIQUEIDENTIFIER NOT NULL,
     [JobName]              NVARCHAR(250)    NOT NULL,
+    [JobDescription]       NVARCHAR(MAX)   NULL,
     [CreatedDateTime]      DATETIME2 (7)    NOT NULL,
     [LastModifiedDateTime] DATETIME2 (7)    NOT NULL,
     [UseDependencyMode]    BIT              NOT NULL,

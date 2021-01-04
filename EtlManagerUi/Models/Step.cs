@@ -23,6 +23,9 @@ namespace EtlManagerUi.Models
         [Display(Name = "Step name")]
         public string StepName { get; set; }
 
+        [Display(Name = "Description")]
+        public string StepDescription { get; set; }
+
         [Required]
         [Display(Name = "Execution phase")]
         public int ExecutionPhase { get; set; }
