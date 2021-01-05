@@ -43,12 +43,12 @@
 
             <AuthorizeView Roles="Admin, Editor">
                 @*Dropdown to change the current job's name*@
-                <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
+                <BSDropdown Class="ml-3">
                     <BSDropdownToggle Color="Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         Edit
                     </BSDropdownToggle>
-                    <BSDropdownMenu Class="p-4" style="min-width: 30rem;">
+                    <BSDropdownMenu Class="dropdown-menu-xl-right p-4" style="min-width: 30rem;">
                         <BSForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
@@ -66,12 +66,12 @@
                 </BSDropdown>
 
                 @*Dropdown to delete the current job*@
-                <BSDropdown Class="ml-3" DropdownDirection="DropdownDirection.Left">
+                <BSDropdown Class="ml-3">
                     <BSDropdownToggle Color="BlazorStrap.Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                         Delete
                     </BSDropdownToggle>
-                    <BSDropdownMenu>
+                    <BSDropdownMenu Class="dropdown-menu-xl-right">
                         <BSDropdownHeader>Delete job?</BSDropdownHeader>
                         <BSDropdownItem @onclick="DeleteJob">Confirm</BSDropdownItem>
                     </BSDropdownMenu>
