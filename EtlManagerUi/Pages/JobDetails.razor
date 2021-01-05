@@ -26,11 +26,11 @@
                     }
                 </BSDropdownMenu>
             </BSDropdown>
-            <BSButton Id="btn_description" Color="Color.Secondary" @onclick="() => { DescriptionOpen = !DescriptionOpen; StateHasChanged(); }" Class="@(DescriptionOpen ? "active" : null)">
+            <BSButton Id="btn_description" Color="Color.Secondary" @onclick="() => DescriptionOpen = !DescriptionOpen" Class="@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "disabled" : DescriptionOpen ? "active" : null)">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
             </BSButton>
         </BSButtonGroup>
-        <BSTooltip Target="btn_description" Placement="Placement.Right">Toggle description</BSTooltip>
+        <BSTooltip Target="btn_description" Placement="Placement.Right">@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "No job description" : "Show/hide description")</BSTooltip>
 
     </div>
 
@@ -58,7 +58,7 @@
                             </BSFormGroup>
                             <BSFormGroup>
                                 <BSLabel>Description</BSLabel>
-                                <BSInput Size="Size.Small" InputType="InputType.TextArea" @bind-Value="EditJob.JobDescription" rows="2"></BSInput>
+                                <BSInput Size="Size.Small" InputType="InputType.TextArea" @bind-Value="EditJob.JobDescription" rows="5"></BSInput>
                             </BSFormGroup>
                             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                         </BSForm>
@@ -81,7 +81,7 @@
     </div>
 </div>
 
-@if (DescriptionOpen)
+@if (DescriptionOpen && !string.IsNullOrWhiteSpace(CurrentJob?.JobDescription))
 {
     <div class="row mt-3">
         <div class="col">

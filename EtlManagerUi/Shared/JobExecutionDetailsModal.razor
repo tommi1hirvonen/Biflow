@@ -71,7 +71,7 @@
                 Refresh
             </BSButton>
 
-            <BSButton Size="Size.Small" Color="Color.Secondary" Class="ml-3" @onclick="ToggleJobExecutionDetails">
+            <BSButton Size="Size.Small" Color="Color.Secondary" Class="ml-3" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                 Job details
             </BSButton>
@@ -124,76 +124,70 @@
             <p></p>
         </div>
 
-        @if (JobExecution != null)
+        @if (JobExecution != null && JobExecutionDetailsOpen)
         {
-            <BSCollapse IsOpen="JobExecutionDetailsOpen">
-                <BSCard CardType="CardType.Card">
-                    <BSCard CardType="CardType.Body">
-                        <dl class="row">
-                            <dt class="col-sm-3">
-                                Execution id
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.ExecutionId
-                            </dd>
-                            <dt class="col-sm-3">
-                                Dependency model
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.DependencyMode
-                            </dd>
-                            <dt class="col-sm-3">
-                                Created by
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.CreatedBy
-                            </dd>
-                            <dt class="col-sm-3">
-                                Created
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.CreatedDateTime
-                            </dd>
-                            <dt class="col-sm-3">
-                                Started
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.StartDateTime
-                            </dd>
-                            <dt class="col-sm-3">
-                                Ended
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.EndDateTime
-                            </dd>
-                            <dt class="col-sm-3">
-                                Number of steps
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.NumberOfSteps
-                            </dd>
-                            <dt class="col-sm-3">
-                                Success percent
-                            </dt>
-                            <dd class="col-sm-9">
-                                @JobExecution.SuccessPercent.FormatPercentage(0)
-                            </dd>
-                            <dt class="col-sm-3">
-                                Duration
-                            </dt>
-                            <dd class="col-sm-9">
-                                <text>@JobExecution.GetDurationInReadableFormat()</text>
-                            </dd>
-                            <dt class="col-sm-3">
-                                Status
-                            </dt>
-                            <dd class="col-sm-9">
-                                <JobExecutionStatusBadgeComponent ExecutionStatus="@JobExecution.ExecutionStatus" />
-                            </dd>
-                        </dl>
-                    </BSCard>
-                </BSCard>
-            </BSCollapse>
+            <dl class="row">
+                <dt class="col-sm-3">
+                    Execution id
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.ExecutionId
+                </dd>
+                <dt class="col-sm-3">
+                    Dependency model
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.DependencyMode
+                </dd>
+                <dt class="col-sm-3">
+                    Created by
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.CreatedBy
+                </dd>
+                <dt class="col-sm-3">
+                    Created
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.CreatedDateTime
+                </dd>
+                <dt class="col-sm-3">
+                    Started
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.StartDateTime
+                </dd>
+                <dt class="col-sm-3">
+                    Ended
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.EndDateTime
+                </dd>
+                <dt class="col-sm-3">
+                    Number of steps
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.NumberOfSteps
+                </dd>
+                <dt class="col-sm-3">
+                    Success percent
+                </dt>
+                <dd class="col-sm-9">
+                    @JobExecution.SuccessPercent.FormatPercentage(0)
+                </dd>
+                <dt class="col-sm-3">
+                    Duration
+                </dt>
+                <dd class="col-sm-9">
+                    <text>@JobExecution.GetDurationInReadableFormat()</text>
+                </dd>
+                <dt class="col-sm-3">
+                    Status
+                </dt>
+                <dd class="col-sm-9">
+                    <JobExecutionStatusBadgeComponent ExecutionStatus="@JobExecution.ExecutionStatus" />
+                </dd>
+            </dl>
         }
 
         @if (!ShowGraph)
@@ -460,12 +454,6 @@
                     break;
             }
         }
-    }
-
-    private void ToggleJobExecutionDetails()
-    {
-        JobExecutionDetailsOpen = !JobExecutionDetailsOpen;
-        StateHasChanged();
     }
 
     private void ToggleSelectedStepExecution(StepExecution execution)
