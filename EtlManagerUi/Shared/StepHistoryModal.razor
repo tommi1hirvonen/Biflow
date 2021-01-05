@@ -1,0 +1,90 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
+    <BSModalHeader @onclick="() => Modal.Hide()">@Step?.StepName</BSModalHeader>
+    <BSModalBody>
+        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Executions == null)
+                {
+                    <tr><td colspan="4">Loading...</td></tr>
+                }
+                else if (Executions.Count == 0)
+                {
+                    <tr><td colspan="4">No executions</td></tr>
+                }
+                else
+                {
+                    @foreach (var execution in Executions)
+                    {
+                        <tr class="@(SelectedStepExecution == execution ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                            <td>@execution.StartDateTime</td>
+                            <td>@execution.EndDateTime</td>
+                            <td>@execution.GetDurationInReadableFormat()</td>
+                            <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+                        </tr>
+                        @if (SelectedStepExecution == execution)
+                        {
+                            <tr class="table-borderless">
+                                <td colspan="4" class="bg-light">
+                                    <StepExecutionDetailsComponent StepExecution="execution" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </BSModalBody>
+    <BSModalFooter>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    [Parameter]
+    public Step Step { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    private List<StepExecution> Executions { get; set; }
+
+    public const int MaxExecutions = 50;
+
+    private StepExecution SelectedStepExecution { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Step != null)
+        {
+            Executions = null; // Set to null to reset the modal layout.
+
+            var context = DbFactory.CreateDbContext();
+            Executions = await context.Executions
+                .Where(e => e.StepId == Step.StepId)
+                .OrderByDescending(execution => execution.CreatedDateTime)
+                .ThenByDescending(Execution => Execution.StartDateTime)
+                .Take(MaxExecutions)
+                .ToListAsync();
+        }
+    }
+
+    private void ToggleSelectedStepExecution(StepExecution execution)
+    {
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
+    public void Show() => Modal.Show();
+
+}

@@ -85,6 +85,10 @@
                         </td>
                         <td align="left">
                             <div class="btn-group btn-row">
+                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                </BSButton>
+                                
                                 <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepDetailsModal(item)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                                 </BSButton>
@@ -151,6 +155,8 @@
 
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
+
+<StepHistoryModal @ref="StepHistoryModal" Step="HistoryModalStep" />
 
 @if (Steps_ != null)
 {
@@ -264,6 +270,9 @@
     private StepDetailsModal StepDetailsModal { get; set; }
     private Step DetailsModalStep { get; set; }
 
+    private StepHistoryModal StepHistoryModal { get; set; }
+    private Step HistoryModalStep { get; set; }
+
     private BSModal ExecuteModal { get; set; }
     private List<Step> StepsToExecute { get; set; } = new();
     private bool ExecuteButtonDisabled { get; set; } = false;
@@ -360,6 +369,15 @@
     {
         DetailsModalStep = step;
         StepDetailsModal.Modal.Show();
+    }
+
+    private void ShowStepHistoryModal(Step step)
+    {
+        // Do not unnecessarily set the component parameter and start its data load.
+        if (step != HistoryModalStep)
+            HistoryModalStep = step;
+
+        StepHistoryModal.Show();
     }
 
     private void ToggleStepsExecuteAll(object checkedValue)
