@@ -22,6 +22,14 @@
     --color-danger-shadow: rgba(250, 92, 124, 0.5);
 }
 
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-primary-super-dark);
+}
+
 .btn {
     box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
 }
