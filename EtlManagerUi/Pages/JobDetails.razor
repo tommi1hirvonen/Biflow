@@ -148,9 +148,9 @@
 </div>
 
 
-@if (DetailsPage == "steps" && CurrentJob != null && Jobs != null)
+@if (DetailsPage == "steps")
 {
-    <StepsComponent Job="CurrentJob" Jobs="Jobs" />
+    <StepsComponent Job="CurrentJob" Jobs="Jobs" Steps="Steps" />
 }
 else if (DetailsPage == "jobhistory")
 {
@@ -158,7 +158,7 @@ else if (DetailsPage == "jobhistory")
 }
 else if (DetailsPage == "dependencies")
 {
-    <DependenciesComponent Id="Id" />
+    <DependenciesComponent Id="Id" Jobs="Jobs" Job="CurrentJob" />
 }
 else if (DetailsPage == "schedules")
 {
@@ -177,9 +177,13 @@ else
     [Parameter]
     public Guid Id { get; set; }
 
-    public Job CurrentJob { get; set; }
+    private Guid PrevId { get; set; }
 
-    public List<Job> Jobs { get; set; }
+    private Job CurrentJob { get; set; }
+
+    private List<Job> Jobs { get; set; }
+
+    private List<Step> Steps { get; set; }
 
     private Job EditJob { get; set; } = new();
 
@@ -193,19 +197,29 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         Jobs = await context.Jobs.Include(job => job.Subscriptions).OrderBy(job => job.JobName).ToListAsync();
-        LoadData();
     }
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        LoadData();
+        if (Id != PrevId)
+        {
+            PrevId = Id;
+            await LoadData();
+        }
     }
 
-    private void LoadData()
+    private async Task LoadData()
     {
         CurrentJob = Jobs.First(job => job.JobId == Id);
         EditJob.JobName = CurrentJob.JobName;
         EditJob.JobDescription = CurrentJob.JobDescription;
+
+        using var context = DbFactory.CreateDbContext();
+        Steps = await context.Steps
+            .Where(step => step.JobId == CurrentJob.JobId)
+            .OrderBy(step => step.ExecutionPhase)
+            .ThenBy(step => step.StepName)
+            .ToListAsync();
     }
 
     private async Task UpdateJob()

@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@Step?.StepName</BSModalHeader>
+    <BSModalHeader @onclick="() => Modal.Hide()"></BSModalHeader>
     <BSModalBody>
         <p class="text-secondary">Showing @MaxExecutions latest executions</p>
         <table class="table table-sm table-hover">
@@ -53,7 +53,9 @@
 @code {
 
     [Parameter]
-    public Step Step { get; set; }
+    public string StepId_ { get; set; }
+
+    private Guid StepId => Guid.Parse(StepId_);
 
     private BSModal Modal { get; set; }
 
@@ -65,13 +67,13 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Step != null)
+        if (StepId_ != null)
         {
             Executions = null; // Set to null to reset the modal layout.
 
             var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
-                .Where(e => e.StepId == Step.StepId)
+                .Where(e => e.StepId == StepId)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(Execution => Execution.StartDateTime)
                 .Take(MaxExecutions)

@@ -62,17 +62,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (Steps_ == null)
+            @if (Steps == null || Jobs == null || Job == null)
             {
                 <tr><td colspan="5">Loading...</td></tr>
             }
-            else if (Steps_.Count == 0)
+            else if (Steps.Count == 0)
             {
                 <tr><td colspan="5">No steps</td></tr>
             }
             else
             {
-                @foreach (var item in Steps_.Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText)))
+                @foreach (var item in Steps.Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText)))
                 {
                     <tr>
                         <td class="align-middle">
@@ -150,25 +150,26 @@
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <StepEditModal @ref="StepEditModal" JobId="Job.JobId" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps_" OnStepSubmit="OnStepSubmit" />
+    <StepEditModal @ref="StepEditModal" Job="Job" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
 
-<StepHistoryModal @ref="StepHistoryModal" Step="HistoryModalStep" />
+<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStep?.StepId.ToString()" />
 
-@if (Steps_ != null)
-{
-    // Execute modal
-    <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true">
-            <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
+
+
+<AuthorizeView Roles="Admin, Editor, Operator">
+    <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true">
+        <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
+        @if (Steps != null)
+        {
             <BSModalBody>
                 <div class="row">
-                    <p class="col font-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</p>    
+                    <p class="col font-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</p>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md">
 
@@ -189,7 +190,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var step in Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
+                                @foreach (var step in Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Add(step)">
                                         <td class="@(step.IsEnabled ? null : "text-secondary")">
@@ -205,13 +206,13 @@
                     <div class="col-md">
                         @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <BSButton Size="Size.Small" Color="Color.Secondary"
-                                  @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                    @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
                             Select enabled
                         </BSButton>
                         @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <BSButton Size="Size.Small" Color="Color.Secondary"
-                                  @onclick="() => StepsToExecute.AddRange(Steps_.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                    @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
                             Select all
                         </BSButton>
@@ -239,21 +240,22 @@
                         </table>
 
                     </div>
-                    
+
                 </div>
             </BSModalBody>
-            <BSModalFooter>
-                <BSButton Color="Color.Primary" Class="ml-5" @onclick="Execute">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-                    Execute
-                </BSButton>
-                <BSButton Color="Color.Secondary" @onclick="() => ExecuteModal.Hide()">Cancel</BSButton>
-            </BSModalFooter>
-        </BSModal>
-    </AuthorizeView>
-}
+        }
+        <BSModalFooter>
+            <BSButton Color="Color.Primary" Class="ml-5" @onclick="Execute">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                Execute
+            </BSButton>
+            <BSButton Color="Color.Secondary" @onclick="() => ExecuteModal.Hide()">Cancel</BSButton>
+        </BSModalFooter>
+    </BSModal>
+</AuthorizeView>
 
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
     [Parameter]
@@ -262,7 +264,8 @@
     [Parameter]
     public IList<Job> Jobs { get; set; }
 
-    private List<Step> Steps_ { get; set; }
+    [Parameter]
+    public List<Step> Steps { get; set; }
 
     private StepEditModal StepEditModal { get; set; }
     private Guid EditModalStepId { get; set; }
@@ -290,16 +293,11 @@
     private async Task LoadData()
     {
         using var context = DbFactory.CreateDbContext();
-        Steps_ = await context.Steps
+        Steps = await context.Steps
             .Where(step => step.JobId == Job.JobId)
             .OrderBy(step => step.ExecutionPhase)
             .ThenBy(step => step.StepName)
             .ToListAsync();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadData();
     }
 
     private void ShowEditModal(Step step)
@@ -329,7 +327,7 @@
             using var context = DbFactory.CreateDbContext();
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
-            Steps_.Remove(step);
+            Steps.Remove(step);
         }
         catch (Exception)
         {
@@ -356,13 +354,13 @@
 
     private void OnStepSubmit(Step step)
     {
-        var existingStep = Steps_.FirstOrDefault(s => s.StepId == step.StepId);
+        var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep != null)
         {
-            Steps_.Remove(existingStep);
+            Steps.Remove(existingStep);
         }
-        Steps_.Add(step);
-        Steps_ = Steps_.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+        Steps.Add(step);
+        Steps = Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
     }
 
     private void ShowStepDetailsModal(Step step)
@@ -386,7 +384,7 @@
         StepsToExecute.Clear();
         if (execute)
         {
-            foreach (var step in Steps_)
+            foreach (var step in Steps)
             {
                 StepsToExecute.Add(step);
             }

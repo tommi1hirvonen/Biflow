@@ -304,7 +304,7 @@
     }
 }
 
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
     private bool SessionStorageValuesRetrieved { get; set; } = false;

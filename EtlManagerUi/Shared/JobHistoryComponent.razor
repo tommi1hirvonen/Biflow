@@ -83,11 +83,13 @@
     </div>
 </div>
 
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId="SelectedJobExecutionId" />
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
     [Parameter]
     public Guid Id { get; set; }
+
+    private Guid PrevId { get; set; }
 
     public IList<JobExecution> Executions { get; set; }
 
@@ -101,24 +103,28 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        Executions = await context.JobExecutions
-                .Where(execution => execution.JobId == Id)
-                .OrderByDescending(execution => execution.CreatedDateTime)
-                .ThenByDescending(Execution => Execution.StartDateTime)
-                .Take(MaxExecutions)
-                .ToListAsync();
-
-        if (Executions.Count > 0)
+        if (Id != PrevId)
         {
-            AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
-        }
-        else
-        {
-            AverageSuccessRate = 0;
-        }
+            PrevId = Id;
+            using var context = DbFactory.CreateDbContext();
+            Executions = await context.JobExecutions
+                    .Where(execution => execution.JobId == Id)
+                    .OrderByDescending(execution => execution.CreatedDateTime)
+                    .ThenByDescending(Execution => Execution.StartDateTime)
+                    .Take(MaxExecutions)
+                    .ToListAsync();
 
-        AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
+            if (Executions.Count > 0)
+            {
+                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
+            }
+            else
+            {
+                AverageSuccessRate = 0;
+            }
+
+            AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
+        }
     }
 
     private void OpenJobExecutionModal(Guid executionId)

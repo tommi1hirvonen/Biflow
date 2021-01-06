@@ -360,8 +360,10 @@
     [Parameter]
     public Guid StepId { get; set; } // empty Guid => new step
 
+    private Guid PrevStepId { get; set; }
+
     [Parameter]
-    public Guid JobId { get; set; }
+    public Job Job { get; set; }
 
     private Step Step { get; set; }
 
@@ -400,18 +402,19 @@
 
     private async Task LoadData()
     {
-        if (StepId != Guid.Empty)
+        if (StepId != Guid.Empty && StepId != PrevStepId)
         {
             Step = await Context.Steps
                 .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
+            PrevStepId = StepId;
         }
-        else
+        else if (StepId == Guid.Empty && Job != null)
         {
             Step = new()
             {
-                JobId = JobId,
+                JobId = Job.JobId,
                 RetryAttempts = 0,
                 RetryIntervalMinutes = 0,
                 StepType = "SQL",
@@ -557,6 +560,6 @@
 
     public void Dispose()
     {
-        Context.Dispose();
+        Context?.Dispose();
     }
 }

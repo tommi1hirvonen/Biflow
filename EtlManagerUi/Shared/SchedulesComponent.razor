@@ -361,6 +361,8 @@
     [Parameter]
     public Guid Id { get; set; }
 
+    private Guid PrevId { get; set; }
+
     private List<Schedule> Schedules { get; set; }
 
     private Schedule NewSchedule { get; set; }
@@ -377,7 +379,11 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadData();
+        if (Id != PrevId)
+        {
+            PrevId = Id;
+            await LoadData();
+        }
     }
 
     private async Task LoadData()

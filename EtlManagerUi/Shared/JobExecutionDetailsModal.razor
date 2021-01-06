@@ -310,7 +310,9 @@
 
 @code {
     [Parameter]
-    public Guid ExecutionId { get; set; }
+    public string ExecutionId_ { get; set; }
+
+    private Guid ExecutionId => Guid.Parse(ExecutionId_);
 
     private BSModal Modal { get; set; }
 

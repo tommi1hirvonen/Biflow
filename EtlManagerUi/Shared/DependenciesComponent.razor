@@ -58,20 +58,22 @@
     </div>
 </div>
 
-@if (Jobs != null && Steps != null)
-{
     <AuthorizeView Roles="Admin, Editor">
-        <StepEditModal @ref="StepEditModal" JobId="Id" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
+        <StepEditModal @ref="StepEditModal" Job="Job" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
     </AuthorizeView>
-}
 
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
-    public Guid PreviousId { get; set; }
+    public Guid PrevId { get; set; }
 
-    private List<Job> Jobs { get; set; }
+    [Parameter]
+    public List<Job> Jobs { get; set; }
+
+    [Parameter]
+    public Job Job { get; set; }
+
     private List<Step> Steps { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
@@ -81,34 +83,30 @@
 
     private bool GraphShouldRender { get; set; } = false;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
         // This will allow JS to call back to a specific instance of this component.
         // This needs to be done, because multiple users might be using this component concurrently.
         var helper = new MethodInvokeHelper(OpenStepEditModal);
         ObjectReference = DotNetObjectReference.Create(helper);
-        
-        var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs.ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id == Guid.Empty)
+        if (Id != PrevId)
         {
-            return;
+            PrevId = Id;
+            using var context = DbFactory.CreateDbContext();
+            Steps = await context.Steps
+                .Where(step => step.JobId == Id)
+                .Include(step => step.Dependencies)
+                .AsNoTracking()
+                .ToListAsync();
+
+            GraphShouldRender = true;
+            StateHasChanged();
         }
-
-        using var context = DbFactory.CreateDbContext();
-        Steps = await context.Steps
-            .Where(step => step.JobId == Id)
-            .Include(step => step.Dependencies)
-            .AsNoTracking()
-            .ToListAsync();
-
-        GraphShouldRender = true;
-        StateHasChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
