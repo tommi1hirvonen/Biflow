@@ -20,11 +20,11 @@ namespace EtlManagerExecutor
 
         public async Task RunAsync(int hours, int minutes)
         {
-            string etlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
+            var etlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
 
             DayOfWeek weekday = DateTime.Now.DayOfWeek;
 
-            StringBuilder commandBuilder = new();
+            var commandBuilder = new StringBuilder();
 
             commandBuilder.Append(
                 @"SELECT A.ScheduleId, A.JobId
@@ -59,11 +59,11 @@ namespace EtlManagerExecutor
                     break;
             }
 
-            using SqlConnection sqlConnection = new(etlManagerConnectionString);
+            using var sqlConnection = new SqlConnection(etlManagerConnectionString);
 
             try
             {
-                sqlConnection.Open();
+                await sqlConnection.OpenAsync();
             }
             catch (Exception ex)
             {
@@ -71,14 +71,14 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            SqlCommand sqlCommand = new(commandBuilder.ToString(), sqlConnection);
+            var sqlCommand = new SqlCommand(commandBuilder.ToString(), sqlConnection);
 
-            List<KeyValuePair<string, string>> jobIds = new();
+            var jobIds = new List<KeyValuePair<string, string>>();
 
             try
             {
-                using var reader = sqlCommand.ExecuteReader();
-                while (reader.Read())
+                using var reader = await sqlCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
                 {
                     var jobId = reader["JobId"].ToString();
                     var scheduleId = reader["ScheduleId"].ToString();
@@ -101,9 +101,7 @@ namespace EtlManagerExecutor
 
             foreach (var pair in jobIds)
             {
-                SqlCommand initCommand = new(
-                    "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_"
-                    , sqlConnection);
+                var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
                 initCommand.Parameters.AddWithValue("@JobId_", pair.Key);
                 initCommand.Parameters.AddWithValue("@ScheduleId_", pair.Value);
 
@@ -118,7 +116,7 @@ namespace EtlManagerExecutor
                     continue;
                 }
 
-                ProcessStartInfo executionInfo = new()
+                var executionInfo = new ProcessStartInfo()
                 {
                     FileName = executorFilePath,
                     ArgumentList = {
@@ -135,7 +133,7 @@ namespace EtlManagerExecutor
                     WindowStyle = ProcessWindowStyle.Hidden
                 };
 
-                Process executorProcess = new() { StartInfo = executionInfo };
+                var executorProcess = new Process() { StartInfo = executionInfo };
                 try
                 {
                     executorProcess.Start();
@@ -146,8 +144,7 @@ namespace EtlManagerExecutor
                     continue;
                 }
 
-                SqlCommand processIdCmd = new(
-                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+                var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
                 processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
                 processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
 

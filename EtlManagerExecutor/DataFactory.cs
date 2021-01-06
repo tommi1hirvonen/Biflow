@@ -2,6 +2,7 @@
 using Serilog;
 using System;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -17,7 +18,7 @@ namespace EtlManagerExecutor
         public string AccessToken { get; set; }
         public DateTime? AccessTokenExpiresOn { get; set; }
 
-        public bool CheckAccessTokenValidity(string connectionString)
+        public async Task<bool> CheckAccessTokenValidityAsync(string connectionString)
         {
             if (AccessTokenExpiresOn == null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
@@ -25,7 +26,7 @@ namespace EtlManagerExecutor
                 {
                     var context = new AuthenticationContext("https://login.microsoftonline.com/" + TenantId);
                     var clientCredential = new ClientCredential(ClientId, ClientSecret);
-                    var result = context.AcquireTokenAsync("https://management.azure.com/", clientCredential).Result;
+                    var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
@@ -38,9 +39,9 @@ namespace EtlManagerExecutor
                 // Update the token and its expiration time to the database for later use.
                 try
                 {
-                    using SqlConnection sqlConnection = new SqlConnection(connectionString);
-                    sqlConnection.Open();
-                    SqlCommand updateTokenCmd = new SqlCommand(
+                    using var sqlConnection = new SqlConnection(connectionString);
+                    await sqlConnection.OpenAsync();
+                    var updateTokenCmd = new SqlCommand(
                         @"UPDATE etlmanager.DataFactory
                     SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
                     WHERE ClientId = @ClientId AND ClientSecret = @ClientSecret", sqlConnection);
@@ -48,7 +49,7 @@ namespace EtlManagerExecutor
                     updateTokenCmd.Parameters.AddWithValue("@AccessTokenExpiresOn", AccessTokenExpiresOn);
                     updateTokenCmd.Parameters.AddWithValue("@ClientId", ClientId);
                     updateTokenCmd.Parameters.AddWithValue("@ClientSecret", ClientSecret);
-                    updateTokenCmd.ExecuteNonQuery();
+                    await updateTokenCmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)
                 {
@@ -63,11 +64,11 @@ namespace EtlManagerExecutor
             }
         }
 
-        public static DataFactory GetDataFactory(string connectionString, string dataFactoryId, string encryptionKey)
+        public static async Task<DataFactory> GetDataFactoryAsync(string connectionString, string dataFactoryId, string encryptionKey)
         {
-            using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
-            SqlCommand sqlCommand = new SqlCommand(
+            using var sqlConnection = new SqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
+            var sqlCommand = new SqlCommand(
                 @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
                         [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
                 FROM etlmanager.DataFactory
@@ -75,8 +76,8 @@ namespace EtlManagerExecutor
             sqlCommand.Parameters.AddWithValue("@DataFactoryId", dataFactoryId);
             sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
 
-            using var reader = sqlCommand.ExecuteReader();
-            reader.Read();
+            using var reader = await sqlCommand.ExecuteReaderAsync();
+            await reader.ReadAsync();
 
             string tenantId = reader["TenantId"].ToString();
             string subscriptionId = reader["SubscriptionId"].ToString();

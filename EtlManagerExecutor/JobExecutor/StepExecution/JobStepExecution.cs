@@ -24,11 +24,11 @@ namespace EtlManagerExecutor
             Process executorProcess;
             string executionId;
 
-            using (SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString))
+            using (var sqlConnection = new SqlConnection(executionConfig.ConnectionString))
             {
-                sqlConnection.Open();
+                await sqlConnection.OpenAsync();
 
-                SqlCommand initCommand = new SqlCommand(
+                var initCommand = new SqlCommand(
                         "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_"
                         , sqlConnection);
                 initCommand.Parameters.AddWithValue("@JobId_", jobStep.JobToExecuteId);
@@ -72,8 +72,7 @@ namespace EtlManagerExecutor
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
-                SqlCommand processIdCmd = new SqlCommand(
-                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+                var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
                 processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
                 processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
 
@@ -95,7 +94,7 @@ namespace EtlManagerExecutor
                 {
                     using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
                     await sqlConnection.OpenAsync();
-                    SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
+                    var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", executionId);
                     string status = (await sqlCommand.ExecuteScalarAsync()).ToString();
                     return status switch

@@ -26,7 +26,7 @@ namespace EtlManagerExecutor
                 Log.Information("{ExecutionId} {StepId} Starting SQL execution", executionConfig.ExecutionId, sqlStep.StepId);
                 using SqlConnection connection = new SqlConnection(sqlStep.ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
-                connection.OpenIfClosed();
+                await connection.OpenIfClosedAsync();
                 SqlCommand sqlCommand = new SqlCommand(sqlStep.SqlStatement, connection) { CommandTimeout = 0 }; // CommandTimeout = 0 => wait indefinitely
                 await sqlCommand.ExecuteNonQueryAsync();
             }

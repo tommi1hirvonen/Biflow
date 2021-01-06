@@ -3,20 +3,21 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
 
     public static class Utility
     {
-        public static string GetEncryptionKey(string encryptionId, string connectionString)
+        public static async Task<string> GetEncryptionKeyAsync(string encryptionId, string connectionString)
         {
-            using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
-            SqlCommand getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
+            using var sqlConnection = new SqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
+            var getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            var reader = getKeyCmd.ExecuteReader();
-            if (reader.Read())
+            using var reader = await getKeyCmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
             {
                 byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
                 byte[] entropy = (byte[])reader["Entropy"];
@@ -32,11 +33,11 @@ namespace EtlManagerExecutor
 
         
 
-        public static void OpenIfClosed(this SqlConnection sqlConnection)
+        public static async Task OpenIfClosedAsync(this SqlConnection sqlConnection)
         {
             if (sqlConnection.State != ConnectionState.Open && sqlConnection.State != ConnectionState.Connecting)
             {
-                sqlConnection.Open();
+                await sqlConnection.OpenAsync();
             }
         }
     }

@@ -32,7 +32,7 @@ namespace EtlManagerExecutor
             // Get the target Data Factory information from the database.
             try
             {
-                dataFactory = DataFactory.GetDataFactory(executionConfig.ConnectionString, pipelineStep.DataFactoryId, executionConfig.EncryptionPassword);
+                dataFactory = await DataFactory.GetDataFactoryAsync(executionConfig.ConnectionString, pipelineStep.DataFactoryId, executionConfig.EncryptionPassword);
             }
             catch (Exception ex)
             {
@@ -41,7 +41,7 @@ namespace EtlManagerExecutor
             }
 
             // Check if the current access token is valid and get a new one if not.
-            dataFactory.CheckAccessTokenValidity(executionConfig.ConnectionString);
+            await dataFactory.CheckAccessTokenValidityAsync(executionConfig.ConnectionString);
 
             var credentials = new TokenCredentials(dataFactory.AccessToken);
             var client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
@@ -49,7 +49,7 @@ namespace EtlManagerExecutor
             CreateRunResponse createRunResponse;
             try
             {
-                createRunResponse = client.Pipelines.CreateRun(dataFactory.ResourceGroupName, dataFactory.ResourceName, pipelineStep.PipelineName);
+                createRunResponse = await client.Pipelines.CreateRunAsync(dataFactory.ResourceGroupName, dataFactory.ResourceName, pipelineStep.PipelineName);
             }
             catch (Exception ex)
             {
@@ -62,9 +62,9 @@ namespace EtlManagerExecutor
 
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-                sqlConnection.Open();
-                SqlCommand sqlCommand = new SqlCommand(
+                using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+                await sqlConnection.OpenAsync();
+                var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET PipelineRunId = @PipelineRunId
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex", sqlConnection);
@@ -72,7 +72,7 @@ namespace EtlManagerExecutor
                 sqlCommand.Parameters.AddWithValue("@StepId", pipelineStep.StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", retryAttempt);
                 sqlCommand.Parameters.AddWithValue("@PipelineRunId", runId);
-                sqlCommand.ExecuteNonQuery();
+                await sqlCommand.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
@@ -82,13 +82,13 @@ namespace EtlManagerExecutor
             PipelineRun pipelineRun;
             while (true)
             {
-                if (!dataFactory.CheckAccessTokenValidity(executionConfig.ConnectionString))
+                if (!await dataFactory.CheckAccessTokenValidityAsync(executionConfig.ConnectionString))
                 {
                     credentials = new TokenCredentials(dataFactory.AccessToken);
                     client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
                 }
 
-                pipelineRun = await TryGetPipelineRun(dataFactory, client, runId);
+                pipelineRun = await TryGetPipelineRunAsync(dataFactory, client, runId);
 
                 if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                 {
@@ -110,7 +110,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task<PipelineRun> TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
+        private async Task<PipelineRun> TryGetPipelineRunAsync(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
         {
             int refreshRetries = 0;
             while (refreshRetries < MaxRefreshRetries)

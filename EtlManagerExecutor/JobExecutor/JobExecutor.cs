@@ -31,7 +31,7 @@ namespace EtlManagerExecutor
             string encryptionPassword;
             try
             {
-                encryptionPassword = Utility.GetEncryptionKey(encryptionId, connectionString);
+                encryptionPassword = await Utility.GetEncryptionKeyAsync(encryptionId, connectionString);
             }
             catch (Exception ex)
             {
@@ -39,26 +39,25 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            using SqlConnection sqlConnection = new SqlConnection(connectionString);
-            sqlConnection.Open();
+            using var sqlConnection = new SqlConnection(connectionString);
+            await sqlConnection.OpenAsync();
 
             // Update this Executor process's PID for the execution.
-            Process process = Process.GetCurrentProcess();
-            SqlCommand processIdCmd = new SqlCommand(
-                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+            var process = Process.GetCurrentProcess();
+            var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
             processIdCmd.Parameters.AddWithValue("@ProcessId", process.Id);
             processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-            processIdCmd.ExecuteNonQuery();
+            await processIdCmd.ExecuteNonQueryAsync();
 
             // Get whether the execution should be run in dependency mode or in execution phase mode.
-            SqlCommand dependencyModeCommand = new SqlCommand("SELECT TOP 1 DependencyMode FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+            var dependencyModeCommand = new SqlCommand("SELECT TOP 1 DependencyMode FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             dependencyModeCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-            bool dependencyMode = (bool)dependencyModeCommand.ExecuteScalar();
+            var dependencyMode = (bool)await dependencyModeCommand.ExecuteScalarAsync();
 
             // Get the job id of the execution.
-            SqlCommand jobIdCommand = new SqlCommand("SELECT TOP 1 JobId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+            var jobIdCommand = new SqlCommand("SELECT TOP 1 JobId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             jobIdCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-            var jobId = jobIdCommand.ExecuteScalar().ToString();
+            var jobId = (await jobIdCommand.ExecuteScalarAsync()).ToString();
 
             var executionConfig = new ExecutionConfiguration(
                 connectionString,
@@ -73,7 +72,7 @@ namespace EtlManagerExecutor
             string circularExecutions;
             try
             {
-                circularExecutions = GetCircularJobExecutions(executionConfig);
+                circularExecutions = await GetCircularJobExecutionsAsync(executionConfig);
             }
             catch (Exception ex)
             {
@@ -83,7 +82,7 @@ namespace EtlManagerExecutor
 
             if (!string.IsNullOrEmpty(circularExecutions))
             {
-                UpdateErrorMessage(executionConfig, "Execution was cancelled because of circular job executions:\n" + circularExecutions);
+                await UpdateErrorMessageAsync(executionConfig, "Execution was cancelled because of circular job executions:\n" + circularExecutions);
                 Log.Error("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
                 return;
             }
@@ -109,10 +108,10 @@ namespace EtlManagerExecutor
 
         private async Task ExecuteInExecutionPhaseMode(ExecutionConfiguration executionConfig)
         {
-            List<KeyValuePair<int, string>> allSteps = new();
+            var allSteps = new List<KeyValuePair<int, string>>();
 
-            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            sqlConnection.Open();
+            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            await sqlConnection.OpenAsync();
             SqlCommand sqlCommand = new SqlCommand("SELECT DISTINCT StepId, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
             using (var reader = sqlCommand.ExecuteReader())
@@ -130,7 +129,7 @@ namespace EtlManagerExecutor
             foreach (int executionPhase in executionPhases)
             {
                 List<string> stepsToExecute = allSteps.Where(step => step.Key == executionPhase).Select(step => step.Value).ToList();
-                List<Task> stepWorkers = new();
+                var stepWorkers = new List<Task>();
 
                 foreach (string stepId in stepsToExecute)
                 {
@@ -158,7 +157,7 @@ namespace EtlManagerExecutor
             string circularDependencies;
             try
             {
-                circularDependencies = GetCircularStepDependencies(executionConfig);
+                circularDependencies = await GetCircularStepDependenciesAsync(executionConfig);
             }
             catch (Exception ex)
             {
@@ -168,25 +167,25 @@ namespace EtlManagerExecutor
 
             if (!string.IsNullOrEmpty(circularDependencies))
             {
-                UpdateErrorMessage(executionConfig, "Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
+                await UpdateErrorMessageAsync(executionConfig, "Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
                 Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, executionConfig.ExecutionId);
                 return;
             }
 
-            List<Task> stepWorkers = new();
+            var stepWorkers = new List<Task>();
 
-            using (SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString))
+            using (var sqlConnection = new SqlConnection(executionConfig.ConnectionString))
             {
-                sqlConnection.Open();
+                await sqlConnection.OpenAsync();
 
                 // Get a list of all steps for this execution
-                List<string> stepsToExecute = new();
+                var stepsToExecute = new List<string>();
 
-                SqlCommand stepsListCommand = new SqlCommand("SELECT DISTINCT StepId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+                var stepsListCommand = new SqlCommand("SELECT DISTINCT StepId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
                 stepsListCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
-                using (var reader = stepsListCommand.ExecuteReader())
+                using (var reader = await stepsListCommand.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         stepsToExecute.Add(reader[0].ToString());
                     }
@@ -195,14 +194,14 @@ namespace EtlManagerExecutor
 
                 while (stepsToExecute.Count > 0)
                 {
-                    List<string> stepsToSkip = new();
-                    List<string> duplicateSteps = new();
-                    List<string> executableSteps = new();
+                    var stepsToSkip = new List<string>();
+                    var duplicateSteps = new List<string>();
+                    var executableSteps = new List<string>();
 
                     // Get a list of steps we can execute based on dependencies and already executed steps.
 
                     // Use a SQL command and the Execution to determine what to do with steps that have not yet been started.
-                    SqlCommand stepActionCommand = new SqlCommand(
+                    var stepActionCommand = new SqlCommand(
                         @"SELECT a.StepId,
                         CASE WHEN EXISTS (" + // There are strict dependencies which have been stopped, skipped or which have failed => step should be skipped
                                 @"SELECT *
@@ -242,12 +241,12 @@ namespace EtlManagerExecutor
                     };
                     stepActionCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
 
-                    sqlConnection.OpenIfClosed();
+                    await sqlConnection.OpenIfClosedAsync();
 
                     // Iterate over the result rows and add steps to one of the following two lists either for skipping or for execution.
-                    using (SqlDataReader reader = stepActionCommand.ExecuteReader())
+                    using (var reader = await stepActionCommand.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             string stepId = reader["StepId"].ToString();
                             string skip = reader["Skip"].ToString();
@@ -264,7 +263,7 @@ namespace EtlManagerExecutor
                     // Mark the steps that should be skipped in the execution table as SKIPPED.
                     foreach (string stepId in stepsToSkip)
                     {
-                        SqlCommand skipUpdateCommand = new SqlCommand(
+                        var skipUpdateCommand = new SqlCommand(
                                         @"UPDATE etlmanager.Execution
                                     SET ExecutionStatus = 'SKIPPED',
                                     StartDateTime = GETDATE(), EndDateTime = GETDATE()
@@ -275,7 +274,7 @@ namespace EtlManagerExecutor
                         };
                         skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                         skipUpdateCommand.Parameters.AddWithValue("@StepId", stepId);
-                        skipUpdateCommand.ExecuteNonQuery();
+                        await skipUpdateCommand.ExecuteNonQueryAsync();
 
                         stepsToExecute.Remove(stepId);
 
@@ -285,7 +284,7 @@ namespace EtlManagerExecutor
                     // Mark the steps that have a duplicate currently running under a different execution as DUPLICATE.
                     foreach (string stepId in duplicateSteps)
                     {
-                        SqlCommand duplicateCommand = new SqlCommand(
+                        var duplicateCommand = new SqlCommand(
                                         @"UPDATE etlmanager.Execution
                                     SET ExecutionStatus = 'DUPLICATE',
                                     StartDateTime = GETDATE(), EndDateTime = GETDATE()
@@ -296,7 +295,7 @@ namespace EtlManagerExecutor
                         };
                         duplicateCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                         duplicateCommand.Parameters.AddWithValue("@StepId", stepId);
-                        duplicateCommand.ExecuteNonQuery();
+                        await duplicateCommand.ExecuteNonQueryAsync();
 
                         stepsToExecute.Remove(stepId);
 
@@ -339,7 +338,7 @@ namespace EtlManagerExecutor
         private async Task StartNewStepWorkerAsync(ExecutionConfiguration executionConfig, string stepId)
         {
             // Create a new step worker...
-            StepWorker stepWorker = new StepWorker(executionConfig, stepId);
+            var stepWorker = new StepWorker(executionConfig, stepId);
             //...and start it asynchronously.
             var task = stepWorker.ExecuteStepAsync();
             // Add one to the counter.
@@ -357,10 +356,10 @@ namespace EtlManagerExecutor
             }
         }
 
-        private static string GetCircularStepDependencies(ExecutionConfiguration executionConfig)
+        private static async Task<string> GetCircularStepDependenciesAsync(ExecutionConfiguration executionConfig)
         {
-            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            SqlCommand sqlCommand = new SqlCommand(
+            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            var sqlCommand = new SqlCommand(
                     @"WITH Recursion AS (
                         SELECT
                             a.StepId,
@@ -396,10 +395,10 @@ namespace EtlManagerExecutor
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
             List<string> dependencyPaths = new();
-            sqlConnection.OpenIfClosed();
-            using (SqlDataReader reader = sqlCommand.ExecuteReader())
+            await sqlConnection.OpenAsync();
+            using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     dependencyPaths.Add(reader["DependencyPath"].ToString());
                 }
@@ -407,10 +406,10 @@ namespace EtlManagerExecutor
             return string.Join("\n\n", dependencyPaths);
         }
 
-        private static string GetCircularJobExecutions(ExecutionConfiguration executionConfig)
+        private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
         {
-            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            SqlCommand sqlCommand = new SqlCommand(
+            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            var sqlCommand = new SqlCommand(
                 @"WITH Recursion AS (
                     SELECT
                         a.JobId,
@@ -444,11 +443,11 @@ namespace EtlManagerExecutor
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            List<string> dependencyPaths = new();
-            sqlConnection.OpenIfClosed();
-            using (SqlDataReader reader = sqlCommand.ExecuteReader())
+            var dependencyPaths = new List<string>();
+            await sqlConnection.OpenAsync();
+            using (SqlDataReader reader = await sqlCommand.ExecuteReaderAsync())
             {
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     dependencyPaths.Add(reader["DependencyPath"].ToString());
                 }
@@ -456,10 +455,10 @@ namespace EtlManagerExecutor
             return string.Join("\n\n", dependencyPaths);
         }
 
-        private static void UpdateErrorMessage(ExecutionConfiguration executionConfig, string errorMessage)
+        private static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
         {
-            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            SqlCommand sqlCommand = new SqlCommand(
+            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
                     WHERE ExecutionId = @ExecutionId"
@@ -471,8 +470,8 @@ namespace EtlManagerExecutor
             sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
             try
             {
-                sqlConnection.OpenIfClosed();
-                sqlCommand.ExecuteNonQuery();
+                await sqlConnection.OpenAsync();
+                await sqlCommand.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
