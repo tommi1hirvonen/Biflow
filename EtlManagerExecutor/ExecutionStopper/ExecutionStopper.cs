@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExecutionStopper : IExecutionStopper
+    partial class ExecutionStopper : IExecutionStopper
     {
         private readonly IConfiguration configuration;
         public ExecutionStopper(IConfiguration configuration)
@@ -19,40 +19,30 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        string ExecutionId { get; set; }
-
-        string Username { get; set; }
-
-        string EncryptionKey { get; set; }
-
-        string EtlManagerConnectionString { get; set; }
-
         public async Task<bool> Run(string executionId, string username)
         {
-            ExecutionId = executionId;
-            Username = username;
-            EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
+            string connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
 
             // First stop the EtlManagerExecutor process. This stops SQL executions as well.
             try
             {
-                if (!StopExecutorProcess())
+                if (!StopExecutorProcess(connectionString, executionId))
                 {
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error stopping Executor process", ExecutionId);
+                Log.Error(ex, "{executionId} Error stopping Executor process", executionId);
                 return false;
             }
 
             // Log SQL steps as STOPPED.
-            Log.Information("{ExecutionId} Logging SQL steps as stopped", ExecutionId);
+            Log.Information("{executionId} Logging SQL steps as stopped", executionId);
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 await sqlConnection.OpenAsync();
                 SqlCommand updateStatuses = new SqlCommand(
                   @"UPDATE etlmanager.Execution
@@ -62,31 +52,32 @@ namespace EtlManagerExecutor
                     StoppedBy = @Username
                 WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND StepType = 'SQL'"
                     , sqlConnection);
-                updateStatuses.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
                 if (username != null) updateStatuses.Parameters.AddWithValue("@Username", username);
                 else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
                 await updateStatuses.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error logging SQL steps as stopped", ExecutionId);
+                Log.Error(ex, "{executionId} Error logging SQL steps as stopped", executionId);
             }
 
             // Get encryption key for package and pipeline stopping.
+            string EncryptionKey;
             try
             {
-                EncryptionKey = Utility.GetEncryptionKey(encryptionId, EtlManagerConnectionString);
+                EncryptionKey = Utility.GetEncryptionKey(encryptionId, connectionString);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting encryption key to stop packages and pipelines", ExecutionId);
+                Log.Error(ex, "{executionId} Error getting encryption key to stop packages and pipelines", executionId);
                 return false;
             }
             
 
             // Start package and pipeline stopping simultaneously.
-            var stopPackagesTask = StopPackageExecutions();
-            var stopPipelinesTask = StopPipelineExecutions();
+            var stopPackagesTask = StopPackageExecutions(connectionString, executionId, EncryptionKey, username);
+            var stopPipelinesTask = StopPipelineExecutions(connectionString, executionId, EncryptionKey, username);
 
             var stopPackagesResult = stopPackagesTask.Result;
             var stopPipelinesResult = stopPipelinesTask.Result;
@@ -94,31 +85,31 @@ namespace EtlManagerExecutor
             return stopPackagesResult && stopPipelinesResult;
         }
 
-        private bool StopExecutorProcess()
+        private static bool StopExecutorProcess(string connectionString, string executionId)
         {
             int executorProcessId;
 
             try
             {
                 // Get the process id for the execution.
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 sqlConnection.Open();
 
                 SqlCommand fetchProcessId = new SqlCommand(
                     "SELECT TOP 1 ExecutorProcessId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId"
                     , sqlConnection);
-                fetchProcessId.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                fetchProcessId.Parameters.AddWithValue("@ExecutionId", executionId);
                 var result = fetchProcessId.ExecuteScalar();
                 if (result == null)
                 {
-                    Log.Warning("{ExecutionId} No Executor process id for given execution id. Execution stopping canceled.", ExecutionId);
+                    Log.Warning("{executionId} No Executor process id for given execution id. Execution stopping canceled.", executionId);
                     return false;
                 }
                 executorProcessId = (int)result;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting Executor process id", ExecutionId);
+                Log.Error(ex, "{executionId} Error getting Executor process id", executionId);
                 return false;
             }
 
@@ -131,18 +122,18 @@ namespace EtlManagerExecutor
             }
             catch (ArgumentException ex)
             {
-                Log.Warning(ex, "{ExecutionId} Error stopping Executor process. The process id {executorProcessId} is not running", ExecutionId, executorProcessId);
+                Log.Warning(ex, "{executionId} Error stopping Executor process. The process id {executorProcessId} is not running", executionId, executorProcessId);
                 return false;
             }
 
             string processName = executorProcess.ProcessName;
             if (!processName.Equals("EtlManagerExecutor"))
             {
-                Log.Warning("{ExecutionId} Process id {executorProcessId} does not map to an instance of EtlManagerExecutor", ExecutionId, executorProcessId);
+                Log.Warning("{executionId} Process id {executorProcessId} does not map to an instance of EtlManagerExecutor", executionId, executorProcessId);
                 return false;
             }
 
-            Log.Information("{ExecutionId} Killing Executor process id {executorProcessId}", ExecutionId, executorProcessId);
+            Log.Information("{executionId} Killing Executor process id {executorProcessId}", executionId, executorProcessId);
 
             executorProcess.Kill();
             executorProcess.WaitForExit();
@@ -150,15 +141,15 @@ namespace EtlManagerExecutor
             return true;
         }
 
-        private async Task<bool> StopPackageExecutions()
+        private static async Task<bool> StopPackageExecutions(string connectionString, string executionId, string encryptionKey, string username)
         {
             List<PackageStep> packageSteps = new List<PackageStep>();
             List<Task<bool>> stopTasks = new List<Task<bool>>();
 
-            Log.Information("{ExecutionId} Getting package executions to be stopped", ExecutionId);
+            Log.Information("{executionId} Getting package executions to be stopped", executionId);
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 sqlConnection.Open();
 
                 SqlCommand fetchPackageStepDetails = new SqlCommand(
@@ -166,8 +157,8 @@ namespace EtlManagerExecutor
                 FROM etlmanager.Execution
                 WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
                     , sqlConnection);
-                fetchPackageStepDetails.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                fetchPackageStepDetails.Parameters.AddWithValue("@EncryptionKey", EncryptionKey);
+                fetchPackageStepDetails.Parameters.AddWithValue("@ExecutionId", executionId);
+                fetchPackageStepDetails.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
 
                 using SqlDataReader packageStepReader = await fetchPackageStepDetails.ExecuteReaderAsync();
                 while (packageStepReader.Read())
@@ -188,13 +179,13 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error reading package executions", ExecutionId);
+                Log.Error(ex, "{executionId} Error reading package executions", executionId);
                 return false;
             }
 
             foreach (var step in packageSteps)
             {
-                stopTasks.Add(StopPackageStep(step));
+                stopTasks.Add(StopPackageStep(connectionString, executionId, username, step));
             }
 
             bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
@@ -202,9 +193,9 @@ namespace EtlManagerExecutor
             return results.All(b => b == true);
         }
 
-        private async Task<bool> StopPackageStep(PackageStep step)
+        private static async Task<bool> StopPackageStep(string connectionString, string executionId, string username, PackageStep step)
         {
-            Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", ExecutionId, step.StepId, step.PackageOperationId);
+            Log.Information("{executionId} {StepId} Stopping package operation id {PackageOperationId}", executionId, step.StepId, step.PackageOperationId);
             try
             {
                 using SqlConnection sqlConnection = new SqlConnection(step.ConnectionString);
@@ -215,13 +206,13 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping package operation id {operationId}", ExecutionId, step.StepId, step.PackageOperationId);
+                Log.Error(ex, "{executionId} {StepId} Error stopping package operation id {operationId}", executionId, step.StepId, step.PackageOperationId);
                 return false;
             }
 
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 await sqlConnection.OpenAsync();
                 SqlCommand updateStatus = new SqlCommand(
                   @"UPDATE etlmanager.Execution
@@ -231,32 +222,32 @@ namespace EtlManagerExecutor
                     StoppedBy = @Username
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
                     , sqlConnection);
-                updateStatus.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                updateStatus.Parameters.AddWithValue("@ExecutionId", executionId);
                 updateStatus.Parameters.AddWithValue("@StepId", step.StepId);
                 updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", step.RetryAttemptIndex);
 
-                if (Username != null) updateStatus.Parameters.AddWithValue("@Username", Username);
+                if (username != null) updateStatus.Parameters.AddWithValue("@Username", username);
                 else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);
                 
                 await updateStatus.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging SSIS step as stopped", ExecutionId, step.StepId);
+                Log.Error(ex, "{executionId} {StepId} Error logging SSIS step as stopped", executionId, step.StepId);
                 return false;
             }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped package operation id {PackageOperationId}", ExecutionId, step.StepId, step.PackageOperationId);
+            Log.Information("{executionId} {StepId} Successfully stopped package operation id {PackageOperationId}", executionId, step.StepId, step.PackageOperationId);
             return true;
         }
 
-        private async Task<bool> StopPipelineExecutions()
+        private static async Task<bool> StopPipelineExecutions(string connectionString, string executionId, string encryptionKey, string username)
         {
             List<KeyValuePair<string, PipelineStep>> pipelineRuns = new List<KeyValuePair<string, PipelineStep>>();
 
-            Log.Information("{ExecutionId} Getting pipeline executions to be stopped", ExecutionId);
+            Log.Information("{executionId} Getting pipeline executions to be stopped", executionId);
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 sqlConnection.Open();
 
                 SqlCommand pipelineSteps = new SqlCommand(
@@ -264,8 +255,8 @@ namespace EtlManagerExecutor
                 FROM etlmanager.Execution
                 WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PipelineRunId IS NOT NULL"
                     , sqlConnection);
-                pipelineSteps.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-                pipelineSteps.Parameters.AddWithValue("@EncryptionKey", EncryptionKey);
+                pipelineSteps.Parameters.AddWithValue("@ExecutionId", executionId);
+                pipelineSteps.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
 
                 using SqlDataReader pipelineStepReader = await pipelineSteps.ExecuteReaderAsync();
                 while (pipelineStepReader.Read())
@@ -286,7 +277,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error reading pipeline executions", ExecutionId);
+                Log.Error(ex, "{executionId} Error reading pipeline executions", executionId);
                 return false;
             }
 
@@ -305,21 +296,21 @@ namespace EtlManagerExecutor
                 DataFactory dataFactory;
                 try
                 {
-                    dataFactory = Utility.GetDataFactory(EtlManagerConnectionString, dataFactoryId, EncryptionKey);
+                    dataFactory = DataFactory.GetDataFactory(connectionString, dataFactoryId, encryptionKey);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} Error getting details for Data Factory id {dataFactoryId}", ExecutionId, dataFactoryId);
+                    Log.Error(ex, "{executionId} Error getting details for Data Factory id {dataFactoryId}", executionId, dataFactoryId);
                     return false;
                 }
 
                 try
                 {
-                    dataFactory.CheckAccessTokenValidity(EtlManagerConnectionString);
+                    dataFactory.CheckAccessTokenValidity(connectionString);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", ExecutionId, dataFactoryId);
+                    Log.Error(ex, "{executionId} Error checking Data Factory {dataFactoryId} access token validity", executionId, dataFactoryId);
                     return false;
                 }
 
@@ -331,7 +322,7 @@ namespace EtlManagerExecutor
                 {
                     try
                     {
-                        if (!dataFactory.CheckAccessTokenValidity(EtlManagerConnectionString))
+                        if (!dataFactory.CheckAccessTokenValidity(connectionString))
                         {
                             credentials = new TokenCredentials(dataFactory.AccessToken);
                             client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
@@ -339,10 +330,10 @@ namespace EtlManagerExecutor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", ExecutionId, dataFactoryId);
+                        Log.Error(ex, "{executionId} Error checking Data Factory {dataFactoryId} access token validity", executionId, dataFactoryId);
                         return false;
                     }
-                    stopTasks.Add(StopPipelineRun(step, dataFactory, client));
+                    stopTasks.Add(StopPipelineRun(connectionString, executionId, username, step, dataFactory, client));
                 }
             }
 
@@ -351,22 +342,22 @@ namespace EtlManagerExecutor
             return results.All(b => b == true);
         }
 
-        private async Task<bool> StopPipelineRun(PipelineStep step, DataFactory dataFactory, DataFactoryManagementClient client)
+        private static async Task<bool> StopPipelineRun(string connectionString, string executionId, string username, PipelineStep step, DataFactory dataFactory, DataFactoryManagementClient client)
         {
-            Log.Information("{ExecutionId} {StepId} Stopping pipeline run id {PipelineRunId}", ExecutionId, step.StepId, step.PipelineRunId);
+            Log.Information("{executionId} {StepId} Stopping pipeline run id {PipelineRunId}", executionId, step.StepId, step.PipelineRunId);
             try
             {
                 await client.PipelineRuns.CancelAsync(dataFactory.ResourceGroupName, dataFactory.ResourceName, step.PipelineRunId, isRecursive: true);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping pipeline run {runId}", ExecutionId, step.StepId, step.PipelineRunId);
+                Log.Error(ex, "{executionId} {StepId} Error stopping pipeline run {runId}", executionId, step.StepId, step.PipelineRunId);
                 return false;
             }
 
             try
             {
-                using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+                using SqlConnection sqlConnection = new SqlConnection(connectionString);
                 sqlConnection.Open();
 
                 SqlCommand updateStatuses = new SqlCommand(
@@ -377,39 +368,24 @@ namespace EtlManagerExecutor
                             StoppedBy = @Username
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
                     , sqlConnection);
-                updateStatuses.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                updateStatuses.Parameters.AddWithValue("@ExecutionId", executionId);
                 updateStatuses.Parameters.AddWithValue("@StepId", step.StepId);
                 updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", step.RetryAttemptIndex);
 
-                if (Username != null) updateStatuses.Parameters.AddWithValue("@Username", Username);
+                if (username != null) updateStatuses.Parameters.AddWithValue("@Username", username);
                 else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
 
                 await updateStatuses.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging pipeline step as stopped", ExecutionId, step.StepId);
+                Log.Error(ex, "{executionId} {StepId} Error logging pipeline step as stopped", executionId, step.StepId);
                 return false;
             }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped pipeline run id {PipelineRunId}", ExecutionId, step.StepId, step.PipelineRunId);
+            Log.Information("{executionId} {StepId} Successfully stopped pipeline run id {PipelineRunId}", executionId, step.StepId, step.PipelineRunId);
             return true;
         }
-    }
 
-    internal class PipelineStep
-    {
-        public string StepId { get; set; }
-        public int RetryAttemptIndex { get; set; }
-        public string PipelineRunId { get; set; }
-        public string DataFactoryId { get; set; }
-    }
-
-    internal class PackageStep
-    {
-        public string StepId { get; set; }
-        public int RetryAttemptIndex { get; set; }
-        public long PackageOperationId { get; set; }
-        public string ConnectionString { get; set; }
     }
 
 }

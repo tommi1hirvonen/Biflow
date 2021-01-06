@@ -14,16 +14,6 @@ namespace EtlManagerExecutor
     {
         private readonly IConfiguration configuration;
 
-        private string EtlManagerConnectionString { get; set; }
-        private int PollingIntervalMs { get; set; }
-        private int MaximumParallelSteps { get; set; }
-        private string EncryptionPassword { get; set; }
-
-        private string ExecutionId { get; set; }
-        private string JobId { get; set; }
-
-        private bool Notify { get; set; } = false;
-
         private int RunningStepsCounter = 0;
 
         public JobExecutor(IConfiguration configuration)
@@ -33,24 +23,23 @@ namespace EtlManagerExecutor
 
         public void Run(string executionId, bool notify)
         {
-            EtlManagerConnectionString = configuration.GetValue<string>("EtlManagerConnectionString");
-            PollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
-            MaximumParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
-            ExecutionId = executionId;
-            Notify = notify;
-            string encryptionId = configuration.GetValue<string>("EncryptionId");
+            var connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
+            var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
+            var maxParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
+            var encryptionId = configuration.GetValue<string>("EncryptionId");
 
+            string encryptionPassword;
             try
             {
-                EncryptionPassword = Utility.GetEncryptionKey(encryptionId, EtlManagerConnectionString);
+                encryptionPassword = Utility.GetEncryptionKey(encryptionId, connectionString);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting encryption password", ExecutionId);
+                Log.Error(ex, "{executionId} Error getting encryption password", executionId);
                 return;
             }
 
-            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            using SqlConnection sqlConnection = new SqlConnection(connectionString);
             sqlConnection.Open();
 
             // Update this Executor process's PID for the execution.
@@ -63,60 +52,69 @@ namespace EtlManagerExecutor
 
             // Get whether the execution should be run in dependency mode or in execution phase mode.
             SqlCommand dependencyModeCommand = new SqlCommand("SELECT TOP 1 DependencyMode FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            dependencyModeCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+            dependencyModeCommand.Parameters.AddWithValue("@ExecutionId", executionId);
             bool dependencyMode = (bool)dependencyModeCommand.ExecuteScalar();
 
             // Get the job id of the execution.
             SqlCommand jobIdCommand = new SqlCommand("SELECT TOP 1 JobId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            jobIdCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
-            JobId = jobIdCommand.ExecuteScalar().ToString();
+            jobIdCommand.Parameters.AddWithValue("@ExecutionId", executionId);
+            var jobId = jobIdCommand.ExecuteScalar().ToString();
+
+            var executionConfig = new ExecutionConfiguration(
+                connectionString,
+                encryptionPassword,
+                maxParallelSteps,
+                pollingIntervalMs,
+                executionId,
+                jobId,
+                notify);
 
             // Check whether there are circular dependencies between jobs (through steps executing another jobs).
             string circularExecutions;
             try
             {
-                circularExecutions = GetCircularJobExecutions();
+                circularExecutions = GetCircularJobExecutions(executionConfig);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error checking for possible circular job executions", ExecutionId);
+                Log.Error(ex, "{executionId} Error checking for possible circular job executions", executionId);
                 return;
             }
 
-            if (circularExecutions != null && circularExecutions.Length > 0)
+            if (!string.IsNullOrEmpty(circularExecutions))
             {
-                UpdateErrorMessage("Execution was cancelled because of circular job executions:\n" + circularExecutions);
-                Log.Error("{ExecutionId} Execution was cancelled because of circular job executions: " + circularExecutions, ExecutionId);
+                UpdateErrorMessage(executionConfig, "Execution was cancelled because of circular job executions:\n" + circularExecutions);
+                Log.Error("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
                 return;
             }
 
             
             if (dependencyMode)
             {
-                Log.Information("{ExecutionId} Starting execution in dependency mode", ExecutionId);
-                ExecuteInDependencyMode();
+                Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
+                ExecuteInDependencyMode(executionConfig);
             }
             else
             {
-                Log.Information("{ExecutionId} Starting execution in execution phase mode", ExecutionId);
-                ExecuteInExecutionPhaseMode();
+                Log.Information("{executionId} Starting execution in execution phase mode", executionId);
+                ExecuteInExecutionPhaseMode(executionConfig);
             }
 
             // Execution finished. Notify subscribers of possible errors.
-            if (Notify)
+            if (notify)
             {
-                EmailHelper.SendNotification(configuration, ExecutionId);
+                EmailHelper.SendNotification(configuration, executionId);
             }
         }
 
-        private void ExecuteInExecutionPhaseMode()
+        private void ExecuteInExecutionPhaseMode(ExecutionConfiguration executionConfig)
         {
             List<KeyValuePair<int, string>> allSteps = new List<KeyValuePair<int, string>>();
 
-            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             sqlConnection.Open();
             SqlCommand sqlCommand = new SqlCommand("SELECT DISTINCT StepId, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
             using (var reader = sqlCommand.ExecuteReader())
             {
                 while (reader.Read())
@@ -137,47 +135,47 @@ namespace EtlManagerExecutor
                 {
                     // Check whether the maximum number of parallel steps are running
                     // and wait for some steps to finish if necessary.
-                    while (RunningStepsCounter >= MaximumParallelSteps)
+                    while (RunningStepsCounter >= executionConfig.MaxParallelSteps)
                     {
-                        Thread.Sleep(PollingIntervalMs);
+                        Thread.Sleep(executionConfig.PollingIntervalMs);
                     }
 
-                    StartNewStepWorker(stepId);
+                    StartNewStepWorker(executionConfig, stepId);
 
-                    Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionId, stepId);
+                    Log.Information("{ExecutionId} {stepId} Started step worker", executionConfig.ExecutionId, stepId);
 
                 }
 
                 // All steps have been started. Poll until the counter is zero => all steps have been completed.
                 while (RunningStepsCounter > 0)
                 {
-                    Thread.Sleep(PollingIntervalMs);
+                    Thread.Sleep(executionConfig.PollingIntervalMs);
                 }
             }
             
         }
 
-        private void ExecuteInDependencyMode()
+        private void ExecuteInDependencyMode(ExecutionConfiguration executionConfig)
         {
             string circularDependencies;
             try
             {
-                circularDependencies = GetCircularStepDependencies();
+                circularDependencies = GetCircularStepDependencies(executionConfig);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", executionConfig.ExecutionId);
                 return;
             }
 
-            if (circularDependencies != null && circularDependencies.Length > 0)
+            if (!string.IsNullOrEmpty(circularDependencies))
             {
-                UpdateErrorMessage("Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
-                Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, ExecutionId);
+                UpdateErrorMessage(executionConfig, "Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
+                Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, executionConfig.ExecutionId);
                 return;
             }
 
-            using (SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString))
+            using (SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString))
             {
                 sqlConnection.Open();
 
@@ -185,7 +183,7 @@ namespace EtlManagerExecutor
                 List<string> stepsToExecute = new List<string>();
 
                 SqlCommand stepsListCommand = new SqlCommand("SELECT DISTINCT StepId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-                stepsListCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                stepsListCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                 using (var reader = stepsListCommand.ExecuteReader())
                 {
                     while (reader.Read())
@@ -242,7 +240,7 @@ namespace EtlManagerExecutor
                     {
                         CommandTimeout = 120 // two minutes
                     };
-                    stepActionCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                    stepActionCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
 
                     sqlConnection.OpenIfClosed();
 
@@ -275,13 +273,13 @@ namespace EtlManagerExecutor
                         {
                             CommandTimeout = 120 // two minutes
                         };
-                        skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                        skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                         skipUpdateCommand.Parameters.AddWithValue("@StepId", stepId);
                         skipUpdateCommand.ExecuteNonQuery();
 
                         stepsToExecute.Remove(stepId);
 
-                        Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", ExecutionId, stepId);
+                        Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", executionConfig.ExecutionId, stepId);
                     }
 
                     // Mark the steps that have a duplicate currently running under a different execution as DUPLICATE.
@@ -296,13 +294,13 @@ namespace EtlManagerExecutor
                         {
                             CommandTimeout = 120 // two minutes
                         };
-                        duplicateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+                        duplicateCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                         duplicateCommand.Parameters.AddWithValue("@StepId", stepId);
                         duplicateCommand.ExecuteNonQuery();
 
                         stepsToExecute.Remove(stepId);
 
-                        Log.Warning("{ExecutionId} {stepId} Marked step as DUPLICATE", ExecutionId, stepId);
+                        Log.Warning("{ExecutionId} {stepId} Marked step as DUPLICATE", executionConfig.ExecutionId, stepId);
 
                     }
 
@@ -310,16 +308,16 @@ namespace EtlManagerExecutor
                     {
                         // Check whether the maximum number of parallel steps are running
                         // and wait for some steps to finish if necessary.
-                        while (RunningStepsCounter >= MaximumParallelSteps)
+                        while (RunningStepsCounter >= executionConfig.MaxParallelSteps)
                         {
-                            Thread.Sleep(PollingIntervalMs);
+                            Thread.Sleep(executionConfig.PollingIntervalMs);
                         }
 
-                        StartNewStepWorker(stepId);
+                        StartNewStepWorker(executionConfig, stepId);
 
                         stepsToExecute.Remove(stepId);
 
-                        Log.Information("{ExecutionId} {stepId} Started step execution", ExecutionId, stepId);
+                        Log.Information("{ExecutionId} {stepId} Started step execution", executionConfig.ExecutionId, stepId);
 
                     }
 
@@ -327,7 +325,7 @@ namespace EtlManagerExecutor
                     // This way we aren't constantly looping and querying the status.
                     if (stepsToExecute.Count > 0)
                     {
-                        Thread.Sleep(PollingIntervalMs);
+                        Thread.Sleep(executionConfig.PollingIntervalMs);
                     }
 
                 }
@@ -337,13 +335,13 @@ namespace EtlManagerExecutor
             // All steps have been started. Poll until the counter is zero => all steps have been completed.
             while (RunningStepsCounter > 0)
             {
-                Thread.Sleep(PollingIntervalMs);
+                Thread.Sleep(executionConfig.PollingIntervalMs);
             }
         }
 
-        private void StartNewStepWorker(string stepId)
+        private void StartNewStepWorker(ExecutionConfiguration executionConfig, string stepId)
         {
-            StepWorker stepWorker = new StepWorker(ExecutionId, stepId, EtlManagerConnectionString, PollingIntervalMs, Notify, OnStepCompleted, EncryptionPassword);
+            StepWorker stepWorker = new StepWorker(executionConfig, stepId, OnStepCompleted);
             BackgroundWorker backgroundWorker = new BackgroundWorker();
             backgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(stepWorker.OnStepCompleted);
             backgroundWorker.DoWork += new DoWorkEventHandler(stepWorker.ExecuteStep);
@@ -351,16 +349,16 @@ namespace EtlManagerExecutor
             Interlocked.Increment(ref RunningStepsCounter);
         }
 
-        void OnStepCompleted(string stepId)
+        void OnStepCompleted(ExecutionConfiguration executionConfig, string stepId)
         {
             Interlocked.Decrement(ref RunningStepsCounter);
 
-            Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionId, stepId);
+            Log.Information("{ExecutionId} {StepId} Finished step execution", executionConfig.ExecutionId, stepId);
         }
 
-        private string GetCircularStepDependencies()
+        private static string GetCircularStepDependencies(ExecutionConfiguration executionConfig)
         {
-            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             SqlCommand sqlCommand = new SqlCommand(
                     @"WITH Recursion AS (
                         SELECT
@@ -395,7 +393,7 @@ namespace EtlManagerExecutor
             {
                 CommandTimeout = 120 // two minutes
             };
-            sqlCommand.Parameters.AddWithValue("@JobId", JobId);
+            sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
             List<string> dependencyPaths = new List<string>();
             sqlConnection.OpenIfClosed();
             using (SqlDataReader reader = sqlCommand.ExecuteReader())
@@ -408,9 +406,9 @@ namespace EtlManagerExecutor
             return string.Join("\n\n", dependencyPaths);
         }
 
-        private string GetCircularJobExecutions()
+        private static string GetCircularJobExecutions(ExecutionConfiguration executionConfig)
         {
-            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             SqlCommand sqlCommand = new SqlCommand(
                 @"WITH Recursion AS (
                     SELECT
@@ -444,7 +442,7 @@ namespace EtlManagerExecutor
             {
                 CommandTimeout = 120 // two minutes
             };
-            sqlCommand.Parameters.AddWithValue("@JobId", JobId);
+            sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
             List<string> dependencyPaths = new List<string>();
             sqlConnection.OpenIfClosed();
             using (SqlDataReader reader = sqlCommand.ExecuteReader())
@@ -457,9 +455,9 @@ namespace EtlManagerExecutor
             return string.Join("\n\n", dependencyPaths);
         }
 
-        private void UpdateErrorMessage(string errorMessage)
+        private static void UpdateErrorMessage(ExecutionConfiguration executionConfig, string errorMessage)
         {
-            using SqlConnection sqlConnection = new SqlConnection(EtlManagerConnectionString);
+            using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             SqlCommand sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
@@ -469,7 +467,7 @@ namespace EtlManagerExecutor
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@ErrorMessage", errorMessage);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionId);
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
             try
             {
                 sqlConnection.OpenIfClosed();
@@ -477,8 +475,9 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error updating error message", ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error updating error message", executionConfig.ExecutionId);
             }
         }
     }
+           
 }
