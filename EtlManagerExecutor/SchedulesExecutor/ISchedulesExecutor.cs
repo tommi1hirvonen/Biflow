@@ -1,7 +1,9 @@
-﻿namespace EtlManagerExecutor
+﻿using System.Threading.Tasks;
+
+namespace EtlManagerExecutor
 {
     interface ISchedulesExecutor
     {
-        void Run(int hours, int minutes);
+        public Task RunAsync(int hours, int minutes);
     }
 }

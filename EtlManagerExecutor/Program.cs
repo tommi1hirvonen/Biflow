@@ -13,7 +13,7 @@ namespace EtlManagerExecutor
 {
     class Program
     {
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             Console.WriteLine(Directory.GetCurrentDirectory());
             var configuration = new ConfigurationBuilder()
@@ -37,19 +37,15 @@ namespace EtlManagerExecutor
                 .UseSerilog()
                 .Build();
 
-            int result = 0;
-
-            Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
-                    (JobExecutorOptions options) => result = RunExecutionAsync(host, options).Result,
+                    (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
-                    (CancelOptions options) => result = CancelExecutionAsync(host, options).Result,
+                    (CancelOptions options) => CancelExecutionAsync(host, options),
                     (MailTestOptions options) => RunMailTest(host, options),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
                 );
-
-            return result;
         }
 
         static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
@@ -59,10 +55,10 @@ namespace EtlManagerExecutor
             return 0;
         }
 
-        static int RunSchedules(IHost host, SchedulesExecutorOptions options)
+        static async Task<int> RunSchedules(IHost host, SchedulesExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
-            service.Run(options.Hours, options.Minutes);
+            await service.RunAsync(options.Hours, options.Minutes);
             return 0;
         }
         
@@ -80,24 +76,24 @@ namespace EtlManagerExecutor
             }
         }
 
-        static int RunMailTest(IHost host, MailTestOptions options)
+        static async Task<int> RunMailTest(IHost host, MailTestOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<MailTest>(host.Services);
-            service.Run(options.ToAddress);
+            await service.RunAsync(options.ToAddress);
             return 0;
         }
 
-        static int HandleParseError(IEnumerable<Error> errors)
+        static async Task<int> HandleParseError(IEnumerable<Error> errors)
         {
             Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
-            return 1;
+            return await Task.FromResult(-1);
         }
 
-        static int PrintCommit()
+        static async Task<int> PrintCommit()
         {
             var commit = Properties.Resources.CurrentCommit;
             Console.WriteLine(commit);
-            return 1;
+            return await Task.FromResult(0);
         }
 
     }

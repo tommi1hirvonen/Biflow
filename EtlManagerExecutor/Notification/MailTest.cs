@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
-using System.Net;
 using System.Net.Mail;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -15,7 +15,7 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(string toAddress)
+        public async Task RunAsync(string toAddress)
         {
             EmailSettings emailSettings;
             try
@@ -56,8 +56,8 @@ namespace EtlManagerExecutor
                 Log.Error(ex, "Error building message object. Check appsettings.json.");
                 return;
             }
-
-            client.Send(mailMessage);
+            
+            await client.SendMailAsync(mailMessage);
         }
     }
 }

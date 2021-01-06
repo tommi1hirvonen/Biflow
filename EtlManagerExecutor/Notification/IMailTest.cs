@@ -1,7 +1,9 @@
-﻿namespace EtlManagerExecutor
+﻿using System.Threading.Tasks;
+
+namespace EtlManagerExecutor
 {
     interface IMailTest
     {
-        void Run(string toAddress);
+        public Task RunAsync(string toAddress);
     }
 }
