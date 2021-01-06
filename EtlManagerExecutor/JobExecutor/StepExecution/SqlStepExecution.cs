@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -18,7 +19,7 @@ namespace EtlManagerExecutor
             sqlStep = sqlStepConfiguration;
         }
 
-        public ExecutionResult Run()
+        public async Task<ExecutionResult> RunAsync()
         {
             try
             {
@@ -27,7 +28,7 @@ namespace EtlManagerExecutor
                 connection.InfoMessage += Connection_InfoMessage;
                 connection.OpenIfClosed();
                 SqlCommand sqlCommand = new SqlCommand(sqlStep.SqlStatement, connection) { CommandTimeout = 0 }; // CommandTimeout = 0 => wait indefinitely
-                sqlCommand.ExecuteNonQuery();
+                await sqlCommand.ExecuteNonQueryAsync();
             }
             catch (SqlException ex)
             {

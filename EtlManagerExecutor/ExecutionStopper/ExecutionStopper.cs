@@ -19,7 +19,7 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public async Task<bool> Run(string executionId, string username)
+        public async Task<bool> RunAsync(string executionId, string username)
         {
             string connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
@@ -77,8 +77,8 @@ namespace EtlManagerExecutor
             var stopConfiguration = new StopConfiguration(connectionString, executionId, encryptionKey, username);
 
             // Start package and pipeline stopping simultaneously.
-            var stopPackagesTask = StopPackageExecutions(stopConfiguration);
-            var stopPipelinesTask = StopPipelineExecutions(stopConfiguration);
+            var stopPackagesTask = StopPackageExecutionsAsync(stopConfiguration);
+            var stopPipelinesTask = StopPipelineExecutionsAsync(stopConfiguration);
 
             var stopPackagesResult = stopPackagesTask.Result;
             var stopPipelinesResult = stopPipelinesTask.Result;
@@ -142,7 +142,7 @@ namespace EtlManagerExecutor
             return true;
         }
 
-        private static async Task<bool> StopPackageExecutions(StopConfiguration stopConfiguration)
+        private static async Task<bool> StopPackageExecutionsAsync(StopConfiguration stopConfiguration)
         {
             List<PackageStep> packageSteps = new List<PackageStep>();
             List<Task<bool>> stopTasks = new List<Task<bool>>();
@@ -186,7 +186,7 @@ namespace EtlManagerExecutor
 
             foreach (var step in packageSteps)
             {
-                stopTasks.Add(StopPackageStep(stopConfiguration, step));
+                stopTasks.Add(StopPackageStepAsync(stopConfiguration, step));
             }
 
             bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
@@ -194,7 +194,7 @@ namespace EtlManagerExecutor
             return results.All(b => b == true);
         }
 
-        private static async Task<bool> StopPackageStep(StopConfiguration stopConfiguration, PackageStep step)
+        private static async Task<bool> StopPackageStepAsync(StopConfiguration stopConfiguration, PackageStep step)
         {
             Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", stopConfiguration.ExecutionId, step.StepId, step.PackageOperationId);
             try
@@ -241,7 +241,7 @@ namespace EtlManagerExecutor
             return true;
         }
 
-        private static async Task<bool> StopPipelineExecutions(StopConfiguration stopConfiguration)
+        private static async Task<bool> StopPipelineExecutionsAsync(StopConfiguration stopConfiguration)
         {
             // List containing pairs of DataFactoryIds and pipeline steps.
             List<KeyValuePair<string, PipelineStep>> pipelineRuns = new List<KeyValuePair<string, PipelineStep>>();
@@ -336,7 +336,7 @@ namespace EtlManagerExecutor
                         Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", stopConfiguration.ExecutionId, dataFactoryId);
                         return false;
                     }
-                    stopTasks.Add(StopPipelineRun(stopConfiguration, step, dataFactory, client));
+                    stopTasks.Add(StopPipelineRunAsync(stopConfiguration, step, dataFactory, client));
                 }
             }
 
@@ -345,7 +345,7 @@ namespace EtlManagerExecutor
             return results.All(b => b == true);
         }
 
-        private static async Task<bool> StopPipelineRun(StopConfiguration stopConfiguration, PipelineStep step, DataFactory dataFactory, DataFactoryManagementClient client)
+        private static async Task<bool> StopPipelineRunAsync(StopConfiguration stopConfiguration, PipelineStep step, DataFactory dataFactory, DataFactoryManagementClient client)
         {
             Log.Information("{ExecutionId} {StepId} Stopping pipeline run id {PipelineRunId}", stopConfiguration.ExecutionId, step.StepId, step.PipelineRunId);
             try

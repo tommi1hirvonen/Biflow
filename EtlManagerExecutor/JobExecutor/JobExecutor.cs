@@ -2,11 +2,11 @@
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -21,7 +21,7 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        public void Run(string executionId, bool notify)
+        public async Task RunAsync(string executionId, bool notify)
         {
             var connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
             var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
@@ -92,12 +92,12 @@ namespace EtlManagerExecutor
             if (dependencyMode)
             {
                 Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
-                ExecuteInDependencyMode(executionConfig);
+                await ExecuteInDependencyMode(executionConfig);
             }
             else
             {
                 Log.Information("{executionId} Starting execution in execution phase mode", executionId);
-                ExecuteInExecutionPhaseMode(executionConfig);
+                await ExecuteInExecutionPhaseMode(executionConfig);
             }
 
             // Execution finished. Notify subscribers of possible errors.
@@ -107,9 +107,9 @@ namespace EtlManagerExecutor
             }
         }
 
-        private void ExecuteInExecutionPhaseMode(ExecutionConfiguration executionConfig)
+        private async Task ExecuteInExecutionPhaseMode(ExecutionConfiguration executionConfig)
         {
-            List<KeyValuePair<int, string>> allSteps = new List<KeyValuePair<int, string>>();
+            List<KeyValuePair<int, string>> allSteps = new();
 
             using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             sqlConnection.Open();
@@ -130,6 +130,7 @@ namespace EtlManagerExecutor
             foreach (int executionPhase in executionPhases)
             {
                 List<string> stepsToExecute = allSteps.Where(step => step.Key == executionPhase).Select(step => step.Value).ToList();
+                List<Task> stepWorkers = new();
 
                 foreach (string stepId in stepsToExecute)
                 {
@@ -137,25 +138,22 @@ namespace EtlManagerExecutor
                     // and wait for some steps to finish if necessary.
                     while (RunningStepsCounter >= executionConfig.MaxParallelSteps)
                     {
-                        Thread.Sleep(executionConfig.PollingIntervalMs);
+                        await Task.Delay(executionConfig.PollingIntervalMs);
                     }
 
-                    StartNewStepWorker(executionConfig, stepId);
+                    stepWorkers.Add(StartNewStepWorkerAsync(executionConfig, stepId));
 
                     Log.Information("{ExecutionId} {stepId} Started step worker", executionConfig.ExecutionId, stepId);
 
                 }
 
-                // All steps have been started. Poll until the counter is zero => all steps have been completed.
-                while (RunningStepsCounter > 0)
-                {
-                    Thread.Sleep(executionConfig.PollingIntervalMs);
-                }
+                // All steps have been started. Wait until all step worker tasks have finished.
+                await Task.WhenAll(stepWorkers);
             }
             
         }
 
-        private void ExecuteInDependencyMode(ExecutionConfiguration executionConfig)
+        private async Task ExecuteInDependencyMode(ExecutionConfiguration executionConfig)
         {
             string circularDependencies;
             try
@@ -175,12 +173,14 @@ namespace EtlManagerExecutor
                 return;
             }
 
+            List<Task> stepWorkers = new();
+
             using (SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString))
             {
                 sqlConnection.Open();
 
                 // Get a list of all steps for this execution
-                List<string> stepsToExecute = new List<string>();
+                List<string> stepsToExecute = new();
 
                 SqlCommand stepsListCommand = new SqlCommand("SELECT DISTINCT StepId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
                 stepsListCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
@@ -195,9 +195,9 @@ namespace EtlManagerExecutor
 
                 while (stepsToExecute.Count > 0)
                 {
-                    List<string> stepsToSkip = new List<string>();
-                    List<string> duplicateSteps = new List<string>();
-                    List<string> executableSteps = new List<string>();
+                    List<string> stepsToSkip = new();
+                    List<string> duplicateSteps = new();
+                    List<string> executableSteps = new();
 
                     // Get a list of steps we can execute based on dependencies and already executed steps.
 
@@ -310,10 +310,10 @@ namespace EtlManagerExecutor
                         // and wait for some steps to finish if necessary.
                         while (RunningStepsCounter >= executionConfig.MaxParallelSteps)
                         {
-                            Thread.Sleep(executionConfig.PollingIntervalMs);
+                            await Task.Delay(executionConfig.PollingIntervalMs);
                         }
 
-                        StartNewStepWorker(executionConfig, stepId);
+                        stepWorkers.Add(StartNewStepWorkerAsync(executionConfig, stepId));
 
                         stepsToExecute.Remove(stepId);
 
@@ -325,35 +325,36 @@ namespace EtlManagerExecutor
                     // This way we aren't constantly looping and querying the status.
                     if (stepsToExecute.Count > 0)
                     {
-                        Thread.Sleep(executionConfig.PollingIntervalMs);
+                        await Task.Delay(executionConfig.PollingIntervalMs);
                     }
 
                 }
 
             }
 
-            // All steps have been started. Poll until the counter is zero => all steps have been completed.
-            while (RunningStepsCounter > 0)
-            {
-                Thread.Sleep(executionConfig.PollingIntervalMs);
-            }
+            // All steps have been started. Wait until all step worker tasks have finished.
+            await Task.WhenAll(stepWorkers);
         }
 
-        private void StartNewStepWorker(ExecutionConfiguration executionConfig, string stepId)
+        private async Task StartNewStepWorkerAsync(ExecutionConfiguration executionConfig, string stepId)
         {
-            StepWorker stepWorker = new StepWorker(executionConfig, stepId, OnStepCompleted);
-            BackgroundWorker backgroundWorker = new BackgroundWorker();
-            backgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(stepWorker.OnStepCompleted);
-            backgroundWorker.DoWork += new DoWorkEventHandler(stepWorker.ExecuteStep);
-            backgroundWorker.RunWorkerAsync();
+            // Create a new step worker...
+            StepWorker stepWorker = new StepWorker(executionConfig, stepId);
+            //...and start it asynchronously.
+            var task = stepWorker.ExecuteStepAsync();
+            // Add one to the counter.
             Interlocked.Increment(ref RunningStepsCounter);
-        }
-
-        void OnStepCompleted(ExecutionConfiguration executionConfig, string stepId)
-        {
-            Interlocked.Decrement(ref RunningStepsCounter);
-
-            Log.Information("{ExecutionId} {StepId} Finished step execution", executionConfig.ExecutionId, stepId);
+            try
+            {
+                // Wait for the step to finish.
+                await task;
+            }
+            finally
+            {
+                // Subtract one from the counter.
+                Interlocked.Decrement(ref RunningStepsCounter);
+                Log.Information("{ExecutionId} {StepId} Finished step execution", executionConfig.ExecutionId, stepId);
+            }
         }
 
         private static string GetCircularStepDependencies(ExecutionConfiguration executionConfig)
@@ -394,7 +395,7 @@ namespace EtlManagerExecutor
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            List<string> dependencyPaths = new List<string>();
+            List<string> dependencyPaths = new();
             sqlConnection.OpenIfClosed();
             using (SqlDataReader reader = sqlCommand.ExecuteReader())
             {
@@ -443,7 +444,7 @@ namespace EtlManagerExecutor
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            List<string> dependencyPaths = new List<string>();
+            List<string> dependencyPaths = new();
             sqlConnection.OpenIfClosed();
             using (SqlDataReader reader = sqlCommand.ExecuteReader())
             {

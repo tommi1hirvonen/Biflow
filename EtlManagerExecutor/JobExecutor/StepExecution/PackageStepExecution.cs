@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -25,7 +26,7 @@ namespace EtlManagerExecutor
             this.retryAttempt = retryAttempt;
         }
 
-        public ExecutionResult Run()
+        public async Task<ExecutionResult> RunAsync()
         {
             // Get possible parameters.
             Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -95,11 +96,11 @@ namespace EtlManagerExecutor
             // Monitor the package's execution.
             try
             {
-                TryRefreshStatus(operationId);
+                await TryRefreshStatus(operationId);
                 while (!Completed)
                 {
-                    Thread.Sleep(executionConfig.PollingIntervalMs);
-                    TryRefreshStatus(operationId);
+                    await Task.Delay(executionConfig.PollingIntervalMs);
+                    await TryRefreshStatus(operationId);
                 }
             }
             catch (Exception ex)
@@ -189,7 +190,7 @@ namespace EtlManagerExecutor
             return (long)executionCommand.ExecuteScalar();
         }
 
-        public void TryRefreshStatus(long operationId)
+        public async Task TryRefreshStatus(long operationId)
         {
             int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
@@ -215,7 +216,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", operationId);
                     refreshRetries++;
-                    Thread.Sleep(executionConfig.PollingIntervalMs);
+                    await Task.Delay(executionConfig.PollingIntervalMs);
                 }
             }
             // The maximum number of attempts was reached. Notify caller with exception.

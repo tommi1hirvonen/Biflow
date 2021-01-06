@@ -5,6 +5,7 @@ using Serilog;
 using System;
 using System.Data.SqlClient;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -24,7 +25,7 @@ namespace EtlManagerExecutor
             this.retryAttempt = retryAttempt;
         }
 
-        public ExecutionResult Run()
+        public async Task<ExecutionResult> RunAsync()
         {
             DataFactory dataFactory;
 
@@ -87,11 +88,11 @@ namespace EtlManagerExecutor
                     client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
                 }
 
-                pipelineRun = TryGetPipelineRun(dataFactory, client, runId);
+                pipelineRun = await TryGetPipelineRun(dataFactory, client, runId);
 
                 if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                 {
-                    Thread.Sleep(5000);
+                    await Task.Delay(PollingIntervalMs);
                 }
                 else
                 {
@@ -109,7 +110,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private PipelineRun TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
+        private async Task<PipelineRun> TryGetPipelineRun(DataFactory dataFactory, DataFactoryManagementClient client, string runId)
         {
             int refreshRetries = 0;
             while (refreshRetries < MaxRefreshRetries)
@@ -123,7 +124,7 @@ namespace EtlManagerExecutor
                     Log.Warning(ex, "{ExecutionId} {StepId} Error getting pipeline run status for run id {runId}",
                         executionConfig.ExecutionId, pipelineStep.StepId, runId);
                     refreshRetries++;
-                    Thread.Sleep(PollingIntervalMs);
+                    await Task.Delay(PollingIntervalMs);
                 }
             }
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");

@@ -1,7 +1,9 @@
-﻿namespace EtlManagerExecutor
+﻿using System.Threading.Tasks;
+
+namespace EtlManagerExecutor
 {
     interface IStepExecution
     {
-        public ExecutionResult Run();
+        public Task<ExecutionResult> RunAsync();
     }
 }

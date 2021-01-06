@@ -41,9 +41,9 @@ namespace EtlManagerExecutor
 
             Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
-                    (JobExecutorOptions options) => result = RunExecution(host, options),
+                    (JobExecutorOptions options) => result = RunExecutionAsync(host, options).Result,
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
-                    (CancelOptions options) => result = CancelExecution(host, options).Result,
+                    (CancelOptions options) => result = CancelExecutionAsync(host, options).Result,
                     (MailTestOptions options) => RunMailTest(host, options),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
@@ -52,10 +52,10 @@ namespace EtlManagerExecutor
             return result;
         }
 
-        static int RunExecution(IHost host, JobExecutorOptions options)
+        static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-            service.Run(options.ExecutionId, options.Notify);
+            await service.RunAsync(options.ExecutionId, options.Notify);
             return 0;
         }
 
@@ -66,12 +66,12 @@ namespace EtlManagerExecutor
             return 0;
         }
         
-        static async Task<int> CancelExecution(IHost host, CancelOptions options)
+        static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
             try
             {
-                var result = await service.Run(options.ExecutionId, options.Username);
+                var result = await service.RunAsync(options.ExecutionId, options.Username);
                 return result ? 0 : -1;
             }
             catch (Exception)

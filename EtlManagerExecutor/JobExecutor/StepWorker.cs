@@ -3,31 +3,27 @@ using System;
 using System.ComponentModel;
 using System.Data.SqlClient;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
     class StepWorker
     {
-        public delegate void StepCompletedDelegate(ExecutionConfiguration executionConfiguration, string stepId);
-
         private readonly ExecutionConfiguration executionConfiguration;
         private readonly string stepId;
-        private readonly StepCompletedDelegate stepCompleted;
 
         private StepConfiguration StepConfiguration { get; set; }
 
         private int AttemptCounter { get; set; } = 0;
 
-        public StepWorker(ExecutionConfiguration executionConfiguration, string stepId, StepCompletedDelegate stepCompleted)
+        public StepWorker(ExecutionConfiguration executionConfiguration, string stepId)
         {
             this.executionConfiguration = executionConfiguration;
             this.stepId = stepId;
-            this.stepCompleted = stepCompleted;
         }
 
-        public void ExecuteStep(object sender, DoWorkEventArgs args)
+        public async Task ExecuteStepAsync()
         {
-
             // Get step details.
             using (SqlConnection sqlConnection = new SqlConnection(executionConfiguration.ConnectionString))
             {
@@ -78,7 +74,7 @@ namespace EtlManagerExecutor
                             var pipelineName = reader["PipelineName"].ToString();
                             StepConfiguration = new PipelineStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, dataFactoryId, pipelineName);
                         }
-                        
+
                     }
                     else
                     {
@@ -151,7 +147,7 @@ namespace EtlManagerExecutor
                         JobStepConfiguration job => new JobStepExecution(executionConfiguration, job),
                         _ => throw new InvalidEnumArgumentException("Unrecognized step type")
                     };
-                    executionResult = stepExecution.Run();
+                    executionResult = await stepExecution.RunAsync();
                 }
                 catch (Exception ex)
                 {
@@ -193,10 +189,10 @@ namespace EtlManagerExecutor
                     else
                     {
                         Log.Information("{ExecutionId} {StepId} Step executed successfully", executionConfiguration.ExecutionId, stepId);
-                        
+
                         // The package was executed successfully. Update the execution accordingly.
                         try
-                        {    
+                        {
                             SqlCommand successUpdate = new SqlCommand(
                               @"UPDATE etlmanager.Execution
                                 SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED', InfoMessage = @InfoMessage
@@ -221,7 +217,7 @@ namespace EtlManagerExecutor
                 if (AttemptCounter < StepConfiguration.RetryAttempts)
                 {
                     AttemptCounter++;
-                    Thread.Sleep(StepConfiguration.RetryIntervalMinutes * 60 * 1000);
+                    await Task.Delay(StepConfiguration.RetryIntervalMinutes * 60 * 1000);
                 }
                 // Otherwise break the loop and end this execution.
                 else
@@ -229,11 +225,6 @@ namespace EtlManagerExecutor
                     break;
                 }
             }
-        }
-
-        public void OnStepCompleted(object sender, RunWorkerCompletedEventArgs args)
-        {
-            stepCompleted(executionConfiguration, stepId);
         }
 
     }

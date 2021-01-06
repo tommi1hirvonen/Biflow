@@ -3,6 +3,7 @@ using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -17,7 +18,7 @@ namespace EtlManagerExecutor
             jobStep = jobStepConfiguration;
         }
 
-        public ExecutionResult Run()
+        public async Task<ExecutionResult> RunAsync()
         {
 
             Process executorProcess;
@@ -34,7 +35,7 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    executionId = initCommand.ExecuteScalar().ToString();
+                    executionId = (await initCommand.ExecuteScalarAsync()).ToString();
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +79,7 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    processIdCmd.ExecuteNonQuery();
+                    await processIdCmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)
                 {
@@ -89,14 +90,14 @@ namespace EtlManagerExecutor
 
             if (jobStep.JobExecuteSynchronized)
             {
-                executorProcess.WaitForExit();
+                await executorProcess.WaitForExitAsync();
                 try
                 {
                     using SqlConnection sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-                    sqlConnection.Open();
+                    await sqlConnection.OpenAsync();
                     SqlCommand sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-                    string status = sqlCommand.ExecuteScalar().ToString();
+                    string status = (await sqlCommand.ExecuteScalarAsync()).ToString();
                     return status switch
                     {
                         "COMPLETED" or "WARNING" => new ExecutionResult.Success(),
