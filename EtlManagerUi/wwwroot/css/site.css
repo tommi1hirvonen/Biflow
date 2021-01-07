@@ -463,7 +463,9 @@ a:hover {
 }
 
 
-
+.validation-message {
+    color: var(--color-danger);
+}
 
 #blazor-error-ui {
     background: lightyellow;
