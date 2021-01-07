@@ -40,16 +40,24 @@
 
 <div class="container-fluid mt-4">
     <div class="row">
-        <div class="card shadow-sm col-lg mr-lg-3 mb-lg-3 mb-3 pt-3">
-            <h6>Average execution duration</h6>
+        <div class="card shadow-sm col-xl mr-xl-3 mb-xl-3 mb-3 pt-3">
+            <h6>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                &nbsp;
+                Average execution duration
+            </h6>
             @if (!ReportLoaded)
             {
                 <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
             }
             <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
         </div>
-        <div class="card shadow-sm col-lg ml-lg-3 mb-lg-3 mt-lg-0 my-3 pt-3">
-            <h6>Job success rate</h6>
+        <div class="card shadow-sm col-xl ml-xl-3 mb-xl-3 mt-xl-0 my-3 pt-3">
+            <h6>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/percent.svg")))
+                &nbsp;
+                Job success rate
+            </h6>
             @if (!ReportLoaded)
             {
         <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
@@ -58,16 +66,24 @@
         </div>
     </div>
     <div class="row">
-        <div class="card shadow-sm col-lg mr-lg-3 mt-lg-3 my-3 pt-3">
-            <h6>Number of executions</h6>
+        <div class="card shadow-sm col-xl mr-xl-3 mt-xl-3 my-3 pt-3">
+            <h6>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                &nbsp;
+                Number of executions
+            </h6>
             @if (!ReportLoaded)
             {
                 <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
             }
             <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
         </div>
-        <div class="card shadow-sm col-lg ml-lg-3 mt-lg-3 my-3 pt-3">
-            <h6>Top 5 failing steps</h6>
+        <div class="card shadow-sm col-xl ml-xl-3 mt-xl-3 my-3 pt-3">
+            <h6>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                &nbsp;
+                Top 5 failing steps
+            </h6>
             @if (!ReportLoaded)
             {
                 <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
