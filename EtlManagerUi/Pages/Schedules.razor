@@ -466,7 +466,7 @@
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleScheduleEnabled(configuration, schedule, value);
+            await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
         }
         catch (Exception)
         {

@@ -301,7 +301,7 @@
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleStepEnabled(configuration, step, value);
+            await Utility.ToggleStepEnabledAsync(configuration, step, value);
             step.IsEnabled = !step.IsEnabled;
         }
         catch (Exception)
@@ -398,7 +398,7 @@
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            SelectedJobExecutionId = await Utility.StartExecution(configuration, Job, user, stepIds);
+            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration, Job, user, stepIds);
             ExecuteSuccess = true;
         }
         catch (Exception ex)

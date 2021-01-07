@@ -58,7 +58,7 @@ namespace EtlManagerUi
             return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        public async static Task<Guid> StartExecution(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
+        public async static Task<Guid> StartExecutionAsync(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand;
@@ -137,7 +137,7 @@ namespace EtlManagerUi
             return result == 0;
         }
 
-        public async static Task ToggleJobDependencyMode(IConfiguration configuration, Job job, bool enabled)
+        public async static Task ToggleJobDependencyModeAsync(IConfiguration configuration, Job job, bool enabled)
         {
             int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
@@ -152,7 +152,7 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleJobEnabled(IConfiguration configuration, Job job, bool enabled)
+        public async static Task ToggleJobEnabledAsync(IConfiguration configuration, Job job, bool enabled)
         {
             int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
@@ -167,7 +167,7 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleStepEnabled(IConfiguration configuration, Step step, bool enabled)
+        public async static Task ToggleStepEnabledAsync(IConfiguration configuration, Step step, bool enabled)
         {
             int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
@@ -182,7 +182,7 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleScheduleEnabled(IConfiguration configuration, Schedule schedule, bool enabled)
+        public async static Task ToggleScheduleEnabledAsync(IConfiguration configuration, Schedule schedule, bool enabled)
         {
             int value = enabled ? 1 : 0;
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

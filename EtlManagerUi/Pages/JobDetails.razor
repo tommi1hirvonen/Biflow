@@ -258,7 +258,7 @@ else
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobEnabled(configuration, CurrentJob, value);
+            await Utility.ToggleJobEnabledAsync(configuration, CurrentJob, value);
             CurrentJob.IsEnabled = !CurrentJob.IsEnabled;
         }
         catch (Exception)
@@ -272,7 +272,7 @@ else
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobDependencyMode(configuration, CurrentJob, value);
+            await Utility.ToggleJobDependencyModeAsync(configuration, CurrentJob, value);
             CurrentJob.UseDependencyMode = !CurrentJob.UseDependencyMode;
         }
         catch (Exception)

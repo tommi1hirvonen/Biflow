@@ -233,7 +233,7 @@
     {
         using var context = DbFactory.CreateDbContext();
         jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
-        
+
         // Get each job's last execution.
         var lastExecutions = await context.JobExecutions
             .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
@@ -245,9 +245,9 @@
                 Execution = context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
             })
             .ToListAsync();
-        
+
         LastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
-        
+
         StateHasChanged();
     }
 
@@ -295,7 +295,7 @@
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleJobEnabled(configuration, job, value);
+            await Utility.ToggleJobEnabledAsync(configuration, job, value);
         }
         catch (Exception)
         {
