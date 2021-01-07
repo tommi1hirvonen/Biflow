@@ -45,7 +45,7 @@
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
                                 </div>
                             </div>
-                            <BSInput InputType="InputType.Text" @bind-Value="NewJob.JobName" autocomplete="off"></BSInput>
+                            <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
                         </div>
                     </BSFormGroup>
                     <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Add</BSButton>
@@ -123,7 +123,7 @@
                                                 <ValidationSummary />
                                                 <BSFormGroup>
                                                     <BSLabel>New name</BSLabel>
-                                                    <BSInput InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                                    <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
                                                 </BSFormGroup>
                                                 <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                                             </BSForm>

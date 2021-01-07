@@ -179,7 +179,7 @@
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
                                         </div>
                                     </div>
-                                    <BSInput @bind-Value="NewSchedule.TimeHours"></BSInput>
+                                    <InputNumber class="form-control" @bind-Value="NewSchedule.TimeHours"></InputNumber>
                                 </div>
                             </BSFormGroup>
                             <div class="form-group">
@@ -265,53 +265,53 @@
                             <BSFormRow>
                                 <BSFormGroup class="col">
                                     <BSLabel>Interval</BSLabel>
-                                    <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.IntervalType">
+                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalType">
                                         <option>Hours</option>
                                         <option>Minutes</option>
-                                    </BSInput>
+                                    </InputSelect>
                                 </BSFormGroup>
                                 @if (ScheduleGeneration.IntervalType == "Hours")
                                 {
                                     <BSFormGroup class="col">
                                         <BSLabel>Hours</BSLabel>
-                                        <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.IntervalValueHours">
+                                        <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalValueHours">
                                             @for (int value = 1; value <= 12; value++)
                                                     {
                                                 <option>@value</option>
                                                     }
-                                        </BSInput>
+                                        </InputSelect>
                                     </BSFormGroup>
                                 }
                                 else if (ScheduleGeneration.IntervalType == "Minutes")
                                 {
                                     <BSFormGroup class="col">
                                         <BSLabel>Minutes</BSLabel>
-                                        <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.IntervalValueMinutes">
+                                        <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalValueMinutes">
                                             <option>15</option>
                                             <option>30</option>
                                             <option>45</option>
-                                        </BSInput>
+                                        </InputSelect>
                                     </BSFormGroup>
                                 }
                             </BSFormRow>
                             <BSFormRow>
                                 <BSFormGroup class="col">
                                     <BSLabel>Start time</BSLabel>
-                                    <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.StartTime">
+                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.StartTime">
                                         @foreach (var value in GetTimeValues())
                                         {
                                             <option>@value</option>
                                         }
-                                    </BSInput>
+                                    </InputSelect>
                                 </BSFormGroup>
                                 <BSFormGroup class="col">
                                     <BSLabel>End time</BSLabel>
-                                    <BSInput InputType="InputType.Select" @bind-Value="ScheduleGeneration.EndTime">
+                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.EndTime">
                                         @foreach (var value in GetTimeValues())
                                         {
                                             <option>@value</option>
                                         }
-                                    </BSInput>
+                                    </InputSelect>
                                 </BSFormGroup>
                             </BSFormRow>
                             <div class="form-group">

@@ -54,11 +54,11 @@
                             <ValidationSummary />
                             <BSFormGroup>
                                 <BSLabel>Name</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="EditJob.JobName" autocomplete="off"></BSInput>
+                                <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
                             </BSFormGroup>
                             <BSFormGroup>
                                 <BSLabel>Description</BSLabel>
-                                <BSInput Size="Size.Small" InputType="InputType.TextArea" @bind-Value="EditJob.JobDescription" rows="5"></BSInput>
+                                <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5"></InputTextArea>
                             </BSFormGroup>
                             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                         </BSForm>

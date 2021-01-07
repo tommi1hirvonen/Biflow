@@ -21,7 +21,7 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                                     </div>
                                 </div>
-                                <BSInput IsDisabled="@(Username != null)" InputType="InputType.Text" @bind-Value="User.Username"></BSInput>
+                                <InputText class="form-control" disabled=@(Username != null) @bind-Value="User.Username"></InputText>
                             </div>
                         </BSFormGroup>
                         <BSFormGroup>
@@ -32,12 +32,12 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
                                     </div>
                                 </div>
-                                <BSInput InputType="InputType.Select" @bind-Value="User.Role">
+                                <InputSelect class="form-control" @bind-Value="User.Role">
                                     <option>Viewer</option>
                                     <option>Operator</option>
                                     <option>Editor</option>
                                     <option>Admin</option>
-                                </BSInput>
+                                </InputSelect>
                             </div>
                         </BSFormGroup>
                         <BSFormGroup>
@@ -48,7 +48,7 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
                                     </div>
                                 </div>
-                                <BSInput InputType="InputType.Email" @bind-Value="User.Email"></BSInput>
+                                <InputText class="form-control" type="email" @bind-Value="User.Email"></InputText>
                             </div>
                         </BSFormGroup>
                         @if (Username == null)
@@ -61,7 +61,7 @@
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
                                         </div>
                                     </div>
-                                    <BSInput InputType="InputType.Password" @bind-Value="Password"></BSInput>
+                                    <InputText class="form-control" type="password" @bind-Value="Password"></InputText>
                                 </div>
                             </BSFormGroup>
                             <BSFormGroup>
@@ -72,7 +72,7 @@
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                         </div>
                                     </div>
-                                    <BSInput InputType="InputType.Password" @bind-Value="ConfirmPassword"></BSInput>
+                                    <InputText class="form-control" type="password" @bind-Value="ConfirmPassword"></InputText>
                                 </div>
                             </BSFormGroup>
                         }

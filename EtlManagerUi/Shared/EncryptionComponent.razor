@@ -25,7 +25,7 @@
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
                         </div>
                     </div>
-                    <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.Password"></BSInput>
+                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
                 </div>
             </BSFormGroup>
             <BSFormGroup>
@@ -36,7 +36,7 @@
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                         </div>
                     </div>
-                    <BSInput InputType="InputType.Password" @bind-Value="PasswordModel_.ConfirmPassword"></BSInput>
+                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
                 </div>
             </BSFormGroup>
             <BSFormGroup>

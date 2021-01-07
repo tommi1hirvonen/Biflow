@@ -14,39 +14,39 @@
 
                         <BSFormGroup>
                             <BSLabel>Data Factory name</BSLabel>
-                            <BSInput InputType="InputType.Text" @bind-Value="DataFactory.DataFactoryName"></BSInput>
+                            <InputText class="form-control" @bind-Value="DataFactory.DataFactoryName"></InputText>
                         </BSFormGroup>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Tenant id</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.TenantId"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.TenantId"></InputText>
                             </BSFormGroup>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Subscription id</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.SubscriptionId"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.SubscriptionId"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Resource group name</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ResourceGroupName"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.ResourceGroupName"></InputText>
                             </BSFormGroup>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Resource name</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ResourceName"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.ResourceName"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Client id</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ClientId"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.ClientId"></InputText>
                             </BSFormGroup>
                             <BSFormGroup Class="col-md">
                                 <BSLabel>Client secret</BSLabel>
-                                <BSInput InputType="InputType.Text" @bind-Value="DataFactory.ClientSecret" placeholder="@(DataFactoryId == Guid.Empty ? null : "Encrypted")"></BSInput>
+                                <InputText class="form-control" @bind-Value="DataFactory.ClientSecret" placeholder="@(DataFactoryId == Guid.Empty ? null : "Encrypted")"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
 

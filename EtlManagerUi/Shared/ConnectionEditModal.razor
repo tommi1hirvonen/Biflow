@@ -20,7 +20,7 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                     </div>
                                 </div>
-                                <BSInput InputType="InputType.Text" @bind-Value="Connection.ConnectionName"></BSInput>
+                                <InputText class="form-control" @bind-Value="Connection.ConnectionName"></InputText>
                             </div>
                         </BSFormGroup>
                         <BSFormGroup>
@@ -31,7 +31,7 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                                     </div>
                                 </div>
-                                <BSInput InputType="InputType.Text" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></BSInput>
+                                <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>
                         </BSFormGroup>
                         <div class="custom-control custom-checkbox custom-control-inline">
