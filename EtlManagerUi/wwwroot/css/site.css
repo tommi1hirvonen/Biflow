@@ -352,7 +352,7 @@ a:hover {
     top: 0;
     bottom: 0;
     left: 0;
-    width: 200px;
+    width: 180px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
     background-color: #fff;
@@ -369,7 +369,7 @@ a:hover {
 @media (min-width: 992px) {
     .main {
         padding-right: 10px !important;
-        padding-left: 210px !important; /* (sidebar width) + (padding right) */
+        padding-left: 190px !important; /* (sidebar width) + (padding right) */
     }
 }
 
@@ -443,7 +443,7 @@ a:hover {
 
 @media (min-width: 992px) {
     .navbar-brand {
-        width: 200px;
+        width: 180px;
     }
 
     /* Never collapse the sidebar for wide screens */
