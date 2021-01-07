@@ -343,8 +343,10 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            await Utility.JobCopy(configuration, job.JobId, "admin");
-            jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+            Guid createdJobId = await Utility.JobCopyAsync(configuration, job.JobId, "admin");
+            var createdJob = await context.Jobs.Include(job_ => job_.Steps).Include(job_ => job_.Schedules).FirstOrDefaultAsync(job_ => job_.JobId == createdJobId);
+            jobs.Add(createdJob);
+            jobs = jobs.OrderBy(job_ => job_.JobName).ToList();
         }
         catch (Exception)
         {

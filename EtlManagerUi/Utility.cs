@@ -197,7 +197,7 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task JobCopy(IConfiguration configuration, Guid jobId, string username)
+        public async static Task<Guid> JobCopyAsync(IConfiguration configuration, Guid jobId, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -207,10 +207,11 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+            var createdJobId = (Guid)await sqlCommand.ExecuteScalarAsync();
+            return createdJobId;
         }
 
-        public async static Task StepCopy(IConfiguration configuration, Guid stepId, Guid targetJobId, string username)
+        public async static Task<Guid> StepCopyAsync(IConfiguration configuration, Guid stepId, Guid targetJobId, string username)
         {
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand = new SqlCommand(
@@ -221,7 +222,8 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+            var createdStepId = (Guid)await sqlCommand.ExecuteScalarAsync();
+            return createdStepId;
         }
 
         public static async Task<bool> IsEncryptionKeySetAsync(IConfiguration configuration)

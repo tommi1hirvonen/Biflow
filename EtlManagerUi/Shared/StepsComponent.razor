@@ -290,16 +290,6 @@
     private JobExecutionDetailsModal JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
 
-    private async Task LoadData()
-    {
-        using var context = DbFactory.CreateDbContext();
-        Steps = await context.Steps
-            .Where(step => step.JobId == Job.JobId)
-            .OrderBy(step => step.ExecutionPhase)
-            .ThenBy(step => step.StepName)
-            .ToListAsync();
-    }
-
     private void ShowEditModal(Step step)
     {
         EditModalStepId = step?.StepId ?? Guid.Empty;
@@ -339,11 +329,14 @@
     {
         try
         {
-            await Utility.StepCopy(configuration, step.StepId, job.JobId, "admin");
+            Guid createdStepId = await Utility.StepCopyAsync(configuration, step.StepId, job.JobId, "admin");
             // If the steps was copied to this job, reload steps.
             if (Job.JobId == job.JobId)
             {
-                await LoadData();
+                using var context = DbFactory.CreateDbContext();
+                var createdStep = await context.Steps.FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
+                Steps.Add(createdStep);
+                Steps = Steps.OrderBy(s => s.ExecutionPhase).ThenBy(s => s.StepName).ToList();
             }
         }
         catch (Exception)

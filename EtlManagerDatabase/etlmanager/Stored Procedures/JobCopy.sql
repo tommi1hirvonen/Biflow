@@ -159,3 +159,5 @@ FROM etlmanager.Parameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 
 COMMIT TRANSACTION
+
+SELECT @JobIdNew
