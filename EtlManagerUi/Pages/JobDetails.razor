@@ -232,9 +232,13 @@ else
             context.Attach(CurrentJob).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
-        catch (Exception)
+        catch (DbUpdateConcurrencyException)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error updating job");
+            await JsRuntime.InvokeVoidAsync("alert", "Concurrency error: the job was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error updating job: " + ex.Message);
         }
     }
 
@@ -247,9 +251,9 @@ else
             await context.SaveChangesAsync();
             NavigationManager.NavigateTo("jobs");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job: " + ex.Message);
         }
     }
 
@@ -261,9 +265,9 @@ else
             await Utility.ToggleJobEnabledAsync(configuration, CurrentJob, value);
             CurrentJob.IsEnabled = !CurrentJob.IsEnabled;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job: " + ex.Message);
         }
     }
 
@@ -275,9 +279,9 @@ else
             await Utility.ToggleJobDependencyModeAsync(configuration, CurrentJob, value);
             CurrentJob.UseDependencyMode = !CurrentJob.UseDependencyMode;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error toggling job dependency mode");
+            await JsRuntime.InvokeVoidAsync("alert", "Error toggling job dependency mode: " + ex.Message);
         }
     }
 
@@ -300,9 +304,9 @@ else
             }
             await context.SaveChangesAsync();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error toggling subscription");
+            await JsRuntime.InvokeVoidAsync("alert", "Error toggling subscription:" + ex.Message);
         }
     }
 

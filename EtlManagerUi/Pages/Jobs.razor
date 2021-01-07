@@ -297,9 +297,9 @@
         {
             await Utility.ToggleJobEnabledAsync(configuration, job, value);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job: " + ex.Message);
         }
     }
 
@@ -308,15 +308,17 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            var job_ = await context.Jobs.FindAsync(job.JobId);
-            job_.JobName = EditJob.JobName;
-            context.Attach(job_).State = EntityState.Modified;
-            await context.SaveChangesAsync();
             job.JobName = EditJob.JobName;
+            context.Attach(job).State = EntityState.Modified;
+            await context.SaveChangesAsync();
         }
-        catch (Exception)
+        catch (DbUpdateConcurrencyException)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error updating job");
+            await JsRuntime.InvokeVoidAsync("alert", "Concurrency error: the job was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error updating job: " + ex.Message);
         }
     }
 
@@ -332,9 +334,9 @@
             jobs.Add(NewJob);
             NewJob = new() { IsEnabled = true };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error adding job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error adding job: " + ex.Message);
         }
     }
 
@@ -348,9 +350,9 @@
             jobs.Add(createdJob);
             jobs = jobs.OrderBy(job_ => job_.JobName).ToList();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error copying job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error copying job: " + ex.Message);
         }
 
     }
@@ -364,9 +366,9 @@
             await context.SaveChangesAsync();
             jobs.Remove(job);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job");
+            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job: " + ex.Message);
         }
     }
 

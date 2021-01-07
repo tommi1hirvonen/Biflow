@@ -8,6 +8,7 @@
     [IsEnabled]            BIT              CONSTRAINT [DF_Job_IsEnabled] DEFAULT (1) NOT NULL,
     [CreatedBy]            NVARCHAR(250)    NULL,
     [LastModifiedBy]       NVARCHAR(250)    NULL,
+    [Timestamp]            ROWVERSION       NOT NULL,
     CONSTRAINT [PK_Job] PRIMARY KEY CLUSTERED ([JobId] ASC)
 );
 

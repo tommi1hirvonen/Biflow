@@ -98,6 +98,9 @@ namespace EtlManagerUi.Models
         [Display(Name = "Last modified by")]
         public string LastModifiedBy { get; set; }
 
+        [Timestamp]
+        public byte[] Timestamp { get; set; }
+
         public ICollection<Dependency> Dependencies { get; set; }
 
         public IList<Parameter> Parameters { get; set; }

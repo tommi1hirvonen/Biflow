@@ -14,16 +14,17 @@
                     <div class="col mx-3">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
-                                      @onclick="() => ShowDependencies = false">
+                                        @onclick="() => ShowDependencies = false">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                                 Settings
                             </BSButton>
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowDependencies ? "active" : null)"
-                                      @onclick="() => ShowDependencies = true">
+                                        @onclick="() => ShowDependencies = true">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                                 Dependencies
                             </BSButton>
                         </BSButtonGroup>
+                        
                         <DataAnnotationsValidator />
                         <ValidationSummary />
                         @if (!ShowDependencies)
@@ -482,25 +483,27 @@
                 Step.Parameters.Clear();
             }
 
-            var existingStep = Context.Steps.AsNoTracking().FirstOrDefault(step_ => step_.StepId == Step.StepId);
-            if (existingStep != null)
+            if (Step.StepId != Guid.Empty)
             {
                 Context.Attach(Step).State = EntityState.Modified;
-                Context.SaveChanges();
             }
             else
             {
                 Context.Steps.Add(Step);
-                Context.SaveChanges();
             }
+            await Context.SaveChangesAsync();
+            
+            await OnStepSubmit.InvokeAsync(Step);
+            Modal.Hide();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await JS.InvokeVoidAsync("alert", "Concurrency error: the step has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error adding/editing step:" + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Error adding/editing step: " + ex.Message);
         }
-
-        await OnStepSubmit.InvokeAsync(Step);
-        Modal.Hide();
     }
 
     private bool ParametersCheck()

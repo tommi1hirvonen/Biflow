@@ -22,6 +22,7 @@
     [CreatedBy]                 NVARCHAR(250)    NULL,
     [LastModifiedDateTime]      DATETIME2 (7)    NOT NULL,
     [LastModifiedBy]            NVARCHAR(250)    NULL,
+    [Timestamp]                 ROWVERSION       NOT NULL, 
     CONSTRAINT [PK_Step] PRIMARY KEY CLUSTERED ([StepId] ASC),
     CONSTRAINT [CK_Step_StepType] CHECK ([StepType]='SSIS' AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='SQL' AND [SqlStatement] IS NOT NULL AND [ConnectionId] IS NOT NULL

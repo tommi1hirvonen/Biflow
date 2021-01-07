@@ -304,9 +304,9 @@
             await Utility.ToggleStepEnabledAsync(configuration, step, value);
             step.IsEnabled = !step.IsEnabled;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling step");
+            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling step: " + ex.Message);
         }
     }
 
@@ -319,9 +319,9 @@
             await context.SaveChangesAsync();
             Steps.Remove(step);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error deleting step");
+            await JsRuntime.InvokeVoidAsync("alert", "Error deleting step: " + ex.Message);
         }
     }
 
@@ -339,9 +339,9 @@
                 Steps = Steps.OrderBy(s => s.ExecutionPhase).ThenBy(s => s.StepName).ToList();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error copying step");
+            await JsRuntime.InvokeVoidAsync("alert", "Error copying step: " + ex.Message);
         }
     }
 
