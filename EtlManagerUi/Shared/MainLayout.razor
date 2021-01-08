@@ -21,7 +21,7 @@
         </header>
         <div class="container-fluid">
             <div role="row">
-                <NavMenu ClassString="@SidebarClass" />
+                <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
                 <main class="main px-md-4 pt-4 flex-grow-1">
                     @Body
                 </main>
@@ -48,5 +48,12 @@
     private void ToggleSidebar()
     {
         collapseSidebar = !collapseSidebar;
+    }
+
+    private async Task CollapseSidebar()
+    {
+        // Do not instantly close the sidebar, as this might look "funky" to the user.
+        await Task.Delay(100);
+        collapseSidebar = true;
     }
 }

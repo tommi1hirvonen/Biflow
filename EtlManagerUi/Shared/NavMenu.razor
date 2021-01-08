@@ -3,51 +3,51 @@
 <nav class="sidebar @ClassString">
     <ul class="nav flex-column pt-3">
         <li class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/home.svg")))
                 Home
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix">
+            <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                 Jobs
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="schedules">
+            <NavLink class="nav-link" href="schedules" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                 Schedules
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="executions">
+            <NavLink class="nav-link" href="executions" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                 Executions
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="dashboard">
+            <NavLink class="nav-link" href="dashboard" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
                 Dashboard
             </NavLink>
         </li>
         <li class="nav-item">
-            <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix">
+            <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                 Account
             </NavLink>
         </li>
         <AuthorizeView Roles="Admin">
             <li class="nav-item">
-                <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix">
+                <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                     Settings
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item">
-            <NavLink class="nav-link" href="about">
+            <NavLink class="nav-link" href="about" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                 About
             </NavLink>
@@ -65,6 +65,9 @@
     [Parameter]
     public string ClassString { get; set; }
 
+    [Parameter]
+    public EventCallback OnNavLinkClick { get; set; }
+
     private bool collapseNavMenu = true;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -72,5 +75,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task NavLinkClick()
+    {
+        await OnNavLinkClick.InvokeAsync();
     }
 }
