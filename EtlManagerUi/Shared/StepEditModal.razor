@@ -52,55 +52,63 @@
                                 </div>
                             </BSFormGroup>
                             <BSFormRow>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Execution phase</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                <div class="col">
+                                    <BSFormRow>
+                                        <BSFormGroup Class="col">
+                                            <BSLabel>Execution phase</BSLabel>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                                    </div>
+                                                </div>
+                                                <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
                                             </div>
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
-                                    </div>
-                                </BSFormGroup>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Step type</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                                        </BSFormGroup>
+                                        <BSFormGroup Class="col">
+                                            <BSLabel>Step type</BSLabel>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                                                    </div>
+                                                </div>
+                                                <InputSelect class="form-control" @bind-Value="Step.StepType" @oninput="StepTypeChanged">
+                                                    <option>SQL</option>
+                                                    <option>SSIS</option>
+                                                    <option>PIPELINE</option>
+                                                    <option>JOB</option>
+                                                </InputSelect>
                                             </div>
-                                        </div>
-                                        <InputSelect class="form-control" @bind-Value="Step.StepType" @oninput="StepTypeChanged">
-                                            <option>SQL</option>
-                                            <option>SSIS</option>
-                                            <option>PIPELINE</option>
-                                            <option>JOB</option>
-                                        </InputSelect>
-                                    </div>
-                                </BSFormGroup>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Retry attempts</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                        </BSFormGroup>
+                                    </BSFormRow>
+                                </div>
+                                <div class="col-lg">
+                                    <BSFormRow>
+                                        <BSFormGroup Class="col">
+                                            <BSLabel>Retry attempts</BSLabel>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                                    </div>
+                                                </div>
+                                                <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
                                             </div>
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
-                                    </div>
-                                </BSFormGroup>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Retry interval (min)</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                        </BSFormGroup>
+                                        <BSFormGroup Class="col">
+                                            <BSLabel>Retry interval (min)</BSLabel>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                                    </div>
+                                                </div>
+                                                <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
                                             </div>
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
-                                    </div>
-                                </BSFormGroup>
+                                        </BSFormGroup>
+                                    </BSFormRow>
+                                </div>
                             </BSFormRow>
                             @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
                             {
@@ -151,7 +159,7 @@
                                             <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="ResetStepError"></InputText>
                                         </div>
                                     </BSFormGroup>
-                                    <BSFormGroup Class="col">
+                                    <BSFormGroup Class="col-lg">
                                         <BSLabel>Project name</BSLabel>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -177,9 +185,11 @@
                                     </BSFormGroup>
                                 </BSFormRow>
                                 <BSFormRow>
-                                    <div class="custom-control custom-checkbox custom-control-inline">
-                                        <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode" @bind-value="Step.ExecuteIn32BitMode">
-                                        <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+                                    <div class="col">
+                                        <div class="custom-control custom-checkbox custom-control-inline">
+                                            <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode" @bind-value="Step.ExecuteIn32BitMode">
+                                            <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+                                        </div>
                                     </div>
                                 </BSFormRow>
                             }
@@ -202,7 +212,7 @@
                                             </InputSelect>
                                         </div>
                                     </BSFormGroup>
-                                    <BSFormGroup Class="col">
+                                    <BSFormGroup Class="col-lg">
                                         <BSLabel>Pipeline name</BSLabel>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -218,7 +228,7 @@
                             @if (Step.StepType == "JOB")
                             {
                                 <BSFormRow>
-                                    <BSFormGroup>
+                                    <BSFormGroup Class="col">
                                         <BSLabel>Job</BSLabel>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -236,9 +246,11 @@
                                     </BSFormGroup>
                                 </BSFormRow>
                                 <BSFormRow>
-                                    <div class="custom-control custom-checkbox custom-control-inline">
-                                        <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized" @bind-value="Step.JobExecuteSynchronized">
-                                        <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
+                                    <div class="col">
+                                        <div class="custom-control custom-checkbox custom-control-inline">
+                                            <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized" @bind-value="Step.JobExecuteSynchronized">
+                                            <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
+                                        </div>
                                     </div>
                                 </BSFormRow>
                             }
