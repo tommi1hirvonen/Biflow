@@ -171,8 +171,8 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md">
 
+                    <div class="col">
                         <div class="input-group input-group-sm">
                             <label class="sr-only">Search</label>
                             <div class="input-group-prepend">
@@ -200,26 +200,27 @@
                                 }
                             </tbody>
                         </table>
-
                     </div>
 
-                    <div class="col-md">
-                        @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                        <BSButton Size="Size.Small" Color="Color.Secondary"
-                                    @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
-                            Select enabled
-                        </BSButton>
-                        @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                        <BSButton Size="Size.Small" Color="Color.Secondary"
-                                    @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
-                            Select all
-                        </BSButton>
-                        <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.Clear()">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-left.svg")))
-                            Deselect all
-                        </BSButton>
+                    <div class="col-lg">
+                        <BSButtonGroup>
+                            @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                            <BSButton Size="Size.Small" Color="Color.Secondary"
+                                      @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
+                                Select enabled
+                            </BSButton>
+                            @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                            <BSButton Size="Size.Small" Color="Color.Secondary"
+                                      @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
+                                Select all
+                            </BSButton>
+                            <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => StepsToExecute.Clear()">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-left.svg")))
+                                Deselect all
+                            </BSButton>
+                        </BSButtonGroup>
 
                         <table class="table table-hover table-sm mt-2">
                             <thead>
@@ -238,8 +239,7 @@
                                 }
                             </tbody>
                         </table>
-
-                    </div>
+                    </div>      
 
                 </div>
             </BSModalBody>
