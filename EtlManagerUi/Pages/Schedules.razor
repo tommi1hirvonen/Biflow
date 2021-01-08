@@ -467,6 +467,7 @@
         try
         {
             await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
+            schedule.IsEnabled = !schedule.IsEnabled;
         }
         catch (Exception)
         {

@@ -296,6 +296,7 @@
         try
         {
             await Utility.ToggleJobEnabledAsync(configuration, job, value);
+            job.IsEnabled = !job.IsEnabled;
         }
         catch (Exception ex)
         {
