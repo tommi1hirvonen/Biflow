@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -34,9 +33,13 @@ namespace EtlManagerExecutor
             // Connect to ETL Manager database.
             using (var sqlConnection = new SqlConnection(executionConfig.ConnectionString))
             {
-                var paramsCommand = new SqlCommand("SELECT [ParameterName], [ParameterValue] FROM [etlmanager].[Parameter] WHERE StepId = @StepId"
+                var paramsCommand = new SqlCommand(
+                    @"SELECT [ParameterName], [ParameterValue]
+                    FROM [etlmanager].[ExecutionParameter]
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
                 paramsCommand.Parameters.AddWithValue("@StepId", packageStep.StepId);
+                paramsCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
 
                 try
                 {

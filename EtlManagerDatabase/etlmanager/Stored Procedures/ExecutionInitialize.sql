@@ -10,7 +10,6 @@ SET NOCOUNT ON
 
 -- Create an execution id for ETL Manager.
 DECLARE @EtlManagerExecutionId UNIQUEIDENTIFIER = NEWID()
-DECLARE @EtlManagerExecutionIdString NVARCHAR(36) = CONVERT(NVARCHAR(36), @EtlManagerExecutionId)
 
 DECLARE @JobIdString NVARCHAR(36) = CONVERT(NVARCHAR(36), @JobId)
 
@@ -103,6 +102,27 @@ WHERE a.JobId = @JobId
 		OR NOT EXISTS (SELECT * FROM #StepIds) AND a.IsEnabled = 1 -- If no list was provided, check IsEnabled
 	)
 
+
+-- Store and historize the parameters.
+INSERT INTO etlmanager.ExecutionParameter (
+	ExecutionId,
+	ParameterId,
+	StepId,
+	ParameterName,
+	ParameterValue
+)
+SELECT
+	a.ExecutionId,
+	b.ParameterId,
+	b.StepId,
+	b.ParameterName,
+	b.ParameterValue
+FROM etlmanager.Execution AS a
+	JOIN etlmanager.Parameter AS b ON b.StepId = a.StepId
+WHERE a.ExecutionId = @EtlManagerExecutionId
+
+
+-- Finally return the id of the initialized execution.
 SELECT @EtlManagerExecutionId
 
 END;
