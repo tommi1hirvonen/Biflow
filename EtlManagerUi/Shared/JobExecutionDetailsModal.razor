@@ -388,6 +388,7 @@
 
             JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             Executions = await context.Executions
+                .Include(e => e.StepExecutionParameters)
                 .Where(e => e.ExecutionId == ExecutionId)
                 .ToListAsync();
             SortExecutions();

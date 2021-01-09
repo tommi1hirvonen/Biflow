@@ -31,7 +31,7 @@
         <dd class="col-sm-9">
             @StepExecution.CreatedDateTime
         </dd>
-        
+
         @if (ShowExtraDetails)
         {
             <dt class="col-sm-3">
@@ -59,7 +59,7 @@
                 <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
             </dd>
         }
-        
+
         @if (StepExecution.ExecutionStatus == "STOPPED")
         {
             <dt class="col-sm-3">
@@ -69,7 +69,7 @@
                 @StepExecution.StoppedBy
             </dd>
         }
-        
+
         @if (StepExecution.StepType == "SQL")
         {
             <dt class="col-sm-3">
@@ -129,6 +129,17 @@
             <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
         </dd>
     </dl>
+    @if (StepExecution.StepType == "SSIS")
+    {
+        <h6>Parameters</h6>
+        <dl class="row">
+            @foreach (var param in StepExecution?.StepExecutionParameters)
+            {
+                <dt class="col-sm-3">@param.ParameterName</dt>
+                <dd class="col-sm-9">@param.ParameterValue</dd>
+            }
+        </dl>
+    }
 }
 
 

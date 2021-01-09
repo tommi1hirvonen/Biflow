@@ -32,6 +32,7 @@ namespace EtlManagerUi.Data
         public DbSet<Connection> Connections { get; set; }
 
         public DbSet<Parameter> Parameters { get; set; }
+        public DbSet<StepExecutionParameter> ExecutionParameters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -80,6 +81,13 @@ namespace EtlManagerUi.Data
                 .ToTable("Parameter")
                 .HasOne(parameter => parameter.Step)
                 .WithMany(step => step.Parameters)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<StepExecutionParameter>()
+                .ToTable("vExecutionParameter")
+                .HasOne(param => param.StepExecution)
+                .WithMany(e => e.StepExecutionParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
             

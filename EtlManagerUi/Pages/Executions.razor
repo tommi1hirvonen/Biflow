@@ -397,6 +397,7 @@
         {
             IQueryable<StepExecution> stepExecutions = context.Executions;
             stepExecutions = stepExecutions
+                .Include(execution => execution.StepExecutionParameters)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
                 .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 

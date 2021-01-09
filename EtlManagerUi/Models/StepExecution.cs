@@ -68,5 +68,7 @@ namespace EtlManagerUi.Models
 
         [Display(Name = "Stopped by")]
         public string StoppedBy { get; set; }
+
+        public ICollection<StepExecutionParameter> StepExecutionParameters { get; set; }
     }
 }
