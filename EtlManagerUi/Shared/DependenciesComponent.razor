@@ -51,8 +51,8 @@
 
 <div class="container-fluid h-100 flex-column p-0">
     <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
-        <svg id="dependency_graph" viewBox="0 0 2000 1000">
-            <g />
+        <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
+            <g id="g_dependency_graph" />
         </svg>
     </div>
 </div>
@@ -68,6 +68,8 @@
     [Parameter]
     public Job Job { get; set; }
 
+    private Job PrevJob { get; set; }
+
     [Parameter]
     public List<Step> Steps { get; set; }
 
@@ -76,7 +78,7 @@
     private StepEditModal StepEditModal { get; set; }
     private Guid EditModalStepId { get; set; }
 
-    private bool GraphShouldRender { get; set; } = false;
+    private bool GrapShouldRender { get; set; }
 
     protected override void OnInitialized()
     {
@@ -87,15 +89,24 @@
         ObjectReference = DotNetObjectReference.Create(helper);
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Job != PrevJob)
+        {
+            PrevJob = Job;
+            GrapShouldRender = true;
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadGraph();
+        if (GrapShouldRender)
+            await LoadGraph();
     }
 
     private async Task LoadGraph()
     {
-        GraphShouldRender = false;
-
+        GrapShouldRender = false;
         // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
         var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
         var stepsJson = JsonSerializer.Serialize(steps);
@@ -116,7 +127,7 @@
         StepEditModal?.Show(showDependencies: true);
     }
 
-    private void OnStepSubmit(Step step)
+    private async Task OnStepSubmit(Step step)
     {
         var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep != null)
@@ -125,7 +136,8 @@
         }
         Steps.Add(step);
         Steps.Sort();
-        GraphShouldRender = true;
+        GrapShouldRender = true;
+        await LoadGraph();
         StateHasChanged();
     }
 

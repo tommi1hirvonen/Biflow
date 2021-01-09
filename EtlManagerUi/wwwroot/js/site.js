@@ -3,8 +3,14 @@
     var steps = JSON.parse(steps_);
     var dependencies = JSON.parse(dependencies_);
 
+    var container = document.getElementById('g_dependency_graph');
+    // Clear all other previous content.
+    // This way we can all previously set listeners as well
+    // => no duplicate function calls back to.NET.
+    container.innerHTML = '';
+
     // Set up zoom support
-    var svg = d3.select("#dependency_graph"),
+    var svg = d3.select("#svg_dependency_graph"),
         inner = svg.select("g"),
         zoom = d3.zoom().on("zoom", function () {
             inner.attr("transform", d3.event.transform);
@@ -179,7 +185,9 @@ function drawStepsTimeline(dataset_, dotNetObject) {
 
     var container = document.getElementById('steps_graph');
 
-    // Clear all other previous content
+    // Clear all other previous content.
+    // This way we can all previously set listeners as well
+    // => no duplicate function calls back to.NET.
     container.innerHTML = '';
 
     var options = {
