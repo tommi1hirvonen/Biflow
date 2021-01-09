@@ -217,6 +217,7 @@ else
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
             .Include(step => step.Parameters)
+            .Include(step => step.Dependencies)
             .Where(step => step.JobId == CurrentJob.JobId)
             .OrderBy(step => step.ExecutionPhase)
             .ThenBy(step => step.StepName)

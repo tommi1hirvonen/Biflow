@@ -187,16 +187,33 @@
                             <thead>
                                 <tr>
                                     <th>Available steps</th>
+                                    @if (Job.UseDependencyMode)
+                                    {
+                                        <th></th>
+                                    }
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var step in Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Add(step)">
-                                        <td class="@(step.IsEnabled ? null : "text-secondary")">
-                                            @step.StepName
+                                <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
+                                    <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                        @step.StepName
+                                    </td>
+                                    @if (Job.UseDependencyMode)
+                                    {
+                                        <td>
+                                            <div class="btn-group btn-group-sm btn-row">
+                                                @if (step.Dependencies?.Count > 0)
+                                                {
+                                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => SelectStepAndDependencies(step)">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                                                </BSButton>
+                                                }
+                                            </div>
                                         </td>
-                                    </tr>
+                                    }
+                                </tr>
                                 }
                             </tbody>
                         </table>
@@ -371,16 +388,30 @@
         StepHistoryModal.Show();
     }
 
-    private void ToggleStepsExecuteAll(object checkedValue)
+    private void SelectStepAndDependencies(Step step, List<Step> processedSteps = null)
     {
-        var execute = (bool)checkedValue;
-        StepsToExecute.Clear();
-        if (execute)
+        // Add the step to the list of steps to execute if it is not there yet.
+        if (!StepsToExecute.Any(s => s.StepId == step.StepId))
         {
-            foreach (var step in Steps)
-            {
-                StepsToExecute.Add(step);
-            }
+            StepsToExecute.Add(step);
+        }
+
+        // Get dependency ids.
+        List<Guid> dependencyStepIds = step.Dependencies.Select(d => d.DependantOnStepId).ToList();
+
+        // If there are no dependencies, return.
+        if (dependencyStepIds.Count == 0)
+        {
+            return;
+        }
+
+        // Get dependency steps based on ids.
+        List<Step> dependencySteps = Steps.Where(s => dependencyStepIds.Any(id => s.StepId == id)).ToList();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            SelectStepAndDependencies(depencyStep);
         }
     }
 
