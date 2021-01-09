@@ -1,6 +1,5 @@
 ﻿@implements IDisposable 
 
-@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
@@ -64,17 +63,13 @@
 
 @code {
     [Parameter]
-    public Guid Id { get; set; }
-
-    public Guid PrevId { get; set; }
-
-    [Parameter]
     public List<Job> Jobs { get; set; }
 
     [Parameter]
     public Job Job { get; set; }
 
-    private List<Step> Steps { get; set; }
+    [Parameter]
+    public List<Step> Steps { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
 
@@ -92,27 +87,9 @@
         ObjectReference = DotNetObjectReference.Create(helper);
     }
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Id != PrevId)
-        {
-            PrevId = Id;
-            using var context = DbFactory.CreateDbContext();
-            Steps = await context.Steps
-                .Where(step => step.JobId == Id)
-                .Include(step => step.Dependencies)
-                .AsNoTracking()
-                .ToListAsync();
-
-            GraphShouldRender = true;
-            StateHasChanged();
-        }
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GraphShouldRender)
-            await LoadGraph();
+        await LoadGraph();
     }
 
     private async Task LoadGraph()
@@ -147,6 +124,7 @@
             Steps.Remove(existingStep);
         }
         Steps.Add(step);
+        Steps.Sort();
         GraphShouldRender = true;
         StateHasChanged();
     }

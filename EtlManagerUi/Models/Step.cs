@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerUi.Models
 {
-    public class Step
+    public class Step : IComparable
     {
         [Key]
         [Required]
@@ -108,5 +108,27 @@ namespace EtlManagerUi.Models
         public DataFactory DataFactory { get; set; }
 
         public Connection Connection { get; set; }
+
+        public int CompareTo(object obj)
+        {
+            if (obj == null) return 1;
+
+            if (obj is Step other)
+            {
+                int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
+                if (result == 0)
+                {
+                    return StepName.CompareTo(other.StepName);
+                }
+                else
+                {
+                    return result;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Object is not a Step");
+            }
+        }
     }
 }

@@ -353,7 +353,7 @@
                 using var context = DbFactory.CreateDbContext();
                 var createdStep = await context.Steps.FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
                 Steps.Add(createdStep);
-                Steps = Steps.OrderBy(s => s.ExecutionPhase).ThenBy(s => s.StepName).ToList();
+                Steps.Sort();
             }
         }
         catch (Exception ex)
@@ -370,7 +370,7 @@
             Steps.Remove(existingStep);
         }
         Steps.Add(step);
-        Steps = Steps.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName).ToList();
+        Steps.Sort();
     }
 
     private void ShowStepDetailsModal(Step step)
@@ -388,7 +388,16 @@
         StepHistoryModal.Show();
     }
 
-    private void SelectStepAndDependencies(Step step, List<Step> processedSteps = null)
+    private async Task SelectStepAndDependencies(Step step)
+    {
+        if (!RecurseDependencies(step, new()))
+        {
+            StepsToExecute.Clear();
+            await JsRuntime.InvokeVoidAsync("alert", "Error selecting step dependencies: there are circular dependencies.");
+        }
+    }
+
+    private bool RecurseDependencies(Step step, List<Step> processedSteps)
     {
         // Add the step to the list of steps to execute if it is not there yet.
         if (!StepsToExecute.Any(s => s.StepId == step.StepId))
@@ -399,11 +408,18 @@
         // Get dependency ids.
         List<Guid> dependencyStepIds = step.Dependencies.Select(d => d.DependantOnStepId).ToList();
 
-        // If there are no dependencies, return.
+        // If there are no dependencies, return true.
         if (dependencyStepIds.Count == 0)
         {
-            return;
+            return true;
         }
+        // If there are dependencies and this step was already handled, there are circular dependencies => return false.
+        else if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return false;
+        }
+
+        processedSteps.Add(step);
 
         // Get dependency steps based on ids.
         List<Step> dependencySteps = Steps.Where(s => dependencyStepIds.Any(id => s.StepId == id)).ToList();
@@ -411,8 +427,13 @@
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
         {
-            SelectStepAndDependencies(depencyStep);
+            if (!RecurseDependencies(depencyStep, processedSteps))
+            {
+                return false;
+            }
         }
+
+        return true;
     }
 
     private async Task Execute()
