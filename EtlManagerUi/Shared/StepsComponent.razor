@@ -161,7 +161,7 @@
 
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true">
+    <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true" IsOpenChanged="isOpen => StepsToExecute.Clear()">
         <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
         @if (Steps != null)
         {
