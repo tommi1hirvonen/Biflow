@@ -1,6 +1,7 @@
 ﻿@implements IDisposable 
 
 @inject IJSRuntime JS
+@inject IWebHostEnvironment WebHostEnvironment
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
@@ -49,6 +50,25 @@
         }
 </style>
 
+<div class="form-row">
+    <div class="form-group ml-3">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                </div>
+            </div>
+            <select class="form-control form-control-sm" @onchange="LimitGraph">
+                <option selected=@string.IsNullOrEmpty(StepFilter) value="">All</option>
+                @foreach (var step in Steps ?? Enumerable.Empty<Step>())
+                {
+                    <option selected=@(StepFilter == step.StepName) value="@step.StepName">@step.StepName</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid h-100 flex-column p-0">
     <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
         <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
@@ -80,6 +100,8 @@
 
     private bool GrapShouldRender { get; set; }
 
+    private string StepFilter { get; set; } = string.Empty;
+
     protected override void OnInitialized()
     {
         // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
@@ -89,11 +111,13 @@
         ObjectReference = DotNetObjectReference.Create(helper);
     }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (Job != PrevJob)
         {
             PrevJob = Job;
+            StepFilter = string.Empty;
+            StateHasChanged();
             GrapShouldRender = true;
         }
     }
@@ -107,16 +131,90 @@
     private async Task LoadGraph()
     {
         GrapShouldRender = false;
-        // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-        var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
-        var stepsJson = JsonSerializer.Serialize(steps);
-        var dependencies = Steps
-            .SelectMany(step => step.Dependencies)
-            .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
-        var dependenciesJson = JsonSerializer.Serialize(dependencies);
+        string stepsJson = null;
+        string dependenciesJson = null;
 
-        // Also pass the reference to this component instance using ObjectReference.
-        await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
+        if (string.IsNullOrEmpty(StepFilter))
+        {
+            // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+            var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
+            var dependencies = Steps
+                .SelectMany(step => step.Dependencies)
+                .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+            
+            stepsJson = JsonSerializer.Serialize(steps);
+            dependenciesJson = JsonSerializer.Serialize(dependencies);
+        }
+        else
+        {
+            var startStep = Steps.FirstOrDefault(s => s.StepName == StepFilter);
+            if (startStep != null)
+            {
+                var steps = RecurseDependenciesBackward(startStep, new());
+                steps.Remove(startStep);
+                steps = RecurseDependenciesForward(startStep, steps);
+
+                var dependencies = steps
+                    .SelectMany(step => step.Dependencies)
+                    .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
+                    .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+
+                stepsJson = JsonSerializer.Serialize(steps.Select(step => new { Id = step.StepId, Name = step.StepName }));
+                dependenciesJson = JsonSerializer.Serialize(dependencies);
+            }
+        }
+
+        if (stepsJson != null && dependenciesJson != null)
+            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
+    }
+
+    private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps)
+    {
+        // If the step was already handled, return.
+        // This way we do not loop indefinitely in case of circular dependencies.
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        // Get dependency steps.
+        List<Step> dependencySteps = Steps.Where(s => step.Dependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesBackward(depencyStep, processedSteps);
+        }
+
+        return processedSteps;
+    }
+
+    private List<Step> RecurseDependenciesForward(Step step, List<Step> processedSteps)
+    {
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        List<Step> dependencySteps = Steps.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
+
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesForward(depencyStep, processedSteps);
+        }
+
+        return processedSteps;
+    }
+
+    private async Task LimitGraph(ChangeEventArgs args)
+    {
+        StepFilter = args.Value.ToString();
+        GrapShouldRender = true;
+        await LoadGraph();
     }
 
     // Step edit modals can be opened from JS using JSInterop by calling this method. See site.js => drawDependencyGraph().
