@@ -94,9 +94,6 @@ namespace EtlManagerUi
                     "--id",
                     executionId.ToString()
                 },
-                // Set WorkingDirectory for the EtlManagerExecutor executable.
-                // This way it reads the configuration file (appsettings.json) from the correct folder.
-                WorkingDirectory = Path.GetDirectoryName(executorPath),
                 UseShellExecute = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
@@ -122,9 +119,6 @@ namespace EtlManagerUi
                     "--username",
                     username
                 },
-                // Set WorkingDirectory for the EtlManagerExecutor executable.
-                // This way it reads the configuration file (appsettings.json) from the correct folder.
-                WorkingDirectory = Path.GetDirectoryName(executorPath),
                 UseShellExecute = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden

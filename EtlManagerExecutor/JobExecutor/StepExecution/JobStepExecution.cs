@@ -53,9 +53,6 @@ namespace EtlManagerExecutor
                         executionId.ToString(),
                         executionConfig.Notify ? "--notify" : ""
                     },
-                    // Set WorkingDirectory for the EtlManagerExecutor executable.
-                    // This way it reads the configuration file (appsettings.json) from the correct folder.
-                    WorkingDirectory = Path.GetDirectoryName(executorFilePath),
                     UseShellExecute = true,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden

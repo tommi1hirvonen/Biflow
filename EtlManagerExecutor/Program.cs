@@ -15,9 +15,8 @@ namespace EtlManagerExecutor
     {
         static async Task<int> Main(string[] args)
         {
-            Console.WriteLine(Directory.GetCurrentDirectory());
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                //.SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
@@ -34,6 +33,8 @@ namespace EtlManagerExecutor
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
                 })
+                .ConfigureHostConfiguration(configHost =>
+                    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .UseSerilog()
                 .Build();
 
