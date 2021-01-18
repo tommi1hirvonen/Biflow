@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -360,99 +361,76 @@ namespace EtlManagerExecutor
         {
             using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             var sqlCommand = new SqlCommand(
-                    @"WITH Recursion AS (
-                        SELECT
-                            a.StepId,
-                            a.DependantOnStepId,
-                            CONVERT(NVARCHAR(MAX), b.StepName) AS DependencyPath
-                        FROM etlmanager.Dependency AS a
-                            INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
-                        WHERE b.JobId = @JobId
-                        
-                        UNION ALL
-                        
-                        SELECT
-                            a.StepId,
-                            b.DependantOnStepId,
-                            DependencyPath = CONVERT(NVARCHAR(MAX), a.DependencyPath + ' => ' + c.StepName)
-                        FROM Recursion AS a
-                            INNER JOIN etlmanager.Dependency AS b ON a.DependantOnStepId = b.StepId
-                            INNER JOIN etlmanager.Step AS c ON b.StepId = c.StepId
-                        WHERE a.DependantOnStepId <> a.StepId AND b.DependantOnStepId <> b.StepId
-                    )
-
-                    SELECT
+                    @"SELECT
                         a.StepId,
-                        a.DependantOnStepId,
-                        DependencyPath = a.DependencyPath + ' => ' + b.StepName
-                    FROM Recursion AS a
-                        INNER JOIN etlmanager.Step AS b ON a.DependantOnStepId = b.StepId
-                    WHERE a.StepId = a.DependantOnStepId
-                    OPTION(MAXRECURSION 1000)"
+                        a.DependantOnStepId
+                    FROM etlmanager.Dependency AS a
+                        INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
+                    WHERE b.JobId = @JobId"
                     , sqlConnection)
             {
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            List<string> dependencyPaths = new();
+            var dependencies = new Dictionary<string, List<string>>();
             await sqlConnection.OpenAsync();
             using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
-                    dependencyPaths.Add(reader["DependencyPath"].ToString());
+                    var stepId = reader["StepId"].ToString();
+                    var dependencyStepId = reader["DependantOnStepId"].ToString();
+                    if (!dependencies.ContainsKey(stepId))
+                    {
+                        dependencies[stepId] = new();
+                    }
+                    dependencies[stepId].Add(dependencyStepId);
                 }
             }
-            return string.Join("\n\n", dependencyPaths);
+
+            List<List<string>> cycles = dependencies.FindCycles();
+            if (cycles.Count == 0)
+                return null;
+            else
+                return JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
         }
 
         private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
         {
             using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
             var sqlCommand = new SqlCommand(
-                @"WITH Recursion AS (
-                    SELECT
-                        a.JobId,
-                        a.JobToExecuteId,
-                        CONVERT(NVARCHAR(MAX), b.JobName) AS DependencyPath
-                    FROM etlmanager.Step AS a
-                        INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
-                    WHERE b.JobId = @JobId AND a.StepType = 'JOB'
-                        
-                    UNION ALL
-                        
-                    SELECT
-                        a.JobId,
-                        c.JobToExecuteId,
-                        DependencyPath = CONVERT(NVARCHAR(MAX), a.DependencyPath + ' => ' + b.JobName)
-                    FROM Recursion AS a
-                        INNER JOIN etlmanager.Job AS b ON a.JobToExecuteId = b.JobId
-                        INNER JOIN etlmanager.Step AS c ON b.JobId = c.JobId AND c.StepType = 'JOB'
-                    WHERE a.JobToExecuteId <> a.JobId
-                )
-                SELECT
+                @"SELECT
                     a.JobId,
-                    a.JobToExecuteId,
-                    DependencyPath = a.DependencyPath + ' => ' + b.JobName
-                FROM Recursion AS a
-                    INNER JOIN etlmanager.Job AS b ON a.JobToExecuteId = b.JobId
-                WHERE a.JobId = a.JobToExecuteId
-                OPTION(MAXRECURSION 1000)"
+                    a.JobToExecuteId
+                FROM etlmanager.Step AS a
+                    INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
+                WHERE a.StepType = 'JOB'"
                 , sqlConnection)
             {
                 CommandTimeout = 120 // two minutes
             };
-            sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            var dependencyPaths = new List<string>();
+            var dependencies = new Dictionary<string, List<string>>();
             await sqlConnection.OpenAsync();
             using (SqlDataReader reader = await sqlCommand.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
-                    dependencyPaths.Add(reader["DependencyPath"].ToString());
+                    var jobId = reader["JobId"].ToString();
+                    var jobToExecuteId = reader["JobToExecuteId"].ToString();
+                    if (!dependencies.ContainsKey(jobId))
+                    {
+                        dependencies[jobId] = new();
+                    }
+                    dependencies[jobId].Add(jobToExecuteId);
                 }
             }
-            return string.Join("\n\n", dependencyPaths);
+
+            List<List<string>> cycles = dependencies.FindCycles();
+            // There are no circular dependencies or this job is not among the cycles.
+            if (cycles.Count == 0 || !cycles.Any(c => c.Any(c_ => c_ == executionConfig.JobId)))
+                return null;
+            else
+                return JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
         }
 
         private static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
