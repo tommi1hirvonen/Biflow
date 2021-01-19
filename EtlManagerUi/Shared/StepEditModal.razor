@@ -472,7 +472,44 @@
         // If the user saves their changes, SubmitStep() is called first and changes are saved.
         if (!isOpen)
         {
-            Context.ChangeTracker.Entries().Where(e => e.Entity != null).ToList().ForEach(e => e.State = EntityState.Detached);
+            // Reset added entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity != null && e.State == EntityState.Added).ToList())
+            {
+                if (entity.Entity is Dependency dependency)
+                {
+                    if (Step.Dependencies.Contains(dependency))
+                        Step.Dependencies.Remove(dependency);
+                }
+                else if (entity.Entity is Parameter parameter)
+                {
+                    if (Step.Parameters.Contains(parameter))
+                        Step.Parameters.Remove(parameter);
+                }
+                entity.State = EntityState.Detached;
+            }
+
+            // Reset deleted entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity != null && e.State == EntityState.Deleted).ToList())
+            {
+                if (entity.Entity is Dependency dependency)
+                {
+                    if (!Step.Dependencies.Contains(dependency))
+                        Step.Dependencies.Add(dependency);
+                }
+                else if (entity.Entity is Parameter parameter)
+                {
+                    if (!Step.Parameters.Contains(parameter))
+                        Step.Parameters.Add(parameter);
+                }
+                entity.State = EntityState.Unchanged;
+            }
+
+            // Reset changed entities.
+            Context.ChangeTracker
+                .Entries()
+                .Where(e => e.Entity != null)
+                .ToList()
+                .ForEach(e => e.State = EntityState.Unchanged);
         }
     }
 

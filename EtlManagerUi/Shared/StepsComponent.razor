@@ -388,7 +388,7 @@
         StepHistoryModal.Show();
     }
 
-    private async Task SelectStepAndDependencies(Step step)
+    private void SelectStepAndDependencies(Step step)
     {
         RecurseDependencies(step, new());
     }
