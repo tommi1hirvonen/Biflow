@@ -30,7 +30,7 @@ namespace EtlManagerUi.Data
         public DbSet<RoleUser> EditableUsers { get; set; }
         public DbSet<DataFactory> DataFactories { get; set; }
         public DbSet<Connection> Connections { get; set; }
-
+        public DbSet<Tag> Tags { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
         public DbSet<StepExecutionParameter> ExecutionParameters { get; set; }
 
@@ -69,6 +69,12 @@ namespace EtlManagerUi.Data
                 .WithMany(job => job.Steps)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Tag>()
+                .ToTable("Tag")
+                .HasMany(t => t.Steps)
+                .WithMany(s => s.Tags)
+                .UsingEntity(e => e.ToTable("StepTag"));
             
             modelBuilder.Entity<Schedule>()
                 .ToTable("Schedule")

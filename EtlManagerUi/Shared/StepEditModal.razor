@@ -9,9 +9,37 @@
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
         <BSModalBody>
-            <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
-                <div class="row">
-                    <div class="col mx-3">
+            <div class="row">
+                <div class="col mx-3">
+                        
+                    <div class="row mb-3">
+                        <div class="col-lg">
+                            <BSForm Model="NewTag" OnValidSubmit="SubmitTag">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+                                <div class="form-group">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                                            </div>
+                                        </div>
+                                        <input @ref="TagInput" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </BSForm>
+                        </div>
+                        <div class="col-lg">
+                            @foreach (var tag in Step.Tags)
+                            {
+                                <span class="badge badge-pill badge-secondary mx-1" style="cursor: pointer;" @onclick="() => Step.Tags.Remove(tag)">
+                                    @tag.TagName
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
                                         @onclick="() => ShowDependencies = false">
@@ -24,7 +52,7 @@
                                 Dependencies
                             </BSButton>
                         </BSButtonGroup>
-                        
+
                         <DataAnnotationsValidator />
                         <ValidationSummary />
                         @if (!ShowDependencies)
@@ -306,8 +334,8 @@
                                 </div>
                                 <div class="custom-control custom-control-inline custom-checkbox col ml-3">
                                     <input type="checkbox" class="custom-control-input" id="only_active"
-                                           checked=@ShowOnlyActiveDependencies
-                                           @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
+                                            checked=@ShowOnlyActiveDependencies
+                                            @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
                                     <label class="custom-control-label" for="only_active">Show only active</label>
                                 </div>
                             </div>
@@ -322,18 +350,18 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                      .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                      .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                      .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                      .OrderBy(step => step.StepName))
+                                        .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                        .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                        .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                        .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
                                             <td class="align-middle">
                                                 <div class="custom-control custom-control-inline custom-checkbox">
                                                     <input type="checkbox" class="custom-control-input" id="dependency_@step.StepId"
-                                                           checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
-                                                           @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
+                                                            checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
+                                                            @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
                                                     <label class="custom-control-label" for="dependency_@step.StepId"></label>
                                                 </div>
                                             </td>
@@ -342,8 +370,8 @@
                                                 {
                                                     <div class="custom-control custom-control-inline custom-checkbox">
                                                         <input type="checkbox" class="custom-control-input" id="strict_@step.StepId"
-                                                               checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
-                                                               @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
+                                                                checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
+                                                                @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
                                                         <label class="custom-control-label" for="strict_@step.StepId"></label>
                                                     </div>
                                                 }
@@ -353,9 +381,9 @@
                                 </tbody>
                             </table>
                         }
-                    </div>
+                    </BSForm>
                 </div>
-            </BSForm>
+            </div>
         </BSModalBody>
         <BSModalFooter>
             <BSButton ButtonType="ButtonType.Submit" form="step_edit_form" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
@@ -390,6 +418,8 @@
 
     private IList<DataFactory> DataFactories { get; set; }
 
+    private IList<Tag> Tags { get; set; }
+
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
@@ -401,16 +431,30 @@
     private string DependenciesFilterText { get; set; } = string.Empty;
     private bool ShowOnlyActiveDependencies { get; set; } = false;
 
+    private ElementReference TagInput { get; set; }
+    private Tag NewTag { get; set; } = new();
+    private bool FocusTagInput { get; set; } = false;
+
     protected override async Task OnInitializedAsync()
     {
         Context = DbFactory.CreateDbContext();
         Connections = await Context.Connections.AsNoTracking().ToListAsync();
         DataFactories = await Context.DataFactories.AsNoTracking().ToListAsync();
+        Tags = await Context.Tags.ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (FocusTagInput)
+        {
+            await TagInput.FocusAsync();
+            FocusTagInput = false;
+        }
     }
 
     private async Task LoadData()
@@ -420,6 +464,7 @@
             Step = await Context.Steps
                 .Include(step => step.Parameters)
                 .Include(step => step.Dependencies)
+                .Include(step => step.Tags)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
             PrevStepId = StepId;
         }
@@ -434,7 +479,8 @@
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
                 Parameters = new List<Parameter>(),
-                Dependencies = new List<Dependency>()
+                Dependencies = new List<Dependency>(),
+                Tags = new List<Tag>()
             };
         }
         StateHasChanged();
@@ -485,6 +531,11 @@
                     if (Step.Parameters.Contains(parameter))
                         Step.Parameters.Remove(parameter);
                 }
+                else if (entity.Entity is Tag tag)
+                {
+                    if (Step.Tags.Contains(tag))
+                        Step.Tags.Remove(tag);
+                }
                 entity.State = EntityState.Detached;
             }
 
@@ -500,6 +551,11 @@
                 {
                     if (!Step.Parameters.Contains(parameter))
                         Step.Parameters.Add(parameter);
+                }
+                else if (entity.Entity is Tag tag)
+                {
+                    if (!Step.Tags.Contains(tag))
+                        Step.Tags.Add(tag);
                 }
                 entity.State = EntityState.Unchanged;
             }
@@ -545,13 +601,14 @@
             return;
         }
 
+        if (Step.StepType != "SSIS")
+        {
+            Step.Parameters.Clear();
+        }
+
+
         try
         {
-            if (Step.StepType != "SSIS")
-            {
-                Step.Parameters.Clear();
-            }
-
             if (Step.StepId != Guid.Empty)
             {
                 Context.Attach(Step).State = EntityState.Modified;
@@ -622,6 +679,21 @@
         {
             dependency.StrictDependency = strict;
         }
+    }
+
+    public void SubmitTag()
+    {
+        var tag = Tags.FirstOrDefault(t => t.TagName == NewTag.TagName) ?? NewTag;
+
+        if (!Tags.Contains(tag))
+            Tags.Add(tag);
+
+        if (!Step.Tags.Contains(tag))
+            Step.Tags.Add(tag);
+
+
+        NewTag = new();
+        FocusTagInput = true;
     }
 
     public void Show(bool showDependencies = false)

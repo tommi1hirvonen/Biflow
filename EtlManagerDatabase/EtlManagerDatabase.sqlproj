@@ -100,6 +100,8 @@
     <Build Include="etlmanager\Views\vConnection.sql" />
     <Build Include="etlmanager\Tables\ExecutionParameter.sql" />
     <Build Include="etlmanager\Views\vExecutionParameter.sql" />
+    <Build Include="etlmanager\Tables\Tag.sql" />
+    <Build Include="etlmanager\Tables\StepTag.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

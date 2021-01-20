@@ -218,6 +218,7 @@ else
         Steps = await context.Steps
             .Include(step => step.Parameters)
             .Include(step => step.Dependencies)
+            .Include(step => step.Tags)
             .Where(step => step.JobId == CurrentJob.JobId)
             .OrderBy(step => step.ExecutionPhase)
             .ThenBy(step => step.StepName)

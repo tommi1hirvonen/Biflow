@@ -105,6 +105,8 @@ namespace EtlManagerUi.Models
 
         public IList<Parameter> Parameters { get; set; }
 
+        public IList<Tag> Tags { get; set; }
+
         public DataFactory DataFactory { get; set; }
 
         public Connection Connection { get; set; }
