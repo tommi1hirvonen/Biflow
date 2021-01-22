@@ -338,10 +338,8 @@ namespace EtlManagerExecutor
 
         private async Task StartNewStepWorkerAsync(ExecutionConfiguration executionConfig, string stepId)
         {
-            // Create a new step worker...
-            var stepWorker = new StepWorker(executionConfig, stepId);
-            //...and start it asynchronously.
-            var task = stepWorker.ExecuteStepAsync();
+            // Create a new step worker and start it asynchronously.
+            var task = new StepWorker(executionConfig, stepId).ExecuteStepAsync();
             // Add one to the counter.
             Interlocked.Increment(ref RunningStepsCounter);
             try
@@ -389,10 +387,8 @@ namespace EtlManagerExecutor
             }
 
             List<List<string>> cycles = dependencies.FindCycles();
-            if (cycles.Count == 0)
-                return null;
-            else
-                return JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
+
+            return cycles.Count == 0 ? null : JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
         }
 
         private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
@@ -426,11 +422,10 @@ namespace EtlManagerExecutor
             }
 
             List<List<string>> cycles = dependencies.FindCycles();
+
             // There are no circular dependencies or this job is not among the cycles.
-            if (cycles.Count == 0 || !cycles.Any(c => c.Any(c_ => c_ == executionConfig.JobId)))
-                return null;
-            else
-                return JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
+            return cycles.Count == 0 || !cycles.Any(c => c.Any(c_ => c_ == executionConfig.JobId))
+                ? null : JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
         }
 
         private static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)

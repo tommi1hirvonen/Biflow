@@ -56,7 +56,7 @@ namespace EtlManagerExecutor
                 , sqlConnection);
             recipientsCmd.Parameters.AddWithValue("@JobId", jobId);
 
-            List<string> recipients = new List<string>();
+            var recipients = new List<string>();
 
             try
             {
@@ -77,7 +77,7 @@ namespace EtlManagerExecutor
             }
 
 
-            SqlCommand messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
+            var messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
             messageBodyCmd.Parameters.AddWithValue("ExecutionId", executionId);
 
             var messageBody = string.Empty;

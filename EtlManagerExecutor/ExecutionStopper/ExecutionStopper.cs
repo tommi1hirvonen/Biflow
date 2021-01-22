@@ -186,59 +186,12 @@ namespace EtlManagerExecutor
 
             foreach (var step in packageSteps)
             {
-                stopTasks.Add(StopPackageStepAsync(stopConfiguration, step));
+                stopTasks.Add(step.StopExecutionAsync(stopConfiguration));
             }
 
             bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
 
             return results.All(b => b == true);
-        }
-
-        private static async Task<bool> StopPackageStepAsync(StopConfiguration stopConfiguration, PackageStep step)
-        {
-            Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", stopConfiguration.ExecutionId, step.StepId, step.PackageOperationId);
-            try
-            {
-                using var sqlConnection = new SqlConnection(step.ConnectionString);
-                await sqlConnection.OpenAsync();
-                var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-                stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", step.PackageOperationId);
-                await stopPackageOperationCmd.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping package operation id {operationId}", stopConfiguration.ExecutionId, step.StepId, step.PackageOperationId);
-                return false;
-            }
-
-            try
-            {
-                using SqlConnection sqlConnection = new SqlConnection(stopConfiguration.ConnectionString);
-                await sqlConnection.OpenAsync();
-                SqlCommand updateStatus = new SqlCommand(
-                  @"UPDATE etlmanager.Execution
-                SET EndDateTime = GETDATE(),
-                    StartDateTime = ISNULL(StartDateTime, GETDATE()),
-	                ExecutionStatus = 'STOPPED',
-                    StoppedBy = @Username
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
-                    , sqlConnection);
-                updateStatus.Parameters.AddWithValue("@ExecutionId", stopConfiguration.ExecutionId);
-                updateStatus.Parameters.AddWithValue("@StepId", step.StepId);
-                updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", step.RetryAttemptIndex);
-
-                if (stopConfiguration.Username != null) updateStatus.Parameters.AddWithValue("@Username", stopConfiguration.Username);
-                else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);
-                
-                await updateStatus.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging SSIS step as stopped", stopConfiguration.ExecutionId, step.StepId);
-                return false;
-            }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped package operation id {PackageOperationId}", stopConfiguration.ExecutionId, step.StepId, step.PackageOperationId);
-            return true;
         }
 
         private static async Task<bool> StopPipelineExecutionsAsync(StopConfiguration stopConfiguration)
@@ -284,7 +237,7 @@ namespace EtlManagerExecutor
             }
 
             // Group pipeline steps based on their DataFactoryId.
-            var pipelineRunsGrouped = pipelineRuns
+            Dictionary<string, List<PipelineStep>> pipelineRunsGrouped = pipelineRuns
                 .GroupBy(run => run.Key)
                 .ToDictionary(
                     group => group.Key,
@@ -320,7 +273,7 @@ namespace EtlManagerExecutor
                 var credentials = new TokenCredentials(dataFactory.AccessToken);
                 var client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
 
-                var steps = pipelineRunsGrouped[dataFactoryId];
+                List<PipelineStep> steps = pipelineRunsGrouped[dataFactoryId];
                 foreach (var step in steps)
                 {
                     try
@@ -336,57 +289,13 @@ namespace EtlManagerExecutor
                         Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", stopConfiguration.ExecutionId, dataFactoryId);
                         return false;
                     }
-                    stopTasks.Add(StopPipelineRunAsync(stopConfiguration, step, dataFactory, client));
+                    stopTasks.Add(step.StopPipelineRunAsync(stopConfiguration, dataFactory, client));
                 }
             }
 
-            var results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
+            bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
 
             return results.All(b => b == true);
-        }
-
-        private static async Task<bool> StopPipelineRunAsync(StopConfiguration stopConfiguration, PipelineStep step, DataFactory dataFactory, DataFactoryManagementClient client)
-        {
-            Log.Information("{ExecutionId} {StepId} Stopping pipeline run id {PipelineRunId}", stopConfiguration.ExecutionId, step.StepId, step.PipelineRunId);
-            try
-            {
-                await client.PipelineRuns.CancelAsync(dataFactory.ResourceGroupName, dataFactory.ResourceName, step.PipelineRunId, isRecursive: true);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping pipeline run {runId}", stopConfiguration.ExecutionId, step.StepId, step.PipelineRunId);
-                return false;
-            }
-
-            try
-            {
-                using var sqlConnection = new SqlConnection(stopConfiguration.ConnectionString);
-                await sqlConnection.OpenAsync();
-
-                var updateStatuses = new SqlCommand(
-                  @"UPDATE etlmanager.Execution
-                        SET EndDateTime = GETDATE(),
-                            StartDateTime = ISNULL(StartDateTime, GETDATE()),
-	                        ExecutionStatus = 'STOPPED',
-                            StoppedBy = @Username
-                        WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
-                    , sqlConnection);
-                updateStatuses.Parameters.AddWithValue("@ExecutionId", stopConfiguration.ExecutionId);
-                updateStatuses.Parameters.AddWithValue("@StepId", step.StepId);
-                updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", step.RetryAttemptIndex);
-
-                if (stopConfiguration.Username != null) updateStatuses.Parameters.AddWithValue("@Username", stopConfiguration.Username);
-                else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
-
-                await updateStatuses.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging pipeline step as stopped", stopConfiguration.ExecutionId, step.StepId);
-                return false;
-            }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped pipeline run id {PipelineRunId}", stopConfiguration.ExecutionId, step.StepId, step.PipelineRunId);
-            return true;
         }
 
     }
