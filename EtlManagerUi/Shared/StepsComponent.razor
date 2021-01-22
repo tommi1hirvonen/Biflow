@@ -5,33 +5,41 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
-
-<AuthorizeView Roles="Admin, Editor">
-    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">Add step</BSButton>
-</AuthorizeView>
-<AuthorizeView Roles="Admin, Editor, Operator">
-    <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-        Execute
-    </BSButton>
-    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
-        <span class="sr-only">Loading...</span>
+<div class="row mx-auto" style="max-width: 60rem;">
+    <div class="col">
+        <AuthorizeView Roles="Admin, Editor">
+            <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">Add step</BSButton>
+        </AuthorizeView>
+        <AuthorizeView Roles="Admin, Editor, Operator">
+            <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                Execute
+            </BSButton>
+            <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </AuthorizeView>
     </div>
-</AuthorizeView>
+</div>
 
-<BSAlert Class="mt-3" Color="@(ExecuteSuccess ? Color.Success : Color.Danger)" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">
-    @if (ExecuteSuccess)
-    {
-        <text>Execution started successfully - <a class="alert-link" href="javascript:void(0)" @onclick="OpenJobExecutionModal">monitor execution</a></text>
-    }
-    else
-    {
-        <text>Error starting execution: @ExecuteErrorMessage</text>
-    }
-</BSAlert>
+<div class="row mx-auto" style="max-width: 60rem;">
+    <div class="col">
+        <BSAlert Class="mt-3" Color="@(ExecuteSuccess ? Color.Success : Color.Danger)" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">
+            @if (ExecuteSuccess)
+            {
+                <text>Execution started successfully - <a class="alert-link" href="javascript:void(0)" @onclick="OpenJobExecutionModal">monitor execution</a></text>
+            }
+            else
+            {
+                <text>Error starting execution: @ExecuteErrorMessage</text>
+            }
+        </BSAlert>
+    </div>
+</div>
 
-<div class="row mt-4 mb-2">
-    <div class="col input-group" style="max-width: 30rem;">
+
+<div class="row mt-4 mb-2 mx-auto" style="max-width: 60rem;">
+    <div class="col-7 input-group">
         <label class="sr-only">Filter by name</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
@@ -40,7 +48,7 @@
         </div>
         <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search by name" />
     </div>
-    <div class="col input-group" style="max-width: 20rem;">
+    <div class="col-5 input-group">
         <label class="sr-only">Filter by tags</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
@@ -52,7 +60,7 @@
 </div>
 
 
-<div class="row" style="height: calc(100vh - 320px); overflow-y: auto; max-width: 60rem;">
+<div class="row mx-auto" style="height: calc(100vh - 320px); overflow-y: auto; max-width: 60rem;">
     <div class="col">
         @if (Steps == null || Jobs == null || Job == null)
         {
@@ -527,8 +535,6 @@
             return;
         }
 
-        ExecuteModal.Hide();
-
         ExecuteButtonDisabled = true;
         string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
         try
@@ -544,6 +550,7 @@
         }
 
         StepsToExecute.Clear();
+        ExecuteModal.Hide();
         ExecuteAlertOpen = true;
         ExecuteButtonDisabled = false;
     }
