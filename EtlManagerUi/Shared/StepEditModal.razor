@@ -12,33 +12,6 @@
             <div class="row">
                 <div class="col mx-3">
                         
-                    <div class="row mb-3">
-                        <div class="col-lg">
-                            <BSForm Model="NewTag" OnValidSubmit="SubmitTag">
-                                <DataAnnotationsValidator />
-                                <ValidationSummary />
-                                <div class="form-group">
-                                    <div class="input-group input-group-sm">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                                            </div>
-                                        </div>
-                                        <input @ref="TagInput" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm">
-                                    </div>
-                                </div>
-                            </BSForm>
-                        </div>
-                        <div class="col-lg">
-                            @foreach (var tag in Step.Tags)
-                            {
-                                <span class="badge badge-pill badge-secondary mx-1" style="cursor: pointer;" @onclick="() => Step.Tags.Remove(tag)">
-                                    @tag.TagName
-                                </span>
-                            }
-                        </div>
-                    </div>
-
                     <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
@@ -418,8 +391,6 @@
 
     private IList<DataFactory> DataFactories { get; set; }
 
-    private IList<Tag> Tags { get; set; }
-
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
@@ -440,21 +411,11 @@
         Context = DbFactory.CreateDbContext();
         Connections = await Context.Connections.AsNoTracking().ToListAsync();
         DataFactories = await Context.DataFactories.AsNoTracking().ToListAsync();
-        Tags = await Context.Tags.ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (FocusTagInput)
-        {
-            await TagInput.FocusAsync();
-            FocusTagInput = false;
-        }
     }
 
     private async Task LoadData()
@@ -479,8 +440,7 @@
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
                 Parameters = new List<Parameter>(),
-                Dependencies = new List<Dependency>(),
-                Tags = new List<Tag>()
+                Dependencies = new List<Dependency>()
             };
         }
         StateHasChanged();
@@ -531,11 +491,6 @@
                     if (Step.Parameters.Contains(parameter))
                         Step.Parameters.Remove(parameter);
                 }
-                else if (entity.Entity is Tag tag)
-                {
-                    if (Step.Tags.Contains(tag))
-                        Step.Tags.Remove(tag);
-                }
                 entity.State = EntityState.Detached;
             }
 
@@ -551,11 +506,6 @@
                 {
                     if (!Step.Parameters.Contains(parameter))
                         Step.Parameters.Add(parameter);
-                }
-                else if (entity.Entity is Tag tag)
-                {
-                    if (!Step.Tags.Contains(tag))
-                        Step.Tags.Add(tag);
                 }
                 entity.State = EntityState.Unchanged;
             }
@@ -681,20 +631,6 @@
         }
     }
 
-    public void SubmitTag()
-    {
-        var tag = Tags.FirstOrDefault(t => t.TagName == NewTag.TagName) ?? NewTag;
-
-        if (!Tags.Contains(tag))
-            Tags.Add(tag);
-
-        if (!Step.Tags.Contains(tag))
-            Step.Tags.Add(tag);
-
-
-        NewTag = new();
-        FocusTagInput = true;
-    }
 
     public void Show(bool showDependencies = false)
     {

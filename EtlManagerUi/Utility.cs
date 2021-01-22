@@ -176,6 +176,52 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
+        public async static Task RemoveTagAsync(IConfiguration configuration, Step step, Tag tag)
+        {
+            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            var sqlCommand = new SqlCommand(
+                @"DELETE FROM [etlmanager].[StepTag]
+                WHERE [StepsStepId] = @StepId AND [TagsTagId] = @TagId"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
+            sqlCommand.Parameters.AddWithValue("@TagId", tag.TagId);
+            await sqlConnection.OpenAsync();
+            await sqlCommand.ExecuteNonQueryAsync();
+        }
+
+        public async static Task AddTagAsync(IConfiguration configuration, Step step, Tag tag)
+        {
+            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            await sqlConnection.OpenAsync();
+
+            // Get id for existing tag.
+            var cmdGetGuid = new SqlCommand("SELECT TagId FROM etlmanager.Tag WHERE TagName = @TagName_", sqlConnection);
+            cmdGetGuid.Parameters.AddWithValue("@TagName_", tag.TagName);
+            var guid = (Guid?)await cmdGetGuid.ExecuteScalarAsync();
+            
+            // If id == null, then no tag with matching name was found. Insert a new tag.
+            if (guid == null)
+            {
+                guid = Guid.NewGuid();
+                var cmdInsertTag = new SqlCommand("INSERT INTO etlmanager.Tag (TagId, TagName) SELECT @TagId, @TagName", sqlConnection);
+                cmdInsertTag.Parameters.AddWithValue("@TagId", guid);
+                cmdInsertTag.Parameters.AddWithValue("@TagName", tag.TagName);
+                await cmdInsertTag.ExecuteNonQueryAsync();
+            }
+
+            tag.TagId = (Guid)guid;
+
+            // Insert a link between the given step and tag.
+            var sqlCommand = new SqlCommand(
+                @"INSERT INTO etlmanager.StepTag (StepsStepId, TagsTagId)
+                SELECT @StepId, @TagId
+                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepsStepId = @StepId AND TagsTagId = @TagId)"
+                , sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@StepId", step.StepId);
+            sqlCommand.Parameters.AddWithValue("@TagId", guid);
+            await sqlCommand.ExecuteNonQueryAsync();
+        }
+
         public async static Task ToggleScheduleEnabledAsync(IConfiguration configuration, Schedule schedule, bool enabled)
         {
             int value = enabled ? 1 : 0;

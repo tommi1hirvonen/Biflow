@@ -328,10 +328,19 @@ a:hover {
     vertical-align: text-bottom;
 }
 
+.tag-remove .feather {
+    width: 14px;
+    height: 14px;
+}
+
+.tag-remove:hover {
+    color: var(--color-primary);
+    cursor: pointer;
+}
+
 /*
     Nav
 */
-
 .nav-pills .nav-link.active {
     background-color: var(--color-primary);
 }
