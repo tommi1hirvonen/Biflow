@@ -410,7 +410,11 @@
             if (Job.JobId == job.JobId)
             {
                 using var context = DbFactory.CreateDbContext();
-                var createdStep = await context.Steps.FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
+                var createdStep = await context.Steps
+                    .Include(step => step.Parameters)
+                    .Include(step => step.Dependencies)
+                    .Include(step => step.Tags)
+                    .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
                 Steps.Add(createdStep);
                 Steps.Sort();
             }

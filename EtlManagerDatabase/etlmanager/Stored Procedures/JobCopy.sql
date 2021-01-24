@@ -158,6 +158,16 @@ SELECT NEWID(),
 FROM etlmanager.Parameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 
+-- Copy tags
+INSERT INTO etlmanager.StepTag (
+	StepsStepId,
+	TagsTagId
+)
+SELECT B.StepIdNew,
+	A.TagsTagId
+FROM etlmanager.StepTag AS A
+	INNER JOIN #StepIdMapping AS B ON a.StepsStepId = B.StepId
+
 COMMIT TRANSACTION
 
 SELECT @JobIdNew

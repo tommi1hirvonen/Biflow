@@ -100,6 +100,17 @@ BEGIN
 
 END
 
+-- Copy tags
+INSERT INTO etlmanager.StepTag (
+	StepsStepId,
+	TagsTagId
+)
+SELECT @StepIdNew,
+	A.TagsTagId
+FROM etlmanager.StepTag AS A
+WHERE A.StepsStepId = @StepId
+
+
 COMMIT TRANSACTION
 
 SELECT @StepIdNew
