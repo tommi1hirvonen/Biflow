@@ -4,6 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
 @inject IJSRuntime JsRuntime
+@inject IHttpContextAccessor HttpContextAccessor
 
 @*CSS definitions for the status icons for each job's last execution*@
 <style>
@@ -345,8 +346,9 @@
     {
         try
         {
+            string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
             using var context = DbFactory.CreateDbContext();
-            Guid createdJobId = await Utility.JobCopyAsync(configuration, job.JobId, "admin");
+            Guid createdJobId = await Utility.JobCopyAsync(configuration, job.JobId, user);
             var createdJob = await context.Jobs.Include(job_ => job_.Steps).Include(job_ => job_.Schedules).FirstOrDefaultAsync(job_ => job_.JobId == createdJobId);
             jobs.Add(createdJob);
             jobs = jobs.OrderBy(job_ => job_.JobName).ToList();

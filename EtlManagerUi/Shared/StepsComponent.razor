@@ -460,7 +460,8 @@
     {
         try
         {
-            Guid createdStepId = await Utility.StepCopyAsync(configuration, step.StepId, job.JobId, "admin");
+            string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+            Guid createdStepId = await Utility.StepCopyAsync(configuration, step.StepId, job.JobId, user);
             // If the steps was copied to this job, reload steps.
             if (Job.JobId == job.JobId)
             {
