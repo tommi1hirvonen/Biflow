@@ -30,16 +30,16 @@
 </BSAlert>
 
 <div class="row mt-4 mb-4">
-    <div class="col input-group">
+    <div class="col input-group" style="max-width: 25rem;">
         <label class="sr-only">Search</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
             </div>
         </div>
-        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search" />
+        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search by name" />
     </div>
-    <div class="col input-group">
+    <div class="col input-group" style="max-width: 25rem;">
         <label class="sr-only">Filter by tags</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
@@ -50,26 +50,26 @@
     </div>
 </div>
 
-<div class="card shadow-sm pt-2 my-4">
-    <table id="steps_table" class="table table-sm">
-        <tbody>
+<div class="card col shadow-sm my-4">
+    <div class="row">
+        <div class="col">
             @if (Steps == null || Jobs == null || Job == null)
             {
-                <tr class="table-borderless"><td colspan="5">Loading...</td></tr>
+                <p>Loading...</p>
             }
             else if (Steps.Count == 0)
             {
-                <tr class="table-borderless"><td colspan="5">No steps</td></tr>
+                <p>No steps</p>
             }
             else
             {
                 var index = 0;
                 @foreach (var item in Steps
-                    .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                    .Where(step => string.IsNullOrEmpty(TagsFilterText) || step.Tags.Any(tag => tag.TagName.ContainsIgnoreCase(TagsFilterText))))
+                   .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
+                   .Where(step => string.IsNullOrEmpty(TagsFilterText) || step.Tags.Any(tag => tag.TagName.ContainsIgnoreCase(TagsFilterText))))
                 {
-                    <tr class="@(item.IsEnabled ? null : "bg-light") @(index == 0 ? "table-borderless" : null)">
-                        <td class="align-middle pl-2">
+                    <div class="row py-2 @(item.IsEnabled ? null : "bg-light") @(index == 0 ? null : "border-top")">
+                        <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                     <StepTypeIconComponent StepType="@item.StepType" />
@@ -82,85 +82,64 @@
                                     @item.StepName
                                 </strong>
                             </AuthorizeView>
-                        </td>
-                        <td class="align-middle">
-                            <div class="row flex-nowrap align-items-center">
-                                <strong>@item.ExecutionPhase</strong>
-                                &nbsp;
-                                <div class="mr-5">@((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))</div>
-                            </div>
-                        </td>
-                        <td align="left">
-                            <div class="row flex-nowrap align-items-center">
-                                <AuthorizeView Roles="Admin, Editor">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="Operator, Viewer">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
-                                        <label class="custom-control-label" for="enabled_@item.StepId" aria-label="enabled"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <div class="btn-group btn-row ml-2">
-                                    <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item)">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
-                                    </BSButton>
-
-                                    <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepDetailsModal(item)">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                                    </BSButton>
-
-                                    <AuthorizeView Roles="Admin, Editor">
-                                        <BSDropdown IsGroup="true">
-                                            <BSDropdownToggle Size="Size.Small" Color="Color.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                            </BSDropdownToggle>
-                                            <BSDropdownMenu>
-                                                <BSDropdownHeader>Copy to</BSDropdownHeader>
-                                                <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
-                                                <BSDropdownItem IsDivider="true"></BSDropdownItem>
-                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                                {
-                                                    <BSDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</BSDropdownItem>
-                                                }
-                                            </BSDropdownMenu>
-                                        </BSDropdown>
-
-                                        <BSDropdown IsGroup="true">
-                                            <BSDropdownToggle Size="Size.Small" Color="Color.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                            </BSDropdownToggle>
-                                            <BSDropdownMenu>
-                                                <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                                <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
-                                            </BSDropdownMenu>
-                                        </BSDropdown>
-                                    </AuthorizeView>
+                        </div>
+                        <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-end">
+                            <strong>@item.ExecutionPhase</strong>
+                            &nbsp;
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                        </div>
+                        <div class="col-xl-3 col-md-4 d-inline-flex align-items-center justify-content-end">
+                            <AuthorizeView Roles="Admin, Editor">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
                                 </div>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Operator, Viewer">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
+                                    <label class="custom-control-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                </div>
+                            </AuthorizeView>
+                            <div class="btn-group btn-row ml-2">
+                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                </BSButton>
+
+                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepDetailsModal(item)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                                </BSButton>
+
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Copy to</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
+                                            <BSDropdownItem IsDivider="true"></BSDropdownItem>
+                                            @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                            {
+                                                <BSDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</BSDropdownItem>
+                                            }
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+
+                                    <BSDropdown IsGroup="true">
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                            <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+                                </AuthorizeView>
                             </div>
-                        </td>
-                    </tr>
-                    <tr class="table-borderless @(item.IsEnabled ? null : "bg-light")">
-                        <td colspan="3">
-                            <div class="btn-group btn-group-sm btn-row">
-                                <BSDropdown>
-                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => TagInputFocusStepId = item.StepId">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu Class="p-3" style="min-width: 20rem;">
-                                        <BSForm Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
-                                            <DataAnnotationsValidator />
-                                            <ValidationSummary />
-                                            <div class="form-group">
-                                                <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm">
-                                            </div>
-                                        </BSForm>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </div>
+                        </div>
+
+                        <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
                             @if (item.Tags.Count > 0)
                             {
                                 @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
@@ -175,15 +154,33 @@
                             }
                             else
                             {
-                                <small class="text-secondary ml-2">No tags</small>
+                                <small class="text-secondary mr-2">No tags</small>
                             }
-                        </td>
-                    </tr>
+                            <div class="btn-group btn-group-sm btn-row">
+                                <BSDropdown>
+                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => TagInputFocusStepId = item.StepId">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu Class="dropdown-menu-right p-3" style="min-width: 20rem;">
+                                        <BSForm Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
+                                            <DataAnnotationsValidator />
+                                            <ValidationSummary />
+                                            <div class="form-group">
+                                                <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm">
+                                            </div>
+                                        </BSForm>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </div>
+                        </div>
+
+                    </div>
+
                     index++;
                 }
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
 </div>
 
 
