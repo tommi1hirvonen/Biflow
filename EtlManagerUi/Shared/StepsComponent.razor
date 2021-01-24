@@ -30,7 +30,7 @@
 </BSAlert>
 
 <div class="row mt-4 mb-4">
-    <div class="col input-group input-group-sm" style="max-width: 40rem;">
+    <div class="col input-group input-group-sm" style="max-width: 25rem;">
         <label class="sr-only">Filter</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
@@ -38,8 +38,28 @@
             </div>
         </div>
         <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
-        <input type="text" class="form-control" @bind-value="TagsFilterText" @bind-value:event="oninput" placeholder="Filter by tag" />
     </div>
+    <BSDropdown>
+        <BSDropdownToggle Color="Color.Light" Size="Size.Small" Class="@(TagsFilterSet.Count == 0 ? null : "font-weight-bold")">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+            Filter by tag
+        </BSDropdownToggle>
+        <BSDropdownMenu Class="p-3" style="min-width: 15rem;">
+            <div>
+                @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+                {
+                    <span class="mx-2 badge badge-pill @(@TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")" style="cursor: pointer;"
+                          @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
+                        @tag
+                    </span>
+                }
+            </div>
+        </BSDropdownMenu>
+    </BSDropdown>
+    <BSButton Class="ml-3" Size="Size.Small" Color="Color.Light" @onclick="() => { TagsFilterSet.Clear(); StepsFilterText = string.Empty; }">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+        Clear filters
+    </BSButton>
 </div>
 
 <div class="card col shadow-sm my-4">
@@ -58,7 +78,7 @@
                 var index = 0;
                 @foreach (var item in Steps
                    .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                   .Where(step => string.IsNullOrEmpty(TagsFilterText) || step.Tags.Any(tag => tag.TagName.ContainsIgnoreCase(TagsFilterText))))
+                   .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
                 {
                     <div class="row py-2 @(item.IsEnabled ? null : "bg-light") @(index == 0 ? null : "border-top")">
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
@@ -200,17 +220,38 @@
                 <div class="row">
 
                     <div class="col">
-                        <div class="input-group input-group-sm">
-                            <label class="sr-only">Search</label>
-                            <div class="input-group-prepend">
-                                <div class="input-group-text rounded-left">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        <div class="row">
+                            <div class="col input-group input-group-sm">
+                                <label class="sr-only">Search</label>
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                                    </div>
                                 </div>
+                                <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
+                                       placeholder="Filter by name" autocomplete="off" />
                             </div>
-                            <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
-                                   placeholder="Filter by name" autocomplete="off" />
-                            <input type="text" class="form-control" @bind-value="ExecuteTagsFilterText" @bind-value:event="oninput"
-                                   placeholder="Filter by tag" autocomplete="off" />
+
+                            <BSDropdown Class="col-auto">
+                                <BSDropdownToggle Color="Color.Light" Size="Size.Small" Class="@(ExecuteTagsFilterSet.Count == 0 ? null : "font-weight-bold")">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                                    Filter by tag
+                                </BSDropdownToggle>
+                                <BSDropdownMenu Class="p-3" style="min-width: 15rem;">
+                                    @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+                                    {
+                                        <span class="mx-2 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")" style="cursor: pointer;"
+                                              @onclick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }">
+                                            @tag
+                                        </span>
+                                    }
+                                </BSDropdownMenu>
+                            </BSDropdown>
+                            <div class="col-auto">
+                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => { ExecuteTagsFilterSet.Clear(); ExecuteFilterText = string.Empty; }">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                                </BSButton>
+                            </div>
                         </div>
 
                         <table class="table table-hover table-sm mt-2">
@@ -329,16 +370,16 @@
     private IEnumerable<Step> StepsAvailableToExecute =>
         Steps.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
         .Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)) // Step name filter
-        .Where(step => string.IsNullOrEmpty(ExecuteTagsFilterText) || step.Tags.Any(tag => tag.TagName.ContainsIgnoreCase(ExecuteTagsFilterText))); // Tag filter
+        .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))); // Tag filter
 
     private bool ExecuteSuccess { get; set; } = false;
     private bool ExecuteAlertOpen { get; set; } = false;
     private string ExecuteErrorMessage { get; set; } = string.Empty;
 
     private string StepsFilterText { get; set; } = string.Empty;
-    private string TagsFilterText { get; set; } = string.Empty;
+    private HashSet<string> TagsFilterSet { get; set; } = new();
     private string ExecuteFilterText { get; set; } = string.Empty;
-    private string ExecuteTagsFilterText { get; set; } = string.Empty;
+    private HashSet<string> ExecuteTagsFilterSet { get; set; } = new();
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
