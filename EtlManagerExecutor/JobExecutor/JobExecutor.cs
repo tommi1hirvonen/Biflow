@@ -361,34 +361,52 @@ namespace EtlManagerExecutor
             var sqlCommand = new SqlCommand(
                     @"SELECT
                         a.StepId,
-                        a.DependantOnStepId
+                        b.StepName,
+                        a.DependantOnStepId,
+                        c.StepName as DependantOnStepName
                     FROM etlmanager.Dependency AS a
                         INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
+                        INNER JOIN etlmanager.Step AS c ON a.DependantOnStepId = c.StepId
                     WHERE b.JobId = @JobId"
                     , sqlConnection)
             {
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            var dependencies = new Dictionary<string, List<string>>();
+            var dependencies = new Dictionary<Step, List<Step>>();
+            var steps = new HashSet<Step>();
             await sqlConnection.OpenAsync();
             using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
                     var stepId = reader["StepId"].ToString();
+                    var stepName = reader["StepName"].ToString();
                     var dependencyStepId = reader["DependantOnStepId"].ToString();
-                    if (!dependencies.ContainsKey(stepId))
-                    {
-                        dependencies[stepId] = new();
-                    }
-                    dependencies[stepId].Add(dependencyStepId);
+                    var dependencyStepName = reader["DependantOnStepName"].ToString();
+
+                    var step = new Step(stepId, stepName);
+                    var dependencyStep = new Step(dependencyStepId, dependencyStepName);
+
+                    if (!dependencies.ContainsKey(step))
+                        dependencies[step] = new();
+                    
+                    dependencies[step].Add(dependencyStep);
+
+                    if (!steps.Contains(step))
+                        steps.Add(step);
+
+                    if (!steps.Contains(dependencyStep))
+                        steps.Add(dependencyStep);
                 }
             }
 
-            List<List<string>> cycles = dependencies.FindCycles();
+            List<List<Step>> cycles = dependencies.FindCycles();
 
-            return cycles.Count == 0 ? null : JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
+            var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+            var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
+
+            return cycles.Count == 0 ? null : json;
         }
 
         private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
@@ -397,35 +415,53 @@ namespace EtlManagerExecutor
             var sqlCommand = new SqlCommand(
                 @"SELECT
                     a.JobId,
-                    a.JobToExecuteId
+                    b.JobName,
+                    a.JobToExecuteId,
+                    c.JobName as JobToExecuteName
                 FROM etlmanager.Step AS a
                     INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
+                    INNER JOIN etlmanager.Job AS c ON a.JobToExecuteId = c.JobId
                 WHERE a.StepType = 'JOB'"
                 , sqlConnection)
             {
                 CommandTimeout = 120 // two minutes
             };
-            var dependencies = new Dictionary<string, List<string>>();
+            var dependencies = new Dictionary<Job, List<Job>>();
+            var jobs = new HashSet<Job>();
             await sqlConnection.OpenAsync();
             using (SqlDataReader reader = await sqlCommand.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
                 {
                     var jobId = reader["JobId"].ToString();
+                    var jobName = reader["JobName"].ToString();
                     var jobToExecuteId = reader["JobToExecuteId"].ToString();
-                    if (!dependencies.ContainsKey(jobId))
-                    {
-                        dependencies[jobId] = new();
-                    }
-                    dependencies[jobId].Add(jobToExecuteId);
+                    var jobToExecuteName = reader["JobToExecuteName"].ToString();
+
+                    var job = new Job(jobId, jobName);
+                    var jobToExecute = new Job(jobToExecuteId, jobToExecuteName);
+
+                    if (!dependencies.ContainsKey(job))
+                        dependencies[job] = new();
+                    
+                    dependencies[job].Add(jobToExecute);
+
+                    if (!jobs.Contains(job))
+                        jobs.Add(job);
+
+                    if (!jobs.Contains(jobToExecute))
+                        jobs.Add(jobToExecute);
                 }
             }
 
-            List<List<string>> cycles = dependencies.FindCycles();
+            List<List<Job>> cycles = dependencies.FindCycles();
+
+            var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+            var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
             // There are no circular dependencies or this job is not among the cycles.
-            return cycles.Count == 0 || !cycles.Any(c => c.Any(c_ => c_ == executionConfig.JobId))
-                ? null : JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true });
+            return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(job => job.JobId == executionConfig.JobId))
+                ? null : json;
         }
 
         private static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
