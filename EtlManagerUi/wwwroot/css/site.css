@@ -297,6 +297,10 @@ a:hover {
     Text
 */
 
+.text-primary {
+    color: var(--color-primary);
+}
+
 .text-success {
     color: var(--color-success);
 }
