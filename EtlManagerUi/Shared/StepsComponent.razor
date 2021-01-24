@@ -45,13 +45,19 @@
             Filter by tag
         </BSDropdownToggle>
         <BSDropdownMenu Class="p-3" style="min-width: 15rem;">
-            <div>
+            <div class="col">
                 @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
                 {
-                    <span class="mx-2 badge badge-pill @(@TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")" style="cursor: pointer;"
-                          @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
-                        @tag
-                    </span>
+                    <div class="row">
+                        <div class="custom-control custom-checkbox custom-control-inline">
+                            <input type="checkbox" class="custom-control-input" id="tag_filter_@tag"
+                                   checked=@TagsFilterSet.Contains(tag)
+                                   @onchange="args => { if ((bool)args.Value) TagsFilterSet.Add(tag); else TagsFilterSet.Remove(tag); }">
+                            <label class="custom-control-label" for="tag_filter_@tag">
+                                <span class="badge badge-pill badge-light">@tag</span>
+                            </label>
+                        </div>
+                    </div>   
                 }
             </div>
         </BSDropdownMenu>
@@ -238,13 +244,21 @@
                                     Filter by tag
                                 </BSDropdownToggle>
                                 <BSDropdownMenu Class="p-3" style="min-width: 15rem;">
-                                    @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
-                                    {
-                                        <span class="mx-2 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")" style="cursor: pointer;"
-                                              @onclick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }">
-                                            @tag
-                                        </span>
-                                    }
+                                    <div class="col">
+                                        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+                                        {
+                                            <div class="row">
+                                                <div class="custom-control custom-checkbox custom-control-inline">
+                                                    <input type="checkbox" class="custom-control-input" id="exec_tag_filter_@tag"
+                                                           checked=@ExecuteTagsFilterSet.Contains(tag)
+                                                           @onchange="args => { if ((bool)args.Value) ExecuteTagsFilterSet.Add(tag); else ExecuteTagsFilterSet.Remove(tag); }">
+                                                    <label class="custom-control-label" for="exec_tag_filter_@tag">
+                                                        <span class="badge badge-pill badge-light">@tag</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
                                 </BSDropdownMenu>
                             </BSDropdown>
                             <div class="col-auto">
