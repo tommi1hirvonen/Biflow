@@ -60,7 +60,7 @@
             {
                 @foreach (var item in Schedules)
                 {
-                    <tr>
+                    <tr class="@(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
                             <div class="custom-control custom-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">

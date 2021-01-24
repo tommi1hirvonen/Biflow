@@ -5,6 +5,19 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
+<style>
+    .step-row:hover,
+    .step-row:focus,
+    .step-row.disabled:hover,
+    .step-row.disabled:focus {
+        background-color: #ececec;
+    }
+
+    .step-row.disabled {
+        background-color: #f3f3f3;
+    }
+</style>
+
 <AuthorizeView Roles="Admin, Editor">
     <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">Add step</BSButton>
 </AuthorizeView>
@@ -86,7 +99,7 @@
                    .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
                    .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
                 {
-                    <div class="row py-2 @(item.IsEnabled ? null : "bg-light") @(index == 0 ? null : "border-top")">
+                    <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
