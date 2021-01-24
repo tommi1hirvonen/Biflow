@@ -6,5 +6,5 @@
 	[ParameterValue] NVARCHAR(4000) NOT NULL,
 	CONSTRAINT [PK_StepParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_Parameter] UNIQUE ([StepId],[ParameterName]),
-	CONSTRAINT [FK_StepParameter_StepId] FOREIGN KEY ([StepId]) REFERENCES [etlmanager].[Step] ([StepId])
+	CONSTRAINT [FK_StepParameter_StepId] FOREIGN KEY ([StepId]) REFERENCES [etlmanager].[Step] ([StepId]) ON DELETE CASCADE
 )

@@ -30,23 +30,15 @@
 </BSAlert>
 
 <div class="row mt-4 mb-4">
-    <div class="col input-group" style="max-width: 25rem;">
-        <label class="sr-only">Search</label>
+    <div class="col input-group input-group-sm" style="max-width: 40rem;">
+        <label class="sr-only">Filter</label>
         <div class="input-group-prepend">
             <div class="input-group-text rounded-left">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
             </div>
         </div>
-        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Search by name" />
-    </div>
-    <div class="col input-group" style="max-width: 25rem;">
-        <label class="sr-only">Filter by tags</label>
-        <div class="input-group-prepend">
-            <div class="input-group-text rounded-left">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-            </div>
-        </div>
-        <input type="text" class="form-control" @bind-value="TagsFilterText" @bind-value:event="oninput" placeholder="Search by tag" />
+        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
+        <input type="text" class="form-control" @bind-value="TagsFilterText" @bind-value:event="oninput" placeholder="Filter by tag" />
     </div>
 </div>
 
@@ -212,10 +204,13 @@
                             <label class="sr-only">Search</label>
                             <div class="input-group-prepend">
                                 <div class="input-group-text rounded-left">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                                 </div>
                             </div>
-                            <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+                            <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
+                                   placeholder="Filter by name" autocomplete="off" />
+                            <input type="text" class="form-control" @bind-value="ExecuteTagsFilterText" @bind-value:event="oninput"
+                                   placeholder="Filter by tag" autocomplete="off" />
                         </div>
 
                         <table class="table table-hover table-sm mt-2">
@@ -229,7 +224,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var step in Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))
+                                @foreach (var step in StepsAvailableToExecute)
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
                                         <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
@@ -258,13 +253,13 @@
                         <BSButtonGroup>
                             @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                             <BSButton Size="Size.Small" Color="Color.Secondary"
-                                      @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && step.IsEnabled && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                      @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute.Where(step => step.IsEnabled))">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
                                 Select enabled
                             </BSButton>
                             @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                             <BSButton Size="Size.Small" Color="Color.Secondary"
-                                      @onclick="() => StepsToExecute.AddRange(Steps.Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText) && !StepsToExecute.Any(e => e.StepId == step.StepId)))">
+                                      @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute)">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
                                 Select all
                             </BSButton>
@@ -331,6 +326,10 @@
     private BSModal ExecuteModal { get; set; }
     private List<Step> StepsToExecute { get; set; } = new();
     private bool ExecuteButtonDisabled { get; set; } = false;
+    private IEnumerable<Step> StepsAvailableToExecute =>
+        Steps.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
+        .Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)) // Step name filter
+        .Where(step => string.IsNullOrEmpty(ExecuteTagsFilterText) || step.Tags.Any(tag => tag.TagName.ContainsIgnoreCase(ExecuteTagsFilterText))); // Tag filter
 
     private bool ExecuteSuccess { get; set; } = false;
     private bool ExecuteAlertOpen { get; set; } = false;
@@ -339,6 +338,7 @@
     private string StepsFilterText { get; set; } = string.Empty;
     private string TagsFilterText { get; set; } = string.Empty;
     private string ExecuteFilterText { get; set; } = string.Empty;
+    private string ExecuteTagsFilterText { get; set; } = string.Empty;
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
