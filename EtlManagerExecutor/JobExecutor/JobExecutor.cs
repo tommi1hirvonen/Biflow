@@ -61,13 +61,13 @@ namespace EtlManagerExecutor
             var jobId = (await jobIdCommand.ExecuteScalarAsync()).ToString();
 
             var executionConfig = new ExecutionConfiguration(
-                connectionString,
-                encryptionPassword,
-                maxParallelSteps,
-                pollingIntervalMs,
-                executionId,
-                jobId,
-                notify);
+                ConnectionString: connectionString,
+                EncryptionPassword: encryptionPassword,
+                MaxParallelSteps: maxParallelSteps,
+                PollingIntervalMs: pollingIntervalMs,
+                ExecutionId: executionId,
+                JobId: jobId,
+                Notify: notify);
 
             // Check whether there are circular dependencies between jobs (through steps executing another jobs).
             string circularExecutions;

@@ -3,8 +3,7 @@
     internal abstract record StepConfiguration(
         string StepId,
         int RetryAttempts,
-        int RetryIntervalMinutes)
-    { }
+        int RetryIntervalMinutes);
 
     internal record SqlStepConfiguration(
         string StepId,
@@ -15,8 +14,7 @@
         : StepConfiguration(
             StepId,
             RetryAttempts,
-            RetryIntervalMinutes)
-    { }
+            RetryIntervalMinutes);
 
     internal record PackageStepConfiguration(
         string StepId,
@@ -30,8 +28,7 @@
         : StepConfiguration(
             StepId,
             RetryAttempts,
-            RetryIntervalMinutes)
-    { }
+            RetryIntervalMinutes);
 
     internal record PipelineStepConfiguration(
         string StepId,
@@ -42,8 +39,7 @@
         : StepConfiguration(
             StepId,
             RetryAttempts,
-            RetryIntervalMinutes)
-    { }
+            RetryIntervalMinutes);
 
     internal record JobStepConfiguration(
         string StepId,
@@ -54,7 +50,5 @@
         : StepConfiguration(
             StepId,
             RetryAttempts,
-            RetryIntervalMinutes)
-    { }
-
+            RetryIntervalMinutes);
 }

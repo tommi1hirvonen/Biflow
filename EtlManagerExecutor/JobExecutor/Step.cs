@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    public record Step(string StepId, string StepName) {}
+    public record Step(string StepId, string StepName);
 }

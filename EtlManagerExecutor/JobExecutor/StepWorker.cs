@@ -12,8 +12,6 @@ namespace EtlManagerExecutor
         private readonly ExecutionConfiguration executionConfiguration;
         private readonly string stepId;
 
-        private StepConfiguration StepConfiguration { get; set; }
-
         private int AttemptCounter { get; set; } = 0;
 
         public StepWorker(ExecutionConfiguration executionConfiguration, string stepId)
@@ -24,6 +22,8 @@ namespace EtlManagerExecutor
 
         public async Task ExecuteStepAsync()
         {
+            StepConfiguration StepConfiguration = null;
+
             // Get step details.
             using (var sqlConnection = new SqlConnection(executionConfiguration.ConnectionString))
             {

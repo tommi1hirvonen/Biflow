@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    public record Job(string JobId, string JobName) {}
+    public record Job(string JobId, string JobName);
 }
