@@ -104,18 +104,18 @@
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                     <StepTypeIconComponent StepType="@item.StepType" />
-                                    <strong>@item.StepName</strong>
+                                    @item.StepName
                                 </a>
                             </AuthorizeView>
                             <AuthorizeView Roles="Operator, Viewer">
-                                <strong class="text-dark">
+                                <span>
                                     <StepTypeIconComponent StepType="@item.StepType" />
                                     @item.StepName
-                                </strong>
+                                </span>
                             </AuthorizeView>
                         </div>
                         <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-end">
-                            <strong>@item.ExecutionPhase</strong>
+                            @item.ExecutionPhase
                             &nbsp;
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
                         </div>
@@ -143,10 +143,11 @@
 
                                 <AuthorizeView Roles="Admin, Editor">
                                     <BSDropdown IsGroup="true">
-                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                        @{ var prefix = "copy_menu"; }
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light" @onclick="() => ScrollIntoViewElementId = prefix + item.StepId">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
                                         </BSDropdownToggle>
-                                        <BSDropdownMenu>
+                                        <BSDropdownMenu id="@(prefix + item.StepId)" Class="dropdown-menu-right">
                                             <BSDropdownHeader>Copy to</BSDropdownHeader>
                                             <BSDropdownItem @onclick="() => CopyStep(item, Job)">here</BSDropdownItem>
                                             <BSDropdownItem IsDivider="true"></BSDropdownItem>
@@ -158,10 +159,11 @@
                                     </BSDropdown>
 
                                     <BSDropdown IsGroup="true">
-                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light">
+                                        @{ var prefix = "delete_menu"; }
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Light" @onclick="() => ScrollIntoViewElementId = prefix + item.StepId">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                                         </BSDropdownToggle>
-                                        <BSDropdownMenu>
+                                        <BSDropdownMenu id="@(prefix + item.StepId)" Class="dropdown-menu-right">
                                             <BSDropdownHeader>Delete?</BSDropdownHeader>
                                             <BSDropdownItem @onclick="() => DeleteStep(item)">Confirm</BSDropdownItem>
                                         </BSDropdownMenu>
@@ -189,16 +191,18 @@
                             }
                             <div class="btn-group btn-group-sm btn-row">
                                 <BSDropdown>
-                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => TagInputFocusStepId = item.StepId">
+                                    @{ var prefix = "tag_menu"; }
+                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => { TagInputFocusStepId = item.StepId; ScrollIntoViewElementId = prefix + item.StepId; }">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
                                     </BSDropdownToggle>
-                                    <BSDropdownMenu Class="dropdown-menu-right p-3" style="min-width: 20rem;">
-                                        <BSForm Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
+                                    <BSDropdownMenu id="@(prefix + item.StepId)" Class="dropdown-menu-right p-3" style="min-width: 25rem;">
+                                        <BSForm Class="d-flex" IsInline="true" Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
                                             <DataAnnotationsValidator />
                                             <ValidationSummary />
-                                            <div class="form-group">
-                                                <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm">
+                                            <div class="form-group flex-grow-1">
+                                                <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm flex-fill">
                                             </div>
+                                            <button type="submit" class="btn btn-sm btn-success ml-2">Add</button>
                                         </BSForm>
                                     </BSDropdownMenu>
                                 </BSDropdown>
@@ -415,6 +419,7 @@
     private Tag NewTag { get; set; } = new();
     private Guid? TagInputFocusStepId { get; set; } = null;
 
+    private string ScrollIntoViewElementId { get; set; } = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -431,6 +436,13 @@
             {
                 TagInputFocusStepId = null;
             }
+        }
+
+        // Used for dropdown menus. If the dropdown menu is not in the viewport then scroll to show it completely.
+        if (ScrollIntoViewElementId != null)
+        {
+            await JsRuntime.InvokeVoidAsync("scrollIntoViewCompat", ScrollIntoViewElementId);
+            ScrollIntoViewElementId = null;
         }
     }
 
