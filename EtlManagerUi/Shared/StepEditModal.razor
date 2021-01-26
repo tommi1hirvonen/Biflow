@@ -15,12 +15,12 @@
                     <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
-                                        @onclick="() => ShowDependencies = false">
+                                      @onclick="() => ShowDependencies = false">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
                                 Settings
                             </BSButton>
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowDependencies ? "active" : null)"
-                                        @onclick="() => ShowDependencies = true">
+                                      @onclick="() => ShowDependencies = true">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                                 Dependencies
                             </BSButton>
@@ -30,17 +30,19 @@
                         <ValidationSummary />
                         @if (!ShowDependencies)
                         {
-                            <BSFormGroup>
-                                <BSLabel>Step name</BSLabel>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Step name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                            </div>
                                         </div>
+                                        <InputText class="form-control" @bind-Value="Step.StepName"></InputText>
                                     </div>
-                                    <InputText class="form-control" @bind-Value="Step.StepName"></InputText>
-                                </div>
-                            </BSFormGroup>
+                                </BSFormGroup>
+                            </BSFormRow>
                             <BSFormGroup>
                                 <BSLabel>Description</BSLabel>
                                 <div class="input-group input-group-sm">
@@ -111,9 +113,22 @@
                                     </BSFormRow>
                                 </div>
                             </BSFormRow>
-                            @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
+                            @if (Step.StepType == "SQL" || Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
                             {
                                 <BSFormRow>
+                                    <BSFormGroup Class="col-lg-6">
+                                        <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                </div>
+                                            </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                    @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
+                                    {
                                     <BSFormGroup Class="col-lg-6">
                                         <BSLabel>Connection</BSLabel>
                                         <div class="input-group">
@@ -130,6 +145,7 @@
                                             </InputSelect>
                                         </div>
                                     </BSFormGroup>
+                                    }
                                 </BSFormRow>
                             }
                             @if (Step.StepType == "SQL")
@@ -229,7 +245,7 @@
                             @if (Step.StepType == "JOB")
                             {
                                 <BSFormRow>
-                                    <BSFormGroup Class="col">
+                                    <BSFormGroup Class="col-lg-6">
                                         <BSLabel>Job</BSLabel>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
@@ -307,8 +323,8 @@
                                 </div>
                                 <div class="custom-control custom-control-inline custom-checkbox col ml-3">
                                     <input type="checkbox" class="custom-control-input" id="only_active"
-                                            checked=@ShowOnlyActiveDependencies
-                                            @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
+                                           checked=@ShowOnlyActiveDependencies
+                                           @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
                                     <label class="custom-control-label" for="only_active">Show only active</label>
                                 </div>
                             </div>
@@ -323,18 +339,18 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                        .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                        .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                        .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                        .OrderBy(step => step.StepName))
+                                      .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                      .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                      .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                      .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
                                             <td class="align-middle">
                                                 <div class="custom-control custom-control-inline custom-checkbox">
                                                     <input type="checkbox" class="custom-control-input" id="dependency_@step.StepId"
-                                                            checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
-                                                            @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
+                                                           checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
+                                                           @onchange="eventArgs => ToggleDependency(step, eventArgs.Value)">
                                                     <label class="custom-control-label" for="dependency_@step.StepId"></label>
                                                 </div>
                                             </td>
@@ -343,8 +359,8 @@
                                                 {
                                                     <div class="custom-control custom-control-inline custom-checkbox">
                                                         <input type="checkbox" class="custom-control-input" id="strict_@step.StepId"
-                                                                checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
-                                                                @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
+                                                               checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
+                                                               @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value)">
                                                         <label class="custom-control-label" for="strict_@step.StepId"></label>
                                                     </div>
                                                 }

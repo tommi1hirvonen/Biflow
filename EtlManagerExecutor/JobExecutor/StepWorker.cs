@@ -30,7 +30,7 @@ namespace EtlManagerExecutor
                 var sqlCommand = new SqlCommand(
                     @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
                         PackageFolderName, PackageProjectName, PackageName,
-                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, DataFactoryId, PipelineName
+                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName
                     FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
@@ -46,11 +46,12 @@ namespace EtlManagerExecutor
                         var stepType = reader["StepType"].ToString();
                         var retryAttempts = (int)reader["RetryAttempts"];
                         var retryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
+                        var timeoutMinutes = (int)reader["TimeoutMinutes"];
                         if (stepType == "SQL")
                         {
                             var sqlStatement = reader["SqlStatement"].ToString();
                             var connectionString = reader["ConnectionString"].ToString();
-                            StepConfiguration = new SqlStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, sqlStatement, connectionString);
+                            StepConfiguration = new SqlStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, sqlStatement, connectionString);
                         }
                         else if (stepType == "SSIS")
                         {
@@ -59,20 +60,20 @@ namespace EtlManagerExecutor
                             var packageProjectName = reader["PackageProjectName"].ToString();
                             var packageName = reader["PackageName"].ToString();
                             var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
-                            StepConfiguration = new PackageStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, connectionString,
+                            StepConfiguration = new PackageStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, connectionString,
                                 packageFolderName, packageProjectName, packageName, executeIn32BitMode);
                         }
                         else if (stepType == "JOB")
                         {
                             var jobToExecuteId = reader["JobToExecuteId"].ToString();
                             var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
-                            StepConfiguration = new JobStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, jobToExecuteId, jobExecuteSynchronized);
+                            StepConfiguration = new JobStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, jobToExecuteId, jobExecuteSynchronized);
                         }
                         else if (stepType == "PIPELINE")
                         {
                             var dataFactoryId = reader["DataFactoryId"].ToString();
                             var pipelineName = reader["PipelineName"].ToString();
-                            StepConfiguration = new PipelineStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, dataFactoryId, pipelineName);
+                            StepConfiguration = new PipelineStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, dataFactoryId, pipelineName);
                         }
 
                     }

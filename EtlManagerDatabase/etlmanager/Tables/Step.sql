@@ -18,6 +18,7 @@
     [IsEnabled]                 BIT              CONSTRAINT [DF_Step_IsEnabled] DEFAULT (1) NOT NULL,
     [RetryAttempts]             INT              CONSTRAINT [DF_Step_RetryAttempts] DEFAULT (0) NOT NULL,
     [RetryIntervalMinutes]      INT              CONSTRAINT [DF_Step_RetryIntervalMinutes] DEFAULT (0) NOT NULL,
+    [TimeoutMinutes]            INT              CONSTRAINT [DF_Step_TimeoutMinutes] DEFAULT (0) NOT NULL,
     [CreatedDateTime]           DATETIME2 (7)    NOT NULL,
     [CreatedBy]                 NVARCHAR(250)    NULL,
     [LastModifiedDateTime]      DATETIME2 (7)    NOT NULL,

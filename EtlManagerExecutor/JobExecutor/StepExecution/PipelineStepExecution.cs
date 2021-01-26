@@ -47,9 +47,11 @@ namespace EtlManagerExecutor
             var client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
 
             CreateRunResponse createRunResponse;
+            DateTime startTime;
             try
             {
                 createRunResponse = await client.Pipelines.CreateRunAsync(dataFactory.ResourceGroupName, dataFactory.ResourceName, pipelineStep.PipelineName);
+                startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
@@ -92,6 +94,16 @@ namespace EtlManagerExecutor
 
                 if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                 {
+                    // Check for timeout.
+                    if (pipelineStep.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > pipelineStep.TimeoutMinutes)
+                    {
+                        var stopPipelineStep = new PipelineStep(pipelineStep.StepId, retryAttempt, runId, pipelineStep.DataFactoryId);
+                        var stopConfig = new StopConfiguration(executionConfig.ConnectionString, executionConfig.ExecutionId, executionConfig.EncryptionPassword, "timeout");
+                        await stopPipelineStep.StopPipelineRunAsync(stopConfig, dataFactory, client);
+                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", executionConfig.ExecutionId, pipelineStep.StepId);
+                        return new ExecutionResult.Failure("Step execution timed out");
+                    }
+
                     await Task.Delay(PollingIntervalMs);
                 }
                 else

@@ -27,7 +27,10 @@ namespace EtlManagerExecutor
                 using SqlConnection connection = new SqlConnection(sqlStep.ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 await connection.OpenIfClosedAsync();
-                SqlCommand sqlCommand = new SqlCommand(sqlStep.SqlStatement, connection) { CommandTimeout = 0 }; // CommandTimeout = 0 => wait indefinitely
+                SqlCommand sqlCommand = new SqlCommand(sqlStep.SqlStatement, connection)
+                {
+                    CommandTimeout = sqlStep.TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely
+                };
                 await sqlCommand.ExecuteNonQueryAsync();
             }
             catch (SqlException ex)

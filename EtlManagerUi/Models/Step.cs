@@ -92,6 +92,11 @@ namespace EtlManagerUi.Models
         [Range(0, 1000)]
         public int RetryIntervalMinutes { get; set; }
 
+        [Required]
+        [Display(Name ="Timeout (min)")]
+        [Range(0, 2880)] // 48 hours
+        public int TimeoutMinutes { get; set; }
+
         [Display(Name = "Created by")]
         public string CreatedBy { get; set; }
 

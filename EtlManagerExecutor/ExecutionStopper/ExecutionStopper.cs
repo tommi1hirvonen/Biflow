@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    partial class ExecutionStopper : IExecutionStopper
+    class ExecutionStopper : IExecutionStopper
     {
         private readonly IConfiguration configuration;
         public ExecutionStopper(IConfiguration configuration)
@@ -168,13 +168,7 @@ namespace EtlManagerExecutor
                     int retryAttemptIndex = (int)packageStepReader["RetryAttemptIndex"];
                     long packageOperationId = (long)packageStepReader["PackageOperationId"];
                     string packageConnectionString = packageStepReader["ConnectionString"].ToString();
-                    var packageStep = new PackageStep()
-                    {
-                        StepId = stepId,
-                        RetryAttemptIndex = retryAttemptIndex,
-                        PackageOperationId = packageOperationId,
-                        ConnectionString = packageConnectionString
-                    };
+                    var packageStep = new PackageStep(stepId, retryAttemptIndex, packageOperationId, packageConnectionString);
                     packageSteps.Add(packageStep);
                 }
             }
@@ -220,13 +214,7 @@ namespace EtlManagerExecutor
                     int retryAttemptIndex = (int)pipelineStepReader["RetryAttemptIndex"];
                     string runId = pipelineStepReader["PipelineRunId"].ToString();
                     string dataFactoryId = pipelineStepReader["DataFactoryId"].ToString();
-                    var pipelineStep = new PipelineStep()
-                    {
-                        StepId = stepId,
-                        RetryAttemptIndex = retryAttemptIndex,
-                        PipelineRunId = runId,
-                        DataFactoryId = dataFactoryId
-                    };
+                    var pipelineStep = new PipelineStep(stepId, retryAttemptIndex, runId, dataFactoryId);
                     pipelineRuns.Add(new KeyValuePair<string, PipelineStep>(dataFactoryId, pipelineStep));
                 }
             }

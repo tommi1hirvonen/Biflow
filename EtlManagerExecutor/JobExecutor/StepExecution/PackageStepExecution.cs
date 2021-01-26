@@ -62,12 +62,14 @@ namespace EtlManagerExecutor
 
 
             // Start the package execution and capture the SSISDB operation id.
+            DateTime startTime;
             long operationId;
             try
             {
                 Log.Information("{ExecutionId} {StepId} Starting package execution", executionConfig.ExecutionId, packageStep.StepId);
 
                 operationId = await StartExecutionAsync(parameters);
+                startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
@@ -102,6 +104,16 @@ namespace EtlManagerExecutor
                 await TryRefreshStatusAsync(operationId);
                 while (!Completed)
                 {
+                    // Check for possible timeout.
+                    if (packageStep.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > packageStep.TimeoutMinutes)
+                    {
+                        var stopPackageStep = new PackageStep(packageStep.StepId, retryAttempt, operationId, packageStep.ConnectionString);
+                        var stopConfig = new StopConfiguration(executionConfig.ConnectionString, executionConfig.ExecutionId, executionConfig.EncryptionPassword, "timeout");
+                        await stopPackageStep.StopExecutionAsync(stopConfig);
+                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", executionConfig.ExecutionId, packageStep.StepId);
+                        return new ExecutionResult.Failure("Step execution timed out");
+                    }
+
                     await Task.Delay(executionConfig.PollingIntervalMs);
                     await TryRefreshStatusAsync(operationId);
                 }
