@@ -85,9 +85,6 @@
                 <th>
                     Next execution
                 </th>
-                <th>
-                    Enabled
-                </th>
             </tr>
         </thead>
         <tbody>
@@ -108,56 +105,69 @@
                         <td class="align-middle">
                             <a class="text-dark" href="@("jobs/steps/" + item.JobId.ToString())">@item.JobName</a>
                         </td>
-                        <td class="align-middle" align="center">
+                        <td>
+                            <div class="d-inline-flex align-items-center">
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                        <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                    </div>
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Operator, Viewer">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)">
+                                        <label class="custom-control-label" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                    </div>
+                                </AuthorizeView>
 
-                            <AuthorizeView Roles="Admin, Editor">
-                                <BSButtonGroup Class="btn-row" Size="Size.Small">
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <BSButtonGroup Class="ml-2 btn-row" Size="Size.Small">
 
-                                    @*Dropdown to edit the job's name*@
-                                    <BSDropdown>
-                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                        </BSDropdownToggle>
-                                        <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                            <BSForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context">
-                                                <DataAnnotationsValidator />
-                                                <ValidationSummary />
-                                                <BSFormGroup>
-                                                    <BSLabel>New name</BSLabel>
-                                                    <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
-                                                </BSFormGroup>
-                                                <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                                            </BSForm>
-                                        </BSDropdownMenu>
-                                    </BSDropdown>
+                                        @*Dropdown to edit the job's name*@
+                                        <BSDropdown>
+                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                            </BSDropdownToggle>
+                                            <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
+                                                <BSForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context">
+                                                    <DataAnnotationsValidator />
+                                                    <ValidationSummary />
+                                                    <BSFormGroup>
+                                                        <BSLabel>New name</BSLabel>
+                                                        <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
+                                                    </BSFormGroup>
+                                                    <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
+                                                </BSForm>
+                                            </BSDropdownMenu>
+                                        </BSDropdown>
 
-                                    <BSDropdown IsGroup="true">
-                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                        </BSDropdownToggle>
-                                        <BSDropdownMenu>
-                                            <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
-                                        </BSDropdownMenu>
-                                    </BSDropdown>
+                                        <BSDropdown IsGroup="true">
+                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                            </BSDropdownToggle>
+                                            <BSDropdownMenu>
+                                                <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
+                                            </BSDropdownMenu>
+                                        </BSDropdown>
 
-                                    <BSDropdown IsGroup="true">
-                                        <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                        </BSDropdownToggle>
-                                        <BSDropdownMenu>
-                                            <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                            <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
-                                        </BSDropdownMenu>
-                                    </BSDropdown>
+                                        <BSDropdown IsGroup="true">
+                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                            </BSDropdownToggle>
+                                            <BSDropdownMenu>
+                                                <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                                <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
+                                            </BSDropdownMenu>
+                                        </BSDropdown>
 
-                                </BSButtonGroup>
-                            </AuthorizeView>
-
+                                    </BSButtonGroup>
+                                </AuthorizeView>
+                            </div>
                         </td>
                         <td class="align-middle">
                             <text>@item.Steps.Count step(s)</text>
                         </td>
-                        <td class="align-middle">
+                        <td class="align-middle" align="right">
                             @switch (lastExecution?.ExecutionStatus)
                             {
                                 case "RUNNING":
@@ -189,21 +199,6 @@
                         </td>
                         <td>
                             @GetNextStartTime(item)
-                        </td>
-                        <td class="align-middle">
-                            <AuthorizeView Roles="Admin, Editor">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                    <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
-                                </div>
-                            </AuthorizeView>
-                            <AuthorizeView Roles="Operator, Viewer">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)">
-                                    <label class="custom-control-label" for="enabled_@item.JobId" aria-label="enabled"></label>
-                                </div>
-                            </AuthorizeView>
-
                         </td>
                     </tr>
                 }
