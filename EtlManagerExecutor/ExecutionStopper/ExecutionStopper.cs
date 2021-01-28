@@ -166,14 +166,22 @@ namespace EtlManagerExecutor
                     {
                         long packageOperationId = (long)stepReader["PackageOperationId"];
                         string packageConnectionString = stepReader["ConnectionString"].ToString();
-                        var packageStep = new PackageStep(configuration, stepId, packageConnectionString) { RetryAttemptIndex = retryAttemptIndex };
+                        var packageStep = new PackageStep(configuration, stepId, packageConnectionString)
+                        {
+                            RetryAttemptIndex = retryAttemptIndex,
+                            PackageOperationId = packageOperationId
+                        };
                         steps.Add(packageStep);
                     }
                     else if (stepType == "PIPELINE")
                     {
                         string runId = stepReader["PipelineRunId"].ToString();
                         string dataFactoryId = stepReader["DataFactoryId"].ToString();
-                        var pipelineStep = new PipelineStep(configuration, stepId, dataFactoryId) { RetryAttemptIndex = retryAttemptIndex };
+                        var pipelineStep = new PipelineStep(configuration, stepId, dataFactoryId)
+                        {
+                            RetryAttemptIndex = retryAttemptIndex,
+                            PipelineRunId = runId
+                        };
                         steps.Add(pipelineStep);
                     }
                 }

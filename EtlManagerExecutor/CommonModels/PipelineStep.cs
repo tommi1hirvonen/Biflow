@@ -16,7 +16,7 @@ namespace EtlManagerExecutor
         
         public int RetryAttemptIndex { get; init; }
         
-        protected string PipelineRunId { get; set; }
+        public string PipelineRunId { get; set; }
         protected DataFactoryManagementClient Client { get; set; }
         protected DataFactory DataFactory { get; set; }
 

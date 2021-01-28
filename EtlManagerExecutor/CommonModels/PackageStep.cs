@@ -13,7 +13,7 @@ namespace EtlManagerExecutor
         public string ConnectionString { get; init; }
 
         public int RetryAttemptIndex { get; set; }
-        protected long PackageOperationId { get; set; }
+        public long PackageOperationId { get; set; }
 
         public PackageStep(ConfigurationBase configuration, string stepId, string connectionString)
             : base(configuration, stepId)
