@@ -74,16 +74,9 @@ namespace EtlManagerExecutor
                 return false;
             }
 
-            var stopConfiguration = new StopConfiguration(connectionString, executionId, encryptionKey, username);
-
-            // Start package and pipeline stopping simultaneously.
-            var stopPackagesTask = StopPackageExecutionsAsync(stopConfiguration);
-            var stopPipelinesTask = StopPipelineExecutionsAsync(stopConfiguration);
-
-            var stopPackagesResult = stopPackagesTask.Result;
-            var stopPipelinesResult = stopPipelinesTask.Result;
+            var stopConfiguration = new ConfigurationBase(connectionString, executionId, encryptionKey, username);            
             
-            return stopPackagesResult && stopPipelinesResult;
+            return await StopStepExecutionsAsync(stopConfiguration);
         }
 
         private static async Task<bool> StopExecutorProcessAsync(string connectionString, string executionId)
@@ -142,146 +135,60 @@ namespace EtlManagerExecutor
             return true;
         }
 
-        private static async Task<bool> StopPackageExecutionsAsync(StopConfiguration stopConfiguration)
+        private static async Task<bool> StopStepExecutionsAsync(ConfigurationBase configuration)
         {
-            var packageSteps = new List<PackageStep>();
-            var stopTasks = new List<Task<bool>>();
+            var steps = new List<ICancelable>();
+            var cancellationTasks = new List<Task<bool>>();
 
-            Log.Information("{ExecutionId} Getting package executions to be stopped", stopConfiguration.ExecutionId);
+            Log.Information("{ExecutionId} Getting package and pipeline executions to be stopped", configuration.ExecutionId);
             try
             {
-                using var sqlConnection = new SqlConnection(stopConfiguration.ConnectionString);
+                using var sqlConnection = new SqlConnection(configuration.ConnectionString);
                 await sqlConnection.OpenAsync();
 
-                var fetchPackageStepDetails = new SqlCommand(
-                    @"SELECT StepId, RetryAttemptIndex, PackageOperationId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionKey) AS ConnectionString
+                var fetchStepDetails = new SqlCommand(
+                    @"SELECT StepId, RetryAttemptIndex, StepType,
+                        PackageOperationId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionKey) AS ConnectionString,
+                        PipelineRunId, DataFactoryId
                 FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PackageOperationId IS NOT NULL"
+                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND (PackageOperationId IS NOT NULL OR PipelineRunId IS NOT NULL)"
                     , sqlConnection);
-                fetchPackageStepDetails.Parameters.AddWithValue("@ExecutionId", stopConfiguration.ExecutionId);
-                fetchPackageStepDetails.Parameters.AddWithValue("@EncryptionKey", stopConfiguration.EncryptionKey);
+                fetchStepDetails.Parameters.AddWithValue("@ExecutionId", configuration.ExecutionId);
+                fetchStepDetails.Parameters.AddWithValue("@EncryptionKey", configuration.EncryptionKey);
 
-                using var packageStepReader = await fetchPackageStepDetails.ExecuteReaderAsync();
-                while (await packageStepReader.ReadAsync())
+                using var stepReader = await fetchStepDetails.ExecuteReaderAsync();
+                while (await stepReader.ReadAsync())
                 {
-                    string stepId = packageStepReader["StepId"].ToString();
-                    int retryAttemptIndex = (int)packageStepReader["RetryAttemptIndex"];
-                    long packageOperationId = (long)packageStepReader["PackageOperationId"];
-                    string packageConnectionString = packageStepReader["ConnectionString"].ToString();
-                    var packageStep = new PackageStep(stepId, retryAttemptIndex, packageOperationId, packageConnectionString);
-                    packageSteps.Add(packageStep);
+                    string stepId = stepReader["StepId"].ToString();
+                    int retryAttemptIndex = (int)stepReader["RetryAttemptIndex"];
+                    string stepType = stepReader["StepType"].ToString();
+                    if (stepType == "SSIS")
+                    {
+                        long packageOperationId = (long)stepReader["PackageOperationId"];
+                        string packageConnectionString = stepReader["ConnectionString"].ToString();
+                        var packageStep = new PackageStep(configuration, stepId, packageConnectionString) { RetryAttemptIndex = retryAttemptIndex };
+                        steps.Add(packageStep);
+                    }
+                    else if (stepType == "PIPELINE")
+                    {
+                        string runId = stepReader["PipelineRunId"].ToString();
+                        string dataFactoryId = stepReader["DataFactoryId"].ToString();
+                        var pipelineStep = new PipelineStep(configuration, stepId, dataFactoryId) { RetryAttemptIndex = retryAttemptIndex };
+                        steps.Add(pipelineStep);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error reading package executions", stopConfiguration.ExecutionId);
-                return false;
+                Log.Error(ex, "{ExecutionId} Error reading package and pipeline executions", configuration.ExecutionId);
             }
 
-            foreach (var step in packageSteps)
+            foreach (var step in steps)
             {
-                stopTasks.Add(step.StopExecutionAsync(stopConfiguration));
+                cancellationTasks.Add(step.CancelAsync());
             }
 
-            bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
-
-            return results.All(b => b == true);
-        }
-
-        private static async Task<bool> StopPipelineExecutionsAsync(StopConfiguration stopConfiguration)
-        {
-            // List containing pairs of DataFactoryIds and pipeline steps.
-            var pipelineRuns = new List<KeyValuePair<string, PipelineStep>>();
-
-            Log.Information("{ExecutionId} Getting pipeline executions to be stopped", stopConfiguration.ExecutionId);
-            try
-            {
-                using var sqlConnection = new SqlConnection(stopConfiguration.ConnectionString);
-                await sqlConnection.OpenAsync();
-
-                var pipelineSteps = new SqlCommand(
-                    @"SELECT StepId, RetryAttemptIndex, PipelineRunId, DataFactoryId
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId AND EndDateTime IS NULL AND PipelineRunId IS NOT NULL"
-                    , sqlConnection);
-                pipelineSteps.Parameters.AddWithValue("@ExecutionId", stopConfiguration.ExecutionId);
-                pipelineSteps.Parameters.AddWithValue("@EncryptionKey", stopConfiguration.EncryptionKey);
-
-                using var pipelineStepReader = await pipelineSteps.ExecuteReaderAsync();
-                while (await pipelineStepReader.ReadAsync())
-                {
-                    string stepId = pipelineStepReader["StepId"].ToString();
-                    int retryAttemptIndex = (int)pipelineStepReader["RetryAttemptIndex"];
-                    string runId = pipelineStepReader["PipelineRunId"].ToString();
-                    string dataFactoryId = pipelineStepReader["DataFactoryId"].ToString();
-                    var pipelineStep = new PipelineStep(stepId, retryAttemptIndex, runId, dataFactoryId);
-                    pipelineRuns.Add(new KeyValuePair<string, PipelineStep>(dataFactoryId, pipelineStep));
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} Error reading pipeline executions", stopConfiguration.ExecutionId);
-                return false;
-            }
-
-            // Group pipeline steps based on their DataFactoryId.
-            Dictionary<string, List<PipelineStep>> pipelineRunsGrouped = pipelineRuns
-                .GroupBy(run => run.Key)
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Select(run => run.Value).ToList()
-                );
-
-            var stopTasks = new List<Task<bool>>();
-
-            // Iterate the various Data Factories and the runs.
-            foreach (string dataFactoryId in pipelineRunsGrouped.Keys)
-            {
-                DataFactory dataFactory;
-                try
-                {
-                    dataFactory = await DataFactory.GetDataFactoryAsync(stopConfiguration.ConnectionString, dataFactoryId, stopConfiguration.EncryptionKey);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} Error getting details for Data Factory id {dataFactoryId}", stopConfiguration.ExecutionId, dataFactoryId);
-                    return false;
-                }
-
-                try
-                {
-                    await dataFactory.CheckAccessTokenValidityAsync(stopConfiguration.ConnectionString);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", stopConfiguration.ExecutionId, dataFactoryId);
-                    return false;
-                }
-
-                var credentials = new TokenCredentials(dataFactory.AccessToken);
-                var client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
-
-                List<PipelineStep> steps = pipelineRunsGrouped[dataFactoryId];
-                foreach (var step in steps)
-                {
-                    try
-                    {
-                        if (!await dataFactory.CheckAccessTokenValidityAsync(stopConfiguration.ConnectionString))
-                        {
-                            credentials = new TokenCredentials(dataFactory.AccessToken);
-                            client = new DataFactoryManagementClient(credentials) { SubscriptionId = dataFactory.SubscriptionId };
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "{ExecutionId} Error checking Data Factory {dataFactoryId} access token validity", stopConfiguration.ExecutionId, dataFactoryId);
-                        return false;
-                    }
-                    stopTasks.Add(step.StopPipelineRunAsync(stopConfiguration, dataFactory, client));
-                }
-            }
-
-            bool[] results = await Task.WhenAll(stopTasks); // Wait for all stop commands to finish.
+            bool[] results = await Task.WhenAll(cancellationTasks); // Wait for all stop commands to finish.
 
             return results.All(b => b == true);
         }

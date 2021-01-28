@@ -2,48 +2,58 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PackageStepExecution : IStepExecution
+    class PackageStepExecution : PackageStep, IExecutable
     {
-        private readonly ExecutionConfiguration executionConfig;
-        private readonly PackageStepConfiguration packageStep;
-        private readonly int retryAttempt;
+        public ExecutionConfiguration Configuration { get; init; }
+        
+        public string FolderName { get; init; }
+        public string ProjectName { get; init; }
+        public string PackageName { get; init; }
+        public bool ExecuteIn32BitMode { get; init; }
 
+        private int TimeoutMinutes { get; init; }
         private bool Completed { get; set; }
         private bool Success { get; set; }
 
         private const int MaxRefreshRetries = 5;
 
-        public PackageStepExecution(ExecutionConfiguration executionConfiguration, PackageStepConfiguration packageStepConfiguration, int retryAttempt)
+        public PackageStepExecution(ExecutionConfiguration configuration, string stepId, string connectionString,
+            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)
+            : base(configuration, stepId, connectionString)
         {
-            executionConfig = executionConfiguration;
-            packageStep = packageStepConfiguration;
-            this.retryAttempt = retryAttempt;
+            Configuration = configuration;
+            FolderName = folderName;
+            ProjectName = projectName;
+            PackageName = packageName;
+            ExecuteIn32BitMode = executeIn32BitMode;
+            TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> RunAsync()
+        public async Task<ExecutionResult> ExecuteAsync()
         {
             // Get possible parameters.
             var parameters = new Dictionary<string, string>();
 
             // Connect to ETL Manager database.
-            using (var sqlConnection = new SqlConnection(executionConfig.ConnectionString))
+            using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
             {
                 var paramsCommand = new SqlCommand(
                     @"SELECT [ParameterName], [ParameterValue]
                     FROM [etlmanager].[ExecutionParameter]
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
-                paramsCommand.Parameters.AddWithValue("@StepId", packageStep.StepId);
-                paramsCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
+                paramsCommand.Parameters.AddWithValue("@StepId", StepId);
+                paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
 
                 try
                 {
-                    Log.Information("{ExecutionId} {StepId} Retrieving package parameters", executionConfig.ExecutionId, packageStep.StepId);
+                    Log.Information("{ExecutionId} {StepId} Retrieving package parameters", Configuration.ExecutionId, StepId);
 
                     await sqlConnection.OpenIfClosedAsync();
                     using var reader = await paramsCommand.ExecuteReaderAsync();
@@ -54,7 +64,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error retrieving package parameters", executionConfig.ExecutionId, packageStep.StepId);
+                    Log.Error(ex, "{ExecutionId} {StepId} Error retrieving package parameters", Configuration.ExecutionId, StepId);
                     return new ExecutionResult.Failure("Error reading package parameters: " + ex.Message);
                 }
 
@@ -63,64 +73,61 @@ namespace EtlManagerExecutor
 
             // Start the package execution and capture the SSISDB operation id.
             DateTime startTime;
-            long operationId;
             try
             {
-                Log.Information("{ExecutionId} {StepId} Starting package execution", executionConfig.ExecutionId, packageStep.StepId);
+                Log.Information("{ExecutionId} {StepId} Starting package execution", Configuration.ExecutionId, StepId);
 
-                operationId = await StartExecutionAsync(parameters);
+                await StartExecutionAsync(parameters);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error executing package", executionConfig.ExecutionId, packageStep.StepId);
+                Log.Error(ex, "{ExecutionId} {StepId} Error executing package", Configuration.ExecutionId, StepId);
                 return new ExecutionResult.Failure("Error executing package: " + ex.Message);
             }
 
             // Update the SSISDB operation id for the target package execution.
             try
             {
-                using var etlManagerConnection = new SqlConnection(executionConfig.ConnectionString);
+                using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
                 await etlManagerConnection.OpenIfClosedAsync();
                 var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                         SET PackageOperationId = @OperationId
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                     , etlManagerConnection);
-                sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", packageStep.StepId);
-                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", retryAttempt);
-                sqlCommand.Parameters.AddWithValue("@OperationId", operationId);
+                sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                sqlCommand.Parameters.AddWithValue("@StepId", StepId);
+                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptIndex);
+                sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
                 await sqlCommand.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error updating target package operation id (" + operationId + ")");
+                Log.Error(ex, "{ExecutionId} {StepId} Error updating target package operation id (" + PackageOperationId + ")");
             }
 
             // Monitor the package's execution.
             try
             {
-                await TryRefreshStatusAsync(operationId);
+                await TryRefreshStatusAsync();
                 while (!Completed)
                 {
                     // Check for possible timeout.
-                    if (packageStep.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > packageStep.TimeoutMinutes)
+                    if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
                     {
-                        var stopPackageStep = new PackageStep(packageStep.StepId, retryAttempt, operationId, packageStep.ConnectionString);
-                        var stopConfig = new StopConfiguration(executionConfig.ConnectionString, executionConfig.ExecutionId, executionConfig.EncryptionPassword, "timeout");
-                        await stopPackageStep.StopExecutionAsync(stopConfig);
-                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", executionConfig.ExecutionId, packageStep.StepId);
+                        await CancelAsync();
+                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", Configuration.ExecutionId, StepId);
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
-                    await Task.Delay(executionConfig.PollingIntervalMs);
-                    await TryRefreshStatusAsync(operationId);
+                    await Task.Delay(Configuration.PollingIntervalMs);
+                    await TryRefreshStatusAsync();
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error monitoring package execution status", executionConfig.ExecutionId, packageStep.StepId);
+                Log.Error(ex, "{ExecutionId} {StepId} Error monitoring package execution status", Configuration.ExecutionId, StepId);
                 return new ExecutionResult.Failure("Error monitoring package execution status: " + ex.Message);
             }
 
@@ -129,12 +136,12 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    List<string> errors = await GetErrorMessagesAsync(operationId);
+                    List<string> errors = await GetErrorMessagesAsync();
                     return new ExecutionResult.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error getting package error messages", executionConfig.ExecutionId, packageStep.StepId);
+                    Log.Error(ex, "{ExecutionId} {StepId} Error getting package error messages", Configuration.ExecutionId, StepId);
                     return new ExecutionResult.Failure("Error getting package error messages: " + ex.Message);
                 }
 
@@ -143,9 +150,9 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
-        public async Task<long> StartExecutionAsync(Dictionary<string, string> parameters)
+        private async Task StartExecutionAsync(Dictionary<string, string> parameters)
         {
-            using var sqlConnection = new SqlConnection(packageStep.ConnectionString);
+            using var sqlConnection = new SqlConnection(ConnectionString);
             var commandBuilder = new StringBuilder();
             commandBuilder.Append(
                 @"DECLARE @execution_id BIGINT
@@ -190,10 +197,10 @@ namespace EtlManagerExecutor
             string commandString = commandBuilder.ToString();
             var executionCommand = new SqlCommand(commandString, sqlConnection);
 
-            executionCommand.Parameters.AddWithValue("@FolderName", packageStep.FolderName);
-            executionCommand.Parameters.AddWithValue("@ProjectName", packageStep.ProjectName);
-            executionCommand.Parameters.AddWithValue("@PackageName", packageStep.PackageName);
-            executionCommand.Parameters.AddWithValue("@ExecuteIn32BitMode", packageStep.ExecuteIn32BitMode ? 1 : 0);
+            executionCommand.Parameters.AddWithValue("@FolderName", FolderName);
+            executionCommand.Parameters.AddWithValue("@ProjectName", ProjectName);
+            executionCommand.Parameters.AddWithValue("@PackageName", PackageName);
+            executionCommand.Parameters.AddWithValue("@ExecuteIn32BitMode", ExecuteIn32BitMode ? 1 : 0);
 
             foreach (var parameter in parameters)
             {
@@ -203,11 +210,10 @@ namespace EtlManagerExecutor
 
             await sqlConnection.OpenAsync();
 
-            var operationId = (long)await executionCommand.ExecuteScalarAsync();
-            return operationId;
+            PackageOperationId = (long)await executionCommand.ExecuteScalarAsync();
         }
 
-        public async Task TryRefreshStatusAsync(long operationId)
+        private async Task TryRefreshStatusAsync()
         {
             int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
@@ -215,9 +221,9 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    using var sqlConnection = new SqlConnection(packageStep.ConnectionString);
+                    using var sqlConnection = new SqlConnection(ConnectionString);
                     var sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@OperationId", operationId);
+                    sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
                     await sqlConnection.OpenAsync();
                     int status = (int)await sqlCommand.ExecuteScalarAsync();
                     // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
@@ -231,24 +237,24 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", operationId);
+                    Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", PackageOperationId);
                     refreshRetries++;
-                    await Task.Delay(executionConfig.PollingIntervalMs);
+                    await Task.Delay(Configuration.PollingIntervalMs);
                 }
             }
             // The maximum number of attempts was reached. Notify caller with exception.
             throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
         }
 
-        public async Task<List<string>> GetErrorMessagesAsync(long operationId)
+        private async Task<List<string>> GetErrorMessagesAsync()
         {
-            using var sqlConnection = new SqlConnection(packageStep.ConnectionString);
+            using var sqlConnection = new SqlConnection(ConnectionString);
             var sqlCommand = new SqlCommand(
                 @"SELECT message
                 FROM SSISDB.catalog.operation_messages
                 WHERE message_type = 120 AND operation_id = @OperationId" // message_type = 120 => error message
                 , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@OperationId", operationId);
+            sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
             await sqlConnection.OpenAsync();
             var messages = new List<string>();
             var reader = await sqlCommand.ExecuteReaderAsync();

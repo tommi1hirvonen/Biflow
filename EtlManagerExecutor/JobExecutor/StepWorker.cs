@@ -22,7 +22,10 @@ namespace EtlManagerExecutor
 
         public async Task ExecuteStepAsync()
         {
-            StepConfiguration StepConfiguration = null;
+            IExecutable stepExecution;
+            int retryAttempts;
+            int retryIntervalMinutes;
+            int timeoutMinutes;
 
             // Get step details.
             using (var sqlConnection = new SqlConnection(executionConfiguration.ConnectionString))
@@ -36,7 +39,7 @@ namespace EtlManagerExecutor
                     , sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                 sqlCommand.Parameters.AddWithValue("@StepId", stepId);
-                sqlCommand.Parameters.AddWithValue("@EncryptionPassword", executionConfiguration.EncryptionPassword);
+                sqlCommand.Parameters.AddWithValue("@EncryptionPassword", executionConfiguration.EncryptionKey);
                 try
                 {
                     await sqlConnection.OpenAsync();
@@ -44,14 +47,14 @@ namespace EtlManagerExecutor
                     if (await reader.ReadAsync())
                     {
                         var stepType = reader["StepType"].ToString();
-                        var retryAttempts = (int)reader["RetryAttempts"];
-                        var retryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
-                        var timeoutMinutes = (int)reader["TimeoutMinutes"];
+                        retryAttempts = (int)reader["RetryAttempts"];
+                        retryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
+                        timeoutMinutes = (int)reader["TimeoutMinutes"];
                         if (stepType == "SQL")
                         {
                             var sqlStatement = reader["SqlStatement"].ToString();
                             var connectionString = reader["ConnectionString"].ToString();
-                            StepConfiguration = new SqlStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, sqlStatement, connectionString);
+                            stepExecution = new SqlStepExecution(executionConfiguration, stepId, sqlStatement, connectionString, timeoutMinutes);
                         }
                         else if (stepType == "SSIS")
                         {
@@ -60,20 +63,25 @@ namespace EtlManagerExecutor
                             var packageProjectName = reader["PackageProjectName"].ToString();
                             var packageName = reader["PackageName"].ToString();
                             var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
-                            StepConfiguration = new PackageStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, connectionString,
-                                packageFolderName, packageProjectName, packageName, executeIn32BitMode);
+                            stepExecution = new PackageStepExecution(executionConfiguration, stepId, connectionString,
+                                packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes);
                         }
                         else if (stepType == "JOB")
                         {
                             var jobToExecuteId = reader["JobToExecuteId"].ToString();
                             var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
-                            StepConfiguration = new JobStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, jobToExecuteId, jobExecuteSynchronized);
+                            stepExecution = new JobStepExecution(executionConfiguration, stepId, jobToExecuteId, jobExecuteSynchronized);
                         }
                         else if (stepType == "PIPELINE")
                         {
                             var dataFactoryId = reader["DataFactoryId"].ToString();
                             var pipelineName = reader["PipelineName"].ToString();
-                            StepConfiguration = new PipelineStepConfiguration(stepId, retryAttempts, retryIntervalMinutes, timeoutMinutes, dataFactoryId, pipelineName);
+                            stepExecution = new PipelineStepExecution(executionConfiguration, stepId, dataFactoryId, pipelineName, timeoutMinutes);
+                        }
+                        else
+                        {
+                            Log.Error("{ExecutionId} {StepId} Incorrect step type {stepType}", executionConfiguration.ExecutionId, stepId, stepType);
+                            return;
                         }
 
                     }
@@ -91,7 +99,7 @@ namespace EtlManagerExecutor
             }
 
             // Loop until there are not retry attempts left.
-            while (AttemptCounter <= StepConfiguration.RetryAttempts)
+            while (AttemptCounter <= retryAttempts)
             {
                 using (var connection = new SqlConnection(executionConfiguration.ConnectionString))
                 {
@@ -140,15 +148,7 @@ namespace EtlManagerExecutor
                 ExecutionResult executionResult;
                 try
                 {
-                    IStepExecution stepExecution = StepConfiguration switch
-                    {
-                        SqlStepConfiguration sql => new SqlStepExecution(executionConfiguration, sql),
-                        PackageStepConfiguration package => new PackageStepExecution(executionConfiguration, package, AttemptCounter),
-                        PipelineStepConfiguration pipeline => new PipelineStepExecution(executionConfiguration, pipeline, AttemptCounter),
-                        JobStepConfiguration job => new JobStepExecution(executionConfiguration, job),
-                        _ => throw new InvalidEnumArgumentException("Unrecognized step type")
-                    };
-                    executionResult = await stepExecution.RunAsync();
+                    executionResult = await stepExecution.ExecuteAsync();
                 }
                 catch (Exception ex)
                 {
@@ -165,7 +165,7 @@ namespace EtlManagerExecutor
                         // The step failed. Update the execution accordingly.
 
                         // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-                        var status = AttemptCounter >= StepConfiguration.RetryAttempts ? "FAILED" : "AWAIT RETRY";
+                        var status = AttemptCounter >= retryAttempts ? "FAILED" : "AWAIT RETRY";
 
                         try
                         {
@@ -215,10 +215,10 @@ namespace EtlManagerExecutor
                 }
 
                 // The step failed. There are attempts left => increase counter and wait for the retry interval.
-                if (AttemptCounter < StepConfiguration.RetryAttempts)
+                if (AttemptCounter < retryAttempts)
                 {
                     AttemptCounter++;
-                    await Task.Delay(StepConfiguration.RetryIntervalMinutes * 60 * 1000);
+                    await Task.Delay(retryIntervalMinutes * 60 * 1000);
                 }
                 // Otherwise break the loop and end this execution.
                 else
