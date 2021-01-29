@@ -168,7 +168,7 @@ namespace EtlManagerExecutor
                         string packageConnectionString = stepReader["ConnectionString"].ToString();
                         var packageStep = new PackageStep(configuration, stepId, packageConnectionString)
                         {
-                            RetryAttemptIndex = retryAttemptIndex,
+                            RetryAttemptCounter = retryAttemptIndex,
                             PackageOperationId = packageOperationId
                         };
                         steps.Add(packageStep);
@@ -179,7 +179,7 @@ namespace EtlManagerExecutor
                         string dataFactoryId = stepReader["DataFactoryId"].ToString();
                         var pipelineStep = new PipelineStep(configuration, stepId, dataFactoryId)
                         {
-                            RetryAttemptIndex = retryAttemptIndex,
+                            RetryAttemptCounter = retryAttemptIndex,
                             PipelineRunId = runId
                         };
                         steps.Add(pipelineStep);

@@ -12,7 +12,7 @@ namespace EtlManagerExecutor
     {
         public string ConnectionString { get; init; }
 
-        public int RetryAttemptIndex { get; set; }
+        public int RetryAttemptCounter { get; set; }
         public long PackageOperationId { get; set; }
 
         public PackageStep(ConfigurationBase configuration, string stepId, string connectionString)
@@ -52,7 +52,7 @@ namespace EtlManagerExecutor
                     , sqlConnection);
                 updateStatus.Parameters.AddWithValue("@ExecutionId", ConfigurationBase.ExecutionId);
                 updateStatus.Parameters.AddWithValue("@StepId", StepId);
-                updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptIndex);
+                updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
 
                 if (ConfigurationBase.Username != null) updateStatus.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
                 else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);

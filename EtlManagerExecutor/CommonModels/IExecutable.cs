@@ -8,6 +8,7 @@ namespace EtlManagerExecutor
 {
     interface IExecutable
     {
+        public int RetryAttemptCounter { get; set; }
         public Task<ExecutionResult> ExecuteAsync();
     }
 }

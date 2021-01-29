@@ -8,6 +8,7 @@ namespace EtlManagerExecutor
 {
     interface ICancelable
     {
+        public int RetryAttemptCounter { get; set; }
         public Task<bool> CancelAsync();
     }
 }

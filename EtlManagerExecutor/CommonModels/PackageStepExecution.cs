@@ -98,7 +98,7 @@ namespace EtlManagerExecutor
                     , etlManagerConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
                 sqlCommand.Parameters.AddWithValue("@StepId", StepId);
-                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptIndex);
+                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
                 await sqlCommand.ExecuteNonQueryAsync();
             }

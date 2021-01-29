@@ -13,6 +13,8 @@ namespace EtlManagerExecutor
     {
         private ExecutionConfiguration Configuration { get; init; }
 
+        public int RetryAttemptCounter { get; set; }
+
         public JobStepExecution(ExecutionConfiguration configuration, string stepId, string jobToExecuteId, bool jobExecuteSynchronized)
             : base(configuration, stepId, jobToExecuteId, jobExecuteSynchronized)
         {

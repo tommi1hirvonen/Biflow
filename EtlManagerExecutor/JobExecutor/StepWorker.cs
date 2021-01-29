@@ -97,14 +97,13 @@ namespace EtlManagerExecutor
             }
 
             // Loop until there are not retry attempts left.
-            int attemptCounter = 0;
-            while (attemptCounter <= retryAttempts)
+            while (stepExecution.RetryAttemptCounter <= retryAttempts)
             {
                 using (var connection = new SqlConnection(executionConfiguration.ConnectionString))
                 {
                     await connection.OpenIfClosedAsync(); // Open the connection to ETL Manager database for execution start logging.
                     // In case of first execution, update the existing execution row.
-                    if (attemptCounter == 0)
+                    if (stepExecution.RetryAttemptCounter == 0)
                     {
                         try
                         {
@@ -115,7 +114,7 @@ namespace EtlManagerExecutor
                                 , connection);
                             startUpdate.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                             startUpdate.Parameters.AddWithValue("@StepId", stepId);
-                            startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", attemptCounter);
+                            startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
                             await startUpdate.ExecuteNonQueryAsync();
                         }
                         catch (Exception ex)
@@ -133,7 +132,7 @@ namespace EtlManagerExecutor
                                 , connection);
                             addNewExecution.Parameters.AddWithValue("@ExecutionId_", executionConfiguration.ExecutionId);
                             addNewExecution.Parameters.AddWithValue("@StepId_", stepId);
-                            addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", attemptCounter);
+                            addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", stepExecution.RetryAttemptCounter);
                             await addNewExecution.ExecuteNonQueryAsync();
                         }
                         catch (Exception ex)
@@ -164,7 +163,7 @@ namespace EtlManagerExecutor
                         // The step failed. Update the execution accordingly.
 
                         // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-                        var status = attemptCounter >= retryAttempts ? "FAILED" : "AWAIT RETRY";
+                        var status = stepExecution.RetryAttemptCounter >= retryAttempts ? "FAILED" : "AWAIT RETRY";
 
                         try
                         {
@@ -175,7 +174,7 @@ namespace EtlManagerExecutor
                                 , connection);
                             errorUpdate.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                             errorUpdate.Parameters.AddWithValue("@StepId", stepId);
-                            errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", attemptCounter);
+                            errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
                             errorUpdate.Parameters.AddWithValue("@ExecutionStatus", status);
                             errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
                             errorUpdate.Parameters.AddWithValue("@InfoMessage", failureResult.InfoMessage?.Length > 0 ? (object)failureResult.InfoMessage : DBNull.Value);
@@ -184,6 +183,18 @@ namespace EtlManagerExecutor
                         catch (Exception ex)
                         {
                             Log.Error(ex, "{ExecutionId} {StepId} Error updating step status to {status}", executionConfiguration.ExecutionId, stepId, status);
+                        }
+
+                        // The step failed. There are attempts left => increase counter and wait for the retry interval.
+                        if (stepExecution.RetryAttemptCounter < retryAttempts)
+                        {
+                            stepExecution.RetryAttemptCounter++;
+                            await Task.Delay(retryIntervalMinutes * 60 * 1000);
+                        }
+                        // Otherwise break the loop and end this execution.
+                        else
+                        {
+                            break;
                         }
                     }
                     else
@@ -200,7 +211,7 @@ namespace EtlManagerExecutor
                                 , connection);
                             successUpdate.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                             successUpdate.Parameters.AddWithValue("@StepId", stepId);
-                            successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", attemptCounter);
+                            successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
                             successUpdate.Parameters.AddWithValue("@InfoMessage", executionResult.InfoMessage?.Length > 0 ? (object)executionResult.InfoMessage : DBNull.Value);
                             await successUpdate.ExecuteNonQueryAsync();
                         }
@@ -211,20 +222,11 @@ namespace EtlManagerExecutor
 
                         break; // Break the loop to end this execution.
                     }
-                }
 
-                // The step failed. There are attempts left => increase counter and wait for the retry interval.
-                if (attemptCounter < retryAttempts)
-                {
-                    attemptCounter++;
-                    await Task.Delay(retryIntervalMinutes * 60 * 1000);
                 }
-                // Otherwise break the loop and end this execution.
-                else
-                {
-                    break;
-                }
+                
             }
+
         }
 
     }

@@ -74,7 +74,7 @@ namespace EtlManagerExecutor
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex", sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
                 sqlCommand.Parameters.AddWithValue("@StepId", StepId);
-                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptIndex);
+                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@PipelineRunId", PipelineRunId);
                 await sqlCommand.ExecuteNonQueryAsync();
             }

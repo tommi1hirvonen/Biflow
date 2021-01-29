@@ -13,6 +13,7 @@ namespace EtlManagerExecutor
         private ExecutionConfiguration ExecutionConfiguration { get; init; }
         private int TimeoutMinutes { get; init; }
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
+        public int RetryAttemptCounter { get; set; }
 
         public SqlStepExecution(ExecutionConfiguration executionConfiguration, string stepId, string sqlStatement, string connectionString, int timeoutMinutes)
             : base(executionConfiguration, stepId, sqlStatement, connectionString)

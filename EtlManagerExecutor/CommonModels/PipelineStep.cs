@@ -14,7 +14,7 @@ namespace EtlManagerExecutor
     {
         public string DataFactoryId { get; init; }
         
-        public int RetryAttemptIndex { get; init; }
+        public int RetryAttemptCounter { get; set; }
         
         public string PipelineRunId { get; set; }
         protected DataFactoryManagementClient Client { get; set; }
@@ -85,7 +85,7 @@ namespace EtlManagerExecutor
                     , sqlConnection);
                 updateStatuses.Parameters.AddWithValue("@ExecutionId", ConfigurationBase.ExecutionId);
                 updateStatuses.Parameters.AddWithValue("@StepId", StepId);
-                updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptIndex);
+                updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
 
                 if (ConfigurationBase.Username != null) updateStatuses.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
                 else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
