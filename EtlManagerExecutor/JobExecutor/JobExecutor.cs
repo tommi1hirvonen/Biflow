@@ -87,17 +87,18 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            
+            ExecutorBase executor;
             if (dependencyMode)
             {
                 Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
-                await new DependencyModeExecutor(executionConfig).RunAsync();
+                executor = new DependencyModeExecutor(executionConfig);
             }
             else
             {
                 Log.Information("{executionId} Starting execution in execution phase mode", executionId);
-                await new ExecutionPhaseExecutor(executionConfig).RunAsync();
+                executor = new ExecutionPhaseExecutor(executionConfig);
             }
+            await executor.RunAsync();
 
             // Execution finished. Notify subscribers of possible errors.
             if (notify)

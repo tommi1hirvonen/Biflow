@@ -10,12 +10,8 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class DependencyModeExecutor
+    class DependencyModeExecutor : ExecutorBase
     {
-        private ExecutionConfiguration ExecutionConfig { get; init; }
-
-        private int RunningStepsCounter = 0;
-
         enum ExecutionStatus
         {
             NotStarted,
@@ -26,18 +22,15 @@ namespace EtlManagerExecutor
 
         private Dictionary<string, ExecutionStatus> StepStatuses { get; set; } = new();
 
-        public DependencyModeExecutor(ExecutionConfiguration executionConfiguration)
-        {
-            ExecutionConfig = executionConfiguration;
-        }
+        public DependencyModeExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
-        public async Task RunAsync()
+        public override async Task RunAsync()
         {
             // List of steps (id), their dependency steps (id) and whether it's a strict dependency or not.
             Dictionary<string, HashSet<KeyValuePair<string, bool>>> stepDependencies;
             try
             {
-                Dictionary<Step, List<KeyValuePair<Step, bool>>> dependencies = await GetCircularStepDependenciesAsync(ExecutionConfig);
+                Dictionary<Step, List<KeyValuePair<Step, bool>>> dependencies = await GetCircularStepDependenciesAsync();
                 stepDependencies = dependencies.ToDictionary(
                     pair => pair.Key.StepId,
                     pair => pair.Value.Select(dependency => new KeyValuePair<string, bool>(dependency.Key.StepId, dependency.Value)
@@ -138,17 +131,8 @@ namespace EtlManagerExecutor
 
                     foreach (string stepId in executableSteps)
                     {
-                        // Check whether the maximum number of parallel steps are running
-                        // and wait for some steps to finish if necessary.
-                        while (RunningStepsCounter >= ExecutionConfig.MaxParallelSteps)
-                        {
-                            await Task.Delay(ExecutionConfig.PollingIntervalMs);
-                        }
-
                         StepStatuses[stepId] = ExecutionStatus.Running;
                         stepWorkers.Add(StartNewStepWorkerAsync(stepId));
-
-                        Log.Information("{ExecutionId} {stepId} Started step execution", ExecutionConfig.ExecutionId, stepId);
                     }
 
                     // Wait before doing another progress and dependencies check.
@@ -168,11 +152,11 @@ namespace EtlManagerExecutor
 
         private async Task StartNewStepWorkerAsync(string stepId)
         {
+            await Semaphore.WaitAsync();
+
             // Create a new step worker and start it asynchronously.
             var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync();
-            // Add one to the counter.
-            Interlocked.Increment(ref RunningStepsCounter);
-
+            Log.Information("{ExecutionId} {stepId} Started step execution", ExecutionConfig.ExecutionId, stepId);
             bool result = false;
             try
             {
@@ -184,16 +168,15 @@ namespace EtlManagerExecutor
                 // Update the status.
                 StepStatuses[stepId] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
 
-                // Subtract one from the counter.
-                Interlocked.Decrement(ref RunningStepsCounter);
+                Semaphore.Release();
                 Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionConfig.ExecutionId, stepId);
             }
         }
 
         // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
-        private static async Task<Dictionary<Step, List<KeyValuePair<Step, bool>>>> GetCircularStepDependenciesAsync(ExecutionConfiguration executionConfig)
+        private async Task<Dictionary<Step, List<KeyValuePair<Step, bool>>>> GetCircularStepDependenciesAsync()
         {
-            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
             // Get a list of dependencies for this execution. Only include steps selected for execution in the check.
             var sqlCommand = new SqlCommand(
                     @"SELECT
@@ -212,8 +195,8 @@ namespace EtlManagerExecutor
             {
                 CommandTimeout = 120 // two minutes
             };
-            sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
+            sqlCommand.Parameters.AddWithValue("@JobId", ExecutionConfig.JobId);
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
             var dependencies = new Dictionary<Step, List<KeyValuePair<Step, bool>>>();
             await sqlConnection.OpenAsync();
             using (var reader = await sqlCommand.ExecuteReaderAsync())

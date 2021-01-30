@@ -9,18 +9,11 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExecutionPhaseExecutor
+    class ExecutionPhaseExecutor : ExecutorBase
     {
-        private ExecutionConfiguration ExecutionConfig { get; init; }
+        public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
-        private int RunningStepsCounter = 0;
-
-        public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration)
-        {
-            ExecutionConfig = executionConfiguration;
-        }
-
-        public async Task RunAsync()
+        public override async Task RunAsync()
         {
             var allSteps = new List<KeyValuePair<int, string>>();
 
@@ -47,17 +40,7 @@ namespace EtlManagerExecutor
 
                 foreach (string stepId in stepsToExecute)
                 {
-                    // Check whether the maximum number of parallel steps are running
-                    // and wait for some steps to finish if necessary.
-                    while (RunningStepsCounter >= ExecutionConfig.MaxParallelSteps)
-                    {
-                        await Task.Delay(ExecutionConfig.PollingIntervalMs);
-                    }
-
                     stepWorkers.Add(StartNewStepWorkerAsync(stepId));
-
-                    Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionConfig.ExecutionId, stepId);
-
                 }
 
                 // All steps have been started. Wait until all step worker tasks have finished.
@@ -67,10 +50,10 @@ namespace EtlManagerExecutor
 
         private async Task StartNewStepWorkerAsync(string stepId)
         {
+            await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
             var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync();
-            // Add one to the counter.
-            Interlocked.Increment(ref RunningStepsCounter);
+            Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionConfig.ExecutionId, stepId);
             try
             {
                 // Wait for the step to finish.
@@ -78,8 +61,7 @@ namespace EtlManagerExecutor
             }
             finally
             {
-                // Subtract one from the counter.
-                Interlocked.Decrement(ref RunningStepsCounter);
+                Semaphore.Release();
                 Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionConfig.ExecutionId, stepId);
             }
         }
