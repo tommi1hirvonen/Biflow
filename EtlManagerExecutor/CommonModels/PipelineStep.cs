@@ -28,7 +28,7 @@ namespace EtlManagerExecutor
 
         public async Task<bool> CancelAsync()
         {
-            if (DataFactory == null)
+            if (DataFactory is null)
             {
                 // Get the target Data Factory information from the database.
                 try
@@ -42,7 +42,7 @@ namespace EtlManagerExecutor
                 }
             }
 
-            if (Client == null)
+            if (Client is null)
             {
                 try
                 {
@@ -87,7 +87,7 @@ namespace EtlManagerExecutor
                 updateStatuses.Parameters.AddWithValue("@StepId", StepId);
                 updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
 
-                if (ConfigurationBase.Username != null) updateStatuses.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
+                if (ConfigurationBase.Username is not null) updateStatuses.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
                 else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
 
                 await updateStatuses.ExecuteNonQueryAsync();

@@ -54,7 +54,7 @@ namespace EtlManagerExecutor
                 updateStatus.Parameters.AddWithValue("@StepId", StepId);
                 updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
 
-                if (ConfigurationBase.Username != null) updateStatus.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
+                if (ConfigurationBase.Username is not null) updateStatus.Parameters.AddWithValue("@Username", ConfigurationBase.Username);
                 else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);
 
                 await updateStatus.ExecuteNonQueryAsync();

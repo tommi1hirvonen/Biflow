@@ -94,7 +94,7 @@ namespace EtlManagerExecutor
                     , sqlConnection);
                 fetchProcessId.Parameters.AddWithValue("@ExecutionId", executionId);
                 var result = await fetchProcessId.ExecuteScalarAsync();
-                if (result == null)
+                if (result is null)
                 {
                     Log.Warning("{executionId} No Executor process id for given execution id. Execution stopping canceled.", executionId);
                     return false;

@@ -20,7 +20,7 @@ namespace EtlManagerExecutor
 
         public async Task<bool> CheckAccessTokenValidityAsync(string connectionString)
         {
-            if (AccessTokenExpiresOn == null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
+            if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
                 try
                 {
