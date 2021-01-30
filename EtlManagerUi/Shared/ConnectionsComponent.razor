@@ -28,7 +28,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (Connections == null)
+            @if (Connections is null)
             {
                 <tr><td colspan="3">Loading...</td></tr>
             }
@@ -107,7 +107,7 @@
         var existingConnection = Connections.FirstOrDefault(conn => conn.ConnectionId == connection.ConnectionId);
         string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
 
-        if (existingConnection != null)
+        if (existingConnection is not null)
         {
             await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string[]
             {

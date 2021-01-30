@@ -148,7 +148,7 @@
         else
         {
             var startStep = Steps.FirstOrDefault(s => s.StepName == StepFilter);
-            if (startStep != null)
+            if (startStep is not null)
             {
                 var steps = RecurseDependenciesBackward(startStep, new());
                 steps.Remove(startStep);
@@ -164,7 +164,7 @@
             }
         }
 
-        if (stepsJson != null && dependenciesJson != null)
+        if (stepsJson is not null && dependenciesJson is not null)
             await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
     }
 
@@ -228,7 +228,7 @@
     private async Task OnStepSubmit(Step step)
     {
         var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
-        if (existingStep != null)
+        if (existingStep is not null)
         {
             Steps.Remove(existingStep);
         }

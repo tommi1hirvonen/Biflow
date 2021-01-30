@@ -10,7 +10,7 @@
 <p></p>
 <h5>@Username</h5>
 
-@if (User == null || Jobs == null)
+@if (User is null || Jobs is null)
 {
     <p><em>Loading...</em></p>
 }
@@ -194,7 +194,7 @@ else
         var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
         try
         {
-            if (subscription != null)
+            if (subscription is not null)
             {
                 context.Subscriptions.Remove(subscription);
                 User.Subscriptions.Remove(subscription);

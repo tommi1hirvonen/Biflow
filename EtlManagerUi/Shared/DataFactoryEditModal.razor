@@ -2,7 +2,7 @@
 @inject IConfiguration configuration
 
 <BSModal @ref="Modal" Size="Size.Large">
-    @if (DataFactory != null)
+    @if (DataFactory is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory.DataFactoryName)</BSModalHeader>
         <BSModalBody>

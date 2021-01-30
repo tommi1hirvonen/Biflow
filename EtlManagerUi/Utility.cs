@@ -63,7 +63,7 @@ namespace EtlManagerUi
             using SqlConnection sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             SqlCommand sqlCommand;
 
-            if (stepIds != null && stepIds.Count > 0)
+            if (stepIds is not null && stepIds.Count > 0)
             {
                 sqlCommand = new SqlCommand(
                 "EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_"
@@ -199,8 +199,8 @@ namespace EtlManagerUi
             cmdGetGuid.Parameters.AddWithValue("@TagName_", tag.TagName);
             var guid = (Guid?)await cmdGetGuid.ExecuteScalarAsync();
             
-            // If id == null, then no tag with matching name was found. Insert a new tag.
-            if (guid == null)
+            // If id is null, then no tag with matching name was found. Insert a new tag.
+            if (guid is null)
             {
                 guid = Guid.NewGuid();
                 var cmdInsertTag = new SqlCommand("INSERT INTO etlmanager.Tag (TagId, TagName) SELECT @TagId, @TagName", sqlConnection);
@@ -337,7 +337,7 @@ namespace EtlManagerUi
 
             updateKeyCmd.Parameters.AddWithValue("@EncryptionId_", encryptionId);
 
-            if (oldEncryptionKey != null) updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", oldEncryptionKey);
+            if (oldEncryptionKey is not null) updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", oldEncryptionKey);
             else updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", DBNull.Value);
 
             updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKey_", newEncryptionKey);
@@ -393,7 +393,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", user.Username);
             sqlCommand.Parameters.AddWithValue("@Password_", password);
             sqlCommand.Parameters.AddWithValue("@Role_", user.Role);
-            if (user.Email != null)
+            if (user.Email is not null)
             {
                 sqlCommand.Parameters.AddWithValue("@Email_", user.Email);
             }

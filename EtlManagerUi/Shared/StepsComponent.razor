@@ -84,7 +84,7 @@
 <div class="card col shadow-sm my-4">
     <div class="row">
         <div class="col">
-            @if (Steps == null || Jobs == null || Job == null)
+            @if (Steps is null || Jobs is null || Job is null)
             {
                 <p>Loading...</p>
             }
@@ -234,7 +234,7 @@
     <BSModal @ref="ExecuteModal" Size="Size.ExtraLarge" IsScrollable="true"
              IsOpenChanged="isOpen => { StepsToExecute.Clear(); ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
         <BSModalHeader OnClick="() => ExecuteModal.Hide()">Execute steps</BSModalHeader>
-        @if (Steps != null)
+        @if (Steps is not null)
         {
             <BSModalBody>
                 <div class="row">
@@ -424,7 +424,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (TagInputFocusStepId != null)
+        if (TagInputFocusStepId is not null)
         {
             try
             {
@@ -440,7 +440,7 @@
         }
 
         // Used for dropdown menus. If the dropdown menu is not in the viewport then scroll to show it completely.
-        if (ScrollIntoViewElementId != null)
+        if (ScrollIntoViewElementId is not null)
         {
             await JsRuntime.InvokeVoidAsync("scrollIntoViewCompat", ScrollIntoViewElementId);
             ScrollIntoViewElementId = null;
@@ -541,7 +541,7 @@
     private void OnStepSubmit(Step step)
     {
         var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
-        if (existingStep != null)
+        if (existingStep is not null)
         {
             Steps.Remove(existingStep);
         }

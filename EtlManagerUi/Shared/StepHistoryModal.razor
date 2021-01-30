@@ -14,7 +14,7 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Executions == null)
+                @if (Executions is null)
                 {
                     <tr><td colspan="4">Loading...</td></tr>
                 }
@@ -67,7 +67,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (StepId_ != null)
+        if (StepId_ is not null)
         {
             Executions = null; // Set to null to reset the modal layout.
 

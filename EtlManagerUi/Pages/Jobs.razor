@@ -88,7 +88,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (jobs == null)
+            @if (jobs is null)
             {
                 <tr><td colspan="7">Loading...</td></tr>
             }
@@ -192,7 +192,7 @@
                             }
                         </td>
                         <td class="align-middle">
-                            @if (lastExecution != null)
+                            @if (lastExecution is not null)
                             {
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime</a>
                             }

@@ -102,7 +102,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (TopFailedSteps != null)
+                            @if (TopFailedSteps is not null)
                             {
                                 @for (int i = 0; i < TopFailedSteps.Count; i++)
                                 {

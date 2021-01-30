@@ -5,7 +5,7 @@
 @inject IJSRuntime JS 
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
-    @if (Step != null && Jobs != null && Connections != null && DataFactories != null && Steps != null)
+    @if (Step is not null && Jobs is not null && Connections is not null && DataFactories is not null && Steps is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
         <BSModalBody>
@@ -445,7 +445,7 @@
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
             PrevStepId = StepId;
         }
-        else if (StepId == Guid.Empty && Job != null)
+        else if (StepId == Guid.Empty && Job is not null)
         {
             Step = new()
             {
@@ -470,15 +470,15 @@
         // If the required id property is not set then try to set it to the first one from the available options.
         // The property would otherwise be null even though the corresponding select input shows a valid option.
         var stepType = args.Value.ToString();
-        if ((stepType == "SQL" || stepType == "SSIS") && Step.ConnectionId == null)
+        if ((stepType == "SQL" || stepType == "SSIS") && Step.ConnectionId is null)
         {
             Step.ConnectionId = Connections?.FirstOrDefault()?.ConnectionId;
         }
-        else if (stepType == "PIPELINE" && Step.DataFactoryId == null)
+        else if (stepType == "PIPELINE" && Step.DataFactoryId is null)
         {
             Step.DataFactoryId = DataFactories?.FirstOrDefault()?.DataFactoryId;
         }
-        else if (stepType == "JOB" && Step.JobToExecuteId == null)
+        else if (stepType == "JOB" && Step.JobToExecuteId is null)
         {
             Step.JobToExecuteId = Jobs?.Where(job => job.JobId != Job.JobId).FirstOrDefault()?.JobId;
         }
@@ -496,7 +496,7 @@
         if (!isOpen)
         {
             // Reset added entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity != null && e.State == EntityState.Added).ToList())
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
             {
                 if (entity.Entity is Dependency dependency)
                 {
@@ -512,7 +512,7 @@
             }
 
             // Reset deleted entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity != null && e.State == EntityState.Deleted).ToList())
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
             {
                 if (entity.Entity is Dependency dependency)
                 {
@@ -530,7 +530,7 @@
             // Reset changed entities.
             Context.ChangeTracker
                 .Entries()
-                .Where(e => e.Entity != null)
+                .Where(e => e.Entity is not null)
                 .ToList()
                 .ForEach(e => e.State = EntityState.Unchanged);
         }
@@ -540,24 +540,24 @@
     {
         StepError = string.Empty;
 
-        if (Step.StepType == "SQL" && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId == null))
+        if (Step.StepType == "SQL" && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId is null))
         {
             StepError = "SQL statement and connection cannot be empty";
             return;
         }
         else if (Step.StepType == "SSIS" && (string.IsNullOrEmpty(Step.PackageFolderName)
             || string.IsNullOrEmpty(Step.PackageProjectName) || string.IsNullOrEmpty(Step.PackageName)
-            || Step.ConnectionId == null))
+            || Step.ConnectionId is null))
         {
             StepError = "Connection, folder, project and package names cannot be empty";
             return;
         }
-        else if (Step.StepType == "PIPELINE" && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId == null))
+        else if (Step.StepType == "PIPELINE" && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId is null))
         {
             StepError = "Pipeline name and Data Factory cannot be empty";
             return;
         }
-        else if (Step.StepType == "JOB" && Step.JobToExecuteId == null)
+        else if (Step.StepType == "JOB" && Step.JobToExecuteId is null)
         {
             StepError = "Job cannot be empty";
             return;
@@ -628,11 +628,11 @@
     {
         var dependent = (bool)checkedValue;
         var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
-        if (!dependent && dependency != null)
+        if (!dependent && dependency is not null)
         {
             Step.Dependencies.Remove(dependency);
         }
-        else if (dependent && dependency == null)
+        else if (dependent && dependency is null)
         {
             Step.Dependencies.Add(new() { StepId = Step.StepId, DependantOnStepId = step.StepId });
         }
@@ -642,7 +642,7 @@
     {
         var strict = (bool)checkedValue;
         var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
-        if (dependency != null)
+        if (dependency is not null)
         {
             dependency.StrictDependency = strict;
         }

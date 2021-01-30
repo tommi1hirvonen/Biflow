@@ -1,5 +1,5 @@
 ﻿<BSModal @ref="Modal" Size="Size.Large">
-    @if (Step != null)
+    @if (Step is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@Step.StepName</BSModalHeader>
         <BSModalBody>
@@ -98,7 +98,7 @@
             @if (Step.StepType == "SSIS")
             {
                 <h6>Parameters</h6>
-                @if (Step.Parameters != null)
+                @if (Step.Parameters is not null)
                 {
                     <dl class="row">
                         @foreach (var param in Step.Parameters)

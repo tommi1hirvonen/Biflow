@@ -28,7 +28,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (Users == null)
+            @if (Users is null)
             {
                 <tr><td colspan="5">Loading...</td></tr>
             }
@@ -144,7 +144,7 @@
     private void OnUserSubmit(RoleUser user)
     {
         var existingUser = Users.FirstOrDefault(u => u.Username == user.Username);
-        if (existingUser != null)
+        if (existingUser is not null)
         {
             Users.Remove(existingUser);
         }

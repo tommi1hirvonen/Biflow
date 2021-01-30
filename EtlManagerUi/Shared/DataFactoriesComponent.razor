@@ -32,7 +32,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @if (DataFactories == null)
+            @if (DataFactories is null)
             {
                 <tr><td colspan="4">Loading...</td></tr>
             }
@@ -118,7 +118,7 @@ else
         var existingDf = DataFactories.FirstOrDefault(df => df.DataFactoryId == dataFactory.DataFactoryId);
         string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
 
-        if (existingDf != null)
+        if (existingDf is not null)
         {
             await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string[]
             {

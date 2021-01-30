@@ -62,7 +62,7 @@
 </style>
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@(JobExecution != null ? JobExecution.JobName : null)</BSModalHeader>
+    <BSModalHeader @onclick="() => Modal.Hide()">@(JobExecution is not null ? JobExecution.JobName : null)</BSModalHeader>
     <BSModalBody>
 
         <BSButtonGroup IsToolbar="true">
@@ -98,7 +98,7 @@
         </BSButtonGroup>
 
         <AuthorizeView Roles="Admin, Editor, Operator">
-            @if (JobExecution != null && JobExecution.ExecutionStatus == "RUNNING")
+            @if (JobExecution is not null && JobExecution.ExecutionStatus == "RUNNING")
             {
                 <BSButtonGroup IsToolbar="true" Class="mt-3">
                     <BSDropdown>
@@ -124,7 +124,7 @@
             <p></p>
         </div>
 
-        @if (JobExecution != null && JobExecutionDetailsOpen)
+        @if (JobExecution is not null && JobExecutionDetailsOpen)
         {
             <dl class="row">
                 <dt class="col-sm-3">
@@ -202,7 +202,7 @@
                         </div>
                         <select class="form-control form-control-sm" @bind="StatusFilter">
                             <option value="" selected=@string.IsNullOrEmpty(StatusFilter)>ALL</option>
-                            @if (Executions != null)
+                            @if (Executions is not null)
                             {
                                 @foreach (var status in Executions.Select(e => e.ExecutionStatus).Distinct().OrderBy(status => status))
                                 {
@@ -251,7 +251,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Executions == null)
+                    @if (Executions is null)
                     {
                         <tr><td colspan="6">Loading...</td></tr>
                     }
@@ -396,7 +396,7 @@
             Loading = false;
 
             // Create a JSON dataset that is passed to the JS method used to draw the steps graph via JSInterop.
-            var dataset = Executions.Where(e => e.StartDateTime != null).Select(e =>
+            var dataset = Executions.Where(e => e.StartDateTime is not null).Select(e =>
             new
             {
                 id = e.StepExecutionId,
@@ -423,7 +423,7 @@
                     break;
                 case SortOption.StartTime:
                     // false sorts before true => not started steps are placed last
-                    Executions = Executions.OrderBy(e => e.StartDateTime == null).ThenBy(e => e.StartDateTime).ThenBy(e => e.EndDateTime == null).ThenBy(e => e.EndDateTime).ToList();
+                    Executions = Executions.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime).ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime).ToList();
                     break;
                 case SortOption.EndTime:
                     Executions = Executions.OrderBy(e => e.EndDateTime).ToList();
@@ -494,7 +494,7 @@
     private void ShowStepExecutionModal(string text)
     {
         var execution = Executions.FirstOrDefault(e => e.StepExecutionId == text);
-        if (execution != null)
+        if (execution is not null)
         {
             SelectedStepExecutionModal = execution;
             StateHasChanged();

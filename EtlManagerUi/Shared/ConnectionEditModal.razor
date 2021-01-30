@@ -3,7 +3,7 @@
 @inject IConfiguration configuration
 
 <BSModal @ref="Modal" Size="Size.Large">
-    @if (Connection != null)
+    @if (Connection is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection.ConnectionName)</BSModalHeader>
         <BSModalBody>

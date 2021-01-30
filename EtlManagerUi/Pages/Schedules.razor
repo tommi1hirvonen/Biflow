@@ -58,7 +58,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (Schedules_ == null)
+            @if (Schedules_ is null)
             {
                 <tr><td colspan="11">Loading...</td></tr>
             }
@@ -176,7 +176,7 @@
 </div>
 
 
-@if (NewSchedule != null)
+@if (NewSchedule is not null)
 {
     <AuthorizeView Roles="Admin, Editor, Operator">
         <BSModal @ref="CreateModal" Size="Size.Large">
@@ -283,7 +283,7 @@
     </AuthorizeView>
 }
 
-@if (ScheduleGeneration != null)
+@if (ScheduleGeneration is not null)
 {
     <AuthorizeView Roles="Admin, Editor, Operator">
         <BSModal @ref="GenerateModal" Size="Size.Large">

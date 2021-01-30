@@ -17,7 +17,7 @@
                 </BSDropdownToggle>
                 <BSDropdownMenu>
                     <BSDropdownHeader>Show</BSDropdownHeader>
-                    @if (Jobs != null)
+                    @if (Jobs is not null)
                     {
                         @foreach (var job in Jobs)
                         {
@@ -294,7 +294,7 @@ else
         var subscription = CurrentJob.Subscriptions.FirstOrDefault(sub => sub.Username == Username);
         try
         {
-            if (subscription != null)
+            if (subscription is not null)
             {
                 context.Subscriptions.Remove(subscription);
                 CurrentJob.Subscriptions.Remove(subscription);

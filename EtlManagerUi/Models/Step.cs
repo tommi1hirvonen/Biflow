@@ -118,7 +118,7 @@ namespace EtlManagerUi.Models
 
         public int CompareTo(object obj)
         {
-            if (obj == null) return 1;
+            if (obj is null) return 1;
 
             if (obj is Step other)
             {

@@ -185,7 +185,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (JobExecutions == null)
+                    @if (JobExecutions is null)
                     {
                         <tr><td colspan="8">Loading...</td></tr>
                     }
@@ -256,7 +256,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (StepExecutions == null)
+                    @if (StepExecutions is null)
                     {
                         <tr><td colspan="6">Loading...</td></tr>
                     }

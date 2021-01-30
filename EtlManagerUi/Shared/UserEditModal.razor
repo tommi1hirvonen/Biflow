@@ -4,8 +4,8 @@
 @inject IConfiguration configuration
 
 <BSModal @ref="Modal">
-    <BSModalHeader OnClick="() => Modal.Hide()">@(Username == null ? "New user" : "Edit " + Username)</BSModalHeader>
-    @if (User != null)
+    <BSModalHeader OnClick="() => Modal.Hide()">@(Username is null ? "New user" : "Edit " + Username)</BSModalHeader>
+    @if (User is not null)
     {
         <BSModalBody>
             <BSForm Model="User" id="user_edit_form" OnValidSubmit="SubmitUser">
@@ -21,7 +21,7 @@
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                                     </div>
                                 </div>
-                                <InputText class="form-control" disabled=@(Username != null) @bind-Value="User.Username"></InputText>
+                                <InputText class="form-control" disabled=@(Username is not null) @bind-Value="User.Username"></InputText>
                             </div>
                         </BSFormGroup>
                         <BSFormGroup>
@@ -51,7 +51,7 @@
                                 <InputText class="form-control" type="email" @bind-Value="User.Email"></InputText>
                             </div>
                         </BSFormGroup>
-                        @if (Username == null)
+                        @if (Username is null)
                         {
                             <BSFormGroup>
                                 <BSLabel>Password</BSLabel>
@@ -82,7 +82,7 @@
         </BSModalBody>
     }
     <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="user_edit_form" Color="Color.Success">@(Username == null ? "Create" : "Save")</BSButton>
+        <BSButton ButtonType="ButtonType.Submit" form="user_edit_form" Color="Color.Success">@(Username is null ? "Create" : "Save")</BSButton>
         <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
     </BSModalFooter>
 </BSModal>
@@ -103,7 +103,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Username == null)
+        if (Username is null)
         {
             User = new() { Role = "Viewer" };
         }
@@ -117,7 +117,7 @@
     private async Task SubmitUser()
     {
         // New user
-        if (Username == null)
+        if (Username is null)
         {
             Password = Password ?? string.Empty;
             ConfirmPassword = ConfirmPassword ?? string.Empty;
