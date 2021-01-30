@@ -19,7 +19,8 @@ namespace EtlManagerExecutor
 
         enum ExecutionStatus
         {
-            Pending,
+            NotStarted,
+            Running,
             Success,
             Failed
         };
@@ -200,23 +201,21 @@ namespace EtlManagerExecutor
             {
                 await sqlConnection.OpenAsync();
 
-                // Get a list of all steps for this execution
-                var stepsToExecute = new List<string>();
-
+                // Get steps to execute and add them to the list of steps and their statuses.
                 var stepsListCommand = new SqlCommand("SELECT DISTINCT StepId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
                 stepsListCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
                 using (var reader = await stepsListCommand.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        stepsToExecute.Add(reader[0].ToString());
+                        var stepId = reader[0].ToString();
+                        StepStatuses[stepId] = ExecutionStatus.NotStarted;
                     }
                 }
 
-                StepStatuses = stepsToExecute.ToDictionary(stepId => stepId, stepId => ExecutionStatus.Pending);
-
-                while (stepsToExecute.Count > 0)
+                while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
                 {
+                    IEnumerable<string> stepsToExecute = StepStatuses.Where(step => step.Value == ExecutionStatus.NotStarted).Select(step => step.Key);
                     var stepsToSkip = new List<string>();
                     var executableSteps = new List<string>();
 
@@ -233,9 +232,10 @@ namespace EtlManagerExecutor
                             {
                                 stepsToSkip.Add(stepId);
                             }
-                            // If all dependencies are marked as something else than pending, the step can be executed.
-                            // Also check that the dependency is actually included in the execution.
-                            else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) || StepStatuses[dep.Key] != ExecutionStatus.Pending))
+                            // If the steps dependencies have been completed (success/failure), the step can be executed.
+                            // Also check if the dependency is actually included in the execution.
+                            else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) ||
+                            StepStatuses[dep.Key] == ExecutionStatus.Success || StepStatuses[dep.Key] == ExecutionStatus.Failed))
                             {
                                 executableSteps.Add(stepId);
                             }
@@ -264,7 +264,6 @@ namespace EtlManagerExecutor
                         skipUpdateCommand.Parameters.AddWithValue("@StepId", stepId);
                         await skipUpdateCommand.ExecuteNonQueryAsync();
 
-                        stepsToExecute.Remove(stepId);
                         StepStatuses[stepId] = ExecutionStatus.Failed;
 
                         Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", executionConfig.ExecutionId, stepId);
@@ -279,7 +278,7 @@ namespace EtlManagerExecutor
                             await Task.Delay(executionConfig.PollingIntervalMs);
                         }
 
-                        stepsToExecute.Remove(stepId);
+                        StepStatuses[stepId] = ExecutionStatus.Running;
                         stepWorkers.Add(StartNewStepWorkerAsync(executionConfig, stepId));
 
                         Log.Information("{ExecutionId} {stepId} Started step execution", executionConfig.ExecutionId, stepId);
@@ -287,7 +286,7 @@ namespace EtlManagerExecutor
 
                     // Wait before doing another progress and dependencies check.
                     // This way we aren't constantly looping and querying the status.
-                    if (stepsToExecute.Count > 0)
+                    if (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
                     {
                         await Task.Delay(executionConfig.PollingIntervalMs);
                     }
