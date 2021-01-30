@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Security.Cryptography;
@@ -31,7 +32,29 @@ namespace EtlManagerExecutor
             }
         }
 
-        
+        public static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
+        {
+            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            var sqlCommand = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                    SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                    WHERE ExecutionId = @ExecutionId"
+                    , sqlConnection)
+            {
+                CommandTimeout = 120 // two minutes
+            };
+            sqlCommand.Parameters.AddWithValue("@ErrorMessage", errorMessage);
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
+            try
+            {
+                await sqlConnection.OpenAsync();
+                await sqlCommand.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error updating error message", executionConfig.ExecutionId);
+            }
+        }
 
         public static async Task OpenIfClosedAsync(this SqlConnection sqlConnection)
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ConfigurationBase
+    public class ConfigurationBase
     {
         public string ConnectionString { get; init; }
         public string ExecutionId { get; init; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExecutionConfiguration : ConfigurationBase
+    public class ExecutionConfiguration : ConfigurationBase
     {
         public int MaxParallelSteps { get; init; }
         public int PollingIntervalMs { get; init; }
