@@ -124,24 +124,29 @@ namespace EtlManagerExecutor
             // Mark the steps that should be skipped in the execution table as SKIPPED.
             foreach (string stepId in stepsToSkip)
             {
-                using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-                await sqlConnection.OpenAsync();
-                var skipUpdateCommand = new SqlCommand(
-                    @"UPDATE etlmanager.Execution
+                StepStatuses[stepId] = ExecutionStatus.Failed;
+                try
+                {
+                    using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
+                    await sqlConnection.OpenAsync();
+                    var skipUpdateCommand = new SqlCommand(
+                        @"UPDATE etlmanager.Execution
                         SET ExecutionStatus = 'SKIPPED',
                         StartDateTime = GETDATE(), EndDateTime = GETDATE()
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                    , sqlConnection)
+                        , sqlConnection)
+                    {
+                        CommandTimeout = 120 // two minutes
+                    };
+                    skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
+                    skipUpdateCommand.Parameters.AddWithValue("@StepId", stepId);
+                    await skipUpdateCommand.ExecuteNonQueryAsync();
+                    Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", ExecutionConfig.ExecutionId, stepId);
+                }
+                catch (Exception ex)
                 {
-                    CommandTimeout = 120 // two minutes
-                };
-                skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-                skipUpdateCommand.Parameters.AddWithValue("@StepId", stepId);
-                await skipUpdateCommand.ExecuteNonQueryAsync();
-
-                StepStatuses[stepId] = ExecutionStatus.Failed;
-
-                Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", ExecutionConfig.ExecutionId, stepId);
+                    Log.Error(ex, "{ExecutionId} {stepId} Error marking step as SKIPPED", ExecutionConfig.ExecutionId, stepId);
+                }
             }
 
             foreach (string stepId in executableSteps)
