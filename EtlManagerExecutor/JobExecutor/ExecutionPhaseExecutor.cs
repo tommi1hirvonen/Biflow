@@ -50,6 +50,7 @@ namespace EtlManagerExecutor
 
         private async Task StartNewStepWorkerAsync(string stepId)
         {
+            // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
             var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync();
@@ -61,6 +62,7 @@ namespace EtlManagerExecutor
             }
             finally
             {
+                // Release the semaphore once to make room for new parallel executions.
                 Semaphore.Release();
                 Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionConfig.ExecutionId, stepId);
             }
