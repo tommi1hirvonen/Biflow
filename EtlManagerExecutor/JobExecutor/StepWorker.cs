@@ -18,7 +18,7 @@ namespace EtlManagerExecutor
             this.stepId = stepId;
         }
 
-        public async Task ExecuteStepAsync()
+        public async Task<bool> ExecuteStepAsync()
         {
             IExecutable stepExecution;
             int retryAttempts;
@@ -79,20 +79,20 @@ namespace EtlManagerExecutor
                         else
                         {
                             Log.Error("{ExecutionId} {StepId} Incorrect step type {stepType}", executionConfiguration.ExecutionId, stepId, stepType);
-                            return;
+                            return false;
                         }
 
                     }
                     else
                     {
                         Log.Error("{ExecutionId} {StepId} Could not find execution details", executionConfiguration.ExecutionId, stepId);
-                        return;
+                        return false;
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "{ExecutionId} {StepId} Error reading execution details", executionConfiguration.ExecutionId, stepId);
-                    return;
+                    return false;
                 }
             }
 
@@ -194,7 +194,7 @@ namespace EtlManagerExecutor
                         // Otherwise break the loop and end this execution.
                         else
                         {
-                            break;
+                            return false;
                         }
                     }
                     else
@@ -220,13 +220,14 @@ namespace EtlManagerExecutor
                             Log.Error(ex, "{ExecutionId} {StepId} Error updating step status to COMPLETED", executionConfiguration.ExecutionId, stepId);
                         }
 
-                        break; // Break the loop to end this execution.
+                        return true; // Break the loop to end this execution.
                     }
 
                 }
                 
             }
 
+            return false; // Execution should not arrive here in normal conditions. Return false.
         }
 
     }

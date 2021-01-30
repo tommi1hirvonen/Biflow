@@ -17,6 +17,15 @@ namespace EtlManagerExecutor
 
         private int RunningStepsCounter = 0;
 
+        enum ExecutionStatus
+        {
+            Pending,
+            Success,
+            Failed
+        };
+
+        private Dictionary<string, ExecutionStatus> StepStatuses { get; set; } = new();
+
         public JobExecutor(IConfiguration configuration)
         {
             this.configuration = configuration;
@@ -102,7 +111,7 @@ namespace EtlManagerExecutor
             }
 
             // Execution finished. Notify subscribers of possible errors.
-            if (notify)
+            if (notify && StepStatuses.Any(status => status.Value == ExecutionStatus.Failed))
             {
                 EmailHelper.SendNotification(configuration, executionId);
             }
@@ -156,10 +165,26 @@ namespace EtlManagerExecutor
 
         private async Task ExecuteInDependencyMode(ExecutionConfiguration executionConfig)
         {
-            string circularDependencies;
+            // List of steps (id), their dependency steps (id) and whether it's a strict dependency or not.
+            Dictionary<string, HashSet<KeyValuePair<string, bool>>> stepDependencies;
             try
             {
-                circularDependencies = await GetCircularStepDependenciesAsync(executionConfig);
+                Dictionary<Step, List<KeyValuePair<Step, bool>>> dependencies = await GetCircularStepDependenciesAsync(executionConfig);
+                stepDependencies = dependencies.ToDictionary(
+                    pair => pair.Key.StepId,
+                    pair => pair.Value.Select(dependency => new KeyValuePair<string, bool>(dependency.Key.StepId, dependency.Value)
+                    ).ToHashSet());
+                List<List<Step>> cycles = dependencies.ToDictionary(pair => pair.Key, pair => pair.Value.Select(dep => dep.Key)).FindCycles();
+
+                // If there are circular dependencies, update error message for all steps and cancel execution.
+                if (cycles.Count > 0)
+                {
+                    var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+                    var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
+                    await UpdateErrorMessageAsync(executionConfig, "Execution was cancelled because of circular step dependencies:\n" + json);
+                    Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, executionConfig.ExecutionId);
+                    return;
+                }
             }
             catch (Exception ex)
             {
@@ -167,12 +192,7 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            if (!string.IsNullOrEmpty(circularDependencies))
-            {
-                await UpdateErrorMessageAsync(executionConfig, "Execution was cancelled because of circular step dependencies:\n" + circularDependencies);
-                Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + circularDependencies, executionConfig.ExecutionId);
-                return;
-            }
+
 
             var stepWorkers = new List<Task>();
 
@@ -193,72 +213,38 @@ namespace EtlManagerExecutor
                     }
                 }
 
+                StepStatuses = stepsToExecute.ToDictionary(stepId => stepId, stepId => ExecutionStatus.Pending);
 
                 while (stepsToExecute.Count > 0)
                 {
                     var stepsToSkip = new List<string>();
-                    var duplicateSteps = new List<string>();
                     var executableSteps = new List<string>();
 
-                    // Get a list of steps we can execute based on dependencies and already executed steps.
-
-                    // Use a SQL command and the Execution to determine what to do with steps that have not yet been started.
-                    var stepActionCommand = new SqlCommand(
-                        @"SELECT a.StepId,
-                        CASE WHEN EXISTS (" + // There are strict dependencies which have been stopped, skipped or which have failed => step should be skipped
-                                @"SELECT *
-                                FROM etlmanager.Dependency AS x
-                                    INNER JOIN etlmanager.Execution AS y ON x.DependantOnStepId = y.StepId AND y.ExecutionId = b.ExecutionId
-                                WHERE x.StepId = a.StepId AND x.StrictDependency = 1 AND y.ExecutionStatus IN ('FAILED', 'SKIPPED', 'STOPPED')
-                            ) THEN '1'
-                            ELSE '0'
-                        END AS Skip,
-                        CASE WHEN EXISTS (" + // The same step is running under a different execution => step should be skipped and marked as duplicate
-                                @"SELECT *
-                                FROM etlmanager.Execution AS x
-                                WHERE b.StepId = x.StepId AND x.ExecutionStatus = 'RUNNING'
-                            ) THEN '1'
-                            ELSE '0'
-                        END AS Duplicate,
-                        CASE WHEN NOT EXISTS (" + // There are no dependencies which have not been started, are not running or are not awaiting a retry => step can be started
-                                @"SELECT *
-                                FROM etlmanager.Dependency AS x
-                                    INNER JOIN etlmanager.Execution AS y ON x.DependantOnStepId = y.StepId AND y.ExecutionId = b.ExecutionId
-                                WHERE x.StepId = a.StepId AND y.ExecutionStatus IN ('NOT STARTED', 'RUNNING', 'AWAIT RETRY')
-                            ) AND NOT EXISTS (" + // Also double check skip logic because in very fast environments steps might get executed even though they should be skipped.
-                                @"SELECT *
-                                FROM etlmanager.Dependency AS x
-                                    INNER JOIN etlmanager.Execution AS y ON x.DependantOnStepId = y.StepId AND y.ExecutionId = b.ExecutionId
-                                WHERE x.StepId = a.StepId AND x.StrictDependency = 1 AND y.ExecutionStatus IN ('FAILED', 'SKIPPED', 'STOPPED')
-                            )
-                            THEN '1'
-                            ELSE '0'
-                        END AS Executable
-                    FROM etlmanager.Step AS a
-                        INNER JOIN etlmanager.Execution AS b ON b.ExecutionId = @ExecutionId AND a.StepId = b.StepId
-                    WHERE b.ExecutionStatus = 'NOT STARTED'"
-                        , sqlConnection)
+                    foreach (var stepId in stepsToExecute)
                     {
-                        CommandTimeout = 120 // two minutes
-                    };
-                    stepActionCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
-
-                    await sqlConnection.OpenIfClosedAsync();
-
-                    // Iterate over the result rows and add steps to one of the following two lists either for skipping or for execution.
-                    using (var reader = await stepActionCommand.ExecuteReaderAsync())
-                    {
-                        while (await reader.ReadAsync())
+                        // Step has dependencies
+                        if (stepDependencies.ContainsKey(stepId))
                         {
-                            string stepId = reader["StepId"].ToString();
-                            string skip = reader["Skip"].ToString();
-                            string duplicate = reader["Duplicate"].ToString();
-                            string executable = reader["Executable"].ToString();
-
-                            if (!stepsToExecute.Contains(stepId)) continue;
-                            else if (skip == "1") stepsToSkip.Add(stepId);
-                            else if (duplicate == "1") duplicateSteps.Add(stepId);
-                            else if (executable == "1") executableSteps.Add(stepId);
+                            HashSet<KeyValuePair<string, bool>> dependencies = stepDependencies[stepId];
+                            IEnumerable<string> strictDependencies = dependencies.Where(dep => dep.Value).Select(dep => dep.Key);
+                            
+                            // If there are any strict dependencies, which have been marked as failed, skip this step.
+                            if (strictDependencies.Any(dep => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == dep)))
+                            {
+                                stepsToSkip.Add(stepId);
+                            }
+                            // If all dependencies are marked as something else than pending, the step can be executed.
+                            // Also check that the dependency is actually included in the execution.
+                            else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) || StepStatuses[dep.Key] != ExecutionStatus.Pending))
+                            {
+                                executableSteps.Add(stepId);
+                            }
+                            // Otherwise wait until the step can be executed.
+                        }
+                        else
+                        {
+                            // Step has no dependencies. It can be executed.
+                            executableSteps.Add(stepId);
                         }
                     }
 
@@ -266,11 +252,11 @@ namespace EtlManagerExecutor
                     foreach (string stepId in stepsToSkip)
                     {
                         var skipUpdateCommand = new SqlCommand(
-                                        @"UPDATE etlmanager.Execution
-                                    SET ExecutionStatus = 'SKIPPED',
-                                    StartDateTime = GETDATE(), EndDateTime = GETDATE()
-                                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                                        , sqlConnection)
+                            @"UPDATE etlmanager.Execution
+                            SET ExecutionStatus = 'SKIPPED',
+                            StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                            , sqlConnection)
                         {
                             CommandTimeout = 120 // two minutes
                         };
@@ -279,30 +265,9 @@ namespace EtlManagerExecutor
                         await skipUpdateCommand.ExecuteNonQueryAsync();
 
                         stepsToExecute.Remove(stepId);
+                        StepStatuses[stepId] = ExecutionStatus.Failed;
 
                         Log.Warning("{ExecutionId} {stepId} Marked step as SKIPPED", executionConfig.ExecutionId, stepId);
-                    }
-
-                    // Mark the steps that have a duplicate currently running under a different execution as DUPLICATE.
-                    foreach (string stepId in duplicateSteps)
-                    {
-                        var duplicateCommand = new SqlCommand(
-                                        @"UPDATE etlmanager.Execution
-                                    SET ExecutionStatus = 'DUPLICATE',
-                                    StartDateTime = GETDATE(), EndDateTime = GETDATE()
-                                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                                        , sqlConnection)
-                        {
-                            CommandTimeout = 120 // two minutes
-                        };
-                        duplicateCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
-                        duplicateCommand.Parameters.AddWithValue("@StepId", stepId);
-                        await duplicateCommand.ExecuteNonQueryAsync();
-
-                        stepsToExecute.Remove(stepId);
-
-                        Log.Warning("{ExecutionId} {stepId} Marked step as DUPLICATE", executionConfig.ExecutionId, stepId);
-
                     }
 
                     foreach (string stepId in executableSteps)
@@ -314,12 +279,10 @@ namespace EtlManagerExecutor
                             await Task.Delay(executionConfig.PollingIntervalMs);
                         }
 
+                        stepsToExecute.Remove(stepId);
                         stepWorkers.Add(StartNewStepWorkerAsync(executionConfig, stepId));
 
-                        stepsToExecute.Remove(stepId);
-
                         Log.Information("{ExecutionId} {stepId} Started step execution", executionConfig.ExecutionId, stepId);
-
                     }
 
                     // Wait before doing another progress and dependencies check.
@@ -343,39 +306,49 @@ namespace EtlManagerExecutor
             var task = new StepWorker(executionConfig, stepId).ExecuteStepAsync();
             // Add one to the counter.
             Interlocked.Increment(ref RunningStepsCounter);
+
+            bool result = false;
             try
             {
                 // Wait for the step to finish.
-                await task;
+                result = await task;
             }
             finally
             {
+                // Update the status.
+                StepStatuses[stepId] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+
                 // Subtract one from the counter.
                 Interlocked.Decrement(ref RunningStepsCounter);
                 Log.Information("{ExecutionId} {StepId} Finished step execution", executionConfig.ExecutionId, stepId);
             }
         }
 
-        private static async Task<string> GetCircularStepDependenciesAsync(ExecutionConfiguration executionConfig)
+        // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
+        private static async Task<Dictionary<Step, List<KeyValuePair<Step, bool>>>> GetCircularStepDependenciesAsync(ExecutionConfiguration executionConfig)
         {
             using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+            // Get a list of dependencies for this execution. Only include steps selected for execution in the check.
             var sqlCommand = new SqlCommand(
                     @"SELECT
                         a.StepId,
                         b.StepName,
                         a.DependantOnStepId,
-                        c.StepName as DependantOnStepName
+                        c.StepName as DependantOnStepName,
+                        a.StrictDependency
                     FROM etlmanager.Dependency AS a
                         INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
                         INNER JOIN etlmanager.Step AS c ON a.DependantOnStepId = c.StepId
+                        INNER JOIN etlmanager.Execution AS d ON a.StepId = d.StepId AND d.ExecutionId = @ExecutionId AND d.RetryAttemptIndex = 0
+                        INNER JOIN etlmanager.Execution AS e ON a.DependantOnStepId = e.StepId AND e.ExecutionId = @ExecutionId AND e.RetryAttemptIndex = 0
                     WHERE b.JobId = @JobId"
                     , sqlConnection)
             {
                 CommandTimeout = 120 // two minutes
             };
             sqlCommand.Parameters.AddWithValue("@JobId", executionConfig.JobId);
-            var dependencies = new Dictionary<Step, List<Step>>();
-            var steps = new HashSet<Step>();
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
+            var dependencies = new Dictionary<Step, List<KeyValuePair<Step, bool>>>();
             await sqlConnection.OpenAsync();
             using (var reader = await sqlCommand.ExecuteReaderAsync())
             {
@@ -385,6 +358,7 @@ namespace EtlManagerExecutor
                     var stepName = reader["StepName"].ToString();
                     var dependencyStepId = reader["DependantOnStepId"].ToString();
                     var dependencyStepName = reader["DependantOnStepName"].ToString();
+                    var strict = (bool)reader["StrictDependency"];
 
                     var step = new Step(stepId, stepName);
                     var dependencyStep = new Step(dependencyStepId, dependencyStepName);
@@ -392,22 +366,11 @@ namespace EtlManagerExecutor
                     if (!dependencies.ContainsKey(step))
                         dependencies[step] = new();
                     
-                    dependencies[step].Add(dependencyStep);
-
-                    if (!steps.Contains(step))
-                        steps.Add(step);
-
-                    if (!steps.Contains(dependencyStep))
-                        steps.Add(dependencyStep);
+                    dependencies[step].Add(new(dependencyStep, strict));
                 }
             }
 
-            List<List<Step>> cycles = dependencies.FindCycles();
-
-            var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
-            var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
-
-            return cycles.Count == 0 ? null : json;
+            return dependencies;
         }
 
         private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
@@ -428,7 +391,6 @@ namespace EtlManagerExecutor
                 CommandTimeout = 120 // two minutes
             };
             var dependencies = new Dictionary<Job, List<Job>>();
-            var jobs = new HashSet<Job>();
             await sqlConnection.OpenAsync();
             using (SqlDataReader reader = await sqlCommand.ExecuteReaderAsync())
             {
@@ -446,12 +408,6 @@ namespace EtlManagerExecutor
                         dependencies[job] = new();
                     
                     dependencies[job].Add(jobToExecute);
-
-                    if (!jobs.Contains(job))
-                        jobs.Add(job);
-
-                    if (!jobs.Contains(jobToExecute))
-                        jobs.Add(jobToExecute);
                 }
             }
 
