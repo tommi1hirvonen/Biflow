@@ -28,20 +28,63 @@ namespace EtlManagerExecutor
             // Get step details.
             using (var sqlConnection = new SqlConnection(executionConfiguration.ConnectionString))
             {
-                var sqlCommand = new SqlCommand(
+                await sqlConnection.OpenAsync();
+
+                // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
+                var duplicateExecutionCmd = new SqlCommand(
+                    @"SELECT 1
+                    FROM etlmanager.Execution
+                    WHERE StepId = @StepId AND ExecutionStatus = 'RUNNING' AND StartDateTime >= DATEADD(DAY, -1, GETDATE())"
+                    , sqlConnection);
+                duplicateExecutionCmd.Parameters.AddWithValue("@StepId", stepId);
+
+                try
+                {
+                    using var duplicateReader = await duplicateExecutionCmd.ExecuteReaderAsync();
+                    // If the duplicate execution query returns any rows, there is another execution running for the same step.
+                    // This step execution should be marked as duplicate.
+                    if (duplicateReader.HasRows)
+                    {
+                        await duplicateReader.CloseAsync();
+                        var duplicateCommand = new SqlCommand(
+                            @"UPDATE etlmanager.Execution
+                            SET ExecutionStatus = 'DUPLICATE',
+                            StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                            , sqlConnection)
+                        {
+                            CommandTimeout = 120 // two minutes
+                        };
+                        duplicateCommand.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
+                        duplicateCommand.Parameters.AddWithValue("@StepId", stepId);
+                        await duplicateCommand.ExecuteNonQueryAsync();
+
+                        Log.Warning("{ExecutionId} {stepId} Marked step as DUPLICATE", executionConfiguration.ExecutionId, stepId);
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {StepId} Error marking step as DUPLICATE", executionConfiguration.ExecutionId, stepId);
+                    return false;
+                }
+
+
+                // Fetch step details.
+                var stepDetailsCmd = new SqlCommand(
                     @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
                         PackageFolderName, PackageProjectName, PackageName,
                         ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName
                     FROM etlmanager.Execution
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                     , sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", stepId);
-                sqlCommand.Parameters.AddWithValue("@EncryptionPassword", executionConfiguration.EncryptionKey);
+                stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
+                stepDetailsCmd.Parameters.AddWithValue("@StepId", stepId);
+                stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", executionConfiguration.EncryptionKey);
+                
                 try
                 {
-                    await sqlConnection.OpenAsync();
-                    using var reader = await sqlCommand.ExecuteReaderAsync();
+                    using var reader = await stepDetailsCmd.ExecuteReaderAsync();
                     if (await reader.ReadAsync())
                     {
                         var stepType = reader["StepType"].ToString();
