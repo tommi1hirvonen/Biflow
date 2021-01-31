@@ -21,7 +21,7 @@ namespace EtlManagerExecutor
         private bool Completed { get; set; }
         private bool Success { get; set; }
 
-        private const int MaxRefreshRetries = 5;
+        private const int MaxRefreshRetries = 3;
 
         public PackageStepExecution(ExecutionConfiguration configuration, string stepId, string connectionString,
             string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)

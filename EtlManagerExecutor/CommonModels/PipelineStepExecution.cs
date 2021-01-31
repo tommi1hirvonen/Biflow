@@ -18,8 +18,7 @@ namespace EtlManagerExecutor
 
         private int TimeoutMinutes { get; init; }
 
-        private const int PollingIntervalMs = 5000;
-        private const int MaxRefreshRetries = 5;
+        private const int MaxRefreshRetries = 3;
 
         public PipelineStepExecution(ExecutionConfiguration configuration, string stepId, string dataFactoryId, string pipelineName, int timeoutMinutes)
             : base(configuration, stepId, dataFactoryId)
@@ -104,7 +103,7 @@ namespace EtlManagerExecutor
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
-                    await Task.Delay(PollingIntervalMs);
+                    await Task.Delay(Configuration.PollingIntervalMs);
                 }
                 else
                 {
@@ -136,7 +135,7 @@ namespace EtlManagerExecutor
                     Log.Warning(ex, "{ExecutionId} {StepId} Error getting pipeline run status for run id {runId}",
                         Configuration.ExecutionId, StepId, PipelineRunId);
                     refreshRetries++;
-                    await Task.Delay(PollingIntervalMs);
+                    await Task.Delay(Configuration.PollingIntervalMs);
                 }
             }
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
