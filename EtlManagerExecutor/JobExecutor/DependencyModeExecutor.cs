@@ -80,9 +80,11 @@ namespace EtlManagerExecutor
                 await DoRoundAsync(stepDependencies);
                 // Wait for at least one step to finish before doing another round.
                 await Task.WhenAny(StepWorkers);
+                // Remove finished tasks from the list so that they don't immediately trigger the next Task.WhenAny().
+                StepWorkers.RemoveAll(task => task.IsCompleted);
             }
 
-            // All steps have been started. Wait until all step worker tasks have finished.
+            // All steps have been started. Wait until the remaining step worker tasks have finished.
             await Task.WhenAll(StepWorkers);
         }
 
