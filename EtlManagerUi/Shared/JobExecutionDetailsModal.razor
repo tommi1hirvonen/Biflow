@@ -419,20 +419,22 @@
             switch (SortOption_)
             {
                 case SortOption.Duration:
-                    Executions = Executions.OrderBy(e => e.ExecutionInSeconds).ToList();
+                    Executions = Executions.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.StartTime:
                     // false sorts before true => not started steps are placed last
-                    Executions = Executions.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime).ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime).ToList();
+                    Executions = Executions.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
+                        .ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime)
+                        .ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.EndTime:
-                    Executions = Executions.OrderBy(e => e.EndDateTime).ToList();
+                    Executions = Executions.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.Name:
                     Executions = Executions.OrderBy(e => e.StepName).ToList();
                     break;
                 case SortOption.Status:
-                    Executions = Executions.OrderBy(e => e.ExecutionStatus).ToList();
+                    Executions = Executions.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepName).ToList();
                     break;
             }
         }
