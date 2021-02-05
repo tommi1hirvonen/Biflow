@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -9,6 +10,6 @@ namespace EtlManagerExecutor
     interface IExecutable
     {
         public int RetryAttemptCounter { get; set; }
-        public Task<ExecutionResult> ExecuteAsync();
+        public Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken);
     }
 }

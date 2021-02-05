@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -21,14 +22,16 @@ namespace EtlManagerExecutor
             Configuration = configuration;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync()
+        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             Process executorProcess;
             string jobExecutionId;
 
             using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
             {
-                await sqlConnection.OpenAsync();
+                await sqlConnection.OpenAsync(CancellationToken.None);
 
                 var initCommand = new SqlCommand(
                         "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_"
@@ -37,7 +40,7 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    jobExecutionId = (await initCommand.ExecuteScalarAsync()).ToString();
+                    jobExecutionId = (await initCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                 }
                 catch (Exception ex)
                 {
@@ -77,7 +80,7 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    await processIdCmd.ExecuteNonQueryAsync();
+                    await processIdCmd.ExecuteNonQueryAsync(CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -88,14 +91,15 @@ namespace EtlManagerExecutor
 
             if (JobExecuteSynchronized)
             {
-                await executorProcess.WaitForExitAsync();
+                await executorProcess.WaitForExitAsync(cancellationToken);
+
                 try
                 {
                     using SqlConnection sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                    await sqlConnection.OpenAsync();
+                    await sqlConnection.OpenAsync(CancellationToken.None);
                     var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
-                    string status = (await sqlCommand.ExecuteScalarAsync()).ToString();
+                    string status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                     return status switch
                     {
                         "COMPLETED" or "WARNING" => new ExecutionResult.Success(),

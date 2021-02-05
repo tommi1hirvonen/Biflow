@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE [etlmanager].[ExecutionStepCopy]
 	@ExecutionId UNIQUEIDENTIFIER,
 	@StepId UNIQUEIDENTIFIER,
-    @RetryAttemptIndex INT
+    @RetryAttemptIndex INT,
+    @Status VARCHAR(50) = 'RUNNING'
 AS
 
 INSERT INTO etlmanager.Execution (
@@ -45,7 +46,7 @@ SELECT
     [CreatedDateTime],
     [RetryAttemptIndex] = @RetryAttemptIndex,
     [StartDateTime] = GETDATE(),
-    [ExecutionStatus] = 'RUNNING',
+    [ExecutionStatus] = @Status,
     [RetryAttempts],
     [RetryIntervalMinutes],
     [TimeoutMinutes],

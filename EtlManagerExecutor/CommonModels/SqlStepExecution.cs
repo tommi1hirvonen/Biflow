@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -22,7 +23,7 @@ namespace EtlManagerExecutor
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync()
+        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -34,10 +35,14 @@ namespace EtlManagerExecutor
                 {
                     CommandTimeout = TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely
                 };
-                await sqlCommand.ExecuteNonQueryAsync();
+                await sqlCommand.ExecuteNonQueryAsync(cancellationToken);
             }
             catch (SqlException ex)
             {
+                // Throw OperationCanceledException if the SqlCommand failed due to cancel being requested.
+                // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
+                cancellationToken.ThrowIfCancellationRequested();
+
                 Log.Warning(ex, "{ExecutionId} {StepId} SQL execution failed", ExecutionConfiguration.ExecutionId, StepId);
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));

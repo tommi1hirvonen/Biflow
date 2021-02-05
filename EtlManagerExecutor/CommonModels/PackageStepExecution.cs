@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -35,8 +36,10 @@ namespace EtlManagerExecutor
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync()
+        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Get possible parameters.
             var parameters = new Dictionary<string, string>();
 
@@ -56,8 +59,8 @@ namespace EtlManagerExecutor
                     Log.Information("{ExecutionId} {StepId} Retrieving package parameters", Configuration.ExecutionId, StepId);
 
                     await sqlConnection.OpenIfClosedAsync();
-                    using var reader = await paramsCommand.ExecuteReaderAsync();
-                    while (await reader.ReadAsync())
+                    using var reader = await paramsCommand.ExecuteReaderAsync(CancellationToken.None);
+                    while (await reader.ReadAsync(CancellationToken.None))
                     {
                         parameters.Add(reader["ParameterName"].ToString(), reader["ParameterValue"].ToString());
                     }
@@ -100,7 +103,7 @@ namespace EtlManagerExecutor
                 sqlCommand.Parameters.AddWithValue("@StepId", StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-                await sqlCommand.ExecuteNonQueryAsync();
+                await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -110,7 +113,7 @@ namespace EtlManagerExecutor
             // Monitor the package's execution.
             try
             {
-                await TryRefreshStatusAsync();
+                await TryRefreshStatusAsync(cancellationToken);
                 while (!Completed)
                 {
                     // Check for possible timeout.
@@ -121,9 +124,14 @@ namespace EtlManagerExecutor
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
-                    await Task.Delay(Configuration.PollingIntervalMs);
-                    await TryRefreshStatusAsync();
+                    await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                    await TryRefreshStatusAsync(cancellationToken);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                await CancelAsync();
+                throw;
             }
             catch (Exception ex)
             {
@@ -213,7 +221,7 @@ namespace EtlManagerExecutor
             PackageOperationId = (long)await executionCommand.ExecuteScalarAsync();
         }
 
-        private async Task TryRefreshStatusAsync()
+        private async Task TryRefreshStatusAsync(CancellationToken cancellationToken)
         {
             int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
@@ -224,8 +232,8 @@ namespace EtlManagerExecutor
                     using var sqlConnection = new SqlConnection(ConnectionString);
                     var sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-                    await sqlConnection.OpenAsync();
-                    int status = (int)await sqlCommand.ExecuteScalarAsync();
+                    await sqlConnection.OpenAsync(CancellationToken.None);
+                    int status = (int)await sqlCommand.ExecuteScalarAsync(CancellationToken.None);
                     // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
                     if (status == 3 || status == 4 || status == 6 || status == 7 || status == 9)
                     {
@@ -239,7 +247,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", PackageOperationId);
                     refreshRetries++;
-                    await Task.Delay(Configuration.PollingIntervalMs);
+                    await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
                 }
             }
             // The maximum number of attempts was reached. Notify caller with exception.

@@ -23,6 +23,8 @@ namespace EtlManagerExecutor
 
         private Dictionary<string, ExecutionStatus> StepStatuses { get; set; } = new();
 
+        private CancellationTokenSource CancellationTokenSource { get; } = new();
+
         public DependencyModeExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
         public override async Task RunAsync()
@@ -73,6 +75,9 @@ namespace EtlManagerExecutor
                 }
             }
 
+            // Start listening for cancel key press.
+            _ = Task.Run(ReadCancel);
+
             // Loop as long as there are steps that haven't yet been started.
             while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
             {
@@ -86,6 +91,19 @@ namespace EtlManagerExecutor
 
             // All steps have been started. Wait until the remaining step worker tasks have finished.
             await Task.WhenAll(StepWorkers);
+        }
+
+        private void ReadCancel()
+        {
+            Console.WriteLine("Press c to cancel execution");
+            ConsoleKeyInfo cki;
+            do
+            {
+                cki = Console.ReadKey();
+            } while (cki.KeyChar != 'c');
+
+            Console.WriteLine("Canceling all step executions");
+            CancellationTokenSource.Cancel();
         }
 
         private async Task DoRoundAsync(Dictionary<string, HashSet<KeyValuePair<string, bool>>> stepDependencies)
@@ -163,7 +181,7 @@ namespace EtlManagerExecutor
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
-            var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync();
+            var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync(CancellationTokenSource.Token);
             Log.Information("{ExecutionId} {stepId} Started step execution", ExecutionConfig.ExecutionId, stepId);
             bool result = false;
             try

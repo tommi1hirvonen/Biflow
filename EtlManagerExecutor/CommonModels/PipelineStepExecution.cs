@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -28,8 +29,10 @@ namespace EtlManagerExecutor
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync()
+        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Get the target Data Factory information from the database.
             try
             {
@@ -91,23 +94,30 @@ namespace EtlManagerExecutor
                     Client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
                 }
 
-                pipelineRun = await TryGetPipelineRunAsync();
-
-                if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
+                try
                 {
-                    // Check for timeout.
-                    if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
+                    pipelineRun = await TryGetPipelineRunAsync(cancellationToken);
+                    if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                     {
-                        await CancelAsync();
-                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", Configuration.ExecutionId, StepId);
-                        return new ExecutionResult.Failure("Step execution timed out");
-                    }
+                        // Check for timeout.
+                        if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
+                        {
+                            await CancelAsync();
+                            Log.Warning("{ExecutionId} {StepId} Step execution timed out", Configuration.ExecutionId, StepId);
+                            return new ExecutionResult.Failure("Step execution timed out");
+                        }
 
-                    await Task.Delay(Configuration.PollingIntervalMs);
+                        await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+                catch (OperationCanceledException)
                 {
-                    break;
+                    await CancelAsync();
+                    throw;
                 }
             }
 
@@ -121,7 +131,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task<PipelineRun> TryGetPipelineRunAsync()
+        private async Task<PipelineRun> TryGetPipelineRunAsync(CancellationToken cancellationToken)
         {
             int refreshRetries = 0;
             while (refreshRetries < MaxRefreshRetries)
@@ -135,7 +145,7 @@ namespace EtlManagerExecutor
                     Log.Warning(ex, "{ExecutionId} {StepId} Error getting pipeline run status for run id {runId}",
                         Configuration.ExecutionId, StepId, PipelineRunId);
                     refreshRetries++;
-                    await Task.Delay(Configuration.PollingIntervalMs);
+                    await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
                 }
             }
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
