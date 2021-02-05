@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -36,8 +38,10 @@ namespace EtlManagerExecutor
             List<int> executionPhases = allSteps.Select(step => step.Key).Distinct().ToList();
             executionPhases.Sort();
 
-            // Start listening for cancel key press.
-            _ = Task.Run(ReadCancel);
+            // Start listening for cancel key press from the console.
+            _ = Task.Run(ReadCancelKey);
+            // Start listening for cancel command from the UI application.
+            _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
 
             // Start all steps in each execution phase in parallel.
             foreach (int executionPhase in executionPhases)
@@ -56,7 +60,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private void ReadCancel()
+        private void ReadCancelKey()
         {
             Console.WriteLine("Press c to cancel execution");
             ConsoleKeyInfo cki;
@@ -67,6 +71,21 @@ namespace EtlManagerExecutor
 
             Console.WriteLine("Canceling all step executions");
             CancellationTokenSource.Cancel();
+        }
+
+        private void ReadCancelPipe(string executionId)
+        {
+            using var pipeServer = new NamedPipeServerStream(executionId.ToLower(), PipeDirection.In);
+            pipeServer.WaitForConnection();
+            using var streamReader = new StreamReader(pipeServer);
+            string input;
+            if ((input = streamReader.ReadLine()) is not null)
+            {
+                // Change the user to the one initiated the cancel.
+                //The UI application provides the username as the pipe input.
+                ExecutionConfig.Username = input;
+                CancellationTokenSource.Cancel();
+            }
         }
 
         private async Task StartNewStepWorkerAsync(string stepId)

@@ -66,6 +66,7 @@ namespace EtlManagerExecutor
                 executionId: executionId,
                 jobId: jobId,
                 notify: notify,
+                // Set the username as timeout. If steps are to be canceled, this will be used by default.
                 username: "timeout");
 
             // Check whether there are circular dependencies between jobs (through steps executing another jobs).

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -105,30 +106,15 @@ namespace EtlManagerUi
             return executionId;
         }
 
-        public static async Task<bool> StopJobExecutionAsync(IConfiguration configuration, Guid executionId, string username)
+        public static async Task StopJobExecutionAsync(Guid executionId, string username)
         {
-            string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
-
-            ProcessStartInfo executionInfo = new ProcessStartInfo()
-            {
-                FileName = executorPath,
-                ArgumentList = {
-                    "cancel",
-                    "--id",
-                    executionId.ToString(),
-                    "--username",
-                    username
-                },
-                UseShellExecute = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-
-            Process executorProcess = new Process() { StartInfo = executionInfo };
-            executorProcess.Start();
-            await executorProcess.WaitForExitAsync();
-            int result = executorProcess.ExitCode;
-            return result == 0;
+            // Connect to the pipe server set up by the executor process.
+            using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+            using var streamWriter = new StreamWriter(pipeClient);
+            // Send cancel command.
+            var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
+            streamWriter.WriteLine(username_);
         }
 
         public async static Task ToggleJobDependencyModeAsync(IConfiguration configuration, Job job, bool enabled)

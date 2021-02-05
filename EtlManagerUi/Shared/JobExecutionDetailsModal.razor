@@ -479,11 +479,11 @@
         try
         {
             var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-            var result = await Utility.StopJobExecutionAsync(configuration, ExecutionId, username);
-            if (!result)
-            {
-                await JS.InvokeVoidAsync("alert", "Error when stopping execution. See Executor logs for details.");
-            }
+            await Utility.StopJobExecutionAsync(ExecutionId, username);
+        }
+        catch (TimeoutException)
+        {
+            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
         }
         catch (Exception ex)
         {
