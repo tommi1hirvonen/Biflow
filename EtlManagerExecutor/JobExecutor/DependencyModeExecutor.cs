@@ -14,6 +14,8 @@ namespace EtlManagerExecutor
 {
     class DependencyModeExecutor : ExecutorBase
     {
+        private record Step(string StepId, string StepName);
+
         private List<Task> StepWorkers { get; } = new();
         enum ExecutionStatus
         {
@@ -25,7 +27,6 @@ namespace EtlManagerExecutor
 
         private Dictionary<string, ExecutionStatus> StepStatuses { get; set; } = new();
 
-        private CancellationTokenSource CancellationTokenSource { get; } = new();
 
         public DependencyModeExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
@@ -95,34 +96,6 @@ namespace EtlManagerExecutor
 
             // All steps have been started. Wait until the remaining step worker tasks have finished.
             await Task.WhenAll(StepWorkers);
-        }
-
-        private void ReadCancelKey()
-        {
-            Console.WriteLine("Press c to cancel execution");
-            ConsoleKeyInfo cki;
-            do
-            {
-                cki = Console.ReadKey();
-            } while (cki.KeyChar != 'c');
-
-            Console.WriteLine("Canceling all step executions");
-            CancellationTokenSource.Cancel();
-        }
-
-        private void ReadCancelPipe(string executionId)
-        {
-            using var pipeServer = new NamedPipeServerStream(executionId.ToLower(), PipeDirection.In);
-            pipeServer.WaitForConnection();
-            using var streamReader = new StreamReader(pipeServer);
-            string input;
-            if ((input = streamReader.ReadLine()) is not null)
-            {
-                // Change the user to the one initiated the cancel.
-                //The UI application provides the username as the pipe input.
-                ExecutionConfig.Username = input;
-                CancellationTokenSource.Cancel();
-            }
         }
 
         private async Task DoRoundAsync(Dictionary<string, HashSet<KeyValuePair<string, bool>>> stepDependencies)

@@ -6,16 +6,23 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    public class ExecutionConfiguration : ConfigurationBase
+    public class ExecutionConfiguration
     {
+        public string ConnectionString { get; init; }
+        public string ExecutionId { get; init; }
+        public string EncryptionKey { get; init; }
+        public string Username { get; set; }
         public int MaxParallelSteps { get; init; }
         public int PollingIntervalMs { get; init; }
         public string JobId { get; init; }
         public bool Notify { get; init; }
         public ExecutionConfiguration(string connectionString, string executionId, string encryptionKey,
             int maxParallelSteps, int pollingIntervalMs, string jobId, bool notify, string username)
-            : base(connectionString, executionId, encryptionKey, username)
         {
+            ConnectionString = connectionString;
+            ExecutionId = executionId;
+            EncryptionKey = encryptionKey;
+            Username = username;
             MaxParallelSteps = maxParallelSteps;
             PollingIntervalMs = pollingIntervalMs;
             JobId = jobId;

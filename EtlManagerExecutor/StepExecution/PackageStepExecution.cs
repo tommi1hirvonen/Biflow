@@ -9,14 +9,17 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PackageStepExecution : PackageStep, IExecutable
+    class PackageStepExecution : IExecutable
     {
-        public ExecutionConfiguration Configuration { get; init; }
-        
-        public string FolderName { get; init; }
-        public string ProjectName { get; init; }
-        public string PackageName { get; init; }
-        public bool ExecuteIn32BitMode { get; init; }
+        private ExecutionConfiguration Configuration { get; init; }
+        private string StepId { get; init; }
+        private string ConnectionString { get; init; }
+        public int RetryAttemptCounter { get; set; }
+        private long PackageOperationId { get; set; }
+        private string FolderName { get; init; }
+        private string ProjectName { get; init; }
+        private string PackageName { get; init; }
+        private bool ExecuteIn32BitMode { get; init; }
 
         private int TimeoutMinutes { get; init; }
         private bool Completed { get; set; }
@@ -26,9 +29,10 @@ namespace EtlManagerExecutor
 
         public PackageStepExecution(ExecutionConfiguration configuration, string stepId, string connectionString,
             string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)
-            : base(configuration, stepId, connectionString)
         {
             Configuration = configuration;
+            StepId = stepId;
+            ConnectionString = connectionString;
             FolderName = folderName;
             ProjectName = projectName;
             PackageName = packageName;
@@ -271,6 +275,53 @@ namespace EtlManagerExecutor
                 messages.Add(reader[0].ToString());
             }
             return messages;
+        }
+
+        public async Task<bool> CancelAsync()
+        {
+            Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, StepId, PackageOperationId);
+            try
+            {
+                using var sqlConnection = new SqlConnection(ConnectionString);
+                await sqlConnection.OpenAsync();
+                var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
+                stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", PackageOperationId);
+                await stopPackageOperationCmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {StepId} Error stopping package operation id {operationId}", Configuration.ExecutionId, StepId, PackageOperationId);
+                return false;
+            }
+
+            try
+            {
+                using SqlConnection sqlConnection = new SqlConnection(Configuration.ConnectionString);
+                await sqlConnection.OpenAsync();
+                SqlCommand updateStatus = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                    SET EndDateTime = GETDATE(),
+                        StartDateTime = ISNULL(StartDateTime, GETDATE()),
+	                    ExecutionStatus = 'STOPPED',
+                        StoppedBy = @Username
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
+                    , sqlConnection);
+                updateStatus.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                updateStatus.Parameters.AddWithValue("@StepId", StepId);
+                updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
+
+                if (Configuration.Username is not null) updateStatus.Parameters.AddWithValue("@Username", Configuration.Username);
+                else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);
+
+                await updateStatus.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {StepId} Error logging SSIS step as stopped", Configuration.ExecutionId, StepId);
+                return false;
+            }
+            Log.Information("{ExecutionId} {StepId} Successfully stopped package operation id {PackageOperationId}", Configuration.ExecutionId, StepId, PackageOperationId);
+            return true;
         }
     }
 }

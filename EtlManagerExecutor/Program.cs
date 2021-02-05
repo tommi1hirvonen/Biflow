@@ -30,7 +30,6 @@ namespace EtlManagerExecutor
                 {
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<ISchedulesExecutor, SchedulesExecutor>();
-                    services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
                 })
                 .ConfigureHostConfiguration(configHost =>
@@ -38,11 +37,10 @@ namespace EtlManagerExecutor
                 .UseSerilog()
                 .Build();
 
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, MailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
-                    (CancelOptions options) => CancelExecutionAsync(host, options),
                     (MailTestOptions options) => RunMailTest(host, options),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
@@ -63,20 +61,6 @@ namespace EtlManagerExecutor
             return 0;
         }
         
-        static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
-        {
-            var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
-            try
-            {
-                var result = await service.RunAsync(options.ExecutionId, options.Username);
-                return result ? 0 : -1;
-            }
-            catch (Exception)
-            {
-                return -1;
-            }
-        }
-
         static async Task<int> RunMailTest(IHost host, MailTestOptions options)
         {
             var service = ActivatorUtilities.CreateInstance<MailTest>(host.Services);
@@ -124,16 +108,6 @@ namespace EtlManagerExecutor
         
         [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
         public int Minutes { get; set; }
-    }
-
-    [Verb("cancel", HelpText = "Cancel a running execution.")]
-    class CancelOptions
-    {
-        [Option('i', "id", HelpText = "Execution id", Required = true)]
-        public string ExecutionId { get; set; }
-
-        [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
-        public string Username { get; set; }
     }
 
     [Verb("get-commit", HelpText = "Return the current version's Git commit checksum.")]

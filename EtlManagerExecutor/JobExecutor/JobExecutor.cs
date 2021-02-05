@@ -20,6 +20,8 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
+        private record Job(string JobId, string JobName);
+
         public async Task RunAsync(string executionId, bool notify)
         {
             var connectionString = configuration.GetValue<string>("EtlManagerConnectionString");

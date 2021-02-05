@@ -9,17 +9,22 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class SqlStepExecution : SqlStep, IExecutable
+    class SqlStepExecution : IExecutable
     {
         private ExecutionConfiguration ExecutionConfiguration { get; init; }
+        private string StepId { get; init; }
+        private string SqlStatement { get; init; }
+        private string ConnectionString { get; init; }
         private int TimeoutMinutes { get; init; }
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
         public int RetryAttemptCounter { get; set; }
 
         public SqlStepExecution(ExecutionConfiguration executionConfiguration, string stepId, string sqlStatement, string connectionString, int timeoutMinutes)
-            : base(executionConfiguration, stepId, sqlStatement, connectionString)
         {
             ExecutionConfiguration = executionConfiguration;
+            StepId = stepId;
+            SqlStatement = sqlStatement;
+            ConnectionString = connectionString;
             TimeoutMinutes = timeoutMinutes;
         }
 
