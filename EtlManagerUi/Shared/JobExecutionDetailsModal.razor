@@ -110,12 +110,6 @@
                             <BSDropdownItem @onclick="StopJobExecution" IsDisabled="Stopping">Confirm</BSDropdownItem>
                         </BSDropdownMenu>
                     </BSDropdown>
-                    @if (Stopping)
-                    {
-                        <div class="spinner-border text-primary align-middle ml-3" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
-                    }
                 </BSButtonGroup>
             }
         </AuthorizeView>
@@ -484,13 +478,13 @@
         catch (TimeoutException)
         {
             await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+            StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+            StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
-        StoppingExecutions.RemoveAll(id => id == ExecutionId);
-        await LoadData();
     }
 
     private void ShowStepExecutionModal(string text)
