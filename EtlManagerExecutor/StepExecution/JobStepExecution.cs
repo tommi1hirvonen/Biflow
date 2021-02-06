@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -95,7 +97,15 @@ namespace EtlManagerExecutor
 
             if (JobExecuteSynchronized)
             {
-                await executorProcess.WaitForExitAsync(cancellationToken);
+                try
+                {
+                    await executorProcess.WaitForExitAsync(cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    await CancelAsync(jobExecutionId, Configuration.Username);
+                    throw;
+                }
 
                 try
                 {
@@ -123,6 +133,17 @@ namespace EtlManagerExecutor
             }
 
             return new ExecutionResult.Success();
+        }
+
+        private static async Task CancelAsync(string executionId, string username)
+        {
+            // Connect to the pipe server set up by the executor process.
+            using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+            using var streamWriter = new StreamWriter(pipeClient);
+            // Send cancel command.
+            var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
+            streamWriter.WriteLine(username_);
         }
     }
 }

@@ -277,7 +277,7 @@ namespace EtlManagerExecutor
             return messages;
         }
 
-        public async Task<bool> CancelAsync()
+        public async Task CancelAsync()
         {
             Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, StepId, PackageOperationId);
             try
@@ -291,37 +291,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {StepId} Error stopping package operation id {operationId}", Configuration.ExecutionId, StepId, PackageOperationId);
-                return false;
             }
-
-            try
-            {
-                using SqlConnection sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                await sqlConnection.OpenAsync();
-                SqlCommand updateStatus = new SqlCommand(
-                    @"UPDATE etlmanager.Execution
-                    SET EndDateTime = GETDATE(),
-                        StartDateTime = ISNULL(StartDateTime, GETDATE()),
-	                    ExecutionStatus = 'STOPPED',
-                        StoppedBy = @Username
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
-                    , sqlConnection);
-                updateStatus.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                updateStatus.Parameters.AddWithValue("@StepId", StepId);
-                updateStatus.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
-
-                if (Configuration.Username is not null) updateStatus.Parameters.AddWithValue("@Username", Configuration.Username);
-                else updateStatus.Parameters.AddWithValue("@Username", DBNull.Value);
-
-                await updateStatus.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging SSIS step as stopped", Configuration.ExecutionId, StepId);
-                return false;
-            }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped package operation id {PackageOperationId}", Configuration.ExecutionId, StepId, PackageOperationId);
-            return true;
         }
     }
 }

@@ -157,7 +157,7 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
         }
 
-        public async Task<bool> CancelAsync()
+        public async Task CancelAsync()
         {
             Log.Information("{ExecutionId} {StepId} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, StepId, PipelineRunId);
             try
@@ -167,38 +167,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {StepId} Error stopping pipeline run {runId}", Configuration.ExecutionId, StepId, PipelineRunId);
-                return false;
             }
-
-            try
-            {
-                using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                await sqlConnection.OpenAsync();
-
-                var updateStatuses = new SqlCommand(
-                    @"UPDATE etlmanager.Execution
-                    SET EndDateTime = GETDATE(),
-                        StartDateTime = ISNULL(StartDateTime, GETDATE()),
-	                    ExecutionStatus = 'STOPPED',
-                        StoppedBy = @Username
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex AND EndDateTime IS NULL"
-                    , sqlConnection);
-                updateStatuses.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                updateStatuses.Parameters.AddWithValue("@StepId", StepId);
-                updateStatuses.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
-
-                if (Configuration.Username is not null) updateStatuses.Parameters.AddWithValue("@Username", Configuration.Username);
-                else updateStatuses.Parameters.AddWithValue("@Username", DBNull.Value);
-
-                await updateStatuses.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {StepId} Error logging pipeline step as stopped", Configuration.ExecutionId, StepId);
-                return false;
-            }
-            Log.Information("{ExecutionId} {StepId} Successfully stopped pipeline run id {PipelineRunId}", Configuration.ExecutionId, StepId, PipelineRunId);
-            return true;
         }
     }
 }

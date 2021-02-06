@@ -27,12 +27,12 @@ namespace EtlManagerExecutor
                 await connection.OpenAsync();
                 var canceledUpdate = new SqlCommand(
                         @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                         , connection);
                 canceledUpdate.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                 canceledUpdate.Parameters.AddWithValue("@StepId", stepId);
-                canceledUpdate.Parameters.AddWithValue("@ExecutionStatus", "STOPPED");
+                canceledUpdate.Parameters.AddWithValue("@Username", (object)executionConfiguration.Username ?? DBNull.Value);
                 await canceledUpdate.ExecuteNonQueryAsync();
                 return false;
             }
@@ -215,12 +215,13 @@ namespace EtlManagerExecutor
                     await connection.OpenAsync();
                     var canceledUpdate = new SqlCommand(
                             @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED'
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                             , connection);
                     canceledUpdate.Parameters.AddWithValue("@ExecutionId", executionConfiguration.ExecutionId);
                     canceledUpdate.Parameters.AddWithValue("@StepId", stepId);
                     canceledUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                    canceledUpdate.Parameters.AddWithValue("@Username", (object)executionConfiguration.Username ?? DBNull.Value);
                     await canceledUpdate.ExecuteNonQueryAsync();
                     return false;
                 }
