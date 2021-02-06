@@ -148,9 +148,11 @@
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
-                                <BSButton Color="Color.Light" Size="Size.Small" aria-label="delete" @onclick="() => DeleteSchedule(item)">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                </BSButton>
+                                <BSButtonGroup Size="Size.Small" Class="btn-row">
+                                    <BSButton Color="Color.Light" Size="Size.Small" aria-label="delete" Class="btn-row" @onclick="() => DeleteSchedule(item)">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                    </BSButton>
+                                </BSButtonGroup>
                             </AuthorizeView>
                         </td>
                     </tr>

@@ -300,9 +300,11 @@
                                                     <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterValue"></BSBasicInput>
                                                 </td>
                                                 <td>
-                                                    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Remove(param)">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                                    </BSButton>
+                                                    <BSButtonGroup Size="Size.Small" Class="btn-row">
+                                                        <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.Parameters.Remove(param)">
+                                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                                        </BSButton>
+                                                    </BSButtonGroup>
                                                 </td>
                                             </tr>
                                         }
