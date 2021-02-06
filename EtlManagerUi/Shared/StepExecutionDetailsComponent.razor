@@ -99,6 +99,12 @@
             <dd class="col-sm-9">
                 @StepExecution.ExecuteIn32BitMode
             </dd>
+            <dt class="col-sm-3">
+                Operation id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PackageOperationId
+            </dd>
         }
         else if (StepExecution.StepType == "PIPELINE")
         {
