@@ -3,6 +3,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IJSRuntime JS
+@inject IHttpContextAccessor HttpContextAccessor
 
 <h4>Executions</h4>
 
@@ -292,6 +293,20 @@
                             {
                                 <tr class="table-borderless">
                                     <td colspan="6" class="bg-light">
+                                        <AuthorizeView Roles="Admin, Editor, Operator">
+                                            @if (item.ExecutionStatus == "RUNNING")
+                                            {
+                                                <BSDropdown Class="mb-2 mt-1">
+                                                    <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                        Stop
+                                                    </BSDropdownToggle>
+                                                    <BSDropdownMenu>
+                                                        <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
+                                                    </BSDropdownMenu>
+                                                </BSDropdown>
+                                            }
+                                        </AuthorizeView>
                                         <StepExecutionDetailsComponent StepExecution="item" />
                                     </td>
                                 </tr>
@@ -445,6 +460,23 @@
         }
         catch (Exception)
         {
+        }
+    }
+
+    private async Task StopStepExecutionAsync(StepExecution stepExecution)
+    {
+        try
+        {
+            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            await Utility.StopExecutionAsync(stepExecution.ExecutionId, username, stepExecution.StepId);
+        }
+        catch (TimeoutException)
+        {
+            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
         }
     }
 

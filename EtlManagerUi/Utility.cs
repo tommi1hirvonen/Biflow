@@ -107,7 +107,7 @@ namespace EtlManagerUi
             return executionId;
         }
 
-        public static async Task StopJobExecutionAsync(Guid executionId, string username, Guid? stepId = null)
+        public static async Task StopExecutionAsync(Guid executionId, string username, Guid? stepId = null)
         {
             // Connect to the pipe server set up by the executor process.
             using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer

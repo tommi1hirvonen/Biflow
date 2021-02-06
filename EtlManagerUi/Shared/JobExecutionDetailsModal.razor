@@ -107,7 +107,7 @@
                             Stop
                         </BSDropdownToggle>
                         <BSDropdownMenu>
-                            <BSDropdownItem @onclick="StopJobExecution" IsDisabled="Stopping">Confirm</BSDropdownItem>
+                            <BSDropdownItem @onclick="StopJobExecutionAsync" IsDisabled="Stopping">Confirm</BSDropdownItem>
                         </BSDropdownMenu>
                     </BSDropdown>
                 </BSButtonGroup>
@@ -281,6 +281,21 @@
                             {
                                 <tr class="table-borderless">
                                     <td colspan="6" class="bg-light">
+                                        <AuthorizeView Roles="Admin, Editor, Operator">
+                                            @if (item.ExecutionStatus == "RUNNING" || item.ExecutionStatus == "AWAIT RETRY" // Step is running or it is awaiting retry...
+                                                && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                            {
+                                                <BSDropdown Class="mb-2 mt-1">
+                                                    <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                        Stop
+                                                    </BSDropdownToggle>
+                                                    <BSDropdownMenu>
+                                                        <BSDropdownItem @onclick="() => StopStepExecutionAsync(item.StepId)">Confirm</BSDropdownItem>
+                                                    </BSDropdownMenu>
+                                                </BSDropdown>
+                                            }
+                                        </AuthorizeView>
                                         <StepExecutionDetailsComponent StepExecution="item" />
                                     </td>
                                 </tr>
@@ -461,7 +476,7 @@
         StateHasChanged();
     }
 
-    private async Task StopJobExecution()
+    private async Task StopJobExecutionAsync()
     {
         if (Stopping)
         {
@@ -473,7 +488,26 @@
         try
         {
             var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-            await Utility.StopJobExecutionAsync(ExecutionId, username);
+            await Utility.StopExecutionAsync(ExecutionId, username);
+        }
+        catch (TimeoutException)
+        {
+            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+            StoppingExecutions.RemoveAll(id => id == ExecutionId);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+            StoppingExecutions.RemoveAll(id => id == ExecutionId);
+        }
+    }
+
+    private async Task StopStepExecutionAsync(Guid stepId)
+    {
+        try
+        {
+            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            await Utility.StopExecutionAsync(ExecutionId, username, stepId);
         }
         catch (TimeoutException)
         {
