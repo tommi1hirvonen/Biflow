@@ -84,11 +84,11 @@
         <div class="col">
             @if (Steps is null || Jobs is null || Job is null)
             {
-                <p>Loading...</p>
+                <div class="row py-2"><div class="col">Loading...</div></div>
             }
             else if (Steps.Count == 0)
             {
-                <p>No steps</p>
+                <div class="row py-2"><div class="col">No steps</div></div>
             }
             else
             {
