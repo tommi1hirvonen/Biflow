@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -143,7 +144,9 @@ namespace EtlManagerExecutor
             using var streamWriter = new StreamWriter(pipeClient);
             // Send cancel command.
             var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-            streamWriter.WriteLine(username_);
+            var cancelCommand = new { StepId = (string)null, Username = username_ };
+            var json = JsonSerializer.Serialize(cancelCommand);
+            streamWriter.WriteLine(json);
         }
     }
 }

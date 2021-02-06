@@ -31,6 +31,7 @@ namespace EtlManagerExecutor
                     var stepId = reader["StepId"].ToString();
                     var executionPhase = (int)reader["ExecutionPhase"];
                     allSteps.Add(new(executionPhase, stepId));
+                    CancellationTokenSources[stepId] = new();
                 }
             }
 
@@ -64,7 +65,7 @@ namespace EtlManagerExecutor
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
-            var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync(CancellationTokenSource.Token);
+            var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync(CancellationTokenSources[stepId].Token);
             Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionConfig.ExecutionId, stepId);
             try
             {

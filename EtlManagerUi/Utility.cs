@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using EtlManagerUi.Models;
 using Microsoft.Data.SqlClient;
@@ -106,7 +107,7 @@ namespace EtlManagerUi
             return executionId;
         }
 
-        public static async Task StopJobExecutionAsync(Guid executionId, string username)
+        public static async Task StopJobExecutionAsync(Guid executionId, string username, Guid? stepId = null)
         {
             // Connect to the pipe server set up by the executor process.
             using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
@@ -114,7 +115,10 @@ namespace EtlManagerUi
             using var streamWriter = new StreamWriter(pipeClient);
             // Send cancel command.
             var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-            streamWriter.WriteLine(username_);
+            var stepId_ = stepId?.ToString().ToLower();
+            var cancelCommand = new { StepId = stepId_, Username = username_ };
+            var json = JsonSerializer.Serialize(cancelCommand);
+            streamWriter.WriteLine(json);
         }
 
         public async static Task ToggleJobDependencyModeAsync(IConfiguration configuration, Job job, bool enabled)
