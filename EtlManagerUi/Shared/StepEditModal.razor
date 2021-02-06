@@ -204,7 +204,9 @@
                                 <BSFormRow>
                                     <div class="col">
                                         <div class="custom-control custom-checkbox custom-control-inline">
-                                            <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode" @bind-value="Step.ExecuteIn32BitMode">
+                                            <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode"
+                                                   checked=@Step.ExecuteIn32BitMode
+                                                   @bind-value="Step.ExecuteIn32BitMode">
                                             <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
                                         </div>
                                     </div>
@@ -265,7 +267,9 @@
                                 <BSFormRow>
                                     <div class="col">
                                         <div class="custom-control custom-checkbox custom-control-inline">
-                                            <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized" @bind-value="Step.JobExecuteSynchronized">
+                                            <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized"
+                                                   checked=@Step.JobExecuteSynchronized
+                                                   @bind-value="Step.JobExecuteSynchronized">
                                             <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
                                         </div>
                                     </div>
