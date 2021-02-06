@@ -53,7 +53,7 @@
         }
         @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
         {
-            <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-light")"
+            <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                   style="cursor: pointer;"
                   @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
                 @tag
@@ -175,7 +175,7 @@
                             {
                                 @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                                 {
-                                    <span class="badge badge-pill badge-light mx-1">
+                                    <span class="badge badge-pill badge-secondary mx-1">
                                         @tag.TagName
                                         <span class="tag-remove" @onclick="() => RemoveTag(item, tag)">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
@@ -249,7 +249,7 @@
                         }
                         @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
                         {
-                            <span class="mx-1 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-light")"
+                            <span class="mx-1 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                                   style="cursor: pointer;"
                                   @onclick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }">
                                 @tag
