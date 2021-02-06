@@ -522,12 +522,19 @@
 
     public async Task SubmitTag(Step step)
     {
+        var tags = NewTag.TagName.Split(" ").ToList();
+        tags = tags.Select(tag => tag.Trim()).ToList();
+        tags.RemoveAll(tag => string.IsNullOrWhiteSpace(tag));
         try
         {
-            if (!step.Tags.Any(t => t.TagName == NewTag.TagName))
+            foreach (var tagText in tags)
             {
-                step.Tags.Add(NewTag);
-                await Utility.AddTagAsync(configuration, step, NewTag);
+                if (!step.Tags.Any(t => t.TagName == tagText))
+                {
+                    var tag = new Tag() { TagName = tagText };
+                    step.Tags.Add(tag);
+                    await Utility.AddTagAsync(configuration, step, tag);
+                }
             }
             NewTag = new();
             TagInputFocusStepId = step.StepId;

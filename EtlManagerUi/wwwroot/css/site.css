@@ -342,7 +342,6 @@ tr.disabled {
 }
 
 .tag-remove:hover {
-    color: var(--color-primary);
     cursor: pointer;
 }
 
