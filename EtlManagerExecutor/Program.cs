@@ -38,7 +38,7 @@ namespace EtlManagerExecutor
                 .UseSerilog()
                 .Build();
 
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, MailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (SchedulesExecutorOptions options) => RunSchedules(host, options),
