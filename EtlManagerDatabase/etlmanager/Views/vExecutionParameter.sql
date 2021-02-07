@@ -2,8 +2,8 @@
 
 SELECT
     StepExecutionParameterId = CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(b.ExecutionId, a.[ParameterId])), 2),
-    b.StepExecutionId,
+    StepExecutionId = CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(b.[ExecutionId], b.[StepId], b.[RetryAttemptIndex])), 2),
     a.ParameterName,
     a.ParameterValue
 FROM etlmanager.ExecutionParameter AS a
-    INNER JOIN etlmanager.vExecution AS b ON a.ExecutionId = b.ExecutionId AND a.StepId = b.StepId
+    INNER JOIN etlmanager.Execution AS b ON a.ExecutionId = b.ExecutionId AND a.StepId = b.StepId

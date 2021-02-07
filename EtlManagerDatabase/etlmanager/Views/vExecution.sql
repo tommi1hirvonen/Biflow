@@ -3,7 +3,7 @@
 
 CREATE VIEW [etlmanager].[vExecution] AS
 
-SELECT TOP 1000
+SELECT
 	[StepExecutionId] = CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT(a.[ExecutionId], a.[StepId], a.[RetryAttemptIndex])), 2)
 	,a.[ExecutionId]
 	,a.[JobId]
@@ -44,4 +44,3 @@ SELECT TOP 1000
 FROM [etlmanager].[Execution] AS a
 	LEFT JOIN etlmanager.Job AS b ON a.JobId = b.JobId
 	LEFT JOIN etlmanager.Step AS c ON a.StepId = c.StepId
-ORDER BY a.CreatedDateTime DESC, a.StartDateTime DESC
