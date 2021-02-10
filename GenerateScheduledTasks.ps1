@@ -3,7 +3,7 @@
 Do {
     $argument = 'exec-schedules -h ' + $time.Hour + ' -m ' + $time.Minute
 
-    $action = New-ScheduledTaskAction -Execute 'etlmanagerexecutor' -Argument $argument
+    $action = New-ScheduledTaskAction -Execute 'C:\EtlManagerExecutor\EtlManagerExecutor.exe' -Argument $argument
 
     $trigger = New-ScheduledTaskTrigger -Daily -At $time
 

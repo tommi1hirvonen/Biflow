@@ -86,10 +86,12 @@ namespace EtlManagerUi
             await sqlConnection.OpenAsync();
             Guid executionId = (Guid)await sqlCommand.ExecuteScalarAsync();
 
+            string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
+
             ProcessStartInfo executionInfo = new ProcessStartInfo()
             {
                 // The installation folder should be included in the Path variable, so no path required here.
-                FileName = "etlmanagerexecutor",
+                FileName = executorPath,
                 ArgumentList = {
                     "execute",
                     "--id",
