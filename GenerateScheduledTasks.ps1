@@ -3,9 +3,7 @@
 Do {
     $argument = 'exec-schedules -h ' + $time.Hour + ' -m ' + $time.Minute
 
-    $action = New-ScheduledTaskAction -Execute 'C:\EtlManagerExecutor\EtlManagerExecutor.exe' `
-        -Argument $argument `
-        -WorkingDirectory 'C:\EtlManagerExecutor\'
+    $action = New-ScheduledTaskAction -Execute 'etlmanagerexecutor' -Argument $argument
 
     $trigger = New-ScheduledTaskTrigger -Daily -At $time
 
@@ -13,7 +11,7 @@ Do {
 
     $taskName = 'ETLMANAGER_' + $time.ToShortTimeString().Replace(':', '_')
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName $taskName -TaskPath "\ETL Manager" `        -User 'Domain\User' -Password 'password'
+    Register-ScheduledTask -Action $action -Trigger $trigger -Settings $settings -TaskName $taskName -TaskPath "\ETL Manager" -User 'Domain\User' -Password 'password'
 
     $time = $time.AddMinutes(15)
 
