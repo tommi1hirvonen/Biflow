@@ -101,7 +101,7 @@
                     </dd>
                 }
             </dl>
-            @if (Step.StepType == "SSIS")
+            @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
             {
                 <h6>Parameters</h6>
                 @if (Step.Parameters is not null)

@@ -135,7 +135,7 @@
             <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
         </dd>
     </dl>
-    @if (StepExecution.StepType == "SSIS")
+    @if (StepExecution.StepType == "SSIS" || StepExecution.StepType == "PIPELINE")
     {
         <h6>Parameters</h6>
         <dl class="row">

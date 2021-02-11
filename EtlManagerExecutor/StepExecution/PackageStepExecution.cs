@@ -41,38 +41,16 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             // Get possible parameters.
-            var parameters = new Dictionary<string, string>();
-
-            // Connect to ETL Manager database.
-            using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
+            Dictionary<string, object> parameters;
+            try
             {
-                var paramsCommand = new SqlCommand(
-                    @"SELECT [ParameterName], [ParameterValue]
-                    FROM [etlmanager].[ExecutionParameter]
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                    , sqlConnection);
-                paramsCommand.Parameters.AddWithValue("@StepId", StepId);
-                paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-
-                try
-                {
-                    Log.Information("{ExecutionId} {StepId} Retrieving package parameters", Configuration.ExecutionId, StepId);
-
-                    await sqlConnection.OpenAsync(CancellationToken.None);
-                    using var reader = await paramsCommand.ExecuteReaderAsync(CancellationToken.None);
-                    while (await reader.ReadAsync(CancellationToken.None))
-                    {
-                        parameters.Add(reader["ParameterName"].ToString(), reader["ParameterValue"].ToString());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error retrieving package parameters", Configuration.ExecutionId, StepId);
-                    return new ExecutionResult.Failure("Error reading package parameters: " + ex.Message);
-                }
-
+                parameters = await GetStepParameters();
             }
-
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {StepId} Error retrieving package parameters", Configuration.ExecutionId, StepId);
+                return new ExecutionResult.Failure("Error reading package parameters: " + ex.Message);
+            }
 
             // Start the package execution and capture the SSISDB operation id.
             DateTime startTime;
@@ -158,7 +136,7 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
-        private async Task StartExecutionAsync(Dictionary<string, string> parameters)
+        private async Task StartExecutionAsync(Dictionary<string, object> parameters)
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
             var commandBuilder = new StringBuilder();

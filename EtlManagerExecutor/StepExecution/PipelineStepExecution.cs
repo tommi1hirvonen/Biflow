@@ -35,6 +35,19 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Get possible parameters.
+            IDictionary<string, object> parameters;
+            try
+            {
+                parameters = await GetStepParameters();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {StepId} Error retrieving pipeline parameters", Configuration.ExecutionId, StepId);
+                return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
+            }
+
+
             // Get the target Data Factory information from the database.
             try
             {
@@ -56,7 +69,8 @@ namespace EtlManagerExecutor
             DateTime startTime;
             try
             {
-                createRunResponse = await Client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName, cancellationToken: CancellationToken.None);
+                createRunResponse = await Client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName,
+                    parameters: parameters, cancellationToken: CancellationToken.None);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)

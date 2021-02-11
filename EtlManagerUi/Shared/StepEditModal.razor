@@ -277,7 +277,7 @@
                             }
                             <p class="text-danger">@StepError</p>
 
-                            @if (Step.StepType == "SSIS")
+                            @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
                             {
                                 <p />
                                 <h5>Parameters</h5>
@@ -574,7 +574,7 @@
             return;
         }
 
-        if (Step.StepType != "SSIS")
+        if (Step.StepType != "SSIS" && Step.StepType != "PIPELINE")
         {
             Step.Parameters.Clear();
         }
