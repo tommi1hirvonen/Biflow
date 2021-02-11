@@ -154,7 +154,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    return Client.PipelineRuns.Get(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineRunId);
+                    return await Client.PipelineRuns.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineRunId, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
