@@ -9,12 +9,9 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PackageStepExecution : IExecutable
+    class PackageStepExecution : StepExecutionBase
     {
-        private ExecutionConfiguration Configuration { get; init; }
-        private string StepId { get; init; }
         private string ConnectionString { get; init; }
-        public int RetryAttemptCounter { get; set; }
         private long PackageOperationId { get; set; }
         private string FolderName { get; init; }
         private string ProjectName { get; init; }
@@ -29,9 +26,8 @@ namespace EtlManagerExecutor
 
         public PackageStepExecution(ExecutionConfiguration configuration, string stepId, string connectionString,
             string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)
+            : base(configuration, stepId)
         {
-            Configuration = configuration;
-            StepId = stepId;
             ConnectionString = connectionString;
             FolderName = folderName;
             ProjectName = projectName;
@@ -40,7 +36,7 @@ namespace EtlManagerExecutor
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -62,7 +58,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Information("{ExecutionId} {StepId} Retrieving package parameters", Configuration.ExecutionId, StepId);
 
-                    await sqlConnection.OpenAsync();
+                    await sqlConnection.OpenAsync(CancellationToken.None);
                     using var reader = await paramsCommand.ExecuteReaderAsync(CancellationToken.None);
                     while (await reader.ReadAsync(CancellationToken.None))
                     {
@@ -97,7 +93,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
-                await etlManagerConnection.OpenAsync();
+                await etlManagerConnection.OpenAsync(CancellationToken.None);
                 var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                         SET PackageOperationId = @OperationId
@@ -220,7 +216,7 @@ namespace EtlManagerExecutor
                 executionCommand.Parameters.AddWithValue("@ParameterValue" + parameter.Key, parameter.Value);
             }
 
-            await sqlConnection.OpenAsync();
+            await sqlConnection.OpenAsync(CancellationToken.None);
 
             PackageOperationId = (long)await executionCommand.ExecuteScalarAsync();
         }
@@ -267,7 +263,7 @@ namespace EtlManagerExecutor
                 WHERE message_type = 120 AND operation_id = @OperationId" // message_type = 120 => error message
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-            await sqlConnection.OpenAsync();
+            await sqlConnection.OpenAsync(CancellationToken.None);
             var messages = new List<string>();
             var reader = await sqlCommand.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -283,7 +279,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var sqlConnection = new SqlConnection(ConnectionString);
-                await sqlConnection.OpenAsync();
+                await sqlConnection.OpenAsync(CancellationToken.None);
                 var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
                 stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", PackageOperationId);
                 await stopPackageOperationCmd.ExecuteNonQueryAsync();

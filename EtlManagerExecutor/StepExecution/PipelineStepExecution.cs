@@ -12,12 +12,9 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PipelineStepExecution : IExecutable
+    class PipelineStepExecution : StepExecutionBase
     {
-        private ExecutionConfiguration Configuration { get; init; }
-        private string StepId { get; init; }
         private string DataFactoryId { get; init; }
-        public int RetryAttemptCounter { get; set; }
         private string PipelineRunId { get; set; }
         private DataFactoryManagementClient Client { get; set; }
         private DataFactory DataFactory { get; set; }
@@ -27,15 +24,14 @@ namespace EtlManagerExecutor
         private const int MaxRefreshRetries = 3;
 
         public PipelineStepExecution(ExecutionConfiguration configuration, string stepId, string dataFactoryId, string pipelineName, int timeoutMinutes)
+            : base(configuration, stepId)
         {
-            Configuration = configuration;
-            StepId = stepId;
             DataFactoryId = dataFactoryId;
             PipelineName = pipelineName;
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -60,7 +56,7 @@ namespace EtlManagerExecutor
             DateTime startTime;
             try
             {
-                createRunResponse = await Client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName);
+                createRunResponse = await Client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName, cancellationToken: CancellationToken.None);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
@@ -75,7 +71,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                await sqlConnection.OpenAsync();
+                await sqlConnection.OpenAsync(CancellationToken.None);
                 var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET PipelineRunId = @PipelineRunId
@@ -84,7 +80,7 @@ namespace EtlManagerExecutor
                 sqlCommand.Parameters.AddWithValue("@StepId", StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@PipelineRunId", PipelineRunId);
-                await sqlCommand.ExecuteNonQueryAsync();
+                await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {

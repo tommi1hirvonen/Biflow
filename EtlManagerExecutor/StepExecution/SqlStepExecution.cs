@@ -9,33 +9,29 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class SqlStepExecution : IExecutable
+    class SqlStepExecution : StepExecutionBase
     {
-        private ExecutionConfiguration ExecutionConfiguration { get; init; }
-        private string StepId { get; init; }
         private string SqlStatement { get; init; }
         private string ConnectionString { get; init; }
         private int TimeoutMinutes { get; init; }
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
-        public int RetryAttemptCounter { get; set; }
 
         public SqlStepExecution(ExecutionConfiguration executionConfiguration, string stepId, string sqlStatement, string connectionString, int timeoutMinutes)
+            : base(executionConfiguration, stepId)
         {
-            ExecutionConfiguration = executionConfiguration;
-            StepId = stepId;
             SqlStatement = sqlStatement;
             ConnectionString = connectionString;
             TimeoutMinutes = timeoutMinutes;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
-                Log.Information("{ExecutionId} {StepId} Starting SQL execution", ExecutionConfiguration.ExecutionId, StepId);
+                Log.Information("{ExecutionId} {StepId} Starting SQL execution", Configuration.ExecutionId, StepId);
                 using var connection = new SqlConnection(ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
-                await connection.OpenAsync();
+                await connection.OpenAsync(CancellationToken.None);
                 SqlCommand sqlCommand = new SqlCommand(SqlStatement, connection)
                 {
                     CommandTimeout = TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely
@@ -48,7 +44,7 @@ namespace EtlManagerExecutor
                 // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
                 cancellationToken.ThrowIfCancellationRequested();
 
-                Log.Warning(ex, "{ExecutionId} {StepId} SQL execution failed", ExecutionConfiguration.ExecutionId, StepId);
+                Log.Warning(ex, "{ExecutionId} {StepId} SQL execution failed", Configuration.ExecutionId, StepId);
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
                 return new ExecutionResult.Failure(errorMessage, InfoMessageBuilder.ToString());

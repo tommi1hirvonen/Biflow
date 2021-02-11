@@ -13,23 +13,19 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class JobStepExecution : IExecutable
+    class JobStepExecution : StepExecutionBase
     {
-        private ExecutionConfiguration Configuration { get; init; }
-        public string StepId { get; init; }
         private string JobToExecuteId { get; init; }
         private bool JobExecuteSynchronized { get; init; }
-        public int RetryAttemptCounter { get; set; }
 
         public JobStepExecution(ExecutionConfiguration configuration, string stepId, string jobToExecuteId, bool jobExecuteSynchronized)
+            : base(configuration, stepId)
         {
-            Configuration = configuration;
-            StepId = stepId;
             JobToExecuteId = jobToExecuteId;
             JobExecuteSynchronized = jobExecuteSynchronized;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -40,9 +36,7 @@ namespace EtlManagerExecutor
             {
                 await sqlConnection.OpenAsync(CancellationToken.None);
 
-                var initCommand = new SqlCommand(
-                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_"
-                        , sqlConnection);
+                var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", sqlConnection);
                 initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
 
                 try
