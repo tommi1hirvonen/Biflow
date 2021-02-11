@@ -33,9 +33,9 @@ namespace EtlManagerExecutor
             try
             {
                 Log.Information("{ExecutionId} {StepId} Starting SQL execution", ExecutionConfiguration.ExecutionId, StepId);
-                using SqlConnection connection = new SqlConnection(ConnectionString);
+                using var connection = new SqlConnection(ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
-                await connection.OpenIfClosedAsync();
+                await connection.OpenAsync();
                 SqlCommand sqlCommand = new SqlCommand(SqlStatement, connection)
                 {
                     CommandTimeout = TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely

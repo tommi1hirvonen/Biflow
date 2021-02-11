@@ -56,12 +56,5 @@ namespace EtlManagerExecutor
             }
         }
 
-        public static async Task OpenIfClosedAsync(this SqlConnection sqlConnection)
-        {
-            if (sqlConnection.State != ConnectionState.Open && sqlConnection.State != ConnectionState.Connecting)
-            {
-                await sqlConnection.OpenAsync();
-            }
-        }
     }
 }

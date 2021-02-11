@@ -161,7 +161,7 @@ namespace EtlManagerExecutor
             {
                 using (var connection = new SqlConnection(executionConfiguration.ConnectionString))
                 {
-                    await connection.OpenIfClosedAsync(); // Open the connection to ETL Manager database for execution start logging.
+                    await connection.OpenAsync(); // Open the connection to ETL Manager database for execution start logging.
                     // In case of first execution, update the existing execution row.
                     if (stepExecution.RetryAttemptCounter == 0)
                     {

@@ -62,7 +62,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Information("{ExecutionId} {StepId} Retrieving package parameters", Configuration.ExecutionId, StepId);
 
-                    await sqlConnection.OpenIfClosedAsync();
+                    await sqlConnection.OpenAsync();
                     using var reader = await paramsCommand.ExecuteReaderAsync(CancellationToken.None);
                     while (await reader.ReadAsync(CancellationToken.None))
                     {
@@ -97,7 +97,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
-                await etlManagerConnection.OpenIfClosedAsync();
+                await etlManagerConnection.OpenAsync();
                 var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                         SET PackageOperationId = @OperationId
