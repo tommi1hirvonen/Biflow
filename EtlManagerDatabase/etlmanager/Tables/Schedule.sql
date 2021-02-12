@@ -16,7 +16,7 @@
     CONSTRAINT [PK_Schedule] PRIMARY KEY CLUSTERED ([ScheduleId] ASC),
     CONSTRAINT [CK_Schedule_TimeMinutes] CHECK ([TimeMinutes]=(45) OR [TimeMinutes]=(30) OR [TimeMinutes]=(15) OR [TimeMinutes]=(0)),
     CONSTRAINT [CK_Schedule_TimeHours] CHECK ([TimeHours]>=(0) AND [TimeHours]<=(23)),
-    CONSTRAINT [FK_Schedule_Job] FOREIGN KEY ([JobId]) REFERENCES [etlmanager].[Job] ([JobId]),
+    CONSTRAINT [FK_Schedule_Job] FOREIGN KEY ([JobId]) REFERENCES [etlmanager].[Job] ([JobId]) ON DELETE CASCADE,
     CONSTRAINT [UQ_Schedule] UNIQUE ([JobId], [Monday], [Tuesday], [Wednesday], [Thursday], [Friday], [Saturday], [Sunday], [TimeHours], [TimeMinutes])
 );
 

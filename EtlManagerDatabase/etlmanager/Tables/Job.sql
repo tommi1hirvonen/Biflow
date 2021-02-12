@@ -23,8 +23,6 @@ CREATE TRIGGER [etlmanager].[Trigger_Job]
         SET NOCOUNT ON
         -- Use instead of trigger to delete linking dependencies because of SQL Server limitation with multiple cascading paths.
         -- https://support.microsoft.com/en-us/help/321843/error-message-1785-occurs-when-you-create-a-foreign-key-constraint-tha
-        DELETE FROM etlmanager.Step WHERE JobId IN (SELECT JobId FROM deleted)
-        DELETE FROM etlmanager.Schedule WHERE JobId IN (SELECT JobId FROM deleted)
-        DELETE FROM etlmanager.Subscription WHERE JobId IN (SELECT JobId FROM deleted)
+        DELETE FROM etlmanager.Step WHERE JobId IN (SELECT JobId FROM deleted) OR JobToExecuteId IN (SELECT JobId FROM deleted)
         DELETE FROM etlmanager.Job WHERE JobId IN (SELECT JobId FROM deleted)
     END
