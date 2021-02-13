@@ -14,10 +14,10 @@ namespace EtlManagerExecutor
         public string Username { get; set; }
         public int MaxParallelSteps { get; init; }
         public int PollingIntervalMs { get; init; }
-        public string JobId { get; init; }
+        public Job Job { get; init; }
         public bool Notify { get; init; }
         public ExecutionConfiguration(string connectionString, string executionId, string encryptionKey,
-            int maxParallelSteps, int pollingIntervalMs, string jobId, bool notify, string username)
+            int maxParallelSteps, int pollingIntervalMs, Job job, bool notify, string username)
         {
             ConnectionString = connectionString;
             ExecutionId = executionId;
@@ -25,7 +25,7 @@ namespace EtlManagerExecutor
             Username = username;
             MaxParallelSteps = maxParallelSteps;
             PollingIntervalMs = pollingIntervalMs;
-            JobId = jobId;
+            Job = job;
             Notify = notify;
         }
     }

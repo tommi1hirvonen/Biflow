@@ -18,8 +18,8 @@ namespace EtlManagerExecutor
         private string JobToExecuteId { get; init; }
         private bool JobExecuteSynchronized { get; init; }
 
-        public JobStepExecution(ExecutionConfiguration configuration, string stepId, string jobToExecuteId, bool jobExecuteSynchronized)
-            : base(configuration, stepId)
+        public JobStepExecution(ExecutionConfiguration configuration, Step step, string jobToExecuteId, bool jobExecuteSynchronized)
+            : base(configuration, step)
         {
             JobToExecuteId = jobToExecuteId;
             JobExecuteSynchronized = jobExecuteSynchronized;
@@ -45,7 +45,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error initializing execution for job {jobId}", Configuration.ExecutionId, StepId, JobToExecuteId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Configuration.ExecutionId, Step, JobToExecuteId);
                     return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
                 }
 
@@ -71,7 +71,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error starting executor process for execution {executionId}", Configuration.ExecutionId, StepId, jobExecutionId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
@@ -85,7 +85,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error updating executor process id for execution {executionId}", Configuration.ExecutionId, StepId, jobExecutionId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error updating executor process id for execution {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
                 }
 
             }
@@ -122,7 +122,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error getting sub-execution status for execution id {executionId}", Configuration.ExecutionId, StepId, jobExecutionId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
                     return new ExecutionResult.Failure("Error getting sub-execution status");
                 }
             }

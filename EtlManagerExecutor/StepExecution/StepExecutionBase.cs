@@ -11,13 +11,13 @@ namespace EtlManagerExecutor
     abstract class StepExecutionBase
     {
         protected ExecutionConfiguration Configuration { get; init; }
-        protected string StepId { get; init; }
+        protected Step Step { get; init; }
         public int RetryAttemptCounter { get; set; }
 
-        public StepExecutionBase(ExecutionConfiguration configuration, string stepId)
+        public StepExecutionBase(ExecutionConfiguration configuration, Step step)
         {
             Configuration = configuration;
-            StepId = stepId;
+            Step = step;
         }
 
         public abstract Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken);
@@ -32,7 +32,7 @@ namespace EtlManagerExecutor
                     FROM [etlmanager].[ExecutionParameter]
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
-            paramsCommand.Parameters.AddWithValue("@StepId", StepId);
+            paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
             paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
 
             await sqlConnection.OpenAsync();

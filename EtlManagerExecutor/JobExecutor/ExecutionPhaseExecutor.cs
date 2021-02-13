@@ -18,19 +18,21 @@ namespace EtlManagerExecutor
 
         public override async Task RunAsync()
         {
-            var allSteps = new List<KeyValuePair<int, string>>();
+            var allSteps = new List<KeyValuePair<int, Step>>();
 
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
             await sqlConnection.OpenAsync();
-            SqlCommand sqlCommand = new SqlCommand("SELECT DISTINCT StepId, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+            SqlCommand sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
             using (var reader = sqlCommand.ExecuteReader())
             {
                 while (reader.Read())
                 {
                     var stepId = reader["StepId"].ToString();
+                    var stepName = reader["StepName"].ToString();
                     var executionPhase = (int)reader["ExecutionPhase"];
-                    allSteps.Add(new(executionPhase, stepId));
+                    var step = new Step(stepId, stepName);
+                    allSteps.Add(new(executionPhase, step));
                     CancellationTokenSources[stepId] = new();
                 }
             }
@@ -47,12 +49,12 @@ namespace EtlManagerExecutor
             foreach (int executionPhase in executionPhases)
             {
                 // Get a list of steps for this execution phase.
-                List<string> stepsToExecute = allSteps.Where(step => step.Key == executionPhase).Select(step => step.Value).ToList();
+                List<Step> stepsToExecute = allSteps.Where(step => step.Key == executionPhase).Select(step => step.Value).ToList();
                 var stepWorkers = new List<Task>();
 
-                foreach (string stepId in stepsToExecute)
+                foreach (var step in stepsToExecute)
                 {
-                    stepWorkers.Add(StartNewStepWorkerAsync(stepId));
+                    stepWorkers.Add(StartNewStepWorkerAsync(step));
                 }
 
                 // All steps have been started. Wait until all step worker tasks have finished.
@@ -60,13 +62,14 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task StartNewStepWorkerAsync(string stepId)
+        private async Task StartNewStepWorkerAsync(Step step)
         {
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
-            var task = new StepWorker(ExecutionConfig, stepId).ExecuteStepAsync(CancellationTokenSources[stepId].Token);
-            Log.Information("{ExecutionId} {stepId} Started step worker", ExecutionConfig.ExecutionId, stepId);
+            var token = CancellationTokenSources[step.StepId].Token;
+            var task = new StepWorker(ExecutionConfig, step).ExecuteStepAsync(token);
+            Log.Information("{ExecutionId} {step} Started step worker", ExecutionConfig.ExecutionId, step);
             try
             {
                 // Wait for the step to finish.
@@ -76,7 +79,7 @@ namespace EtlManagerExecutor
             {
                 // Release the semaphore once to make room for new parallel executions.
                 Semaphore.Release();
-                Log.Information("{ExecutionId} {StepId} Finished step execution", ExecutionConfig.ExecutionId, stepId);
+                Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
             }
         }
     }

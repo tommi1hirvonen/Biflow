@@ -24,9 +24,9 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 3;
 
-        public PackageStepExecution(ExecutionConfiguration configuration, string stepId, string connectionString,
+        public PackageStepExecution(ExecutionConfiguration configuration, Step step, string connectionString,
             string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)
-            : base(configuration, stepId)
+            : base(configuration, step)
         {
             ConnectionString = connectionString;
             FolderName = folderName;
@@ -48,7 +48,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error retrieving package parameters", Configuration.ExecutionId, StepId);
+                Log.Error(ex, "{ExecutionId} {Step} Error retrieving package parameters", Configuration.ExecutionId, Step);
                 return new ExecutionResult.Failure("Error reading package parameters: " + ex.Message);
             }
 
@@ -56,14 +56,14 @@ namespace EtlManagerExecutor
             DateTime startTime;
             try
             {
-                Log.Information("{ExecutionId} {StepId} Starting package execution", Configuration.ExecutionId, StepId);
+                Log.Information("{ExecutionId} {Step} Starting package execution", Configuration.ExecutionId, Step);
 
                 await StartExecutionAsync(parameters);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error executing package", Configuration.ExecutionId, StepId);
+                Log.Error(ex, "{ExecutionId} {Step} Error executing package", Configuration.ExecutionId, Step);
                 return new ExecutionResult.Failure("Error executing package: " + ex.Message);
             }
 
@@ -78,14 +78,14 @@ namespace EtlManagerExecutor
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                     , etlManagerConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", StepId);
+                sqlCommand.Parameters.AddWithValue("@StepId", Step.StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
                 await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error updating target package operation id (" + PackageOperationId + ")");
+                Log.Error(ex, "{ExecutionId} {Step} Error updating target package operation id (" + PackageOperationId + ")", Configuration.ExecutionId, Step);
             }
 
             // Monitor the package's execution.
@@ -98,7 +98,7 @@ namespace EtlManagerExecutor
                     if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
                     {
                         await CancelAsync();
-                        Log.Warning("{ExecutionId} {StepId} Step execution timed out", Configuration.ExecutionId, StepId);
+                        Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
@@ -113,7 +113,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error monitoring package execution status", Configuration.ExecutionId, StepId);
+                Log.Error(ex, "{ExecutionId} {Step} Error monitoring package execution status", Configuration.ExecutionId, Step);
                 return new ExecutionResult.Failure("Error monitoring package execution status: " + ex.Message);
             }
 
@@ -127,7 +127,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {StepId} Error getting package error messages", Configuration.ExecutionId, StepId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error getting package error messages", Configuration.ExecutionId, Step);
                     return new ExecutionResult.Failure("Error getting package error messages: " + ex.Message);
                 }
 
@@ -253,7 +253,7 @@ namespace EtlManagerExecutor
 
         public async Task CancelAsync()
         {
-            Log.Information("{ExecutionId} {StepId} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, StepId, PackageOperationId);
+            Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, Step, PackageOperationId);
             try
             {
                 using var sqlConnection = new SqlConnection(ConnectionString);
@@ -264,7 +264,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping package operation id {operationId}", Configuration.ExecutionId, StepId, PackageOperationId);
+                Log.Error(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Configuration.ExecutionId, Step, PackageOperationId);
             }
         }
     }

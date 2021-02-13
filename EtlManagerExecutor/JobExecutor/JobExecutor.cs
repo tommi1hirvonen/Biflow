@@ -20,8 +20,6 @@ namespace EtlManagerExecutor
             this.configuration = configuration;
         }
 
-        private record Job(string JobId, string JobName);
-
         public async Task RunAsync(string executionId, bool notify)
         {
             var connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
@@ -50,15 +48,33 @@ namespace EtlManagerExecutor
             processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
             await processIdCmd.ExecuteNonQueryAsync();
 
-            // Get whether the execution should be run in dependency mode or in execution phase mode.
-            var dependencyModeCommand = new SqlCommand("SELECT TOP 1 DependencyMode FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            dependencyModeCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-            var dependencyMode = (bool)await dependencyModeCommand.ExecuteScalarAsync();
+            var detailsCommand = new SqlCommand(
+                @"SELECT TOP 1 DependencyMode, JobId, JobName
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId"
+                , sqlConnection);
+            detailsCommand.Parameters.AddWithValue("@ExecutionId", executionId);
 
-            // Get the job id of the execution.
-            var jobIdCommand = new SqlCommand("SELECT TOP 1 JobId FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            jobIdCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-            var jobId = (await jobIdCommand.ExecuteScalarAsync()).ToString();
+            bool dependencyMode;
+            Job job;
+            using (var reader = await detailsCommand.ExecuteReaderAsync())
+            {
+                if (await reader.ReadAsync())
+                {
+                    // Get whether the execution should be run in dependency mode or in execution phase mode.
+                    dependencyMode = (bool)reader["DependencyMode"];
+
+                    // Get job details for the execution.
+                    var jobId = reader["JobId"].ToString();
+                    var jobName = reader["JobName"].ToString();
+                    job = new(jobId, jobName);
+                }
+                else
+                {
+                    Log.Error("{executionId} No execution initialized with given execution id", executionId);
+                    return;
+                }
+            }
 
             var executionConfig = new ExecutionConfiguration(
                 connectionString: connectionString,
@@ -66,7 +82,7 @@ namespace EtlManagerExecutor
                 maxParallelSteps: maxParallelSteps,
                 pollingIntervalMs: pollingIntervalMs,
                 executionId: executionId,
-                jobId: jobId,
+                job: job,
                 notify: notify,
                 // Set the username as timeout. If steps are to be canceled, this will be used by default.
                 username: "timeout");
@@ -154,7 +170,7 @@ namespace EtlManagerExecutor
             var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
             // There are no circular dependencies or this job is not among the cycles.
-            return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(job => job.JobId == executionConfig.JobId))
+            return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(job => job.JobId == executionConfig.Job.JobId))
                 ? null : json;
         }
 

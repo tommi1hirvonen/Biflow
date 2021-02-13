@@ -23,8 +23,8 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 3;
 
-        public PipelineStepExecution(ExecutionConfiguration configuration, string stepId, string dataFactoryId, string pipelineName, int timeoutMinutes)
-            : base(configuration, stepId)
+        public PipelineStepExecution(ExecutionConfiguration configuration, Step step, string dataFactoryId, string pipelineName, int timeoutMinutes)
+            : base(configuration, step)
         {
             DataFactoryId = dataFactoryId;
             PipelineName = pipelineName;
@@ -43,7 +43,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error retrieving pipeline parameters", Configuration.ExecutionId, StepId);
+                Log.Error(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Configuration.ExecutionId, Step);
                 return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
@@ -75,8 +75,8 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                    Configuration.ExecutionId, StepId, DataFactory.DataFactoryId, PipelineName);
+                Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
+                    Configuration.ExecutionId, Step, DataFactory.DataFactoryId, PipelineName);
                 throw;
             }
 
@@ -91,14 +91,14 @@ namespace EtlManagerExecutor
                     SET PipelineRunId = @PipelineRunId
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex", sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", StepId);
+                sqlCommand.Parameters.AddWithValue("@StepId", Step.StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
                 sqlCommand.Parameters.AddWithValue("@PipelineRunId", PipelineRunId);
                 await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "{ExecutionId} {StepId} Error updating pipeline run id", Configuration.ExecutionId, StepId);
+                Log.Warning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Configuration.ExecutionId, Step);
             }
 
             PipelineRun pipelineRun;
@@ -119,7 +119,7 @@ namespace EtlManagerExecutor
                         if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
                         {
                             await CancelAsync();
-                            Log.Warning("{ExecutionId} {StepId} Step execution timed out", Configuration.ExecutionId, StepId);
+                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
                             return new ExecutionResult.Failure("Step execution timed out");
                         }
 
@@ -158,8 +158,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "{ExecutionId} {StepId} Error getting pipeline run status for run id {runId}",
-                        Configuration.ExecutionId, StepId, PipelineRunId);
+                    Log.Warning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Configuration.ExecutionId, Step, PipelineRunId);
                     refreshRetries++;
                     await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
                 }
@@ -169,14 +168,14 @@ namespace EtlManagerExecutor
 
         public async Task CancelAsync()
         {
-            Log.Information("{ExecutionId} {StepId} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, StepId, PipelineRunId);
+            Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, PipelineRunId);
             try
             {
                 await Client.PipelineRuns.CancelAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineRunId, isRecursive: true);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {StepId} Error stopping pipeline run {runId}", Configuration.ExecutionId, StepId, PipelineRunId);
+                Log.Error(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Configuration.ExecutionId, Step, PipelineRunId);
             }
         }
     }
