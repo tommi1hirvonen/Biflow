@@ -14,18 +14,7 @@ namespace EtlManagerExecutor
 {
     class DependencyModeExecutor : ExecutorBase
     {
-
         private List<Task> StepWorkers { get; } = new();
-        enum ExecutionStatus
-        {
-            NotStarted,
-            Running,
-            Success,
-            Failed
-        };
-
-        private Dictionary<Step, ExecutionStatus> StepStatuses { get; set; } = new();
-
 
         public DependencyModeExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
@@ -76,10 +65,8 @@ namespace EtlManagerExecutor
                 }
             }
 
-            // Start listening for cancel key press from the console.
-            _ = Task.Run(ReadCancelKey);
-            // Start listening for cancel command from the UI application.
-            _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
+            // Start listening for cancel commands.
+            RegisterCancelListeners();
 
             // Loop as long as there are steps that haven't yet been started.
             while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
@@ -164,30 +151,6 @@ namespace EtlManagerExecutor
             {
                 StepStatuses[step] = ExecutionStatus.Running;
                 StepWorkers.Add(StartNewStepWorkerAsync(step));
-            }
-        }
-
-        private async Task StartNewStepWorkerAsync(Step step)
-        {
-            // Wait until the semaphore can be entered and the step can be started.
-            await Semaphore.WaitAsync();
-            // Create a new step worker and start it asynchronously.
-            var token = CancellationTokenSources[step.StepId].Token;
-            var task = new StepWorker(ExecutionConfig, step).ExecuteStepAsync(token);
-            Log.Information("{ExecutionId} {step} Started step execution", ExecutionConfig.ExecutionId, step);
-            bool result = false;
-            try
-            {
-                // Wait for the step to finish.
-                result = await task;
-            }
-            finally
-            {
-                // Update the status.
-                StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
-                // Release the semaphore once to make room for new parallel executions.
-                Semaphore.Release();
-                Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
             }
         }
 

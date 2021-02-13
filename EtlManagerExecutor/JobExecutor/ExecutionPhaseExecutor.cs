@@ -15,14 +15,14 @@ namespace EtlManagerExecutor
     {
         public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
 
-
         public override async Task RunAsync()
         {
+            // Fetch all steps for this execution along with their execution phase.
             var allSteps = new List<KeyValuePair<int, Step>>();
 
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
             await sqlConnection.OpenAsync();
-            SqlCommand sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+            var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
             sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
             using (var reader = sqlCommand.ExecuteReader())
             {
@@ -40,10 +40,8 @@ namespace EtlManagerExecutor
             List<int> executionPhases = allSteps.Select(step => step.Key).Distinct().ToList();
             executionPhases.Sort();
 
-            // Start listening for cancel key press from the console.
-            _ = Task.Run(ReadCancelKey);
-            // Start listening for cancel command from the UI application.
-            _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
+            // Start listening for cancel commands.
+            RegisterCancelListeners();
 
             // Start all steps in each execution phase in parallel.
             foreach (int executionPhase in executionPhases)
@@ -62,25 +60,5 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task StartNewStepWorkerAsync(Step step)
-        {
-            // Wait until the semaphore can be entered and the step can be started.
-            await Semaphore.WaitAsync();
-            // Create a new step worker and start it asynchronously.
-            var token = CancellationTokenSources[step.StepId].Token;
-            var task = new StepWorker(ExecutionConfig, step).ExecuteStepAsync(token);
-            Log.Information("{ExecutionId} {step} Started step worker", ExecutionConfig.ExecutionId, step);
-            try
-            {
-                // Wait for the step to finish.
-                await task;
-            }
-            finally
-            {
-                // Release the semaphore once to make room for new parallel executions.
-                Semaphore.Release();
-                Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
-            }
-        }
     }
 }

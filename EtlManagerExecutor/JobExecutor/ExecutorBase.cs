@@ -16,8 +16,20 @@ namespace EtlManagerExecutor
         public record CancelCommand(string StepId, string Username);
 
         protected ExecutionConfiguration ExecutionConfig { get; init; }
-        protected SemaphoreSlim Semaphore { get; init; }
+
+        private SemaphoreSlim Semaphore { get; init; }
+
         protected Dictionary<string, CancellationTokenSource> CancellationTokenSources { get; } = new();
+
+        protected enum ExecutionStatus
+        {
+            NotStarted,
+            Running,
+            Success,
+            Failed
+        };
+
+        protected Dictionary<Step, ExecutionStatus> StepStatuses { get; } = new();
 
         public ExecutorBase(ExecutionConfiguration executionConfiguration)
         {
@@ -27,7 +39,39 @@ namespace EtlManagerExecutor
 
         public abstract Task RunAsync();
 
-        protected void ReadCancelKey()
+        protected void RegisterCancelListeners()
+        {
+            // Start listening for cancel key press from the console.
+            _ = Task.Run(ReadCancelKey);
+            // Start listening for cancel command from the UI application.
+            _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
+        }
+
+        protected async Task StartNewStepWorkerAsync(Step step)
+        {
+            // Wait until the semaphore can be entered and the step can be started.
+            await Semaphore.WaitAsync();
+            // Create a new step worker and start it asynchronously.
+            var token = CancellationTokenSources[step.StepId].Token;
+            var task = new StepWorker(ExecutionConfig, step).ExecuteStepAsync(token);
+            Log.Information("{ExecutionId} {step} Started step execution", ExecutionConfig.ExecutionId, step);
+            bool result = false;
+            try
+            {
+                // Wait for the step to finish.
+                result = await task;
+            }
+            finally
+            {
+                // Update the status.
+                StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+                // Release the semaphore once to make room for new parallel executions.
+                Semaphore.Release();
+                Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
+            }
+        }
+
+        private void ReadCancelKey()
         {
             Console.WriteLine("Enter 'c' to cancel all step executions or a step id to cancel that step's execution.");
             while (true)
@@ -63,7 +107,7 @@ namespace EtlManagerExecutor
             } 
         }
 
-        protected void ReadCancelPipe(string executionId)
+        private void ReadCancelPipe(string executionId)
         {
             while (true)
             {
