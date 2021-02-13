@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" NoBackdrop="NoBackdrop">
     <BSModalHeader @onclick="() => Modal.Hide()"></BSModalHeader>
     <BSModalBody>
         <p class="text-secondary">Showing @MaxExecutions latest executions</p>
@@ -54,6 +54,9 @@
 
     [Parameter]
     public string StepId_ { get; set; }
+
+    [Parameter]
+    public bool NoBackdrop { get; set; } = false;
 
     private Guid StepId => Guid.Parse(StepId_);
 

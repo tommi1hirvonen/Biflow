@@ -287,21 +287,28 @@
                             {
                                 <tr class="table-borderless">
                                     <td colspan="6" class="bg-light">
-                                        <AuthorizeView Roles="Admin, Editor, Operator">
-                                            @if (item.ExecutionStatus == "RUNNING" || item.ExecutionStatus == "AWAIT RETRY" // Step is running or it is awaiting retry...
-                                                && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
-                                            {
-                                                <BSDropdown Class="mb-2 mt-1">
-                                                    <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
-                                                        Stop
-                                                    </BSDropdownToggle>
-                                                    <BSDropdownMenu>
-                                                        <BSDropdownItem @onclick="() => StopStepExecutionAsync(item.StepId)">Confirm</BSDropdownItem>
-                                                    </BSDropdownMenu>
-                                                </BSDropdown>
-                                            }
-                                        </AuthorizeView>
+                                        <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
+                                            <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                                History
+                                            </BSButton>
+                                            <AuthorizeView Roles="Admin, Editor, Operator">
+                                                @if (item.ExecutionStatus == "RUNNING" || item.ExecutionStatus == "AWAIT RETRY" // Step is running or it is awaiting retry...
+                                                  && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                                {
+                                                    <BSDropdown Class="ml-3">
+                                                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                            Stop
+                                                        </BSDropdownToggle>
+                                                        <BSDropdownMenu>
+                                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item.StepId)">Confirm</BSDropdownItem>
+                                                        </BSDropdownMenu>
+                                                    </BSDropdown>
+                                                }
+                                            </AuthorizeView>
+                                        </BSButtonGroup>
+                                        
                                         <StepExecutionDetailsComponent StepExecution="item" />
                                     </td>
                                 </tr>
@@ -322,6 +329,8 @@
 </BSModal>
 
 <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecution="SelectedStepExecutionModal" />
+
+<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" NoBackdrop="true" />
 
 @code {
     [Parameter]
@@ -346,6 +355,9 @@
     private StepExecution SelectedStepExecution { get; set; }
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
+
+    private StepHistoryModal StepHistoryModal { get; set; }
+    private string HistoryModalStepId { get; set; }
 
     private SortOption _SortOption = SortOption.StartTime;
     private bool SortAscending = true;
@@ -536,6 +548,12 @@
             StateHasChanged();
             StepExecutionDetailsModal.Show();
         }
+    }
+
+    private void ShowStepHistoryModal(string stepId)
+    {
+        HistoryModalStepId = stepId;
+        StepHistoryModal.Show();
     }
 
     public void Show() => Modal.Show();
