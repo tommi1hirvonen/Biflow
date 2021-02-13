@@ -36,11 +36,10 @@ namespace EtlManagerExecutor
             {
                 await sqlConnection.OpenAsync(CancellationToken.None);
 
-                var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", sqlConnection);
-                initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
-
                 try
                 {
+                    using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", sqlConnection);
+                    initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
                     jobExecutionId = (await initCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                 }
                 catch (Exception ex)
@@ -75,7 +74,7 @@ namespace EtlManagerExecutor
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
-                var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+                using var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
                 processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
                 processIdCmd.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
 
@@ -106,7 +105,7 @@ namespace EtlManagerExecutor
                 {
                     using SqlConnection sqlConnection = new SqlConnection(Configuration.ConnectionString);
                     await sqlConnection.OpenAsync(CancellationToken.None);
-                    var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
+                    using var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
                     string status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                     return status switch

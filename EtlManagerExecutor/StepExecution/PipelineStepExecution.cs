@@ -86,7 +86,7 @@ namespace EtlManagerExecutor
             {
                 using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
                 await sqlConnection.OpenAsync(CancellationToken.None);
-                var sqlCommand = new SqlCommand(
+                using var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET PipelineRunId = @PipelineRunId
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex", sqlConnection);

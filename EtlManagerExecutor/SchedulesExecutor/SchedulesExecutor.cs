@@ -71,12 +71,10 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            var sqlCommand = new SqlCommand(commandBuilder.ToString(), sqlConnection);
-
             var jobIds = new List<KeyValuePair<string, string>>();
-
             try
             {
+                using var sqlCommand = new SqlCommand(commandBuilder.ToString(), sqlConnection);
                 using var reader = await sqlCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
@@ -101,13 +99,12 @@ namespace EtlManagerExecutor
 
             foreach (var pair in jobIds)
             {
-                var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
-                initCommand.Parameters.AddWithValue("@JobId_", pair.Key);
-                initCommand.Parameters.AddWithValue("@ScheduleId_", pair.Value);
-
                 string executionId;
                 try
                 {
+                    using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
+                    initCommand.Parameters.AddWithValue("@JobId_", pair.Key);
+                    initCommand.Parameters.AddWithValue("@ScheduleId_", pair.Value);
                     executionId = (await initCommand.ExecuteScalarAsync()).ToString();
                 }
                 catch (Exception ex)
@@ -141,12 +138,11 @@ namespace EtlManagerExecutor
                     continue;
                 }
 
-                var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-                processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
-                processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-
                 try
                 {
+                    using var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
+                    processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
+                    processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
                     await processIdCmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)

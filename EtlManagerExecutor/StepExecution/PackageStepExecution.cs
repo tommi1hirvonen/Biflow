@@ -72,7 +72,7 @@ namespace EtlManagerExecutor
             {
                 using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
                 await etlManagerConnection.OpenAsync(CancellationToken.None);
-                var sqlCommand = new SqlCommand(
+                using var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                         SET PackageOperationId = @OperationId
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
@@ -181,7 +181,7 @@ namespace EtlManagerExecutor
                 SELECT @execution_id"
                 );
             string commandString = commandBuilder.ToString();
-            var executionCommand = new SqlCommand(commandString, sqlConnection);
+            using var executionCommand = new SqlCommand(commandString, sqlConnection);
 
             executionCommand.Parameters.AddWithValue("@FolderName", FolderName);
             executionCommand.Parameters.AddWithValue("@ProjectName", ProjectName);
@@ -208,7 +208,7 @@ namespace EtlManagerExecutor
                 try
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
-                    var sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
+                    using var sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
                     await sqlConnection.OpenAsync(CancellationToken.None);
                     int status = (int)await sqlCommand.ExecuteScalarAsync(CancellationToken.None);
@@ -235,7 +235,7 @@ namespace EtlManagerExecutor
         private async Task<List<string>> GetErrorMessagesAsync()
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
-            var sqlCommand = new SqlCommand(
+            using var sqlCommand = new SqlCommand(
                 @"SELECT message
                 FROM SSISDB.catalog.operation_messages
                 WHERE message_type = 120 AND operation_id = @OperationId" // message_type = 120 => error message
@@ -258,7 +258,7 @@ namespace EtlManagerExecutor
             {
                 using var sqlConnection = new SqlConnection(ConnectionString);
                 await sqlConnection.OpenAsync(CancellationToken.None);
-                var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
+                using var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
                 stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", PackageOperationId);
                 await stopPackageOperationCmd.ExecuteNonQueryAsync();
             }

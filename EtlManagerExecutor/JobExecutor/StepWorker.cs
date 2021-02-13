@@ -24,7 +24,7 @@ namespace EtlManagerExecutor
             {
                 using var connection = new SqlConnection(Configuration.ConnectionString);
                 await connection.OpenAsync(CancellationToken.None);
-                var canceledUpdate = new SqlCommand(
+                using var canceledUpdate = new SqlCommand(
                         @"UPDATE etlmanager.Execution
                             SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
@@ -47,15 +47,14 @@ namespace EtlManagerExecutor
                 await sqlConnection.OpenAsync(CancellationToken.None);
 
                 // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
-                var duplicateExecutionCmd = new SqlCommand(
-                    @"SELECT 1
-                    FROM etlmanager.Execution
-                    WHERE StepId = @StepId AND ExecutionStatus = 'RUNNING' AND StartDateTime >= DATEADD(DAY, -1, GETDATE())"
-                    , sqlConnection);
-                duplicateExecutionCmd.Parameters.AddWithValue("@StepId", Step.StepId);
-
                 try
                 {
+                    using var duplicateExecutionCmd = new SqlCommand(
+                        @"SELECT 1
+                        FROM etlmanager.Execution
+                        WHERE StepId = @StepId AND ExecutionStatus = 'RUNNING' AND StartDateTime >= DATEADD(DAY, -1, GETDATE())"
+                        , sqlConnection);
+                    duplicateExecutionCmd.Parameters.AddWithValue("@StepId", Step.StepId);
                     using var duplicateReader = await duplicateExecutionCmd.ExecuteReaderAsync(CancellationToken.None);
                     // If the duplicate execution query returns any rows, there is another execution running for the same step.
                     // This step execution should be marked as duplicate.
@@ -87,19 +86,18 @@ namespace EtlManagerExecutor
 
 
                 // Fetch step details.
-                var stepDetailsCmd = new SqlCommand(
-                    @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
-                        PackageFolderName, PackageProjectName, PackageName,
-                        ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName
-                    FROM etlmanager.Execution
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                    , sqlConnection);
-                stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                stepDetailsCmd.Parameters.AddWithValue("@StepId", Step.StepId);
-                stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", Configuration.EncryptionKey);
-                
                 try
                 {
+                    using var stepDetailsCmd = new SqlCommand(
+                        @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
+                            PackageFolderName, PackageProjectName, PackageName,
+                            ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName
+                        FROM etlmanager.Execution
+                        WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                        , sqlConnection);
+                    stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                    stepDetailsCmd.Parameters.AddWithValue("@StepId", Step.StepId);
+                    stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", Configuration.EncryptionKey);
                     using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
                     if (await reader.ReadAsync(CancellationToken.None))
                     {
@@ -166,7 +164,7 @@ namespace EtlManagerExecutor
                     {
                         try
                         {
-                            var startUpdate = new SqlCommand(
+                            using var startUpdate = new SqlCommand(
                               @"UPDATE etlmanager.Execution
                                 SET StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING'
                                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
@@ -186,7 +184,7 @@ namespace EtlManagerExecutor
                     {
                         try
                         {
-                            var addNewExecution = new SqlCommand(
+                            using var addNewExecution = new SqlCommand(
                               @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'RUNNING'"
                                 , connection);
                             addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
@@ -212,7 +210,7 @@ namespace EtlManagerExecutor
                     // Execution was canceled. Update the status to STOPPED and do not attempt any retries (return).
                     using var connection = new SqlConnection(Configuration.ConnectionString);
                     await connection.OpenAsync(CancellationToken.None);
-                    var canceledUpdate = new SqlCommand(
+                    using var canceledUpdate = new SqlCommand(
                             @"UPDATE etlmanager.Execution
                             SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
@@ -243,7 +241,7 @@ namespace EtlManagerExecutor
                     {
                         using var connection = new SqlConnection(Configuration.ConnectionString);
                         await connection.OpenAsync(CancellationToken.None);
-                        var errorUpdate = new SqlCommand(
+                        using var errorUpdate = new SqlCommand(
                             @"UPDATE etlmanager.Execution
                             SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage, InfoMessage = @InfoMessage
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
@@ -277,7 +275,7 @@ namespace EtlManagerExecutor
                             {
                                 using var connection = new SqlConnection(Configuration.ConnectionString);
                                 await connection.OpenAsync(CancellationToken.None);
-                                var addNewExecution = new SqlCommand(
+                                using var addNewExecution = new SqlCommand(
                                     @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'STOPPED'"
                                     , connection);
                                 addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
@@ -307,7 +305,7 @@ namespace EtlManagerExecutor
                     {
                         using var connection = new SqlConnection(Configuration.ConnectionString);
                         await connection.OpenAsync(CancellationToken.None);
-                        var successUpdate = new SqlCommand(
+                        using var successUpdate = new SqlCommand(
                             @"UPDATE etlmanager.Execution
                             SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED', InfoMessage = @InfoMessage
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"

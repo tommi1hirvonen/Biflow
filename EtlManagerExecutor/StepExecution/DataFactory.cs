@@ -41,7 +41,7 @@ namespace EtlManagerExecutor
                 {
                     using var sqlConnection = new SqlConnection(connectionString);
                     await sqlConnection.OpenAsync();
-                    var updateTokenCmd = new SqlCommand(
+                    using var updateTokenCmd = new SqlCommand(
                         @"UPDATE etlmanager.DataFactory
                     SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
                     WHERE ClientId = @ClientId AND ClientSecret = @ClientSecret", sqlConnection);
@@ -68,7 +68,7 @@ namespace EtlManagerExecutor
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
-            var sqlCommand = new SqlCommand(
+            using var sqlCommand = new SqlCommand(
                 @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
                         [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
                 FROM etlmanager.DataFactory

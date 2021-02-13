@@ -20,12 +20,12 @@ namespace EtlManagerExecutor
             // Fetch all steps for this execution along with their execution phase.
             var allSteps = new List<KeyValuePair<int, Step>>();
 
-            using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-            await sqlConnection.OpenAsync();
-            var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-            using (var reader = sqlCommand.ExecuteReader())
+            using (var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString))
             {
+                await sqlConnection.OpenAsync();
+                using var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
+                using var reader = sqlCommand.ExecuteReader();
                 while (reader.Read())
                 {
                     var stepId = reader["StepId"].ToString();

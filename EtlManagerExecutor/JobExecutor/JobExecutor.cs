@@ -38,27 +38,26 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            using var sqlConnection = new SqlConnection(connectionString);
-            await sqlConnection.OpenAsync();
-
-            // Update this Executor process's PID for the execution.
-            var process = Process.GetCurrentProcess();
-            var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-            processIdCmd.Parameters.AddWithValue("@ProcessId", process.Id);
-            processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-            await processIdCmd.ExecuteNonQueryAsync();
-
-            var detailsCommand = new SqlCommand(
-                @"SELECT TOP 1 DependencyMode, JobId, JobName
-                FROM etlmanager.Execution
-                WHERE ExecutionId = @ExecutionId"
-                , sqlConnection);
-            detailsCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-
             bool dependencyMode;
             Job job;
-            using (var reader = await detailsCommand.ExecuteReaderAsync())
+
+            using (var sqlConnection = new SqlConnection(connectionString))
             {
+                await sqlConnection.OpenAsync();
+
+                // Update this Executor process's PID for the execution.
+                var process = Process.GetCurrentProcess();
+                using (var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection))
+                {
+                    processIdCmd.Parameters.AddWithValue("@ProcessId", process.Id);
+                    processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
+                    await processIdCmd.ExecuteNonQueryAsync();
+                }
+                
+                // Get execution details.
+                using var detailsCommand = new SqlCommand(@"SELECT TOP 1 DependencyMode, JobId, JobName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+                detailsCommand.Parameters.AddWithValue("@ExecutionId", executionId);
+                using var reader = await detailsCommand.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     // Get whether the execution should be run in dependency mode or in execution phase mode.
@@ -128,9 +127,12 @@ namespace EtlManagerExecutor
 
         private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
         {
-            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            var sqlCommand = new SqlCommand(
-                @"SELECT
+            var dependencies = new Dictionary<Job, List<Job>>();
+
+            using (var sqlConnection = new SqlConnection(executionConfig.ConnectionString))
+            {
+                using var sqlCommand = new SqlCommand(
+                    @"SELECT
                     a.JobId,
                     b.JobName,
                     a.JobToExecuteId,
@@ -139,14 +141,13 @@ namespace EtlManagerExecutor
                     INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
                     INNER JOIN etlmanager.Job AS c ON a.JobToExecuteId = c.JobId
                 WHERE a.StepType = 'JOB'"
-                , sqlConnection)
-            {
-                CommandTimeout = 120 // two minutes
-            };
-            var dependencies = new Dictionary<Job, List<Job>>();
-            await sqlConnection.OpenAsync();
-            using (SqlDataReader reader = await sqlCommand.ExecuteReaderAsync())
-            {
+                    , sqlConnection)
+                {
+                    CommandTimeout = 120 // two minutes
+                };
+                
+                await sqlConnection.OpenAsync();
+                using var reader = await sqlCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
                     var jobId = reader["JobId"].ToString();
@@ -159,7 +160,7 @@ namespace EtlManagerExecutor
 
                     if (!dependencies.ContainsKey(job))
                         dependencies[job] = new();
-                    
+
                     dependencies[job].Add(jobToExecute);
                 }
             }

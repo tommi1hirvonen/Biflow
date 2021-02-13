@@ -27,7 +27,7 @@ namespace EtlManagerExecutor
             var parameters = new Dictionary<string, object>();
             
             using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-            var paramsCommand = new SqlCommand(
+            using var paramsCommand = new SqlCommand(
                 @"SELECT [ParameterName], [ParameterValue]
                     FROM [etlmanager].[ExecutionParameter]
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"

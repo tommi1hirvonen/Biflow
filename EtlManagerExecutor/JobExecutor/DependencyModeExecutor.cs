@@ -52,7 +52,7 @@ namespace EtlManagerExecutor
                 await sqlConnection.OpenAsync();
 
                 // Get steps to execute and add them to the list of steps and their statuses.
-                var stepsListCommand = new SqlCommand("SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+                using var stepsListCommand = new SqlCommand("SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
                 stepsListCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
                 using var reader = await stepsListCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
@@ -127,7 +127,7 @@ namespace EtlManagerExecutor
                 {
                     using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
                     await sqlConnection.OpenAsync();
-                    var skipUpdateCommand = new SqlCommand(
+                    using var skipUpdateCommand = new SqlCommand(
                         @"UPDATE etlmanager.Execution
                         SET ExecutionStatus = 'SKIPPED',
                         StartDateTime = GETDATE(), EndDateTime = GETDATE()
@@ -159,7 +159,7 @@ namespace EtlManagerExecutor
         {
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
             // Get a list of dependencies for this execution. Only include steps selected for execution in the check (inner join to Execution table).
-            var sqlCommand = new SqlCommand(
+            using var sqlCommand = new SqlCommand(
                     @"SELECT
                         a.StepId,
                         b.StepName,

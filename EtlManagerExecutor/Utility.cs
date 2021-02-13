@@ -15,7 +15,7 @@ namespace EtlManagerExecutor
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
-            var getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
+            using var getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
             getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
             using var reader = await getKeyCmd.ExecuteReaderAsync();
             if (await reader.ReadAsync())
@@ -35,7 +35,7 @@ namespace EtlManagerExecutor
         public static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
         {
             using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            var sqlCommand = new SqlCommand(
+            using var sqlCommand = new SqlCommand(
                     @"UPDATE etlmanager.Execution
                     SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
                     WHERE ExecutionId = @ExecutionId"

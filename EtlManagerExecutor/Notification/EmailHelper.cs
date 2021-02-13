@@ -14,15 +14,10 @@ namespace EtlManagerExecutor
     {
         public static void SendNotification(IConfiguration configuration, string executionId)
         {
-            using SqlConnection sqlConnection = new SqlConnection(configuration.GetValue<string>("EtlManagerConnectionString"));
+            using var sqlConnection = new SqlConnection(configuration.GetValue<string>("EtlManagerConnectionString"));
             sqlConnection.Open();
 
-            SqlCommand jobInfoCmd = new SqlCommand(
-                @"SELECT JobId, JobName, ExecutionStatus
-                FROM etlmanager.vExecutionJob
-                WHERE ExecutionId = @ExecutionId"
-                , sqlConnection);
-            jobInfoCmd.Parameters.AddWithValue("ExecutionId", executionId);
+            
 
             string jobId = string.Empty;
             string jobName = string.Empty;
@@ -30,6 +25,12 @@ namespace EtlManagerExecutor
 
             try
             {
+                using var jobInfoCmd = new SqlCommand(
+                    @"SELECT JobId, JobName, ExecutionStatus
+                    FROM etlmanager.vExecutionJob
+                    WHERE ExecutionId = @ExecutionId"
+                    , sqlConnection);
+                jobInfoCmd.Parameters.AddWithValue("ExecutionId", executionId);
                 using var reader = jobInfoCmd.ExecuteReader();
                 reader.Read();
                 jobId = reader["JobId"].ToString();
@@ -48,18 +49,17 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            SqlCommand recipientsCmd = new SqlCommand(
-                @"SELECT DISTINCT B.[Email]
-                FROM [etlmanager].[Subscription] AS A
-                    INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username]
-                WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL"
-                , sqlConnection);
-            recipientsCmd.Parameters.AddWithValue("@JobId", jobId);
 
             var recipients = new List<string>();
-
             try
             {
+                using var recipientsCmd = new SqlCommand(
+                    @"SELECT DISTINCT B.[Email]
+                    FROM [etlmanager].[Subscription] AS A
+                        INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username]
+                    WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL"
+                    , sqlConnection);
+                recipientsCmd.Parameters.AddWithValue("@JobId", jobId);
                 using var reader = recipientsCmd.ExecuteReader();
                 while (reader.Read())
                 {
@@ -76,13 +76,11 @@ namespace EtlManagerExecutor
                 return;
             }
 
-
-            var messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
-            messageBodyCmd.Parameters.AddWithValue("ExecutionId", executionId);
-
             var messageBody = string.Empty;
             try
             {
+                using var messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
+                messageBodyCmd.Parameters.AddWithValue("ExecutionId", executionId);
                 messageBody = messageBodyCmd.ExecuteScalar().ToString();
             }
             catch (Exception ex)

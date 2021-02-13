@@ -32,7 +32,7 @@ namespace EtlManagerExecutor
                 using var connection = new SqlConnection(ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 await connection.OpenAsync(CancellationToken.None);
-                SqlCommand sqlCommand = new SqlCommand(SqlStatement, connection)
+                using var sqlCommand = new SqlCommand(SqlStatement, connection)
                 {
                     CommandTimeout = TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely
                 };
