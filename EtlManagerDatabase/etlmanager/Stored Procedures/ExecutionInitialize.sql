@@ -64,6 +64,10 @@ INSERT INTO etlmanager.Execution (
 	PipelineName,
 	JobToExecuteId,
 	JobExecuteSynchronized,
+	ExeFileName,
+	ExeArguments,
+	ExeWorkingDirectory,
+	ExeSuccessExitCode,
 	CreatedBy,
 	ScheduleId
 )
@@ -94,6 +98,10 @@ SELECT
 	a.PipelineName,
 	JobToExecuteId = a.JobToExecuteId,
 	JobExecuteSynchronized = a.JobExecuteSynchronized,
+	a.ExeFileName,
+	a.ExeArguments,
+	a.ExeWorkingDirectory,
+	a.ExeSuccessExitCode,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId
 FROM etlmanager.Step AS a

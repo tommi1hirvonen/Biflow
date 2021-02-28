@@ -91,7 +91,8 @@ namespace EtlManagerExecutor
                     using var stepDetailsCmd = new SqlCommand(
                         @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
                             PackageFolderName, PackageProjectName, PackageName,
-                            ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName
+                            ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName,
+                            ExeFileName, ExeArguments, ExeWorkingDirectory, ExeSuccessExitCode
                         FROM etlmanager.Execution
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                         , sqlConnection);
@@ -132,6 +133,14 @@ namespace EtlManagerExecutor
                             var dataFactoryId = reader["DataFactoryId"].ToString();
                             var pipelineName = reader["PipelineName"].ToString();
                             stepExecution = new PipelineStepExecution(Configuration, Step, dataFactoryId, pipelineName, timeoutMinutes);
+                        }
+                        else if (stepType == "EXE")
+                        {
+                            var fileName = reader["ExeFileName"].ToString();
+                            var arguments = reader["ExeArguments"].ToString();
+                            var workingDirectory = reader["ExeWorkingDirectory"].ToString();
+                            int? successExitCode = reader["ExeSuccessExitCode"] as int?;
+                            stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
                         }
                         else
                         {

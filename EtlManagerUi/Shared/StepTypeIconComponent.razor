@@ -16,6 +16,10 @@ else if (StepType == "JOB")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
 }
+else if (StepType == "EXE")
+{
+    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/terminal.svg")))
+}
 
 @code {
     [Parameter]

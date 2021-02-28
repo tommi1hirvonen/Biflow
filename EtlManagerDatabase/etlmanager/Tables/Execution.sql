@@ -29,6 +29,10 @@
     [PipelineRunId]             NVARCHAR(250)       NULL,
     [JobToExecuteId]            UNIQUEIDENTIFIER    NULL,
     [JobExecuteSynchronized]    BIT                 NULL,
+    [ExeFileName]               NVARCHAR(1000)      NULL,
+    [ExeArguments]              NVARCHAR(MAX)       NULL,
+    [ExeWorkingDirectory]       NVARCHAR(1000)      NULL,
+    [ExeSuccessExitCode]        INT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [CreatedBy]                 NVARCHAR(250)       NULL,
@@ -36,6 +40,6 @@
     [ScheduleId]                UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]         INT                 NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
-    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE')
+    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE')
 );
 

@@ -70,6 +70,48 @@
                         @Step.DataFactory?.DataFactoryName
                     </dd>
                 }
+                else if (Step.StepType == "JOB")
+                {
+                    <dt class="col-sm-3">
+                        Job to execute
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.JobToExecuteId
+                    </dd>
+                    <dt class="col-sm-3">
+                        Synchronized
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.JobExecuteSynchronized
+                    </dd>
+                }
+                else if (Step.StepType == "EXE")
+                {
+                    <dt class="col-sm-3">
+                        File path
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.ExeFileName
+                    </dd>
+                    <dt class="col-sm-3">
+                        Arguments
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.ExeArguments
+                    </dd>
+                    <dt class="col-sm-3">
+                        Working directory
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.ExeWorkingDirectory
+                    </dd>
+                    <dt class="col-sm-3">
+                        Success exit code
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.ExeSuccessExitCode
+                    </dd>
+                }
                 else if (Step.StepType == "SSIS")
                 {
                     <dt class="col-sm-3">

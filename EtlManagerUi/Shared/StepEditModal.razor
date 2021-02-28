@@ -81,6 +81,7 @@
                                                     <option>SSIS</option>
                                                     <option>PIPELINE</option>
                                                     <option>JOB</option>
+                                                    <option>EXE</option>
                                                 </InputSelect>
                                             </div>
                                         </BSFormGroup>
@@ -113,7 +114,7 @@
                                     </BSFormRow>
                                 </div>
                             </BSFormRow>
-                            @if (Step.StepType == "SQL" || Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
+                            @if (Step.StepType == "SQL" || Step.StepType == "SSIS" || Step.StepType == "PIPELINE" || Step.StepType == "EXE")
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col-lg-6">
@@ -129,22 +130,22 @@
                                     </BSFormGroup>
                                     @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
                                     {
-                                    <BSFormGroup Class="col-lg-6">
-                                        <BSLabel>Connection</BSLabel>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <div class="input-group-text">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                        <BSFormGroup Class="col-lg-6">
+                                            <BSLabel>Connection</BSLabel>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <div class="input-group-text">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                                    </div>
                                                 </div>
+                                                <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
+                                                    @foreach (var connection in Connections)
+                                                                    {
+                                                        <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                                                                    }
+                                                </InputSelect>
                                             </div>
-                                            <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
-                                                @foreach (var connection in Connections)
-                                                            {
-                                                    <option value="@connection.ConnectionId">@connection.ConnectionName</option>
-                                                            }
-                                            </InputSelect>
-                                        </div>
-                                    </BSFormGroup>
+                                        </BSFormGroup>
                                     }
                                 </BSFormRow>
                             }
@@ -275,6 +276,61 @@
                                     </div>
                                 </BSFormRow>
                             }
+                            @if (Step.StepType == "EXE")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>File path</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.ExeFileName" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Arguments</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/command.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.ExeArguments" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Working directory</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.ExeWorkingDirectory" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Success exit code (blank if not applicable)</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+                                                </div>
+                                            </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.ExeSuccessExitCode" @oninput="ResetStepError"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                            }
                             <p class="text-danger">@StepError</p>
 
                             @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
@@ -345,10 +401,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                      .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                      .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                      .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                      .OrderBy(step => step.StepName))
+                                  .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                  .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                  .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                  .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
@@ -566,6 +622,11 @@
         else if (Step.StepType == "JOB" && Step.JobToExecuteId is null)
         {
             StepError = "Job cannot be empty";
+            return;
+        }
+        else if (Step.StepType == "EXE" && string.IsNullOrWhiteSpace(Step.ExeFileName))
+        {
+            StepError = "File path cannot be empty";
             return;
         }
 

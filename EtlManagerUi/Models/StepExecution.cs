@@ -45,6 +45,14 @@ namespace EtlManagerUi.Models
 
         [Display(Name = "Synchronized")]
         public bool? JobExecuteSynchronized { get; set; }
+        [Display(Name = "File path")]
+        public string ExeFileName { get; set; }
+        [Display(Name = "Arguments")]
+        public string ExeArguments { get; set; }
+        [Display(Name = "Working directory")]
+        public string ExeWorkingDirectory { get; set; }
+        [Display(Name = "Success exit code")]
+        public int? ExeSuccessExitCode { get; set; }
 
         [Display(Name = "Pipeline name")]
         public string PipelineName { get; set; }

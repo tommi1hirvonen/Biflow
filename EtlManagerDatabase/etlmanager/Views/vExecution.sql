@@ -39,6 +39,10 @@ SELECT
 	,a.[DataFactoryId]
 	,a.[PipelineRunId]
 	,a.[ScheduleId]
+	,a.[ExeFileName]
+	,a.[ExeArguments]
+	,a.[ExeWorkingDirectory]
+	,a.[ExeSuccessExitCode]
 	,a.[StoppedBy]
 	,a.[ExecutorProcessId]
 FROM [etlmanager].[Execution] AS a
