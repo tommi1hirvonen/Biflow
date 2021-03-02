@@ -58,7 +58,7 @@ namespace EtlManagerExecutor
                         jobExecutionId.ToString(),
                         Configuration.Notify ? "--notify" : ""
                     },
-                    UseShellExecute = true,
+                    UseShellExecute = false,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden
                 };

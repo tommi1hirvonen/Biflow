@@ -98,7 +98,7 @@ namespace EtlManagerUi
                     "--id",
                     executionId.ToString()
                 },
-                UseShellExecute = true,
+                UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             };
