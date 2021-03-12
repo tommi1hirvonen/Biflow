@@ -1,18 +1,18 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor.StepExecution
 {
-    public class DataFactory
+    class PowerBIService
     {
-        public string DataFactoryId { get; init; }
+        public string PowerBIServiceId { get; init; }
         public string TenantId { get; init; }
-        public string SubscriptionId { get; init; }
-        public string ResourceGroupName { get; init; }
-        public string ResourceName { get; init; }
         public string ClientId { get; init; }
         public string ClientSecret { get; init; }
         public string AccessToken { get; set; }
@@ -26,13 +26,13 @@ namespace EtlManagerExecutor
                 {
                     var context = new AuthenticationContext("https://login.microsoftonline.com/" + TenantId);
                     var clientCredential = new ClientCredential(ClientId, ClientSecret);
-                    var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
+                    var result = await context.AcquireTokenAsync("https://analysis.windows.net/powerbi/api", clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
+                    Log.Error(ex, "Error getting Microsoft OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIServiceId);
                     throw;
                 }
 
@@ -42,7 +42,7 @@ namespace EtlManagerExecutor
                     using var sqlConnection = new SqlConnection(connectionString);
                     await sqlConnection.OpenAsync();
                     using var updateTokenCmd = new SqlCommand(
-                        @"UPDATE etlmanager.DataFactory
+                        @"UPDATE etlmanager.PowerBIService
                     SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
                     WHERE ClientId = @ClientId AND ClientSecret = @ClientSecret", sqlConnection);
                     updateTokenCmd.Parameters.AddWithValue("@AccessToken", AccessToken);
@@ -53,7 +53,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
+                    Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIServiceId);
                     throw;
                 }
                 return false;
@@ -64,25 +64,22 @@ namespace EtlManagerExecutor
             }
         }
 
-        public static async Task<DataFactory> GetDataFactoryAsync(string connectionString, string dataFactoryId, string encryptionKey)
+        public static async Task<PowerBIService> GetPowerBIServiceAsync(string connectionString, string powerBIServiceId, string encryptionKey)
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
             using var sqlCommand = new SqlCommand(
-                @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
-                        [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
-                FROM etlmanager.DataFactory
-                WHERE DataFactoryId = @DataFactoryId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@DataFactoryId", dataFactoryId);
+                @"SELECT [TenantId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
+                        [AccessToken], [AccessTokenExpiresOn]
+                FROM etlmanager.PowerBIService
+                WHERE PowerBIServiceId = @PowerBIServiceId", sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@PowerBIServiceId", powerBIServiceId);
             sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
 
             using var reader = await sqlCommand.ExecuteReaderAsync();
             await reader.ReadAsync();
 
             string tenantId = reader["TenantId"].ToString();
-            string subscriptionId = reader["SubscriptionId"].ToString();
-            string resourceGroupName = reader["ResourceGroupName"].ToString();
-            string resourceName = reader["ResourceName"].ToString();
             string clientId = reader["ClientId"].ToString();
             string clientSecret = reader["ClientSecret"].ToString();
             string accessToken = null;
@@ -90,13 +87,10 @@ namespace EtlManagerExecutor
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
             if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
 
-            return new DataFactory
+            return new PowerBIService
             {
-                DataFactoryId = dataFactoryId,
+                PowerBIServiceId = powerBIServiceId,
                 TenantId = tenantId,
-                SubscriptionId = subscriptionId,
-                ResourceGroupName = resourceGroupName,
-                ResourceName = resourceName,
                 ClientId = clientId,
                 ClientSecret = clientSecret,
                 AccessToken = accessToken,
