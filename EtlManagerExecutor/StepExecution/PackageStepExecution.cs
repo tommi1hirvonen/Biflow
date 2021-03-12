@@ -251,7 +251,7 @@ namespace EtlManagerExecutor
             return messages;
         }
 
-        public async Task CancelAsync()
+        private async Task CancelAsync()
         {
             Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, Step, PackageOperationId);
             try

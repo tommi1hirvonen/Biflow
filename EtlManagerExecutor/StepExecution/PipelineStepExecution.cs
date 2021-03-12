@@ -166,7 +166,7 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
         }
 
-        public async Task CancelAsync()
+        private async Task CancelAsync()
         {
             Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, PipelineRunId);
             try
