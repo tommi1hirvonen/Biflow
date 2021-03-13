@@ -68,6 +68,9 @@ INSERT INTO etlmanager.Execution (
 	ExeArguments,
 	ExeWorkingDirectory,
 	ExeSuccessExitCode,
+	PowerBIServiceId,
+	DatasetGroupId,
+	DatasetId,
 	CreatedBy,
 	ScheduleId
 )
@@ -102,6 +105,9 @@ SELECT
 	a.ExeArguments,
 	a.ExeWorkingDirectory,
 	a.ExeSuccessExitCode,
+	a.PowerBIServiceId,
+	a.DatasetGroupId,
+	a.DatasetId,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId
 FROM etlmanager.Step AS a

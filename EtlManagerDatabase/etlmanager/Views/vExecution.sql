@@ -43,6 +43,9 @@ SELECT
 	,a.[ExeArguments]
 	,a.[ExeWorkingDirectory]
 	,a.[ExeSuccessExitCode]
+	,a.[PowerBIServiceId]
+	,a.[DatasetGroupId]
+	,a.[DatasetId]
 	,a.[StoppedBy]
 	,a.[ExecutorProcessId]
 FROM [etlmanager].[Execution] AS a

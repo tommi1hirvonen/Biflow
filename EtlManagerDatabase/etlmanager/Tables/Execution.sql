@@ -33,6 +33,9 @@
     [ExeArguments]              NVARCHAR(MAX)       NULL,
     [ExeWorkingDirectory]       NVARCHAR(1000)      NULL,
     [ExeSuccessExitCode]        INT                 NULL,
+    [PowerBIServiceId]          UNIQUEIDENTIFIER    NULL,
+    [DatasetGroupId]            NVARCHAR(36)        NULL,
+    [DatasetId]                 NVARCHAR(36)        NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [CreatedBy]                 NVARCHAR(250)       NULL,
@@ -40,6 +43,6 @@
     [ScheduleId]                UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]         INT                 NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
-    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE')
+    CONSTRAINT [CK_Execution_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE' OR [StepType]='DATASET')
 );
 

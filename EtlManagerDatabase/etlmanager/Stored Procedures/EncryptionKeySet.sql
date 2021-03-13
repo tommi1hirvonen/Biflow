@@ -16,6 +16,9 @@ BEGIN
 	UPDATE etlmanager.DataFactory
 	SET ClientSecret = ENCRYPTBYPASSPHRASE(@NewEncryptionKey, CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@OldEncryptionKey, ClientSecret)))
 
+	UPDATE etlmanager.PowerBIService
+	SET ClientSecret = ENCRYPTBYPASSPHRASE(@NewEncryptionKey, CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@OldEncryptionKey, ClientSecret)))
+
 	UPDATE etlmanager.Connection
 	SET ConnectionStringEncrypted = ENCRYPTBYPASSPHRASE(@NewEncryptionKey, CONVERT(NVARCHAR(MAX), DECRYPTBYPASSPHRASE(@OldEncryptionKey, ConnectionStringEncrypted)))
 	WHERE IsSensitive = 1

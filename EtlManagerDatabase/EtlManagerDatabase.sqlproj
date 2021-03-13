@@ -102,6 +102,9 @@
     <Build Include="etlmanager\Views\vExecutionParameter.sql" />
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
+    <Build Include="etlmanager\Tables\PowerBIService.sql" />
+    <Build Include="etlmanager\Stored Procedures\PowerBIServiceAdd.sql" />
+    <Build Include="etlmanager\Stored Procedures\PowerBIServiceUpdate.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">
