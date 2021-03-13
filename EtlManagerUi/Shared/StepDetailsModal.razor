@@ -112,6 +112,27 @@
                         @Step.ExeSuccessExitCode
                     </dd>
                 }
+                else if (Step.StepType == "DATASET")
+                {
+                    <dt class="col-sm-3">
+                        Group id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.DatasetGroupId
+                    </dd>
+                    <dt class="col-sm-3">
+                        Dataset id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.DatasetId
+                    </dd>
+                    <dt class="col-sm-3">
+                        Power BI Service name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Step.PowerBIService?.PowerBIServiceName
+                    </dd>
+                }
                 else if (Step.StepType == "SSIS")
                 {
                     <dt class="col-sm-3">

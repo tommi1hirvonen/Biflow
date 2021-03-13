@@ -82,6 +82,7 @@
                                                     <option>PIPELINE</option>
                                                     <option>JOB</option>
                                                     <option>EXE</option>
+                                                    <option>DATASET</option>
                                                 </InputSelect>
                                             </div>
                                         </BSFormGroup>
@@ -331,6 +332,54 @@
                                     </BSFormGroup>
                                 </BSFormRow>
                             }
+                            @if (Step.StepType == "DATASET")
+                            {
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Power BI Service</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+                                                </div>
+                                            </div>
+                                            <InputSelect class="form-control" @bind-Value="Step.PowerBIServiceId">
+                                                @foreach (var pbi in PowerBIServices)
+                                                {
+                                                    <option value="@pbi.PowerBIServiceId">@pbi.PowerBIServiceName</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col-lg">
+                                        <BSLabel>Group id</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col-lg">
+                                        <BSLabel>Dataset id</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                            }
+
                             <p class="text-danger">@StepError</p>
 
                             @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
@@ -401,10 +450,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                  .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                  .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                  .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                  .OrderBy(step => step.StepName))
+                                 .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                 .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                 .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                 .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
@@ -469,6 +518,8 @@
 
     private IList<DataFactory> DataFactories { get; set; }
 
+    private IList<PowerBIService> PowerBIServices { get; set; }
+
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
@@ -489,6 +540,7 @@
         Context = DbFactory.CreateDbContext();
         Connections = await Context.Connections.AsNoTracking().ToListAsync();
         DataFactories = await Context.DataFactories.AsNoTracking().ToListAsync();
+        PowerBIServices = await Context.PowerBIServices.AsNoTracking().ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -543,6 +595,10 @@
         else if (stepType == "JOB" && Step.JobToExecuteId is null)
         {
             Step.JobToExecuteId = Jobs?.Where(job => job.JobId != Job.JobId).FirstOrDefault()?.JobId;
+        }
+        else if (stepType == "DATASET" && Step.PowerBIServiceId is null)
+        {
+            Step.PowerBIServiceId = PowerBIServices?.FirstOrDefault()?.PowerBIServiceId;
         }
     }
 
@@ -617,6 +673,11 @@
         else if (Step.StepType == "PIPELINE" && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId is null))
         {
             StepError = "Pipeline name and Data Factory cannot be empty";
+            return;
+        }
+        else if (Step.StepType == "DATASET" && (string.IsNullOrWhiteSpace(Step.DatasetGroupId) || string.IsNullOrWhiteSpace(Step.DatasetId) || Step.PowerBIServiceId is null))
+        {
+            StepError = "Power BI Service, group id and dataset id cannot be empty";
             return;
         }
         else if (Step.StepType == "JOB" && Step.JobToExecuteId is null)

@@ -178,6 +178,19 @@ namespace EtlManagerUi.Data
                 {
                     step.JobToExecuteId = null;
                 }
+                if (step.StepType != "EXE")
+                {
+                    step.ExeFileName = null;
+                    step.ExeArguments = null;
+                    step.ExeSuccessExitCode = null;
+                    step.ExeWorkingDirectory = null;
+                }
+                if (step.StepType != "DATASET")
+                {
+                    step.PowerBIServiceId = null;
+                    step.DatasetGroupId = null;
+                    step.DatasetId = null;
+                }
             }
 
 

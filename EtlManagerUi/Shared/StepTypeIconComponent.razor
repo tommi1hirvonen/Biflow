@@ -20,6 +20,10 @@ else if (StepType == "EXE")
 {
     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/terminal.svg")))
 }
+else if (StepType == "DATASET")
+{
+    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+}
 
 @code {
     [Parameter]
