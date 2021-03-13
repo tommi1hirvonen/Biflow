@@ -92,7 +92,8 @@ namespace EtlManagerExecutor
                         @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
                             PackageFolderName, PackageProjectName, PackageName,
                             ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName,
-                            ExeFileName, ExeArguments, ExeWorkingDirectory, ExeSuccessExitCode
+                            ExeFileName, ExeArguments, ExeWorkingDirectory, ExeSuccessExitCode,
+                            PowerBIServiceId, DatasetGroupId, DatasetId
                         FROM etlmanager.Execution
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                         , sqlConnection);
@@ -141,6 +142,13 @@ namespace EtlManagerExecutor
                             var workingDirectory = reader["ExeWorkingDirectory"].ToString();
                             int? successExitCode = reader["ExeSuccessExitCode"] as int?;
                             stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
+                        }
+                        else if (stepType == "DATASET")
+                        {
+                            var powerBIServiceId = reader["PowerBIServiceId"].ToString();
+                            var groupId = reader["DatasetGroupId"].ToString();
+                            var datasetId = reader["DatasetId"].ToString();
+                            stepExecution = new DatasetStepExecution(Configuration, Step, powerBIServiceId, groupId, datasetId);
                         }
                         else
                         {
