@@ -54,6 +54,15 @@ namespace EtlManagerUi.Models
         [Display(Name = "Success exit code")]
         public int? ExeSuccessExitCode { get; set; }
 
+        [Display(Name = "Power BI Service id")]
+        public Guid? PowerBIServiceId { get; set; }
+        
+        [Display(Name = "Group id")]
+        public string DatasetGroupId { get; set; }
+
+        [Display(Name = "Dataset id")]
+        public string DatasetId { get; set; }
+
         [Display(Name = "Pipeline name")]
         public string PipelineName { get; set; }
 

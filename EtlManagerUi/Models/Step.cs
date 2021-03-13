@@ -70,6 +70,18 @@ namespace EtlManagerUi.Models
         [Display(Name = "Success exit code")]
         public int? ExeSuccessExitCode { get; set; }
 
+        public Guid? PowerBIServiceId { get; set; }
+        
+        [Display(Name = "Group id")]
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string DatasetGroupId { get; set; }
+
+        [Display(Name = "Dataset id")]
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string DatasetId { get; set; }
+
         public Guid? DataFactoryId { get; set; }
         
         [MaxLength(250)]
@@ -123,6 +135,8 @@ namespace EtlManagerUi.Models
         public DataFactory DataFactory { get; set; }
 
         public Connection Connection { get; set; }
+
+        public PowerBIService PowerBIService { get; set; }
 
         public int CompareTo(object obj)
         {
