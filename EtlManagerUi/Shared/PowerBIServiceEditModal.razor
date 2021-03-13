@@ -1,0 +1,80 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IConfiguration configuration
+
+<BSModal @ref="Modal" Size="Size.Large">
+    @if (PowerBIService is not null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(PowerBIServiceId == Guid.Empty ? "New Power BI Service" : "Edit " + PowerBIService.PowerBIServiceName)</BSModalHeader>
+        <BSModalBody>
+            <BSForm Model="PowerBIService" id="pbi_edit_form" OnValidSubmit="SubmitPowerBIService">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <BSFormGroup>
+                            <BSLabel>Power BI Service name</BSLabel>
+                            <InputText class="form-control" @bind-Value="PowerBIService.PowerBIServiceName"></InputText>
+                        </BSFormGroup>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Tenant id</BSLabel>
+                                <InputText class="form-control" @bind-Value="PowerBIService.TenantId"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Client id</BSLabel>
+                                <InputText class="form-control" @bind-Value="PowerBIService.ClientId"></InputText>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Client secret</BSLabel>
+                                <InputText class="form-control" @bind-Value="PowerBIService.ClientSecret" placeholder="@(PowerBIServiceId == Guid.Empty ? null : "Encrypted")"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                    </div>
+                </div>
+            </BSForm>
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="pbi_edit_form" Color="Color.Success">@(PowerBIServiceId == Guid.Empty ? "Create" : "Save")</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public Guid PowerBIServiceId { get; set; } // empty Guid => new Power BI Service
+
+    [Parameter]
+    public EventCallback<PowerBIService> OnPowerBIServiceSubmit { get; set; }
+
+    private PowerBIService PowerBIService { get; set; }
+
+    private BSModal Modal { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (PowerBIServiceId != Guid.Empty)
+        {
+            var context = DbFactory.CreateDbContext();
+            PowerBIService = await context.PowerBIServices.FindAsync(PowerBIServiceId);
+        }
+        else
+        {
+            PowerBIService = new();
+        }
+    }
+
+    private async Task SubmitPowerBIService()
+    {
+        await OnPowerBIServiceSubmit.InvokeAsync(PowerBIService);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}

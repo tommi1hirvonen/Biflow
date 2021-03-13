@@ -1,0 +1,147 @@
+﻿@inject IConfiguration configuration
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+
+@if (!IsEncryptionKeySet)
+{
+    <div class="alert alert-danger show" role="alert">
+        Encryption key is not set. Power BI Services cannot be added and previously created services will not work. Set the encryption key and reset the client secret for previously created Power BI Services.
+    </div>
+}
+else
+{
+    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+        Add Power BI Service
+    </BSButton>
+}
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Tenant id
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (PowerBIServices is null)
+            {
+                <tr><td colspan="4">Loading...</td></tr>
+            }
+            else if (PowerBIServices.Count == 0)
+            {
+                <tr><td colspan="4">No Power BI Services</td></tr>
+            }
+            else
+            {
+                @foreach (var pbi in PowerBIServices)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @pbi.PowerBIServiceName
+                        </td>
+                        <td class="align-middle">
+                            <BSButtonGroup Class="btn-row">
+                                @if (IsEncryptionKeySet)
+                                {
+                                    <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(pbi)">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </BSButton>
+                                }
+                                <BSDropdown>
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeletePowerBIService(pbi)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </BSButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @pbi.TenantId
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<PowerBIServiceEditModal @ref="PowerBIServiceEditModal" PowerBIServiceId="EditPowerBIServiceId" OnPowerBIServiceSubmit="OnPowerBIServiceSubmit" />
+
+@code {
+    private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
+
+    private List<PowerBIService> PowerBIServices { get; set; }
+
+    private Guid EditPowerBIServiceId { get; set; }
+    private PowerBIServiceEditModal PowerBIServiceEditModal { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+        PowerBIServices = await context.PowerBIServices.OrderBy(df => df.PowerBIServiceName).ToListAsync();
+    }
+
+    private async Task DeletePowerBIService(PowerBIService powerBIService)
+    {
+        var context = DbFactory.CreateDbContext();
+        context.Remove(powerBIService);
+        await context.SaveChangesAsync();
+        PowerBIServices.Remove(powerBIService);
+    }
+
+    private async void OnPowerBIServiceSubmit(PowerBIService powerBIService)
+    {
+        var context = DbFactory.CreateDbContext();
+        var existingService = PowerBIServices.FirstOrDefault(pbi => pbi.PowerBIServiceId == powerBIService.PowerBIServiceId);
+        string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
+
+        if (existingService is not null)
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceUpdate {0}, {1}, {2}, {3}, {4}, {5}", parameters: new string[]
+            {
+                powerBIService.PowerBIServiceId.ToString(),
+                powerBIService.PowerBIServiceName,
+                powerBIService.TenantId,
+                powerBIService.ClientId,
+                powerBIService.ClientSecret,
+                encryptionPassword
+            });
+        }
+        else
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceAdd {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            {
+                powerBIService.PowerBIServiceName,
+                powerBIService.TenantId,
+                powerBIService.ClientId,
+                powerBIService.ClientSecret,
+                encryptionPassword
+            });
+        }
+
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private void ShowEditModal(PowerBIService powerBIService)
+    {
+        EditPowerBIServiceId = powerBIService?.PowerBIServiceId ?? Guid.Empty;
+        PowerBIServiceEditModal.Show();
+    }
+}

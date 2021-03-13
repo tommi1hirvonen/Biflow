@@ -29,6 +29,7 @@ namespace EtlManagerUi.Data
         public DbSet<User> Users { get; set; }
         public DbSet<RoleUser> EditableUsers { get; set; }
         public DbSet<DataFactory> DataFactories { get; set; }
+        public DbSet<PowerBIService> PowerBIServices { get; set; }
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<Parameter> Parameters { get; set; }
@@ -126,7 +127,12 @@ namespace EtlManagerUi.Data
                 .ToTable("DataFactory")
                 .HasMany(df => df.Steps)
                 .WithOne(step => step.DataFactory);
-            
+
+            modelBuilder.Entity<PowerBIService>()
+                .ToTable("PowerBIService")
+                .HasMany(df => df.Steps)
+                .WithOne(step => step.PowerBIService);
+
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
                 .ToTable("vConnection")
