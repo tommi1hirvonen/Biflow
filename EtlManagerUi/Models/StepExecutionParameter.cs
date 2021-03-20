@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EtlManagerUi.Models
 {
@@ -12,7 +13,10 @@ namespace EtlManagerUi.Models
 
         public string ParameterName { get; set; }
 
-        public string ParameterValue { get; set; }
+        [Column(TypeName = "sql_variant")]
+        public object ParameterValue { get; set; }
+
+        public string ParameterType { get; set; }
 
         public StepExecution StepExecution { get; set; }
     }

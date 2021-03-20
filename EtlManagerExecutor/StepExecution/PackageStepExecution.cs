@@ -41,7 +41,7 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             // Get possible parameters.
-            Dictionary<string, object> parameters;
+            HashSet<Parameter> parameters;
             try
             {
                 parameters = await GetStepParameters();
@@ -136,7 +136,7 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
-        private async Task StartExecutionAsync(Dictionary<string, object> parameters)
+        private async Task StartExecutionAsync(HashSet<Parameter> parameters)
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
             var commandBuilder = new StringBuilder();
@@ -166,12 +166,15 @@ namespace EtlManagerExecutor
 
             foreach (var parameter in parameters)
             {
+                var objectType = parameter.Level == "Project" ? "20" : "30"; // 20 => project parameter; 30 => package parameter
+                // Same parameter name can be used for project and package parameter.
+                // Use level in addition to name to uniquely identify each parameter.
                 commandBuilder.Append(
                     @"EXEC [SSISDB].[catalog].[set_execution_parameter_value]
                         @execution_id,
-                        @object_type = 30,
-                        @parameter_name = @ParameterName" + parameter.Key + @",
-                        @parameter_value = @ParameterValue" + parameter.Key + "\n"
+                        @object_type = " + objectType + @",
+                        @parameter_name = @ParameterName" + parameter.Name + parameter.Level + @",
+                        @parameter_value = @ParameterValue" + parameter.Name + parameter.Level + "\n"
                     );
             }
 
@@ -190,8 +193,8 @@ namespace EtlManagerExecutor
 
             foreach (var parameter in parameters)
             {
-                executionCommand.Parameters.AddWithValue("@ParameterName" + parameter.Key, parameter.Key);
-                executionCommand.Parameters.AddWithValue("@ParameterValue" + parameter.Key, parameter.Value);
+                executionCommand.Parameters.AddWithValue("@ParameterName" + parameter.Name + parameter.Level, parameter.Name);
+                executionCommand.Parameters.AddWithValue("@ParameterValue" + parameter.Name + parameter.Level, parameter.Value);
             }
 
             await sqlConnection.OpenAsync(CancellationToken.None);

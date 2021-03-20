@@ -1,8 +1,8 @@
-﻿@implements IDisposable 
+﻿@implements IDisposable
 
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IJSRuntime JS 
+@inject IJSRuntime JS
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
     @if (Step is not null && Jobs is not null && Connections is not null && DataFactories is not null && Steps is not null)
@@ -11,7 +11,7 @@
         <BSModalBody>
             <div class="row">
                 <div class="col mx-3">
-                        
+
                     <BSForm id="step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
@@ -389,7 +389,12 @@
                                 <table id="parameters_table" class="table table-sm">
                                     <thead>
                                         <tr>
+                                            @if (Step.StepType == "SSIS")
+                                            {
+                                                <th>Level</th> 
+                                            }
                                             <th>Name</th>
+                                            <th>Type</th>
                                             <th>Value</th>
                                             <th></th>
                                         </tr>
@@ -398,11 +403,87 @@
                                         @foreach (var param in Step.Parameters)
                                         {
                                             <tr>
+                                                @if (Step.StepType == "SSIS")
+                                                { 
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterLevel">
+                                                                <option>Package</option>
+                                                                <option>Project</option>
+                                                            </InputSelect>
+                                                        </div>
+                                                    </td>
+                                                } 
                                                 <td>
                                                     <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
                                                 </td>
                                                 <td>
-                                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterValue"></BSBasicInput>
+                                                    <div class="input-group">
+                                                        <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
+                                                            <option>Boolean</option>
+                                                            <option>Byte</option>
+                                                            <option>DateTime</option>
+                                                            <option>Decimal</option>
+                                                            <option>Double</option>
+                                                            <option>Int16</option>
+                                                            <option>Int32</option>
+                                                            <option>Int64</option>
+                                                            <option>SByte</option>
+                                                            <option>Single</option>
+                                                            <option>String</option>
+                                                            <option>UInt32</option>
+                                                            <option>UInt64</option>
+                                                        </InputSelect>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    @switch (param.ParameterType)
+                                                    {
+                                                        case "Boolean":
+                                                            <div class="input-group">
+                                                                <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
+                                                                    <option value="True">True</option>
+                                                                    <option value="False">False</option>
+                                                                </InputSelectBoolean>
+                                                            </div>
+                                                            break;
+                                                        case "Byte":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
+                                                            break;
+                                                        case "DateTime":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
+                                                            break;
+                                                        case "Decimal":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
+                                                            break;
+                                                        case "Double":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
+                                                            break;
+                                                        case "Int16":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
+                                                            break;
+                                                        case "Int32":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
+                                                            break;
+                                                        case "Int64":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
+                                                            break;
+                                                        case "SByte":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
+                                                            break;
+                                                        case "Single":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
+                                                            break;
+                                                        case "String":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
+                                                            break;
+                                                        case "UInt32":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
+                                                            break;
+                                                        case "UInt64":
+                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
+                                                            break;
+                                                    }
                                                 </td>
                                                 <td>
                                                     <BSButtonGroup Size="Size.Small" Class="btn-row">
@@ -415,13 +496,14 @@
                                         }
                                     </tbody>
                                 </table>
-                                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Add(new Parameter())">
+                                var level = "Package"; var type = "String";
+                                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Add(new Parameter { ParameterLevel = level, ParameterType = type })">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
                                 </BSButton>
                             }
-                        }
-                        else
-                        {
+                            }
+                            else
+                            {
                             <div class="row mt-2 align-items-center">
                                 <div class="input-group input-group-sm col">
                                     <label class="sr-only">Search</label>
@@ -691,12 +773,35 @@
             return;
         }
 
-        if (Step.StepType == "SSIS" && !ParametersCheck())
+        if ((Step.StepType == "SSIS" || Step.StepType == "PIPELINE") && !ParametersCheck())
         {
             return;
         }
 
-        if (Step.StepType != "SSIS" && Step.StepType != "PIPELINE")
+        if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
+        {
+            foreach (var param in Step.Parameters)
+            {
+                param.ParameterValue = param.ParameterType switch
+                {
+                    "Boolean" => param.ValueBoolean,
+                    "Byte" => param.ValueByte,
+                    "DateTime" => param.ValueDateTime,
+                    "Decimal" => param.ValueDecimal,
+                    "Double" => param.ValueDouble,
+                    "Int16" => param.ValueInt16,
+                    "Int32" => param.ValueInt32,
+                    "Int64" => param.ValueInt64,
+                    "SByte" => param.ValueSByte,
+                    "Single" => param.ValueSingle,
+                    "String" => param.ValueString,
+                    "UInt32" => param.ValueUInt32,
+                    "UInt64" => param.ValueUInt64,
+                    _ => string.Empty
+                };
+            }
+        }
+        else
         {
             Step.Parameters.Clear();
         }
@@ -723,26 +828,27 @@
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error adding/editing step: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", $"Error adding/editing step: {ex.Message}\n{ex.InnerException?.Message}");
         }
     }
 
     private bool ParametersCheck()
     {
-        var parameters = Step.Parameters.OrderBy(param => param.ParameterName).ToList();
+        var parameters = Step.Parameters.OrderBy(param => param.ParameterName).ThenBy(param => param.ParameterLevel).ToList();
 
         foreach (var param in parameters)
         {
-            if (string.IsNullOrEmpty(param.ParameterName) || string.IsNullOrEmpty(param.ParameterValue))
+            if (string.IsNullOrEmpty(param.ParameterName))
             {
-                StepError = "Parameter name and value cannot be empty";
+                StepError = "Parameter name cannot be empty";
                 return false;
             }
         }
 
         for (var i = 0; i < parameters.Count - 1; i++)
         {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName
+                && parameters[i + 1].ParameterLevel == parameters[i].ParameterLevel)
             {
                 StepError = "Duplicate parameter names";
                 return false;

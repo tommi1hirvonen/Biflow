@@ -22,14 +22,14 @@ namespace EtlManagerExecutor
 
         public abstract Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken);
 
-        protected async Task<Dictionary<string, object>> GetStepParameters()
+        protected async Task<HashSet<Parameter>> GetStepParameters()
         {
-            var parameters = new Dictionary<string, object>();
+            var parameters = new HashSet<Parameter>();
             
             using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
             using var paramsCommand = new SqlCommand(
-                @"SELECT [ParameterName], [ParameterValue]
-                    FROM [etlmanager].[ExecutionParameter]
+                @"SELECT ParameterName, ParameterValue, ParameterLevel
+                    FROM etlmanager.ExecutionParameter
                     WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
             paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
@@ -40,8 +40,9 @@ namespace EtlManagerExecutor
             while (await reader.ReadAsync())
             {
                 var name = reader["ParameterName"].ToString();
-                var value = reader["ParameterValue"].ToString();
-                parameters[name] = value;
+                object value = reader["ParameterValue"];
+                var level = reader["ParameterLevel"].ToString();
+                parameters.Add(new(name, value, level));
             }
 
             return parameters;
