@@ -36,10 +36,12 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             // Get possible parameters.
+            HashSet<Parameter> parametersSet;
             IDictionary<string, object> parameters;
             try
             {
-                parameters = await GetStepParameters();
+                parametersSet = await GetStepParameters();
+                parameters = parametersSet.ToDictionary(param => param.Name, param => param.Value);
             }
             catch (Exception ex)
             {

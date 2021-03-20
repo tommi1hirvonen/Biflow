@@ -119,14 +119,18 @@ INSERT INTO etlmanager.ExecutionParameter (
 	ParameterId,
 	StepId,
 	ParameterName,
-	ParameterValue
+	ParameterValue,
+	ParameterLevel,
+	ParameterType
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
 	b.ParameterName,
-	b.ParameterValue
+	b.ParameterValue,
+	b.ParameterLevel,
+	b.ParameterType
 FROM etlmanager.Execution AS a
 	JOIN etlmanager.Parameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @EtlManagerExecutionId

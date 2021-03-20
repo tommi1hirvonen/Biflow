@@ -4,6 +4,8 @@
 	[ParameterId] UNIQUEIDENTIFIER NOT NULL,
 	[StepId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterName] NVARCHAR(128) NOT NULL,
-	[ParameterValue] NVARCHAR(4000) NOT NULL,
-	CONSTRAINT [PK_ExecutionParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId])
+	[ParameterValue] SQL_VARIANT NOT NULL,
+	[ParameterLevel] VARCHAR(20) NOT NULL,
+	[ParameterType] VARCHAR(20) NOT NULL, 
+    CONSTRAINT [PK_ExecutionParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId])
 )
