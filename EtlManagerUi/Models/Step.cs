@@ -116,7 +116,9 @@ namespace EtlManagerUi.Models
 
         public ICollection<Dependency> Dependencies { get; set; }
 
-        public IList<Parameter> Parameters { get; set; }
+        public IList<PackageParameter> PackageParameters { get; set; }
+
+        public IList<PipelineParameter> PipelineParameters { get; set; }
 
         public IList<Tag> Tags { get; set; }
 

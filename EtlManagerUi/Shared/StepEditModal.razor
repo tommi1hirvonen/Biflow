@@ -333,125 +333,8 @@
                             }
                             <p class="text-danger">@StepError</p>
 
-                            @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
-                            {
-                                <p />
-                                <h5>Parameters</h5>
-                                <table id="parameters_table" class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            @if (Step.StepType == "SSIS")
-                                            {
-                                                <th>Level</th> 
-                                            }
-                                            <th>Name</th>
-                                            <th>Type</th>
-                                            <th>Value</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var param in Step.Parameters)
-                                        {
-                                            <tr>
-                                                @if (Step.StepType == "SSIS")
-                                                { 
-                                                    <td>
-                                                        <div class="input-group">
-                                                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterLevel">
-                                                                <option>Package</option>
-                                                                <option>Project</option>
-                                                            </InputSelect>
-                                                        </div>
-                                                    </td>
-                                                } 
-                                                <td>
-                                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
-                                                </td>
-                                                <td>
-                                                    <div class="input-group">
-                                                        <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
-                                                            <option>Boolean</option>
-                                                            <option>Byte</option>
-                                                            <option>DateTime</option>
-                                                            <option>Decimal</option>
-                                                            <option>Double</option>
-                                                            <option>Int16</option>
-                                                            <option>Int32</option>
-                                                            <option>Int64</option>
-                                                            <option>SByte</option>
-                                                            <option>Single</option>
-                                                            <option>String</option>
-                                                            <option>UInt32</option>
-                                                            <option>UInt64</option>
-                                                        </InputSelect>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @switch (param.ParameterType)
-                                                    {
-                                                        case "Boolean":
-                                                            <div class="input-group">
-                                                                <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
-                                                                    <option value="True">True</option>
-                                                                    <option value="False">False</option>
-                                                                </InputSelectBoolean>
-                                                            </div>
-                                                            break;
-                                                        case "Byte":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
-                                                            break;
-                                                        case "DateTime":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
-                                                            break;
-                                                        case "Decimal":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
-                                                            break;
-                                                        case "Double":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
-                                                            break;
-                                                        case "Int16":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
-                                                            break;
-                                                        case "Int32":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
-                                                            break;
-                                                        case "Int64":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
-                                                            break;
-                                                        case "SByte":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
-                                                            break;
-                                                        case "Single":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
-                                                            break;
-                                                        case "String":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
-                                                            break;
-                                                        case "UInt32":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
-                                                            break;
-                                                        case "UInt64":
-                                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
-                                                            break;
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <BSButtonGroup Size="Size.Small" Class="btn-row">
-                                                        <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.Parameters.Remove(param)">
-                                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                                        </BSButton>
-                                                    </BSButtonGroup>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                                var level = "Package"; var type = "String";
-                                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.Parameters.Add(new Parameter { ParameterLevel = level, ParameterType = type })">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
-                                </BSButton>
-                            }
+                            <ParameterEditComponent Step="Step"/>
+                            
                             }
                             else
                             {
@@ -583,7 +466,8 @@
         if (StepId != Guid.Empty && StepId != PrevStepId)
         {
             Step = await Context.Steps
-                .Include(step => step.Parameters)
+                .Include(step => step.PackageParameters)
+                .Include(step => step.PipelineParameters)
                 .Include(step => step.Dependencies)
                 .Include(step => step.Tags)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
@@ -599,7 +483,8 @@
                 StepType = "SQL",
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-                Parameters = new List<Parameter>(),
+                PackageParameters = new List<PackageParameter>(),
+                PipelineParameters = new List<PipelineParameter>(),
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>()
             };
@@ -647,10 +532,15 @@
                     if (Step.Dependencies.Contains(dependency))
                         Step.Dependencies.Remove(dependency);
                 }
-                else if (entity.Entity is Parameter parameter)
+                else if (entity.Entity is PackageParameter packageParam)
                 {
-                    if (Step.Parameters.Contains(parameter))
-                        Step.Parameters.Remove(parameter);
+                    if (Step.PackageParameters.Contains(packageParam))
+                        Step.PackageParameters.Remove(packageParam);
+                }
+                else if (entity.Entity is PipelineParameter pipelineParam)
+                {
+                    if (Step.PipelineParameters.Contains(pipelineParam))
+                        Step.PipelineParameters.Remove(pipelineParam);
                 }
                 entity.State = EntityState.Detached;
             }
@@ -663,10 +553,15 @@
                     if (!Step.Dependencies.Contains(dependency))
                         Step.Dependencies.Add(dependency);
                 }
-                else if (entity.Entity is Parameter parameter)
+                else if (entity.Entity is PackageParameter packageParam)
                 {
-                    if (!Step.Parameters.Contains(parameter))
-                        Step.Parameters.Add(parameter);
+                    if (!Step.PackageParameters.Contains(packageParam))
+                        Step.PackageParameters.Add(packageParam);
+                }
+                else if (entity.Entity is PipelineParameter pipelineParam)
+                {
+                    if (!Step.PipelineParameters.Contains(pipelineParam))
+                        Step.PipelineParameters.Add(pipelineParam);
                 }
                 entity.State = EntityState.Unchanged;
             }
@@ -684,6 +579,7 @@
     {
         StepError = string.Empty;
 
+        // Check various requirements based on step type.
         if (Step.StepType == "SQL" && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId is null))
         {
             StepError = "SQL statement and connection cannot be empty";
@@ -717,41 +613,38 @@
             return;
         }
 
-        if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
+        // Process parameters based on step type.
+        if (Step.StepType == "SSIS")
         {
-            foreach (var param in Step.Parameters)
+            foreach (var param in Step.PackageParameters)
             {
-                param.ParameterValue = param.ParameterType switch
-                {
-                    "Boolean" => param.ValueBoolean,
-                    "Byte" => param.ValueByte,
-                    "DateTime" => param.ValueDateTime,
-                    "Decimal" => param.ValueDecimal,
-                    "Double" => param.ValueDouble,
-                    "Int16" => param.ValueInt16,
-                    "Int32" => param.ValueInt32,
-                    "Int64" => param.ValueInt64,
-                    "SByte" => param.ValueSByte,
-                    "Single" => param.ValueSingle,
-                    "String" => param.ValueString,
-                    "UInt32" => param.ValueUInt32,
-                    "UInt64" => param.ValueUInt64,
-                    _ => string.Empty
-                };
+                param.SetParameterValue();
             }
+            Step.PipelineParameters.Clear();
+        }
+        else if (Step.StepType == "PIPELINE")
+        {
+            foreach (var param in Step.PipelineParameters)
+            {
+                param.SetParameterValue();
+            }
+            Step.PackageParameters.Clear();
         }
         else
         {
-            Step.Parameters.Clear();
+            Step.PackageParameters.Clear();
+            Step.PipelineParameters.Clear();
         }
 
-
+        // Save changes.
         try
         {
+            // Existing step
             if (Step.StepId != Guid.Empty)
             {
                 Context.Attach(Step).State = EntityState.Modified;
             }
+            // New step
             else
             {
                 Context.Steps.Add(Step);
@@ -773,24 +666,45 @@
 
     private bool ParametersCheck()
     {
-        var parameters = Step.Parameters.OrderBy(param => param.ParameterName).ThenBy(param => param.ParameterLevel).ToList();
-
-        foreach (var param in parameters)
+        if (Step.StepType == "SSIS")
         {
-            if (string.IsNullOrEmpty(param.ParameterName))
+            var parameters = Step.PackageParameters.OrderBy(param => param.ParameterName).ThenBy(param => param.ParameterLevel).ToList();
+            foreach (var param in parameters)
             {
-                StepError = "Parameter name cannot be empty";
-                return false;
+                if (string.IsNullOrEmpty(param.ParameterName))
+                {
+                    StepError = "Parameter name cannot be empty";
+                    return false;
+                }
+            }
+            for (var i = 0; i < parameters.Count - 1; i++)
+            {
+                if (parameters[i + 1].ParameterName == parameters[i].ParameterName
+                    && parameters[i + 1].ParameterLevel == parameters[i].ParameterLevel)
+                {
+                    StepError = "Duplicate parameter names";
+                    return false;
+                }
             }
         }
-
-        for (var i = 0; i < parameters.Count - 1; i++)
+        else if (Step.StepType == "PIPELINE")
         {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName
-                && parameters[i + 1].ParameterLevel == parameters[i].ParameterLevel)
+            var parameters = Step.PipelineParameters.OrderBy(param => param.ParameterName).ToList();
+            foreach (var param in parameters)
             {
-                StepError = "Duplicate parameter names";
-                return false;
+                if (string.IsNullOrEmpty(param.ParameterName))
+                {
+                    StepError = "Parameter name cannot be empty";
+                    return false;
+                }
+            }
+            for (var i = 0; i < parameters.Count - 1; i++)
+            {
+                if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+                {
+                    StepError = "Duplicate parameter names";
+                    return false;
+                }
             }
         }
 

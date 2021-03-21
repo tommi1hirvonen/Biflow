@@ -36,12 +36,10 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             // Get possible parameters.
-            HashSet<Parameter> parametersSet;
             IDictionary<string, object> parameters;
             try
             {
-                parametersSet = await GetStepParameters();
-                parameters = parametersSet.ToDictionary(param => param.Name, param => param.Value);
+                parameters = await GetStepParameters();
             }
             catch (Exception ex)
             {
@@ -147,6 +145,31 @@ namespace EtlManagerExecutor
             {
                 return new ExecutionResult.Failure(pipelineRun.Message);
             }
+        }
+
+        private async Task<Dictionary<string, object>> GetStepParameters()
+        {
+            var parameters = new Dictionary<string, object>();
+
+            using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
+            using var paramsCommand = new SqlCommand(
+                @"SELECT ParameterName, ParameterValue
+                    FROM etlmanager.ExecutionParameter
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel = 'Pipeline'"
+                , sqlConnection);
+            paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
+            paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+
+            await sqlConnection.OpenAsync();
+            using var reader = await paramsCommand.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var name = reader["ParameterName"].ToString();
+                object value = reader["ParameterValue"];
+                parameters[name] = value;
+            }
+
+            return parameters;
         }
 
         private async Task<PipelineRun> TryGetPipelineRunAsync(CancellationToken cancellationToken)

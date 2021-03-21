@@ -143,13 +143,27 @@
                     </dd>
                 }
             </dl>
-            @if (Step.StepType == "SSIS" || Step.StepType == "PIPELINE")
+            @if (Step.StepType == "SSIS")
             {
                 <h6>Parameters</h6>
-                @if (Step.Parameters is not null)
+                @if (Step.PackageParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in Step.Parameters)
+                        @foreach (var param in Step.PackageParameters)
+                        {
+                            <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
+                            <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
+                        }
+                    </dl>
+                }
+            }
+            else if (Step.StepType == "PIPELINE")
+            {
+                <h6>Parameters</h6>
+                @if (Step.PipelineParameters is not null)
+                {
+                    <dl class="row">
+                        @foreach (var param in Step.PackageParameters)
                         {
                             <dt class="col-sm-3">@param.ParameterName</dt>
                             <dd class="col-sm-9">@param.ParameterValue</dd>
@@ -157,7 +171,6 @@
                     </dl>
                 }
             }
-
         </BSModalBody>
     }
     <BSModalFooter>
