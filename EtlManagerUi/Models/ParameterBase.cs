@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerUi.Models
 {
-    public class Parameter
+    public abstract class ParameterBase
     {
         [Key]
         [Required]
@@ -86,9 +86,6 @@ namespace EtlManagerUi.Models
         [Required]
         public string ParameterType { get; set; }
 
-        [Required]
-        public string ParameterLevel { get; set; }
-
         [NotMapped]
         public bool ValueBoolean { get; set; }
         [NotMapped]
@@ -116,5 +113,25 @@ namespace EtlManagerUi.Models
         [NotMapped]
         public ulong ValueUInt64 { get; set; }
 
+        public void SetParameterValue()
+        {
+            ParameterValue = ParameterType switch
+            {
+                "Boolean" => ValueBoolean,
+                "Byte" => ValueByte,
+                "DateTime" => ValueDateTime,
+                "Decimal" => ValueDecimal,
+                "Double" => ValueDouble,
+                "Int16" => ValueInt16,
+                "Int32" => ValueInt32,
+                "Int64" => ValueInt64,
+                "SByte" => ValueSByte,
+                "Single" => ValueSingle,
+                "String" => ValueString,
+                "UInt32" => ValueUInt32,
+                "UInt64" => ValueUInt64,
+                _ => string.Empty
+            };
+        }
     }
 }

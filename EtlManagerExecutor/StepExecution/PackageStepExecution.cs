@@ -202,6 +202,32 @@ namespace EtlManagerExecutor
             PackageOperationId = (long)await executionCommand.ExecuteScalarAsync();
         }
 
+        private async Task<HashSet<Parameter>> GetStepParameters()
+        {
+            var parameters = new HashSet<Parameter>();
+
+            using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
+            using var paramsCommand = new SqlCommand(
+                @"SELECT ParameterName, ParameterValue, ParameterLevel
+                    FROM etlmanager.ExecutionParameter
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel IN ('Package','Project')"
+                , sqlConnection);
+            paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
+            paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+
+            await sqlConnection.OpenAsync();
+            using var reader = await paramsCommand.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var name = reader["ParameterName"].ToString();
+                object value = reader["ParameterValue"];
+                var level = reader["ParameterLevel"].ToString();
+                parameters.Add(new(name, value, level));
+            }
+
+            return parameters;
+        }
+
         private async Task TryRefreshStatusAsync(CancellationToken cancellationToken)
         {
             int refreshRetries = 0;

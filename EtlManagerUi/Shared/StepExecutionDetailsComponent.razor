@@ -1,74 +1,74 @@
 ﻿@if (StepExecution is not null)
 {
-<dl class="row">
-    <dt class="col-sm-3">
-        Execution id
-    </dt>
-    <dd class="col-sm-9">
-        @StepExecution.ExecutionId
-    </dd>
-    <dt class="col-sm-3">
-        Executor PID
-    </dt>
-    <dd class="col-sm-9">
-        @StepExecution.ExecutorProcessId
-    </dd>
-    <dt class="col-sm-3">
-        Job
-    </dt>
-    <dd class="col-sm-9">
-        @StepExecution.JobName
-    </dd>
-    <dt class="col-sm-3">
-        Created by
-    </dt>
-    <dd class="col-sm-9">
-        @StepExecution.CreatedBy
-    </dd>
-    <dt class="col-sm-3">
-        Created
-    </dt>
-    <dd class="col-sm-9">
-        @StepExecution.CreatedDateTime
-    </dd>
+    <dl class="row">
+        <dt class="col-sm-3">
+            Execution id
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.ExecutionId
+        </dd>
+        <dt class="col-sm-3">
+            Executor PID
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.ExecutorProcessId
+        </dd>
+        <dt class="col-sm-3">
+            Job
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.JobName
+        </dd>
+        <dt class="col-sm-3">
+            Created by
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.CreatedBy
+        </dd>
+        <dt class="col-sm-3">
+            Created
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.CreatedDateTime
+        </dd>
 
-    @if (ShowExtraDetails)
-    {
-        <dt class="col-sm-3">
-            Started
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.StartDateTime
-        </dd>
-        <dt class="col-sm-3">
-            Ended
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.EndDateTime
-        </dd>
-        <dt class="col-sm-3">
-            <text>Duration</text>
-        </dt>
-        <dd class="col-sm-9">
-            <text>@StepExecution.GetDurationInReadableFormat()</text>
-        </dd>
-        <dt class="col-sm-3">
-            Status
-        </dt>
-        <dd class="col-sm-9">
-            <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
-        </dd>
-    }
+        @if (ShowExtraDetails)
+        {
+            <dt class="col-sm-3">
+                Started
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.StartDateTime
+            </dd>
+            <dt class="col-sm-3">
+                Ended
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.EndDateTime
+            </dd>
+            <dt class="col-sm-3">
+                <text>Duration</text>
+            </dt>
+            <dd class="col-sm-9">
+                <text>@StepExecution.GetDurationInReadableFormat()</text>
+            </dd>
+            <dt class="col-sm-3">
+                Status
+            </dt>
+            <dd class="col-sm-9">
+                <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
+            </dd>
+        }
 
-    @if (StepExecution.ExecutionStatus == "STOPPED")
-    {
-        <dt class="col-sm-3">
-            Stopped by
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.StoppedBy
-        </dd>
-    }
+        @if (StepExecution.ExecutionStatus == "STOPPED")
+        {
+            <dt class="col-sm-3">
+                Stopped by
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.StoppedBy
+            </dd>
+        }
 
     @if (StepExecution.StepType == "SQL")
     {
@@ -127,27 +127,6 @@
             @StepExecution.DataFactoryId
         </dd>
     }
-    else if (StepExecution.StepType == "DATASET")
-    {
-        <dt class="col-sm-3">
-            Group id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.DatasetGroupId
-        </dd>
-        <dt class="col-sm-3">
-            Dataset id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.DatasetId
-        </dd>
-        <dt class="col-sm-3">
-            Power BI Service id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PowerBIServiceId
-        </dd>
-    }
     else if (StepExecution.StepType == "EXE")
     {
         <dt class="col-sm-3">
@@ -181,22 +160,54 @@
             <pre><code>@StepExecution.InfoMessage</code></pre>
         </dd>
     }
+    else if (StepExecution.StepType == "DATASET")
+    {
+        <dt class="col-sm-3">
+            Group id
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.DatasetGroupId
+        </dd>
+        <dt class="col-sm-3">
+            Dataset id
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.DatasetId
+        </dd>
+        <dt class="col-sm-3">
+            Power BI Service id
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecution.PowerBIServiceId
+        </dd>
+    }
 
-    <dt class="col-sm-3">
-        Error message
-    </dt>
-    <dd class="col-sm-9">
-        <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
-    </dd>
-</dl>
-    @if (StepExecution.StepType == "SSIS" || StepExecution.StepType == "PIPELINE")
+        <dt class="col-sm-3">
+            Error message
+        </dt>
+        <dd class="col-sm-9">
+            <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
+        </dd>
+    </dl>
+    @if (StepExecution.StepType == "SSIS")
+    {
+        <h6>Parameters</h6>
+        <dl class="row">
+            @foreach (var param in StepExecution.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
+            {
+                <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
+                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
+            }
+        </dl>
+    }
+    else if (StepExecution.StepType == "PIPELINE")
     {
         <h6>Parameters</h6>
         <dl class="row">
             @foreach (var param in StepExecution.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
             {
                 <dt class="col-sm-3">@param.ParameterName</dt>
-                <dd class="col-sm-9">@param.ParameterValue</dd>
+                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
             }
         </dl>
     }

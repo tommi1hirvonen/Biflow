@@ -81,7 +81,7 @@
     <Build Include="Security\etlmanager.sql" />
     <Build Include="etlmanager\Views\vExecutionJob.sql" />
     <Build Include="etlmanager\Stored Procedures\JobCopy.sql" />
-    <Build Include="etlmanager\Tables\Parameter.sql" />
+    <Build Include="etlmanager\Tables\PackageParameter.sql" />
     <Build Include="etlmanager\Tables\Subscription.sql" />
     <Build Include="etlmanager\Stored Procedures\StepCopy.sql" />
     <Build Include="etlmanager\Views\vUser.sql" />
@@ -102,6 +102,7 @@
     <Build Include="etlmanager\Views\vExecutionParameter.sql" />
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
+    <Build Include="etlmanager\Tables\PipelineParameter.sql" />
     <Build Include="etlmanager\Tables\PowerBIService.sql" />
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceAdd.sql" />
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceUpdate.sql" />

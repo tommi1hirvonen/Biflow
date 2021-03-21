@@ -493,7 +493,7 @@
             {
                 using var context = DbFactory.CreateDbContext();
                 var createdStep = await context.Steps
-                    .Include(step => step.Parameters)
+                    .Include(step => step.PackageParameters)
                     .Include(step => step.Dependencies)
                     .Include(step => step.Tags)
                     .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);

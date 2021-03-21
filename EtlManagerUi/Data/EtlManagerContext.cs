@@ -32,7 +32,8 @@ namespace EtlManagerUi.Data
         public DbSet<PowerBIService> PowerBIServices { get; set; }
         public DbSet<Connection> Connections { get; set; }
         public DbSet<Tag> Tags { get; set; }
-        public DbSet<Parameter> Parameters { get; set; }
+        public DbSet<PackageParameter> PackageParameters { get; set; }
+        public DbSet<PipelineParameter> PipelineParameters { get; set; }
         public DbSet<StepExecutionParameter> ExecutionParameters { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -83,13 +84,24 @@ namespace EtlManagerUi.Data
                 .WithMany(job => job.Schedules)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            
-            modelBuilder.Entity<Parameter>()
-                .ToTable("Parameter")
+
+            modelBuilder.Entity<PackageParameter>(e =>
+            {
+                e.ToTable("PackageParameter")
                 .HasOne(parameter => parameter.Step)
-                .WithMany(step => step.Parameters)
+                .WithMany(step => step.PackageParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<PipelineParameter>(e =>
+            { 
+                e.ToTable("PipelineParameter")
+                .HasOne(parameter => parameter.Step)
+                .WithMany(step => step.PipelineParameters)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder.Entity<StepExecutionParameter>()
                 .ToTable("vExecutionParameter")

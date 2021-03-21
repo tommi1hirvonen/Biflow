@@ -18,6 +18,8 @@ namespace EtlManagerUi.Models
 
         public string ParameterType { get; set; }
 
+        public string ParameterLevel { get; set; }
+
         public StepExecution StepExecution { get; set; }
     }
 }

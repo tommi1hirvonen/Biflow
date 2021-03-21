@@ -119,7 +119,7 @@ WHERE a.JobId = @JobId
 	)
 
 
--- Store and historize the parameters.
+-- Store and historize package execution parameters.
 INSERT INTO etlmanager.ExecutionParameter (
 	ExecutionId,
 	ParameterId,
@@ -138,7 +138,29 @@ SELECT
 	b.ParameterLevel,
 	b.ParameterType
 FROM etlmanager.Execution AS a
-	JOIN etlmanager.Parameter AS b ON b.StepId = a.StepId
+	JOIN etlmanager.PackageParameter AS b ON b.StepId = a.StepId
+WHERE a.ExecutionId = @EtlManagerExecutionId
+
+-- Store and historize pipeline execution parameters.
+INSERT INTO etlmanager.ExecutionParameter (
+	ExecutionId,
+	ParameterId,
+	StepId,
+	ParameterName,
+	ParameterValue,
+	ParameterLevel,
+	ParameterType
+)
+SELECT
+	a.ExecutionId,
+	b.ParameterId,
+	b.StepId,
+	b.ParameterName,
+	b.ParameterValue,
+	'Pipeline' AS ParameterLevel,
+	b.ParameterType
+FROM etlmanager.Execution AS a
+	JOIN etlmanager.PipelineParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 
