@@ -1,6 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IConfiguration configuration
+@inject IJSRuntime JS
 
 <BSModal @ref="Modal" Size="Size.Large">
     @if (Connection is not null)
@@ -40,6 +41,32 @@
                                    @bind-value="Connection.IsSensitive">
                             <label class="custom-control-label" for="chk_sensitive">Sensitive</label>
                         </div>
+
+                        <div class="row mt-2">
+                            <div class="col">
+                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                    Test connection
+                                </BSButton>
+                                @if (TestingConnection)
+                                {
+                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                @if (ConnectionTestSuccess == true)
+                                {
+                                    <span class="badge badge-success">Success</span>
+                                }
+                                else if (ConnectionTestSuccess == false)
+                                {
+                                    <span class="badge badge-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             </BSForm>
@@ -64,6 +91,9 @@
 
     private bool IsEncryptionKeySet { get; set; }
 
+    private bool? ConnectionTestSuccess { get; set; } = null;
+    private bool TestingConnection { get; set; } = false;
+
     protected override async Task OnInitializedAsync()
     {
         IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
@@ -80,12 +110,32 @@
         {
             Connection = new();
         }
+        ConnectionTestSuccess = null;
+        TestingConnection = false;
     }
 
     private async Task SubmitConnection()
     {
         await OnConnectionSubmit.InvokeAsync(Connection);
         Modal.Hide();
+    }
+
+    private async Task TestConnection()
+    {
+        ConnectionTestSuccess = null;
+        TestingConnection = true;
+        try
+        {
+            using var connection = new SqlConnection(Connection.ConnectionString);
+            await connection.OpenAsync();
+            ConnectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestSuccess = false;
+            await JS.InvokeVoidAsync("alert", ex.Message);
+        }
+        TestingConnection = false;
     }
 
     public void Show() => Modal.Show();

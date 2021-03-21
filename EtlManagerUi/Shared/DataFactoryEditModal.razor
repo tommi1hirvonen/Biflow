@@ -1,5 +1,10 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@using Microsoft.Azure.Management.DataFactory
+@using Microsoft.IdentityModel.Clients.ActiveDirectory
+@using Microsoft.Rest
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
+@inject IJSRuntime JS
 
 <BSModal @ref="Modal" Size="Size.Large">
     @if (DataFactory is not null)
@@ -49,7 +54,31 @@
                                 <InputText class="form-control" @bind-Value="DataFactory.ClientSecret" placeholder="@(DataFactoryId == Guid.Empty ? null : "Encrypted")"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
-
+                        <div class="row mt-2">
+                            <div class="col">
+                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                    Test connection
+                                </BSButton>
+                                @if (TestingConnection)
+                                {
+                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                @if (ConnectionTestSuccess == true)
+                                {
+                                    <span class="badge badge-success">Success</span>
+                                }
+                                else if (ConnectionTestSuccess == false)
+                                {
+                                    <span class="badge badge-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             </BSForm>
@@ -72,6 +101,9 @@
 
     private BSModal Modal { get; set; }
 
+    private bool? ConnectionTestSuccess { get; set; } = null;
+    private bool TestingConnection { get; set; } = false;
+
     protected override async Task OnParametersSetAsync()
     {
         if (DataFactoryId != Guid.Empty)
@@ -83,12 +115,36 @@
         {
             DataFactory = new();
         }
+        ConnectionTestSuccess = null;
+        TestingConnection = false;
     }
 
     private async Task SubmitDataFactory()
     {
         await OnDataFactorySubmit.InvokeAsync(DataFactory);
         Modal.Hide();
+    }
+
+    private async Task TestConnection()
+    {
+        ConnectionTestSuccess = null;
+        TestingConnection = true;
+        try
+        {
+            var context = new AuthenticationContext("https://login.microsoftonline.com/" + DataFactory.TenantId);
+            var clientCredential = new ClientCredential(DataFactory.ClientId, DataFactory.ClientSecret);
+            var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
+            var credentials = new TokenCredentials(result.AccessToken);
+            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
+            var dataFactory = await client.Factories.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName);
+            ConnectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestSuccess = false;
+            await JS.InvokeVoidAsync("alert", ex.Message);
+        }
+        TestingConnection = false;
     }
 
     public void Show() => Modal.Show();
