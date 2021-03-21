@@ -152,18 +152,38 @@ FROM etlmanager.Dependency AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 	INNER JOIN #StepIdMapping AS C ON A.DependantOnStepId = C.StepId
 
--- Copy parameters
-INSERT INTO etlmanager.Parameter (
+-- Copy package parameters
+INSERT INTO etlmanager.PackageParameter (
+	ParameterId,
+	StepId,
+	ParameterLevel,
+	ParameterName,
+	ParameterType,
+	ParameterValue
+)
+SELECT NEWID(),
+	B.StepIdNew,
+	A.ParameterLevel,
+	A.ParameterName,
+	A.ParameterType,
+	A.ParameterValue
+FROM etlmanager.PackageParameter AS A
+	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+
+-- Copy pipeline parameters
+INSERT INTO etlmanager.PipelineParameter (
 	ParameterId,
 	StepId,
 	ParameterName,
+	ParameterType,
 	ParameterValue
 )
 SELECT NEWID(),
 	B.StepIdNew,
 	A.ParameterName,
+	A.ParameterType,
 	A.ParameterValue
-FROM etlmanager.Parameter AS A
+FROM etlmanager.PipelineParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 
 -- Copy tags
