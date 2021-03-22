@@ -25,6 +25,9 @@ namespace EtlManagerUi.Models
         [Display(Name = "Sensitive")]
         public bool IsSensitive { get; set; }
 
+        [Display(Name = "Execute packages as login")]
+        public string ExecutePackagesAsLogin { get; set; }
+
         public IList<Step> Steps { get; set; }
     }
 }

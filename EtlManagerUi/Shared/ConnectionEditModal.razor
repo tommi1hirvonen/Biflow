@@ -42,6 +42,18 @@
                             <label class="custom-control-label" for="chk_sensitive">Sensitive</label>
                         </div>
 
+                        <BSFormGroup Class="mt-2">
+                            <BSLabel>Execute SSIS packages as login (blank = no impersonation)</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                    </div>
+                                </div>
+                                <InputText class="form-control" @bind-Value="Connection.ExecutePackagesAsLogin"></InputText>
+                            </div>
+                        </BSFormGroup>
+
                         <div class="row mt-2">
                             <div class="col">
                                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">

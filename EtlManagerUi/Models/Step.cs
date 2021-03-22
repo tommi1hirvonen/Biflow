@@ -55,6 +55,9 @@ namespace EtlManagerUi.Models
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
+        [Display(Name = "Execute as login")]
+        public string ExecuteAsLogin { get; set; }
+
         [Display(Name = "Job to execute")]
         public Guid? JobToExecuteId { get; set; }
 

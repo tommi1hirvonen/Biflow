@@ -176,6 +176,7 @@ namespace EtlManagerUi.Data
                     step.PackageFolderName = null;
                     step.PackageProjectName = null;
                     step.PackageName = null;
+                    step.ExecuteAsLogin = null;
                 }
                 if (step.StepType != "SQL" && step.StepType != "SSIS")
                 {

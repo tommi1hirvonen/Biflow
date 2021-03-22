@@ -70,118 +70,123 @@
             </dd>
         }
 
-    @if (StepExecution.StepType == "SQL")
-    {
-        <dt class="col-sm-3">
-            SQL statement
-        </dt>
-        <dd class="col-sm-9">
-            <pre><code>@StepExecution.SqlStatement</code></pre>
-        </dd>
-        <dt class="col-sm-3">
-            Info message
-        </dt>
-        <dd class="col-sm-9">
-            <pre><code>@StepExecution.InfoMessage</code></pre>
-        </dd>
-    }
-    else if (StepExecution.StepType == "SSIS")
-    {
-        <dt class="col-sm-3">
-            Package path
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PackagePath
-        </dd>
-        <dt class="col-sm-3">
-            32 bit mode
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.ExecuteIn32BitMode
-        </dd>
-        <dt class="col-sm-3">
-            Operation id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PackageOperationId
-        </dd>
-    }
-    else if (StepExecution.StepType == "PIPELINE")
-    {
-        <dt class="col-sm-3">
-            Pipeline name
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PipelineName
-        </dd>
-        <dt class="col-sm-3">
-            Pipeline run id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PipelineRunId
-        </dd>
-        <dt class="col-sm-3">
-            Data Factory id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.DataFactoryId
-        </dd>
-    }
-    else if (StepExecution.StepType == "EXE")
-    {
-        <dt class="col-sm-3">
-            File path
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.ExeFileName
-        </dd>
-        <dt class="col-sm-3">
-            Arguments
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.ExeArguments
-        </dd>
-        <dt class="col-sm-3">
-            Working directory
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.ExeWorkingDirectory
-        </dd>
-        <dt class="col-sm-3">
-            Success exit code
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.ExeSuccessExitCode
-        </dd>
-        <dt class="col-sm-3">
-            Output
-        </dt>
-        <dd class="col-sm-9">
-            <pre><code>@StepExecution.InfoMessage</code></pre>
-        </dd>
-    }
-    else if (StepExecution.StepType == "DATASET")
-    {
-        <dt class="col-sm-3">
-            Group id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.DatasetGroupId
-        </dd>
-        <dt class="col-sm-3">
-            Dataset id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.DatasetId
-        </dd>
-        <dt class="col-sm-3">
-            Power BI Service id
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecution.PowerBIServiceId
-        </dd>
-    }
-
+        @if (StepExecution.StepType == "SQL")
+        {
+            <dt class="col-sm-3">
+                SQL statement
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@StepExecution.SqlStatement</code></pre>
+            </dd>
+            <dt class="col-sm-3">
+                Info message
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@StepExecution.InfoMessage</code></pre>
+            </dd>
+        }
+        else if (StepExecution.StepType == "SSIS")
+        {
+            <dt class="col-sm-3">
+                Package path
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PackagePath
+            </dd>
+            <dt class="col-sm-3">
+                32 bit mode
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExecuteIn32BitMode
+            </dd>
+            <dt class="col-sm-3">
+                Execute as login
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExecuteAsLogin
+            </dd>
+            <dt class="col-sm-3">
+                Operation id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PackageOperationId
+            </dd>
+        }
+        else if (StepExecution.StepType == "PIPELINE")
+        {
+            <dt class="col-sm-3">
+                Pipeline name
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PipelineName
+            </dd>
+            <dt class="col-sm-3">
+                Pipeline run id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PipelineRunId
+            </dd>
+            <dt class="col-sm-3">
+                Data Factory id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.DataFactoryId
+            </dd>
+        }
+        else if (StepExecution.StepType == "EXE")
+        {
+            <dt class="col-sm-3">
+                File path
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExeFileName
+            </dd>
+            <dt class="col-sm-3">
+                Arguments
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExeArguments
+            </dd>
+            <dt class="col-sm-3">
+                Working directory
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExeWorkingDirectory
+            </dd>
+            <dt class="col-sm-3">
+                Success exit code
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.ExeSuccessExitCode
+            </dd>
+            <dt class="col-sm-3">
+                Output
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@StepExecution.InfoMessage</code></pre>
+            </dd>
+        }
+        else if (StepExecution.StepType == "DATASET")
+        {
+            <dt class="col-sm-3">
+                Group id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.DatasetGroupId
+            </dd>
+            <dt class="col-sm-3">
+                Dataset id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.DatasetId
+            </dd>
+            <dt class="col-sm-3">
+                Power BI Service id
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecution.PowerBIServiceId
+            </dd>
+        }
         <dt class="col-sm-3">
             Error message
         </dt>

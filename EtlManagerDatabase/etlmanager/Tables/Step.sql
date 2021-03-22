@@ -11,6 +11,7 @@
     [PackageProjectName]        NVARCHAR(128)    NULL,
     [PackageName]               NVARCHAR(260)    NULL,
     [ExecuteIn32BitMode]        BIT              CONSTRAINT [DF_Step_ExecuteIn32BitMode] DEFAULT (0) NOT NULL,
+    [ExecuteAsLogin]            NVARCHAR(128)    NULL,
     [DataFactoryId]             UNIQUEIDENTIFIER CONSTRAINT [FK_Step_DataFactory] FOREIGN KEY REFERENCES etlmanager.DataFactory ([DataFactoryId]) NULL,
     [PipelineName]              NVARCHAR(250)    NULL,
     [JobToExecuteId]            UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_JobToExecute] FOREIGN KEY REFERENCES [etlmanager].[Job] ([JobId]),

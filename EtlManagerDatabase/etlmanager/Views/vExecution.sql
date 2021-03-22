@@ -30,6 +30,7 @@ SELECT
 	,a.[PackageProjectName]
 	,a.[PackageName]
 	,a.[ExecuteIn32BitMode]
+	,a.[ExecuteAsLogin]
 	,a.[ErrorMessage]
 	,a.[InfoMessage]
 	,a.[PackageOperationId]

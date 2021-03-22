@@ -23,6 +23,7 @@
     [PackageProjectName]        NVARCHAR(128)       NULL,
     [PackageName]               NVARCHAR(260)       NULL,
     [ExecuteIn32BitMode]        BIT                 NOT NULL,
+    [ExecuteAsLogin]            NVARCHAR(128)       NULL,
     [PackageOperationId]        BIGINT              NULL,
     [DataFactoryId]             UNIQUEIDENTIFIER    NULL,
     [PipelineName]              NVARCHAR(250)       NULL,
