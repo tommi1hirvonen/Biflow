@@ -90,8 +90,9 @@ namespace EtlManagerExecutor
                 {
                     using var stepDetailsCmd = new SqlCommand(
                         @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
-                            PackageFolderName, PackageProjectName, PackageName,
-                            ExecuteIn32BitMode, JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName,
+                            PackageFolderName, PackageProjectName, PackageName, ExecuteIn32BitMode, ExecuteAsLogin,
+                            etlmanager.GetExecutePackagesAsLogin(ConnectionId) as ExecutePackagesAsLogin,
+                            JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName,
                             ExeFileName, ExeArguments, ExeWorkingDirectory, ExeSuccessExitCode
                         FROM etlmanager.Execution
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
@@ -119,8 +120,17 @@ namespace EtlManagerExecutor
                             var packageProjectName = reader["PackageProjectName"].ToString();
                             var packageName = reader["PackageName"].ToString();
                             var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
+
+                            var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
+                            executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
+                            
+                            var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
+                            executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
+                            
+                            executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
+                            
                             stepExecution = new PackageStepExecution(Configuration, Step, connectionString,
-                                packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes);
+                                packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
                         }
                         else if (stepType == "JOB")
                         {

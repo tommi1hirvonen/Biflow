@@ -212,6 +212,19 @@
                                         </div>
                                     </div>
                                 </BSFormRow>
+                                <BSFormRow Class="mt-2">
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Execute as login (blank = no impersonation)</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                                </div>
+                                            </div>
+                                            <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="ResetStepError"></InputText>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
                             }
                             @if (Step.StepType == "PIPELINE")
                             {
@@ -333,11 +346,11 @@
                             }
                             <p class="text-danger">@StepError</p>
 
-                            <ParameterEditComponent Step="Step"/>
-                            
-                            }
-                            else
-                            {
+                            <ParameterEditComponent Step="Step" />
+
+                        }
+                        else
+                        {
                             <div class="row mt-2 align-items-center">
                                 <div class="input-group input-group-sm col">
                                     <label class="sr-only">Search</label>
@@ -366,10 +379,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                                 .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                                 .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                                 .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                                 .OrderBy(step => step.StepName))
+                                .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                                .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                                .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                                .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>

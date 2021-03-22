@@ -5,5 +5,6 @@ SELECT
 	CASE WHEN IsSensitive = 1 THEN 'Encrypted'
 		ELSE ConnectionString
 	END AS ConnectionString,
-	IsSensitive
+	IsSensitive,
+	ExecutePackagesAsLogin
 FROM etlmanager.Connection

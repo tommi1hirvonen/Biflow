@@ -103,6 +103,7 @@
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
     <Build Include="etlmanager\Tables\PipelineParameter.sql" />
+    <Build Include="etlmanager\Functions\GetExecutePackagesAsLogin.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

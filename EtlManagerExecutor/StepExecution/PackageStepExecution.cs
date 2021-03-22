@@ -17,6 +17,7 @@ namespace EtlManagerExecutor
         private string ProjectName { get; init; }
         private string PackageName { get; init; }
         private bool ExecuteIn32BitMode { get; init; }
+        private string ExecuteAsLogin { get; set; }
 
         private int TimeoutMinutes { get; init; }
         private bool Completed { get; set; }
@@ -25,7 +26,7 @@ namespace EtlManagerExecutor
         private const int MaxRefreshRetries = 3;
 
         public PackageStepExecution(ExecutionConfiguration configuration, Step step, string connectionString,
-            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes)
+            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes, string executeAsLogin)
             : base(configuration, step)
         {
             ConnectionString = connectionString;
@@ -34,6 +35,7 @@ namespace EtlManagerExecutor
             PackageName = packageName;
             ExecuteIn32BitMode = executeIn32BitMode;
             TimeoutMinutes = timeoutMinutes;
+            ExecuteAsLogin = executeAsLogin;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
@@ -140,6 +142,11 @@ namespace EtlManagerExecutor
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
             var commandBuilder = new StringBuilder();
+            commandBuilder.Append("USE SSISDB\n");
+            if (ExecuteAsLogin is not null)
+            {
+                commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
+            }
             commandBuilder.Append(
                 @"DECLARE @execution_id BIGINT
 
@@ -186,6 +193,10 @@ namespace EtlManagerExecutor
             string commandString = commandBuilder.ToString();
             using var executionCommand = new SqlCommand(commandString, sqlConnection);
 
+            if (ExecuteAsLogin is not null)
+            {
+                executionCommand.Parameters.AddWithValue("@ExecuteAsLogin", ExecuteAsLogin);
+            }
             executionCommand.Parameters.AddWithValue("@FolderName", FolderName);
             executionCommand.Parameters.AddWithValue("@ProjectName", ProjectName);
             executionCommand.Parameters.AddWithValue("@PackageName", PackageName);
