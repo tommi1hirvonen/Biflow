@@ -1,0 +1,142 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS  
+
+<BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select package</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Folders</th></tr></thead>
+                    <tbody>
+                        @if (Catalog is not null)
+                        {
+                            foreach (var folder in Catalog.Keys)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light font-weight-bold" : null)">
+                                    <td>@folder</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-lg">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Projects</th></tr></thead>
+                    <tbody>
+                        @if (Catalog is not null && SelectedFolder is not null)
+                        {
+                            foreach (var project in Catalog[SelectedFolder].Keys)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light font-weight-bold" : null)">
+                                    <td>@project</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Packages</th></tr></thead>
+                    <tbody>
+                        @if (Catalog is not null && SelectedFolder is not null && SelectedProject is not null)
+                        {
+                            foreach (var package in Catalog[SelectedFolder][SelectedProject])
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light font-weight-bold" : null)">
+                                    <td>@package</td>
+                                </tr>
+                            }
+                        } 
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectPackage"
+                  IsDisabled="SelectedPackage is null || SelectedProject is null || SelectedFolder is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; }
+
+    [Parameter]
+    public Guid? ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<Tuple<string, string, string>> OnPackageSelected { get; set; }
+
+    private Dictionary<string, Dictionary<string, List<string>>> Catalog { get; set; }
+
+    private string SelectedFolder { get; set; }
+    private string SelectedProject { get; set; }
+    private string SelectedPackage { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && ConnectionId != Guid.Empty)
+        {
+            try
+            {
+                Catalog = await Utility.GetSSISCatalogPackages(Configuration, ConnectionId.ToString());
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading catalog: {ex.Message}");
+            }
+        }
+        else
+        {
+            Catalog = null;
+            SelectedFolder = null;
+            SelectedProject = null;
+            SelectedPackage = null;
+        }
+    }
+
+    private void OnFolderChanged(string folder)
+    {
+        if (folder != SelectedFolder)
+        {
+            SelectedPackage = null;
+            SelectedProject = null;
+        }
+        SelectedFolder = folder;
+    }
+
+    private void OnProjectChanged(string project)
+    {
+        if (project != SelectedProject)
+        {
+            SelectedPackage = null;
+        }
+        SelectedProject = project;
+    }
+
+    private void SelectPackage()
+    {
+        var package = new Tuple<string, string, string>(SelectedFolder, SelectedProject, SelectedPackage);
+        OnPackageSelected.InvokeAsync(package);
+        Modal.Hide();
+    }
+
+    private async Task OnModalOpen()
+    {
+        Catalog = await Utility.GetSSISCatalogPackages(Configuration, ConnectionId.ToString());
+    }
+
+    public void Show() => Modal.Show();
+}

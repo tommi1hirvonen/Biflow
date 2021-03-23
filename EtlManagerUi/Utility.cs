@@ -360,6 +360,55 @@ namespace EtlManagerUi
             }
         }
 
+        public static async Task<Dictionary<string, Dictionary<string, List<string>>>> GetSSISCatalogPackages(IConfiguration configuration, string connectionId)
+        {
+            Dictionary<string, Dictionary<string, List<string>>> catalog = new();
+            var encryptionKey = await GetEncryptionKeyAsync(configuration);
+            string catalogConnectionString;
+            using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
+            {
+                await sqlConnection.OpenAsync();
+                using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
+                sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
+                catalogConnectionString = (await sqlCommand.ExecuteScalarAsync()).ToString();
+            }
+            using (var sqlConnection = new SqlConnection(catalogConnectionString))
+            {
+                await sqlConnection.OpenAsync();
+                using var sqlCommand = new SqlCommand(
+                    @"SELECT
+	                    [folders].[name] AS FolderName,
+	                    [projects].[name] AS ProjectName,
+	                    [packages].[name] AS PackageName
+                    FROM [SSISDB].[catalog].[folders]
+	                    LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+	                    LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+                    ORDER BY FolderName, ProjectName, PackageName"
+                    , sqlConnection);
+                using var reader = await sqlCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var folder = reader["FolderName"].ToString();
+                    var project = reader["ProjectName"].ToString();
+                    var package = reader["PackageName"].ToString();
+                    if (!catalog.ContainsKey(folder))
+                    {
+                        catalog[folder] = new();
+                    }
+                    if (!catalog[folder].ContainsKey(project))
+                    {
+                        catalog[folder][project] = new();
+                    }
+                    if (package is not null)
+                    {
+                        catalog[folder][project].Add(package);
+                    }
+                }
+            }
+            return catalog;
+        }
+
         public static async Task<bool> UpdatePasswordAsync(IConfiguration configuration, string username, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
