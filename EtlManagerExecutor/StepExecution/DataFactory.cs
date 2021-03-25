@@ -44,11 +44,10 @@ namespace EtlManagerExecutor
                     using var updateTokenCmd = new SqlCommand(
                         @"UPDATE etlmanager.DataFactory
                     SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                    WHERE ClientId = @ClientId AND ClientSecret = @ClientSecret", sqlConnection);
+                    WHERE DataFactoryId = @DataFactoryId", sqlConnection);
                     updateTokenCmd.Parameters.AddWithValue("@AccessToken", AccessToken);
                     updateTokenCmd.Parameters.AddWithValue("@AccessTokenExpiresOn", AccessTokenExpiresOn);
-                    updateTokenCmd.Parameters.AddWithValue("@ClientId", ClientId);
-                    updateTokenCmd.Parameters.AddWithValue("@ClientSecret", ClientSecret);
+                    updateTokenCmd.Parameters.AddWithValue("@DataFactoryId", DataFactoryId);
                     await updateTokenCmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)
