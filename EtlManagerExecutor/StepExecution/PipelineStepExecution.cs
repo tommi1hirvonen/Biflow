@@ -1,6 +1,5 @@
-﻿using Microsoft.Azure.Management.DataFactory;
+﻿using EtlManagerUtils;
 using Microsoft.Azure.Management.DataFactory.Models;
-using Microsoft.Rest;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -15,9 +14,7 @@ namespace EtlManagerExecutor
     class PipelineStepExecution : StepExecutionBase
     {
         private string DataFactoryId { get; init; }
-        private string PipelineRunId { get; set; }
-        private DataFactoryManagementClient Client { get; set; }
-        private DataFactory DataFactory { get; set; }
+        private DataFactoryHelper DataFactoryHelper { get; set; }
         private string PipelineName { get; init; }
         private int TimeoutMinutes { get; init; }
 
@@ -51,7 +48,7 @@ namespace EtlManagerExecutor
             // Get the target Data Factory information from the database.
             try
             {
-                DataFactory = await DataFactory.GetDataFactoryAsync(Configuration.ConnectionString, DataFactoryId, Configuration.EncryptionKey);
+                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.ConnectionString, DataFactoryId, Configuration.EncryptionKey);
             }
             catch (Exception ex)
             {
@@ -59,28 +56,19 @@ namespace EtlManagerExecutor
                 throw;
             }
 
-            // Check if the current access token is valid and get a new one if not.
-            await DataFactory.CheckAccessTokenValidityAsync(Configuration.ConnectionString);
-
-            var credentials = new TokenCredentials(DataFactory.AccessToken);
-            Client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
-
-            CreateRunResponse createRunResponse;
+            string runId;
             DateTime startTime;
             try
             {
-                createRunResponse = await Client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineName,
-                    parameters: parameters, cancellationToken: CancellationToken.None);
+                runId = await DataFactoryHelper.StartPipelineRunAsync(PipelineName, parameters, cancellationToken);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                    Configuration.ExecutionId, Step, DataFactory.DataFactoryId, PipelineName);
+                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactoryId, PipelineName);
                 throw;
             }
-
-            PipelineRunId = createRunResponse.RunId;
 
             try
             {
@@ -93,7 +81,7 @@ namespace EtlManagerExecutor
                 sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
                 sqlCommand.Parameters.AddWithValue("@StepId", Step.StepId);
                 sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
-                sqlCommand.Parameters.AddWithValue("@PipelineRunId", PipelineRunId);
+                sqlCommand.Parameters.AddWithValue("@PipelineRunId", runId);
                 await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
             }
             catch (Exception ex)
@@ -104,21 +92,15 @@ namespace EtlManagerExecutor
             PipelineRun pipelineRun;
             while (true)
             {
-                if (!await DataFactory.CheckAccessTokenValidityAsync(Configuration.ConnectionString))
-                {
-                    credentials = new TokenCredentials(DataFactory.AccessToken);
-                    Client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
-                }
-
                 try
                 {
-                    pipelineRun = await TryGetPipelineRunAsync(cancellationToken);
+                    pipelineRun = await TryGetPipelineRunAsync(runId, cancellationToken);
                     if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                     {
                         // Check for timeout.
                         if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
                         {
-                            await CancelAsync();
+                            await CancelAsync(runId);
                             Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
                             return new ExecutionResult.Failure("Step execution timed out");
                         }
@@ -132,7 +114,7 @@ namespace EtlManagerExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    await CancelAsync();
+                    await CancelAsync(runId);
                     throw;
                 }
             }
@@ -172,18 +154,18 @@ namespace EtlManagerExecutor
             return parameters;
         }
 
-        private async Task<PipelineRun> TryGetPipelineRunAsync(CancellationToken cancellationToken)
+        private async Task<PipelineRun> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)
         {
             int refreshRetries = 0;
             while (refreshRetries < MaxRefreshRetries)
             {
                 try
                 {
-                    return await Client.PipelineRuns.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineRunId, CancellationToken.None);
+                    return await DataFactoryHelper.GetPipelineRunAsync(runId, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Configuration.ExecutionId, Step, PipelineRunId);
+                    Log.Warning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Configuration.ExecutionId, Step, runId);
                     refreshRetries++;
                     await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
                 }
@@ -191,16 +173,16 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
         }
 
-        private async Task CancelAsync()
+        private async Task CancelAsync(string runId)
         {
-            Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, PipelineRunId);
+            Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, runId);
             try
             {
-                await Client.PipelineRuns.CancelAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, PipelineRunId, isRecursive: true);
+                await DataFactoryHelper.CancelPipelineRunAsync(runId);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Configuration.ExecutionId, Step, PipelineRunId);
+                Log.Error(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Configuration.ExecutionId, Step, runId);
             }
         }
     }

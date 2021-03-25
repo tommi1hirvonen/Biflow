@@ -1,5 +1,4 @@
-﻿using Microsoft.PowerBI.Api;
-using Microsoft.Rest;
+﻿using EtlManagerUtils;
 using Serilog;
 using System;
 using System.Threading;
@@ -25,10 +24,10 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            PowerBIService powerBIService;
+            PowerBIServiceHelper powerBIServiceHelper;
             try
             {
-                powerBIService = await PowerBIService.GetPowerBIServiceAsync(Configuration.ConnectionString, PowerBIServiceId, Configuration.EncryptionKey);
+                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.ConnectionString, PowerBIServiceId, Configuration.EncryptionKey);
             }
             catch (Exception ex)
             {
@@ -36,15 +35,9 @@ namespace EtlManagerExecutor
                 throw;
             }
 
-            await powerBIService.CheckAccessTokenValidityAsync(Configuration.ConnectionString);
-
-            
-            var credentials = new TokenCredentials(powerBIService.AccessToken);
-            var client = new PowerBIClient(credentials);
-
             try
             {
-                await client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(GroupId), DatasetId, cancellationToken: cancellationToken);
+                await powerBIServiceHelper.RefreshDatasetAsync(GroupId, DatasetId, cancellationToken);
                 return new ExecutionResult.Success();
             }
             catch (OperationCanceledException)

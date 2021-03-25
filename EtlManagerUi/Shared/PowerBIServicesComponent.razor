@@ -1,6 +1,7 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS  
 
 @if (!IsEncryptionKeySet)
 {
@@ -109,7 +110,7 @@ else
     {
         var context = DbFactory.CreateDbContext();
         var existingService = PowerBIServices.FirstOrDefault(pbi => pbi.PowerBIServiceId == powerBIService.PowerBIServiceId);
-        string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
+        string encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
 
         if (existingService is not null)
         {

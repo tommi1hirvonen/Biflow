@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using EtlManagerUi.Models;
+using EtlManagerUtils;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
@@ -277,67 +278,6 @@ namespace EtlManagerUi
             }
         }
 
-        public static async Task<string> GetEncryptionKeyAsync(IConfiguration configuration)
-        {
-            string connectionString = configuration.GetConnectionString("EtlManagerContext");
-            string encryptionId = configuration.GetValue<string>("EncryptionId");
-            using var sqlConnection = new SqlConnection(connectionString);
-            using var getKeyCmd = new SqlCommand("SELECT TOP 1 EncryptionKey, Entropy FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
-            getKeyCmd.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            await sqlConnection.OpenAsync();
-            var reader = getKeyCmd.ExecuteReader();
-            if (reader.Read())
-            {
-                byte[] encryptionKeyBinary = (byte[])reader["EncryptionKey"];
-                byte[] entropy = (byte[])reader["Entropy"];
-                
-                #pragma warning disable CA1416 // Validate platform compatibility
-                byte[] output = ProtectedData.Unprotect(encryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
-                #pragma warning restore CA1416 // Validate platform compatibility
-                
-                return Encoding.ASCII.GetString(output);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        public static async Task SetEncryptionKeyAsync(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
-        {
-            string connectionString = configuration.GetConnectionString("EtlManagerContext");
-            string encryptionId = configuration.GetValue<string>("EncryptionId");
-            using var sqlConnection = new SqlConnection(connectionString);
-            await sqlConnection.OpenAsync();
-
-            // Create random entropy
-            byte[] entropy = new byte[16];
-            new RNGCryptoServiceProvider().GetBytes(entropy);
-
-            byte[] newEncryptionKeyBinary = Encoding.ASCII.GetBytes(newEncryptionKey);
-            
-            #pragma warning disable CA1416 // Validate platform compatibility
-            byte[] newEncryptionKeyEncrypted = ProtectedData.Protect(newEncryptionKeyBinary, entropy, DataProtectionScope.LocalMachine);
-            #pragma warning restore CA1416 // Validate platform compatibility
-            
-            using var updateKeyCmd = new SqlCommand(@"etlmanager.EncryptionKeySet
-                    @EncryptionId = @EncryptionId_,
-                    @OldEncryptionKey = @OldEncryptionKey_,
-                    @NewEncryptionKey = @NewEncryptionKey_,
-                    @NewEncryptionKeyEncrypted = @NewEncryptionKeyEncrypted_,
-                    @Entropy = @Entropy_", sqlConnection);
-
-            updateKeyCmd.Parameters.AddWithValue("@EncryptionId_", encryptionId);
-
-            if (oldEncryptionKey is not null) updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", oldEncryptionKey);
-            else updateKeyCmd.Parameters.AddWithValue("@OldEncryptionKey_", DBNull.Value);
-
-            updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKey_", newEncryptionKey);
-            updateKeyCmd.Parameters.AddWithValue("@NewEncryptionKeyEncrypted_", newEncryptionKeyEncrypted);
-            updateKeyCmd.Parameters.AddWithValue("@Entropy_", entropy);
-
-            await updateKeyCmd.ExecuteNonQueryAsync();
-        }
 
         public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)
         {
@@ -363,7 +303,7 @@ namespace EtlManagerUi
         public static async Task<Dictionary<string, Dictionary<string, List<string>>>> GetSSISCatalogPackages(IConfiguration configuration, string connectionId)
         {
             Dictionary<string, Dictionary<string, List<string>>> catalog = new();
-            var encryptionKey = await GetEncryptionKeyAsync(configuration);
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
             string catalogConnectionString;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
             {

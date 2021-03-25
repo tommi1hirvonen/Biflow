@@ -78,8 +78,8 @@
 
         try
         {
-            string oldEncryptionKey = await Utility.GetEncryptionKeyAsync(configuration);
-            await Utility.SetEncryptionKeyAsync(configuration, oldEncryptionKey, PasswordModel_.Password);
+            string oldEncryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            await CommonUtility.SetEncryptionKeyAsync(configuration, oldEncryptionKey, PasswordModel_.Password);
             await JS.InvokeVoidAsync("alert", "Encryption key set successfully");
             PasswordModel_.Password = null;
             PasswordModel_.ConfirmPassword = null;

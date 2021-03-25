@@ -1,24 +1,53 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.Azure.Management.DataFactory;
+using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Rest;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerUtils
 {
-    public class DataFactory
+    public class DataFactoryHelper
     {
         public string DataFactoryId { get; init; }
-        public string TenantId { get; init; }
-        public string SubscriptionId { get; init; }
-        public string ResourceGroupName { get; init; }
-        public string ResourceName { get; init; }
-        public string ClientId { get; init; }
-        public string ClientSecret { get; init; }
-        public string AccessToken { get; set; }
-        public DateTime? AccessTokenExpiresOn { get; set; }
+        private string TenantId { get; init; }
+        private string SubscriptionId { get; init; }
+        private string ResourceGroupName { get; init; }
+        private string ResourceName { get; init; }
+        private string ClientId { get; init; }
+        private string ClientSecret { get; init; }
+        private string AccessToken { get; set; }
+        private DateTime? AccessTokenExpiresOn { get; set; }
+        private string ConnectionString { get; init; }
+        private DataFactoryManagementClient Client {get;set;}
 
-        public async Task<bool> CheckAccessTokenValidityAsync(string connectionString)
+        public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+        {
+            await CheckAccessTokenValidityAsync();
+            var createRunResponse = await Client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
+                parameters: parameters, cancellationToken: cancellationToken);
+            return createRunResponse.RunId;
+        }
+
+        public async Task<PipelineRun> GetPipelineRunAsync(string runId, CancellationToken cancellationToken)
+        {
+            await CheckAccessTokenValidityAsync();
+            return await Client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+        }
+
+        public async Task CancelPipelineRunAsync(string runId)
+        {
+            await CheckAccessTokenValidityAsync();
+            await Client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+        }
+
+        private async Task CheckAccessTokenValidityAsync()
         {
             if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
@@ -36,15 +65,18 @@ namespace EtlManagerExecutor
                     throw;
                 }
 
+                var credentials = new TokenCredentials(AccessToken);
+                Client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+
                 // Update the token and its expiration time to the database for later use.
                 try
                 {
-                    using var sqlConnection = new SqlConnection(connectionString);
+                    using var sqlConnection = new SqlConnection(ConnectionString);
                     await sqlConnection.OpenAsync();
                     using var updateTokenCmd = new SqlCommand(
                         @"UPDATE etlmanager.DataFactory
-                    SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                    WHERE DataFactoryId = @DataFactoryId", sqlConnection);
+                        SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
+                        WHERE DataFactoryId = @DataFactoryId", sqlConnection);
                     updateTokenCmd.Parameters.AddWithValue("@AccessToken", AccessToken);
                     updateTokenCmd.Parameters.AddWithValue("@AccessTokenExpiresOn", AccessTokenExpiresOn);
                     updateTokenCmd.Parameters.AddWithValue("@DataFactoryId", DataFactoryId);
@@ -55,15 +87,15 @@ namespace EtlManagerExecutor
                     Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
                     throw;
                 }
-                return false;
             }
-            else
+            else if (Client is null)
             {
-                return true;
+                var credentials = new TokenCredentials(AccessToken);
+                Client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
             }
         }
 
-        public static async Task<DataFactory> GetDataFactoryAsync(string connectionString, string dataFactoryId, string encryptionKey)
+        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(string connectionString, string dataFactoryId, string encryptionKey)
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
@@ -89,7 +121,7 @@ namespace EtlManagerExecutor
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
             if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
 
-            return new DataFactory
+            return new DataFactoryHelper
             {
                 DataFactoryId = dataFactoryId,
                 TenantId = tenantId,
@@ -99,7 +131,8 @@ namespace EtlManagerExecutor
                 ClientId = clientId,
                 ClientSecret = clientSecret,
                 AccessToken = accessToken,
-                AccessTokenExpiresOn = accessTokenExpiresOn
+                AccessTokenExpiresOn = accessTokenExpiresOn,
+                ConnectionString = connectionString
             };
         }
     }

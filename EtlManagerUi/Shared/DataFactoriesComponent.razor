@@ -116,7 +116,7 @@ else
     {
         var context = DbFactory.CreateDbContext();
         var existingDf = DataFactories.FirstOrDefault(df => df.DataFactoryId == dataFactory.DataFactoryId);
-        string encryptionPassword = Utility.GetEncryptionKeyAsync(configuration).Result;
+        string encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
 
         if (existingDf is not null)
         {

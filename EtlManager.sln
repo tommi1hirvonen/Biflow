@@ -9,6 +9,8 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "EtlManagerDatabase", "EtlMa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerUi", "EtlManagerUi\EtlManagerUi.csproj", "{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManagerUtils", "EtlManagerUtils\EtlManagerUtils.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

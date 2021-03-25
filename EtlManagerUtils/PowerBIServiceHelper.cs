@@ -1,24 +1,35 @@
 ﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.PowerBI.Api;
+using Microsoft.Rest;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerUtils
 {
-    class PowerBIService
+    public class PowerBIServiceHelper
     {
         public string PowerBIServiceId { get; init; }
-        public string TenantId { get; init; }
-        public string ClientId { get; init; }
-        public string ClientSecret { get; init; }
-        public string AccessToken { get; set; }
-        public DateTime? AccessTokenExpiresOn { get; set; }
+        private string TenantId { get; init; }
+        private string ClientId { get; init; }
+        private string ClientSecret { get; init; }
+        private string AccessToken { get; set; }
+        private DateTime? AccessTokenExpiresOn { get; set; }
+        private string ConnectionString { get; init; }
+        private PowerBIClient Client { get; set; }
 
-        public async Task<bool> CheckAccessTokenValidityAsync(string connectionString)
+        public async Task RefreshDatasetAsync(string groupId, string datasetId, CancellationToken cancellationToken)
+        {
+            await CheckAccessTokenValidityAsync();
+            await Client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
+        }
+
+        private async Task CheckAccessTokenValidityAsync()
         {
             if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
@@ -36,10 +47,13 @@ namespace EtlManagerExecutor
                     throw;
                 }
 
+                var credentials = new TokenCredentials(AccessToken);
+                Client = new PowerBIClient(credentials);
+
                 // Update the token and its expiration time to the database for later use.
                 try
                 {
-                    using var sqlConnection = new SqlConnection(connectionString);
+                    using var sqlConnection = new SqlConnection(ConnectionString);
                     await sqlConnection.OpenAsync();
                     using var updateTokenCmd = new SqlCommand(
                         @"UPDATE etlmanager.PowerBIService
@@ -55,15 +69,15 @@ namespace EtlManagerExecutor
                     Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIServiceId);
                     throw;
                 }
-                return false;
             }
-            else
+            else if (Client is null)
             {
-                return true;
+                var credentials = new TokenCredentials(AccessToken);
+                Client = new PowerBIClient(credentials);
             }
         }
 
-        public static async Task<PowerBIService> GetPowerBIServiceAsync(string connectionString, string powerBIServiceId, string encryptionKey)
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(string connectionString, string powerBIServiceId, string encryptionKey)
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();
@@ -86,14 +100,15 @@ namespace EtlManagerExecutor
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
             if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
 
-            return new PowerBIService
+            return new PowerBIServiceHelper
             {
                 PowerBIServiceId = powerBIServiceId,
                 TenantId = tenantId,
                 ClientId = clientId,
                 ClientSecret = clientSecret,
                 AccessToken = accessToken,
-                AccessTokenExpiresOn = accessTokenExpiresOn
+                AccessTokenExpiresOn = accessTokenExpiresOn,
+                ConnectionString = connectionString
             };
         }
     }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using EtlManagerUtils;
+using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace EtlManagerExecutor
             string encryptionPassword;
             try
             {
-                encryptionPassword = await Utility.GetEncryptionKeyAsync(encryptionId, connectionString);
+                encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(encryptionId, connectionString);
             }
             catch (Exception ex)
             {
