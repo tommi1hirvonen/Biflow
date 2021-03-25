@@ -1,0 +1,106 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select pipeline</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Folders</th></tr></thead>
+                    <tbody>
+                        @if (Pipelines is not null)
+                        {
+                            foreach (var folder in Pipelines.Select(p => p.FolderName).Distinct().OrderBy(folder => folder))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light font-weight-bold" : null)">
+                                    <td>@folder</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-lg">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Pipelines</th></tr></thead>
+                    <tbody>
+                        @if (Pipelines is not null && SelectedFolder is not null)
+                        {
+                            foreach (var pipeline in Pipelines.Where(p => p.FolderName == SelectedFolder).Select(p => p.PipelineName).OrderBy(p => p))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light font-weight-bold" : null)">
+                                    <td>@pipeline</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectPipeline"
+                  IsDisabled="SelectedPipeline is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; }
+
+    [Parameter]
+    public Guid? DataFactoryId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnPipelineSelected { get; set; }
+
+    private List<(string FolderName, string PipelineName)> Pipelines { get; set; }
+
+    private string SelectedFolder { get; set; }
+    private string SelectedPipeline { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && DataFactoryId is not null && DataFactoryId != Guid.Empty)
+        {
+            try
+            {
+                var dataFactory = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration, DataFactoryId.ToString());
+                Pipelines = await dataFactory.GetPipelinesAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading pipelines: {ex.Message}");
+            }
+        }
+        else
+        {
+            SelectedFolder = null;
+            SelectedPipeline = null;
+        }
+    }
+
+    private void OnFolderChanged(string folder)
+    {
+        if (folder != SelectedFolder)
+        {
+            SelectedPipeline = null;
+        }
+        SelectedFolder = folder;
+    }
+
+    private void SelectPipeline()
+    {
+        OnPipelineSelected.InvokeAsync(SelectedPipeline);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}

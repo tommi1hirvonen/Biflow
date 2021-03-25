@@ -76,7 +76,7 @@
     public Guid? ConnectionId { get; set; }
 
     [Parameter]
-    public EventCallback<Tuple<string, string, string>> OnPackageSelected { get; set; }
+    public EventCallback<(string Folder, string Project, string Package)> OnPackageSelected { get; set; }
 
     private Dictionary<string, Dictionary<string, List<string>>> Catalog { get; set; }
 
@@ -128,7 +128,7 @@
 
     private void SelectPackage()
     {
-        var package = new Tuple<string, string, string>(SelectedFolder, SelectedProject, SelectedPackage);
+        var package = (SelectedFolder, SelectedProject, SelectedPackage);
         OnPackageSelected.InvokeAsync(package);
         Modal.Hide();
     }

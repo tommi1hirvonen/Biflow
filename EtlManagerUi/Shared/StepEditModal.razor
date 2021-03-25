@@ -267,6 +267,15 @@
                                         </div>
                                     </BSFormGroup>
                                 </BSFormRow>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenPipelineSelectModal">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                                            Browse pipelines
+                                        </BSButton>
+                                    </div>
+                                </div>
+                                <PipelineSelectModal @ref="PipelineSelectModal" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
                             }
                             @if (Step.StepType == "JOB")
                             {
@@ -367,9 +376,9 @@
                                             </div>
                                             <InputSelect class="form-control" @bind-Value="Step.PowerBIServiceId">
                                                 @foreach (var pbi in PowerBIServices)
-                                                {
+                                                            {
                                                     <option value="@pbi.PowerBIServiceId">@pbi.PowerBIServiceName</option>
-                                                }
+                                                            }
                                             </InputSelect>
                                         </div>
                                     </BSFormGroup>
@@ -437,10 +446,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                               .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                               .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                               .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                               .OrderBy(step => step.StepName))
+                              .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                              .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                              .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                              .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
@@ -519,6 +528,7 @@
     private bool ShowOnlyActiveDependencies { get; set; } = false;
 
     private PackageSelectModal PackageSelectModal { get; set; }
+    private PipelineSelectModal PipelineSelectModal { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -797,11 +807,21 @@
         PackageSelectModal.Show();
     }
 
-    private void OnPackageSelected(Tuple<string, string, string> package)
+    private void OnPackageSelected((string Folder, string Project, string Package) package)
     {
-        Step.PackageFolderName = package.Item1;
-        Step.PackageProjectName = package.Item2;
-        Step.PackageName = package.Item3;
+        Step.PackageFolderName = package.Folder;
+        Step.PackageProjectName = package.Project;
+        Step.PackageName = package.Package;
+    }
+
+    private void OpenPipelineSelectModal()
+    {
+        PipelineSelectModal.Show();
+    }
+
+    private void OnPipelineSelected(string pipelineName)
+    {
+        Step.PipelineName = pipelineName;
     }
 
     private void ToggleDependency(Step step, object checkedValue)

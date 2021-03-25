@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Serilog;
@@ -45,6 +46,13 @@ namespace EtlManagerUtils
         {
             await CheckAccessTokenValidityAsync();
             await Client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+        }
+
+        public async Task<List<(string FolderName, string PipelineName)>> GetPipelinesAsync()
+        {
+            await CheckAccessTokenValidityAsync();
+            var pipelines = await Client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+            return pipelines.Select(p => (p.Folder?.Name ?? "/", p.Name)).ToList();
         }
 
         private async Task CheckAccessTokenValidityAsync()
@@ -93,6 +101,13 @@ namespace EtlManagerUtils
                 var credentials = new TokenCredentials(AccessToken);
                 Client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
             }
+        }
+
+        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IConfiguration configuration, string dataFactoryId)
+        {
+            var connectionString = configuration.GetConnectionString("EtlManagerContext");
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            return await GetDataFactoryHelperAsync(connectionString, dataFactoryId, encryptionKey);
         }
 
         public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(string connectionString, string dataFactoryId, string encryptionKey)
