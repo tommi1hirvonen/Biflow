@@ -51,11 +51,19 @@
                     <tbody>
                         @if (Datasets is not null && SelectedGroup is not null)
                         {
-                            foreach (var dataset in Datasets[SelectedGroup.Value].OrderBy(p => p))
+                            var datasets = Datasets[SelectedGroup.Value];
+                            if (datasets.Count == 0)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-light font-weight-bold" : null)">
-                                    <td>@dataset.DatasetName</td>
-                                </tr>
+                                <tr><td>No datasets</td></tr>
+                            }
+                            else
+                            {
+                                foreach (var dataset in datasets.OrderBy(p => p))
+                                {
+                                    <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-light font-weight-bold" : null)">
+                                        <td>@dataset.DatasetName</td>
+                                    </tr>
+                                }
                             }
                         }
                     </tbody>
@@ -100,11 +108,12 @@
             }
             catch (Exception ex)
             {
-                await JS.InvokeVoidAsync("alert", $"Error reading pipelines: {ex.Message}");
+                await JS.InvokeVoidAsync("alert", $"Error reading datasets: {ex.Message}");
             }
         }
         else
         {
+            Datasets = null;
             SelectedGroup = null;
             SelectedDataset = null;
         }

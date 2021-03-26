@@ -349,6 +349,42 @@ namespace EtlManagerUi
             return catalog;
         }
 
+        public static async Task<Dictionary<string, List<string>>> GetDatabaseStoredProcedures(IConfiguration configuration, string connectionId)
+        {
+            var procedures = new Dictionary<string, List<string>>();
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            string connectionString;
+            using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
+            {
+                await sqlConnection.OpenAsync();
+                using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
+                sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
+                sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
+                connectionString = (await sqlCommand.ExecuteScalarAsync()).ToString();
+            }
+            using (var sqlConnection = new SqlConnection(connectionString))
+            {
+                await sqlConnection.OpenAsync();
+                using var sqlCommand = new SqlCommand(
+                    @"SELECT OBJECT_SCHEMA_NAME([object_id]) AS [schema], [name]
+                    FROM [sys].[procedures]
+                    ORDER BY [schema], [name]"
+                    , sqlConnection);
+                using var reader = await sqlCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var schema = reader["schema"].ToString();
+                    var procedure = reader["name"].ToString();
+                    if (!procedures.ContainsKey(schema))
+                    {
+                        procedures[schema] = new();
+                    }
+                    procedures[schema].Add(procedure);
+                }
+            }
+            return procedures;
+        }
+
         public static async Task<bool> UpdatePasswordAsync(IConfiguration configuration, string username, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

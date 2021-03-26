@@ -1,0 +1,133 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select stored procedure</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Schemas
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Procedures is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var schema in Procedures.Keys)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnSchemaChanged(schema)" class="@(schema == SelectedSchema ? "bg-light font-weight-bold" : null)">
+                                    <td>@schema</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Stored procedures
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Procedures is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (SelectedSchema is not null)
+                        {
+                            foreach (var procedure in Procedures[SelectedSchema].OrderBy(p => p))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedProcedure = procedure" class="@(procedure == SelectedProcedure ? "bg-light font-weight-bold" : null)">
+                                    <td>@procedure</td>
+                                </tr>
+                            }
+                        }
+                        else if (Procedures.Count == 0)
+                        {
+                            <tr><td>No stored procedures</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectProcedure"
+                  IsDisabled="SelectedSchema is null || SelectedProcedure is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; }
+
+    [Parameter]
+    public Guid? ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<(string Schema, string Procedure)> OnProcedureSelected { get; set; }
+
+    private Dictionary<string, List<string>> Procedures { get; set; }
+
+    private string SelectedSchema { get; set; }
+    private string SelectedProcedure { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && ConnectionId != Guid.Empty)
+        {
+            try
+            {
+                Procedures = await Utility.GetDatabaseStoredProcedures(Configuration, ConnectionId.ToString());
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading procedures: {ex.Message}");
+            }
+        }
+        else
+        {
+            Procedures = null;
+            SelectedSchema = null;
+            SelectedProcedure = null;
+        }
+    }
+
+    private void OnSchemaChanged(string schema)
+    {
+        if (schema != SelectedSchema)
+        {
+            SelectedProcedure = null;
+        }
+        SelectedSchema = schema;
+    }
+
+    private void SelectProcedure()
+    {
+        var procedure = (SelectedSchema, SelectedProcedure);
+        OnProcedureSelected.InvokeAsync(procedure);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}

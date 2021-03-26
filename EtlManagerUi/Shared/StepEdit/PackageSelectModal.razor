@@ -179,10 +179,5 @@
         Modal.Hide();
     }
 
-    private async Task OnModalOpen()
-    {
-        Catalog = await Utility.GetSSISCatalogPackages(Configuration, ConnectionId.ToString());
-    }
-
     public void Show() => Modal.Show();
 }
