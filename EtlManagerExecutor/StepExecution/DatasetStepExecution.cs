@@ -32,7 +32,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "Error getting Power BI Service information for id {PowerBIServiceId}", PowerBIServiceId);
-                throw;
+                return new ExecutionResult.Failure($"Error getting Power BI Service object information:\n{ex.Message}");
             }
 
             try

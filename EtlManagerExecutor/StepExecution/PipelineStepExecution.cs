@@ -53,7 +53,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "Error getting Data Factory information for id {DataFactoryId}", DataFactoryId);
-                throw;
+                return new ExecutionResult.Failure($"Error getting Data Factory object information:\n{ex.Message}");
             }
 
             string runId;
@@ -67,7 +67,7 @@ namespace EtlManagerExecutor
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
                     Configuration.ExecutionId, Step, DataFactoryHelper.DataFactoryId, PipelineName);
-                throw;
+                return new ExecutionResult.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
 
             try
