@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.PowerBI.Api;
 using Microsoft.Rest;
 using Serilog;
@@ -27,6 +28,19 @@ namespace EtlManagerUtils
         {
             await CheckAccessTokenValidityAsync();
             await Client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
+        }
+        public async Task<Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>> GetAllDatasetsAsync()
+        {
+            await CheckAccessTokenValidityAsync();
+            var groups = await Client.Groups.GetGroupsAsync();
+            var datasets = new Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>();
+            foreach (var group in groups.Value)
+            {
+                var groupDatasets = await Client.Datasets.GetDatasetsInGroupAsync(group.Id);
+                var key = (group.Id.ToString(), group.Name);
+                datasets[key] = groupDatasets.Value.Select(d => (d.Id.ToString(), d.Name)).ToList();
+            }
+            return datasets;
         }
 
         private async Task CheckAccessTokenValidityAsync()
@@ -75,6 +89,13 @@ namespace EtlManagerUtils
                 var credentials = new TokenCredentials(AccessToken);
                 Client = new PowerBIClient(credentials);
             }
+        }
+
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IConfiguration configuration, string powerBIServiceId)
+        {
+            var connectionString = configuration.GetConnectionString("EtlManagerContext");
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            return await GetPowerBIServiceHelperAsync(connectionString, powerBIServiceId, encryptionKey);
         }
 
         public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(string connectionString, string powerBIServiceId, string encryptionKey)

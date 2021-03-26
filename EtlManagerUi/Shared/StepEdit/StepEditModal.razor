@@ -409,6 +409,15 @@
                                         </div>
                                     </BSFormGroup>
                                 </BSFormRow>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenDatasetSelectModal">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                                            Browse datasets
+                                        </BSButton>
+                                    </div>
+                                </div>
+                                <DatasetSelectModal @ref="DatasetSelectModal" PowerBIServiceId="Step.PowerBIServiceId" OnDatasetSelected="OnDatasetSelected" />
                             }
 
                             <p class="text-danger">@StepError</p>
@@ -446,10 +455,10 @@
                                 </thead>
                                 <tbody>
                                     @foreach (var step in Steps
-                              .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
-                              .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
-                              .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-                              .OrderBy(step => step.StepName))
+                             .Where(step => step.StepId != StepId) // Exclude current step => step cannot depend on itself.
+                             .Where(step => step.StepName.ContainsIgnoreCase(DependenciesFilterText)) // Filter based on search filter.
+                             .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+                             .OrderBy(step => step.StepName))
                                     {
                                         <tr>
                                             <td class="align-middle">@step.StepName</td>
@@ -529,6 +538,7 @@
 
     private PackageSelectModal PackageSelectModal { get; set; }
     private PipelineSelectModal PipelineSelectModal { get; set; }
+    private DatasetSelectModal DatasetSelectModal { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -822,6 +832,17 @@
     private void OnPipelineSelected(string pipelineName)
     {
         Step.PipelineName = pipelineName;
+    }
+
+    private void OpenDatasetSelectModal()
+    {
+        DatasetSelectModal.Show();
+    }
+
+    private void OnDatasetSelected((string GroupId, string DatasetId) dataset)
+    {
+        Step.DatasetGroupId = dataset.GroupId;
+        Step.DatasetId = dataset.DatasetId;
     }
 
     private void ToggleDependency(Step step, object checkedValue)

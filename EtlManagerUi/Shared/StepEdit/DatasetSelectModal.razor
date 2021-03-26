@@ -1,0 +1,114 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select pipeline</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Workspaces</th></tr></thead>
+                    <tbody>
+                        @if (Datasets is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (Datasets.Count == 0)
+                        {
+                            <tr><td>No workspaces</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var group in Datasets.Keys.OrderBy(folder => folder))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == SelectedGroup ? "bg-light font-weight-bold" : null)">
+                                    <td>@group.GroupName</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-lg">
+                <table class="table table-hover table-sm">
+                    <thead><tr><th>Pipelines</th></tr></thead>
+                    <tbody>
+                        @if (Datasets is not null && SelectedGroup is not null)
+                        {
+                            foreach (var dataset in Datasets[SelectedGroup.Value].OrderBy(p => p))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-light font-weight-bold" : null)">
+                                    <td>@dataset.DatasetName</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectDataset"
+                  IsDisabled="SelectedDataset is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; }
+
+    [Parameter]
+    public Guid? PowerBIServiceId { get; set; }
+
+    [Parameter]
+    public EventCallback<(string GroupId, string DatasetId)> OnDatasetSelected { get; set; }
+
+    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>> Datasets { get; set; }
+
+    private (string GroupId, string GroupName)? SelectedGroup { get; set; }
+    private (string DatasetId, string DatasetName)? SelectedDataset { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && PowerBIServiceId is not null && PowerBIServiceId != Guid.Empty)
+        {
+            try
+            {
+                var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration, PowerBIServiceId.ToString());
+                Datasets = await powerBIService.GetAllDatasetsAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading pipelines: {ex.Message}");
+            }
+        }
+        else
+        {
+            SelectedGroup = null;
+            SelectedDataset = null;
+        }
+    }
+
+    private void OnGroupChanged((string Id, string Name) group)
+    {
+        if (group != SelectedGroup)
+        {
+            SelectedDataset = null;
+        }
+        SelectedGroup = group;
+    }
+
+    private void SelectDataset()
+    {
+        OnDatasetSelected.InvokeAsync((SelectedGroup?.GroupId, SelectedDataset?.DatasetId));
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}
