@@ -24,6 +24,9 @@ namespace EtlManagerUtils
         private string ConnectionString { get; init; }
         private PowerBIClient Client { get; set; }
 
+        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
+
         public async Task RefreshDatasetAsync(string groupId, string datasetId, CancellationToken cancellationToken)
         {
             await CheckAccessTokenValidityAsync();
@@ -49,9 +52,9 @@ namespace EtlManagerUtils
             {
                 try
                 {
-                    var context = new AuthenticationContext("https://login.microsoftonline.com/" + TenantId);
+                    var context = new AuthenticationContext(AuthenticationUrl + TenantId);
                     var clientCredential = new ClientCredential(ClientId, ClientSecret);
-                    var result = await context.AcquireTokenAsync("https://analysis.windows.net/powerbi/api", clientCredential);
+                    var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
@@ -131,6 +134,16 @@ namespace EtlManagerUtils
                 AccessTokenExpiresOn = accessTokenExpiresOn,
                 ConnectionString = connectionString
             };
+        }
+
+        public static async Task TestConnection(string tenantId, string clientId, string clientSecret)
+        {
+            var context = new AuthenticationContext(AuthenticationUrl + tenantId);
+            var clientCredential = new ClientCredential(clientId, clientSecret);
+            var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
+            var credentials = new TokenCredentials(result.AccessToken);
+            var client = new PowerBIClient(credentials);
+            var _ = await client.Groups.GetGroupsAsync();
         }
     }
 }

@@ -28,6 +28,9 @@ namespace EtlManagerUtils
         private string ConnectionString { get; init; }
         private DataFactoryManagementClient Client {get;set;}
 
+        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        private const string ResourceUrl = "https://management.azure.com/";
+
         public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
         {
             await CheckAccessTokenValidityAsync();
@@ -65,9 +68,9 @@ namespace EtlManagerUtils
             {
                 try
                 {
-                    var context = new AuthenticationContext("https://login.microsoftonline.com/" + TenantId);
+                    var context = new AuthenticationContext(AuthenticationUrl + TenantId);
                     var clientCredential = new ClientCredential(ClientId, ClientSecret);
-                    var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
+                    var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
@@ -153,6 +156,16 @@ namespace EtlManagerUtils
                 AccessTokenExpiresOn = accessTokenExpiresOn,
                 ConnectionString = connectionString
             };
+        }
+
+        public static async Task TestConnection(string tenantId, string clientId, string clientSecret, string subscriptionId, string resourceGroupName, string resourceName)
+        {
+            var context = new AuthenticationContext(AuthenticationUrl + tenantId);
+            var clientCredential = new ClientCredential(clientId, clientSecret);
+            var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
+            var credentials = new TokenCredentials(result.AccessToken);
+            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = subscriptionId };
+            var _ = await client.Factories.GetAsync(resourceGroupName, resourceName);
         }
     }
 }

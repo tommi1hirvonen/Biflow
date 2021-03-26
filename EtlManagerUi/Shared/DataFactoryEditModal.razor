@@ -1,8 +1,4 @@
-﻿@using Microsoft.Azure.Management.DataFactory
-@using Microsoft.IdentityModel.Clients.ActiveDirectory
-@using Microsoft.Rest
-
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
@@ -131,12 +127,8 @@
         TestingConnection = true;
         try
         {
-            var context = new AuthenticationContext("https://login.microsoftonline.com/" + DataFactory.TenantId);
-            var clientCredential = new ClientCredential(DataFactory.ClientId, DataFactory.ClientSecret);
-            var result = await context.AcquireTokenAsync("https://management.azure.com/", clientCredential);
-            var credentials = new TokenCredentials(result.AccessToken);
-            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
-            var dataFactory = await client.Factories.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName);
+            await DataFactoryHelper.TestConnection(DataFactory.TenantId, DataFactory.ClientId, DataFactory.ClientSecret,
+                DataFactory.SubscriptionId, DataFactory.ResourceGroupName, DataFactory.ResourceName);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)
