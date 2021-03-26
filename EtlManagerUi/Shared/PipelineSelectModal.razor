@@ -10,9 +10,17 @@
                 <table class="table table-hover table-sm">
                     <thead><tr><th>Folders</th></tr></thead>
                     <tbody>
-                        @if (Pipelines is not null)
+                        @if (Pipelines is null)
                         {
-                            foreach (var folder in Pipelines.Select(p => p.FolderName).Distinct().OrderBy(folder => folder))
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (Pipelines.Count == 0)
+                        {
+                            <tr><td>No pipelines</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var folder in Pipelines.Keys.OrderBy(folder => folder))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light font-weight-bold" : null)">
                                     <td>@folder</td>
@@ -28,7 +36,7 @@
                     <tbody>
                         @if (Pipelines is not null && SelectedFolder is not null)
                         {
-                            foreach (var pipeline in Pipelines.Where(p => p.FolderName == SelectedFolder).Select(p => p.PipelineName).OrderBy(p => p))
+                            foreach (var pipeline in Pipelines[SelectedFolder].OrderBy(p => p))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light font-weight-bold" : null)">
                                     <td>@pipeline</td>
@@ -60,7 +68,7 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private List<(string FolderName, string PipelineName)> Pipelines { get; set; }
+    private Dictionary<string, List<string>> Pipelines { get; set; }
 
     private string SelectedFolder { get; set; }
     private string SelectedPipeline { get; set; }

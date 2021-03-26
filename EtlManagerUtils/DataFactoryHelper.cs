@@ -48,11 +48,15 @@ namespace EtlManagerUtils
             await Client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
         }
 
-        public async Task<List<(string FolderName, string PipelineName)>> GetPipelinesAsync()
+        public async Task<Dictionary<string, List<string>>> GetPipelinesAsync()
         {
             await CheckAccessTokenValidityAsync();
             var pipelines = await Client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
-            return pipelines.Select(p => (p.Folder?.Name ?? "/", p.Name)).ToList();
+            // Key = Folder
+            // Value = List of pipelines in that folder
+            return pipelines
+                .GroupBy(p => p.Folder?.Name ?? "/") // Replace null folder (root) with forward slash.
+                .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
         }
 
         private async Task CheckAccessTokenValidityAsync()

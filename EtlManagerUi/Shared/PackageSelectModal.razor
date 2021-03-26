@@ -10,7 +10,15 @@
                 <table class="table table-hover table-sm">
                     <thead><tr><th>Folders</th></tr></thead>
                     <tbody>
-                        @if (Catalog is not null)
+                        @if (Catalog is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (Catalog.Count == 0)
+                        {
+                            <tr><td>No folders</td></tr>
+                        }
+                        else
                         {
                             foreach (var folder in Catalog.Keys)
                             {
@@ -28,11 +36,19 @@
                     <tbody>
                         @if (Catalog is not null && SelectedFolder is not null)
                         {
-                            foreach (var project in Catalog[SelectedFolder].Keys)
+                            var projects = Catalog[SelectedFolder].Keys;
+                            if (projects.Count == 0)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light font-weight-bold" : null)">
-                                    <td>@project</td>
-                                </tr>
+                                <tr><td>No projects</td></tr>
+                            }
+                            else
+                            {
+                                foreach (var project in projects)
+                                {
+                                    <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light font-weight-bold" : null)">
+                                        <td>@project</td>
+                                    </tr>
+                                }
                             }
                         }
                     </tbody>
@@ -46,13 +62,21 @@
                     <tbody>
                         @if (Catalog is not null && SelectedFolder is not null && SelectedProject is not null)
                         {
-                            foreach (var package in Catalog[SelectedFolder][SelectedProject])
+                            var packages = Catalog[SelectedFolder][SelectedProject];
+                            if (packages.Count == 0)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light font-weight-bold" : null)">
-                                    <td>@package</td>
-                                </tr>
+                                <tr><td>No packages</td></tr>
                             }
-                        } 
+                            else
+                            {
+                                foreach (var package in packages)
+                                {
+                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light font-weight-bold" : null)">
+                                        <td>@package</td>
+                                    </tr>
+                                }
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
