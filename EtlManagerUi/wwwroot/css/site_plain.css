@@ -1,6 +1,20 @@
 ﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
+:root {
+    --color-primary-super-dark: #004085;
+    --color-primary-super-light: #CCE5FF;
+    --color-success: #28a745;
+    --color-success-super-dark: #155724;
+    --color-success-super-light: #D4EDDA;
+    --color-danger: #dc3545;
+    --color-danger-super-dark: #721C24;
+    --color-danger-super-light: #F8D7DA;
+    --color-warning: #ffc107;
+    --color-warning-super-light: #FFF3CD;
+    --color-warning-extra-dark: #856404;
+}
+
 .btn-row .btn-light {
     background-color: transparent;
     border-color: transparent;
@@ -40,6 +54,78 @@ tr.disabled {
     color: #fff;
 }
 
+
+/*
+    Job status icons
+*/
+.status-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.status-icon.failed svg {
+    color: var(--color-danger);
+}
+
+.status-icon.running svg {
+    color: var(--color-success);
+}
+
+.status-icon.warning svg {
+    color: var(--color-warning);
+}
+
+/*
+    Execution Gantt graph
+*/
+.steps-graph .running,
+.steps-graph .running.vis-selected {
+    background-color: var(--color-primary-super-light);
+    border-color: var(--color-primary-super-dark);
+    color: var(--color-primary-super-dark);
+}
+
+.steps-graph .completed,
+.steps-graph .completed.vis-selected {
+    background-color: var(--color-success-super-light);
+    border-color: var(--color-success-super-dark);
+    color: var(--color-success-super-dark);
+}
+
+.steps-graph .failed,
+.steps-graph .failed.vis-selected {
+    background-color: var(--color-danger-super-light);
+    border-color: var(--color-danger-super-dark);
+    color: var(--color-danger-super-dark);
+}
+
+.steps-graph .skipped,
+.steps-graph .skipped.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+
+.steps-graph .stopped,
+.steps-graph .stopped.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+
+.steps-graph .duplicate,
+.steps-graph .duplicate.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+
+.steps-graph .await-retry,
+.steps-graph .await-retry.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
 
 
 /*

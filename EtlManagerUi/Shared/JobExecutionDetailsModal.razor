@@ -6,65 +6,19 @@
 @inject IConfiguration configuration
 @inject IHttpContextAccessor HttpContextAccessor
 
-@*CSS styling for the vis-timeline object drawn using JSInterop in site.js*@
 <style>
     .vis-item {
         cursor: pointer;
         font-weight: bold;
     }
-
-    .vis-item .vis-item-overflow {
-        overflow: visible;
-    }
-
+        .vis-item .vis-item-overflow {
+            overflow: visible;
+        }
         .vis-labelset .vis-label .vis-inner,
         .vis-item .vis-item-content {
             font-size: 12px;
             padding: 0 5px;
         }
-
-    .steps-graph .running,
-    .steps-graph .running.vis-selected {
-        background-color: @GetFillFromStatus("RUNNING");
-        border-color: @GetFillFromStatus("RUNNING", true);
-        color: @GetFillFromStatus("RUNNING", true);
-    }
-    .steps-graph .completed,
-    .steps-graph .completed.vis-selected {
-        background-color: @GetFillFromStatus("COMPLETED");
-        border-color: @GetFillFromStatus("COMPLETED", true);
-        color: @GetFillFromStatus("COMPLETED", true);
-    }
-    .steps-graph .failed,
-    .steps-graph .failed.vis-selected {
-        background-color: @GetFillFromStatus("FAILED");
-        border-color: @GetFillFromStatus("FAILED", true);
-        color: @GetFillFromStatus("FAILED", true);
-    }
-    .steps-graph .skipped,
-    .steps-graph .skipped.vis-selected {
-        background-color: @GetFillFromStatus("SKIPPED");
-        border-color: @GetFillFromStatus("SKIPPED", true);
-        color: @GetFillFromStatus("SKIPPED", true);
-    }
-    .steps-graph .stopped,
-    .steps-graph .stopped.vis-selected {
-        background-color: @GetFillFromStatus("STOPPED");
-        border-color: @GetFillFromStatus("STOPPED", true);
-        color: @GetFillFromStatus("STOPPED", true);
-    }
-    .steps-graph .duplicate,
-    .steps-graph .duplicate.vis-selected {
-        background-color: @GetFillFromStatus("DUPLICATE");
-        border-color: @GetFillFromStatus("DUPLICATE", true);
-        color: @GetFillFromStatus("DUPLICATE", true);
-    }
-    .steps-graph .await-retry,
-    .steps-graph .await-retry.vis-selected {
-        background-color: @GetFillFromStatus("AWAIT RETRY");
-        border-color: @GetFillFromStatus("AWAIT RETRY", true);
-        color: @GetFillFromStatus("AWAIT RETRY", true);
-    }
 </style>
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
@@ -570,34 +524,6 @@
         Duration,
         Name,
         Status
-    }
-
-    private static string colorRed = "#FEDEE5";
-    private static string colorRedDark = "#823040";
-    private static string colorGreen = "#CEF5EA";
-    private static string colorGreenDark = "#056C4F";
-    private static string colorOrange = "#FFF2CC";
-    private static string colorOrangeDark = "#856200";
-    private static string colorBlue = "#E3E5FD";
-    private static string colorBlueDark = "#3B40A7";
-
-    public static string GetFillFromStatus(string status, bool dark = false)
-    {
-        switch (status)
-        {
-            case "COMPLETED":
-                return dark ? colorGreenDark : colorGreen;
-            case "FAILED":
-                return dark ? colorRedDark : colorRed;
-            case "SKIPPED":
-            case "STOPPED":
-            case "DUPLICATE":
-            case "AWAIT RETRY":
-                return dark ? colorOrangeDark : colorOrange;
-            case "RUNNING":
-            default:
-                return dark ? colorBlueDark : colorBlue;
-        }
     }
 
 }

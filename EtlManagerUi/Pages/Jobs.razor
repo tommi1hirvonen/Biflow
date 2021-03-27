@@ -6,27 +6,6 @@
 @inject IJSRuntime JsRuntime
 @inject IHttpContextAccessor HttpContextAccessor
 
-@*CSS definitions for the status icons for each job's last execution*@
-<style>
-    .status.failed svg {
-        width: 20px;
-        height: 20px;
-        color: #fa5c7c; @*red*@
-    }
-
-    .status.running svg {
-        width: 20px;
-        height: 20px;
-        color: #0acf97; @*green*@
-    }
-
-    .status.warning svg {
-        width: 20px;
-        height: 20px;
-        color: #dfa100; @*orange*@
-    }
-</style>
-
 <h4>Jobs</h4>
 
 <div class="btn-toolbar mt-3">
@@ -173,19 +152,19 @@
                             @switch (lastExecution?.ExecutionStatus)
                             {
                                 case "RUNNING":
-                                    <div class="status running" title="Running" aria-label="running">
+                                    <div class="status-icon running" title="Running" aria-label="running">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                                     </div>
                                     break;
                                 case "FAILED":
-                                    <div class="status failed" title="Failed" aria-label="failed">
+                                    <div class="status-icon failed" title="Failed" aria-label="failed">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
                                     </div>
                                     break;
                                 case "WARNING":
                                 case "STOPPED":
                                 case "SUSPENDED":
-                                    <div class="status warning" title="Warning" aria-label="warning">
+                                    <div class="status-icon warning" title="Warning" aria-label="warning">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
                                     </div>
                                     break;

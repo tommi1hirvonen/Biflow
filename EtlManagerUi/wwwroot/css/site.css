@@ -10,6 +10,7 @@
     --color-success: #0acf97;
     --color-success-dark: #08af80;
     --color-success-extra-dark: #079c72;
+    --color-success-super-dark: #056C4F;
     --color-success-light: #0beaab;
     --color-success-extra-light: #aaf1dd;
     --color-success-super-light: #cef5ea;
@@ -17,9 +18,13 @@
     --color-danger: #fa5c7c;
     --color-danger-dark: #f9395f;
     --color-danger-extra-dark: #f82550;
+    --color-danger-super-dark: #823040;
     --color-danger-light: #fb748f;
     --color-danger-super-light: #fedee5;
     --color-danger-shadow: rgba(250, 92, 124, 0.5);
+    --color-warning: #dfa100;
+    --color-warning-super-light: #FFF2CC;
+    --color-warning-extra-dark: #856200;
 }
 
 a {
@@ -314,6 +319,23 @@ tr.disabled {
 }
 
 /*
+    Job status icons
+*/
+.status-icon svg {
+    width: 20px;
+    height: 20px;
+}
+.status-icon.failed svg {
+    color: var(--color-danger);
+}
+.status-icon.running svg {
+    color: var(--color-success);
+}
+.status-icon.warning svg {
+    color: var(--color-warning);
+}
+
+/*
     Alert
 */
 .alert-success {
@@ -325,6 +347,55 @@ tr.disabled {
     background-color: var(--color-danger-super-light);
     border-color: var(--color-danger-super-light);
 }
+
+
+/*
+    Execution Gantt graph
+*/
+.steps-graph .running,
+.steps-graph .running.vis-selected {
+    background-color: var(--color-primary-super-light);
+    border-color: var(--color-primary-super-dark);
+    color: var(--color-primary-super-dark);
+}
+.steps-graph .completed,
+.steps-graph .completed.vis-selected {
+    background-color: var(--color-success-super-light);
+    border-color: var(--color-success-super-dark);
+    color: var(--color-success-super-dark);
+}
+.steps-graph .failed,
+.steps-graph .failed.vis-selected {
+    background-color: var(--color-danger-super-light);
+    border-color: var(--color-danger-super-dark);
+    color: var(--color-danger-super-dark);
+}
+.steps-graph .skipped,
+.steps-graph .skipped.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+.steps-graph .stopped,
+.steps-graph .stopped.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+.steps-graph .duplicate,
+.steps-graph .duplicate.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+.steps-graph .await-retry,
+.steps-graph .await-retry.vis-selected {
+    background-color: var(--color-warning-super-light);
+    border-color: var(--color-warning-extra-dark);
+    color: var(--color-warning-extra-dark);
+}
+
+
 
 
 /*
