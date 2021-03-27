@@ -75,12 +75,17 @@
                     Job name
                 </th>
                 <th></th>
-                <th></th>
                 <th>
 
                 </th>
                 <th>
                     Last execution
+                    @if (IsLoading)
+                    {
+                        <div class="spinner-border spinner-border-sm text-secondary align-middle ml-3" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    }
                 </th>
                 <th>
                     Next execution
@@ -164,9 +169,6 @@
                                 </AuthorizeView>
                             </div>
                         </td>
-                        <td class="align-middle">
-                            <text>@item.Steps.Count step(s)</text>
-                        </td>
                         <td class="align-middle" align="right">
                             @switch (lastExecution?.ExecutionStatus)
                             {
@@ -213,9 +215,11 @@
 
 @code {
     private IList<Job> jobs { get; set; }
-    private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = new();
+    private Dictionary<Guid, JobExecution> LastExecutions { get; set; }
     private Job NewJob { get; set; } = new() { IsEnabled = true };
     private Job EditJob { get; set; } = new();
+
+    private bool IsLoading { get; set; } = false;
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
@@ -227,9 +231,16 @@
 
     private async Task LoadData()
     {
+        IsLoading = true;
         using var context = DbFactory.CreateDbContext();
-        jobs = await context.Jobs.Include(job => job.Steps).Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+        jobs = await context.Jobs.Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+        StateHasChanged(); // Render/publish results so far (jobs),
+        await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
+        IsLoading = false;
+    }
 
+    private async Task LoadLastExecutions(EtlManagerContext context)
+    {
         // Get each job's last execution.
         var lastExecutions = await context.JobExecutions
             .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
@@ -243,7 +254,6 @@
             .ToListAsync();
 
         LastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
-
         StateHasChanged();
     }
 
