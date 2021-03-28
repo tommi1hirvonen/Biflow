@@ -507,8 +507,8 @@ tr.disabled {
  */
 
 .navbar-custom {
-    /*background-color: #414b58;*/
-    background-image: linear-gradient(90deg, #727CF5 0%, #8F75DA 100%);
+    background-color: #313A46;
+    /*background-image: linear-gradient(90deg, #727CF5 0%, #8F75DA 100%);*/
 }
 
     /* change the brand and text color */
