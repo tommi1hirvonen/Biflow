@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.PowerBI.Api;
+using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
 using Serilog;
 using System;
@@ -32,6 +33,14 @@ namespace EtlManagerUtils
             await CheckAccessTokenValidityAsync();
             await Client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
         }
+
+        public async Task<Refresh> GetDatasetRefreshStatus(string groupId, string datasetId, CancellationToken cancellationToken)
+        {
+            await CheckAccessTokenValidityAsync();
+            var refresh = await Client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
+            return refresh.Value.FirstOrDefault();
+        }
+
         public async Task<Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>> GetAllDatasetsAsync()
         {
             await CheckAccessTokenValidityAsync();

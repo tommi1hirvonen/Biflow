@@ -24,6 +24,7 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Get reference to the Power BI Service helper object.
             PowerBIServiceHelper powerBIServiceHelper;
             try
             {
@@ -35,10 +36,11 @@ namespace EtlManagerExecutor
                 return new ExecutionResult.Failure($"Error getting Power BI Service object information:\n{ex.Message}");
             }
 
+            // Start dataset refresh.
             try
             {
                 await powerBIServiceHelper.RefreshDatasetAsync(GroupId, DatasetId, cancellationToken);
-                return new ExecutionResult.Success();
+                
             }
             catch (OperationCanceledException)
             {
@@ -50,6 +52,36 @@ namespace EtlManagerExecutor
                 return new ExecutionResult.Failure(ex.Message);
             }
 
+            // Wait for 5 seconds before first attempting to get the dataset refresh status.
+            await Task.Delay(5000, cancellationToken);
+
+            while (true)
+            {
+                try
+                {
+                    var refresh = await powerBIServiceHelper.GetDatasetRefreshStatus(GroupId, DatasetId, cancellationToken);
+                    if (refresh?.Status == "Completed")
+                    {
+                        return new ExecutionResult.Success();
+                    }
+                    else if (refresh?.Status == "Failed" || refresh?.Status == "Disabled")
+                    {
+                        return new ExecutionResult.Failure(refresh.ServiceExceptionJson);
+                    }
+                    else
+                    {
+                        await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    return new ExecutionResult.Failure(ex.Message);
+                }
+            }
         }
     }
 }
