@@ -217,6 +217,7 @@ else
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
             .Include(step => step.PackageParameters)
+            .Include(step => step.PipelineParameters)
             .Include(step => step.Dependencies)
             .Include(step => step.Tags)
             .Where(step => step.JobId == CurrentJob.JobId)

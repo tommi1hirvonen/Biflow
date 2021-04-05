@@ -190,7 +190,7 @@
                 @if (Step.PipelineParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in Step.PackageParameters)
+                        @foreach (var param in Step.PipelineParameters)
                         {
                             <dt class="col-sm-3">@param.ParameterName</dt>
                             <dd class="col-sm-9">@param.ParameterValue</dd>
