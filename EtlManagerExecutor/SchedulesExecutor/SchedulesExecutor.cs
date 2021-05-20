@@ -71,7 +71,7 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            var jobIds = new List<KeyValuePair<string, string>>();
+            var jobIds = new List<(string JobId, string ScheduleId)>();
             try
             {
                 using var sqlCommand = new SqlCommand(commandBuilder.ToString(), sqlConnection);
@@ -80,7 +80,7 @@ namespace EtlManagerExecutor
                 {
                     var jobId = reader["JobId"].ToString();
                     var scheduleId = reader["ScheduleId"].ToString();
-                    jobIds.Add(new KeyValuePair<string, string>(jobId, scheduleId));
+                    jobIds.Add((jobId, scheduleId));
                 }
             }
             catch (Exception ex)
@@ -97,19 +97,19 @@ namespace EtlManagerExecutor
 
             string executorFilePath = Process.GetCurrentProcess().MainModule.FileName;
 
-            foreach (var pair in jobIds)
+            foreach (var (jobId, scheduleId) in jobIds)
             {
                 string executionId;
                 try
                 {
                     using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
-                    initCommand.Parameters.AddWithValue("@JobId_", pair.Key);
-                    initCommand.Parameters.AddWithValue("@ScheduleId_", pair.Value);
+                    initCommand.Parameters.AddWithValue("@JobId_", jobId);
+                    initCommand.Parameters.AddWithValue("@ScheduleId_", scheduleId);
                     executionId = (await initCommand.ExecuteScalarAsync()).ToString();
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error initializing execution for job {jobId}", pair.Key);
+                    Log.Error(ex, "Error initializing execution for job {jobId}", jobId);
                     continue;
                 }
 

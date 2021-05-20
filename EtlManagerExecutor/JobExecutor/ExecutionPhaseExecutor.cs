@@ -18,7 +18,7 @@ namespace EtlManagerExecutor
         public override async Task RunAsync()
         {
             // Fetch all steps for this execution along with their execution phase.
-            var allSteps = new List<KeyValuePair<int, Step>>();
+            var allSteps = new List<(int ExecutionPhase, Step Step)>();
 
             using (var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString))
             {
@@ -32,12 +32,12 @@ namespace EtlManagerExecutor
                     var stepName = reader["StepName"].ToString();
                     var executionPhase = (int)reader["ExecutionPhase"];
                     var step = new Step(stepId, stepName);
-                    allSteps.Add(new(executionPhase, step));
+                    allSteps.Add((executionPhase, step));
                     CancellationTokenSources[stepId] = new();
                 }
             }
 
-            List<int> executionPhases = allSteps.Select(step => step.Key).Distinct().ToList();
+            List<int> executionPhases = allSteps.Select(step => step.ExecutionPhase).Distinct().ToList();
             executionPhases.Sort();
 
             // Start listening for cancel commands.
@@ -47,7 +47,7 @@ namespace EtlManagerExecutor
             foreach (int executionPhase in executionPhases)
             {
                 // Get a list of steps for this execution phase.
-                List<Step> stepsToExecute = allSteps.Where(step => step.Key == executionPhase).Select(step => step.Value).ToList();
+                List<Step> stepsToExecute = allSteps.Where(step => step.ExecutionPhase == executionPhase).Select(step => step.Step).ToList();
                 var stepWorkers = new List<Task>();
 
                 foreach (var step in stepsToExecute)
