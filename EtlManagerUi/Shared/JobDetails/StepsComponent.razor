@@ -359,6 +359,14 @@
             </BSModalBody>
         }
         <BSModalFooter>
+            <div class="col mr-auto">
+                <div class="custom-control custom-checkbox custom-control-inline">
+                    <input type="checkbox" class="custom-control-input" id="execute_notify"
+                            checked=@ExecuteNotify
+                            @bind-value="ExecuteNotify">
+                    <label class="custom-control-label" for="execute_notify">Notify based on subscriptions</label>
+                </div>
+            </div>
             <BSButton Color="Color.Primary" Class="ml-5" @onclick="Execute">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                 Execute
@@ -403,6 +411,7 @@
         Steps.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
         .Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)) // Step name filter
         .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))); // Tag filter
+    private bool ExecuteNotify { get; set; } = false;
 
     private bool ExecuteSuccess { get; set; } = false;
     private bool ExecuteAlertOpen { get; set; } = false;
@@ -623,7 +632,7 @@
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration, Job, user, stepIds);
+            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration, Job, user, stepIds, ExecuteNotify);
             ExecuteSuccess = true;
         }
         catch (Exception ex)
@@ -636,6 +645,7 @@
         ExecuteModal.Hide();
         ExecuteAlertOpen = true;
         ExecuteButtonDisabled = false;
+        ExecuteNotify = false;
     }
 
     private void OpenJobExecutionModal()

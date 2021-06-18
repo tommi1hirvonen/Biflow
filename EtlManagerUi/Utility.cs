@@ -61,7 +61,7 @@ namespace EtlManagerUi
             return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        public async static Task<Guid> StartExecutionAsync(IConfiguration configuration, Job job, string username, List<string> stepIds = null)
+        public async static Task<Guid> StartExecutionAsync(IConfiguration configuration, Job job, string username, List<string> stepIds = null, bool notify = false)
         {
             Guid executionId;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
@@ -97,7 +97,8 @@ namespace EtlManagerUi
                 ArgumentList = {
                     "execute",
                     "--id",
-                    executionId.ToString()
+                    executionId.ToString(),
+                    notify ? "--notify" : ""
                 },
                 UseShellExecute = false,
                 CreateNoWindow = true,
