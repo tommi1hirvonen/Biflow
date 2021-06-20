@@ -35,29 +35,13 @@ WHERE JobId = @JobId
 INSERT INTO etlmanager.Schedule (
 	ScheduleId,
 	JobId,
-	Monday,
-	Tuesday,
-	Wednesday,
-	Thursday,
-	Friday,
-	Saturday,
-	Sunday,
-	TimeHours,
-	TimeMinutes,
+	CronExpression,
 	CreatedBy,
 	CreatedDateTime
 )
 SELECT NEWID(),
 	@JobIdNew,
-	Monday,
-	Tuesday,
-	Wednesday,
-	Thursday,
-	Friday,
-	Saturday,
-	Sunday,
-	TimeHours,
-	TimeMinutes,
+	CronExpression,
 	@Username,
 	GETDATE()
 FROM etlmanager.Schedule

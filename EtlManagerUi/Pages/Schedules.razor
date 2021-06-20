@@ -12,9 +12,6 @@
         <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()" IsDisabled="Jobs?.Count == 0">
             Add schedule
         </BSButton>
-        <BSButton Color="Color.Primary" Class="ml-3" @onclick="() => GenerateModal.Show()" IsDisabled="Jobs?.Count == 0">
-            Generate schedules
-        </BSButton>
     </div>
 </AuthorizeView>
 
@@ -30,28 +27,13 @@
                     Enabled
                 </th>
                 <th>
-                    Time
+                    Cron expression
                 </th>
                 <th>
-                    <text class="sr-only">Monday</text>
+                    Description
                 </th>
                 <th>
-                    <text class="sr-only">Tuesday</text>
-                </th>
-                <th>
-                    <text class="sr-only">Wednesday</text>
-                </th>
-                <th>
-                    <text class="sr-only">Thursday</text>
-                </th>
-                <th>
-                    <text class="sr-only">Friday</text>
-                </th>
-                <th>
-                    <text class="sr-only">Saturday</text>
-                </th>
-                <th>
-                    <text class="sr-only">Sunday</text>
+                    Next execution
                 </th>
                 <th>
                 </th>
@@ -89,77 +71,20 @@
                             </div>
                         </td>
                         <td>
-                            @item.TimeHours:@item.GetMinutesText()
+                            @item.CronExpression
                         </td>
                         <td>
-                            @if (item.Monday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Monday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Monday</span>
-                            }
+                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" id="@("tooltip_" + item.ScheduleId)">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                            </BSButton>
+                            <BSTooltip Target="@("tooltip_" + item.ScheduleId)" Placement="Placement.Auto">
+                                <div style="white-space: pre;">
+                                    @item.GetScheduleDescription()
+                                </div>
+                            </BSTooltip>
                         </td>
                         <td>
-                            @if (item.Tuesday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Tuesday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Tuesday</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.Wednesday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Wednesday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Wednesday</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.Thursday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Thursday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Thursday</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.Friday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Friday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Friday</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.Saturday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Saturday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Saturday</span>
-                            }
-                        </td>
-                        <td>
-                            @if (item.Sunday)
-                            {
-                                <span class="badge badge-primary" aria-label="on">Sunday</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-secondary" aria-label="off">Sunday</span>
-                            }
+                            @item.GetNextFireTime()
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
@@ -189,7 +114,7 @@
                         <div class="col-md-8 mx-auto">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <BSFormGroup Class="col">
+                            <BSFormGroup>
                                 <BSLabel>Job</BSLabel>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
@@ -205,74 +130,17 @@
                                     </InputSelect>
                                 </div>
                             </BSFormGroup>
-                            <BSFormGroup Class="col-md-4">
-                                <BSLabel>Hours</BSLabel>
+                            <BSFormGroup>
+                                <BSLabel>Cron expression</BSLabel>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <div class="input-group-text">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                                         </div>
                                     </div>
-                                    <BSInput @bind-Value="NewSchedule.TimeHours"></BSInput>
+                                    <InputText class="form-control" @bind-Value="NewSchedule.CronExpression"></InputText>
                                 </div>
                             </BSFormGroup>
-                            <div class="form-group">
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="timeMinutes0" value="0"
-                                           checked=@NewSchedule.TimeMinutes.Equals(0)
-                                           @onchange="eventArgs => NewSchedule.TimeMinutes = int.Parse((string)eventArgs.Value)">
-                                    <label class="custom-control-label" for="timeMinutes0">:00</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="timeMinutes15" value="15"
-                                           checked=@NewSchedule.TimeMinutes.Equals(15)
-                                           @onchange="eventArgs => NewSchedule.TimeMinutes = int.Parse((string)eventArgs.Value)">
-                                    <label class="custom-control-label" for="timeMinutes15">:15</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="timeMinutes30" value="30"
-                                           checked=@NewSchedule.TimeMinutes.Equals(30)
-                                           @onchange="eventArgs => NewSchedule.TimeMinutes = int.Parse((string)eventArgs.Value)">
-                                    <label class="custom-control-label" for="timeMinutes30">:30</label>
-                                </div>
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" class="custom-control-input" id="timeMinutes45" value="45"
-                                           checked=@NewSchedule.TimeMinutes.Equals(45)
-                                           @onchange="eventArgs => NewSchedule.TimeMinutes = int.Parse((string)eventArgs.Value)">
-                                    <label class="custom-control-label" for="timeMinutes45">:45</label>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="monday" @bind-value="NewSchedule.Monday">
-                                    <label class="custom-control-label" for="monday">Mon</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="tuesday" @bind-value="NewSchedule.Tuesday">
-                                    <label class="custom-control-label" for="tuesday">Tue</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="wednesday" @bind-value="NewSchedule.Wednesday">
-                                    <label class="custom-control-label" for="wednesday">Wed</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="thursday" @bind-value="NewSchedule.Thursday">
-                                    <label class="custom-control-label" for="thursday">Thu</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="friday" @bind-value="NewSchedule.Friday">
-                                    <label class="custom-control-label" for="friday">Fri</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="saturday" @bind-value="NewSchedule.Saturday">
-                                    <label class="custom-control-label" for="saturday">Sat</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="sunday" @bind-value="NewSchedule.Sunday">
-                                    <label class="custom-control-label" for="sunday">Sun</label>
-                                </div>
-                            </div>
-                            <p class="text-danger">@CreateErrorMessage</p>
                         </div>
                     </div>
                 </BSModalBody>
@@ -285,127 +153,6 @@
     </AuthorizeView>
 }
 
-@if (ScheduleGeneration is not null)
-{
-    <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSModal @ref="GenerateModal" Size="Size.Large">
-            <BSModalHeader OnClick="() => GenerateModal.Hide()">Generate schedules</BSModalHeader>
-            <BSForm Model="ScheduleGeneration" OnValidSubmit="GenerateSchedules" Context="_context">
-                <BSModalBody>
-                    <div class="row">
-                        <div class="col-md-8 mx-auto">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
-                            <BSFormGroup Class="col">
-                                <BSLabel>Job</BSLabel>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                                        </div>
-                                    </div>
-                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.JobId">
-                                        @foreach (var job in Jobs)
-                                            {
-                                            <option value="@job.JobId">@job.JobName</option>
-                                            }
-                                    </InputSelect>
-                                </div>
-                            </BSFormGroup>
-                            <BSFormRow>
-                                <BSFormGroup class="col">
-                                    <BSLabel>Interval</BSLabel>
-                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalType">
-                                        <option>Hours</option>
-                                        <option>Minutes</option>
-                                    </InputSelect>
-                                </BSFormGroup>
-                                @if (ScheduleGeneration.IntervalType == "Hours")
-                                {
-                                    <BSFormGroup class="col">
-                                        <BSLabel>Hours</BSLabel>
-                                        <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalValueHours">
-                                            @for (int value = 1; value <= 12; value++)
-                                                    {
-                                                <option>@value</option>
-                                                    }
-                                        </InputSelect>
-                                    </BSFormGroup>
-                                }
-                                else if (ScheduleGeneration.IntervalType == "Minutes")
-                                {
-                                    <BSFormGroup class="col">
-                                        <BSLabel>Minutes</BSLabel>
-                                        <InputSelect class="form-control" @bind-Value="ScheduleGeneration.IntervalValueMinutes">
-                                            <option>15</option>
-                                            <option>30</option>
-                                            <option>45</option>
-                                        </InputSelect>
-                                    </BSFormGroup>
-                                }
-                            </BSFormRow>
-                            <BSFormRow>
-                                <BSFormGroup class="col">
-                                    <BSLabel>Start time</BSLabel>
-                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.StartTime">
-                                        @foreach (var value in GetTimeValues())
-                                            {
-                                            <option>@value</option>
-                                            }
-                                    </InputSelect>
-                                </BSFormGroup>
-                                <BSFormGroup class="col">
-                                    <BSLabel>End time</BSLabel>
-                                    <InputSelect class="form-control" @bind-Value="ScheduleGeneration.EndTime">
-                                        @foreach (var value in GetTimeValues())
-                                            {
-                                            <option>@value</option>
-                                            }
-                                    </InputSelect>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <div class="form-group">
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_monday" @bind-value="ScheduleGeneration.Monday">
-                                    <label class="custom-control-label" for="generate_monday">Mon</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_tuesday" @bind-value="ScheduleGeneration.Tuesday">
-                                    <label class="custom-control-label" for="generate_tuesday">Tue</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_wednesday" @bind-value="ScheduleGeneration.Wednesday">
-                                    <label class="custom-control-label" for="generate_wednesday">Wed</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_thursday" @bind-value="ScheduleGeneration.Thursday">
-                                    <label class="custom-control-label" for="generate_thursday">Thu</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_friday" @bind-value="ScheduleGeneration.Friday">
-                                    <label class="custom-control-label" for="generate_friday">Fri</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_saturday" @bind-value="ScheduleGeneration.Saturday">
-                                    <label class="custom-control-label" for="generate_saturday">Sat</label>
-                                </div>
-                                <div class="custom-control custom-checkbox custom-control-inline">
-                                    <input type="checkbox" class="custom-control-input" id="generate_sunday" @bind-value="ScheduleGeneration.Sunday">
-                                    <label class="custom-control-label" for="generate_sunday">Sun</label>
-                                </div>
-                            </div>
-                            <p class="text-danger">@GenerateErrorMessage</p>
-                        </div>
-                    </div>
-                </BSModalBody>
-                <BSModalFooter>
-                    <BSButton ButtonType="ButtonType.Submit" Color="Color.Primary">Generate</BSButton>
-                    <BSButton Color="Color.Secondary" @onclick="() => GenerateModal.Hide()">Cancel</BSButton>
-                </BSModalFooter>
-            </BSForm>
-        </BSModal>
-    </AuthorizeView>
-}
 
 @code {
 
@@ -415,15 +162,7 @@
 
     private Schedule NewSchedule { get; set; }
 
-    private ScheduleGeneration ScheduleGeneration { get; set; }
-
     private BSModal CreateModal { get; set; }
-
-    private BSModal GenerateModal { get; set; }
-
-    private string CreateErrorMessage { get; set; } = string.Empty;
-
-    private string GenerateErrorMessage { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -437,8 +176,7 @@
         Schedules_ = await context.Schedules
             .Include(schedule => schedule.Job)
             .OrderBy(schedule => schedule.Job.JobName)
-            .ThenBy(schedule => schedule.TimeHours)
-            .ThenBy(schedule => schedule.TimeMinutes)
+            .ThenBy(schedule => schedule.CronExpression)
             .ToListAsync();
 
         if (Jobs?.Count == 0)
@@ -452,15 +190,6 @@
             IsEnabled = true
         };
 
-        ScheduleGeneration = new()
-        {
-            JobId = Jobs.Select(job => job.JobId).First(),
-            IntervalType = "Hours",
-            IntervalValueHours = 1,
-            IntervalValueMinutes = 15,
-            StartTime = "00:00",
-            EndTime = "00:00"
-        };
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
@@ -468,33 +197,48 @@
         bool value = (bool)args.Value;
         try
         {
-            await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
-            schedule.IsEnabled = !schedule.IsEnabled;
+            var success = await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
+            if (success)
+            {
+                schedule.IsEnabled = !schedule.IsEnabled;
+            }
+            else
+            {
+                throw new Exception("Error sending command to the scheduler service");
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error enabling/disabling schedule");
+            await JS.InvokeVoidAsync("alert", $"Error enabling/disabling schedule\n{ex.Message}");
         }
     }
 
     private async Task AddSchedule()
     {
-        if (!NewSchedule.Monday && !NewSchedule.Tuesday && !NewSchedule.Wednesday
-            && !NewSchedule.Thursday && !NewSchedule.Friday && !NewSchedule.Saturday && !NewSchedule.Sunday)
-        {
-            CreateErrorMessage = "At least one weekday must be selected";
-            return;
-        }
-        CreateErrorMessage = string.Empty;
         CreateModal.Hide();
         try
         {
+            // Save the new schedule to the database.
             using var context = DbFactory.CreateDbContext();
+            using var transaction = context.Database.BeginTransaction();
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
+            // Send the schedule to the scheduler service.
+            bool success = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Add, NewSchedule);
+            // Commit the database transaction if the scheduler received the schedule. Otherwise rollback the transaction.
+            if (success)
+            {
+                transaction.Commit();
+            }
+            else
+            {
+                transaction.Rollback();
+                throw new Exception("Error sending the new schedule to the scheduler service");
+            }
+
             NewSchedule.Job = Jobs.First(job => job.JobId == NewSchedule.JobId);
             Schedules_.Add(NewSchedule);
-            Schedules_ = Schedules_.OrderBy(sched => sched.Job.JobName).ThenBy(sched => sched.TimeHours).ThenBy(sched => sched.TimeMinutes).ToList();
+            Schedules_ = Schedules_.OrderBy(sched => sched.Job.JobName).ThenBy(sched => sched.CronExpression).ToList();
 
             NewSchedule = new()
             {
@@ -502,9 +246,9 @@
                 IsEnabled = true
             };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error adding schedule");
+            await JS.InvokeVoidAsync("alert", $"Error adding schedule\n{ex.Message}");
         }
     }
 
@@ -513,97 +257,26 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
+            using var transaction = context.Database.BeginTransaction();
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
+            bool success = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Delete, schedule);
+            if (success)
+            {
+                transaction.Commit();
+            }
+            else
+            {
+                transaction.Rollback();
+                throw new Exception("Error removing the schedule from the scheduler service");
+            }
+
             Schedules_.Remove(schedule);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error deleting schedule");
+            await JS.InvokeVoidAsync("alert", $"Error deleting schedule\n{ex.Message}");
         }
-    }
-
-    private async Task GenerateSchedules()
-    {
-        if (!ScheduleGeneration.Monday && !ScheduleGeneration.Tuesday && !ScheduleGeneration.Wednesday
-            && !ScheduleGeneration.Thursday && !ScheduleGeneration.Friday && !ScheduleGeneration.Saturday && !ScheduleGeneration.Sunday)
-        {
-            GenerateErrorMessage = "At least one weekday must be selected";
-            return;
-        }
-        GenerateErrorMessage = string.Empty;
-        GenerateModal.Hide();
-        var startHours = int.Parse(ScheduleGeneration.StartTime.Split(':')[0]);
-        var startMinutes = int.Parse(ScheduleGeneration.StartTime.Split(':')[1]);
-        var endHours = int.Parse(ScheduleGeneration.EndTime.Split(':')[0]);
-        var endMinutes = int.Parse(ScheduleGeneration.EndTime.Split(':')[1]);
-
-        using var context = DbFactory.CreateDbContext();
-
-        if (ScheduleGeneration.IntervalType == "Hours")
-        {
-            for (int hour = startHours; hour <= endHours; hour += ScheduleGeneration.IntervalValueHours)
-            {
-                var schedule = new Schedule()
-                {
-                    IsEnabled = true,
-                    JobId = ScheduleGeneration.JobId,
-                    TimeHours = hour,
-                    TimeMinutes = startMinutes,
-                    Monday = ScheduleGeneration.Monday,
-                    Tuesday = ScheduleGeneration.Tuesday,
-                    Wednesday = ScheduleGeneration.Wednesday,
-                    Thursday = ScheduleGeneration.Thursday,
-                    Friday = ScheduleGeneration.Friday,
-                    Saturday = ScheduleGeneration.Saturday,
-                    Sunday = ScheduleGeneration.Sunday
-                };
-                context.Schedules.Add(schedule);
-            }
-        }
-        else if (ScheduleGeneration.IntervalType == "Minutes")
-        {
-            var timeSpan = new TimeSpan(startHours, startMinutes, 0);
-            var endTimeSpan = new TimeSpan(endHours, endMinutes, 0);
-            while (timeSpan <= endTimeSpan)
-            {
-                var schedule = new Schedule()
-                {
-                    IsEnabled = true,
-                    JobId = ScheduleGeneration.JobId,
-                    TimeHours = timeSpan.Hours,
-                    TimeMinutes = timeSpan.Minutes,
-                    Monday = ScheduleGeneration.Monday,
-                    Tuesday = ScheduleGeneration.Tuesday,
-                    Wednesday = ScheduleGeneration.Wednesday,
-                    Thursday = ScheduleGeneration.Thursday,
-                    Friday = ScheduleGeneration.Friday,
-                    Saturday = ScheduleGeneration.Saturday,
-                    Sunday = ScheduleGeneration.Sunday
-                };
-                context.Schedules.Add(schedule);
-                timeSpan = timeSpan.Add(new TimeSpan(0, ScheduleGeneration.IntervalValueMinutes, 0));
-            }
-        }
-
-        await context.SaveChangesAsync();
-        await LoadData();
-    }
-
-    // Generates a list of time values in HH:mm format in 15 minute increments.
-    public List<string> GetTimeValues()
-    {
-        List<string> timeValues = new List<string>();
-        for (int hours = 0; hours < 24; hours++)
-        {
-            for (int minutes = 0; minutes < 60; minutes += 15)
-            {
-                string hourString = hours.ToString().Length > 1 ? hours.ToString() : "0" + hours;
-                string minuteString = minutes.ToString().Length > 1 ? minutes.ToString() : "0" + minutes;
-                timeValues.Add(hourString + ":" + minuteString);
-            }
-        }
-        return timeValues;
     }
 
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Quartz;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,50 +11,54 @@ namespace EtlManagerUi.Models
     {
         [Key]
         public Guid ScheduleId { get; set; }
+        
         [Required]
         public Guid JobId { get; set; }
+        
         public Job Job { get; set; }
+        
         [Required]
-        [Display(Name = "Mon")]
-        public bool Monday { get; set; }
-        [Required]
-        [Display(Name = "Tue")]
-        public bool Tuesday { get; set; }
-        [Required]
-        [Display(Name = "Wed")]
-        public bool Wednesday { get; set; }
-        [Required]
-        [Display(Name = "Thu")]
-        public bool Thursday { get; set; }
-        [Required]
-        [Display(Name = "Fri")]
-        public bool Friday { get; set; }
-        [Required]
-        [Display(Name = "Sat")]
-        public bool Saturday { get; set; }
-        [Required]
-        [Display(Name = "Sun")]
-        public bool Sunday { get; set; }
-        [Required]
-        [Range(0, 23, ErrorMessage = "Use values between 0 and 23")]
-        [Display(Name = "Hours")]
-        public int TimeHours { get; set; }
-        [Required]
-        [Display(Name = "Minutes")]
-        public int TimeMinutes { get; set; } = 0;
+        [Display(Name = "Cron expression")]
+        [CronExpression]
+        public string CronExpression { get; set; }
+        
+        
         [Required]
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
+        
         [Required]
         [Display(Name = "Created")]
         public DateTime CreatedDateTime { get; set; }
+        
         [Display(Name = "Created by")]
         public string CreatedBy { get; set; }
 
-        public string GetMinutesText()
+        public string GetScheduleDescription()
         {
-            string temp = "0" + TimeMinutes.ToString();
-            return temp.Substring(temp.Length - 2);
+            if (Quartz.CronExpression.IsValidExpression(CronExpression))
+            {
+                var cron = new CronExpression(CronExpression);
+                return cron.GetExpressionSummary();
+            }
+            else
+            {
+                return "Invalid Cron expression";
+            }
+        }
+
+        public DateTime GetNextFireTime()
+        {
+            if (Quartz.CronExpression.IsValidExpression(CronExpression))
+            {
+                var cron = new CronExpression(CronExpression);
+                var nextFireTime = cron.GetTimeAfter(DateTimeOffset.UtcNow)?.LocalDateTime;
+                return nextFireTime ?? DateTime.MaxValue;
+            }
+            else
+            {
+                return DateTime.MaxValue;
+            }
         }
     }
 }

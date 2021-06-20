@@ -246,33 +246,8 @@
 
     private DateTime? GetNextStartTime(Job job)
     {
-        IEnumerable<DateTime> dateTimes = GetPossibleDateTimes(job.Schedules);
-        dateTimes = dateTimes.Where(dt => dt > DateTime.Now);
+        var dateTimes = job.Schedules.Select(s => s.GetNextFireTime());
         return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
-    }
-
-    // Takes a list of Schedules and converts them to a list of DateTimes for the current and next week.
-    private List<DateTime> GetPossibleDateTimes(ICollection<Schedule> schedules)
-    {
-        List<DateTime> dateTimes = new List<DateTime>();
-        foreach (var schedule in schedules.Where(schedule => schedule.IsEnabled))
-        {
-            List<DateTime> dateTimesTemp = new List<DateTime>();
-            DateTime startOfWeek = DateTime.Now.StartOfWeek(DayOfWeek.Monday);
-            startOfWeek = startOfWeek.AddHours(schedule.TimeHours).AddMinutes(schedule.TimeMinutes);
-            if (schedule.Monday) dateTimesTemp.Add(startOfWeek);
-            if (schedule.Tuesday) dateTimesTemp.Add(startOfWeek.AddDays(1));
-            if (schedule.Wednesday) dateTimesTemp.Add(startOfWeek.AddDays(2));
-            if (schedule.Thursday) dateTimesTemp.Add(startOfWeek.AddDays(3));
-            if (schedule.Friday) dateTimesTemp.Add(startOfWeek.AddDays(4));
-            if (schedule.Saturday) dateTimesTemp.Add(startOfWeek.AddDays(5));
-            if (schedule.Sunday) dateTimesTemp.Add(startOfWeek.AddDays(6));
-            // Current week
-            dateTimesTemp.ForEach(dt => dateTimes.Add(dt));
-            // Add next week in case current has no match
-            dateTimesTemp.ForEach(dt => dateTimes.Add(dt.AddDays(7)));
-        }
-        return dateTimes;
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Job job)
@@ -351,6 +326,7 @@
             using var context = DbFactory.CreateDbContext();
             context.Jobs.Remove(job);
             await context.SaveChangesAsync();
+            await Utility.SchedulerServiceDeleteJobAsync(job);
             jobs.Remove(job);
         }
         catch (Exception ex)

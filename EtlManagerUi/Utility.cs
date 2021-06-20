@@ -216,19 +216,77 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
-        public async static Task ToggleScheduleEnabledAsync(IConfiguration configuration, Schedule schedule, bool enabled)
+        public async static Task<bool> SchedulerServiceDeleteJobAsync(Job job)
+        {
+            // Connect to the pipe server set up by the scheduler service.
+            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+#pragma warning disable CA1416 // Validate platform compatibility
+            pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
+#pragma warning restore CA1416 // Validate platform compatibility
+
+            // Send add command.
+            var addCommand = new SchedulerCommand(SchedulerCommand.CommandType.Delete, job.JobId.ToString(), null, null);
+            var json = JsonSerializer.Serialize(addCommand);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            pipeClient.Write(bytes, 0, bytes.Length);
+
+
+            // Get response from scheduler service
+            var responseBytes = CommonUtility.ReadMessage(pipeClient);
+            var response = Encoding.UTF8.GetString(responseBytes);
+            return response == "SUCCESS";
+        }
+
+        public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule schedule)
+        {
+            // Connect to the pipe server set up by the scheduler service.
+            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+#pragma warning disable CA1416 // Validate platform compatibility
+            pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
+#pragma warning restore CA1416 // Validate platform compatibility
+
+            // Send add command.
+            var addCommand = new SchedulerCommand(commandType, schedule.JobId.ToString(), schedule.ScheduleId.ToString(), schedule.CronExpression);
+            var json = JsonSerializer.Serialize(addCommand);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            pipeClient.Write(bytes, 0, bytes.Length);
+
+
+            // Get response from scheduler service
+            var responseBytes = CommonUtility.ReadMessage(pipeClient);
+            var response = Encoding.UTF8.GetString(responseBytes);
+            return response == "SUCCESS";
+        }
+
+        public async static Task<bool> ToggleScheduleEnabledAsync(IConfiguration configuration, Schedule schedule, bool enabled)
         {
             int value = enabled ? 1 : 0;
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            
+            await sqlConnection.OpenAsync();
+            using var transaction = sqlConnection.BeginTransaction();
             using var sqlCommand = new SqlCommand(
                 @"UPDATE [etlmanager].[Schedule]
                 SET [IsEnabled] = @Value
                 WHERE [ScheduleId] = @ScheduleId"
-                , sqlConnection);
+                , sqlConnection, transaction);
             sqlCommand.Parameters.AddWithValue("@ScheduleId", schedule.ScheduleId.ToString());
             sqlCommand.Parameters.AddWithValue("@Value", value);
-            await sqlConnection.OpenAsync();
             await sqlCommand.ExecuteNonQueryAsync();
+            var commandType = enabled ? SchedulerCommand.CommandType.Resume : SchedulerCommand.CommandType.Pause;
+            bool success = await SchedulerServiceSendCommandAsync(commandType, schedule);
+            if (success)
+            {
+                transaction.Commit();
+                return true;
+            }
+            else
+            {
+                transaction.Rollback();
+                return false;
+            }
         }
 
         public async static Task<Guid> JobCopyAsync(IConfiguration configuration, Guid jobId, string username)

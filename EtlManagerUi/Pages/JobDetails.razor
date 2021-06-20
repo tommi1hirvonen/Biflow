@@ -253,6 +253,7 @@ else
             using var context = DbFactory.CreateDbContext();
             context.Jobs.Remove(CurrentJob);
             await context.SaveChangesAsync();
+            await Utility.SchedulerServiceDeleteJobAsync(CurrentJob);
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
