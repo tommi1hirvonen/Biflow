@@ -104,6 +104,10 @@ namespace EtlManagerScheduler
                 }
 
                 _logger.LogInformation($"Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}");
+
+                // Wait for the execution to finish and for the executor process to exit.
+                // This way Quartz does not start a parallel execution of the same job.
+                await executorProcess.WaitForExitAsync();
             }
             catch (Exception ex)
             {

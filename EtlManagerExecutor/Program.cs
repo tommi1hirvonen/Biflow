@@ -29,7 +29,6 @@ namespace EtlManagerExecutor
                 .ConfigureServices((context, services) =>
                 {
                     services.AddTransient<IJobExecutor, JobExecutor>();
-                    services.AddTransient<ISchedulesExecutor, SchedulesExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
                 })
@@ -38,10 +37,9 @@ namespace EtlManagerExecutor
                 .UseSerilog()
                 .Build();
 
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, SchedulesExecutorOptions, CancelOptions, MailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, MailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
-                    (SchedulesExecutorOptions options) => RunSchedules(host, options),
                     (CancelOptions options) => CancelExecutionAsync(host, options),
                     (MailTestOptions options) => RunMailTest(host, options),
                     (CommitOptions options) => PrintCommit(),
@@ -53,13 +51,6 @@ namespace EtlManagerExecutor
         {
             var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
             await service.RunAsync(options.ExecutionId, options.Notify);
-            return 0;
-        }
-
-        static async Task<int> RunSchedules(IHost host, SchedulesExecutorOptions options)
-        {
-            var service = ActivatorUtilities.CreateInstance<SchedulesExecutor>(host.Services);
-            await service.RunAsync(options.Hours, options.Minutes);
             return 0;
         }
 
@@ -114,16 +105,6 @@ namespace EtlManagerExecutor
     {
         [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
         public string ToAddress { get; set; }
-    }
-
-    [Verb("exec-schedules", HelpText = "Execute schedules for a specific time of day.")]
-    class SchedulesExecutorOptions
-    {
-        [Option('h', "hours", HelpText = "Hours of the time of day", Required = true)]
-        public int Hours { get; set; }
-        
-        [Option('m', "minutes", HelpText = "Minutes of the time of day", Required = true)]
-        public int Minutes { get; set; }
     }
 
     [Verb("cancel", HelpText = "Cancel a running execution under a different executor process.")]
