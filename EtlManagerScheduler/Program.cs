@@ -18,6 +18,7 @@ namespace EtlManagerScheduler
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .UseWindowsService()
                 .ConfigureLogging((hostContext, loggingBuilder) =>
                 {
                     var logger = new LoggerConfiguration().ReadFrom.Configuration(hostContext.Configuration).CreateLogger();
