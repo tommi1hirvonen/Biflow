@@ -5,11 +5,19 @@
 <AuthorizeView>
     <Authorized>
         <header>
-            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow">
+            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : null)">
                 <text class="navbar-brand navbar-brand-bg mr-0 px-3">ETL Manager</text>
                 <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                @if (SchedulerServiceErrorMessage is not null)
+                {
+                    <ul class="navbar-nav">
+                        <li>
+                            <strong class="navbar-text px-3">@SchedulerServiceErrorMessage</strong>
+                        </li>
+                    </ul>
+                }
                 <ul class="navbar-nav ml-auto">
                     <li>
                         <strong class="navbar-text px-3">
@@ -35,6 +43,7 @@
 
     private bool collapseSidebar = true;
     private string SidebarClass => collapseSidebar ? "collapse" : null;
+    private string SchedulerServiceErrorMessage { get; set; } = null;
 
     protected async override Task OnInitializedAsync()
     {
@@ -42,6 +51,18 @@
         if (!user.Identity.IsAuthenticated)
         {
             NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+
+        // Get the scheduler service status and notify the user of a possible error.
+        (var running, var error, var status) = Utility.SchedulerServiceGetStatus();
+        if (error)
+        {
+            SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed correctly.";
+        }
+        else if (!running)
+        {
+            SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
         }
     }
 

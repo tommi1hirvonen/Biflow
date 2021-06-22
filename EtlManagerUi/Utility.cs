@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Security.Cryptography;
+using System.ServiceProcess;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -216,8 +217,41 @@ namespace EtlManagerUi
             await sqlCommand.ExecuteNonQueryAsync();
         }
 
+        public static (bool Running, bool Error, string Status) SchedulerServiceGetStatus()
+        {
+            try
+            {
+#pragma warning disable CA1416 // Validate platform compatibility
+                var serviceController = new ServiceController("EtlManagerScheduler");
+                var status = serviceController.Status switch
+                {
+                    ServiceControllerStatus.Running => "Running",
+                    ServiceControllerStatus.Stopped => "Stopped",
+                    ServiceControllerStatus.Paused => "Paused",
+                    ServiceControllerStatus.StopPending => "Stopping",
+                    ServiceControllerStatus.StartPending => "Starting",
+                    ServiceControllerStatus.ContinuePending => "Continue pending",
+                    ServiceControllerStatus.PausePending => "Pause pending",
+                    _ => "Unknown"
+                };
+                return (status == "Running", false, status);
+#pragma warning restore CA1416 // Validate platform compatibility
+            }
+            catch (Exception)
+            {
+                return (false, true, "Unknown");
+            }
+        }
+
         public async static Task<bool> SchedulerServiceDeleteJobAsync(Job job)
         {
+            // If the scheduler service is not running, return true.
+            // This way the changes can be committed to the database.
+            (var running, var _, var _) = SchedulerServiceGetStatus();
+
+            if (!running)
+                return true;
+
             // Connect to the pipe server set up by the scheduler service.
             using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
             await pipeClient.ConnectAsync(10000); // wait for 10 seconds
@@ -240,6 +274,13 @@ namespace EtlManagerUi
 
         public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule schedule)
         {
+            // If the scheduler service is not running, return true.
+            // This way the changes can be committed to the database.
+            (var running, var _, var _) = SchedulerServiceGetStatus();
+
+            if (!running)
+                return true;
+
             // Connect to the pipe server set up by the scheduler service.
             using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
             await pipeClient.ConnectAsync(10000); // wait for 10 seconds
