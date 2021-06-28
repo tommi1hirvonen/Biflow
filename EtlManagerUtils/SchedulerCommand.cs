@@ -18,7 +18,11 @@ namespace EtlManagerUtils
             [EnumMember(Value = "PAUSE")]
             Pause,
             [EnumMember(Value = "RESUME")]
-            Resume
+            Resume,
+            [EnumMember(Value = "SYNCHRONIZE")]
+            Synchronize,
+            [EnumMember(Value = "STATUS")]
+            Status
         }
     }
 }

@@ -272,6 +272,27 @@ namespace EtlManagerUi
             return response == "SUCCESS";
         }
 
+        public async static Task<bool> SchedulerServiceSynchronize()
+        {
+            // Connect to the pipe server set up by the scheduler service.
+            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+#pragma warning disable CA1416 // Validate platform compatibility
+            pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
+#pragma warning restore CA1416 // Validate platform compatibility
+
+            // Send synchronize command
+            var command = new SchedulerCommand(SchedulerCommand.CommandType.Synchronize, null, null, null);
+            var json = JsonSerializer.Serialize(command);
+            var bytes = Encoding.UTF8.GetBytes(json);
+            pipeClient.Write(bytes, 0, bytes.Length);
+
+            // Get response from the scheduler service.
+            var responseBytes = CommonUtility.ReadMessage(pipeClient);
+            var response = Encoding.UTF8.GetString(responseBytes);
+            return response == "SUCCESS";
+        }
+
         public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule schedule)
         {
             // If the scheduler service is not running, return true.
@@ -289,7 +310,7 @@ namespace EtlManagerUi
 #pragma warning restore CA1416 // Validate platform compatibility
 
             // Send add command.
-            var addCommand = new SchedulerCommand(commandType, schedule.JobId.ToString(), schedule.ScheduleId.ToString(), schedule.CronExpression);
+            var addCommand = new SchedulerCommand(commandType, schedule?.JobId.ToString(), schedule?.ScheduleId.ToString(), schedule?.CronExpression);
             var json = JsonSerializer.Serialize(addCommand);
             var bytes = Encoding.UTF8.GetBytes(json);
             pipeClient.Write(bytes, 0, bytes.Length);

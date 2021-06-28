@@ -8,9 +8,13 @@
 <h4>Schedules</h4>
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <div class="btn-toolbar mt-3">
+    <div class="mt-3">
         <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()" IsDisabled="Jobs?.Count == 0">
             Add schedule
+        </BSButton>
+        <BSButton Class="ml-3" Color="Color.Primary" @onclick="SynchronizeSchedulerService">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+            Synchronize
         </BSButton>
     </div>
 </AuthorizeView>
@@ -276,6 +280,22 @@
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"Error deleting schedule\n{ex.Message}");
+        }
+    }
+
+    private async Task SynchronizeSchedulerService()
+    {
+        try
+        {
+            var result = await Utility.SchedulerServiceSynchronize();
+            if (!result)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error synchronizing");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error synchronizing\n{ex.Message}");
         }
     }
 

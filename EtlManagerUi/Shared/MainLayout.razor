@@ -64,6 +64,12 @@
         {
             SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
         }
+
+        var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Status, null);
+        if (!schedulerStatus)
+        {
+            SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";
+        }
     }
 
     private void ToggleSidebar()

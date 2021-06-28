@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
+using Quartz.Impl.Matchers;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -22,6 +23,10 @@ namespace EtlManagerScheduler
         private readonly IConfiguration _configuration;
         private readonly IScheduler _scheduler;
 
+        private bool DatabaseReadError { get; set; } = false;
+
+        private record Schedule(string JobId, string ScheduleId, string CronExpression, bool IsEnabled);
+
         public Worker(ILogger<Worker> logger, IConfiguration configuration, ISchedulerFactory schedulerFactory)
         {
             _logger = logger;
@@ -34,9 +39,11 @@ namespace EtlManagerScheduler
             try
             {
                 await ReadAllSchedules(stoppingToken);
+                DatabaseReadError = false;
             }
             catch (Exception ex)
             {
+                DatabaseReadError = true;
                 _logger.LogError(ex, "Error reading schedules from database");
             }
 
@@ -66,40 +73,82 @@ namespace EtlManagerScheduler
 
             using var sqlCommand = new SqlCommand("SELECT ScheduleId, JobId, CronExpression, IsEnabled FROM etlmanager.Schedule", sqlConnection);
             var reader = await sqlCommand.ExecuteReaderAsync(cancellationToken);
-            var counter = 0;
-            var pausedCounter = 0;
+            var schedules = new List<Schedule>();
+            
+            // Read schedule objects from the database.
             while (await reader.ReadAsync(cancellationToken))
             {
-                var jobId = reader["JobId"].ToString() ?? throw new ArgumentNullException("jobId", "JobId was null");
-                var scheduleId = reader["ScheduleId"].ToString() ?? throw new ArgumentNullException("scheduleId", "ScheduleId was null");
-                var cronExpression = reader["CronExpression"].ToString() ?? throw new ArgumentNullException("cronExpression", "CronExpression was null");
-                var isEnabled = reader["IsEnabled"] as bool?;
-                var jobKey = new JobKey(jobId);
-                var triggerKey = new TriggerKey(scheduleId);
-                var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
-                var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(cronExpression).Build();
+                try
+                {
+                    var jobId = reader["JobId"].ToString() ?? throw new ArgumentNullException("jobId", "JobId was null");
+                    var scheduleId = reader["ScheduleId"].ToString() ?? throw new ArgumentNullException("scheduleId", "ScheduleId was null");
+                    var cronExpression = reader["CronExpression"].ToString() ?? throw new ArgumentNullException("cronExpression", "CronExpression was null");
+                    if (!CronExpression.IsValidExpression(cronExpression))
+                    {
+                        throw new ArgumentException($"Invalid Cron expression {cronExpression} for schedule id {scheduleId}. The schedule was skipped.");
+                    }
+                    var isEnabled = reader["IsEnabled"] as bool?;
+                    var schedule = new Schedule(jobId, scheduleId, cronExpression, isEnabled == true);
+                    schedules.Add(schedule);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error parsing schedule object");
+                }
+            }
 
+            // Iterate the schedules and add them to the scheduler if they don't already exist.
+            foreach (var schedule in schedules)
+            {
+                var jobKey = new JobKey(schedule.JobId);
+                var triggerKey = new TriggerKey(schedule.ScheduleId);
+                var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
+                var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(schedule.CronExpression).Build();
+
+                // The entire job doesn't exist in the scheduler.
                 if (!await _scheduler.CheckExists(jobKey, cancellationToken))
                 {
                     await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
                 }
-                else
+                // The trigger doesn't exist for the job.
+                else if (!await _scheduler.CheckExists(triggerKey, cancellationToken))
                 {
                     await _scheduler.ScheduleJob(trigger, cancellationToken);
                 }
 
-                _logger.LogInformation($"Added schedule id {scheduleId} for job id {jobId} with Cron expression {cronExpression}");
-                
-                if (!isEnabled == true)
+                // Resume the trigger in case it was paused at some point.
+                if (schedule.IsEnabled == true)
+                {
+                    await _scheduler.ResumeTrigger(triggerKey, cancellationToken);
+                }
+                else
                 {
                     await _scheduler.PauseTrigger(triggerKey, cancellationToken);
-                    _logger.LogInformation($"Paused schedule id {scheduleId}");
-                    pausedCounter++;
                 }
 
-                counter++;
+                var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
+                _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
             }
-            _logger.LogInformation($"Schedules loaded successfully. No. of schedules in total: {counter}. Paused schedules: {pausedCounter}");
+
+            // Get all jobs from the scheduler.
+            var jobKeys = await _scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup(), cancellationToken) ?? Enumerable.Empty<JobKey>();
+            var jobsToRemove = jobKeys.Where(j => !schedules.Any(s => j.Name == s.JobId)); // JobKeys that are not listed among the schedules read from the database.
+            foreach (var job in jobsToRemove)
+            {
+                await _scheduler.DeleteJob(job, cancellationToken);
+                _logger.LogInformation($"Deleted job id {job.Name} from the scheduler");
+            }
+
+            // Get all triggers from the schduler.
+            var triggerKeys = await _scheduler.GetTriggerKeys(GroupMatcher<TriggerKey>.AnyGroup(), cancellationToken) ?? Enumerable.Empty<TriggerKey>();
+            var triggersToRemove = triggerKeys.Where(t => !schedules.Any(s => t.Name == s.ScheduleId));
+            foreach (var trigger in triggersToRemove)
+            {
+                await _scheduler.UnscheduleJob(trigger, cancellationToken);
+                _logger.LogInformation($"Deleted schedule id {trigger.Name}");
+            }
+
+            _logger.LogInformation($"Schedules loaded successfully.");
         }
 
         private async Task ReadNamedPipeAsync(CancellationToken cancellationToken)
@@ -191,6 +240,28 @@ namespace EtlManagerScheduler
 
                         _logger.LogInformation($"Resumed schedule id {command.ScheduleId} for job id {command.JobId}");
                     }
+                    else if (command.Type == SchedulerCommand.CommandType.Synchronize)
+                    {
+                        _logger.LogInformation("Synchronizing scheduler with schedules from database");
+                        try
+                        {
+                            await ReadAllSchedules(cancellationToken);
+                            DatabaseReadError = false;
+                        }
+                        catch (Exception)
+                        {
+                            DatabaseReadError = true;
+                            throw;
+                        }
+                    }
+                    else if (command.Type == SchedulerCommand.CommandType.Status)
+                    {
+                        if (DatabaseReadError)
+                        {
+                            pipeServer.Write(failureBytes, 0, failureBytes.Length);
+                            continue;
+                        }
+                    }
                     else
                     {
                         pipeServer.Write(failureBytes, 0, failureBytes.Length);
@@ -202,7 +273,7 @@ namespace EtlManagerScheduler
                 catch (Exception ex)
                 {
                     pipeServer.Write(failureBytes, 0, failureBytes.Length);
-                    _logger.LogError(ex, "Error reading named pipe command");
+                    _logger.LogError(ex, "Error reading or executing named pipe command");
                 }
             }
         }
