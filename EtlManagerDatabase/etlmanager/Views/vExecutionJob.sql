@@ -43,11 +43,11 @@ SELECT
 			WHEN NOT EXISTS (SELECT * FROM etlmanager.Execution AS X WHERE A.ExecutionId = X.ExecutionId AND X.ExecutionStatus <> 'NOT STARTED') THEN 'NOT STARTED'
 			WHEN EXISTS (SELECT * FROM etlmanager.Execution AS X WHERE A.ExecutionId = X.ExecutionId AND X.ExecutionStatus = 'STOPPED') THEN 'STOPPED'
 			WHEN EXISTS (SELECT * FROM etlmanager.Execution AS X WHERE A.ExecutionId = X.ExecutionId AND X.ExecutionStatus = 'NOT STARTED') THEN 'SUSPENDED'
-			ELSE 'COMPLETED'
+			ELSE 'SUCCEEDED'
 		END,
 
 	NumberOfSteps = COUNT(DISTINCT A.StepId),
-	SuccessPercent = COUNT(CASE WHEN A.ExecutionStatus = 'COMPLETED' THEN 1 ELSE NULL END) * 100.0 / COUNT(DISTINCT A.StepId)
+	SuccessPercent = COUNT(CASE WHEN A.ExecutionStatus = 'SUCCEEDED' THEN 1 ELSE NULL END) * 100.0 / COUNT(DISTINCT A.StepId)
 
 FROM etlmanager.Execution AS A
 	LEFT JOIN etlmanager.Job AS B ON A.JobId = B.JobId

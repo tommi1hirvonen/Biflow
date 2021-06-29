@@ -334,7 +334,7 @@ namespace EtlManagerExecutor
                         await connection.OpenAsync(CancellationToken.None);
                         using var successUpdate = new SqlCommand(
                             @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'COMPLETED', InfoMessage = @InfoMessage
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'SUCCEEDED', InfoMessage = @InfoMessage
                             WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                             , connection);
                         successUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
@@ -345,7 +345,7 @@ namespace EtlManagerExecutor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "{ExecutionId} {Step} Error updating step status to COMPLETED", Configuration.ExecutionId, Step);
+                        Log.Error(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", Configuration.ExecutionId, Step);
                     }
 
                     return true; // Break the loop to end this execution.

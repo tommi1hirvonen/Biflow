@@ -110,7 +110,7 @@ namespace EtlManagerExecutor
                     string status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                     return status switch
                     {
-                        "COMPLETED" or "WARNING" => new ExecutionResult.Success(),
+                        "SUCCEEDED" or "WARNING" => new ExecutionResult.Success(),
                         "FAILED" => new ExecutionResult.Failure("Sub-execution failed"),
                         "STOPPED" => new ExecutionResult.Failure("Sub-execution was stopped"),
                         "SUSPENDED" => new ExecutionResult.Failure("Sub-execution was suspended"),

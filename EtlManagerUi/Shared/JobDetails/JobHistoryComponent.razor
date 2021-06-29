@@ -116,7 +116,7 @@
 
             if (Executions.Count > 0)
             {
-                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "COMPLETED").Count() / Executions.Count() * 100;
+                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "SUCCEEDED").Count() / Executions.Count() * 100;
             }
             else
             {
