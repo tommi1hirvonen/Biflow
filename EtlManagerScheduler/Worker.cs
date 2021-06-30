@@ -98,7 +98,10 @@ namespace EtlManagerScheduler
                 }
             }
 
-            // Iterate the schedules and add them to the scheduler if they don't already exist.
+            // Clear the scheduler if there were any existing jobs or triggers.
+            await _scheduler.Clear(cancellationToken);
+
+            // Iterate the schedules and add them to the scheduler.
             foreach (var schedule in schedules)
             {
                 var jobKey = new JobKey(schedule.JobId);
@@ -106,47 +109,22 @@ namespace EtlManagerScheduler
                 var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
                 var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(schedule.CronExpression).Build();
 
-                // The entire job doesn't exist in the scheduler.
                 if (!await _scheduler.CheckExists(jobKey, cancellationToken))
                 {
                     await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
                 }
-                // The trigger doesn't exist for the job.
-                else if (!await _scheduler.CheckExists(triggerKey, cancellationToken))
+                else
                 {
                     await _scheduler.ScheduleJob(trigger, cancellationToken);
                 }
 
-                // Resume the trigger in case it was paused at some point.
-                if (schedule.IsEnabled == true)
-                {
-                    await _scheduler.ResumeTrigger(triggerKey, cancellationToken);
-                }
-                else
+                if (!schedule.IsEnabled)
                 {
                     await _scheduler.PauseTrigger(triggerKey, cancellationToken);
                 }
 
                 var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
                 _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
-            }
-
-            // Get all jobs from the scheduler.
-            var jobKeys = await _scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup(), cancellationToken) ?? Enumerable.Empty<JobKey>();
-            var jobsToRemove = jobKeys.Where(j => !schedules.Any(s => j.Name == s.JobId)); // JobKeys that are not listed among the schedules read from the database.
-            foreach (var job in jobsToRemove)
-            {
-                await _scheduler.DeleteJob(job, cancellationToken);
-                _logger.LogInformation($"Deleted job id {job.Name} from the scheduler");
-            }
-
-            // Get all triggers from the schduler.
-            var triggerKeys = await _scheduler.GetTriggerKeys(GroupMatcher<TriggerKey>.AnyGroup(), cancellationToken) ?? Enumerable.Empty<TriggerKey>();
-            var triggersToRemove = triggerKeys.Where(t => !schedules.Any(s => t.Name == s.ScheduleId));
-            foreach (var trigger in triggersToRemove)
-            {
-                await _scheduler.UnscheduleJob(trigger, cancellationToken);
-                _logger.LogInformation($"Deleted schedule id {trigger.Name}");
             }
 
             _logger.LogInformation($"Schedules loaded successfully.");
