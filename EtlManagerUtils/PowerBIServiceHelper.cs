@@ -20,43 +20,62 @@ namespace EtlManagerUtils
         private string TenantId { get; init; }
         private string ClientId { get; init; }
         private string ClientSecret { get; init; }
-        private string AccessToken { get; set; }
+        private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
-        private PowerBIClient Client { get; set; }
 
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
 
-        public async Task RefreshDatasetAsync(string groupId, string datasetId, CancellationToken cancellationToken)
+        private PowerBIServiceHelper(
+            string powerBIServiceId,
+            string tenantId,
+            string clientId,
+            string clientSecret,
+            string? accessToken,
+            DateTime? accessTokenExpiresOn,
+            string connectionString
+            )
         {
-            await CheckAccessTokenValidityAsync();
-            await Client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
+            PowerBIServiceId = powerBIServiceId;
+            TenantId = tenantId;
+            ClientId = clientId;
+            ClientSecret = clientSecret;
+            AccessToken = accessToken;
+            AccessTokenExpiresOn = accessTokenExpiresOn;
+            ConnectionString = connectionString;
         }
 
-        public async Task<Refresh> GetDatasetRefreshStatus(string groupId, string datasetId, CancellationToken cancellationToken)
+        public async Task RefreshDatasetAsync(string groupId, string datasetId, CancellationToken cancellationToken)
         {
-            await CheckAccessTokenValidityAsync();
-            var refresh = await Client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
+            var client = await CheckAccessTokenValidityAsync();
+            await client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
+        }
+
+        public async Task<Refresh?> GetDatasetRefreshStatus(string groupId, string datasetId, CancellationToken cancellationToken)
+        {
+            var client = await CheckAccessTokenValidityAsync();
+            var refresh = await client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
             return refresh.Value.FirstOrDefault();
         }
 
         public async Task<Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>> GetAllDatasetsAsync()
         {
-            await CheckAccessTokenValidityAsync();
-            var groups = await Client.Groups.GetGroupsAsync();
+            var client = await CheckAccessTokenValidityAsync();
+            var groups = await client.Groups.GetGroupsAsync();
             var datasets = new Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>();
             foreach (var group in groups.Value)
             {
-                var groupDatasets = await Client.Datasets.GetDatasetsInGroupAsync(group.Id);
+                var groupDatasets = await client.Datasets.GetDatasetsInGroupAsync(group.Id);
                 var key = (group.Id.ToString(), group.Name);
                 datasets[key] = groupDatasets.Value.Select(d => (d.Id.ToString(), d.Name)).ToList();
             }
             return datasets;
         }
 
-        private async Task CheckAccessTokenValidityAsync()
+        private async Task<PowerBIClient> CheckAccessTokenValidityAsync()
         {
+            PowerBIClient? client = null;
             if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
                 try
@@ -74,7 +93,7 @@ namespace EtlManagerUtils
                 }
 
                 var credentials = new TokenCredentials(AccessToken);
-                Client = new PowerBIClient(credentials);
+                client = new PowerBIClient(credentials);
 
                 // Update the token and its expiration time to the database for later use.
                 try
@@ -96,17 +115,19 @@ namespace EtlManagerUtils
                     throw;
                 }
             }
-            else if (Client is null)
+            else if (client is null)
             {
                 var credentials = new TokenCredentials(AccessToken);
-                Client = new PowerBIClient(credentials);
+                client = new PowerBIClient(credentials);
             }
+            return client;
         }
 
         public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IConfiguration configuration, string powerBIServiceId)
         {
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
+                ?? throw new ArgumentNullException("encyptionKey", "Encryption key cannot be null in order to create a PowerBIServiceHelper");
             return await GetPowerBIServiceHelperAsync(connectionString, powerBIServiceId, encryptionKey);
         }
 
@@ -125,24 +146,23 @@ namespace EtlManagerUtils
             using var reader = await sqlCommand.ExecuteReaderAsync();
             await reader.ReadAsync();
 
-            string tenantId = reader["TenantId"].ToString();
-            string clientId = reader["ClientId"].ToString();
-            string clientSecret = reader["ClientSecret"].ToString();
-            string accessToken = null;
+            string tenantId = reader["TenantId"].ToString() ?? throw new ArgumentNullException(nameof(tenantId), "TenantId was null");
+            string clientId = reader["ClientId"].ToString() ?? throw new ArgumentNullException(nameof(clientId), "ClientId was null");
+            string clientSecret = reader["ClientSecret"].ToString() ?? throw new ArgumentNullException(nameof(clientSecret), "ClientSecret was null");
+            string? accessToken = null;
             DateTime? accessTokenExpiresOn = null;
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
             if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
 
-            return new PowerBIServiceHelper
-            {
-                PowerBIServiceId = powerBIServiceId,
-                TenantId = tenantId,
-                ClientId = clientId,
-                ClientSecret = clientSecret,
-                AccessToken = accessToken,
-                AccessTokenExpiresOn = accessTokenExpiresOn,
-                ConnectionString = connectionString
-            };
+            return new PowerBIServiceHelper(
+                powerBIServiceId: powerBIServiceId,
+                tenantId: tenantId,
+                clientId: clientId,
+                clientSecret: clientSecret,
+                accessToken: accessToken,
+                accessTokenExpiresOn: accessTokenExpiresOn,
+                connectionString: connectionString
+            );
         }
 
         public static async Task TestConnection(string tenantId, string clientId, string clientSecret)

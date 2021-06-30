@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerUtils
 {
-    public record SchedulerCommand(SchedulerCommand.CommandType Type, string JobId, string ScheduleId, string CronExpression)
+    public record SchedulerCommand(SchedulerCommand.CommandType Type, string? JobId, string? ScheduleId, string? CronExpression)
     {
         public enum CommandType
         {

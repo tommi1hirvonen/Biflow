@@ -162,6 +162,9 @@ namespace EtlManagerScheduler
                         if (command.ScheduleId is null)
                             throw new ArgumentNullException(nameof(command.ScheduleId), "Schedule id was null");
 
+                        if (command.JobId is null)
+                            throw new ArgumentNullException(nameof(command.JobId), "Job id was null");
+
                         // Check that the Cron expression is valid.
                         if (!CronExpression.IsValidExpression(command.CronExpression))
                             throw new ArgumentException($"Invalid Cron expression for schedule id {command.ScheduleId}: {command.CronExpression}");
@@ -186,6 +189,9 @@ namespace EtlManagerScheduler
                         // If no schedule was mentioned, delete all schedules for the given job.
                         if (command.ScheduleId is null)
                         {
+                            if (command.JobId is null)
+                                throw new ArgumentNullException(nameof(command.JobId), "Schedule id and job id were null when one of them should be given");
+
                             var jobKey = new JobKey(command.JobId);
                             await _scheduler.DeleteJob(jobKey, cancellationToken);
 

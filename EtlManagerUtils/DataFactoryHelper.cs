@@ -23,38 +23,62 @@ namespace EtlManagerUtils
         private string ResourceName { get; init; }
         private string ClientId { get; init; }
         private string ClientSecret { get; init; }
-        private string AccessToken { get; set; }
+        private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
-        private DataFactoryManagementClient Client {get;set;}
 
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private const string ResourceUrl = "https://management.azure.com/";
 
+        private DataFactoryHelper(
+            string dataFactoryId,
+            string tenantId,
+            string subscriptionId,
+            string resourceGroupName,
+            string resourceName,
+            string clientId,
+            string clientSecret,
+            string? accessToken,
+            DateTime? accessTokenExpiresOn,
+            string connectionString
+            )
+        {
+            DataFactoryId = dataFactoryId;
+            TenantId = tenantId;
+            SubscriptionId = subscriptionId;
+            ResourceGroupName = resourceGroupName;
+            ResourceName = resourceName;
+            ClientId = clientId;
+            ClientSecret = clientSecret;
+            AccessToken = accessToken;
+            AccessTokenExpiresOn = accessTokenExpiresOn;
+            ConnectionString = connectionString;
+        }
+
         public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
         {
-            await CheckAccessTokenValidityAsync();
-            var createRunResponse = await Client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
+            var client = await CheckAccessTokenValidityAsync();
+            var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
                 parameters: parameters, cancellationToken: cancellationToken);
             return createRunResponse.RunId;
         }
 
         public async Task<PipelineRun> GetPipelineRunAsync(string runId, CancellationToken cancellationToken)
         {
-            await CheckAccessTokenValidityAsync();
-            return await Client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+            var client = await CheckAccessTokenValidityAsync();
+            return await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
         }
 
         public async Task CancelPipelineRunAsync(string runId)
         {
-            await CheckAccessTokenValidityAsync();
-            await Client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+            var client = await CheckAccessTokenValidityAsync();
+            await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
         }
 
         public async Task<Dictionary<string, List<string>>> GetPipelinesAsync()
         {
-            await CheckAccessTokenValidityAsync();
-            var pipelines = await Client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+            var client = await CheckAccessTokenValidityAsync();
+            var pipelines = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
             // Key = Folder
             // Value = List of pipelines in that folder
             return pipelines
@@ -62,8 +86,9 @@ namespace EtlManagerUtils
                 .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
         }
 
-        private async Task CheckAccessTokenValidityAsync()
+        private async Task<DataFactoryManagementClient> CheckAccessTokenValidityAsync()
         {
+            DataFactoryManagementClient? client = null;
             if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
                 try
@@ -81,7 +106,7 @@ namespace EtlManagerUtils
                 }
 
                 var credentials = new TokenCredentials(AccessToken);
-                Client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+                client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
 
                 // Update the token and its expiration time to the database for later use.
                 try
@@ -103,17 +128,19 @@ namespace EtlManagerUtils
                     throw;
                 }
             }
-            else if (Client is null)
+            else if (client is null)
             {
                 var credentials = new TokenCredentials(AccessToken);
-                Client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+                client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
             }
+            return client;
         }
 
         public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IConfiguration configuration, string dataFactoryId)
         {
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
+            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
+                ?? throw new ArgumentNullException("encyptionKey", "Encryption key cannot be null in order to create a DataFactoryHelper");
             return await GetDataFactoryHelperAsync(connectionString, dataFactoryId, encryptionKey);
         }
 
@@ -132,30 +159,29 @@ namespace EtlManagerUtils
             using var reader = await sqlCommand.ExecuteReaderAsync();
             await reader.ReadAsync();
 
-            string tenantId = reader["TenantId"].ToString();
-            string subscriptionId = reader["SubscriptionId"].ToString();
-            string resourceGroupName = reader["ResourceGroupName"].ToString();
-            string resourceName = reader["ResourceName"].ToString();
-            string clientId = reader["ClientId"].ToString();
-            string clientSecret = reader["ClientSecret"].ToString();
-            string accessToken = null;
+            string tenantId = reader["TenantId"].ToString() ?? throw new ArgumentNullException(nameof(tenantId), "TenantId was null");
+            string subscriptionId = reader["SubscriptionId"].ToString() ?? throw new ArgumentNullException(nameof(subscriptionId), "SubscriptionId was null");
+            string resourceGroupName = reader["ResourceGroupName"].ToString() ?? throw new ArgumentNullException(nameof(resourceGroupName), "ResourceGroupName was null");
+            string resourceName = reader["ResourceName"].ToString() ?? throw new ArgumentNullException(nameof(resourceName), "ResourceName was null");
+            string clientId = reader["ClientId"].ToString() ?? throw new ArgumentNullException(nameof(clientId), "ClientId was null");
+            string clientSecret = reader["ClientSecret"].ToString() ?? throw new ArgumentNullException(nameof(clientSecret), "ClientSecret was null");
+            string? accessToken = null;
             DateTime? accessTokenExpiresOn = null;
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
             if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
 
-            return new DataFactoryHelper
-            {
-                DataFactoryId = dataFactoryId,
-                TenantId = tenantId,
-                SubscriptionId = subscriptionId,
-                ResourceGroupName = resourceGroupName,
-                ResourceName = resourceName,
-                ClientId = clientId,
-                ClientSecret = clientSecret,
-                AccessToken = accessToken,
-                AccessTokenExpiresOn = accessTokenExpiresOn,
-                ConnectionString = connectionString
-            };
+            return new DataFactoryHelper(
+                dataFactoryId: dataFactoryId,
+                tenantId: tenantId,
+                subscriptionId: subscriptionId,
+                resourceGroupName: resourceGroupName,
+                resourceName: resourceName,
+                clientId: clientId,
+                clientSecret: clientSecret,
+                accessToken: accessToken,
+                accessTokenExpiresOn: accessTokenExpiresOn,
+                connectionString: connectionString
+            );
         }
 
         public static async Task TestConnection(string tenantId, string clientId, string clientSecret, string subscriptionId, string resourceGroupName, string resourceName)

@@ -28,14 +28,14 @@ namespace EtlManagerUtils
             return ms.ToArray();
         }
 
-        public static async Task<string> GetEncryptionKeyAsync(IConfiguration configuration)
+        public static async Task<string?> GetEncryptionKeyAsync(IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
             return await GetEncryptionKeyAsync(encryptionId, connectionString);
         }
 
-        public static async Task<string> GetEncryptionKeyAsync(string encryptionId, string connectionString)
+        public static async Task<string?> GetEncryptionKeyAsync(string encryptionId, string connectionString)
         {
             using var sqlConnection = new SqlConnection(connectionString);
             await sqlConnection.OpenAsync();

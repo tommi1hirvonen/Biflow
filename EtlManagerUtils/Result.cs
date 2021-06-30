@@ -22,9 +22,9 @@ namespace EtlManagerUtils
             return new Result(false, errorMessage);
         }
 
-        public static Result<T> Failure<T>(string errorMessage)
+        public static Result<T?> Failure<T>(string errorMessage)
         {
-            return new Result<T>(default, false, errorMessage);
+            return new Result<T?>(default, false, errorMessage);
         }
 
         public static Result Ok()
