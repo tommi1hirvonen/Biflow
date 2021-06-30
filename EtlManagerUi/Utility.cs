@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.ServiceProcess;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using EtlManagerUi.Models;
 using EtlManagerUtils;
@@ -243,6 +244,9 @@ namespace EtlManagerUi
             }
         }
 
+        private static JsonSerializerOptions SchedulerCommandSerializerOptions() =>
+            new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
+
         public async static Task<bool> SchedulerServiceDeleteJobAsync(Job job)
         {
             // If the scheduler service is not running, return true.
@@ -259,9 +263,9 @@ namespace EtlManagerUi
             pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
 #pragma warning restore CA1416 // Validate platform compatibility
 
-            // Send add command.
+            // Send delete command.
             var addCommand = new SchedulerCommand(SchedulerCommand.CommandType.Delete, job.JobId.ToString(), null, null);
-            var json = JsonSerializer.Serialize(addCommand);
+            var json = JsonSerializer.Serialize(addCommand, SchedulerCommandSerializerOptions());
             var bytes = Encoding.UTF8.GetBytes(json);
             pipeClient.Write(bytes, 0, bytes.Length);
 
@@ -283,7 +287,7 @@ namespace EtlManagerUi
 
             // Send synchronize command
             var command = new SchedulerCommand(SchedulerCommand.CommandType.Synchronize, null, null, null);
-            var json = JsonSerializer.Serialize(command);
+            var json = JsonSerializer.Serialize(command, SchedulerCommandSerializerOptions());
             var bytes = Encoding.UTF8.GetBytes(json);
             pipeClient.Write(bytes, 0, bytes.Length);
 
@@ -311,7 +315,7 @@ namespace EtlManagerUi
 
             // Send add command.
             var addCommand = new SchedulerCommand(commandType, schedule?.JobId.ToString(), schedule?.ScheduleId.ToString(), schedule?.CronExpression);
-            var json = JsonSerializer.Serialize(addCommand);
+            var json = JsonSerializer.Serialize(addCommand, SchedulerCommandSerializerOptions());
             var bytes = Encoding.UTF8.GetBytes(json);
             pipeClient.Write(bytes, 0, bytes.Length);
 

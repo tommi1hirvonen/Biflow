@@ -12,6 +12,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -172,7 +173,8 @@ namespace EtlManagerScheduler
 
                     _logger.LogInformation($"Processing scheduler command: {json}");
 
-                    var command = JsonSerializer.Deserialize<SchedulerCommand>(json) ?? throw new ArgumentNullException("command", "Scheduler command was null");
+                    var options = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
+                    var command = JsonSerializer.Deserialize<SchedulerCommand>(json, options) ?? throw new ArgumentNullException("command", "Scheduler command was null");
 
                     if (command.Type == SchedulerCommand.CommandType.Add)
                     {
