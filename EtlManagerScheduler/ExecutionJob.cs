@@ -91,18 +91,6 @@ namespace EtlManagerScheduler
                     return;
                 }
 
-                try
-                {
-                    using var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-                    processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
-                    processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-                    await processIdCmd.ExecuteNonQueryAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error updating executor process id for execution {executionId}", executionId);
-                }
-
                 _logger.LogInformation($"Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}");
 
                 // Wait for the execution to finish and for the executor process to exit.

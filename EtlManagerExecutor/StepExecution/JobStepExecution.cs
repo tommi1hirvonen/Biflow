@@ -75,19 +75,6 @@ namespace EtlManagerExecutor
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
-                using var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-                processIdCmd.Parameters.AddWithValue("@ProcessId", executorProcess.Id);
-                processIdCmd.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
-
-                try
-                {
-                    await processIdCmd.ExecuteNonQueryAsync(CancellationToken.None);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} {Step} Error updating executor process id for execution {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
-                }
-
             }
 
             if (JobExecuteSynchronized)
