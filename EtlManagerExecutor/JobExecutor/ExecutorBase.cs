@@ -76,7 +76,7 @@ namespace EtlManagerExecutor
             Console.WriteLine("Enter 'c' to cancel all step executions or a step id to cancel that step's execution.");
             while (true)
             {
-                string input = Console.ReadLine();
+                var input = Console.ReadLine();
                 try
                 {
                     if (input == "c")
@@ -87,7 +87,7 @@ namespace EtlManagerExecutor
                             pair.Value.Cancel();
                         }
                     }
-                    else
+                    else if (input is not null)
                     {
                         if (CancellationTokenSources.ContainsKey(input))
                         {
@@ -117,13 +117,14 @@ namespace EtlManagerExecutor
                 {
                     using var streamReader = new StreamReader(pipeServer);
                     var builder = new StringBuilder();
-                    string input;
+                    string? input;
                     while ((input = streamReader.ReadLine()) is not null)
                     {
                         builder.Append(input);
                     }
                     var json = builder.ToString();
-                    var cancelCommand = JsonSerializer.Deserialize<CancelCommand>(json);
+                    var cancelCommand = JsonSerializer.Deserialize<CancelCommand>(json)
+                        ?? throw new ArgumentNullException("cancelCommand", "Cancel command cannot be null");
                     // Change the user to the one initiated the cancel.
                     ExecutionConfig.Username = cancelCommand.Username;
                     if (cancelCommand.StepId is not null)

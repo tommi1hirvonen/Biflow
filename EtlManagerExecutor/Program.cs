@@ -94,7 +94,10 @@ namespace EtlManagerExecutor
     class JobExecutorOptions
     {
         [Option('i', "id", HelpText = "Execution id", Required = true)]
+        // Safe to suppress because Required = true
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string ExecutionId { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
         public bool Notify { get; set; }
@@ -104,20 +107,26 @@ namespace EtlManagerExecutor
     class MailTestOptions
     {
         [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
+        // Safe to suppress because Required = true
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string ToAddress { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
 
     [Verb("cancel", HelpText = "Cancel a running execution under a different executor process.")]
     class CancelOptions
     {
         [Option('i', "execution-id", HelpText = "Execution id", Required = true)]
+        // Safe to suppress because Required = true
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string ExecutionId { get; set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [Option('s', "step-id", HelpText = "Step id for a specific step that should be canceled (optional).", Required = false)]
-        public string StepId { get; set; }
+        public string? StepId { get; set; }
     }
 
 

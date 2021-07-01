@@ -11,7 +11,7 @@ namespace EtlManagerExecutor
 {
     class ExecutionStopper : IExecutionStopper
     {
-        public async Task<bool> RunAsync(string executionId, string username, string stepId)
+        public async Task<bool> RunAsync(string executionId, string? username, string? stepId)
         {
             try
             {

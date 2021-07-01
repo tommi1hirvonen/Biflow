@@ -110,16 +110,16 @@ namespace EtlManagerExecutor
                         timeoutMinutes = (int)reader["TimeoutMinutes"];
                         if (stepType == "SQL")
                         {
-                            var sqlStatement = reader["SqlStatement"].ToString();
-                            var connectionString = reader["ConnectionString"].ToString();
+                            var sqlStatement = reader["SqlStatement"].ToString()!;
+                            var connectionString = reader["ConnectionString"].ToString()!;
                             stepExecution = new SqlStepExecution(Configuration, Step, sqlStatement, connectionString, timeoutMinutes);
                         }
                         else if (stepType == "SSIS")
                         {
-                            var connectionString = reader["ConnectionString"].ToString();
-                            var packageFolderName = reader["PackageFolderName"].ToString();
-                            var packageProjectName = reader["PackageProjectName"].ToString();
-                            var packageName = reader["PackageName"].ToString();
+                            var connectionString = reader["ConnectionString"].ToString()!;
+                            var packageFolderName = reader["PackageFolderName"].ToString()!;
+                            var packageProjectName = reader["PackageProjectName"].ToString()!;
+                            var packageName = reader["PackageName"].ToString()!;
                             var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
 
                             var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
@@ -135,29 +135,29 @@ namespace EtlManagerExecutor
                         }
                         else if (stepType == "JOB")
                         {
-                            var jobToExecuteId = reader["JobToExecuteId"].ToString();
+                            var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
                             var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
                             stepExecution = new JobStepExecution(Configuration, Step, jobToExecuteId, jobExecuteSynchronized);
                         }
                         else if (stepType == "PIPELINE")
                         {
-                            var dataFactoryId = reader["DataFactoryId"].ToString();
-                            var pipelineName = reader["PipelineName"].ToString();
+                            var dataFactoryId = reader["DataFactoryId"].ToString()!;
+                            var pipelineName = reader["PipelineName"].ToString()!;
                             stepExecution = new PipelineStepExecution(Configuration, Step, dataFactoryId, pipelineName, timeoutMinutes);
                         }
                         else if (stepType == "EXE")
                         {
-                            var fileName = reader["ExeFileName"].ToString();
-                            var arguments = reader["ExeArguments"].ToString();
-                            var workingDirectory = reader["ExeWorkingDirectory"].ToString();
+                            var fileName = reader["ExeFileName"].ToString()!;
+                            var arguments = reader["ExeArguments"].ToString()!;
+                            var workingDirectory = reader["ExeWorkingDirectory"].ToString()!;
                             int? successExitCode = reader["ExeSuccessExitCode"] as int?;
                             stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
                         }
                         else if (stepType == "DATASET")
                         {
-                            var powerBIServiceId = reader["PowerBIServiceId"].ToString();
-                            var groupId = reader["DatasetGroupId"].ToString();
-                            var datasetId = reader["DatasetId"].ToString();
+                            var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
+                            var groupId = reader["DatasetGroupId"].ToString()!;
+                            var datasetId = reader["DatasetId"].ToString()!;
                             stepExecution = new DatasetStepExecution(Configuration, Step, powerBIServiceId, groupId, datasetId);
                         }
                         else

@@ -8,16 +8,16 @@ namespace EtlManagerExecutor
 {
     public abstract class ExecutionResult
     {
-        public string InfoMessage { get; }
+        public string? InfoMessage { get; }
 
-        public ExecutionResult(string infoMessage)
+        public ExecutionResult(string? infoMessage)
         {
             InfoMessage = infoMessage;
         }
 
         public class Success : ExecutionResult
         {
-            public Success(string infoMessage = null) : base(infoMessage)
+            public Success(string? infoMessage = null) : base(infoMessage)
             {
             }
         }
@@ -26,7 +26,7 @@ namespace EtlManagerExecutor
         {
             public string ErrorMessage { get; } = string.Empty;
 
-            public Failure(string errorMessage, string infoMessage = null) : base(infoMessage)
+            public Failure(string errorMessage, string? infoMessage = null) : base(infoMessage)
             {
                 ErrorMessage = errorMessage;
             }

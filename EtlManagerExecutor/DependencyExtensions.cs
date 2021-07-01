@@ -13,14 +13,14 @@ namespace EtlManagerExecutor
             Visited
         };
 
-        public static TValue ValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        public static TValue? ValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue? defaultValue)
         {
-            if (dictionary.TryGetValue(key, out TValue value))
+            if (dictionary.TryGetValue(key, out TValue? value))
                 return value;
             return defaultValue;
         }
 
-        static void DepthFirstSearch<T>(T node, Func<T, IEnumerable<T>> lookup, List<T> parents, Dictionary<T, VisitState> visited, List<List<T>> cycles)
+        static void DepthFirstSearch<T>(T node, Func<T, IEnumerable<T>> lookup, List<T> parents, Dictionary<T, VisitState> visited, List<List<T>> cycles) where T : notnull
         {
             var state = visited.ValueOrDefault(node, VisitState.NotVisited);
             if (state == VisitState.Visited)
@@ -41,7 +41,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        public static List<List<T>> FindCycles<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> edges)
+        public static List<List<T>> FindCycles<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> edges) where T : notnull
         {
             var cycles = new List<List<T>>();
             var visited = new Dictionary<T, VisitState>();
@@ -52,6 +52,7 @@ namespace EtlManagerExecutor
 
         public static List<List<T>> FindCycles<T, TValueList>(this IDictionary<T, TValueList> listDictionary)
             where TValueList : class, IEnumerable<T>
+            where T : notnull
         {
             return listDictionary.Keys.FindCycles(key => listDictionary.ValueOrDefault(key, null) ?? Enumerable.Empty<T>());
         }

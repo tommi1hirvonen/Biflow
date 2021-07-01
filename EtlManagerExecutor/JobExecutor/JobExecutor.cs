@@ -28,7 +28,7 @@ namespace EtlManagerExecutor
             var maxParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
             var encryptionId = configuration.GetValue<string>("EncryptionId");
 
-            string encryptionPassword;
+            string? encryptionPassword;
             try
             {
                 encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(encryptionId, connectionString);
@@ -65,8 +65,8 @@ namespace EtlManagerExecutor
                     dependencyMode = (bool)reader["DependencyMode"];
 
                     // Get job details for the execution.
-                    var jobId = reader["JobId"].ToString();
-                    var jobName = reader["JobName"].ToString();
+                    var jobId = reader["JobId"].ToString()!;
+                    var jobName = reader["JobName"].ToString()!;
                     job = new(jobId, jobName);
                 }
                 else
@@ -88,7 +88,7 @@ namespace EtlManagerExecutor
                 username: "timeout");
 
             // Check whether there are circular dependencies between jobs (through steps executing another jobs).
-            string circularExecutions;
+            string? circularExecutions;
             try
             {
                 circularExecutions = await GetCircularJobExecutionsAsync(executionConfig);
@@ -126,7 +126,15 @@ namespace EtlManagerExecutor
             }
         }
 
-        private static async Task<string> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
+        /// <summary>
+        /// Checks for circular dependencies between jobs.
+        /// Jobs can reference other jobs, so it's important to check them for circlular dependencies.
+        /// </summary>
+        /// <param name="executionConfig"></param>
+        /// <returns>
+        /// JSON string of circular job dependencies or null if there were no circular dependencies.
+        /// </returns>
+        private static async Task<string?> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
         {
             var dependencies = new Dictionary<Job, List<Job>>();
 
@@ -151,10 +159,10 @@ namespace EtlManagerExecutor
                 using var reader = await sqlCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    var jobId = reader["JobId"].ToString();
-                    var jobName = reader["JobName"].ToString();
-                    var jobToExecuteId = reader["JobToExecuteId"].ToString();
-                    var jobToExecuteName = reader["JobToExecuteName"].ToString();
+                    var jobId = reader["JobId"].ToString()!;
+                    var jobName = reader["JobName"].ToString()!;
+                    var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
+                    var jobToExecuteName = reader["JobToExecuteName"].ToString()!;
 
                     var job = new Job(jobId, jobName);
                     var jobToExecute = new Job(jobToExecuteId, jobToExecuteName);

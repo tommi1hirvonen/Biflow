@@ -34,7 +34,7 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            ProcessStartInfo startInfo = new ProcessStartInfo()
+            var startInfo = new ProcessStartInfo()
             {
                 FileName = FileName,
                 UseShellExecute = false,

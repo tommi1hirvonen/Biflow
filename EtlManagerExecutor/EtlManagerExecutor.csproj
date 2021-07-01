@@ -8,6 +8,7 @@
     <Authors>Tommi Hirvonen</Authors>
     <Company>Tommi Hirvonen</Company>
     <Product>ETL Manager</Product>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

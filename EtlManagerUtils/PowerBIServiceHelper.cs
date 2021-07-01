@@ -146,9 +146,9 @@ namespace EtlManagerUtils
             using var reader = await sqlCommand.ExecuteReaderAsync();
             await reader.ReadAsync();
 
-            string tenantId = reader["TenantId"].ToString() ?? throw new ArgumentNullException(nameof(tenantId), "TenantId was null");
-            string clientId = reader["ClientId"].ToString() ?? throw new ArgumentNullException(nameof(clientId), "ClientId was null");
-            string clientSecret = reader["ClientSecret"].ToString() ?? throw new ArgumentNullException(nameof(clientSecret), "ClientSecret was null");
+            string tenantId = reader["TenantId"].ToString()!;
+            string clientId = reader["ClientId"].ToString()!;
+            string clientSecret = reader["ClientSecret"].ToString()!;
             string? accessToken = null;
             DateTime? accessTokenExpiresOn = null;
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();

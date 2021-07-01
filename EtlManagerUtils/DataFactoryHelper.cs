@@ -159,12 +159,12 @@ namespace EtlManagerUtils
             using var reader = await sqlCommand.ExecuteReaderAsync();
             await reader.ReadAsync();
 
-            string tenantId = reader["TenantId"].ToString() ?? throw new ArgumentNullException(nameof(tenantId), "TenantId was null");
-            string subscriptionId = reader["SubscriptionId"].ToString() ?? throw new ArgumentNullException(nameof(subscriptionId), "SubscriptionId was null");
-            string resourceGroupName = reader["ResourceGroupName"].ToString() ?? throw new ArgumentNullException(nameof(resourceGroupName), "ResourceGroupName was null");
-            string resourceName = reader["ResourceName"].ToString() ?? throw new ArgumentNullException(nameof(resourceName), "ResourceName was null");
-            string clientId = reader["ClientId"].ToString() ?? throw new ArgumentNullException(nameof(clientId), "ClientId was null");
-            string clientSecret = reader["ClientSecret"].ToString() ?? throw new ArgumentNullException(nameof(clientSecret), "ClientSecret was null");
+            string tenantId = reader["TenantId"].ToString()!;
+            string subscriptionId = reader["SubscriptionId"].ToString()!;
+            string resourceGroupName = reader["ResourceGroupName"].ToString()!;
+            string resourceName = reader["ResourceName"].ToString()!;
+            string clientId = reader["ClientId"].ToString()!;
+            string clientSecret = reader["ClientSecret"].ToString()!;
             string? accessToken = null;
             DateTime? accessTokenExpiresOn = null;
             if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();

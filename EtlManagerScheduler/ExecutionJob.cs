@@ -42,7 +42,7 @@ namespace EtlManagerScheduler
                 {
                     using var jobEnabledCommand = new SqlCommand("SELECT IsEnabled FROM etlmanager.Job WHERE JobId = @JobId", sqlConnection);
                     jobEnabledCommand.Parameters.AddWithValue("@JobId", jobId);
-                    var isEnabled = await jobEnabledCommand.ExecuteScalarAsync() as bool? ?? throw new NullReferenceException("IsEnabled was null");
+                    var isEnabled = (bool)(await jobEnabledCommand.ExecuteScalarAsync())!;
                     if (!isEnabled)
                         return;
                 }
@@ -58,7 +58,7 @@ namespace EtlManagerScheduler
                     using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
                     initCommand.Parameters.AddWithValue("@JobId_", jobId);
                     initCommand.Parameters.AddWithValue("@ScheduleId_", scheduleId);
-                    executionId = (await initCommand.ExecuteScalarAsync())?.ToString() ?? throw new NullReferenceException("Execution id returned was null");
+                    executionId = (await initCommand.ExecuteScalarAsync())!.ToString()!;
                 }
                 catch (Exception ex)
                 {

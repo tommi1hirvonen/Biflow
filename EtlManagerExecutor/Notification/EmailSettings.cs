@@ -9,13 +9,32 @@ namespace EtlManagerExecutor.Notification
 {
     public class EmailSettings
     {
-        public string SmtpServer { get; set; }
-        public bool EnableSsl { get; set; }
-        public int Port { get; set; }
-        public string FromAddress { get; set; }
-        public bool AnonymousAuthentication { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string SmtpServer { get; init; }
+        public bool EnableSsl { get; init; }
+        public int Port { get; init; }
+        public string FromAddress { get; init; }
+        public bool AnonymousAuthentication { get; init; }
+        public string Username { get; init; }
+        public string Password { get; init; }
+
+        private EmailSettings(
+            string smtpServer,
+            bool enableSsl,
+            int port,
+            string fromAddress,
+            bool anonymousAuthentication,
+            string username,
+            string password
+            )
+        {
+            SmtpServer = smtpServer;
+            EnableSsl = enableSsl;
+            Port = port;
+            FromAddress = fromAddress;
+            AnonymousAuthentication = anonymousAuthentication;
+            Username = username;
+            Password = password;
+        }
 
         public SmtpClient GetSmtpClient()
         {
@@ -38,16 +57,15 @@ namespace EtlManagerExecutor.Notification
         public static EmailSettings FromConfiguration(IConfiguration configuration)
         {
             IConfigurationSection emailSettings = configuration.GetSection("EmailSettings");
-            return new EmailSettings()
-            {
-                SmtpServer = emailSettings.GetValue<string>("SmtpServer"),
-                EnableSsl = emailSettings.GetValue<bool>("EnableSsl"),
-                Port = emailSettings.GetValue<int>("Port"),
-                FromAddress = emailSettings.GetValue<string>("FromAddress"),
-                AnonymousAuthentication = emailSettings.GetValue<bool>("AnonymousAuthentication"),
-                Username = emailSettings.GetValue<string>("Username"),
-                Password = emailSettings.GetValue<string>("Password")
-            };
+            return new EmailSettings(
+                smtpServer: emailSettings.GetValue<string>("SmtpServer"),
+                enableSsl: emailSettings.GetValue<bool>("EnableSsl"),
+                port: emailSettings.GetValue<int>("Port"),
+                fromAddress: emailSettings.GetValue<string>("FromAddress"),
+                anonymousAuthentication: emailSettings.GetValue<bool>("AnonymousAuthentication"),
+                username: emailSettings.GetValue<string>("Username"),
+                password: emailSettings.GetValue<string>("Password")
+            );
         }
     }
 }

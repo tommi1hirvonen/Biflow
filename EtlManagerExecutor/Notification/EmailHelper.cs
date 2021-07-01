@@ -33,9 +33,9 @@ namespace EtlManagerExecutor
                 jobInfoCmd.Parameters.AddWithValue("ExecutionId", executionId);
                 using var reader = jobInfoCmd.ExecuteReader();
                 reader.Read();
-                jobId = reader["JobId"].ToString();
-                jobName = reader["JobName"].ToString();
-                jobStatus = reader["ExecutionStatus"].ToString();
+                jobId = reader["JobId"].ToString()!;
+                jobName = reader["JobName"].ToString()!;
+                jobStatus = reader["ExecutionStatus"].ToString()!;
             }
             catch (Exception ex)
             {
@@ -63,7 +63,9 @@ namespace EtlManagerExecutor
                 using var reader = recipientsCmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    recipients.Add(reader[0].ToString());
+                    var recipient = reader[0].ToString();
+                    if (recipient is not null)
+                        recipients.Add(recipient);
                 }
             }
             catch (Exception ex)

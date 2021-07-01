@@ -14,7 +14,7 @@ namespace EtlManagerExecutor
     class PipelineStepExecution : StepExecutionBase
     {
         private string DataFactoryId { get; init; }
-        private DataFactoryHelper DataFactoryHelper { get; set; }
+        private DataFactoryHelper? DataFactoryHelper { get; set; }
         private string PipelineName { get; init; }
         private int TimeoutMinutes { get; init; }
 
@@ -146,7 +146,7 @@ namespace EtlManagerExecutor
             using var reader = await paramsCommand.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                var name = reader["ParameterName"].ToString();
+                var name = reader["ParameterName"].ToString()!;
                 object value = reader["ParameterValue"];
                 parameters[name] = value;
             }
@@ -161,7 +161,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    return await DataFactoryHelper.GetPipelineRunAsync(runId, CancellationToken.None);
+                    return await DataFactoryHelper!.GetPipelineRunAsync(runId, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -178,7 +178,7 @@ namespace EtlManagerExecutor
             Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, runId);
             try
             {
-                await DataFactoryHelper.CancelPipelineRunAsync(runId);
+                await DataFactoryHelper!.CancelPipelineRunAsync(runId);
             }
             catch (Exception ex)
             {

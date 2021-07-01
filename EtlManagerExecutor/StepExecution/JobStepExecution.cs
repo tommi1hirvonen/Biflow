@@ -40,7 +40,7 @@ namespace EtlManagerExecutor
                 {
                     using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", sqlConnection);
                     initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
-                    jobExecutionId = (await initCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
+                    jobExecutionId = (await initCommand.ExecuteScalarAsync(CancellationToken.None)).ToString()!;
                 }
                 catch (Exception ex)
                 {
@@ -48,8 +48,9 @@ namespace EtlManagerExecutor
                     return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
                 }
 
-                string executorFilePath = Process.GetCurrentProcess().MainModule.FileName;
-                ProcessStartInfo executionInfo = new ProcessStartInfo()
+                var executorFilePath = Process.GetCurrentProcess().MainModule?.FileName
+                    ?? throw new ArgumentNullException("FileName", "Executor file path cannot be null");
+                var executionInfo = new ProcessStartInfo()
                 {
                     FileName = executorFilePath,
                     ArgumentList = {
@@ -103,11 +104,11 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    using SqlConnection sqlConnection = new SqlConnection(Configuration.ConnectionString);
+                    using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
                     await sqlConnection.OpenAsync(CancellationToken.None);
                     using var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
                     sqlCommand.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
-                    string status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
+                    var status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
                     return status switch
                     {
                         "SUCCEEDED" or "WARNING" => new ExecutionResult.Success(),
@@ -137,7 +138,7 @@ namespace EtlManagerExecutor
             using var streamWriter = new StreamWriter(pipeClient);
             // Send cancel command.
             var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-            var cancelCommand = new { StepId = (string)null, Username = username_ };
+            var cancelCommand = new { StepId = (string?)null, Username = username_ };
             var json = JsonSerializer.Serialize(cancelCommand);
             streamWriter.WriteLine(json);
         }

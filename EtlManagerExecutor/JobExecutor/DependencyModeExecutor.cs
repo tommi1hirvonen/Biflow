@@ -57,8 +57,8 @@ namespace EtlManagerExecutor
                 using var reader = await stepsListCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    var stepId = reader["StepId"].ToString();
-                    var stepName = reader["StepName"].ToString();
+                    var stepId = reader["StepId"].ToString()!;
+                    var stepName = reader["StepName"].ToString()!;
                     var step = new Step(stepId, stepName);
                     StepStatuses[step] = ExecutionStatus.NotStarted;
                     CancellationTokenSources[stepId] = new();
@@ -184,10 +184,10 @@ namespace EtlManagerExecutor
             {
                 while (await reader.ReadAsync())
                 {
-                    var stepId = reader["StepId"].ToString();
-                    var stepName = reader["StepName"].ToString();
-                    var dependencyStepId = reader["DependantOnStepId"].ToString();
-                    var dependencyStepName = reader["DependantOnStepName"].ToString();
+                    var stepId = reader["StepId"].ToString()!;
+                    var stepName = reader["StepName"].ToString()!;
+                    var dependencyStepId = reader["DependantOnStepId"].ToString()!;
+                    var dependencyStepName = reader["DependantOnStepName"].ToString()!;
                     var strict = (bool)reader["StrictDependency"];
 
                     var step = new Step(stepId, stepName);

@@ -17,7 +17,7 @@ namespace EtlManagerExecutor
         private string ProjectName { get; init; }
         private string PackageName { get; init; }
         private bool ExecuteIn32BitMode { get; init; }
-        private string ExecuteAsLogin { get; set; }
+        private string? ExecuteAsLogin { get; set; }
 
         private int TimeoutMinutes { get; init; }
         private bool Completed { get; set; }
@@ -26,7 +26,7 @@ namespace EtlManagerExecutor
         private const int MaxRefreshRetries = 3;
 
         public PackageStepExecution(ExecutionConfiguration configuration, Step step, string connectionString,
-            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes, string executeAsLogin)
+            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes, string? executeAsLogin)
             : base(configuration, step)
         {
             ConnectionString = connectionString;
@@ -124,7 +124,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    List<string> errors = await GetErrorMessagesAsync();
+                    List<string?> errors = await GetErrorMessagesAsync();
                     return new ExecutionResult.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)
@@ -210,7 +210,7 @@ namespace EtlManagerExecutor
 
             await sqlConnection.OpenAsync(CancellationToken.None);
 
-            PackageOperationId = (long)await executionCommand.ExecuteScalarAsync();
+            PackageOperationId = (long)(await executionCommand.ExecuteScalarAsync())!;
         }
 
         private async Task<HashSet<Parameter>> GetStepParameters()
@@ -230,9 +230,9 @@ namespace EtlManagerExecutor
             using var reader = await paramsCommand.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                var name = reader["ParameterName"].ToString();
+                var name = reader["ParameterName"].ToString()!;
                 object value = reader["ParameterValue"];
-                var level = reader["ParameterLevel"].ToString();
+                var level = reader["ParameterLevel"].ToString()!;
                 parameters.Add(new(name, value, level));
             }
 
@@ -272,7 +272,7 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
         }
 
-        private async Task<List<string>> GetErrorMessagesAsync()
+        private async Task<List<string?>> GetErrorMessagesAsync()
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
             using var sqlCommand = new SqlCommand(
@@ -282,7 +282,7 @@ namespace EtlManagerExecutor
                 , sqlConnection);
             sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
             await sqlConnection.OpenAsync(CancellationToken.None);
-            var messages = new List<string>();
+            var messages = new List<string?>();
             var reader = await sqlCommand.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {

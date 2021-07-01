@@ -81,9 +81,9 @@ namespace EtlManagerScheduler
             {
                 try
                 {
-                    var jobId = reader["JobId"].ToString() ?? throw new ArgumentNullException("jobId", "JobId was null");
-                    var scheduleId = reader["ScheduleId"].ToString() ?? throw new ArgumentNullException("scheduleId", "ScheduleId was null");
-                    var cronExpression = reader["CronExpression"].ToString() ?? throw new ArgumentNullException("cronExpression", "CronExpression was null");
+                    var jobId = reader["JobId"].ToString()!;
+                    var scheduleId = reader["ScheduleId"].ToString()!;
+                    var cronExpression = reader["CronExpression"].ToString()!;
                     if (!CronExpression.IsValidExpression(cronExpression))
                     {
                         throw new ArgumentException($"Invalid Cron expression {cronExpression} for schedule id {scheduleId}. The schedule was skipped.");

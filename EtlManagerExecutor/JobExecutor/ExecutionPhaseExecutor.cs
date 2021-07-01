@@ -28,8 +28,8 @@ namespace EtlManagerExecutor
                 using var reader = sqlCommand.ExecuteReader();
                 while (reader.Read())
                 {
-                    var stepId = reader["StepId"].ToString();
-                    var stepName = reader["StepName"].ToString();
+                    var stepId = reader["StepId"].ToString()!;
+                    var stepName = reader["StepName"].ToString()!;
                     var executionPhase = (int)reader["ExecutionPhase"];
                     var step = new Step(stepId, stepName);
                     allSteps.Add((executionPhase, step));

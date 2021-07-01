@@ -10,13 +10,13 @@ namespace EtlManagerExecutor
     {
         public string ConnectionString { get; init; }
         public string ExecutionId { get; init; }
-        public string EncryptionKey { get; init; }
+        public string? EncryptionKey { get; init; }
         public string Username { get; set; }
         public int MaxParallelSteps { get; init; }
         public int PollingIntervalMs { get; init; }
         public Job Job { get; init; }
         public bool Notify { get; init; }
-        public ExecutionConfiguration(string connectionString, string executionId, string encryptionKey,
+        public ExecutionConfiguration(string connectionString, string executionId, string? encryptionKey,
             int maxParallelSteps, int pollingIntervalMs, Job job, bool notify, string username)
         {
             ConnectionString = connectionString;
