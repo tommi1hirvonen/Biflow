@@ -358,8 +358,8 @@ tr.disabled {
     border-color: var(--color-primary-super-dark);
     color: var(--color-primary-super-dark);
 }
-.steps-graph .completed,
-.steps-graph .completed.vis-selected {
+.steps-graph .succeeded,
+.steps-graph .succeeded.vis-selected {
     background-color: var(--color-success-super-light);
     border-color: var(--color-success-super-dark);
     color: var(--color-success-super-dark);
