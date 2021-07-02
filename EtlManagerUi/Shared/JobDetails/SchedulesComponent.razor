@@ -20,9 +20,6 @@
                     Cron expression
                 </th>
                 <th>
-                    Description
-                </th>
-                <th>
                     Next execution
                 </th>
                 <th>
@@ -57,19 +54,29 @@
                         </td>
                         <td>
                             @item.CronExpression
-                        </td>
-                        <td>
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" id="@("tooltip_" + item.ScheduleId)">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                            </BSButton>
-                            <BSTooltip Target="@("tooltip_" + item.ScheduleId)" Placement="Placement.Auto">
-                                <div style="white-space: pre;">
-                                    @item.GetScheduleDescription()
-                                </div>
-                            </BSTooltip>
+                            <BSButtonGroup Size="Size.Small" Class="btn-row">
+                                <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" id="@("tooltip_" + item.ScheduleId)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                                </BSButton>
+                                <BSTooltip Target="@("tooltip_" + item.ScheduleId)" Placement="Placement.Auto">
+                                    <div style="white-space: pre;">
+                                        @item.GetScheduleSummary()
+                                    </div>
+                                </BSTooltip>
+                            </BSButtonGroup>
                         </td>
                         <td>
                             @item.GetNextFireTime()
+                            <BSButtonGroup Size="Size.Small" Class="btn-row">
+                                <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" id="@("tooltip2_" + item.ScheduleId)">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                                </BSButton>
+                                <BSTooltip Target="@("tooltip2_" + item.ScheduleId)" Placement="Placement.Auto">
+                                    <div style="white-space: pre;">
+                                        @("Next executions:\n" + string.Join("\n", item.GetNextFireTimes(15)))
+                                    </div>
+                                </BSTooltip>
+                            </BSButtonGroup>
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">

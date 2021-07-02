@@ -34,7 +34,7 @@ namespace EtlManagerUi.Models
         [Display(Name = "Created by")]
         public string CreatedBy { get; set; }
 
-        public string GetScheduleDescription()
+        public string GetScheduleSummary()
         {
             if (Quartz.CronExpression.IsValidExpression(CronExpression))
             {
@@ -49,15 +49,28 @@ namespace EtlManagerUi.Models
 
         public DateTime GetNextFireTime()
         {
+            return NextFireTimesSequence().FirstOrDefault();
+        }
+
+        public IEnumerable<DateTime> GetNextFireTimes(int count)
+        {
+            return NextFireTimesSequence().Take(count);
+        }
+
+        private IEnumerable<DateTime> NextFireTimesSequence()
+        {
             if (Quartz.CronExpression.IsValidExpression(CronExpression))
             {
                 var cron = new CronExpression(CronExpression);
-                var nextFireTime = cron.GetTimeAfter(DateTimeOffset.UtcNow)?.LocalDateTime;
-                return nextFireTime ?? DateTime.MaxValue;
-            }
-            else
-            {
-                return DateTime.MaxValue;
+                DateTimeOffset? dateTime = DateTimeOffset.UtcNow;
+                while (dateTime is not null)
+                {
+                    dateTime = cron.GetTimeAfter((DateTimeOffset)dateTime);
+                    if (dateTime is null)
+                        break;
+                    else
+                        yield return dateTime.Value.LocalDateTime;
+                }
             }
         }
     }
