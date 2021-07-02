@@ -44,6 +44,8 @@ namespace EtlManagerExecutor
                 return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
+            if (Configuration.EncryptionKey is null)
+                throw new ArgumentNullException(nameof(Configuration.EncryptionKey), "Encryption key cannot be null for pipeline step executions");
 
             // Get the target Data Factory information from the database.
             try

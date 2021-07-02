@@ -58,7 +58,7 @@ namespace EtlManagerUtils
             }
         }
 
-        public static async Task SetEncryptionKeyAsync(IConfiguration configuration, string oldEncryptionKey, string newEncryptionKey)
+        public static async Task SetEncryptionKeyAsync(IConfiguration configuration, string? oldEncryptionKey, string newEncryptionKey)
         {
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
