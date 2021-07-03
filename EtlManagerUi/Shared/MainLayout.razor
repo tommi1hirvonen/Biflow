@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
+@using System.Security.Claims
+@using System.Security.Principal
 
 <AuthorizeView>
     <Authorized>
@@ -39,16 +41,19 @@
 </AuthorizeView>
 
 @code {
-    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+    [CascadingParameter]
+    protected Task<AuthenticationState>? AuthStat { get; set; }
 
     private bool collapseSidebar = true;
-    private string SidebarClass => collapseSidebar ? "collapse" : null;
-    private string SchedulerServiceErrorMessage { get; set; } = null;
+    private string? SidebarClass => collapseSidebar ? "collapse" : null;
+    private string? SchedulerServiceErrorMessage { get; set; } = null;
 
     protected async override Task OnInitializedAsync()
     {
-        var user = (await AuthStat).User;
-        if (!user.Identity.IsAuthenticated)
+        AuthenticationState authenticationState = await (AuthStat ?? throw new InvalidOperationException("Failed to get authentication state"));
+        ClaimsPrincipal user = authenticationState.User;
+        IIdentity identity = user.Identity ?? throw new InvalidOperationException("Usere identity was null");
+        if (!identity.IsAuthenticated)
         {
             NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
             return;

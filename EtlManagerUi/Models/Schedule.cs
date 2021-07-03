@@ -14,13 +14,13 @@ namespace EtlManagerUi.Models
         
         [Required]
         public Guid JobId { get; set; }
-        
-        public Job Job { get; set; }
+
+        public Job Job { get; set; } = null!;
         
         [Required]
         [Display(Name = "Cron expression")]
         [CronExpression]
-        public string CronExpression { get; set; }
+        public string? CronExpression { get; set; }
         
         
         [Required]
@@ -32,11 +32,11 @@ namespace EtlManagerUi.Models
         public DateTime CreatedDateTime { get; set; }
         
         [Display(Name = "Created by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
 
         public string GetScheduleSummary()
         {
-            if (Quartz.CronExpression.IsValidExpression(CronExpression))
+            if (CronExpression is not null && Quartz.CronExpression.IsValidExpression(CronExpression))
             {
                 var cron = new CronExpression(CronExpression);
                 return cron.GetExpressionSummary();
@@ -59,7 +59,7 @@ namespace EtlManagerUi.Models
 
         private IEnumerable<DateTime> NextFireTimesSequence()
         {
-            if (Quartz.CronExpression.IsValidExpression(CronExpression))
+            if (CronExpression is not null && Quartz.CronExpression.IsValidExpression(CronExpression))
             {
                 var cron = new CronExpression(CronExpression);
                 DateTimeOffset? dateTime = DateTimeOffset.UtcNow;

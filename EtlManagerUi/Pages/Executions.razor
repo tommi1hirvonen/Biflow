@@ -357,17 +357,17 @@
 
     private bool Loading { get; set; } = false;
 
-    private List<JobExecution> JobExecutions { get; set; }
+    private List<JobExecution> JobExecutions { get; set; } = null!;
 
-    private List<StepExecution> StepExecutions { get; set; }
+    private List<StepExecution> StepExecutions { get; set; } = null!;
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
-    private StepExecution SelectedStepExecution { get; set; }
+    private StepExecution? SelectedStepExecution { get; set; }
 
-    private StepHistoryModal StepHistoryModal { get; set; }
-    private string HistoryModalStepId { get; set; }
+    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private string? HistoryModalStepId { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -485,7 +485,8 @@
     {
         try
         {
-            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
             await Utility.StopExecutionAsync(stepExecution.ExecutionId, username, stepExecution.StepId);
         }
         catch (TimeoutException)

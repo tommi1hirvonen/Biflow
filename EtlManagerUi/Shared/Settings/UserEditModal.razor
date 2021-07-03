@@ -89,17 +89,17 @@
 
 @code {
     [Parameter]
-    public string Username { get; set; }
+    public string? Username { get; set; }
 
     [Parameter]
     public EventCallback<RoleUser> OnUserSubmit { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
-    private RoleUser User { get; set; }
+    private RoleUser? User { get; set; }
 
-    private string Password { get; set; }
-    private string ConfirmPassword { get; set; }
+    private string? Password { get; set; }
+    private string? ConfirmPassword { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -136,7 +136,7 @@
 
             try
             {
-                var result = await Utility.AddUserAsync(configuration, User, Password);
+                var result = await Utility.AddUserAsync(configuration, User ?? throw new ArgumentNullException(nameof(User), "User was null"), Password);
                 if (result)
                 {
                     Password = null;

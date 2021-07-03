@@ -97,9 +97,9 @@
     [Parameter]
     public EventCallback<Connection> OnConnectionSubmit { get; set; }
 
-    private Connection Connection { get; set; }
+    private Connection? Connection { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     private bool IsEncryptionKeySet { get; set; }
 
@@ -138,7 +138,7 @@
         TestingConnection = true;
         try
         {
-            using var connection = new SqlConnection(Connection.ConnectionString);
+            using var connection = new SqlConnection(Connection?.ConnectionString);
             await connection.OpenAsync();
             ConnectionTestSuccess = true;
         }

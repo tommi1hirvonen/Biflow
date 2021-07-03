@@ -22,7 +22,7 @@ namespace EtlManagerUi.Pages
         }
 
         [BindProperty]
-        public Login Login { get; set; }
+        public Login Login { get; set; } = new();
 
         public IActionResult OnGet()
         {
@@ -40,10 +40,10 @@ namespace EtlManagerUi.Pages
         {
             try
             {
-                if (ModelState.IsValid)
+                if (ModelState.IsValid && Login.Username is not null && Login.Password is not null)
                 {
                     AuthenticationResult result = Utility.AuthenticateUser(_configuration, Login.Username, Login.Password);
-                    if (result.AuthenticationSuccessful)
+                    if (result.AuthenticationSuccessful && result.Role is not null)
                     {
                         await SignInUser(Login.Username, result.Role, false);
                         return LocalRedirect(Url.Content("~/"));

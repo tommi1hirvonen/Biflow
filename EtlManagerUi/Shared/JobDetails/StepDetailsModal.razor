@@ -207,8 +207,8 @@
 
 
 @code {
-    public BSModal Modal { get; set; }
+    public BSModal Modal { get; set; } = null!;
 
     [Parameter]
-    public Step Step { get; set; }
+    public Step? Step { get; set; }
 }

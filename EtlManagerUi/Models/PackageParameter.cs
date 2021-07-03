@@ -10,6 +10,6 @@ namespace EtlManagerUi.Models
     public class PackageParameter : ParameterBase
     {
         [Required]
-        public string ParameterLevel { get; set; }
+        public string? ParameterLevel { get; set; }
     }
 }

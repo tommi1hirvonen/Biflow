@@ -135,11 +135,11 @@
 
     private Guid PrevId { get; set; }
 
-    private List<Schedule> Schedules { get; set; }
+    private List<Schedule>? Schedules { get; set; }
 
-    private Schedule NewSchedule { get; set; }
+    private Schedule? NewSchedule { get; set; }
 
-    private BSModal CreateModal { get; set; }
+    private BSModal CreateModal { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -162,7 +162,7 @@
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             var success = await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
@@ -186,6 +186,7 @@
         CreateModal.Hide();
         try
         {
+            if (NewSchedule is null) throw new InvalidOperationException("NewSchedule was null");
             // Save the new schedule to the database.
             using var context = DbFactory.CreateDbContext();
             using var transaction = context.Database.BeginTransaction();
@@ -204,8 +205,8 @@
                 throw new Exception("Error sending the new schedule to the scheduler service");
             }
 
-            Schedules.Add(NewSchedule);
-            Schedules = Schedules.OrderBy(sched => sched.CronExpression).ToList();
+            Schedules?.Add(NewSchedule);
+            Schedules = Schedules?.OrderBy(sched => sched.CronExpression).ToList();
             NewSchedule = new() { JobId = Id, IsEnabled = true };
         }
         catch (Exception)
@@ -233,7 +234,7 @@
                 throw new Exception("Error removing the schedule from the scheduler service");
             }
 
-            Schedules.Remove(schedule);
+            Schedules?.Remove(schedule);
         }
         catch (Exception ex)
         {

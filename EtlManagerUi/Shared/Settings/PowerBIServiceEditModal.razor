@@ -78,9 +78,9 @@
     [Parameter]
     public EventCallback<PowerBIService> OnPowerBIServiceSubmit { get; set; }
 
-    private PowerBIService PowerBIService { get; set; }
+    private PowerBIService? PowerBIService { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -110,6 +110,10 @@
         TestingConnection = true;
         try
         {
+            if (PowerBIService?.TenantId is null || PowerBIService.ClientId is null || PowerBIService.ClientSecret is null)
+            {
+                throw new ArgumentNullException("One or more of the Power BI Service properties needed for connection testingwas null");
+            }
             await PowerBIServiceHelper.TestConnection(PowerBIService.TenantId, PowerBIService.ClientId, PowerBIService.ClientSecret);
             ConnectionTestSuccess = true;
         }

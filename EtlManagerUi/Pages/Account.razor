@@ -129,11 +129,11 @@ else
 }
 
 @code {
-    private string Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
-    private User User { get; set; }
+    private User User { get; set; } = null!;
 
-    private IList<Job> Jobs { get; set; }
+    private IList<Job> Jobs { get; set; } = null!;
 
     private PasswordModel PasswordModel_ { get; set; } = new();
 
@@ -163,6 +163,12 @@ else
 
     private async Task UpdatePassword()
     {
+        if (Username is null)
+        {
+            await JS.InvokeVoidAsync("alert", "Error getting username from HttpContext");
+            return;
+        }
+
         PasswordModel_.Password = PasswordModel_.Password ?? string.Empty;
         PasswordModel_.ConfirmPassword = PasswordModel_.ConfirmPassword ?? string.Empty;
 
@@ -218,8 +224,8 @@ else
 
     private class PasswordModel
     {
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
-        public string ConfirmPassword { get; set; }
+        public string? ConfirmPassword { get; set; }
     }
 }

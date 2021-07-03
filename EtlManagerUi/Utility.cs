@@ -63,7 +63,7 @@ namespace EtlManagerUi
             return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
-        public async static Task<Guid> StartExecutionAsync(IConfiguration configuration, Job job, string username, List<string> stepIds = null, bool notify = false)
+        public async static Task<Guid> StartExecutionAsync(IConfiguration configuration, Job job, string username, List<string>? stepIds = null, bool notify = false)
         {
             Guid executionId;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
@@ -87,7 +87,7 @@ namespace EtlManagerUi
                 sqlCommand.Parameters.AddWithValue("@Username_", username);
 
                 await sqlConnection.OpenAsync();
-                executionId = (Guid)await sqlCommand.ExecuteScalarAsync();
+                executionId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
             }
 
             string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
@@ -297,7 +297,7 @@ namespace EtlManagerUi
             return response == "SUCCESS";
         }
 
-        public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule schedule)
+        public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule? schedule)
         {
             // If the scheduler service is not running, return true.
             // This way the changes can be committed to the database.
@@ -365,7 +365,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
-            var createdJobId = (Guid)await sqlCommand.ExecuteScalarAsync();
+            var createdJobId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
             return createdJobId;
         }
 
@@ -380,7 +380,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Username_", username);
 
             await sqlConnection.OpenAsync();
-            var createdStepId = (Guid)await sqlCommand.ExecuteScalarAsync();
+            var createdStepId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
             return createdStepId;
         }
 
@@ -436,7 +436,8 @@ namespace EtlManagerUi
                 using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
                 sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
-                catalogConnectionString = (await sqlCommand.ExecuteScalarAsync()).ToString();
+                catalogConnectionString = (await sqlCommand.ExecuteScalarAsync())?.ToString()
+                    ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string cannot be null");
             }
             using (var sqlConnection = new SqlConnection(catalogConnectionString))
             {
@@ -454,9 +455,9 @@ namespace EtlManagerUi
                 using var reader = await sqlCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    var folder = reader["FolderName"].ToString();
-                    var project = reader["ProjectName"].ToString();
-                    var package = reader["PackageName"].ToString();
+                    var folder = reader["FolderName"].ToString()!;
+                    var project = reader["ProjectName"].ToString()!;
+                    var package = reader["PackageName"].ToString()!;
                     if (!catalog.ContainsKey(folder))
                     {
                         catalog[folder] = new();
@@ -485,7 +486,8 @@ namespace EtlManagerUi
                 using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
                 sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
                 sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
-                connectionString = (await sqlCommand.ExecuteScalarAsync()).ToString();
+                connectionString = (await sqlCommand.ExecuteScalarAsync())?.ToString()
+                    ?? throw new ArgumentNullException(nameof(connectionString), "Connection string cannot be null");
             }
             using (var sqlConnection = new SqlConnection(connectionString))
             {
@@ -498,8 +500,8 @@ namespace EtlManagerUi
                 using var reader = await sqlCommand.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
-                    var schema = reader["schema"].ToString();
-                    var procedure = reader["name"].ToString();
+                    var schema = reader["schema"].ToString()!;
+                    var procedure = reader["name"].ToString()!;
                     if (!procedures.ContainsKey(schema))
                     {
                         procedures[schema] = new();
@@ -520,7 +522,7 @@ namespace EtlManagerUi
             sqlCommand.Parameters.AddWithValue("@Password_", password);
 
             await sqlConnection.OpenAsync();
-            int result = (int)(await sqlCommand.ExecuteScalarAsync());
+            int result = (int)(await sqlCommand.ExecuteScalarAsync())!;
 
             if (result > 0) return true;
             else return false;
@@ -546,7 +548,7 @@ namespace EtlManagerUi
 
 
             await sqlConnection.OpenAsync();
-            int result = (int)(await sqlCommand.ExecuteScalarAsync());
+            int result = (int)(await sqlCommand.ExecuteScalarAsync())!;
 
             if (result > 0) return true;
             else return false;
@@ -563,8 +565,8 @@ namespace EtlManagerUi
     public class AuthenticationResult
     {
         public bool AuthenticationSuccessful { get; }
-        public string Role { get; }
-        public AuthenticationResult(string role)
+        public string? Role { get; }
+        public AuthenticationResult(string? role)
         {
             Role = role;
             switch (role)

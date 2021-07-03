@@ -51,7 +51,7 @@
         {
             <small class="text-secondary mr-2">No tags</small>
         }
-        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName ?? string.Empty).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
         {
             <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                   style="cursor: pointer;"
@@ -247,7 +247,7 @@
                         {
                             <small class="text-secondary mr-2">No tags</small>
                         }
-                        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+                        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName ?? string.Empty).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
                         {
                             <span class="mx-1 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                                   style="cursor: pointer;"
@@ -284,7 +284,7 @@
                             <thead>
                                 <tr>
                                     <th>Available steps</th>
-                                    @if (Job.UseDependencyMode)
+                                    @if (Job?.UseDependencyMode == true)
                                     {
                                         <th></th>
                                     }
@@ -297,7 +297,7 @@
                                         <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
                                             @step.StepName
                                         </td>
-                                        @if (Job.UseDependencyMode)
+                                        @if (Job?.UseDependencyMode == true)
                                         {
                                             <td>
                                                 <div class="btn-group btn-group-sm btn-row">
@@ -381,36 +381,37 @@
 
 @code {
     [Parameter]
-    public Job Job { get; set; }
+    public Job? Job { get; set; }
 
     [Parameter]
-    public IList<Job> Jobs { get; set; }
+    public IList<Job>? Jobs { get; set; }
 
     [Parameter]
-    public List<Step> Steps { get; set; }
+    public List<Step>? Steps { get; set; }
 
     private IEnumerable<string> Tags => Steps?
         .SelectMany(step => step.Tags)
-        .Select(tag => tag.TagName)
+        .Select(tag => tag.TagName ?? string.Empty)
         .Distinct()
         .OrderBy(str => str) ?? Enumerable.Empty<string>();
 
-    private StepEditModal StepEditModal { get; set; }
+    private StepEditModal StepEditModal { get; set; } = null!;
     private Guid EditModalStepId { get; set; }
 
-    private StepDetailsModal StepDetailsModal { get; set; }
-    private Step DetailsModalStep { get; set; }
+    private StepDetailsModal StepDetailsModal { get; set; } = null!;
+    private Step? DetailsModalStep { get; set; }
 
-    private StepHistoryModal StepHistoryModal { get; set; }
-    private Step HistoryModalStep { get; set; }
+    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private Step? HistoryModalStep { get; set; }
 
-    private BSModal ExecuteModal { get; set; }
+    private BSModal ExecuteModal { get; set; } = null!;
     private List<Step> StepsToExecute { get; set; } = new();
     private bool ExecuteButtonDisabled { get; set; } = false;
     private IEnumerable<Step> StepsAvailableToExecute =>
-        Steps.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
-        .Where(step => step.StepName.ContainsIgnoreCase(ExecuteFilterText)) // Step name filter
-        .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))); // Tag filter
+        Steps?.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
+        .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
+        .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))) // Tag filter
+        ?? Enumerable.Empty<Step>();
     private bool ExecuteNotify { get; set; } = false;
 
     private bool ExecuteSuccess { get; set; } = false;
@@ -422,14 +423,14 @@
     private string ExecuteFilterText { get; set; } = string.Empty;
     private HashSet<string> ExecuteTagsFilterSet { get; set; } = new();
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
     private Dictionary<Guid, ElementReference> TagInputs { get; set; } = new();
     private Tag NewTag { get; set; } = new();
     private Guid? TagInputFocusStepId { get; set; } = null;
 
-    private string ScrollIntoViewElementId { get; set; } = null;
+    private string? ScrollIntoViewElementId { get; set; } = null;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -456,7 +457,7 @@
         }
     }
 
-    private void ShowEditModal(Step step)
+    private void ShowEditModal(Step? step)
     {
         EditModalStepId = step?.StepId ?? Guid.Empty;
         StepEditModal.Show();
@@ -464,7 +465,7 @@
 
     private async Task ToggleEnabled(ChangeEventArgs args, Step step)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             await Utility.ToggleStepEnabledAsync(configuration, step, value);
@@ -483,7 +484,7 @@
             using var context = DbFactory.CreateDbContext();
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
-            Steps.Remove(step);
+            Steps?.Remove(step);
         }
         catch (Exception ex)
         {
@@ -495,10 +496,10 @@
     {
         try
         {
-            string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
             Guid createdStepId = await Utility.StepCopyAsync(configuration, step.StepId, job.JobId, user);
             // If the steps was copied to this job, reload steps.
-            if (Job.JobId == job.JobId)
+            if (Job?.JobId == job.JobId)
             {
                 using var context = DbFactory.CreateDbContext();
                 var createdStep = await context.Steps
@@ -506,8 +507,8 @@
                     .Include(step => step.Dependencies)
                     .Include(step => step.Tags)
                     .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
-                Steps.Add(createdStep);
-                Steps.Sort();
+                Steps?.Add(createdStep);
+                Steps?.Sort();
             }
         }
         catch (Exception ex)
@@ -531,7 +532,7 @@
 
     public async Task SubmitTag(Step step)
     {
-        var tags = NewTag.TagName.Split(" ").ToList();
+        var tags = NewTag?.TagName?.Split(" ").ToList() ?? new();
         tags = tags.Select(tag => tag.Trim()).ToList();
         tags.RemoveAll(tag => string.IsNullOrWhiteSpace(tag));
         try
@@ -556,13 +557,13 @@
 
     private void OnStepSubmit(Step step)
     {
-        var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
+        var existingStep = Steps?.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep is not null)
         {
-            Steps.Remove(existingStep);
+            Steps?.Remove(existingStep);
         }
-        Steps.Add(step);
-        Steps.Sort();
+        Steps?.Add(step);
+        Steps?.Sort();
     }
 
     private void ShowStepDetailsModal(Step step)
@@ -610,7 +611,7 @@
         processedSteps.Add(step);
 
         // Get dependency steps based on ids.
-        List<Step> dependencySteps = Steps.Where(s => dependencyStepIds.Any(id => s.StepId == id)).ToList();
+        List<Step> dependencySteps = Steps?.Where(s => dependencyStepIds.Any(id => s.StepId == id))?.ToList() ?? new();
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
@@ -628,11 +629,13 @@
         }
 
         ExecuteButtonDisabled = true;
-        string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+        string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration, Job, user, stepIds, ExecuteNotify);
+            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration,
+                Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
+                user, stepIds, ExecuteNotify);
             ExecuteSuccess = true;
         }
         catch (Exception ex)

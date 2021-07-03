@@ -91,14 +91,14 @@
 
     private Guid PrevId { get; set; }
 
-    public IList<JobExecution> Executions { get; set; }
+    public IList<JobExecution>? Executions { get; set; }
 
     public int MaxExecutions { get; set; } = 50;
 
     public decimal AverageSuccessRate { get; set; }
     public int AverageDurationInSeconds { get; set; }
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
     protected override async Task OnParametersSetAsync()

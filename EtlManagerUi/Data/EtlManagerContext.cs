@@ -11,7 +11,7 @@ namespace EtlManagerUi.Data
 {
     public class EtlManagerContext : DbContext
     {
-        private readonly HttpContext HttpContext;
+        private readonly HttpContext? HttpContext;
 
         public EtlManagerContext (DbContextOptions<EtlManagerContext> options, IHttpContextAccessor httpContextAccessor)
             : base(options)
@@ -19,22 +19,22 @@ namespace EtlManagerUi.Data
             HttpContext = httpContextAccessor.HttpContext;
         }
 
-        public DbSet<Job> Jobs { get; set; }
-        public DbSet<Step> Steps { get; set; }
-        public DbSet<StepExecution> Executions { get; set; }
-        public DbSet<JobExecution> JobExecutions { get; set; }
-        public DbSet<Dependency> Dependencies { get; set; }
-        public DbSet<Schedule> Schedules { get; set; }
-        public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<RoleUser> EditableUsers { get; set; }
-        public DbSet<DataFactory> DataFactories { get; set; }
-        public DbSet<PowerBIService> PowerBIServices { get; set; }
-        public DbSet<Connection> Connections { get; set; }
-        public DbSet<Tag> Tags { get; set; }
-        public DbSet<PackageParameter> PackageParameters { get; set; }
-        public DbSet<PipelineParameter> PipelineParameters { get; set; }
-        public DbSet<StepExecutionParameter> ExecutionParameters { get; set; }
+        public DbSet<Job> Jobs => Set<Job>();
+        public DbSet<Step> Steps => Set<Step>();
+        public DbSet<StepExecution> Executions => Set<StepExecution>();
+        public DbSet<JobExecution> JobExecutions => Set<JobExecution>();
+        public DbSet<Dependency> Dependencies => Set<Dependency>();
+        public DbSet<Schedule> Schedules => Set<Schedule>();
+        public DbSet<Subscription> Subscriptions => Set<Subscription>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<RoleUser> EditableUsers => Set<RoleUser>();
+        public DbSet<DataFactory> DataFactories => Set<DataFactory>();
+        public DbSet<PowerBIService> PowerBIServices => Set<PowerBIService>();
+        public DbSet<Connection> Connections => Set<Connection>();
+        public DbSet<Tag> Tags => Set<Tag>();
+        public DbSet<PackageParameter> PackageParameters => Set<PackageParameter>();
+        public DbSet<PipelineParameter> PipelineParameters => Set<PipelineParameter>();
+        public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -57,7 +57,7 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<Job>()
                 .ToTable("Job")
                 .HasMany(job => job.Steps)
-                .WithOne(step => step.Job);
+                .WithOne(step => step.Job!);
             modelBuilder.Entity<Job>()
                 .HasMany(job => job.Schedules)
                 .WithOne(schedule => schedule.Job);
@@ -67,7 +67,7 @@ namespace EtlManagerUi.Data
             
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
-                .HasOne(step => step.Job)
+                .HasOne(step => step.Job!)
                 .WithMany(job => job.Steps)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
@@ -138,24 +138,24 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory")
                 .HasMany(df => df.Steps)
-                .WithOne(step => step.DataFactory);
+                .WithOne(step => step.DataFactory!);
 
             modelBuilder.Entity<PowerBIService>()
                 .ToTable("PowerBIService")
                 .HasMany(df => df.Steps)
-                .WithOne(step => step.PowerBIService);
+                .WithOne(step => step.PowerBIService!);
 
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
                 .ToTable("vConnection")
                 .HasMany(connection => connection.Steps)
-                .WithOne(step => step.Connection);
+                .WithOne(step => step.Connection!);
         }
 
         
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
-            string user = HttpContext.User?.Identity?.Name;
+            var user = HttpContext?.User?.Identity?.Name;
 
             // Get new and modified steps.
             var stepEntities = ChangeTracker

@@ -74,10 +74,10 @@
 
 @code {
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
-    private List<Connection> Connections { get; set; }
+    private List<Connection>? Connections { get; set; }
 
     private Guid EditConnectionId { get; set; }
-    private ConnectionEditModal ConnectionEditModal { get; set; }
+    private ConnectionEditModal ConnectionEditModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,18 +98,18 @@
         var conn = await context.Connections.FindAsync(connection.ConnectionId);
         context.Connections.Remove(conn);
         await context.SaveChangesAsync();
-        Connections.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+        Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
     }
 
     private async void OnConnectionSubmit(Connection connection)
     {
         var context = DbFactory.CreateDbContext();
-        var existingConnection = Connections.FirstOrDefault(conn => conn.ConnectionId == connection.ConnectionId);
-        string encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
+        var existingConnection = Connections?.FirstOrDefault(conn => conn.ConnectionId == connection.ConnectionId);
+        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
 
         if (existingConnection is not null)
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}, {5}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionUpdate {0}, {1}, {2}, {3}, {4}, {5}", parameters: new string?[]
             {
                 connection.ConnectionId.ToString(),
                 connection.ConnectionName,
@@ -121,7 +121,7 @@
         }
         else
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.ConnectionAdd {0}, {1}, {2}, {3}, {4}", parameters: new string?[]
             {
                 connection.ConnectionName,
                 connection.ConnectionString,

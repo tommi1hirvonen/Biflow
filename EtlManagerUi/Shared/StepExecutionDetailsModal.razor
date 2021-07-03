@@ -10,9 +10,9 @@
 
 @code {
     [Parameter]
-    public StepExecution StepExecution { get; set; }
+    public StepExecution? StepExecution { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     public void Show() => Modal.Show();
 }

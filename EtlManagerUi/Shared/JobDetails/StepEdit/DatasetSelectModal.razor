@@ -83,7 +83,7 @@
 
 @code {
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? PowerBIServiceId { get; set; }
@@ -91,7 +91,7 @@
     [Parameter]
     public EventCallback<(string GroupId, string DatasetId)> OnDatasetSelected { get; set; }
 
-    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>> Datasets { get; set; }
+    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>? Datasets { get; set; }
 
     private (string GroupId, string GroupName)? SelectedGroup { get; set; }
     private (string DatasetId, string DatasetName)? SelectedDataset { get; set; }
@@ -102,7 +102,8 @@
         {
             try
             {
-                var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration, PowerBIServiceId.ToString());
+                string id = PowerBIServiceId?.ToString() ?? throw new ArgumentNullException(nameof(id), "Power BI Service id cannot be null");
+                var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration, id);
                 Datasets = await powerBIService.GetAllDatasetsAsync();
                 StateHasChanged();
             }
@@ -130,8 +131,13 @@
 
     private void SelectDataset()
     {
-        OnDatasetSelected.InvokeAsync((SelectedGroup?.GroupId, SelectedDataset?.DatasetId));
-        Modal.Hide();
+        var groupId = SelectedGroup?.GroupId;
+        var datasetId = SelectedDataset?.DatasetId;
+        if (groupId is not null && datasetId is not null)
+        {
+            OnDatasetSelected.InvokeAsync((groupId, datasetId));
+            Modal.Hide();
+        }
     }
 
     public void Show() => Modal.Show();

@@ -14,12 +14,12 @@ namespace EtlManagerUi.Models
         [Required]
         public Guid StepId { get; set; }
 
-        public Step Step { get; set; }
+        public Step Step { get; set; } = null!;
 
         [Required]
         public Guid DependantOnStepId { get; set; }
 
-        public Step DependantOnStep { get; set; }
+        public Step DependantOnStep { get; set; } = null!;
 
         [Display(Name = "Strict dependency")]
         public bool StrictDependency { get; set; }
@@ -29,6 +29,6 @@ namespace EtlManagerUi.Models
         public DateTime CreatedDateTime { get; set; }
 
         [Display(Name = "Created by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
     }
 }

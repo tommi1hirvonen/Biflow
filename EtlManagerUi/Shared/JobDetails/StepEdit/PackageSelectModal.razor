@@ -116,7 +116,7 @@
 
 @code {
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? ConnectionId { get; set; }
@@ -124,11 +124,11 @@
     [Parameter]
     public EventCallback<(string Folder, string Project, string Package)> OnPackageSelected { get; set; }
 
-    private Dictionary<string, Dictionary<string, List<string>>> Catalog { get; set; }
+    private Dictionary<string, Dictionary<string, List<string>>>? Catalog { get; set; }
 
-    private string SelectedFolder { get; set; }
-    private string SelectedProject { get; set; }
-    private string SelectedPackage { get; set; }
+    private string? SelectedFolder { get; set; }
+    private string? SelectedProject { get; set; }
+    private string? SelectedPackage { get; set; }
 
     private async Task ModalOpenChanged(bool isOpen)
     {
@@ -136,7 +136,8 @@
         {
             try
             {
-                Catalog = await Utility.GetSSISCatalogPackages(Configuration, ConnectionId.ToString());
+                string connectionId = ConnectionId?.ToString() ?? throw new ArgumentNullException(nameof(connectionId), "Connection id cannot be null");
+                Catalog = await Utility.GetSSISCatalogPackages(Configuration, connectionId);
                 StateHasChanged();
             }
             catch (Exception ex)
@@ -174,9 +175,12 @@
 
     private void SelectPackage()
     {
-        var package = (SelectedFolder, SelectedProject, SelectedPackage);
-        OnPackageSelected.InvokeAsync(package);
-        Modal.Hide();
+        if (SelectedFolder is not null && SelectedProject is not null && SelectedPackage is not null)
+        {
+            var package = (SelectedFolder, SelectedProject, SelectedPackage);
+            OnPackageSelected.InvokeAsync(package);
+            Modal.Hide();
+        }
     }
 
     public void Show() => Modal.Show();

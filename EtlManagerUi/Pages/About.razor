@@ -8,7 +8,7 @@
         <dt>Environment</dt>
         <dd>@(Configuration.GetValue<string>("EnvironmentName"))</dd>
         <dt>Version</dt>
-        <dd>v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion)</dd>
+        <dd>v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion)</dd>
         <dt>Commit SHA</dt>
         <dd>@EtlManagerUi.Properties.Resources.CurrentCommit</dd>
     </dl>

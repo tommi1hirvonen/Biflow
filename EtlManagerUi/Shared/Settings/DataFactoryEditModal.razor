@@ -93,9 +93,9 @@
     [Parameter]
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
-    private DataFactory DataFactory { get; set; }
+    private DataFactory? DataFactory { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -127,6 +127,11 @@
         TestingConnection = true;
         try
         {
+            if (DataFactory?.TenantId is null || DataFactory.ClientId is null || DataFactory.ClientSecret is null
+                || DataFactory.SubscriptionId is null || DataFactory.ResourceGroupName is null || DataFactory.ResourceName is null)
+            {
+                throw new ArgumentNullException("One or more of the Data Factory properties needed for connection testing was null");
+            }
             await DataFactoryHelper.TestConnection(DataFactory.TenantId, DataFactory.ClientId, DataFactory.ClientSecret,
                 DataFactory.SubscriptionId, DataFactory.ResourceGroupName, DataFactory.ResourceName);
             ConnectionTestSuccess = true;

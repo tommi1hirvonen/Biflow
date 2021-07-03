@@ -86,10 +86,10 @@ else
 @code {
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
 
-    private List<DataFactory> DataFactories { get; set; }
+    private List<DataFactory>? DataFactories { get; set; }
 
     private Guid EditDataFactoryId { get; set; }
-    private DataFactoryEditModal DataFactoryEditModal { get; set; }
+    private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,18 +109,18 @@ else
         var context = DbFactory.CreateDbContext();
         context.Remove(df);
         await context.SaveChangesAsync();
-        DataFactories.Remove(df);
+        DataFactories?.Remove(df);
     }
 
     private async void OnDataFactorySubmit(DataFactory dataFactory)
     {
         var context = DbFactory.CreateDbContext();
-        var existingDf = DataFactories.FirstOrDefault(df => df.DataFactoryId == dataFactory.DataFactoryId);
-        string encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
+        var existingDf = DataFactories?.FirstOrDefault(df => df.DataFactoryId == dataFactory.DataFactoryId);
+        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
 
         if (existingDf is not null)
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryUpdate {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}", parameters: new string?[]
             {
                 dataFactory.DataFactoryId.ToString(),
                 dataFactory.DataFactoryName,
@@ -135,7 +135,7 @@ else
         }
         else
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryAdd {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.DataFactoryAdd {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}", parameters: new string?[]
             {
                 dataFactory.DataFactoryName,
                 dataFactory.TenantId,
@@ -152,7 +152,7 @@ else
         StateHasChanged();
     }
 
-    private void ShowEditModal(DataFactory dataFactory)
+    private void ShowEditModal(DataFactory? dataFactory)
     {
         EditDataFactoryId = dataFactory?.DataFactoryId ?? Guid.Empty;
         DataFactoryEditModal.Show();

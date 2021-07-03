@@ -53,20 +53,20 @@
 @code {
 
     [Parameter]
-    public string StepId_ { get; set; }
+    public string? StepId_ { get; set; }
 
     [Parameter]
     public bool NoBackdrop { get; set; } = false;
 
-    private Guid StepId => Guid.Parse(StepId_);
+    private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
-    private List<StepExecution> Executions { get; set; }
+    private List<StepExecution>? Executions { get; set; }
 
     public const int MaxExecutions = 50;
 
-    private StepExecution SelectedStepExecution { get; set; }
+    private StepExecution? SelectedStepExecution { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

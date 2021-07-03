@@ -8,6 +8,14 @@ namespace EtlManagerUi.Models
 {
     abstract public class Execution
     {
+
+        public Execution(string jobName, DateTime createdDateTime, string executionStatus)
+        {
+            JobName = jobName;
+            CreatedDateTime = createdDateTime;
+            ExecutionStatus = executionStatus;
+        }
+
         abstract public Guid ExecutionId { get; set; }
 
         [Display(Name = "Job id")]
@@ -18,7 +26,7 @@ namespace EtlManagerUi.Models
 
         [Display(Name = "Created")]
         [DataType(DataType.DateTime)]
-        public DateTime? CreatedDateTime { get; set; }
+        public DateTime CreatedDateTime { get; set; }
 
         [Display(Name = "Started")]
         [DataType(DataType.DateTime)]
@@ -38,12 +46,12 @@ namespace EtlManagerUi.Models
         public bool DependencyMode { get; set; }
 
         [Display(Name = "Created by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
 
         [Display(Name = "Schedule id")]
         public Guid? ScheduleId { get; set; }
 
-        public string GetDurationInReadableFormat()
+        public string? GetDurationInReadableFormat()
         {
             return ExecutionInSeconds?.SecondsToReadableFormat() ?? null;
         }

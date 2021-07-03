@@ -16,12 +16,12 @@ namespace EtlManagerUi.Models
         [Required]
         public Guid JobId { get; set; }
 
-        public Job Job { get; set; }
+        public Job Job { get; set; } = null!;
 
         [Required]
         [ForeignKey("User")]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
-        public User User { get; set; }
+        public User User { get; set; } = null!;
     }
 }

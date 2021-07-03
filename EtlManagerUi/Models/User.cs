@@ -12,11 +12,11 @@ namespace EtlManagerUi.Models
         [Key]
         [Required]
         [MaxLength(250)]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [MaxLength(254)]
         [DataType(DataType.EmailAddress)]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [Required]
         public DateTime CreatedDateTime { get; set; }
@@ -24,6 +24,6 @@ namespace EtlManagerUi.Models
         [Required]
         public DateTime LastModifiedDateTime { get; set; }
 
-        public ICollection<Subscription> Subscriptions { get; set; }
+        public ICollection<Subscription> Subscriptions { get; set; } = null!;
     }
 }

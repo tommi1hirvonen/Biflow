@@ -15,19 +15,19 @@ namespace EtlManagerUi.Models
         [Required]
         [MaxLength(250)]
         [Display(Name = "Connection name")]
-        public string ConnectionName { get; set; }
+        public string? ConnectionName { get; set; }
 
         [Required]
         [Display(Name = "Connection string")]
-        public string ConnectionString { get; set; }
+        public string? ConnectionString { get; set; }
 
         [Required]
         [Display(Name = "Sensitive")]
         public bool IsSensitive { get; set; }
 
         [Display(Name = "Execute packages as login")]
-        public string ExecutePackagesAsLogin { get; set; }
+        public string? ExecutePackagesAsLogin { get; set; }
 
-        public IList<Step> Steps { get; set; }
+        public IList<Step> Steps { get; set; } = null!;
     }
 }

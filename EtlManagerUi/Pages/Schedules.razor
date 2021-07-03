@@ -167,13 +167,13 @@
 
 @code {
 
-    private List<Job> Jobs { get; set; }
+    private List<Job> Jobs { get; set; } = null!;
 
-    private List<Schedule> Schedules_ { get; set; }
+    private List<Schedule> Schedules_ { get; set; } = null!;
 
-    private Schedule NewSchedule { get; set; }
+    private Schedule NewSchedule { get; set; } = new();
 
-    private BSModal CreateModal { get; set; }
+    private BSModal CreateModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -190,7 +190,7 @@
             .ThenBy(schedule => schedule.CronExpression)
             .ToListAsync();
 
-        if (Jobs?.Count == 0)
+        if (Jobs.Count == 0)
         {
             return;
         }
@@ -205,7 +205,7 @@
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             var success = await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);

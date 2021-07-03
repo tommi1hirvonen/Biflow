@@ -16,15 +16,15 @@ namespace EtlManagerUi.Models
         [Required]
         public Guid JobId { get; set; }
 
-        public Job Job { get; set; }
+        public Job? Job { get; set; }
 
         [Required]
         [MaxLength(250)]
         [Display(Name = "Step name")]
-        public string StepName { get; set; }
+        public string? StepName { get; set; }
 
         [Display(Name = "Description")]
-        public string StepDescription { get; set; }
+        public string? StepDescription { get; set; }
 
         [Required]
         [Display(Name = "Execution phase")]
@@ -32,31 +32,31 @@ namespace EtlManagerUi.Models
 
         [Required]
         [Display(Name = "Step type")]
-        public string StepType { get; set; }
+        public string? StepType { get; set; }
 
         [Display(Name = "SQL statement")]
-        public string SqlStatement { get; set; }
+        public string? SqlStatement { get; set; }
 
         public Guid? ConnectionId { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Folder name")]
-        public string PackageFolderName { get; set; }
+        public string? PackageFolderName { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Project name")]
-        public string PackageProjectName { get; set; }
+        public string? PackageProjectName { get; set; }
 
         [MaxLength(260)]
         [Display(Name = "Package name")]
-        public string PackageName { get; set; }
+        public string? PackageName { get; set; }
 
         [Required]
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
         [Display(Name = "Execute as login")]
-        public string ExecuteAsLogin { get; set; }
+        public string? ExecuteAsLogin { get; set; }
 
         [Display(Name = "Job to execute")]
         public Guid? JobToExecuteId { get; set; }
@@ -65,11 +65,11 @@ namespace EtlManagerUi.Models
         public bool JobExecuteSynchronized { get; set; }
 
         [Display(Name = "File path")]
-        public string ExeFileName { get; set; }
+        public string? ExeFileName { get; set; }
         [Display(Name = "Arguments")]
-        public string ExeArguments { get; set; }
+        public string? ExeArguments { get; set; }
         [Display(Name = "Working directory")]
-        public string ExeWorkingDirectory { get; set; }
+        public string? ExeWorkingDirectory { get; set; }
         [Display(Name = "Success exit code")]
         public int? ExeSuccessExitCode { get; set; }
 
@@ -78,18 +78,18 @@ namespace EtlManagerUi.Models
         [Display(Name = "Group id")]
         [MaxLength(36)]
         [MinLength(36)]
-        public string DatasetGroupId { get; set; }
+        public string? DatasetGroupId { get; set; }
 
         [Display(Name = "Dataset id")]
         [MaxLength(36)]
         [MinLength(36)]
-        public string DatasetId { get; set; }
+        public string? DatasetId { get; set; }
 
         public Guid? DataFactoryId { get; set; }
         
         [MaxLength(250)]
         [Display(Name = "Pipeline name")]
-        public string PipelineName { get; set; }
+        public string? PipelineName { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]
@@ -121,29 +121,29 @@ namespace EtlManagerUi.Models
         public int TimeoutMinutes { get; set; }
 
         [Display(Name = "Created by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
 
         [Display(Name = "Last modified by")]
-        public string LastModifiedBy { get; set; }
+        public string? LastModifiedBy { get; set; }
 
         [Timestamp]
-        public byte[] Timestamp { get; set; }
+        public byte[]? Timestamp { get; set; }
 
-        public ICollection<Dependency> Dependencies { get; set; }
+        public ICollection<Dependency> Dependencies { get; set; } = null!;
 
-        public IList<PackageParameter> PackageParameters { get; set; }
+        public IList<PackageParameter> PackageParameters { get; set; } = null!;
 
-        public IList<PipelineParameter> PipelineParameters { get; set; }
+        public IList<PipelineParameter> PipelineParameters { get; set; } = null!;
 
-        public IList<Tag> Tags { get; set; }
+        public IList<Tag> Tags { get; set; } = null!;
 
-        public DataFactory DataFactory { get; set; }
+        public DataFactory? DataFactory { get; set; }
 
-        public Connection Connection { get; set; }
+        public Connection? Connection { get; set; }
 
-        public PowerBIService PowerBIService { get; set; }
+        public PowerBIService? PowerBIService { get; set; }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
             if (obj is null) return 1;
 
@@ -152,7 +152,7 @@ namespace EtlManagerUi.Models
                 int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
                 if (result == 0)
                 {
-                    return StepName.CompareTo(other.StepName);
+                    return StepName?.CompareTo(other.StepName) ?? 0;
                 }
                 else
                 {

@@ -132,9 +132,9 @@
     private Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
 
     private Dictionary<string, string> JobColors = new Dictionary<string, string>();
-    private List<ReportingJob> Jobs { get; set; }
+    private List<ReportingJob>? Jobs { get; set; }
 
-    private List<TopStep> TopFailedSteps { get; set; }
+    private List<TopStep>? TopFailedSteps { get; set; }
 
     private int IntervalDays { get; set; } = 90;
 
@@ -183,7 +183,7 @@
             })
             .Select(select => new TimeSeriesItem
             {
-                DurationInMinutes = select.Average(total => (decimal)total.ExecutionInSeconds / 60),
+                DurationInMinutes = select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60),
                 JobName = select.Key.JobName,
                 Date = select.Key.Date,
                 NumberOfExecutions = select.Count()
@@ -318,7 +318,7 @@
 
     public class TimeSeriesItem
     {
-        public string JobName { get; set; }
+        public string JobName { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public decimal DurationInMinutes { get; set; }
         public int NumberOfExecutions { get; set; }
@@ -327,15 +327,15 @@
     public class ReportingJob
     {
         public decimal SuccessPercent { get; set; }
-        public string JobName { get; set; }
+        public string JobName { get; set; } = string.Empty;
     }
 
     public class TopStep
     {
         public decimal SuccessPercent { get; set; }
-        public string StepName { get; set; }
+        public string StepName { get; set; } = string.Empty;
         public Guid StepId { get; set; }
-        public string JobName { get; set; }
+        public string JobName { get; set; } = string.Empty;
         public Guid JobId { get; set; }
         public int NoOfExecutions { get; set; }
     }

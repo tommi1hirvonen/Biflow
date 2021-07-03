@@ -112,13 +112,13 @@
 
 
 @code {
-    private List<RoleUser> Users { get; set; }
+    private List<RoleUser> Users { get; set; } = null!;
 
-    private UserEditModal UserEditModal { get; set; }
-    private string EditModalUsername { get; set; }
+    private UserEditModal UserEditModal { get; set; } = null!;
+    private string? EditModalUsername { get; set; }
 
-    private string Password { get; set; }
-    private string ConfirmPassword { get; set; }
+    private string? Password { get; set; }
+    private string? ConfirmPassword { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -164,7 +164,9 @@
             return;
         }
 
-        var result = await Utility.UpdatePasswordAsync(configuration, user.Username, Password);
+        var result = await Utility.UpdatePasswordAsync(configuration,
+            user.Username ?? throw new ArgumentNullException(nameof(user.Username), "Username was null"),
+            Password!); // PasswordCheck() makes sure Password is not null
         if (result)
         {
             ResetPassword();

@@ -13,8 +13,8 @@ namespace EtlManagerUi.Models
         [Required]
         [MaxLength(250)]
         [MinLength(1)]
-        public string TagName { get; set; }
+        public string? TagName { get; set; }
 
-        public IList<Step> Steps { get; set; }
+        public IList<Step> Steps { get; set; } = null!;
     }
 }

@@ -8,6 +8,13 @@ namespace EtlManagerUi.Models
 {
     public class JobExecution : Execution
     {
+
+        public JobExecution(string jobName, DateTime createdDateTime, string executionStatus)
+            : base(jobName, createdDateTime, executionStatus)
+        {
+
+        }
+
         [Key]
         [Display(Name = "Execution id")]
         override public Guid ExecutionId { get; set; }

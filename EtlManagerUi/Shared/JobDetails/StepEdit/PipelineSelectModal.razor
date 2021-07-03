@@ -77,7 +77,7 @@
 
 @code {
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? DataFactoryId { get; set; }
@@ -85,10 +85,10 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private Dictionary<string, List<string>> Pipelines { get; set; }
+    private Dictionary<string, List<string>>? Pipelines { get; set; }
 
-    private string SelectedFolder { get; set; }
-    private string SelectedPipeline { get; set; }
+    private string? SelectedFolder { get; set; }
+    private string? SelectedPipeline { get; set; }
 
     private async Task ModalOpenChanged(bool isOpen)
     {
@@ -96,7 +96,8 @@
         {
             try
             {
-                var dataFactory = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration, DataFactoryId.ToString());
+                string dataFactoryId = DataFactoryId?.ToString() ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
+                var dataFactory = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration, dataFactoryId);
                 Pipelines = await dataFactory.GetPipelinesAsync();
                 StateHasChanged();
             }

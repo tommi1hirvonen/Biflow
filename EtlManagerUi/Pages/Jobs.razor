@@ -193,14 +193,14 @@
 
 
 @code {
-    private IList<Job> jobs { get; set; }
-    private Dictionary<Guid, JobExecution> LastExecutions { get; set; }
+    private IList<Job> jobs { get; set; } = null!;
+    private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = null!;
     private Job NewJob { get; set; } = new() { IsEnabled = true };
     private Job EditJob { get; set; } = new();
 
     private bool IsLoading { get; set; } = false;
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; }
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -237,9 +237,9 @@
     }
 
     // Helper method for Dictionary TryGet access
-    private JobExecution GetLastExecution(Job job)
+    private JobExecution? GetLastExecution(Job job)
     {
-        JobExecution execution = null;
+        JobExecution? execution = null;
         LastExecutions?.TryGetValue(job.JobId, out execution);
         return execution;
     }
@@ -252,7 +252,7 @@
 
     private async Task ToggleEnabled(ChangeEventArgs args, Job job)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             await Utility.ToggleJobEnabledAsync(configuration, job, value);
@@ -305,7 +305,8 @@
     {
         try
         {
-            string user = HttpContextAccessor.HttpContext.User?.Identity?.Name;
+            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(user), "Error getting username from HttpContext");
             using var context = DbFactory.CreateDbContext();
             Guid createdJobId = await Utility.JobCopyAsync(configuration, job.JobId, user);
             var createdJob = await context.Jobs.Include(job_ => job_.Steps).Include(job_ => job_.Schedules).FirstOrDefaultAsync(job_ => job_.JobId == createdJobId);

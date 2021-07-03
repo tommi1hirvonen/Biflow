@@ -173,7 +173,7 @@
             <table class="table table-sm table-hover mt-2">
                 <thead>
                     <tr>
-                        @{ string Decorate(SortOption sortOption) => sortOption == SortOption_ ? "text-decoration: underline;" : null; }
+                        @{ string? Decorate(SortOption sortOption) => sortOption == SortOption_ ? "text-decoration: underline;" : null; }
                         <th>
                             <a style="@Decorate(SortOption.Name)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Name">
                                 Step
@@ -287,16 +287,16 @@
 <StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" NoBackdrop="true" />
 
 @code {
-    [Parameter]
-    public string ExecutionId_ { get; set; }
+        [Parameter]
+        public string? ExecutionId_ { get; set; }
 
-    private Guid ExecutionId => Guid.Parse(ExecutionId_);
+    private Guid ExecutionId => ExecutionId_ switch { not null => Guid.Parse(ExecutionId_), _ => Guid.Empty };
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
-    private JobExecution JobExecution { get; set; }
+    private JobExecution? JobExecution { get; set; }
 
-    private List<StepExecution> Executions { get; set; }
+    private List<StepExecution>? Executions { get; set; }
 
     private bool ShowGraph { get; set; } = false;
 
@@ -306,12 +306,12 @@
 
     private string StatusFilter { get; set; } = string.Empty;
 
-    private StepExecution SelectedStepExecution { get; set; }
+    private StepExecution? SelectedStepExecution { get; set; }
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
-    private StepHistoryModal StepHistoryModal { get; set; }
-    private string HistoryModalStepId { get; set; }
+    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private string? HistoryModalStepId { get; set; }
 
     private SortOption _SortOption = SortOption.StartTime;
     private bool SortAscending = true;
@@ -323,7 +323,7 @@
             if (value == _SortOption)
             {
                 SortAscending = !SortAscending;
-                Executions.Reverse();
+                Executions?.Reverse();
             }
             else
             {
@@ -340,9 +340,9 @@
     // and to modify the view based on which job execution is being shown.
     private List<Guid> StoppingExecutions { get; set; } = new();
 
-    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; }
-    private StepExecution SelectedStepExecutionModal { get; set; }
-    private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
+    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; } = null!;
+    private StepExecution SelectedStepExecutionModal { get; set; } = null!;
+    private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
     protected override void OnInitialized()
     {
@@ -400,22 +400,22 @@
             switch (SortOption_)
             {
                 case SortOption.Duration:
-                    Executions = Executions.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepName).ToList();
+                    Executions = Executions?.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.StartTime:
                     // false sorts before true => not started steps are placed last
-                    Executions = Executions.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
+                    Executions = Executions?.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
                         .ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime)
                         .ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.EndTime:
-                    Executions = Executions.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepName).ToList();
+                    Executions = Executions?.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepName).ToList();
                     break;
                 case SortOption.Name:
-                    Executions = Executions.OrderBy(e => e.StepName).ToList();
+                    Executions = Executions?.OrderBy(e => e.StepName).ToList();
                     break;
                 case SortOption.Status:
-                    Executions = Executions.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepName).ToList();
+                    Executions = Executions?.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepName).ToList();
                     break;
             }
         }
@@ -424,19 +424,19 @@
             switch (SortOption_)
             {
                 case SortOption.Duration:
-                    Executions = Executions.OrderByDescending(e => e.ExecutionInSeconds).ToList();
+                    Executions = Executions?.OrderByDescending(e => e.ExecutionInSeconds).ToList();
                     break;
                 case SortOption.StartTime:
-                    Executions = Executions.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
+                    Executions = Executions?.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
                     break;
                 case SortOption.EndTime:
-                    Executions = Executions.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
+                    Executions = Executions?.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
                     break;
                 case SortOption.Name:
-                    Executions = Executions.OrderByDescending(e => e.StepName).ToList();
+                    Executions = Executions?.OrderByDescending(e => e.StepName).ToList();
                     break;
                 case SortOption.Status:
-                    Executions = Executions.OrderByDescending(e => e.ExecutionStatus).ToList();
+                    Executions = Executions?.OrderByDescending(e => e.ExecutionStatus).ToList();
                     break;
             }
         }
@@ -459,7 +459,8 @@
         StoppingExecutions.Add(ExecutionId);
         try
         {
-            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
             await Utility.StopExecutionAsync(ExecutionId, username);
         }
         catch (TimeoutException)
@@ -478,7 +479,8 @@
     {
         try
         {
-            var username = HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
             await Utility.StopExecutionAsync(ExecutionId, username, stepId);
         }
         catch (TimeoutException)
@@ -495,7 +497,7 @@
 
     private void ShowStepExecutionModal(string text)
     {
-        var execution = Executions.FirstOrDefault(e => e.StepExecutionId == text);
+        var execution = Executions?.FirstOrDefault(e => e.StepExecutionId == text);
         if (execution is not null)
         {
             SelectedStepExecutionModal = execution;

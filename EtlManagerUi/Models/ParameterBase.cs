@@ -14,7 +14,7 @@ namespace EtlManagerUi.Models
         [Display(Name = "Id")]
         public Guid ParameterId { get; set; }
 
-        public Step Step { get; set; }
+        public Step Step { get; set; } = null!;
 
         [Display(Name = "Step id")]
         public Guid StepId { get; set; }
@@ -22,12 +22,12 @@ namespace EtlManagerUi.Models
         [Required]
         [MaxLength(128)]
         [Display(Name = "Name")]
-        public string ParameterName { get; set; }
+        public string? ParameterName { get; set; }
 
         [Required]
         [Display(Name = "Value")]
         [Column(TypeName = "sql_variant")]
-        public object ParameterValue
+        public object? ParameterValue
         {
             get
             {
@@ -81,10 +81,10 @@ namespace EtlManagerUi.Models
             }
         }
 
-        private object parameterValueField;
+        private object? parameterValueField;
 
         [Required]
-        public string ParameterType { get; set; }
+        public string? ParameterType { get; set; }
 
         [NotMapped]
         public bool ValueBoolean { get; set; }
@@ -107,7 +107,7 @@ namespace EtlManagerUi.Models
         [NotMapped]
         public float ValueSingle { get; set; }
         [NotMapped]
-        public string ValueString { get; set; }
+        public string? ValueString { get; set; }
         [NotMapped]
         public uint ValueUInt32 { get; set; }
         [NotMapped]

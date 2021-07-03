@@ -8,8 +8,7 @@ namespace EtlManagerUi
 {
     public class InputSelectBoolean<T> : InputSelect<T>
     {
-        protected override bool TryParseValueFromString(string value, out T result,
-            out string validationErrorMessage)
+        protected override bool TryParseValueFromString(string? value, out T result, out string validationErrorMessage)
         {
             if (typeof(T) == typeof(bool))
             {

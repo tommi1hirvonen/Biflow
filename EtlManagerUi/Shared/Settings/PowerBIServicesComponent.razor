@@ -80,10 +80,10 @@ else
 @code {
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
 
-    private List<PowerBIService> PowerBIServices { get; set; }
+    private List<PowerBIService>? PowerBIServices { get; set; }
 
     private Guid EditPowerBIServiceId { get; set; }
-    private PowerBIServiceEditModal PowerBIServiceEditModal { get; set; }
+    private PowerBIServiceEditModal PowerBIServiceEditModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,18 +103,18 @@ else
         var context = DbFactory.CreateDbContext();
         context.Remove(powerBIService);
         await context.SaveChangesAsync();
-        PowerBIServices.Remove(powerBIService);
+        PowerBIServices?.Remove(powerBIService);
     }
 
     private async void OnPowerBIServiceSubmit(PowerBIService powerBIService)
     {
         var context = DbFactory.CreateDbContext();
-        var existingService = PowerBIServices.FirstOrDefault(pbi => pbi.PowerBIServiceId == powerBIService.PowerBIServiceId);
-        string encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
+        var existingService = PowerBIServices?.FirstOrDefault(pbi => pbi.PowerBIServiceId == powerBIService.PowerBIServiceId);
+        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
 
         if (existingService is not null)
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceUpdate {0}, {1}, {2}, {3}, {4}, {5}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceUpdate {0}, {1}, {2}, {3}, {4}, {5}", parameters: new string?[]
             {
                 powerBIService.PowerBIServiceId.ToString(),
                 powerBIService.PowerBIServiceName,
@@ -126,7 +126,7 @@ else
         }
         else
         {
-            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceAdd {0}, {1}, {2}, {3}, {4}", parameters: new string[]
+            await context.Database.ExecuteSqlRawAsync("etlmanager.PowerBIServiceAdd {0}, {1}, {2}, {3}, {4}", parameters: new string?[]
             {
                 powerBIService.PowerBIServiceName,
                 powerBIService.TenantId,
@@ -140,7 +140,7 @@ else
         StateHasChanged();
     }
 
-    private void ShowEditModal(PowerBIService powerBIService)
+    private void ShowEditModal(PowerBIService? powerBIService)
     {
         EditPowerBIServiceId = powerBIService?.PowerBIServiceId ?? Guid.Empty;
         PowerBIServiceEditModal.Show();

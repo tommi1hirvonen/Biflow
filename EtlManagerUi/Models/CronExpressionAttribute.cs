@@ -16,14 +16,14 @@ namespace EtlManagerUi
 
         public string GetErrorMessage() => "Not a valid Cron expression";
 
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
             var schedule = (Schedule)validationContext.ObjectInstance;
             if (!CronExpression.IsValidExpression(schedule.CronExpression))
             {
                 return new ValidationResult(GetErrorMessage());
             }
-            return ValidationResult.Success;
+            return ValidationResult.Success!;
         }
     }
 }

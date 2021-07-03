@@ -172,22 +172,22 @@ else
 
 @code {
     [Parameter]
-    public string DetailsPage { get; set; }
+    public string? DetailsPage { get; set; }
 
     [Parameter]
     public Guid Id { get; set; }
 
     private Guid PrevId { get; set; }
 
-    private Job CurrentJob { get; set; }
+    private Job CurrentJob { get; set; } = null!;
 
-    private List<Job> Jobs { get; set; }
+    private List<Job> Jobs { get; set; } = null!;
 
-    private List<Step> Steps { get; set; }
+    private List<Step> Steps { get; set; } = null!;
 
     private Job EditJob { get; set; } = new();
 
-    private string Username => HttpContextAccessor.HttpContext.User?.Identity?.Name;
+    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
     private bool Subscribed => CurrentJob?.Subscriptions.Any(sub => sub.Username == Username) ?? false;
 
@@ -264,7 +264,7 @@ else
 
     private async Task ToggleJobEnabled(ChangeEventArgs args)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             await Utility.ToggleJobEnabledAsync(configuration, CurrentJob, value);
@@ -278,7 +278,7 @@ else
 
     private async Task ToggleDependencyMode(ChangeEventArgs args)
     {
-        bool value = (bool)args.Value;
+        bool value = (bool)args.Value!;
         try
         {
             await Utility.ToggleJobDependencyModeAsync(configuration, CurrentJob, value);

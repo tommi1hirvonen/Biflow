@@ -83,19 +83,19 @@
 
 @code {
     [Parameter]
-    public List<Job> Jobs { get; set; }
+    public List<Job> Jobs { get; set; } = null!;
 
     [Parameter]
-    public Job Job { get; set; }
+    public Job Job { get; set; } = null!;
 
-    private Job PrevJob { get; set; }
+    private Job? PrevJob { get; set; }
 
     [Parameter]
-    public List<Step> Steps { get; set; }
+    public List<Step> Steps { get; set; } = null!;
 
-    private DotNetObjectReference<MethodInvokeHelper> ObjectReference;
+    private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
-    private StepEditModal StepEditModal { get; set; }
+    private StepEditModal StepEditModal { get; set; } = null!;
     private Guid EditModalStepId { get; set; }
 
     private bool GrapShouldRender { get; set; }
@@ -131,8 +131,8 @@
     private async Task LoadGraph()
     {
         GrapShouldRender = false;
-        string stepsJson = null;
-        string dependenciesJson = null;
+        string? stepsJson = null;
+        string? dependenciesJson = null;
 
         if (string.IsNullOrEmpty(StepFilter))
         {
@@ -141,7 +141,7 @@
             var dependencies = Steps
                 .SelectMany(step => step.Dependencies)
                 .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
-            
+
             stepsJson = JsonSerializer.Serialize(steps);
             dependenciesJson = JsonSerializer.Serialize(dependencies);
         }
@@ -212,7 +212,7 @@
 
     private async Task LimitGraph(ChangeEventArgs args)
     {
-        StepFilter = args.Value.ToString();
+        StepFilter = args.Value?.ToString() ?? string.Empty;
         GrapShouldRender = true;
         await LoadGraph();
     }

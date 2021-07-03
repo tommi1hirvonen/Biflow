@@ -15,10 +15,10 @@ namespace EtlManagerUi.Models
         [Required]
         [MaxLength(250)]
         [Display(Name = "Job name")]
-        public string JobName { get; set; }
+        public string? JobName { get; set; }
 
         [Display(Name = "Description")]
-        public string JobDescription { get; set; }
+        public string? JobDescription { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]
@@ -38,18 +38,18 @@ namespace EtlManagerUi.Models
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
 
-        public ICollection<Step> Steps { get; set; }
-        public ICollection<Schedule> Schedules { get; set; }
+        public ICollection<Step> Steps { get; set; } = null!;
+        public ICollection<Schedule> Schedules { get; set; } = null!;
 
-        public ICollection<Subscription> Subscriptions { get; set; }
+        public ICollection<Subscription> Subscriptions { get; set; } = null!;
 
         [Display(Name = "Created by")]
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
 
         [Display(Name = "Last modified by")]
-        public string LastModifiedBy { get; set; }
+        public string? LastModifiedBy { get; set; }
 
         [Timestamp]
-        public byte[] Timestamp { get; set; }
+        public byte[]? Timestamp { get; set; }
     }
 }

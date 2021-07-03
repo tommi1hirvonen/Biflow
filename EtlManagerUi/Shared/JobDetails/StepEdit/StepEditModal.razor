@@ -5,7 +5,7 @@
 @inject IJSRuntime JS
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
-    @if (Step is not null && Jobs is not null && Connections is not null && DataFactories is not null && Steps is not null)
+    @if (Step is not null && Jobs is not null && Connections is not null && DataFactories is not null && PowerBIServices is not null && Steps is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
         <BSModalBody>
@@ -385,9 +385,9 @@
                                             </div>
                                             <InputSelect class="form-control" @bind-Value="Step.PowerBIServiceId">
                                                 @foreach (var pbi in PowerBIServices)
-                                                            {
+                                                {
                                                     <option value="@pbi.PowerBIServiceId">@pbi.PowerBIServiceName</option>
-                                                            }
+                                                }
                                             </InputSelect>
                                         </div>
                                     </BSFormGroup>
@@ -510,7 +510,7 @@
 
 @code {
     // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
-    private EtlManagerContext Context { get; set; }
+    private EtlManagerContext Context { get; set; } = null!;
 
     [Parameter]
     public Guid StepId { get; set; } // empty Guid => new step
@@ -518,26 +518,26 @@
     private Guid PrevStepId { get; set; }
 
     [Parameter]
-    public Job Job { get; set; }
+    public Job? Job { get; set; }
 
-    private Step Step { get; set; }
-
-    [Parameter]
-    public IList<Job> Jobs { get; set; }
+    private Step Step { get; set; } = new();
 
     [Parameter]
-    public IList<Step> Steps { get; set; }
+    public IList<Job>? Jobs { get; set; }
 
-    private IList<Connection> Connections { get; set; }
+    [Parameter]
+    public IList<Step>? Steps { get; set; }
 
-    private IList<DataFactory> DataFactories { get; set; }
+    private IList<Connection>? Connections { get; set; }
 
-    private IList<PowerBIService> PowerBIServices { get; set; }
+    private IList<DataFactory>? DataFactories { get; set; }
+
+    private IList<PowerBIService>? PowerBIServices { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
-    private BSModal Modal { get; set; }
+    private BSModal Modal { get; set; } = null!;
 
     private string StepError { get; set; } = string.Empty;
 
@@ -545,10 +545,10 @@
     private string DependenciesFilterText { get; set; } = string.Empty;
     private bool ShowOnlyActiveDependencies { get; set; } = false;
 
-    private PackageSelectModal PackageSelectModal { get; set; }
-    private PipelineSelectModal PipelineSelectModal { get; set; }
-    private DatasetSelectModal DatasetSelectModal { get; set; }
-    private StoredProcedureSelectModal StoredProcedureSelectModal { get; set; }
+    private PackageSelectModal PackageSelectModal { get; set; } = null!;
+    private PipelineSelectModal PipelineSelectModal { get; set; } = null!;
+    private DatasetSelectModal DatasetSelectModal { get; set; } = null!;
+    private StoredProcedureSelectModal StoredProcedureSelectModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -600,7 +600,7 @@
 
         // If the required id property is not set then try to set it to the first one from the available options.
         // The property would otherwise be null even though the corresponding select input shows a valid option.
-        var stepType = args.Value.ToString();
+        var stepType = args.Value?.ToString();
         if ((stepType == "SQL" || stepType == "SSIS") && Step.ConnectionId is null)
         {
             Step.ConnectionId = Connections?.FirstOrDefault()?.ConnectionId;
@@ -611,7 +611,7 @@
         }
         else if (stepType == "JOB" && Step.JobToExecuteId is null)
         {
-            Step.JobToExecuteId = Jobs?.Where(job => job.JobId != Job.JobId).FirstOrDefault()?.JobId;
+            Step.JobToExecuteId = Jobs?.Where(job => job.JobId != Job?.JobId).FirstOrDefault()?.JobId;
         }
         else if (stepType == "DATASET" && Step.PowerBIServiceId is null)
         {

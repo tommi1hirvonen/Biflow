@@ -12,18 +12,18 @@ namespace EtlManagerUi.Models
         [Key]
         [Required]
         [MaxLength(250)]
-        public string Username { get; set; }
+        public string? Username { get; set; }
 
         [MaxLength(254)]
         [DataType(DataType.EmailAddress)]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         public DateTime CreatedDateTime { get; set; }
 
         public DateTime LastModifiedDateTime { get; set; }
 
         [Required]
-        public string Role { get; set; }
+        public string? Role { get; set; }
 
     }
 }

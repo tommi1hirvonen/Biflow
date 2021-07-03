@@ -63,14 +63,14 @@
 
 @code {
     [Parameter]
-    public string ClassString { get; set; }
+    public string? ClassString { get; set; }
 
     [Parameter]
     public EventCallback OnNavLinkClick { get; set; }
 
     private bool collapseNavMenu = true;
 
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {

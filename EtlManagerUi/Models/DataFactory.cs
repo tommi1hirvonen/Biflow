@@ -14,39 +14,39 @@ namespace EtlManagerUi.Models
         
         [Required]
         [Display(Name = "Data Factory name")]
-        public string DataFactoryName { get; set; }
+        public string? DataFactoryName { get; set; }
         
         [Required]
         [Display(Name = "Tenant id")]
         [MaxLength(36)]
         [MinLength(36)]
-        public string TenantId { get; set; }
+        public string? TenantId { get; set; }
        
         [Required]
         [Display(Name = "Subscription id")]
         [MaxLength(36)]
         [MinLength(36)]
-        public string SubscriptionId { get; set; }
+        public string? SubscriptionId { get; set; }
        
         [Required]
         [Display(Name = "Client id")]
         [MaxLength(36)]
         [MinLength(36)]
-        public string ClientId { get; set; }
+        public string? ClientId { get; set; }
         
         [NotMapped]
         [Required]
         [Display(Name = "Client secret")]
-        public string ClientSecret { get; set; }
+        public string? ClientSecret { get; set; }
         
         [Required]
         [Display(Name = "Resource group name")]
-        public string ResourceGroupName { get; set; }
+        public string? ResourceGroupName { get; set; }
         
         [Required]
         [Display(Name = "Resource name")]
-        public string ResourceName { get; set; }
+        public string? ResourceName { get; set; }
 
-        public IList<Step> Steps { get; set; }
+        public IList<Step> Steps { get; set; } = null;
     }
 }
