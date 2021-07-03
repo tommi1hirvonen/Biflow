@@ -246,7 +246,7 @@
 
     private DateTime? GetNextStartTime(Job job)
     {
-        var dateTimes = job.Schedules.Select(s => s.GetNextFireTime());
+        var dateTimes = job.Schedules.Where(s => s.IsEnabled).Select(s => s.GetNextFireTime());
         return dateTimes.Any() ? dateTimes.Min() : null as DateTime?;
     }
 
