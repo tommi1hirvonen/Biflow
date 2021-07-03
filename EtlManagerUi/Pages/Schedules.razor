@@ -134,10 +134,10 @@
                                         </div>
                                     </div>
                                     <InputSelect class="form-control" @bind-Value="NewSchedule.JobId">
-                                        @foreach (var job in Jobs)
-                                            {
-                                            <option value="@job.JobId">@job.JobName</option>
-                                            }
+                                        @foreach (var job in Jobs ?? Enumerable.Empty<Job>())
+                                        {
+                                        <option value="@job.JobId">@job.JobName</option>
+                                        }
                                     </InputSelect>
                                 </div>
                             </BSFormGroup>
@@ -167,9 +167,9 @@
 
 @code {
 
-    private List<Job> Jobs { get; set; } = null!;
+    private List<Job>? Jobs { get; set; }
 
-    private List<Schedule> Schedules_ { get; set; } = null!;
+    private List<Schedule>? Schedules_ { get; set; }
 
     private Schedule NewSchedule { get; set; } = new();
 
@@ -247,9 +247,10 @@
                 throw new Exception("Error sending the new schedule to the scheduler service");
             }
 
-            NewSchedule.Job = Jobs.First(job => job.JobId == NewSchedule.JobId);
-            Schedules_.Add(NewSchedule);
-            Schedules_ = Schedules_.OrderBy(sched => sched.Job.JobName).ThenBy(sched => sched.CronExpression).ToList();
+            NewSchedule.Job = Jobs?.FirstOrDefault(job => job.JobId == NewSchedule.JobId)
+                ?? throw new InvalidOperationException("Job cannot be null");
+            Schedules_?.Add(NewSchedule);
+            Schedules_ = Schedules_?.OrderBy(sched => sched.Job.JobName).ThenBy(sched => sched.CronExpression).ToList();
 
             NewSchedule = new()
             {
@@ -282,7 +283,7 @@
                 throw new Exception("Error removing the schedule from the scheduler service");
             }
 
-            Schedules_.Remove(schedule);
+            Schedules_?.Remove(schedule);
         }
         catch (Exception ex)
         {
