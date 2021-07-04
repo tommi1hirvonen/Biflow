@@ -22,24 +22,13 @@ namespace EtlManagerExecutor
             // If the step was canceled already before it was even started, update the status to STOPPED.
             if (cancellationToken.IsCancellationRequested)
             {
-                using var connection = new SqlConnection(Configuration.ConnectionString);
-                await connection.OpenAsync(CancellationToken.None);
-                using var canceledUpdate = new SqlCommand(
-                        @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                        , connection);
-                canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-                canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
-                await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+                await UpdateStepAsStoppedAsync();
                 return false;
             }
 
             StepExecutionBase stepExecution;
             int retryAttempts;
             int retryIntervalMinutes;
-            int timeoutMinutes;
 
             // Get step details.
             using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
@@ -49,31 +38,11 @@ namespace EtlManagerExecutor
                 // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
                 try
                 {
-                    using var duplicateExecutionCmd = new SqlCommand(
-                        @"SELECT 1
-                        FROM etlmanager.Execution
-                        WHERE StepId = @StepId AND ExecutionStatus = 'RUNNING' AND StartDateTime >= DATEADD(DAY, -1, GETDATE())"
-                        , sqlConnection);
-                    duplicateExecutionCmd.Parameters.AddWithValue("@StepId", Step.StepId);
-                    using var duplicateReader = await duplicateExecutionCmd.ExecuteReaderAsync(CancellationToken.None);
-                    // If the duplicate execution query returns any rows, there is another execution running for the same step.
+                    var duplicateExecution = await IsDuplicateExecutionAsync(sqlConnection);
                     // This step execution should be marked as duplicate.
-                    if (duplicateReader.HasRows)
+                    if (duplicateExecution)
                     {
-                        await duplicateReader.CloseAsync();
-                        var duplicateCommand = new SqlCommand(
-                            @"UPDATE etlmanager.Execution
-                            SET ExecutionStatus = 'DUPLICATE',
-                            StartDateTime = GETDATE(), EndDateTime = GETDATE()
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                            , sqlConnection)
-                        {
-                            CommandTimeout = 120 // two minutes
-                        };
-                        duplicateCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                        duplicateCommand.Parameters.AddWithValue("@StepId", Step.StepId);
-                        await duplicateCommand.ExecuteNonQueryAsync(CancellationToken.None);
-
+                        await UpdateStepAsDuplicateAsync(sqlConnection);
                         Log.Warning("{ExecutionId} {Step} Marked step as DUPLICATE", Configuration.ExecutionId, Step);
                         return false;
                     }
@@ -107,65 +76,59 @@ namespace EtlManagerExecutor
                         var stepType = reader["StepType"].ToString();
                         retryAttempts = (int)reader["RetryAttempts"];
                         retryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
-                        timeoutMinutes = (int)reader["TimeoutMinutes"];
-                        if (stepType == "SQL")
+                        int timeoutMinutes = (int)reader["TimeoutMinutes"];
+                        switch (stepType)
                         {
-                            var sqlStatement = reader["SqlStatement"].ToString()!;
-                            var connectionString = reader["ConnectionString"].ToString()!;
-                            stepExecution = new SqlStepExecution(Configuration, Step, sqlStatement, connectionString, timeoutMinutes);
-                        }
-                        else if (stepType == "SSIS")
-                        {
-                            var connectionString = reader["ConnectionString"].ToString()!;
-                            var packageFolderName = reader["PackageFolderName"].ToString()!;
-                            var packageProjectName = reader["PackageProjectName"].ToString()!;
-                            var packageName = reader["PackageName"].ToString()!;
-                            var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
+                            case "SQL":
+                                var sqlStatement = reader["SqlStatement"].ToString()!;
+                                var connectionStringSql = reader["ConnectionString"].ToString()!;
+                                stepExecution = new SqlStepExecution(Configuration, Step, sqlStatement, connectionStringSql, timeoutMinutes);
+                                break;
+                            case "SSIS":
+                                var connectionStringSsis = reader["ConnectionString"].ToString()!;
+                                var packageFolderName = reader["PackageFolderName"].ToString()!;
+                                var packageProjectName = reader["PackageProjectName"].ToString()!;
+                                var packageName = reader["PackageName"].ToString()!;
+                                var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
 
-                            var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
-                            executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
+                                var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
+                                executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
                             
-                            var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
-                            executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
+                                var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
+                                executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
                             
-                            executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
+                                executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
                             
-                            stepExecution = new PackageStepExecution(Configuration, Step, connectionString,
-                                packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
+                                stepExecution = new PackageStepExecution(Configuration, Step, connectionStringSsis,
+                                    packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
+                                break;
+                            case "JOB":
+                                var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
+                                var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
+                                stepExecution = new JobStepExecution(Configuration, Step, jobToExecuteId, jobExecuteSynchronized);
+                                break;
+                            case "PIPELINE":
+                                var dataFactoryId = reader["DataFactoryId"].ToString()!;
+                                var pipelineName = reader["PipelineName"].ToString()!;
+                                stepExecution = new PipelineStepExecution(Configuration, Step, dataFactoryId, pipelineName, timeoutMinutes);
+                                break;
+                            case "EXE":
+                                var fileName = reader["ExeFileName"].ToString()!;
+                                var arguments = reader["ExeArguments"].ToString()!;
+                                var workingDirectory = reader["ExeWorkingDirectory"].ToString()!;
+                                int? successExitCode = reader["ExeSuccessExitCode"] as int?;
+                                stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
+                                break;
+                            case "DATASET":
+                                var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
+                                var groupId = reader["DatasetGroupId"].ToString()!;
+                                var datasetId = reader["DatasetId"].ToString()!;
+                                stepExecution = new DatasetStepExecution(Configuration, Step, powerBIServiceId, groupId, datasetId);
+                                break;
+                            default:
+                                Log.Error("{ExecutionId} {Step} Incorrect step type {stepType}", Configuration.ExecutionId, Step, stepType);
+                                return false;
                         }
-                        else if (stepType == "JOB")
-                        {
-                            var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
-                            var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
-                            stepExecution = new JobStepExecution(Configuration, Step, jobToExecuteId, jobExecuteSynchronized);
-                        }
-                        else if (stepType == "PIPELINE")
-                        {
-                            var dataFactoryId = reader["DataFactoryId"].ToString()!;
-                            var pipelineName = reader["PipelineName"].ToString()!;
-                            stepExecution = new PipelineStepExecution(Configuration, Step, dataFactoryId, pipelineName, timeoutMinutes);
-                        }
-                        else if (stepType == "EXE")
-                        {
-                            var fileName = reader["ExeFileName"].ToString()!;
-                            var arguments = reader["ExeArguments"].ToString()!;
-                            var workingDirectory = reader["ExeWorkingDirectory"].ToString()!;
-                            int? successExitCode = reader["ExeSuccessExitCode"] as int?;
-                            stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
-                        }
-                        else if (stepType == "DATASET")
-                        {
-                            var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
-                            var groupId = reader["DatasetGroupId"].ToString()!;
-                            var datasetId = reader["DatasetId"].ToString()!;
-                            stepExecution = new DatasetStepExecution(Configuration, Step, powerBIServiceId, groupId, datasetId);
-                        }
-                        else
-                        {
-                            Log.Error("{ExecutionId} {Step} Incorrect step type {stepType}", Configuration.ExecutionId, Step, stepType);
-                            return false;
-                        }
-
                     }
                     else
                     {
@@ -354,6 +317,57 @@ namespace EtlManagerExecutor
             }
 
             return false; // Execution should not arrive here in normal conditions. Return false.
+        }
+
+        private async Task<bool> IsDuplicateExecutionAsync(SqlConnection sqlConnection)
+        {
+            using var duplicateExecutionCmd = new SqlCommand(
+                        @"SELECT 1
+                        FROM etlmanager.Execution
+                        WHERE StepId = @StepId AND ExecutionStatus = 'RUNNING' AND StartDateTime >= DATEADD(DAY, -1, GETDATE())"
+                        , sqlConnection);
+            duplicateExecutionCmd.Parameters.AddWithValue("@StepId", Step.StepId);
+            using var duplicateReader = await duplicateExecutionCmd.ExecuteReaderAsync();
+            // If the duplicate execution query returns any rows, there is another execution running for the same step.
+            if (duplicateReader.HasRows)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private async Task UpdateStepAsDuplicateAsync(SqlConnection sqlConnection)
+        {
+            var duplicateCommand = new SqlCommand(
+                                        @"UPDATE etlmanager.Execution
+                            SET ExecutionStatus = 'DUPLICATE',
+                            StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                                        , sqlConnection)
+            {
+                CommandTimeout = 120 // two minutes
+            };
+            duplicateCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+            duplicateCommand.Parameters.AddWithValue("@StepId", Step.StepId);
+            await duplicateCommand.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+
+        private async Task UpdateStepAsStoppedAsync()
+        {
+            using var connection = new SqlConnection(Configuration.ConnectionString);
+            await connection.OpenAsync(CancellationToken.None);
+            using var canceledUpdate = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                    , connection);
+            canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+            canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+            canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
+            await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
         }
 
     }
