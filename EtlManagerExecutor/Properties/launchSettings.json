@@ -2,7 +2,7 @@
   "profiles": {
     "EtlManagerExecutor": {
       "commandName": "Project",
-      "commandLineArgs": "execute -i \"966e3c5f-bdee-4c12-a9a7-30d0a25f38c8\""
+      "commandLineArgs": "execute -i \"54BD0244-541F-44DC-BCC4-E616D188E69A\""
     }
   }
 }

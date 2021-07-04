@@ -47,23 +47,12 @@ namespace EtlManagerExecutor
 
 
             // Populate StepStatuses with a list of steps to execute.
-            using (var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString))
+            var allSteps = await ReadStepsAsync();
+            allSteps.ForEach(step =>
             {
-                await sqlConnection.OpenAsync();
-
-                // Get steps to execute and add them to the list of steps and their statuses.
-                using var stepsListCommand = new SqlCommand("SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-                stepsListCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-                using var reader = await stepsListCommand.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    var stepId = reader["StepId"].ToString()!;
-                    var stepName = reader["StepName"].ToString()!;
-                    var step = new Step(stepId, stepName);
-                    StepStatuses[step] = ExecutionStatus.NotStarted;
-                    CancellationTokenSources[stepId] = new();
-                }
-            }
+                StepStatuses[step] = ExecutionStatus.NotStarted;
+                CancellationTokenSources[step.StepId] = new();
+            });
 
             // Start listening for cancel commands.
             RegisterCancelListeners();
@@ -85,73 +74,102 @@ namespace EtlManagerExecutor
 
         private async Task DoRoundAsync(Dictionary<Step, HashSet<KeyValuePair<Step, bool>>> stepDependencies)
         {
-            IEnumerable<Step> stepsToExecute = StepStatuses.Where(step => step.Value == ExecutionStatus.NotStarted).Select(step => step.Key);
-            var stepsToSkip = new List<Step>();
-            var executableSteps = new List<Step>();
-
-            foreach (var step in stepsToExecute)
+            var unstartedSteps = StepStatuses.Where(step => step.Value == ExecutionStatus.NotStarted).Select(step => step.Key);
+            foreach (var step in unstartedSteps)
             {
-                // Step has dependencies
-                if (stepDependencies.ContainsKey(step))
+                var stepAction = GetStepAction(stepDependencies, step);
+                switch (stepAction)
                 {
-                    HashSet<KeyValuePair<Step, bool>> dependencies = stepDependencies[step];
-                    IEnumerable<Step> strictDependencies = dependencies.Where(dep => dep.Value).Select(dep => dep.Key);
+                    case StepAction.Execute:
+                        StepStatuses[step] = ExecutionStatus.Running;
+                        StepWorkers.Add(StartNewStepWorkerAsync(step));
+                        break;
 
-                    // If there are any strict dependencies, which have been marked as failed, skip this step.
-                    if (strictDependencies.Any(dep => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == dep)))
-                    {
-                        stepsToSkip.Add(step);
-                    }
+                    case StepAction.Skip:
+                        StepStatuses[step] = ExecutionStatus.Failed;
+                        try
+                        {
+                            await UpdateStepAsSkipped(step);
+                            Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", ExecutionConfig.ExecutionId, step);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, "{ExecutionId} {step} Error marking step as SKIPPED", ExecutionConfig.ExecutionId, step);
+                        }
+                        break;
 
-                    // If the steps dependencies have been completed (success or failure), the step can be executed.
-                    // Also check if the dependency is actually included in the execution. If not, the step can be started.
-                    else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) ||
-                    StepStatuses[dep.Key] == ExecutionStatus.Success || StepStatuses[dep.Key] == ExecutionStatus.Failed))
-                    {
-                        executableSteps.Add(step);
-                    }
-                    // No action should be taken with this step at this time. Wait until next round.
-                }
-                else
-                {
-                    // Step has no dependencies. It can be executed.
-                    executableSteps.Add(step);
+                    case StepAction.Wait:
+                        break;
                 }
             }
+        }
 
-            // Mark the steps that should be skipped in the execution table as SKIPPED.
-            foreach (var step in stepsToSkip)
+        private StepAction GetStepAction(Dictionary<Step, HashSet<KeyValuePair<Step, bool>>> stepDependencies, Step step)
+        {
+            // Step has dependencies
+            if (stepDependencies.ContainsKey(step))
             {
-                StepStatuses[step] = ExecutionStatus.Failed;
-                try
+                HashSet<KeyValuePair<Step, bool>> dependencies = stepDependencies[step];
+                IEnumerable<Step> strictDependencies = dependencies.Where(dep => dep.Value).Select(dep => dep.Key);
+
+                // If there are any strict dependencies, which have been marked as failed, skip this step.
+                if (strictDependencies.Any(dep => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == dep)))
                 {
-                    using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-                    await sqlConnection.OpenAsync();
-                    using var skipUpdateCommand = new SqlCommand(
-                        @"UPDATE etlmanager.Execution
+                    return StepAction.Skip;
+                }
+
+                // If the steps dependencies have been completed (success or failure), the step can be executed.
+                // Also check if the dependency is actually included in the execution. If not, the step can be started.
+                else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) ||
+                StepStatuses[dep.Key] == ExecutionStatus.Success || StepStatuses[dep.Key] == ExecutionStatus.Failed))
+                {
+                    return StepAction.Execute;
+                }
+
+                // No action should be taken with this step at this time. Wait until next round.
+                return StepAction.Wait;
+            }
+            else
+            {
+                // Step has no dependencies. It can be executed.
+                return StepAction.Execute;
+            }
+        }
+
+        private async Task UpdateStepAsSkipped(Step step)
+        {
+            using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
+            await sqlConnection.OpenAsync();
+            using var skipUpdateCommand = new SqlCommand(
+                @"UPDATE etlmanager.Execution
                         SET ExecutionStatus = 'SKIPPED',
                         StartDateTime = GETDATE(), EndDateTime = GETDATE()
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                        , sqlConnection)
-                    {
-                        CommandTimeout = 120 // two minutes
-                    };
-                    skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-                    skipUpdateCommand.Parameters.AddWithValue("@StepId", step.StepId);
-                    await skipUpdateCommand.ExecuteNonQueryAsync();
-                    Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", ExecutionConfig.ExecutionId, step);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "{ExecutionId} {step} Error marking step as SKIPPED", ExecutionConfig.ExecutionId, step);
-                }
-            }
-
-            foreach (var step in executableSteps)
+                , sqlConnection)
             {
-                StepStatuses[step] = ExecutionStatus.Running;
-                StepWorkers.Add(StartNewStepWorkerAsync(step));
+                CommandTimeout = 120 // two minutes
+            };
+            skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
+            skipUpdateCommand.Parameters.AddWithValue("@StepId", step.StepId);
+            await skipUpdateCommand.ExecuteNonQueryAsync();
+        }
+
+        private async Task<List<Step>> ReadStepsAsync()
+        {
+            var allSteps = new List<Step>();
+            using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
+            await sqlConnection.OpenAsync();
+            using var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
+            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
+            using var reader = sqlCommand.ExecuteReader();
+            while (await reader.ReadAsync())
+            {
+                var stepId = reader["StepId"].ToString()!;
+                var stepName = reader["StepName"].ToString()!;
+                var step = new Step(stepId, stepName);
+                allSteps.Add(step);
             }
+            return allSteps;
         }
 
         // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
@@ -201,6 +219,13 @@ namespace EtlManagerExecutor
             }
 
             return dependencies;
+        }
+
+        private enum StepAction
+        {
+            Execute,
+            Skip,
+            Wait
         }
 
     }

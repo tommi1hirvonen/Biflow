@@ -79,26 +79,7 @@ namespace EtlManagerExecutor
                 var input = Console.ReadLine();
                 try
                 {
-                    if (input == "c")
-                    {
-                        Console.WriteLine("Canceling all step executions.");
-                        foreach (var pair in CancellationTokenSources)
-                        {
-                            pair.Value.Cancel();
-                        }
-                    }
-                    else if (input is not null)
-                    {
-                        if (CancellationTokenSources.ContainsKey(input))
-                        {
-                            CancellationTokenSources[input].Cancel();
-                            Console.WriteLine($"Canceled step {input}.");
-                        }
-                        else
-                        {
-                            Console.WriteLine("No step running with that step id.");
-                        }
-                    }
+                    ProcessCancelInput(input);
                 }
                 catch (Exception ex)
                 {
@@ -106,6 +87,31 @@ namespace EtlManagerExecutor
                 }
             } 
         }
+
+        private void ProcessCancelInput(string? input)
+        {
+            if (input == "c")
+            {
+                Console.WriteLine("Canceling all step executions.");
+                foreach (var pair in CancellationTokenSources)
+                {
+                    pair.Value.Cancel();
+                }
+            }
+            else if (input is not null)
+            {
+                if (CancellationTokenSources.ContainsKey(input))
+                {
+                    CancellationTokenSources[input].Cancel();
+                    Console.WriteLine($"Canceled step {input}.");
+                }
+                else
+                {
+                    Console.WriteLine("No step running with that step id.");
+                }
+            }
+        }
+
 
         private void ReadCancelPipe(string executionId)
         {
