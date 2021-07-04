@@ -11,6 +11,32 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    class PipelineStepExecutionBuilder : IStepExecutionBuilder
+    {
+        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
+        {
+            using var stepDetailsCmd = new SqlCommand(
+                @"SELECT TOP 1 TimeoutMinutes, DataFactoryId, PipelineName
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                , sqlConnection);
+            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
+            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
+            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
+            if (await reader.ReadAsync(CancellationToken.None))
+            {
+                var dataFactoryId = reader["DataFactoryId"].ToString()!;
+                var pipelineName = reader["PipelineName"].ToString()!;
+                var timeoutMinutes = (int)reader["TimeoutMinutes"];
+                return new PipelineStepExecution(config, step, dataFactoryId, pipelineName, timeoutMinutes);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find step execution details");
+            }
+        }
+    }
+
     class PipelineStepExecution : StepExecutionBase
     {
         private string DataFactoryId { get; init; }

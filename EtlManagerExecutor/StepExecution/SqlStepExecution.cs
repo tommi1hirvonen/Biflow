@@ -9,6 +9,36 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    class SqlStepExecutionBuilder : IStepExecutionBuilder
+    {
+        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
+        {
+            using var stepDetailsCmd = new SqlCommand(
+                @"SELECT TOP 1
+                    SqlStatement,
+                    ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
+                    TimeoutMinutes
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                , sqlConnection);
+            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
+            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
+            stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", config.EncryptionKey);
+            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
+            if (await reader.ReadAsync(CancellationToken.None))
+            {
+                var sqlStatement = reader["SqlStatement"].ToString()!;
+                var connectionString = reader["ConnectionString"].ToString()!;
+                var timeoutMinutes = (int)reader["TimeoutMinutes"];
+                return new SqlStepExecution(config, step, sqlStatement, connectionString, timeoutMinutes);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find step execution details");
+            }
+        }
+    }
+
     class SqlStepExecution : StepExecutionBase
     {
         private string SqlStatement { get; init; }

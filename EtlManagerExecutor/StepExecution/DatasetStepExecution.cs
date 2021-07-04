@@ -1,11 +1,38 @@
 ﻿using EtlManagerUtils;
 using Serilog;
 using System;
+using System.Data.SqlClient;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    class DatasetStepExecutionBuilder : IStepExecutionBuilder
+    {
+        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
+        {
+            using var stepDetailsCmd = new SqlCommand(
+                @"SELECT TOP 1 PowerBIServiceId, DatasetGroupId, DatasetId
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                , sqlConnection);
+            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
+            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
+            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
+            if (await reader.ReadAsync(CancellationToken.None))
+            {
+                var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
+                var groupId = reader["DatasetGroupId"].ToString()!;
+                var datasetId = reader["DatasetId"].ToString()!;
+                return new DatasetStepExecution(config, step, powerBIServiceId, groupId, datasetId);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find step execution details");
+            }
+        }
+    }
+
     class DatasetStepExecution : StepExecutionBase
     {
         private string PowerBIServiceId { get; init; }

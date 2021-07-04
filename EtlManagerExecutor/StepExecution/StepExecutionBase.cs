@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    interface IStepExecutionBuilder
+    {
+        public Task<StepExecutionBase> CreateAsync(ExecutionConfiguration executionConfiguration, Step step, SqlConnection sqlConnection);
+    }
+
     abstract class StepExecutionBase
     {
         protected ExecutionConfiguration Configuration { get; init; }

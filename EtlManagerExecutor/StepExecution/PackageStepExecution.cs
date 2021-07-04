@@ -9,6 +9,54 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    class PackageStepExecutionBuilder : IStepExecutionBuilder
+    {
+        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
+        {
+            using var stepDetailsCmd = new SqlCommand(
+                @"SELECT TOP 1
+                    ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
+                    PackageFolderName,
+                    PackageProjectName,
+                    PackageName,
+                    ExecuteIn32BitMode,
+                    ExecuteAsLogin,
+                    ExecutePackagesAsLogin = etlmanager.GetExecutePackagesAsLogin(ConnectionId),
+                    TimeoutMinutes
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                , sqlConnection);
+            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
+            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
+            stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", config.EncryptionKey);
+            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
+            if (await reader.ReadAsync(CancellationToken.None))
+            {
+                var timeoutMinutes = (int)reader["TimeoutMinutes"];
+                var connectionStringSsis = reader["ConnectionString"].ToString()!;
+                var packageFolderName = reader["PackageFolderName"].ToString()!;
+                var packageProjectName = reader["PackageProjectName"].ToString()!;
+                var packageName = reader["PackageName"].ToString()!;
+                var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
+
+                var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
+                executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
+
+                var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
+                executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
+
+                executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
+
+                return new PackageStepExecution(config, step, connectionStringSsis,
+                    packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find step execution details");
+            }
+        }
+    }
+
     class PackageStepExecution : StepExecutionBase
     {
         private string ConnectionString { get; init; }

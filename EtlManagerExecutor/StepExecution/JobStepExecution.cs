@@ -13,6 +13,31 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
+    class JobStepExecutionBuilder : IStepExecutionBuilder
+    {
+        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
+        {
+            using var stepDetailsCmd = new SqlCommand(
+                @"SELECT TOP 1 JobToExecuteId, JobExecuteSynchronized
+                FROM etlmanager.Execution
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                , sqlConnection);
+            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
+            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
+            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
+            if (await reader.ReadAsync(CancellationToken.None))
+            {
+                var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
+                var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
+                return new JobStepExecution(config, step, jobToExecuteId, jobExecuteSynchronized);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find step execution details");
+            }
+        }
+    }
+
     class JobStepExecution : StepExecutionBase
     {
         private string JobToExecuteId { get; init; }

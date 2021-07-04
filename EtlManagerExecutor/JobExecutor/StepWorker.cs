@@ -22,10 +22,10 @@ namespace EtlManagerExecutor
             // If the step was canceled already before it was even started, update the status to STOPPED.
             if (cancellationToken.IsCancellationRequested)
             {
-                await UpdateStepAsStoppedAsync();
+                await UpdateExecutionStoppedAsync();
                 return false;
             }
-
+            
             StepExecutionBase stepExecution;
             int retryAttempts;
             int retryIntervalMinutes;
@@ -53,82 +53,23 @@ namespace EtlManagerExecutor
                     return false;
                 }
 
-
                 // Fetch step details.
+                string stepType;
                 try
                 {
                     using var stepDetailsCmd = new SqlCommand(
-                        @"SELECT TOP 1 StepType, SqlStatement, ConnectionId, etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword) AS ConnectionString,
-                            PackageFolderName, PackageProjectName, PackageName, ExecuteIn32BitMode, ExecuteAsLogin,
-                            etlmanager.GetExecutePackagesAsLogin(ConnectionId) as ExecutePackagesAsLogin,
-                            JobToExecuteId, JobExecuteSynchronized, RetryAttempts, RetryIntervalMinutes, TimeoutMinutes, DataFactoryId, PipelineName,
-                            ExeFileName, ExeArguments, ExeWorkingDirectory, ExeSuccessExitCode,
-                            PowerBIServiceId, DatasetGroupId, DatasetId
+                        @"SELECT TOP 1 StepType, RetryAttempts, RetryIntervalMinutes
                         FROM etlmanager.Execution
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                         , sqlConnection);
                     stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
                     stepDetailsCmd.Parameters.AddWithValue("@StepId", Step.StepId);
-                    stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", Configuration.EncryptionKey);
                     using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
                     if (await reader.ReadAsync(CancellationToken.None))
                     {
-                        var stepType = reader["StepType"].ToString();
+                        stepType = reader["StepType"].ToString()!;
                         retryAttempts = (int)reader["RetryAttempts"];
                         retryIntervalMinutes = (int)reader["RetryIntervalMinutes"];
-                        int timeoutMinutes = (int)reader["TimeoutMinutes"];
-                        switch (stepType)
-                        {
-                            case "SQL":
-                                var sqlStatement = reader["SqlStatement"].ToString()!;
-                                var connectionStringSql = reader["ConnectionString"].ToString()!;
-                                stepExecution = new SqlStepExecution(Configuration, Step, sqlStatement, connectionStringSql, timeoutMinutes);
-                                break;
-                            case "SSIS":
-                                var connectionStringSsis = reader["ConnectionString"].ToString()!;
-                                var packageFolderName = reader["PackageFolderName"].ToString()!;
-                                var packageProjectName = reader["PackageProjectName"].ToString()!;
-                                var packageName = reader["PackageName"].ToString()!;
-                                var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
-
-                                var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
-                                executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
-                            
-                                var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
-                                executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
-                            
-                                executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
-                            
-                                stepExecution = new PackageStepExecution(Configuration, Step, connectionStringSsis,
-                                    packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
-                                break;
-                            case "JOB":
-                                var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
-                                var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
-                                stepExecution = new JobStepExecution(Configuration, Step, jobToExecuteId, jobExecuteSynchronized);
-                                break;
-                            case "PIPELINE":
-                                var dataFactoryId = reader["DataFactoryId"].ToString()!;
-                                var pipelineName = reader["PipelineName"].ToString()!;
-                                stepExecution = new PipelineStepExecution(Configuration, Step, dataFactoryId, pipelineName, timeoutMinutes);
-                                break;
-                            case "EXE":
-                                var fileName = reader["ExeFileName"].ToString()!;
-                                var arguments = reader["ExeArguments"].ToString()!;
-                                var workingDirectory = reader["ExeWorkingDirectory"].ToString()!;
-                                int? successExitCode = reader["ExeSuccessExitCode"] as int?;
-                                stepExecution = new ExeStepExecution(Configuration, Step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
-                                break;
-                            case "DATASET":
-                                var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
-                                var groupId = reader["DatasetGroupId"].ToString()!;
-                                var datasetId = reader["DatasetId"].ToString()!;
-                                stepExecution = new DatasetStepExecution(Configuration, Step, powerBIServiceId, groupId, datasetId);
-                                break;
-                            default:
-                                Log.Error("{ExecutionId} {Step} Incorrect step type {stepType}", Configuration.ExecutionId, Step, stepType);
-                                return false;
-                        }
                     }
                     else
                     {
@@ -141,53 +82,32 @@ namespace EtlManagerExecutor
                     Log.Error(ex, "{ExecutionId} {Step} Error reading execution details", Configuration.ExecutionId, Step);
                     return false;
                 }
+
+                try
+                {
+                    IStepExecutionBuilder stepExecutionBuilder = stepType switch
+                    {
+                        "SQL" => new SqlStepExecutionBuilder(),
+                        "SSIS" => new PackageStepExecutionBuilder(),
+                        "JOB" => new JobStepExecutionBuilder(),
+                        "PIPELINE" => new PipelineStepExecutionBuilder(),
+                        "EXE" => new ExeStepExecutionBuilder(),
+                        "DATASET" => new DatasetStepExecutionBuilder(),
+                        _ => throw new InvalidOperationException($"{stepType} is not a recognized step type")
+                    };
+                    stepExecution = await stepExecutionBuilder.CreateAsync(Configuration, Step, sqlConnection);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {Step} Error creating step execution object", Configuration.ExecutionId, Step);
+                    return false;
+                }
             }
 
             // Loop until there are not retry attempts left.
             while (stepExecution.RetryAttemptCounter <= retryAttempts)
             {
-                using (var connection = new SqlConnection(Configuration.ConnectionString))
-                {
-                    await connection.OpenAsync(CancellationToken.None); // Open the connection to ETL Manager database for execution start logging.
-                    // In case of first execution, update the existing execution row.
-                    if (stepExecution.RetryAttemptCounter == 0)
-                    {
-                        try
-                        {
-                            using var startUpdate = new SqlCommand(
-                              @"UPDATE etlmanager.Execution
-                                SET StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING'
-                                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                                , connection);
-                            startUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                            startUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-                            startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
-                            await startUpdate.ExecuteNonQueryAsync(CancellationToken.None);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "{ExecutionId} {Step} Error updating step status to RUNNING", Configuration.ExecutionId, Step);
-                        }
-                    }
-                    // In case of later retry execution, insert new execution row based on the first one (RetryAttemptIndex = 0).
-                    else
-                    {
-                        try
-                        {
-                            using var addNewExecution = new SqlCommand(
-                              @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'RUNNING'"
-                                , connection);
-                            addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
-                            addNewExecution.Parameters.AddWithValue("@StepId_", Step.StepId);
-                            addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", stepExecution.RetryAttemptCounter);
-                            await addNewExecution.ExecuteNonQueryAsync(CancellationToken.None);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Error(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", Configuration.ExecutionId, Step);
-                        }
-                    }
-                }
+                await CheckIfStepExecutionIsRetryAttemptAsync(stepExecution);
 
                 // Execute the step based on its step type.
                 ExecutionResult executionResult;
@@ -197,19 +117,7 @@ namespace EtlManagerExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    // Execution was canceled. Update the status to STOPPED and do not attempt any retries (return).
-                    using var connection = new SqlConnection(Configuration.ConnectionString);
-                    await connection.OpenAsync(CancellationToken.None);
-                    using var canceledUpdate = new SqlCommand(
-                            @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                    canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                    canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-                    canceledUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
-                    canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
-                    await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+                    await UpdateExecutionCancelledAsync(stepExecution);
                     return false;
                 }
                 catch (Exception ex)
@@ -217,66 +125,21 @@ namespace EtlManagerExecutor
                     executionResult = new ExecutionResult.Failure("Error during step execution: " + ex.Message);
                 }
 
-
                 if (executionResult is ExecutionResult.Failure failureResult)
                 {
                     Log.Warning("{ExecutionId} {Step} Error executing step: " + failureResult.ErrorMessage, Configuration.ExecutionId, Step);
+                    await UpdateExecutionFailedAsync(stepExecution, retryAttempts, failureResult);
 
-                    // The step failed. Update the execution accordingly.
-
-                    // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-                    var status = stepExecution.RetryAttemptCounter >= retryAttempts ? "FAILED" : "AWAIT RETRY";
-
-                    try
-                    {
-                        using var connection = new SqlConnection(Configuration.ConnectionString);
-                        await connection.OpenAsync(CancellationToken.None);
-                        using var errorUpdate = new SqlCommand(
-                            @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage, InfoMessage = @InfoMessage
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                        errorUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                        errorUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-                        errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
-                        errorUpdate.Parameters.AddWithValue("@ExecutionStatus", status);
-                        errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
-                        errorUpdate.Parameters.AddWithValue("@InfoMessage", failureResult.InfoMessage?.Length > 0 ? (object)failureResult.InfoMessage : DBNull.Value);
-                        await errorUpdate.ExecuteNonQueryAsync(CancellationToken.None);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "{ExecutionId} {Step} Error updating step status to {status}", Configuration.ExecutionId, Step, status);
-                    }
-
-                    // The step failed. There are attempts left => increase counter and wait for the retry interval.
+                    // There are attempts left => increase counter and wait for the retry interval.
                     if (stepExecution.RetryAttemptCounter < retryAttempts)
                     {
                         stepExecution.RetryAttemptCounter++;
                         try
                         {
-                            await Task.Delay(retryIntervalMinutes * 60 * 1000, cancellationToken);
+                            await WaitForExecutionRetryAsync(stepExecution, retryIntervalMinutes, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
-                            // If the step was canceled during waiting for a retry, copy a new execution row with STOPPED status.
-                            Log.Warning("{ExecutionId} {Step} Step was canceled", Configuration.ExecutionId, Step);
-                            try
-                            {
-                                using var connection = new SqlConnection(Configuration.ConnectionString);
-                                await connection.OpenAsync(CancellationToken.None);
-                                using var addNewExecution = new SqlCommand(
-                                    @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'STOPPED'"
-                                    , connection);
-                                addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
-                                addNewExecution.Parameters.AddWithValue("@StepId_", Step.StepId);
-                                addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", stepExecution.RetryAttemptCounter);
-                                await addNewExecution.ExecuteNonQueryAsync(CancellationToken.None);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Error(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", Configuration.ExecutionId, Step);
-                            }
                             return false;
                         }
                     }
@@ -289,34 +152,179 @@ namespace EtlManagerExecutor
                 else
                 {
                     Log.Information("{ExecutionId} {Step} Step executed successfully", Configuration.ExecutionId, Step);
-
-                    // The package was executed successfully. Update the execution accordingly.
-                    try
-                    {
-                        using var connection = new SqlConnection(Configuration.ConnectionString);
-                        await connection.OpenAsync(CancellationToken.None);
-                        using var successUpdate = new SqlCommand(
-                            @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'SUCCEEDED', InfoMessage = @InfoMessage
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                            , connection);
-                        successUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                        successUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-                        successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
-                        successUpdate.Parameters.AddWithValue("@InfoMessage", executionResult.InfoMessage?.Length > 0 ? (object)executionResult.InfoMessage : DBNull.Value);
-                        await successUpdate.ExecuteNonQueryAsync(CancellationToken.None);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", Configuration.ExecutionId, Step);
-                    }
-
+                    // The step execution was successful. Update the execution accordingly.
+                    await UpdateExecutionSucceededAsync(stepExecution, executionResult);
                     return true; // Break the loop to end this execution.
                 }
-                
             }
 
             return false; // Execution should not arrive here in normal conditions. Return false.
+        }
+
+        private async Task WaitForExecutionRetryAsync(StepExecutionBase stepExecution, int retryIntervalMinutes, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await Task.Delay(retryIntervalMinutes * 60 * 1000, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // If the step was canceled during waiting for a retry, copy a new execution row with STOPPED status.
+                Log.Warning("{ExecutionId} {Step} Step was canceled", Configuration.ExecutionId, Step);
+                try
+                {
+                    using var connection = new SqlConnection(Configuration.ConnectionString);
+                    await connection.OpenAsync(CancellationToken.None);
+                    using var addNewExecution = new SqlCommand(
+                        @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'STOPPED'"
+                        , connection);
+                    addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
+                    addNewExecution.Parameters.AddWithValue("@StepId_", Step.StepId);
+                    addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", stepExecution.RetryAttemptCounter);
+                    await addNewExecution.ExecuteNonQueryAsync(CancellationToken.None);
+
+                    using var updateEndTime = new SqlCommand(
+                        @"UPDATE etlmanager.Execution
+                        SET EndDateTime = GETDATE()
+                        WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                        , connection);
+                    addNewExecution.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                    addNewExecution.Parameters.AddWithValue("@StepId", Step.StepId);
+                    addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                    await updateEndTime.ExecuteNonQueryAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", Configuration.ExecutionId, Step);
+                }
+                throw;
+            }
+        }
+
+        private async Task UpdateExecutionCancelledAsync(StepExecutionBase stepExecution)
+        {
+            // Execution was canceled. Update the status to STOPPED and do not attempt any retries (return).
+            using var connection = new SqlConnection(Configuration.ConnectionString);
+            await connection.OpenAsync(CancellationToken.None);
+            using var canceledUpdate = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                    , connection);
+            canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+            canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+            canceledUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+            canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
+            await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+
+        private async Task UpdateExecutionFailedAsync(StepExecutionBase stepExecution, int retryAttempts, ExecutionResult.Failure failureResult)
+        {
+            // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
+            var status = stepExecution.RetryAttemptCounter >= retryAttempts ? "FAILED" : "AWAIT RETRY";
+            try
+            {
+                using var connection = new SqlConnection(Configuration.ConnectionString);
+                await connection.OpenAsync(CancellationToken.None);
+                using var errorUpdate = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                            SET EndDateTime = GETDATE(), ExecutionStatus = @ExecutionStatus, ErrorMessage = @ErrorMessage, InfoMessage = @InfoMessage
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                    , connection);
+                errorUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                errorUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+                errorUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                errorUpdate.Parameters.AddWithValue("@ExecutionStatus", status);
+                errorUpdate.Parameters.AddWithValue("@ErrorMessage", failureResult.ErrorMessage);
+                errorUpdate.Parameters.AddWithValue("@InfoMessage", failureResult.InfoMessage?.Length > 0 ? (object)failureResult.InfoMessage : DBNull.Value);
+                await errorUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {Step} Error updating step status to {status}", Configuration.ExecutionId, Step, status);
+            }
+        }
+
+        private async Task UpdateExecutionSucceededAsync(StepExecutionBase stepExecution, ExecutionResult executionResult)
+        {
+            try
+            {
+                using var connection = new SqlConnection(Configuration.ConnectionString);
+                await connection.OpenAsync(CancellationToken.None);
+                using var successUpdate = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'SUCCEEDED', InfoMessage = @InfoMessage
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                    , connection);
+                successUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                successUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+                successUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                successUpdate.Parameters.AddWithValue("@InfoMessage", executionResult.InfoMessage?.Length > 0 ? (object)executionResult.InfoMessage : DBNull.Value);
+                await successUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", Configuration.ExecutionId, Step);
+            }
+        }
+
+        private async Task UpdateExecutionStoppedAsync()
+        {
+            using var connection = new SqlConnection(Configuration.ConnectionString);
+            await connection.OpenAsync(CancellationToken.None);
+            using var canceledUpdate = new SqlCommand(
+                    @"UPDATE etlmanager.Execution
+                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
+                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
+                    , connection);
+            canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+            canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+            canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
+            await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+
+        private async Task CheckIfStepExecutionIsRetryAttemptAsync(StepExecutionBase stepExecution)
+        {
+            using var connection = new SqlConnection(Configuration.ConnectionString);
+            await connection.OpenAsync(CancellationToken.None); // Open the connection to ETL Manager database for execution start logging.
+                                                                // In case of first execution, update the existing execution row.
+            if (stepExecution.RetryAttemptCounter == 0)
+            {
+                try
+                {
+                    using var startUpdate = new SqlCommand(
+                      @"UPDATE etlmanager.Execution
+                                SET StartDateTime = GETDATE(), ExecutionStatus = 'RUNNING'
+                                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
+                        , connection);
+                    startUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                    startUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
+                    startUpdate.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                    await startUpdate.ExecuteNonQueryAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {Step} Error updating step status to RUNNING", Configuration.ExecutionId, Step);
+                }
+            }
+            // In case of later retry execution, insert new execution row based on the first one (RetryAttemptIndex = 0).
+            else
+            {
+                try
+                {
+                    using var addNewExecution = new SqlCommand(
+                      @"EXEC [etlmanager].[ExecutionStepCopy] @ExecutionId = @ExecutionId_, @StepId = @StepId_, @RetryAttemptIndex = @RetryAttemptIndex_, @Status = 'RUNNING'"
+                        , connection);
+                    addNewExecution.Parameters.AddWithValue("@ExecutionId_", Configuration.ExecutionId);
+                    addNewExecution.Parameters.AddWithValue("@StepId_", Step.StepId);
+                    addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex_", stepExecution.RetryAttemptCounter);
+                    await addNewExecution.ExecuteNonQueryAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", Configuration.ExecutionId, Step);
+                }
+            }
         }
 
         private async Task<bool> IsDuplicateExecutionAsync(SqlConnection sqlConnection)
@@ -353,21 +361,6 @@ namespace EtlManagerExecutor
             duplicateCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
             duplicateCommand.Parameters.AddWithValue("@StepId", Step.StepId);
             await duplicateCommand.ExecuteNonQueryAsync(CancellationToken.None);
-        }
-
-        private async Task UpdateStepAsStoppedAsync()
-        {
-            using var connection = new SqlConnection(Configuration.ConnectionString);
-            await connection.OpenAsync(CancellationToken.None);
-            using var canceledUpdate = new SqlCommand(
-                    @"UPDATE etlmanager.Execution
-                            SET EndDateTime = GETDATE(), ExecutionStatus = 'STOPPED', StoppedBy = @Username
-                            WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                    , connection);
-            canceledUpdate.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-            canceledUpdate.Parameters.AddWithValue("@StepId", Step.StepId);
-            canceledUpdate.Parameters.AddWithValue("@Username", (object)Configuration.Username ?? DBNull.Value);
-            await canceledUpdate.ExecuteNonQueryAsync(CancellationToken.None);
         }
 
     }
