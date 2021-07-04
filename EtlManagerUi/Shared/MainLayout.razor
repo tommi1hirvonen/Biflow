@@ -48,7 +48,7 @@
     private string? SidebarClass => collapseSidebar ? "collapse" : null;
     private string? SchedulerServiceErrorMessage { get; set; } = null;
 
-    protected async override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         AuthenticationState authenticationState = await (AuthStat ?? throw new InvalidOperationException("Failed to get authentication state"));
         ClaimsPrincipal user = authenticationState.User;
@@ -58,29 +58,36 @@
             NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
             return;
         }
+    }
 
-        // Get the scheduler service status and notify the user of a possible error.
-        try
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
         {
-            (var running, var error, var status) = Utility.SchedulerServiceGetStatus();
-            if (error)
+            // Get the scheduler service status and notify the user of a possible error.
+            try
             {
-                SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed correctly.";
-            }
-            else if (!running)
-            {
-                SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
-            }
+                (var running, var error, var status) = Utility.SchedulerServiceGetStatus();
+                if (error)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed correctly.";
+                }
+                else if (!running)
+                {
+                    SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
+                }
 
-            var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Status, null);
-            if (!schedulerStatus)
-            {
-                SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";
+                var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Status, null);
+                if (!schedulerStatus)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            SchedulerServiceErrorMessage = $"Error getting scheduler service status: {ex.Message}";
+            catch (Exception ex)
+            {
+                SchedulerServiceErrorMessage = $"Error getting scheduler service status: {ex.Message}";
+            }
+            StateHasChanged();
         }
     }
 
