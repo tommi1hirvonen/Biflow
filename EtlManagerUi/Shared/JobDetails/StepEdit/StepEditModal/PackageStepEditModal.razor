@@ -237,7 +237,8 @@
 
     private PackageStep Step { get; set; } = new();
 
-    private IList<Connection>? Connections { get; set; }
+    [Parameter]
+    public IList<Connection>? Connections { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -253,7 +254,6 @@
     protected override async Task OnInitializedAsync()
     {
         Context = DbFactory.CreateDbContext();
-        Connections = await Context.Connections.AsNoTracking().ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()

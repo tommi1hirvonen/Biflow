@@ -191,7 +191,8 @@
 
     private PipelineStep Step { get; set; } = new();
 
-    private IList<DataFactory>? DataFactories { get; set; }
+    [Parameter]
+    public IList<DataFactory>? DataFactories { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -207,7 +208,6 @@
     protected override async Task OnInitializedAsync()
     {
         Context = DbFactory.CreateDbContext();
-        DataFactories = await Context.DataFactories.AsNoTracking().ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()

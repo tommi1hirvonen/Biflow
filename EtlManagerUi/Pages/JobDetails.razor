@@ -150,7 +150,7 @@
 
 @if (DetailsPage == "steps")
 {
-    <StepsComponent Job="CurrentJob" Jobs="Jobs" Steps="Steps" />
+    <StepsComponent Job="CurrentJob" Jobs="Jobs" Steps="Steps" Connections="Connections" DataFactories="DataFactories" PowerBIServices="PowerBIServices" />
 }
 else if (DetailsPage == "jobhistory")
 {
@@ -158,7 +158,7 @@ else if (DetailsPage == "jobhistory")
 }
 else if (DetailsPage == "dependencies")
 {
-    <DependenciesComponent Jobs="Jobs" Job="CurrentJob" Steps="Steps" />
+    <DependenciesComponent Jobs="Jobs" Job="CurrentJob" Steps="Steps" Connections="Connections" DataFactories="DataFactories" PowerBIServices="PowerBIServices" />
 }
 else if (DetailsPage == "schedules")
 {
@@ -187,6 +187,10 @@ else
 
     private Job EditJob { get; set; } = new();
 
+    private List<Connection>? Connections { get; set; }
+    private List<DataFactory>? DataFactories { get; set; }
+    private List<PowerBIService>? PowerBIServices { get; set; }
+
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
     private bool Subscribed => CurrentJob?.Subscriptions.Any(sub => sub.Username == Username) ?? false;
@@ -197,6 +201,9 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         Jobs = await context.Jobs.Include(job => job.Subscriptions).OrderBy(job => job.JobName).ToListAsync();
+        Connections = await context.Connections.AsNoTracking().OrderBy(c => c.ConnectionName).ToListAsync();
+        DataFactories = await context.DataFactories.AsNoTracking().OrderBy(df => df.DataFactoryName).ToListAsync();
+        PowerBIServices = await context.PowerBIServices.AsNoTracking().OrderBy(pbi => pbi.PowerBIServiceName).ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()

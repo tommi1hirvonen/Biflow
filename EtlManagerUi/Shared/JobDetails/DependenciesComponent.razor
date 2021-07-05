@@ -78,12 +78,12 @@
 </div>
 
 <AuthorizeView Roles="Admin, Editor">
-    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" PowerBIServices="PowerBIServices" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepId" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @code {
@@ -97,6 +97,13 @@
 
     [Parameter]
     public List<Step> Steps { get; set; } = null!;
+
+    [Parameter]
+    public List<Connection>? Connections { get; set; }
+    [Parameter]
+    public List<DataFactory>? DataFactories { get; set; }
+    [Parameter]
+    public List<PowerBIService>? PowerBIServices { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
