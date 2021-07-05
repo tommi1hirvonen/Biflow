@@ -216,10 +216,10 @@ else
 
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
-            .Include(step => step.PackageParameters)
-            .Include(step => step.PipelineParameters)
             .Include(step => step.Dependencies)
             .Include(step => step.Tags)
+            .Include(step => (step as PackageStep)!.PackageParameters)
+            .Include(step => (step as PipelineStep)!.PipelineParameters)
             .Where(step => step.JobId == CurrentJob.JobId)
             .OrderBy(step => step.ExecutionPhase)
             .ThenBy(step => step.StepName)

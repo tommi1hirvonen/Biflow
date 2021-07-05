@@ -28,6 +28,5 @@ namespace EtlManagerUi.Models
         [Display(Name = "Execute packages as login")]
         public string? ExecutePackagesAsLogin { get; set; }
 
-        public IList<Step> Steps { get; set; } = null!;
     }
 }

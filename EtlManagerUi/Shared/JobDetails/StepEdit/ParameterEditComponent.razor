@@ -1,6 +1,6 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 
-@if (Step.StepType == StepType.Package)
+@if (Step is PackageStep packageStep)
 {
     <p />
     <h5>Parameters</h5>
@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var param in Step.PackageParameters)
+            @foreach (var param in packageStep.PackageParameters)
             {
                 <tr>
                     <td>
@@ -99,7 +99,7 @@
                     </td>
                     <td>
                         <BSButtonGroup Size="Size.Small" Class="btn-row">
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.PackageParameters.Remove(param)">
+                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => packageStep.PackageParameters.Remove(param)">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </BSButton>
                         </BSButtonGroup>
@@ -109,11 +109,11 @@
         </tbody>
     </table>
     var level = "Package"; var type = "String";
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.PackageParameters.Add(new PackageParameter { ParameterLevel = level, ParameterType = type })">
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => packageStep.PackageParameters.Add(new PackageParameter { ParameterLevel = level, ParameterType = type })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }
-else if (Step.StepType == StepType.Pipeline)
+else if (Step is PipelineStep pipelineStep)
 {
     <p />
     <h5>Parameters</h5>
@@ -127,7 +127,7 @@ else if (Step.StepType == StepType.Pipeline)
             </tr>
         </thead>
         <tbody>
-            @foreach (var param in Step.PipelineParameters)
+            @foreach (var param in pipelineStep.PipelineParameters)
             {
                 <tr>
                     <td>
@@ -203,7 +203,7 @@ else if (Step.StepType == StepType.Pipeline)
                     </td>
                     <td>
                         <BSButtonGroup Size="Size.Small" Class="btn-row">
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.PipelineParameters.Remove(param)">
+                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => pipelineStep.PipelineParameters.Remove(param)">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </BSButton>
                         </BSButtonGroup>
@@ -213,7 +213,7 @@ else if (Step.StepType == StepType.Pipeline)
         </tbody>
     </table>
     var type = "String";
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.PipelineParameters.Add(new PipelineParameter { ParameterType = type })">
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => pipelineStep.PipelineParameters.Add(new PipelineParameter { ParameterType = type })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }

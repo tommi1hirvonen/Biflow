@@ -22,6 +22,12 @@ namespace EtlManagerUi.Data
 
         public DbSet<Job> Jobs => Set<Job>();
         public DbSet<Step> Steps => Set<Step>();
+        public DbSet<DatasetStep> DatasetSteps => Set<DatasetStep>();
+        public DbSet<ExeStep> ExeSteps => Set<ExeStep>();
+        public DbSet<JobStep> JobSteps => Set<JobStep>();
+        public DbSet<PackageStep> PackageSteps => Set<PackageStep>();
+        public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
+        public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
         public DbSet<StepExecution> Executions => Set<StepExecution>();
         public DbSet<JobExecution> JobExecutions => Set<JobExecution>();
         public DbSet<Dependency> Dependencies => Set<Dependency>();
@@ -99,6 +105,14 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<Step>()
                 .Property(s => s.StepType)
                 .HasConversion(stepTypeConverter);
+            modelBuilder.Entity<Step>()
+                .HasDiscriminator<StepType?>("StepType")
+                .HasValue<DatasetStep>(StepType.Dataset)
+                .HasValue<ExeStep>(StepType.Exe)
+                .HasValue<JobStep>(StepType.Job)
+                .HasValue<PackageStep>(StepType.Package)
+                .HasValue<PipelineStep>(StepType.Pipeline)
+                .HasValue<SqlStep>(StepType.Sql);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")
@@ -164,76 +178,20 @@ namespace EtlManagerUi.Data
                 .ToTable("vUser");
 
             modelBuilder.Entity<DataFactory>()
-                .ToTable("DataFactory")
-                .HasMany(df => df.Steps)
-                .WithOne(step => step.DataFactory!);
+                .ToTable("DataFactory");
 
             modelBuilder.Entity<PowerBIService>()
-                .ToTable("PowerBIService")
-                .HasMany(df => df.Steps)
-                .WithOne(step => step.PowerBIService!);
+                .ToTable("PowerBIService");
 
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
-                .ToTable("vConnection")
-                .HasMany(connection => connection.Steps)
-                .WithOne(step => step.Connection!);
+                .ToTable("vConnection");
         }
 
         
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             var user = HttpContext?.User?.Identity?.Name;
-
-            // Get new and modified steps.
-            var stepEntities = ChangeTracker
-                .Entries()
-                .Where(entity => entity.Entity is Step && (entity.State == EntityState.Modified || entity.State == EntityState.Added))
-                .ToList();
-
-            // Reset data for steps that is not needed to prevent confusion in DB tables.
-            foreach (var stepEntity in stepEntities)
-            {
-                Step step = (Step)stepEntity.Entity;
-                if (step.StepType != StepType.Sql)
-                {
-                    step.SqlStatement = null;
-                }
-                if (step.StepType != StepType.Package)
-                {
-                    step.PackageFolderName = null;
-                    step.PackageProjectName = null;
-                    step.PackageName = null;
-                    step.ExecuteAsLogin = null;
-                }
-                if (step.StepType != StepType.Sql && step.StepType != StepType.Package)
-                {
-                    step.ConnectionId = null;
-                }
-                if (step.StepType != StepType.Pipeline)
-                {
-                    step.PipelineName = null;
-                    step.DataFactoryId = null;
-                }
-                if (step.StepType != StepType.Job)
-                {
-                    step.JobToExecuteId = null;
-                }
-                if (step.StepType != StepType.Exe)
-                {
-                    step.ExeFileName = null;
-                    step.ExeArguments = null;
-                    step.ExeSuccessExitCode = null;
-                    step.ExeWorkingDirectory = null;
-                }
-                if (step.StepType != StepType.Dataset)
-                {
-                    step.PowerBIServiceId = null;
-                    step.DatasetGroupId = null;
-                    step.DatasetId = null;
-                }
-            }
-
 
             // If there are Jobs or Steps that have been edited, set the audit fields.
             var editedJobsAndSteps = ChangeTracker.Entries()

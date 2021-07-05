@@ -77,9 +77,14 @@
     </div>
 </div>
 
-    <AuthorizeView Roles="Admin, Editor">
-        <StepEditModal @ref="StepEditModal" Job="Job" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
-    </AuthorizeView>
+<AuthorizeView Roles="Admin, Editor">
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepId" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+</AuthorizeView>
 
 @code {
     [Parameter]
@@ -95,7 +100,7 @@
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
-    private StepEditModal StepEditModal { get; set; } = null!;
+    private Dictionary<StepType, IStepEditModal> StepEditModals = new();
     private Guid EditModalStepId { get; set; }
 
     private bool GrapShouldRender { get; set; }
@@ -222,7 +227,9 @@
     {
         EditModalStepId = Guid.Parse(id);
         StateHasChanged();
-        StepEditModal?.Show(showDependencies: true);
+        var step = Steps.First(s => s.StepId == EditModalStepId);
+        if (step.StepType is not null)
+            StepEditModals[(StepType)step.StepType].Show();
     }
 
     private async Task OnStepSubmit(Step step)

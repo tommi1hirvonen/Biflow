@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace EtlManagerUi.Models
+{
+    public class PipelineStep : Step
+    {
+        public Guid? DataFactoryId { get; set; }
+
+        [MaxLength(250)]
+        [Display(Name = "Pipeline name")]
+        public string? PipelineName { get; set; }
+
+        public IList<PipelineParameter> PipelineParameters { get; set; } = null!;
+
+        public DataFactory? DataFactory { get; set; }
+    }
+}

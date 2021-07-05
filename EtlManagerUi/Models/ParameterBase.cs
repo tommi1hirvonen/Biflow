@@ -14,11 +14,6 @@ namespace EtlManagerUi.Models
         [Display(Name = "Id")]
         public Guid ParameterId { get; set; }
 
-        public Step Step { get; set; } = null!;
-
-        [Display(Name = "Step id")]
-        public Guid StepId { get; set; }
-
         [Required]
         [MaxLength(128)]
         [Display(Name = "Name")]

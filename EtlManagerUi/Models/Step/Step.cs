@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerUi.Models
 {
-    public class Step : IComparable
+    public abstract class Step : IComparable
     {
         [Key]
         [Required]
@@ -32,64 +32,7 @@ namespace EtlManagerUi.Models
 
         [Required]
         [Display(Name = "Step type")]
-        public StepType? StepType { get; set; }
-
-        [Display(Name = "SQL statement")]
-        public string? SqlStatement { get; set; }
-
-        public Guid? ConnectionId { get; set; }
-
-        [MaxLength(128)]
-        [Display(Name = "Folder name")]
-        public string? PackageFolderName { get; set; }
-
-        [MaxLength(128)]
-        [Display(Name = "Project name")]
-        public string? PackageProjectName { get; set; }
-
-        [MaxLength(260)]
-        [Display(Name = "Package name")]
-        public string? PackageName { get; set; }
-
-        [Required]
-        [Display(Name = "32 bit mode")]
-        public bool ExecuteIn32BitMode { get; set; }
-
-        [Display(Name = "Execute as login")]
-        public string? ExecuteAsLogin { get; set; }
-
-        [Display(Name = "Job to execute")]
-        public Guid? JobToExecuteId { get; set; }
-
-        [Display(Name = "Synchronized")]
-        public bool JobExecuteSynchronized { get; set; }
-
-        [Display(Name = "File path")]
-        public string? ExeFileName { get; set; }
-        [Display(Name = "Arguments")]
-        public string? ExeArguments { get; set; }
-        [Display(Name = "Working directory")]
-        public string? ExeWorkingDirectory { get; set; }
-        [Display(Name = "Success exit code")]
-        public int? ExeSuccessExitCode { get; set; }
-
-        public Guid? PowerBIServiceId { get; set; }
-        
-        [Display(Name = "Group id")]
-        [MaxLength(36)]
-        [MinLength(36)]
-        public string? DatasetGroupId { get; set; }
-
-        [Display(Name = "Dataset id")]
-        [MaxLength(36)]
-        [MinLength(36)]
-        public string? DatasetId { get; set; }
-
-        public Guid? DataFactoryId { get; set; }
-        
-        [MaxLength(250)]
-        [Display(Name = "Pipeline name")]
-        public string? PipelineName { get; set; }
+        public StepType? StepType { get; set; }      
 
         [Required]
         [DataType(DataType.DateTime)]
@@ -131,17 +74,7 @@ namespace EtlManagerUi.Models
 
         public ICollection<Dependency> Dependencies { get; set; } = null!;
 
-        public IList<PackageParameter> PackageParameters { get; set; } = null!;
-
-        public IList<PipelineParameter> PipelineParameters { get; set; } = null!;
-
         public IList<Tag> Tags { get; set; } = null!;
-
-        public DataFactory? DataFactory { get; set; }
-
-        public Connection? Connection { get; set; }
-
-        public PowerBIService? PowerBIService { get; set; }
 
         public int CompareTo(object? obj)
         {

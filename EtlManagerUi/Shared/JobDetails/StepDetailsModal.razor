@@ -46,119 +46,119 @@
                 <dd class="col-sm-9">
                     @Step.TimeoutMinutes
                 </dd>
-                @if (Step.StepType == StepType.Sql)
+                @if (Step is SqlStep sql)
                 {
                     <dt class="col-sm-3">
                         SQL statement
                     </dt>
                     <dd class="col-sm-9">
-                        <pre><code>@Step.SqlStatement</code></pre>
+                        <pre><code>@sql.SqlStatement</code></pre>
                     </dd>
                 }
-                else if (Step.StepType == StepType.Pipeline)
+                else if (Step is PipelineStep pipeline)
                 {
                     <dt class="col-sm-3">
                         Pipeline name
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.PipelineName
+                        @pipeline.PipelineName
                     </dd>
                     <dt class="col-sm-3">
                         Data Factory name
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.DataFactory?.DataFactoryName
+                        @pipeline.DataFactory?.DataFactoryName
                     </dd>
                 }
-                else if (Step.StepType == StepType.Job)
+                else if (Step is JobStep job)
                 {
                     <dt class="col-sm-3">
                         Job to execute
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.JobToExecuteId
+                        @job.JobToExecuteId
                     </dd>
                     <dt class="col-sm-3">
                         Synchronized
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.JobExecuteSynchronized
+                        @job.JobExecuteSynchronized
                     </dd>
                 }
-                else if (Step.StepType == StepType.Exe)
+                else if (Step is ExeStep exe)
                 {
                     <dt class="col-sm-3">
                         File path
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.ExeFileName
+                        @exe.ExeFileName
                     </dd>
                     <dt class="col-sm-3">
                         Arguments
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.ExeArguments
+                        @exe.ExeArguments
                     </dd>
                     <dt class="col-sm-3">
                         Working directory
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.ExeWorkingDirectory
+                        @exe.ExeWorkingDirectory
                     </dd>
                     <dt class="col-sm-3">
                         Success exit code
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.ExeSuccessExitCode
+                        @exe.ExeSuccessExitCode
                     </dd>
                 }
-                else if (Step.StepType == StepType.Dataset)
+                else if (Step is DatasetStep dataset)
                 {
                     <dt class="col-sm-3">
                         Group id
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.DatasetGroupId
+                        @dataset.DatasetGroupId
                     </dd>
                     <dt class="col-sm-3">
                         Dataset id
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.DatasetId
+                        @dataset.DatasetId
                     </dd>
                     <dt class="col-sm-3">
                         Power BI Service name
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.PowerBIService?.PowerBIServiceName
+                        @dataset.PowerBIService?.PowerBIServiceName
                     </dd>
                 }
-                else if (Step.StepType == StepType.Package)
+                else if (Step is PackageStep package)
                 {
                     <dt class="col-sm-3">
                         Package folder
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.PackageFolderName
+                        @package.PackageFolderName
                     </dd>
                     <dt class="col-sm-3">
                         Package project
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.PackageProjectName
+                        @package.PackageProjectName
                     </dd>
                     <dt class="col-sm-3">
                         Package name
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.PackageName
+                        @package.PackageName
                     </dd>
                     <dt class="col-sm-3">
                         32 bit mode
                     </dt>
                     <dd class="col-sm-9">
                         <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" disabled checked="@(Step.ExecuteIn32BitMode ? "checked" : null)">
+                            <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
                             <label class="custom-control-label"></label>
                         </div>
                     </dd>
@@ -166,17 +166,17 @@
                         Execute as login
                     </dt>
                     <dd class="col-sm-9">
-                        @Step.ExecuteAsLogin
+                        @package.ExecuteAsLogin
                     </dd>
                 }
             </dl>
-            @if (Step.StepType == StepType.Package)
+            @if (Step is PackageStep package_)
             {
                 <h6>Parameters</h6>
-                @if (Step.PackageParameters is not null)
+                @if (package_.PackageParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in Step.PackageParameters)
+                        @foreach (var param in package_.PackageParameters)
                         {
                             <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
                             <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
@@ -184,13 +184,13 @@
                     </dl>
                 }
             }
-            else if (Step.StepType == StepType.Pipeline)
+            else if (Step is PipelineStep pipeline)
             {
                 <h6>Parameters</h6>
-                @if (Step.PipelineParameters is not null)
+                @if (pipeline.PipelineParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in Step.PipelineParameters)
+                        @foreach (var param in pipeline.PipelineParameters)
                         {
                             <dt class="col-sm-3">@param.ParameterName</dt>
                             <dd class="col-sm-9">@param.ParameterValue</dd>

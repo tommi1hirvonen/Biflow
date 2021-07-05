@@ -35,6 +35,5 @@ namespace EtlManagerUi.Models
         [Display(Name = "Client secret")]
         public string? ClientSecret { get; set; }
 
-        public IList<Step> Steps { get; set; } = null!;
     }
 }

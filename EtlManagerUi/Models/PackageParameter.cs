@@ -11,5 +11,11 @@ namespace EtlManagerUi.Models
     {
         [Required]
         public string? ParameterLevel { get; set; }
+
+        [Display(Name = "Step id")]
+        [Column("StepId")]
+        public Guid StepId { get; set; }
+
+        public PackageStep Step { get; set; } = null!;
     }
 }

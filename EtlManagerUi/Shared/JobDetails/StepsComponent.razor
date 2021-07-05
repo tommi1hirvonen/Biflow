@@ -18,18 +18,35 @@
     }
 </style>
 
-<AuthorizeView Roles="Admin, Editor">
-    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">Add step</BSButton>
-</AuthorizeView>
-<AuthorizeView Roles="Admin, Editor, Operator">
-    <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-        Execute
-    </BSButton>
-    <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
-        <span class="sr-only">Loading...</span>
-    </div>
-</AuthorizeView>
+<div class="btn-toolbar">
+    <AuthorizeView Roles="Admin, Editor">
+        <BSDropdown>
+            <BSDropdownToggle Color="Color.Success">
+                Add step
+            </BSDropdownToggle>
+            <BSDropdownMenu>
+                <BSDropdownHeader>Step type</BSDropdownHeader>
+                @foreach (var stepType in Enum.GetValues(typeof(StepType)))
+                {
+                    var stepTypeEnum = Enum.Parse<StepType>(stepType.ToString()!);
+                    <BSDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)">
+                        <StepTypeIconComponent StepType_="stepTypeEnum" />
+                        @stepType
+                    </BSDropdownItem>
+                }
+            </BSDropdownMenu>
+        </BSDropdown>
+    </AuthorizeView>
+    <AuthorizeView Roles="Admin, Editor, Operator">
+        <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+            Execute
+        </BSButton>
+        <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </AuthorizeView>
+</div>
 
 <BSAlert Class="mt-3" Color="@(ExecuteSuccess ? Color.Success : Color.Danger)" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">
     @if (ExecuteSuccess)
@@ -218,7 +235,12 @@
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <StepEditModal @ref="StepEditModal" Job="Job" StepId="EditModalStepId" Jobs="Jobs" Steps="Steps" OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepId" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
@@ -395,7 +417,7 @@
         .Distinct()
         .OrderBy(str => str) ?? Enumerable.Empty<string>();
 
-    private StepEditModal StepEditModal { get; set; } = null!;
+    private Dictionary<StepType, IStepEditModal> StepEditModals = new();
     private Guid EditModalStepId { get; set; }
 
     private StepDetailsModal StepDetailsModal { get; set; } = null!;
@@ -457,10 +479,22 @@
         }
     }
 
-    private void ShowEditModal(Step? step)
+    private void ShowEditModal(Step step)
     {
-        EditModalStepId = step?.StepId ?? Guid.Empty;
-        StepEditModal.Show();
+        EditModalStepId = step.StepId;
+        OpenStepEditModal(step.StepType);
+    }
+
+    private void ShowNewStepModal(StepType? stepType)
+    {
+        EditModalStepId = Guid.Empty;
+        OpenStepEditModal(stepType);
+    }
+
+    private void OpenStepEditModal(StepType? stepType)
+    {
+        if (stepType is not null)
+            StepEditModals[(StepType)stepType].Show();
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Step step)
@@ -503,7 +537,6 @@
             {
                 using var context = DbFactory.CreateDbContext();
                 var createdStep = await context.Steps
-                    .Include(step => step.PackageParameters)
                     .Include(step => step.Dependencies)
                     .Include(step => step.Tags)
                     .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);

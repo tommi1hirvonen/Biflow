@@ -47,6 +47,5 @@ namespace EtlManagerUi.Models
         [Display(Name = "Resource name")]
         public string? ResourceName { get; set; }
 
-        public IList<Step> Steps { get; set; } = null;
     }
 }

@@ -9,7 +9,11 @@ namespace EtlManagerUi.Models
 {
     public class PipelineParameter : ParameterBase
     {
-        
+        [Display(Name = "Step id")]
+        [Column("StepId")]
+        public Guid StepId { get; set; }
+
+        public PipelineStep Step { get; set; } = null!;
     }
 
 }
