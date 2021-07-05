@@ -1,31 +1,31 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 
-@if (StepType == "SQL")
+@switch (StepType_)
 {
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-}
-else if (StepType == "SSIS")
-{
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-}
-else if (StepType == "PIPELINE")
-{
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pipeline.svg")))
-}
-else if (StepType == "JOB")
-{
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-}
-else if (StepType == "EXE")
-{
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/terminal.svg")))
-}
-else if (StepType == "DATASET")
-{
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+    case StepType.Sql:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+        break;
+    case StepType.Package:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+        break;
+    case StepType.Pipeline:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pipeline.svg")))
+        break;
+    case StepType.Job:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+        break;
+    case StepType.Exe:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/terminal.svg")))
+        break;
+    case StepType.Dataset:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+        break;
+    default:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-circle.svg")))
+        break;
 }
 
 @code {
     [Parameter]
-    public string? StepType { get; set; }
+    public StepType? StepType_ { get; set; }
 }

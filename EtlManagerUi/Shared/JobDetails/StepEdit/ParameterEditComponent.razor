@@ -1,6 +1,6 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
 
-@if (Step.StepType == "SSIS")
+@if (Step.StepType == StepType.Package)
 {
     <p />
     <h5>Parameters</h5>
@@ -113,7 +113,7 @@
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }
-else if (Step.StepType == "PIPELINE")
+else if (Step.StepType == StepType.Pipeline)
 {
     <p />
     <h5>Parameters</h5>

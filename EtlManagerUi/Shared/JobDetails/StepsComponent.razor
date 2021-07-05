@@ -101,13 +101,13 @@
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
-                                    <StepTypeIconComponent StepType="@item.StepType" />
+                                    <StepTypeIconComponent StepType_="@item.StepType" />
                                     @item.StepName
                                 </a>
                             </AuthorizeView>
                             <AuthorizeView Roles="Operator, Viewer">
                                 <span>
-                                    <StepTypeIconComponent StepType="@item.StepType" />
+                                    <StepTypeIconComponent StepType_="@item.StepType" />
                                     @item.StepName
                                 </span>
                             </AuthorizeView>

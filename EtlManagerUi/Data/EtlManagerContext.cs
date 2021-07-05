@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using EtlManagerUi.Models;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EtlManagerUi.Data
 {
@@ -38,12 +39,36 @@ namespace EtlManagerUi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            Func<StepType?, string?> stepTypeToString = value => value switch
+            {
+                StepType.Sql => "SQL",
+                StepType.Package => "SSIS",
+                StepType.Job => "JOB",
+                StepType.Exe => "EXE",
+                StepType.Pipeline => "PIPELINE",
+                StepType.Dataset => "DATASET",
+                _ => null
+            };
+            Func<string?, StepType?> stringToStepType = value => value switch
+            {
+                "SQL" => StepType.Sql,
+                "SSIS" => StepType.Package,
+                "JOB" => StepType.Job,
+                "EXE" => StepType.Exe,
+                "PIPELINE" => StepType.Pipeline,
+                "DATASET" => StepType.Dataset,
+                _ => null
+            };
+            var stepTypeConverter = new ValueConverter<StepType?, string?>(v => stepTypeToString(v), v => stringToStepType(v));
+
             modelBuilder.HasDefaultSchema("etlmanager");
             
             // Map executions to views, which have additional logic implemented.
             // We never save or modify the executions via UI, so this is no problem.
             modelBuilder.Entity<StepExecution>()
-                .ToView("vExecution");
+                .ToView("vExecution")
+                .Property(e => e.StepType)
+                .HasConversion(stepTypeConverter);
             modelBuilder.Entity<JobExecution>()
                 .ToView("vExecutionJob");
             
@@ -64,13 +89,16 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<Job>()
                 .HasMany(job => job.Subscriptions)
                 .WithOne(subscription => subscription.Job);
-            
+
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
                 .HasOne(step => step.Job!)
                 .WithMany(job => job.Steps)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Step>()
+                .Property(s => s.StepType)
+                .HasConversion(stepTypeConverter);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")
@@ -167,38 +195,38 @@ namespace EtlManagerUi.Data
             foreach (var stepEntity in stepEntities)
             {
                 Step step = (Step)stepEntity.Entity;
-                if (step.StepType != "SQL")
+                if (step.StepType != StepType.Sql)
                 {
                     step.SqlStatement = null;
                 }
-                if (step.StepType != "SSIS")
+                if (step.StepType != StepType.Package)
                 {
                     step.PackageFolderName = null;
                     step.PackageProjectName = null;
                     step.PackageName = null;
                     step.ExecuteAsLogin = null;
                 }
-                if (step.StepType != "SQL" && step.StepType != "SSIS")
+                if (step.StepType != StepType.Sql && step.StepType != StepType.Package)
                 {
                     step.ConnectionId = null;
                 }
-                if (step.StepType != "PIPELINE")
+                if (step.StepType != StepType.Pipeline)
                 {
                     step.PipelineName = null;
                     step.DataFactoryId = null;
                 }
-                if (step.StepType != "JOB")
+                if (step.StepType != StepType.Job)
                 {
                     step.JobToExecuteId = null;
                 }
-                if (step.StepType != "EXE")
+                if (step.StepType != StepType.Exe)
                 {
                     step.ExeFileName = null;
                     step.ExeArguments = null;
                     step.ExeSuccessExitCode = null;
                     step.ExeWorkingDirectory = null;
                 }
-                if (step.StepType != "DATASET")
+                if (step.StepType != StepType.Dataset)
                 {
                     step.PowerBIServiceId = null;
                     step.DatasetGroupId = null;

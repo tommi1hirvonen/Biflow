@@ -77,12 +77,10 @@
                                                     </div>
                                                 </div>
                                                 <InputSelect class="form-control" @bind-Value="Step.StepType" @oninput="StepTypeChanged">
-                                                    <option>SQL</option>
-                                                    <option>SSIS</option>
-                                                    <option>PIPELINE</option>
-                                                    <option>JOB</option>
-                                                    <option>EXE</option>
-                                                    <option>DATASET</option>
+                                                    @foreach (var stepType in Enum.GetValues(typeof(StepType)))
+                                                    {
+                                                        <option>@stepType</option>
+                                                    }
                                                 </InputSelect>
                                             </div>
                                         </BSFormGroup>
@@ -115,7 +113,7 @@
                                     </BSFormRow>
                                 </div>
                             </BSFormRow>
-                            @if (Step.StepType == "SQL" || Step.StepType == "SSIS" || Step.StepType == "PIPELINE" || Step.StepType == "EXE")
+                            @if (Step.StepType == StepType.Sql || Step.StepType == StepType.Package || Step.StepType == StepType.Pipeline || Step.StepType == StepType.Exe)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col-lg-6">
@@ -129,7 +127,7 @@
                                             <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                                         </div>
                                     </BSFormGroup>
-                                    @if (Step.StepType == "SQL" || Step.StepType == "SSIS")
+                                    @if (Step.StepType == StepType.Sql || Step.StepType == StepType.Package)
                                     {
                                         <BSFormGroup Class="col-lg-6">
                                             <BSLabel>Connection</BSLabel>
@@ -150,7 +148,7 @@
                                     }
                                 </BSFormRow>
                             }
-                            @if (Step.StepType == "SQL")
+                            @if (Step.StepType == StepType.Sql)
                             {
                                 <BSFormGroup>
                                     <BSLabel>SQL statement</BSLabel>
@@ -173,7 +171,7 @@
                                 </div>
                                 <StoredProcedureSelectModal @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
                             }
-                            @if (Step.StepType == "SSIS")
+                            @if (Step.StepType == StepType.Package)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col">
@@ -245,7 +243,7 @@
                                     </BSFormGroup>
                                 </BSFormRow>
                             }
-                            @if (Step.StepType == "PIPELINE")
+                            @if (Step.StepType == StepType.Pipeline)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col">
@@ -286,7 +284,7 @@
                                 </div>
                                 <PipelineSelectModal @ref="PipelineSelectModal" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
                             }
-                            @if (Step.StepType == "JOB")
+                            @if (Step.StepType == StepType.Job)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col-lg-6">
@@ -317,7 +315,7 @@
                                     </div>
                                 </BSFormRow>
                             }
-                            @if (Step.StepType == "EXE")
+                            @if (Step.StepType == StepType.Exe)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col">
@@ -372,7 +370,7 @@
                                     </BSFormGroup>
                                 </BSFormRow>
                             }
-                            @if (Step.StepType == "DATASET")
+                            @if (Step.StepType == StepType.Dataset)
                             {
                                 <BSFormRow>
                                     <BSFormGroup Class="col">
@@ -582,7 +580,7 @@
                 JobId = Job.JobId,
                 RetryAttempts = 0,
                 RetryIntervalMinutes = 0,
-                StepType = "SQL",
+                StepType = StepType.Sql,
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
                 PackageParameters = new List<PackageParameter>(),
@@ -686,46 +684,46 @@
         StepError = string.Empty;
 
         // Check various requirements based on step type.
-        if (Step.StepType == "SQL" && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId is null))
+        if (Step.StepType == StepType.Sql && (string.IsNullOrEmpty(Step.SqlStatement) || Step.ConnectionId is null))
         {
             StepError = "SQL statement and connection cannot be empty";
             return;
         }
-        else if (Step.StepType == "SSIS" && (string.IsNullOrEmpty(Step.PackageFolderName)
+        else if (Step.StepType == StepType.Package && (string.IsNullOrEmpty(Step.PackageFolderName)
             || string.IsNullOrEmpty(Step.PackageProjectName) || string.IsNullOrEmpty(Step.PackageName)
             || Step.ConnectionId is null))
         {
             StepError = "Connection, folder, project and package names cannot be empty";
             return;
         }
-        else if (Step.StepType == "PIPELINE" && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId is null))
+        else if (Step.StepType == StepType.Pipeline && (string.IsNullOrEmpty(Step.PipelineName) || Step.DataFactoryId is null))
         {
             StepError = "Pipeline name and Data Factory cannot be empty";
             return;
         }
-        else if (Step.StepType == "DATASET" && (string.IsNullOrWhiteSpace(Step.DatasetGroupId) || string.IsNullOrWhiteSpace(Step.DatasetId) || Step.PowerBIServiceId is null))
+        else if (Step.StepType == StepType.Dataset && (string.IsNullOrWhiteSpace(Step.DatasetGroupId) || string.IsNullOrWhiteSpace(Step.DatasetId) || Step.PowerBIServiceId is null))
         {
             StepError = "Power BI Service, group id and dataset id cannot be empty";
             return;
         }
-        else if (Step.StepType == "JOB" && Step.JobToExecuteId is null)
+        else if (Step.StepType == StepType.Job && Step.JobToExecuteId is null)
         {
             StepError = "Job cannot be empty";
             return;
         }
-        else if (Step.StepType == "EXE" && string.IsNullOrWhiteSpace(Step.ExeFileName))
+        else if (Step.StepType == StepType.Exe && string.IsNullOrWhiteSpace(Step.ExeFileName))
         {
             StepError = "File path cannot be empty";
             return;
         }
 
-        if ((Step.StepType == "SSIS" || Step.StepType == "PIPELINE") && !ParametersCheck())
+        if ((Step.StepType == StepType.Package || Step.StepType == StepType.Pipeline) && !ParametersCheck())
         {
             return;
         }
 
         // Process parameters based on step type.
-        if (Step.StepType == "SSIS")
+        if (Step.StepType == StepType.Package)
         {
             foreach (var param in Step.PackageParameters)
             {
@@ -733,7 +731,7 @@
             }
             Step.PipelineParameters.Clear();
         }
-        else if (Step.StepType == "PIPELINE")
+        else if (Step.StepType == StepType.Pipeline)
         {
             foreach (var param in Step.PipelineParameters)
             {
@@ -777,7 +775,7 @@
 
     private bool ParametersCheck()
     {
-        if (Step.StepType == "SSIS")
+        if (Step.StepType == StepType.Package)
         {
             var parameters = Step.PackageParameters.OrderBy(param => param.ParameterName).ThenBy(param => param.ParameterLevel).ToList();
             foreach (var param in parameters)
@@ -798,7 +796,7 @@
                 }
             }
         }
-        else if (Step.StepType == "PIPELINE")
+        else if (Step.StepType == StepType.Pipeline)
         {
             var parameters = Step.PipelineParameters.OrderBy(param => param.ParameterName).ToList();
             foreach (var param in parameters)

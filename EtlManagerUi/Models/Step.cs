@@ -32,7 +32,7 @@ namespace EtlManagerUi.Models
 
         [Required]
         [Display(Name = "Step type")]
-        public string? StepType { get; set; }
+        public StepType? StepType { get; set; }
 
         [Display(Name = "SQL statement")]
         public string? SqlStatement { get; set; }
@@ -164,5 +164,15 @@ namespace EtlManagerUi.Models
                 throw new ArgumentException("Object is not a Step");
             }
         }
+    }
+
+    public enum StepType
+    {
+        Sql,
+        Package,
+        Job,
+        Exe,
+        Pipeline,
+        Dataset
     }
 }

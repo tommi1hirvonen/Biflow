@@ -46,7 +46,7 @@
                 <dd class="col-sm-9">
                     @Step.TimeoutMinutes
                 </dd>
-                @if (Step.StepType == "SQL")
+                @if (Step.StepType == StepType.Sql)
                 {
                     <dt class="col-sm-3">
                         SQL statement
@@ -55,7 +55,7 @@
                         <pre><code>@Step.SqlStatement</code></pre>
                     </dd>
                 }
-                else if (Step.StepType == "PIPELINE")
+                else if (Step.StepType == StepType.Pipeline)
                 {
                     <dt class="col-sm-3">
                         Pipeline name
@@ -70,7 +70,7 @@
                         @Step.DataFactory?.DataFactoryName
                     </dd>
                 }
-                else if (Step.StepType == "JOB")
+                else if (Step.StepType == StepType.Job)
                 {
                     <dt class="col-sm-3">
                         Job to execute
@@ -85,7 +85,7 @@
                         @Step.JobExecuteSynchronized
                     </dd>
                 }
-                else if (Step.StepType == "EXE")
+                else if (Step.StepType == StepType.Exe)
                 {
                     <dt class="col-sm-3">
                         File path
@@ -112,7 +112,7 @@
                         @Step.ExeSuccessExitCode
                     </dd>
                 }
-                else if (Step.StepType == "DATASET")
+                else if (Step.StepType == StepType.Dataset)
                 {
                     <dt class="col-sm-3">
                         Group id
@@ -133,7 +133,7 @@
                         @Step.PowerBIService?.PowerBIServiceName
                     </dd>
                 }
-                else if (Step.StepType == "SSIS")
+                else if (Step.StepType == StepType.Package)
                 {
                     <dt class="col-sm-3">
                         Package folder
@@ -170,7 +170,7 @@
                     </dd>
                 }
             </dl>
-            @if (Step.StepType == "SSIS")
+            @if (Step.StepType == StepType.Package)
             {
                 <h6>Parameters</h6>
                 @if (Step.PackageParameters is not null)
@@ -184,7 +184,7 @@
                     </dl>
                 }
             }
-            else if (Step.StepType == "PIPELINE")
+            else if (Step.StepType == StepType.Pipeline)
             {
                 <h6>Parameters</h6>
                 @if (Step.PipelineParameters is not null)

@@ -70,7 +70,7 @@
             </dd>
         }
 
-        @if (StepExecution.StepType == "SQL")
+        @if (StepExecution.StepType == StepType.Sql)
         {
             <dt class="col-sm-3">
                 SQL statement
@@ -85,7 +85,7 @@
                 <pre><code>@StepExecution.InfoMessage</code></pre>
             </dd>
         }
-        else if (StepExecution.StepType == "SSIS")
+        else if (StepExecution.StepType == StepType.Package)
         {
             <dt class="col-sm-3">
                 Package path
@@ -112,7 +112,7 @@
                 @StepExecution.PackageOperationId
             </dd>
         }
-        else if (StepExecution.StepType == "PIPELINE")
+        else if (StepExecution.StepType == StepType.Pipeline)
         {
             <dt class="col-sm-3">
                 Pipeline name
@@ -133,7 +133,7 @@
                 @StepExecution.DataFactoryId
             </dd>
         }
-        else if (StepExecution.StepType == "EXE")
+        else if (StepExecution.StepType == StepType.Exe)
         {
             <dt class="col-sm-3">
                 File path
@@ -166,7 +166,7 @@
                 <pre><code>@StepExecution.InfoMessage</code></pre>
             </dd>
         }
-        else if (StepExecution.StepType == "DATASET")
+        else if (StepExecution.StepType == StepType.Dataset)
         {
             <dt class="col-sm-3">
                 Group id
@@ -194,7 +194,7 @@
             <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
         </dd>
     </dl>
-    @if (StepExecution.StepType == "SSIS")
+    @if (StepExecution.StepType == StepType.Package)
     {
         <h6>Parameters</h6>
         <dl class="row">
@@ -205,7 +205,7 @@
             }
         </dl>
     }
-    else if (StepExecution.StepType == "PIPELINE")
+    else if (StepExecution.StepType == StepType.Pipeline)
     {
         <h6>Parameters</h6>
         <dl class="row">

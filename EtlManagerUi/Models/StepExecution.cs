@@ -31,7 +31,7 @@ namespace EtlManagerUi.Models
         public string StepName { get; set; }
 
         [Display(Name = "Step type")]
-        public string? StepType { get; set; }
+        public StepType? StepType { get; set; }
 
         [Display(Name = "SQL statement")]
         public string? SqlStatement { get; set; }
