@@ -63,50 +63,44 @@
                                 </div>
                             </BSFormGroup>
                             <BSFormRow>
-                                <div class="col">
-                                    <BSFormRow>
-                                        <BSFormGroup Class="col">
-                                            <BSLabel>Execution phase</BSLabel>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
-                                                    </div>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Execution phase</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
                                                 </div>
-                                                <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
                                             </div>
-                                        </BSFormGroup>
-                                    </BSFormRow>
-                                </div>
-                                <div class="col-lg">
-                                    <BSFormRow>
-                                        <BSFormGroup Class="col">
-                                            <BSLabel>Retry attempts</BSLabel>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
-                                                    </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Retry attempts</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
                                                 </div>
-                                                <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
                                             </div>
-                                        </BSFormGroup>
-                                        <BSFormGroup Class="col">
-                                            <BSLabel>Retry interval (min)</BSLabel>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
-                                                    </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Retry interval (min)</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
                                                 </div>
-                                                <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
                                             </div>
-                                        </BSFormGroup>
-                                    </BSFormRow>
-                                </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
                             </BSFormRow>
                             <BSFormRow>
-                                <BSFormGroup Class="col">
+                                <BSFormGroup Class="col-lg-6">
                                     <BSLabel>Power BI Service</BSLabel>
                                     <div class="input-group">
                                         <div class="input-group-prepend">
