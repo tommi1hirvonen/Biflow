@@ -59,7 +59,7 @@ namespace EtlManagerExecutor
                 {
                     using var stepDetailsCmd = new SqlCommand(
                         @"SELECT TOP 1 StepType, RetryAttempts, RetryIntervalMinutes
-                        FROM etlmanager.Execution
+                        FROM etlmanager.Execution with (nolock)
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                         , sqlConnection);
                     stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);

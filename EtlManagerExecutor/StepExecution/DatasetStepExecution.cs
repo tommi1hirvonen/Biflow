@@ -13,7 +13,7 @@ namespace EtlManagerExecutor
         {
             using var stepDetailsCmd = new SqlCommand(
                 @"SELECT TOP 1 PowerBIServiceId, DatasetGroupId, DatasetId
-                FROM etlmanager.Execution
+                FROM etlmanager.Execution with (nolock)
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
             stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);

@@ -23,7 +23,7 @@ namespace EtlManagerExecutor
                     ExecuteAsLogin,
                     ExecutePackagesAsLogin = etlmanager.GetExecutePackagesAsLogin(ConnectionId),
                     TimeoutMinutes
-                FROM etlmanager.Execution
+                FROM etlmanager.Execution with (nolock)
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
             stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);

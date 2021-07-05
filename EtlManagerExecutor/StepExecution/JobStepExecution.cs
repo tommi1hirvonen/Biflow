@@ -19,7 +19,7 @@ namespace EtlManagerExecutor
         {
             using var stepDetailsCmd = new SqlCommand(
                 @"SELECT TOP 1 JobToExecuteId, JobExecuteSynchronized
-                FROM etlmanager.Execution
+                FROM etlmanager.Execution with (nolock)
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
             stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);

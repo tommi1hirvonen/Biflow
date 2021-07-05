@@ -21,7 +21,7 @@ namespace EtlManagerExecutor
                     ExeArguments,
                     ExeWorkingDirectory,
                     ExeSuccessExitCode
-                FROM etlmanager.Execution
+                FROM etlmanager.Execution with (nolock)
                 WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
                 , sqlConnection);
             stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
