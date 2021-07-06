@@ -188,9 +188,9 @@ namespace EtlManagerExecutor
                         SET EndDateTime = GETDATE()
                         WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
                         , connection);
-                    addNewExecution.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                    addNewExecution.Parameters.AddWithValue("@StepId", Step.StepId);
-                    addNewExecution.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
+                    updateEndTime.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
+                    updateEndTime.Parameters.AddWithValue("@StepId", Step.StepId);
+                    updateEndTime.Parameters.AddWithValue("@RetryAttemptIndex", stepExecution.RetryAttemptCounter);
                     await updateEndTime.ExecuteNonQueryAsync(CancellationToken.None);
                 }
                 catch (Exception ex)
