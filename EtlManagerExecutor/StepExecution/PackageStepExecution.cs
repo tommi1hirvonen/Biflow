@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -13,47 +14,27 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
-                @"SELECT TOP 1
-                    ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
-                    PackageFolderName,
-                    PackageProjectName,
-                    PackageName,
-                    ExecuteIn32BitMode,
-                    ExecuteAsLogin,
-                    ExecutePackagesAsLogin = etlmanager.GetExecutePackagesAsLogin(ConnectionId),
-                    TimeoutMinutes
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", config.EncryptionKey);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var timeoutMinutes = (int)reader["TimeoutMinutes"];
-                var connectionStringSsis = reader["ConnectionString"].ToString()!;
-                var packageFolderName = reader["PackageFolderName"].ToString()!;
-                var packageProjectName = reader["PackageProjectName"].ToString()!;
-                var packageName = reader["PackageName"].ToString()!;
-                var executeIn32BitMode = reader["ExecuteIn32BitMode"].ToString() == "1";
-
-                var executeAsLogin = reader["ExecuteAsLogin"] as string; // Login specified for each package step separately
-                executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
-
-                var executePackagesAsLogin = reader["ExecutePackagesAsLogin"] as string; // Login specified for the entire connection
-                executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
-
-                executeAsLogin ??= executePackagesAsLogin; // If the step specific login was specified, use that. Otherwise use connection login impersonation (can be null).
-
-                return new PackageStepExecution(config, step, connectionStringSsis,
+            
+            (var packageFolderName, var packageProjectName, var packageName, var executeIn32BitMode,
+                var executeAsLogin, var executePackagesAsLogin, var connectionString, var timeoutMinutes) =
+                await sqlConnection.QueryFirstAsync<(string, string, string, bool, string?, string?, string, int)>(
+                    @"SELECT TOP 1
+                        PackageFolderName,
+                        PackageProjectName,
+                        PackageName,
+                        ExecuteIn32BitMode,
+                        ExecuteAsLogin,
+                        ExecutePackagesAsLogin = etlmanager.GetExecutePackagesAsLogin(ConnectionId),
+                        ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
+                        TimeoutMinutes
+                    FROM etlmanager.Execution with (nolock)
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                    new { config.ExecutionId, step.StepId, EncryptionPassword = config.EncryptionKey });
+            executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
+            executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
+            executeAsLogin ??= executePackagesAsLogin;
+            return new PackageStepExecution(config, step, connectionString,
                     packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
         }
     }
 
@@ -121,17 +102,11 @@ namespace EtlManagerExecutor
             try
             {
                 using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
-                await etlManagerConnection.OpenAsync(CancellationToken.None);
-                using var sqlCommand = new SqlCommand(
+                await etlManagerConnection.ExecuteAsync(
                     @"UPDATE etlmanager.Execution
-                        SET PackageOperationId = @OperationId
-                        WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex"
-                    , etlManagerConnection);
-                sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", Step.StepId);
-                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
-                sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-                await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
+                    SET PackageOperationId = @OperationId
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex",
+                    new { Configuration.ExecutionId, Step.StepId, RetryAttemptIndex = RetryAttemptCounter, OperationId = PackageOperationId });
             }
             catch (Exception ex)
             {
@@ -263,27 +238,13 @@ namespace EtlManagerExecutor
 
         private async Task<HashSet<Parameter>> GetStepParameters()
         {
-            var parameters = new HashSet<Parameter>();
-
             using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-            using var paramsCommand = new SqlCommand(
-                @"SELECT ParameterName, ParameterValue, ParameterLevel
-                    FROM etlmanager.ExecutionParameter
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel IN ('Package','Project')"
-                , sqlConnection);
-            paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
-            paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-
-            await sqlConnection.OpenAsync();
-            using var reader = await paramsCommand.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var name = reader["ParameterName"].ToString()!;
-                object value = reader["ParameterValue"];
-                var level = reader["ParameterLevel"].ToString()!;
-                parameters.Add(new(name, value, level));
-            }
-
+            var rows = await sqlConnection.QueryAsync<Parameter>(
+                @"SELECT [Name] = [ParameterName], [Value] = [ParameterValue], [Level] = [ParameterLevel]
+                FROM etlmanager.ExecutionParameter
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel IN ('Package','Project')",
+                new { Step.StepId, Configuration.ExecutionId });
+            var parameters = rows.ToHashSet();
             return parameters;
         }
 
@@ -296,10 +257,9 @@ namespace EtlManagerExecutor
                 try
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
-                    using var sqlCommand = new SqlCommand("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId", sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-                    await sqlConnection.OpenAsync(CancellationToken.None);
-                    int status = (int)await sqlCommand.ExecuteScalarAsync(CancellationToken.None);
+                    var status = await sqlConnection.ExecuteScalarAsync<int>(
+                        "SELECT status from SSISDB.catalog.operations where operation_id = @OperationId",
+                        new { OperationId = PackageOperationId });
                     // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
                     if (status == 3 || status == 4 || status == 6 || status == 7 || status == 9)
                     {
@@ -323,20 +283,12 @@ namespace EtlManagerExecutor
         private async Task<List<string?>> GetErrorMessagesAsync()
         {
             using var sqlConnection = new SqlConnection(ConnectionString);
-            using var sqlCommand = new SqlCommand(
+            var messages = await sqlConnection.QueryAsync<string?>(
                 @"SELECT message
                 FROM SSISDB.catalog.operation_messages
-                WHERE message_type = 120 AND operation_id = @OperationId" // message_type = 120 => error message
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@OperationId", PackageOperationId);
-            await sqlConnection.OpenAsync(CancellationToken.None);
-            var messages = new List<string?>();
-            var reader = await sqlCommand.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                messages.Add(reader[0].ToString());
-            }
-            return messages;
+                WHERE message_type = 120 AND operation_id = @OperationId", // message_type = 120 => error message
+                new { OperationId = PackageOperationId });
+            return messages.ToList();
         }
 
         private async Task CancelAsync()
@@ -345,10 +297,8 @@ namespace EtlManagerExecutor
             try
             {
                 using var sqlConnection = new SqlConnection(ConnectionString);
-                await sqlConnection.OpenAsync(CancellationToken.None);
-                using var stopPackageOperationCmd = new SqlCommand("EXEC SSISDB.catalog.stop_operation @OperationId", sqlConnection) { CommandTimeout = 60 }; // One minute
-                stopPackageOperationCmd.Parameters.AddWithValue("@OperationId", PackageOperationId);
-                await stopPackageOperationCmd.ExecuteNonQueryAsync();
+                await sqlConnection.ExecuteAsync("EXEC SSISDB.catalog.stop_operation @OperationId",
+                    new { OperationId = PackageOperationId });
             }
             catch (Exception ex)
             {

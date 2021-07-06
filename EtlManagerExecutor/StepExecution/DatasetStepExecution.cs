@@ -1,4 +1,5 @@
-﻿using EtlManagerUtils;
+﻿using Dapper;
+using EtlManagerUtils;
 using Serilog;
 using System;
 using System.Data.SqlClient;
@@ -11,35 +12,22 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
+            (var powerBIServiceId, var groupId, var datasetId) = await sqlConnection.QueryFirstAsync<(Guid, string, string)>(
                 @"SELECT TOP 1 PowerBIServiceId, DatasetGroupId, DatasetId
                 FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var powerBIServiceId = reader["PowerBIServiceId"].ToString()!;
-                var groupId = reader["DatasetGroupId"].ToString()!;
-                var datasetId = reader["DatasetId"].ToString()!;
-                return new DatasetStepExecution(config, step, powerBIServiceId, groupId, datasetId);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                new { config.ExecutionId, step.StepId });
+            return new DatasetStepExecution(config, step, powerBIServiceId, groupId, datasetId);
         }
     }
 
     class DatasetStepExecution : StepExecutionBase
     {
-        private string PowerBIServiceId { get; init; }
+        private Guid PowerBIServiceId { get; init; }
         private string GroupId { get; init; }
         private string DatasetId { get; init; }
 
-        public DatasetStepExecution(ExecutionConfiguration configuration, Step step, string powerBIServiceId,
+        public DatasetStepExecution(ExecutionConfiguration configuration, Step step, Guid powerBIServiceId,
             string groupId, string datasetId) : base(configuration, step)
         {
             PowerBIServiceId = powerBIServiceId;

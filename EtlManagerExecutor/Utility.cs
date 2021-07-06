@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -13,21 +14,14 @@ namespace EtlManagerExecutor
     {
         public static async Task UpdateErrorMessageAsync(ExecutionConfiguration executionConfig, string errorMessage)
         {
-            using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
-            using var sqlCommand = new SqlCommand(
-                    @"UPDATE etlmanager.Execution
-                    SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
-                    WHERE ExecutionId = @ExecutionId"
-                    , sqlConnection)
-            {
-                CommandTimeout = 120 // two minutes
-            };
-            sqlCommand.Parameters.AddWithValue("@ErrorMessage", errorMessage);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", executionConfig.ExecutionId);
             try
             {
-                await sqlConnection.OpenAsync();
-                await sqlCommand.ExecuteNonQueryAsync();
+                using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
+                await sqlConnection.ExecuteAsync(
+                    @"UPDATE etlmanager.Execution
+                    SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                    WHERE ExecutionId = @ExecutionId",
+                    new { ErrorMessage = errorMessage, executionConfig.ExecutionId });
             }
             catch (Exception ex)
             {

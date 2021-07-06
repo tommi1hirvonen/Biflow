@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -14,32 +15,18 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
-                @"SELECT TOP 1
-                    TimeoutMinutes,
-                    ExeFileName,
-                    ExeArguments,
-                    ExeWorkingDirectory,
-                    ExeSuccessExitCode
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var fileName = reader["ExeFileName"].ToString()!;
-                var arguments = reader["ExeArguments"].ToString()!;
-                var workingDirectory = reader["ExeWorkingDirectory"].ToString()!;
-                var successExitCode = reader["ExeSuccessExitCode"] as int?;
-                var timeoutMinutes = (int)reader["TimeoutMinutes"];
-                return new ExeStepExecution(config, step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
+            (var fileName, var arguments, var workingDirectory, var successExitCode, var timeoutMinutes) =
+                await sqlConnection.QueryFirstAsync<(string, string, string, int?, int)>(
+                    @"SELECT TOP 1
+                        ExeFileName,
+                        ExeArguments,
+                        ExeWorkingDirectory,
+                        ExeSuccessExitCode,
+                        TimeoutMinutes
+                    FROM etlmanager.Execution with (nolock)
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                    new { config.ExecutionId, step.StepId });
+            return new ExeStepExecution(config, step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
         }
     }
 

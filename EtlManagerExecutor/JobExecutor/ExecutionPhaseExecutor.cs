@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -44,21 +45,11 @@ namespace EtlManagerExecutor
 
         private async Task<List<ExecutionPhaseStep>> ReadStepsAsync()
         {
-            var allSteps = new List<ExecutionPhaseStep>();
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-            await sqlConnection.OpenAsync();
-            using var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-            using var reader = sqlCommand.ExecuteReader();
-            while (await reader.ReadAsync())
-            {
-                var stepId = reader["StepId"].ToString()!;
-                var stepName = reader["StepName"].ToString()!;
-                var executionPhase = (int)reader["ExecutionPhase"];
-                var step = new ExecutionPhaseStep(stepId, stepName, executionPhase);
-                allSteps.Add(step);
-            }
-            return allSteps;
+            var steps = (await sqlConnection.QueryAsync<ExecutionPhaseStep>(
+                "SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
+                new { ExecutionConfig.ExecutionId })).ToList();
+            return steps;
         }
     }
 }

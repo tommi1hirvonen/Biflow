@@ -1,4 +1,5 @@
-﻿using EtlManagerUtils;
+﻿using Dapper;
+using EtlManagerUtils;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Serilog;
 using System;
@@ -15,38 +16,25 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
-                @"SELECT TOP 1 TimeoutMinutes, DataFactoryId, PipelineName
+            (var dataFactoryId, var pipelineName, var timeoutMinutes) = await sqlConnection.QueryFirstAsync<(Guid, string, int)>(
+                @"SELECT TOP 1 DataFactoryId, PipelineName, TimeoutMinutes
                 FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var dataFactoryId = reader["DataFactoryId"].ToString()!;
-                var pipelineName = reader["PipelineName"].ToString()!;
-                var timeoutMinutes = (int)reader["TimeoutMinutes"];
-                return new PipelineStepExecution(config, step, dataFactoryId, pipelineName, timeoutMinutes);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                new { config.ExecutionId, step.StepId });
+            return new PipelineStepExecution(config, step, dataFactoryId, pipelineName, timeoutMinutes);
         }
     }
 
     class PipelineStepExecution : StepExecutionBase
     {
-        private string DataFactoryId { get; init; }
+        private Guid DataFactoryId { get; init; }
         private DataFactoryHelper? DataFactoryHelper { get; set; }
         private string PipelineName { get; init; }
         private int TimeoutMinutes { get; init; }
 
         private const int MaxRefreshRetries = 3;
 
-        public PipelineStepExecution(ExecutionConfiguration configuration, Step step, string dataFactoryId, string pipelineName, int timeoutMinutes)
+        public PipelineStepExecution(ExecutionConfiguration configuration, Step step, Guid dataFactoryId, string pipelineName, int timeoutMinutes)
             : base(configuration, step)
         {
             DataFactoryId = dataFactoryId;
@@ -101,16 +89,11 @@ namespace EtlManagerExecutor
             try
             {
                 using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                await sqlConnection.OpenAsync(CancellationToken.None);
-                using var sqlCommand = new SqlCommand(
+                await sqlConnection.ExecuteAsync(
                     @"UPDATE etlmanager.Execution
                     SET PipelineRunId = @PipelineRunId
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex", sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-                sqlCommand.Parameters.AddWithValue("@StepId", Step.StepId);
-                sqlCommand.Parameters.AddWithValue("@RetryAttemptIndex", RetryAttemptCounter);
-                sqlCommand.Parameters.AddWithValue("@PipelineRunId", runId);
-                await sqlCommand.ExecuteNonQueryAsync(CancellationToken.None);
+                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex",
+                    new { Configuration.ExecutionId, Step.StepId, RetryAttemptIndex = RetryAttemptCounter, PipelineRunId = runId });
             }
             catch (Exception ex)
             {
@@ -159,27 +142,14 @@ namespace EtlManagerExecutor
 
         private async Task<Dictionary<string, object>> GetStepParameters()
         {
-            var parameters = new Dictionary<string, object>();
-
             using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-            using var paramsCommand = new SqlCommand(
+            var parameters = await sqlConnection.QueryAsync<(string, object)>(
                 @"SELECT ParameterName, ParameterValue
-                    FROM etlmanager.ExecutionParameter
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel = 'Pipeline'"
-                , sqlConnection);
-            paramsCommand.Parameters.AddWithValue("@StepId", Step.StepId);
-            paramsCommand.Parameters.AddWithValue("@ExecutionId", Configuration.ExecutionId);
-
-            await sqlConnection.OpenAsync();
-            using var reader = await paramsCommand.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var name = reader["ParameterName"].ToString()!;
-                object value = reader["ParameterValue"];
-                parameters[name] = value;
-            }
-
-            return parameters;
+                FROM etlmanager.ExecutionParameter
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel = 'Pipeline'",
+                new { Configuration.ExecutionId, Step.StepId });
+            var dictionary = parameters.ToDictionary(key => key.Item1, value => value.Item2);
+            return dictionary;
         }
 
         private async Task<PipelineRun> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)

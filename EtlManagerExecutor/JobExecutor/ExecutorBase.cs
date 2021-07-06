@@ -13,13 +13,13 @@ namespace EtlManagerExecutor
 {
     abstract class ExecutorBase
     {
-        public record CancelCommand(string StepId, string Username);
+        public record CancelCommand(Guid? StepId, string Username);
 
         protected ExecutionConfiguration ExecutionConfig { get; init; }
 
         private SemaphoreSlim Semaphore { get; init; }
 
-        protected Dictionary<string, CancellationTokenSource> CancellationTokenSources { get; } = new();
+        protected Dictionary<Guid, CancellationTokenSource> CancellationTokenSources { get; } = new();
 
         protected enum ExecutionStatus
         {
@@ -100,10 +100,11 @@ namespace EtlManagerExecutor
             }
             else if (input is not null)
             {
-                if (CancellationTokenSources.ContainsKey(input))
+                var stepId = Guid.Parse(input);
+                if (CancellationTokenSources.ContainsKey(stepId))
                 {
-                    CancellationTokenSources[input].Cancel();
-                    Console.WriteLine($"Canceled step {input}.");
+                    CancellationTokenSources[stepId].Cancel();
+                    Console.WriteLine($"Canceled step {stepId}.");
                 }
                 else
                 {
@@ -136,7 +137,7 @@ namespace EtlManagerExecutor
                     if (cancelCommand.StepId is not null)
                     {
                         // Cancel just one step
-                        CancellationTokenSources[cancelCommand.StepId].Cancel();
+                        CancellationTokenSources[(Guid)cancelCommand.StepId].Cancel();
                     }
                     else
                     {

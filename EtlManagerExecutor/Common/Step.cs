@@ -1,7 +1,9 @@
-﻿namespace EtlManagerExecutor
-{
-    public record Step(string StepId, string StepName);
+﻿using System;
 
-    public record ExecutionPhaseStep(string StepId, string StepName, int ExecutionPhase)
+namespace EtlManagerExecutor
+{
+    public record Step(Guid StepId, string StepName);
+
+    public record ExecutionPhaseStep(Guid StepId, string StepName, int ExecutionPhase)
         : Step(StepId, StepName);
 }

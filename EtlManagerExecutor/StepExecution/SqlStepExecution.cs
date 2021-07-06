@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -13,29 +14,15 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
+            (var sqlStatement, var connectionString, var timeoutMinutes) = await sqlConnection.QueryFirstAsync<(string, string, int)>(
                 @"SELECT TOP 1
                     SqlStatement,
                     ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
                     TimeoutMinutes
                 FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            stepDetailsCmd.Parameters.AddWithValue("@EncryptionPassword", config.EncryptionKey);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var sqlStatement = reader["SqlStatement"].ToString()!;
-                var connectionString = reader["ConnectionString"].ToString()!;
-                var timeoutMinutes = (int)reader["TimeoutMinutes"];
-                return new SqlStepExecution(config, step, sqlStatement, connectionString, timeoutMinutes);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                new { config.ExecutionId, step.StepId, EncryptionPassword = config.EncryptionKey });
+            return new SqlStepExecution(config, step, sqlStatement, connectionString, timeoutMinutes);
         }
     }
 
@@ -77,10 +64,17 @@ namespace EtlManagerExecutor
                 Log.Warning(ex, "{ExecutionId} {Step} SQL execution failed", Configuration.ExecutionId, Step);
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-                return new ExecutionResult.Failure(errorMessage, InfoMessageBuilder.ToString());
+                return new ExecutionResult.Failure(errorMessage, GetInfoMessage());
             }
 
-            return new ExecutionResult.Success(InfoMessageBuilder.ToString());
+            return new ExecutionResult.Success(GetInfoMessage());
+        }
+
+        private string? GetInfoMessage()
+        {
+            var infoMessage = InfoMessageBuilder.ToString();
+            infoMessage = string.IsNullOrEmpty(infoMessage) ? null : infoMessage;
+            return infoMessage;
         }
 
         private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)

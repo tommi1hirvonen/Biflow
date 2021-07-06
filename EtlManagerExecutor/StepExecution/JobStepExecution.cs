@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -17,33 +18,21 @@ namespace EtlManagerExecutor
     {
         public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
         {
-            using var stepDetailsCmd = new SqlCommand(
+            (var jobToExecuteId, var jobExecuteSynchronized) = await sqlConnection.QueryFirstAsync<(Guid, bool)>(
                 @"SELECT TOP 1 JobToExecuteId, JobExecuteSynchronized
                 FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection);
-            stepDetailsCmd.Parameters.AddWithValue("@ExecutionId", config.ExecutionId);
-            stepDetailsCmd.Parameters.AddWithValue("@StepId", step.StepId);
-            using var reader = await stepDetailsCmd.ExecuteReaderAsync(CancellationToken.None);
-            if (await reader.ReadAsync(CancellationToken.None))
-            {
-                var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
-                var jobExecuteSynchronized = (bool)reader["JobExecuteSynchronized"];
-                return new JobStepExecution(config, step, jobToExecuteId, jobExecuteSynchronized);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution details");
-            }
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                new { config.ExecutionId, step.StepId });
+            return new JobStepExecution(config, step, jobToExecuteId, jobExecuteSynchronized);
         }
     }
 
     class JobStepExecution : StepExecutionBase
     {
-        private string JobToExecuteId { get; init; }
+        private Guid JobToExecuteId { get; init; }
         private bool JobExecuteSynchronized { get; init; }
 
-        public JobStepExecution(ExecutionConfiguration configuration, Step step, string jobToExecuteId, bool jobExecuteSynchronized)
+        public JobStepExecution(ExecutionConfiguration configuration, Step step, Guid jobToExecuteId, bool jobExecuteSynchronized)
             : base(configuration, step)
         {
             JobToExecuteId = jobToExecuteId;
@@ -55,7 +44,7 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             Process executorProcess;
-            string jobExecutionId;
+            Guid jobExecutionId;
 
             using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
             {
@@ -63,9 +52,8 @@ namespace EtlManagerExecutor
 
                 try
                 {
-                    using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", sqlConnection);
-                    initCommand.Parameters.AddWithValue("@JobId_", JobToExecuteId);
-                    jobExecutionId = (await initCommand.ExecuteScalarAsync(CancellationToken.None)).ToString()!;
+                    jobExecutionId = await sqlConnection.ExecuteScalarAsync<Guid>(
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", new { JobId_ = JobToExecuteId });
                 }
                 catch (Exception ex)
                 {
@@ -117,10 +105,9 @@ namespace EtlManagerExecutor
                 try
                 {
                     using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                    await sqlConnection.OpenAsync(CancellationToken.None);
-                    using var sqlCommand = new SqlCommand("SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId", sqlConnection);
-                    sqlCommand.Parameters.AddWithValue("@ExecutionId", jobExecutionId);
-                    var status = (await sqlCommand.ExecuteScalarAsync(CancellationToken.None)).ToString();
+                    var status = await sqlConnection.ExecuteScalarAsync<string>(
+                        "SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId",
+                        new { ExecutionId = jobExecutionId });
                     return status switch
                     {
                         "SUCCEEDED" or "WARNING" => new ExecutionResult.Success(),
@@ -142,7 +129,7 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
-        private static async Task CancelAsync(string executionId, string username)
+        private static async Task CancelAsync(Guid executionId, string username)
         {
             // Connect to the pipe server set up by the executor process.
             using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer

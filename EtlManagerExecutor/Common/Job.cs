@@ -1,4 +1,6 @@
-﻿namespace EtlManagerExecutor
+﻿using System;
+
+namespace EtlManagerExecutor
 {
-    public record Job(string JobId, string JobName);        
+    public record Job(Guid JobId, string JobName);        
 }

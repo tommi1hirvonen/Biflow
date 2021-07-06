@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
@@ -16,7 +17,7 @@ namespace EtlManagerUtils
 {
     public class PowerBIServiceHelper
     {
-        public string PowerBIServiceId { get; init; }
+        public Guid PowerBIServiceId { get; init; }
         private string TenantId { get; init; }
         private string ClientId { get; init; }
         private string ClientSecret { get; init; }
@@ -28,7 +29,7 @@ namespace EtlManagerUtils
         private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
 
         private PowerBIServiceHelper(
-            string powerBIServiceId,
+            Guid powerBIServiceId,
             string tenantId,
             string clientId,
             string clientSecret,
@@ -99,15 +100,11 @@ namespace EtlManagerUtils
                 try
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
-                    await sqlConnection.OpenAsync();
-                    using var updateTokenCmd = new SqlCommand(
+                    await sqlConnection.ExecuteAsync(
                         @"UPDATE etlmanager.PowerBIService
-                    SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                    WHERE PowerBIServiceId = @PowerBIServiceId", sqlConnection);
-                    updateTokenCmd.Parameters.AddWithValue("@AccessToken", AccessToken);
-                    updateTokenCmd.Parameters.AddWithValue("@AccessTokenExpiresOn", AccessTokenExpiresOn);
-                    updateTokenCmd.Parameters.AddWithValue("@PowerBIServiceId", PowerBIServiceId);
-                    await updateTokenCmd.ExecuteNonQueryAsync();
+                        SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
+                        WHERE PowerBIServiceId = @PowerBIServiceId",
+                        new { AccessToken, AccessTokenExpiresOn, PowerBIServiceId });
                 }
                 catch (Exception ex)
                 {
@@ -123,7 +120,7 @@ namespace EtlManagerUtils
             return client;
         }
 
-        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IConfiguration configuration, string powerBIServiceId)
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IConfiguration configuration, Guid powerBIServiceId)
         {
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
             var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
@@ -131,28 +128,16 @@ namespace EtlManagerUtils
             return await GetPowerBIServiceHelperAsync(connectionString, powerBIServiceId, encryptionKey);
         }
 
-        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(string connectionString, string powerBIServiceId, string encryptionKey)
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(string connectionString, Guid powerBIServiceId, string encryptionKey)
         {
             using var sqlConnection = new SqlConnection(connectionString);
-            await sqlConnection.OpenAsync();
-            using var sqlCommand = new SqlCommand(
-                @"SELECT [TenantId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
-                        [AccessToken], [AccessTokenExpiresOn]
-                FROM etlmanager.PowerBIService
-                WHERE PowerBIServiceId = @PowerBIServiceId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@PowerBIServiceId", powerBIServiceId);
-            sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
-
-            using var reader = await sqlCommand.ExecuteReaderAsync();
-            await reader.ReadAsync();
-
-            string tenantId = reader["TenantId"].ToString()!;
-            string clientId = reader["ClientId"].ToString()!;
-            string clientSecret = reader["ClientSecret"].ToString()!;
-            string? accessToken = null;
-            DateTime? accessTokenExpiresOn = null;
-            if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
-            if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
+            (var tenantId, var clientId, var clientSecret, var accessToken, var accessTokenExpiresOn) =
+                await sqlConnection.QueryFirstAsync<(string, string, string, string?, DateTime?)>(
+                    @"SELECT [TenantId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
+                            [AccessToken], [AccessTokenExpiresOn]
+                    FROM etlmanager.PowerBIService
+                    WHERE PowerBIServiceId = @PowerBIServiceId",
+                    new { PowerBIServiceId = powerBIServiceId, EncryptionKey = encryptionKey });
 
             return new PowerBIServiceHelper(
                 powerBIServiceId: powerBIServiceId,

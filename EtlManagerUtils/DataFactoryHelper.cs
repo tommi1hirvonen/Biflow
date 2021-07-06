@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Management.DataFactory;
+﻿using Dapper;
+using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
@@ -16,7 +17,7 @@ namespace EtlManagerUtils
 {
     public class DataFactoryHelper
     {
-        public string DataFactoryId { get; init; }
+        public Guid DataFactoryId { get; init; }
         private string TenantId { get; init; }
         private string SubscriptionId { get; init; }
         private string ResourceGroupName { get; init; }
@@ -31,7 +32,7 @@ namespace EtlManagerUtils
         private const string ResourceUrl = "https://management.azure.com/";
 
         private DataFactoryHelper(
-            string dataFactoryId,
+            Guid dataFactoryId,
             string tenantId,
             string subscriptionId,
             string resourceGroupName,
@@ -112,15 +113,11 @@ namespace EtlManagerUtils
                 try
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
-                    await sqlConnection.OpenAsync();
-                    using var updateTokenCmd = new SqlCommand(
+                    await sqlConnection.ExecuteAsync(
                         @"UPDATE etlmanager.DataFactory
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE DataFactoryId = @DataFactoryId", sqlConnection);
-                    updateTokenCmd.Parameters.AddWithValue("@AccessToken", AccessToken);
-                    updateTokenCmd.Parameters.AddWithValue("@AccessTokenExpiresOn", AccessTokenExpiresOn);
-                    updateTokenCmd.Parameters.AddWithValue("@DataFactoryId", DataFactoryId);
-                    await updateTokenCmd.ExecuteNonQueryAsync();
+                        WHERE DataFactoryId = @DataFactoryId",
+                        new { AccessToken, AccessTokenExpiresOn, DataFactoryId });
                 }
                 catch (Exception ex)
                 {
@@ -136,7 +133,7 @@ namespace EtlManagerUtils
             return client;
         }
 
-        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IConfiguration configuration, string dataFactoryId)
+        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IConfiguration configuration, Guid dataFactoryId)
         {
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
             var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
@@ -144,31 +141,17 @@ namespace EtlManagerUtils
             return await GetDataFactoryHelperAsync(connectionString, dataFactoryId, encryptionKey);
         }
 
-        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(string connectionString, string dataFactoryId, string encryptionKey)
+        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(string connectionString, Guid dataFactoryId, string encryptionKey)
         {
             using var sqlConnection = new SqlConnection(connectionString);
-            await sqlConnection.OpenAsync();
-            using var sqlCommand = new SqlCommand(
-                @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
-                        [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
-                FROM etlmanager.DataFactory
-                WHERE DataFactoryId = @DataFactoryId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@DataFactoryId", dataFactoryId);
-            sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
-
-            using var reader = await sqlCommand.ExecuteReaderAsync();
-            await reader.ReadAsync();
-
-            string tenantId = reader["TenantId"].ToString()!;
-            string subscriptionId = reader["SubscriptionId"].ToString()!;
-            string resourceGroupName = reader["ResourceGroupName"].ToString()!;
-            string resourceName = reader["ResourceName"].ToString()!;
-            string clientId = reader["ClientId"].ToString()!;
-            string clientSecret = reader["ClientSecret"].ToString()!;
-            string? accessToken = null;
-            DateTime? accessTokenExpiresOn = null;
-            if (reader["AccessToken"] != DBNull.Value) accessToken = reader["AccessToken"].ToString();
-            if (reader["AccessTokenExpiresOn"] != DBNull.Value) accessTokenExpiresOn = (DateTime)reader["AccessTokenExpiresOn"];
+            (var tenantId, var subscriptionId, var clientId, var clientSecret,
+                var resourceGroupName, var resourceName, var accessToken, var accessTokenExpiresOn) =
+                await sqlConnection.QueryFirstAsync<(string, string, string, string, string, string, string?, DateTime?)>(
+                    @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
+                            [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
+                    FROM etlmanager.DataFactory
+                    WHERE DataFactoryId = @DataFactoryId",
+                    new { DataFactoryId = dataFactoryId, EncryptionKey = encryptionKey });
 
             return new DataFactoryHelper(
                 dataFactoryId: dataFactoryId,

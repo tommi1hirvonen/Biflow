@@ -1,4 +1,5 @@
-﻿using EtlManagerUtils;
+﻿using Dapper;
+using EtlManagerUtils;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
@@ -44,7 +45,6 @@ namespace EtlManagerExecutor
 
             using (var sqlConnection = new SqlConnection(connectionString))
             {
-                await sqlConnection.OpenAsync();
                 try
                 {
                     await UpdateExecutorProcessIdAsync(executionId, sqlConnection);
@@ -118,34 +118,19 @@ namespace EtlManagerExecutor
         {
             // Update this Executor process's PID for the execution.
             var process = Process.GetCurrentProcess();
-            using var processIdCmd = new SqlCommand("UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId", sqlConnection);
-            processIdCmd.Parameters.AddWithValue("@ProcessId", process.Id);
-            processIdCmd.Parameters.AddWithValue("@ExecutionId", executionId);
-            await processIdCmd.ExecuteNonQueryAsync();
+            await sqlConnection.ExecuteAsync(
+                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId",
+                new { ProcessId = process.Id, ExecutionId = executionId });
         }
 
         private static async Task<(Job Job, bool DependencyMode)> GetExecutionDetailsAsync(string executionId, SqlConnection sqlConnection)
         {
             // Get execution details.
-            using var detailsCommand = new SqlCommand(@"SELECT TOP 1 DependencyMode, JobId, JobName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            detailsCommand.Parameters.AddWithValue("@ExecutionId", executionId);
-            using var reader = await detailsCommand.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                // Get whether the execution should be run in dependency mode or in execution phase mode.
-                var dependencyMode = (bool)reader["DependencyMode"];
-
-                // Get job details for the execution.
-                var jobId = reader["JobId"].ToString()!;
-                var jobName = reader["JobName"].ToString()!;
-                var job = new Job(jobId, jobName);
-
-                return (job, dependencyMode);
-            }
-            else
-            {
-                throw new InvalidOperationException($"No execution was initialized with the given execution id {executionId}");
-            }
+            (var dependencymode, var jobId, var jobName) = await sqlConnection.QueryFirstAsync<(bool, Guid, string)>(
+                "SELECT TOP 1 DependencyMode, JobId, JobName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
+                new { ExecutionId = executionId });
+            var job = new Job(jobId, jobName);
+            return (job, dependencymode);
         }
 
         /// <summary>
@@ -171,9 +156,8 @@ namespace EtlManagerExecutor
 
         private static async Task<Dictionary<Job, List<Job>>> ReadDependenciesAsync(string connectionString)
         {
-            var dependencies = new Dictionary<Job, List<Job>>();
             using var sqlConnection = new SqlConnection(connectionString);
-            using var sqlCommand = new SqlCommand(
+            var rows = (await sqlConnection.QueryAsync<(Guid, string, Guid, string)>(
                 @"SELECT
                     a.JobId,
                     b.JobName,
@@ -182,29 +166,11 @@ namespace EtlManagerExecutor
                 FROM etlmanager.Step AS a
                     INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
                     INNER JOIN etlmanager.Job AS c ON a.JobToExecuteId = c.JobId
-                WHERE a.StepType = 'JOB'"
-                , sqlConnection)
-            {
-                CommandTimeout = 120 // two minutes
-            };
-
-            await sqlConnection.OpenAsync();
-            using var reader = await sqlCommand.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var jobId = reader["JobId"].ToString()!;
-                var jobName = reader["JobName"].ToString()!;
-                var jobToExecuteId = reader["JobToExecuteId"].ToString()!;
-                var jobToExecuteName = reader["JobToExecuteName"].ToString()!;
-
-                var job = new Job(jobId, jobName);
-                var jobToExecute = new Job(jobToExecuteId, jobToExecuteName);
-
-                if (!dependencies.ContainsKey(job))
-                    dependencies[job] = new();
-
-                dependencies[job].Add(jobToExecute);
-            }
+                WHERE a.StepType = 'JOB'")).ToList();
+            var jobs = rows.Select(row => (new Job(row.Item1, row.Item2), new Job(row.Item3, row.Item4))).ToList();
+            var dependencies = jobs
+                .GroupBy(key => key.Item1, element => element.Item2)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
             return dependencies;
         }
 

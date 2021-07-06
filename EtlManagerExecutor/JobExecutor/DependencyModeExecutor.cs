@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Dapper;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -21,13 +22,13 @@ namespace EtlManagerExecutor
         public override async Task RunAsync()
         {
             // List of steps, their dependency steps and whether it's a strict dependency or not.
-            Dictionary<Step, HashSet<KeyValuePair<Step, bool>>> stepDependencies;
+            Dictionary<Step, HashSet<(Step, bool)>> stepDependencies;
             try
             {
                 stepDependencies = await GetStepDependenciesAsync();
 
                 // Find circular step dependencies which are not allowed since they would block each other's executions.
-                List<List<Step>> cycles = stepDependencies.ToDictionary(pair => pair.Key, pair => pair.Value.Select(dep => dep.Key)).FindCycles();
+                List<List<Step>> cycles = stepDependencies.ToDictionary(pair => pair.Key, pair => pair.Value.Select(dep => dep.Item1)).FindCycles();
 
                 // If there are circular dependencies, update error message for all steps and cancel execution.
                 if (cycles.Count > 0)
@@ -72,7 +73,7 @@ namespace EtlManagerExecutor
             await Task.WhenAll(StepWorkers);
         }
 
-        private async Task DoRoundAsync(Dictionary<Step, HashSet<KeyValuePair<Step, bool>>> stepDependencies)
+        private async Task DoRoundAsync(Dictionary<Step, HashSet<(Step, bool)>> stepDependencies)
         {
             var unstartedSteps = StepStatuses.Where(step => step.Value == ExecutionStatus.NotStarted).Select(step => step.Key);
             foreach (var step in unstartedSteps)
@@ -104,13 +105,13 @@ namespace EtlManagerExecutor
             }
         }
 
-        private StepAction GetStepAction(Dictionary<Step, HashSet<KeyValuePair<Step, bool>>> stepDependencies, Step step)
+        private StepAction GetStepAction(Dictionary<Step, HashSet<(Step, bool)>> stepDependencies, Step step)
         {
             // Step has dependencies
             if (stepDependencies.ContainsKey(step))
             {
-                HashSet<KeyValuePair<Step, bool>> dependencies = stepDependencies[step];
-                IEnumerable<Step> strictDependencies = dependencies.Where(dep => dep.Value).Select(dep => dep.Key);
+                HashSet<(Step, bool)> dependencies = stepDependencies[step];
+                IEnumerable<Step> strictDependencies = dependencies.Where(dep => dep.Item2).Select(dep => dep.Item1);
 
                 // If there are any strict dependencies, which have been marked as failed, skip this step.
                 if (strictDependencies.Any(dep => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == dep)))
@@ -120,8 +121,8 @@ namespace EtlManagerExecutor
 
                 // If the steps dependencies have been completed (success or failure), the step can be executed.
                 // Also check if the dependency is actually included in the execution. If not, the step can be started.
-                else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Key) ||
-                StepStatuses[dep.Key] == ExecutionStatus.Success || StepStatuses[dep.Key] == ExecutionStatus.Failed))
+                else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Item1) ||
+                StepStatuses[dep.Item1] == ExecutionStatus.Success || StepStatuses[dep.Item1] == ExecutionStatus.Failed))
                 {
                     return StepAction.Execute;
                 }
@@ -139,85 +140,51 @@ namespace EtlManagerExecutor
         private async Task UpdateStepAsSkipped(Step step)
         {
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-            await sqlConnection.OpenAsync();
-            using var skipUpdateCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"UPDATE etlmanager.Execution
-                        SET ExecutionStatus = 'SKIPPED',
-                        StartDateTime = GETDATE(), EndDateTime = GETDATE()
-                        WHERE ExecutionId = @ExecutionId AND StepId = @StepId"
-                , sqlConnection)
-            {
-                CommandTimeout = 120 // two minutes
-            };
-            skipUpdateCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-            skipUpdateCommand.Parameters.AddWithValue("@StepId", step.StepId);
-            await skipUpdateCommand.ExecuteNonQueryAsync();
+                SET ExecutionStatus = 'SKIPPED',
+                StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
+                new { ExecutionConfig.ExecutionId, step.StepId });
         }
 
         private async Task<List<Step>> ReadStepsAsync()
         {
-            var allSteps = new List<Step>();
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-            await sqlConnection.OpenAsync();
-            using var sqlCommand = new SqlCommand("SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-            using var reader = sqlCommand.ExecuteReader();
-            while (await reader.ReadAsync())
-            {
-                var stepId = reader["StepId"].ToString()!;
-                var stepName = reader["StepName"].ToString()!;
-                var step = new Step(stepId, stepName);
-                allSteps.Add(step);
-            }
-            return allSteps;
+            var steps = await sqlConnection.QueryAsync<Step>(
+                "SELECT DISTINCT StepId, StepName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
+                new { ExecutionConfig.ExecutionId });
+            return steps.ToList();
         }
 
         // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
-        private async Task<Dictionary<Step, HashSet<KeyValuePair<Step, bool>>>> GetStepDependenciesAsync()
+        private async Task<Dictionary<Step, HashSet<(Step, bool)>>> GetStepDependenciesAsync()
         {
             using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
             // Get a list of dependencies for this execution. Only include steps selected for execution in the check (inner join to Execution table).
-            using var sqlCommand = new SqlCommand(
-                    @"SELECT
-                        a.StepId,
-                        b.StepName,
-                        a.DependantOnStepId,
-                        c.StepName as DependantOnStepName,
-                        a.StrictDependency
-                    FROM etlmanager.Dependency AS a
-                        INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
-                        INNER JOIN etlmanager.Step AS c ON a.DependantOnStepId = c.StepId
-                        INNER JOIN etlmanager.Execution AS d ON a.StepId = d.StepId AND d.ExecutionId = @ExecutionId AND d.RetryAttemptIndex = 0
-                        INNER JOIN etlmanager.Execution AS e ON a.DependantOnStepId = e.StepId AND e.ExecutionId = @ExecutionId AND e.RetryAttemptIndex = 0
-                    WHERE b.JobId = @JobId"
-                    , sqlConnection)
-            {
-                CommandTimeout = 120 // two minutes
-            };
-            sqlCommand.Parameters.AddWithValue("@JobId", ExecutionConfig.Job.JobId);
-            sqlCommand.Parameters.AddWithValue("@ExecutionId", ExecutionConfig.ExecutionId);
-            var dependencies = new Dictionary<Step, HashSet<KeyValuePair<Step, bool>>>();
-            await sqlConnection.OpenAsync();
-            using (var reader = await sqlCommand.ExecuteReaderAsync())
-            {
-                while (await reader.ReadAsync())
-                {
-                    var stepId = reader["StepId"].ToString()!;
-                    var stepName = reader["StepName"].ToString()!;
-                    var dependencyStepId = reader["DependantOnStepId"].ToString()!;
-                    var dependencyStepName = reader["DependantOnStepName"].ToString()!;
-                    var strict = (bool)reader["StrictDependency"];
+            var rows = await sqlConnection.QueryAsync<(Guid StepId, string StepName, Guid DependantOnStepId, string DependantOnStepName, bool StrictDependency)>(
+                @"SELECT
+                    a.StepId,
+                    b.StepName,
+                    a.DependantOnStepId,
+                    c.StepName as DependantOnStepName,
+                    a.StrictDependency
+                FROM etlmanager.Dependency AS a
+                    INNER JOIN etlmanager.Step AS b ON a.StepId = b.StepId
+                    INNER JOIN etlmanager.Step AS c ON a.DependantOnStepId = c.StepId
+                    INNER JOIN etlmanager.Execution AS d ON a.StepId = d.StepId AND d.ExecutionId = @ExecutionId AND d.RetryAttemptIndex = 0
+                    INNER JOIN etlmanager.Execution AS e ON a.DependantOnStepId = e.StepId AND e.ExecutionId = @ExecutionId AND e.RetryAttemptIndex = 0
+                WHERE b.JobId = @JobId",
+                new { ExecutionConfig.Job.JobId, ExecutionConfig.ExecutionId });
+            
+            var steps = rows.Select(row => (
+            Step: new Step(row.StepId, row.StepName),
+            DependantOnStep: new Step(row.DependantOnStepId, row.DependantOnStepName),
+            row.StrictDependency)).ToList();
 
-                    var step = new Step(stepId, stepName);
-                    var dependencyStep = new Step(dependencyStepId, dependencyStepName);
-
-                    if (!dependencies.ContainsKey(step))
-                        dependencies[step] = new();
-
-                    dependencies[step].Add(new(dependencyStep, strict));
-                }
-            }
-
+            var dependencies = steps
+                .GroupBy(key => key.Step, element => (element.DependantOnStep, element.StrictDependency))
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToHashSet());
             return dependencies;
         }
 

@@ -1,9 +1,11 @@
-﻿using EtlManagerExecutor.Notification;
+﻿using Dapper;
+using EtlManagerExecutor.Notification;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
@@ -15,24 +17,17 @@ namespace EtlManagerExecutor
         public static void SendNotification(IConfiguration configuration, string executionId)
         {
             using var sqlConnection = new SqlConnection(configuration.GetValue<string>("EtlManagerConnectionString"));
-            sqlConnection.Open();
 
-            string jobId = string.Empty;
-            string jobName = string.Empty;
-            string jobStatus = string.Empty;
+            Guid jobId;
+            string jobName;
+            string jobStatus;
             try
             {
-                using var jobInfoCmd = new SqlCommand(
+                (jobId, jobName, jobStatus) = sqlConnection.QueryFirst<(Guid, string, string)>(
                     @"SELECT JobId, JobName, ExecutionStatus
                     FROM etlmanager.vExecutionJob
-                    WHERE ExecutionId = @ExecutionId"
-                    , sqlConnection);
-                jobInfoCmd.Parameters.AddWithValue("ExecutionId", executionId);
-                using var reader = jobInfoCmd.ExecuteReader();
-                reader.Read();
-                jobId = reader["JobId"].ToString()!;
-                jobName = reader["JobName"].ToString()!;
-                jobStatus = reader["ExecutionStatus"].ToString()!;
+                    WHERE ExecutionId = @ExecutionId",
+                    new { ExecutionId = executionId });
             }
             catch (Exception ex)
             {
@@ -40,47 +35,38 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            string subscriptionTypeFilter = jobStatus switch
+            var subscriptionTypeFilter = jobStatus switch
             {
-                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" => "'FAILURE', 'COMPLETION'",
-                "SUCCEEDED" or "WARNING" => "'SUCCESS', 'COMPLETION'",
-                _ => "'COMPLETION'"
+                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" => new string[] { "FAILURE", "COMPLETION" },
+                "SUCCEEDED" or "WARNING" => new string[] { "SUCCESS", "COMPLETION" },
+                _ => new string[] { "COMPLETION" }
             };
 
-            var recipients = new List<string>();
+            List<string> recipients;
             try
             {
-                using var recipientsCmd = new SqlCommand(
-                    "SELECT DISTINCT B.[Email] \n" +
-                    "FROM [etlmanager].[Subscription] AS A \n" +
-                        "INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username] \n" +
-                    $"WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL AND A.[SubscriptionType] IN ({subscriptionTypeFilter})"
-                    , sqlConnection);
-                recipientsCmd.Parameters.AddWithValue("@JobId", jobId);
-                using var reader = recipientsCmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    var recipient = reader[0].ToString();
-                    if (recipient is not null)
-                        recipients.Add(recipient);
-                }
+                recipients = sqlConnection.Query<string>(
+                    @"SELECT DISTINCT B.[Email]
+                    FROM [etlmanager].[Subscription] AS A
+                        INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username]
+                    WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL AND A.[SubscriptionType] IN @SubscriptionTypeFilter",
+                    new { JobId = jobId, SubscriptionTypeFilter = subscriptionTypeFilter }).ToList();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "{executionId} Error getting recipients for notification", executionId);
-            }
-
-            if (recipients.Count == 0)
-            {
                 return;
             }
+
+            if (!recipients.Any())
+                return;
 
             string messageBody = string.Empty;
             try
             {
-                using var messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
-                messageBodyCmd.Parameters.AddWithValue("ExecutionId", executionId);
-                messageBody = messageBodyCmd.ExecuteScalar().ToString() ?? string.Empty;
+                messageBody = sqlConnection.ExecuteScalar<string?>(
+                    "EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId",
+                    new { ExecutionId = executionId }) ?? string.Empty;
             }
             catch (Exception ex)
             {
