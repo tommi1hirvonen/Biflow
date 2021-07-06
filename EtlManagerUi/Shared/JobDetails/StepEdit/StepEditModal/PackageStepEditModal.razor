@@ -2,226 +2,122 @@
 @implements IStepEditModal
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
-    @if (Step is not null && Connections is not null)
-    {
-        <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
-        <BSModalBody>
-            <div class="row">
-                <div class="col mx-3">
-                    <BSForm id="package_step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
-
-                        <BSButtonGroup Size="Size.Small" Class="mb-3">
-                            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
-                                      @onclick="() => ShowDependencies = false">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
-                                Settings
-                            </BSButton>
-                            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowDependencies ? "active" : null)"
-                                      @onclick="() => ShowDependencies = true">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
-                                Dependencies
-                            </BSButton>
-                        </BSButtonGroup>
-
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-
-                        @if (ShowDependencies)
-                        {
-                            @if (Steps is not null)
-                            {
-                                <DependenciesEditComponent Step="Step" Steps="Steps" />
-                            }
-                        }
-                        else
-                        {
-                            <BSFormRow>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Step name</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
-                                            </div>
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Step.StepName"></InputText>
-                                    </div>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <BSFormGroup>
-                                <BSLabel>Description</BSLabel>
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/book-open.svg")))
-                                        </div>
-                                    </div>
-                                    <InputTextArea class="form-control" @bind-Value="Step.StepDescription" rows="2"></InputTextArea>
-                                </div>
-                            </BSFormGroup>
-                            <BSFormRow>
-                                <BSFormRow>
-                                    <BSFormGroup Class="col">
-                                        <BSLabel>Execution phase</BSLabel>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <div class="input-group-text">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
-                                                </div>
-                                            </div>
-                                            <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
-                                        </div>
-                                    </BSFormGroup>
-                                    <BSFormGroup Class="col">
-                                        <BSLabel>Retry attempts</BSLabel>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <div class="input-group-text">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
-                                                </div>
-                                            </div>
-                                            <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
-                                        </div>
-                                    </BSFormGroup>
-                                    <BSFormGroup Class="col">
-                                        <BSLabel>Retry interval (min)</BSLabel>
-                                        <div class="input-group">
-                                            <div class="input-group-prepend">
-                                                <div class="input-group-text">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
-                                                </div>
-                                            </div>
-                                            <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
-                                        </div>
-                                    </BSFormGroup>
-                                </BSFormRow>
-                            </BSFormRow>
-                            <BSFormRow>
-                                <BSFormGroup Class="col-lg-6">
-                                    <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
-                                            </div>
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
-                                    </div>
-                                </BSFormGroup>
-                                <BSFormGroup Class="col-lg-6">
-                                    <BSLabel>Connection</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
-                                            </div>
-                                        </div>
-                                        <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
-                                            @foreach (var connection in Connections)
-                                                    {
-                                                <option value="@connection.ConnectionId">@connection.ConnectionName</option>
-                                                    }
-                                        </InputSelect>
-                                    </div>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <BSFormRow>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Folder name</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
-                                            </div>
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="ResetStepError"></InputText>
-                                    </div>
-                                </BSFormGroup>
-                                <BSFormGroup Class="col-lg">
-                                    <BSLabel>Project name</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
-                                            </div>
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Step.PackageProjectName" @oninput="ResetStepError"></InputText>
-                                    </div>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <BSFormRow>
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Package name</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                                            </div>
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Step.PackageName" @oninput="ResetStepError"></InputText>
-                                    </div>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <div class="row mb-3">
-                                <div class="col">
-                                    <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenPackageSelectModal">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
-                                        Browse catalog
-                                    </BSButton>
-                                </div>
-                            </div>
-                            <PackageSelectModal @ref="PackageSelectModal" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
-                            <BSFormRow>
-                                <div class="col">
-                                    <div class="custom-control custom-checkbox custom-control-inline">
-                                        <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode"
-                                               checked=@Step.ExecuteIn32BitMode
-                                               @bind-value="Step.ExecuteIn32BitMode">
-                                        <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
-                                    </div>
-                                </div>
-                            </BSFormRow>
-                            <BSFormRow Class="mt-2">
-                                <BSFormGroup Class="col">
-                                    <BSLabel>Execute as login (blank = no impersonation)</BSLabel>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
-                                            </div>
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="ResetStepError"></InputText>
-                                    </div>
-                                </BSFormGroup>
-                            </BSFormRow>
-                            <p class="text-danger">@StepError</p>
-                            <ParameterEditComponent Step="Step" />
-                        }
-
-                    </BSForm>
+<StepEditModalBase @ref="Modal"
+                   Job="Job"
+                   Steps="Steps"
+                   Step="Step"
+                   Context="Context"
+                   StepValidityCheck="StepValidityCheck"
+                   ResetDeletedEntities="ResetDeletedEntities"
+                   ResetAddedEntities="ResetAddedEntities"
+                   OnStepSubmit="OnStepSubmit">
+    <BSFormRow>
+        <BSFormGroup Class="col-lg-6">
+            <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                    </div>
                 </div>
+                <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
-        </BSModalBody>
-        <BSModalFooter>
-            <BSButton ButtonType="ButtonType.Submit" form="package_step_edit_form" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
-            <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-        </BSModalFooter>
-    }
-</BSModal>
-
+        </BSFormGroup>
+        <BSFormGroup Class="col-lg-6">
+            <BSLabel>Connection</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                    </div>
+                </div>
+                <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
+                    @foreach (var connection in Connections ?? Enumerable.Empty<Connection>())
+                    {
+                        <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                    }
+                </InputSelect>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <BSFormRow>
+        <BSFormGroup Class="col">
+            <BSLabel>Folder name</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="Modal.ResetStepError"></InputText>
+            </div>
+        </BSFormGroup>
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Project name</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.PackageProjectName" @oninput="Modal.ResetStepError"></InputText>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <BSFormRow>
+        <BSFormGroup Class="col">
+            <BSLabel>Package name</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.PackageName" @oninput="Modal.ResetStepError"></InputText>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <div class="row mb-3">
+        <div class="col">
+            <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenPackageSelectModal">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                Browse catalog
+            </BSButton>
+        </div>
+    </div>
+    <PackageSelectModal @ref="PackageSelectModal" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
+    <BSFormRow>
+        <div class="col">
+            <div class="custom-control custom-checkbox custom-control-inline">
+                <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode"
+                       checked=@Step.ExecuteIn32BitMode
+                       @bind-value="Step.ExecuteIn32BitMode">
+                <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+            </div>
+        </div>
+    </BSFormRow>
+    <BSFormRow Class="mt-2">
+        <BSFormGroup Class="col">
+            <BSLabel>Execute as login (blank = no impersonation)</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="Modal.ResetStepError"></InputText>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <ParameterEditComponent Step="Step" />
+</StepEditModalBase>
 
 
 @code {
-    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
-    private EtlManagerContext Context { get; set; } = null!;
 
     [Parameter]
     public Guid StepId { get; set; } // empty Guid => new step
-
-    private Guid PrevStepId { get; set; }
 
     [Parameter]
     public Job? Job { get; set; }
@@ -229,23 +125,24 @@
     [Parameter]
     public IList<Step>? Steps { get; set; }
 
-    private PackageStep Step { get; set; } = new();
-
     [Parameter]
     public IList<Connection>? Connections { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
-    private BSModal Modal { get; set; } = null!;
+    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
+    private EtlManagerContext Context { get; set; } = null!;
 
-    private string StepError { get; set; } = string.Empty;
+    private Guid PrevStepId { get; set; }
+
+    private PackageStep Step { get; set; } = null!;
+
+    private StepEditModalBase Modal { get; set; } = null!;
 
     private PackageSelectModal PackageSelectModal { get; set; } = null!;
 
-    private bool ShowDependencies { get; set; } = false;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Context = DbFactory.CreateDbContext();
     }
@@ -284,117 +181,61 @@
         StateHasChanged();
     }
 
-    private void ResetStepError()
+    private void ResetDeletedEntities(EntityEntry entity)
     {
-        StepError = string.Empty;
-    }
-
-    private void IsModalOpenChanged(bool isOpen)
-    {
-        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
-        // If the user saves their changes, SubmitStep() is called first and changes are saved.
-        if (!isOpen)
+        if (entity.Entity is PackageParameter packageParam)
         {
-            // Reset added entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
-            {
-                if (entity.Entity is Dependency dependency)
-                {
-                    if (Step.Dependencies.Contains(dependency))
-                        Step.Dependencies.Remove(dependency);
-                }
-                else if (entity.Entity is PackageParameter packageParam)
-                {
-                    if (Step.PackageParameters.Contains(packageParam))
-                        Step.PackageParameters.Remove(packageParam);
-                }
-                entity.State = EntityState.Detached;
-            }
-
-            // Reset deleted entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
-            {
-                if (entity.Entity is Dependency dependency)
-                {
-                    if (!Step.Dependencies.Contains(dependency))
-                        Step.Dependencies.Add(dependency);
-                }
-                else if (entity.Entity is PackageParameter packageParam)
-                {
-                    if (!Step.PackageParameters.Contains(packageParam))
-                        Step.PackageParameters.Add(packageParam);
-                }
-                entity.State = EntityState.Unchanged;
-            }
-
-            // Reset changed entities.
-            Context.ChangeTracker
-                .Entries()
-                .Where(e => e.Entity is not null)
-                .ToList()
-                .ForEach(e => e.State = EntityState.Unchanged);
+            if (!Step.PackageParameters.Contains(packageParam))
+                Step.PackageParameters.Add(packageParam);
         }
     }
 
-    private async Task SubmitStep()
+    private void ResetAddedEntities(EntityEntry entity)
     {
-        StepError = string.Empty;
-
-        // Check various requirements based on step type.
-        if (string.IsNullOrEmpty(Step.PackageFolderName) || string.IsNullOrEmpty(Step.PackageProjectName) || string.IsNullOrEmpty(Step.PackageName)
-            || Step.ConnectionId is null)
+        if (entity.Entity is PackageParameter packageParam)
         {
-            StepError = "Connection, folder, project and package names cannot be empty";
-            return;
+            if (Step.PackageParameters.Contains(packageParam))
+                Step.PackageParameters.Remove(packageParam);
         }
+    }
 
-        if (!ParametersCheck())
+    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
+    {
+        if (step is PackageStep package)
         {
-            return;
-        }
-
-        foreach (var param in Step.PackageParameters)
-        {
-            param.SetParameterValue();
-        }
-
-        // Save changes.
-        try
-        {
-            // Existing step
-            if (Step.StepId != Guid.Empty)
+            (var paramResult, var paramMessage) = ParametersCheck();
+            if (string.IsNullOrEmpty(package.PackageFolderName) || string.IsNullOrEmpty(package.PackageProjectName) || string.IsNullOrEmpty(package.PackageName)
+            || package.ConnectionId is null)
             {
-                Context.Attach(Step).State = EntityState.Modified;
+                return (false, "Connection, folder, project and package names cannot be empty");
             }
-            // New step
+            else if (!paramResult)
+            {
+                return (false, paramMessage);
+            }
             else
             {
-                Context.Steps.Add(Step);
+                foreach (var param in package.PackageParameters)
+                {
+                    param.SetParameterValue();
+                }
+                return (true, null);
             }
-            await Context.SaveChangesAsync();
-
-            await OnStepSubmit.InvokeAsync(Step);
-            Modal.Hide();
         }
-        catch (DbUpdateConcurrencyException)
+        else
         {
-            await JS.InvokeVoidAsync("alert", "Concurrency error: the step has been modified outside of this session. Reload the page to view the most recent settings.");
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"Error adding/editing step: {ex.Message}\n{ex.InnerException?.Message}");
+            return (false, "Not PackageStep");
         }
     }
 
-    private bool ParametersCheck()
+    private (bool Result, string? Message) ParametersCheck()
     {
-        var parameters = Step.PackageParameters.OrderBy(param => param.ParameterName).ThenBy(param => param.ParameterLevel).ToList();
+        var parameters = Step.PackageParameters.OrderBy(param => param.ParameterName).ToList();
         foreach (var param in parameters)
         {
             if (string.IsNullOrEmpty(param.ParameterName))
             {
-                StepError = "Parameter name cannot be empty";
-                return false;
+                return (false, "Parameter name cannot be empty");
             }
         }
         for (var i = 0; i < parameters.Count - 1; i++)
@@ -402,18 +243,14 @@
             if (parameters[i + 1].ParameterName == parameters[i].ParameterName
                 && parameters[i + 1].ParameterLevel == parameters[i].ParameterLevel)
             {
-                StepError = "Duplicate parameter names";
-                return false;
+                return (false, "Duplicate parameter names");
             }
         }
 
-        return true;
+        return (true, null);
     }
 
-    private void OpenPackageSelectModal()
-    {
-        PackageSelectModal.Show();
-    }
+    private void OpenPackageSelectModal()=> PackageSelectModal.Show();
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {
@@ -422,13 +259,8 @@
         Step.PackageName = package.Package;
     }
 
-    public void Show()
-    {
-        Modal.Show();
-    }
+    public void Show()=> Modal.Show();
 
-    public void Dispose()
-    {
-        Context?.Dispose();
-    }
+    public void Dispose() => Context?.Dispose();
+
 }

@@ -1,0 +1,236 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="IsModalOpenChanged">
+    @if (Step is not null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(Step.StepId == Guid.Empty ? "New step" : "Edit " + Step.StepName)</BSModalHeader>
+        <BSModalBody>
+            <div class="row">
+                <div class="col mx-3">
+                    <BSForm id="sql_step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
+
+                        <BSButtonGroup Size="Size.Small" Class="mb-3">
+                            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
+                                      @onclick="() => ShowDependencies = false">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
+                                Settings
+                            </BSButton>
+                            <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowDependencies ? "active" : null)"
+                                      @onclick="() => ShowDependencies = true">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                                Dependencies
+                            </BSButton>
+                        </BSButtonGroup>
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        @if (ShowDependencies)
+                        {
+                            @if (Steps is not null)
+                            {
+                                <DependenciesEditComponent Step="Step" Steps="Steps" />
+                            }
+                        }
+                        else
+                        {
+                            <BSFormRow>
+                                <BSFormGroup Class="col">
+                                    <BSLabel>Step name</BSLabel>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                            </div>
+                                        </div>
+                                        <InputText class="form-control" @bind-Value="Step.StepName"></InputText>
+                                    </div>
+                                </BSFormGroup>
+                            </BSFormRow>
+                            <BSFormGroup>
+                                <BSLabel>Description</BSLabel>
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/book-open.svg")))
+                                        </div>
+                                    </div>
+                                    <InputTextArea class="form-control" @bind-Value="Step.StepDescription" rows="2"></InputTextArea>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormRow>
+                                <BSFormRow>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Execution phase</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                                </div>
+                                            </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.ExecutionPhase"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Retry attempts</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/repeat.svg")))
+                                                </div>
+                                            </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.RetryAttempts"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                    <BSFormGroup Class="col">
+                                        <BSLabel>Retry interval (min)</BSLabel>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <div class="input-group-text">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                                                </div>
+                                            </div>
+                                            <InputNumber class="form-control" @bind-Value="Step.RetryIntervalMinutes"></InputNumber>
+                                        </div>
+                                    </BSFormGroup>
+                                </BSFormRow>
+                            </BSFormRow>
+                            @ChildContent
+                            <p class="text-danger">@StepError</p>
+                        }
+
+                    </BSForm>
+                </div>
+            </div>
+        </BSModalBody>
+        <BSModalFooter>
+            <BSButton ButtonType="ButtonType.Submit" form="sql_step_edit_form" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
+            <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+        </BSModalFooter>
+    }
+</BSModal>
+
+
+
+@code {
+    [Parameter]
+    public Job? Job { get; set; }
+    [Parameter]
+    public IList<Step>? Steps { get; set; }
+    [Parameter]
+    public Step Step { get; set; } = null!;
+    [Parameter]
+    public EventCallback<Step> OnStepSubmit { get; set; }
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    [Parameter]
+    public Func<Step, (bool Result, string? ErrorMessage)>? StepValidityCheck { get; set; }
+    [Parameter]
+    public Action<EntityEntry>? ResetAddedEntities { get; set; }
+    [Parameter]
+    public Action<EntityEntry>? ResetDeletedEntities { get; set; }
+    [Parameter]
+    public EtlManagerContext Context { get; set; } = null!;
+
+    private BSModal Modal { get; set; } = null!;
+
+    private string StepError { get; set; } = string.Empty;
+
+    private bool ShowDependencies { get; set; } = false;
+
+    public void ResetStepError()
+    {
+        StepError = string.Empty;
+    }
+
+    private void IsModalOpenChanged(bool isOpen)
+    {
+        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
+        // If the user saves their changes, SubmitStep() is called first and changes are saved.
+        if (!isOpen)
+        {
+            // Reset added entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
+            {
+                if (entity.Entity is Dependency dependency)
+                {
+                    if (Step.Dependencies.Contains(dependency))
+                        Step.Dependencies.Remove(dependency);
+                }
+
+                if (ResetAddedEntities is not null)
+                    ResetAddedEntities(entity);
+
+                entity.State = EntityState.Detached;
+            }
+
+            // Reset deleted entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
+            {
+                if (entity.Entity is Dependency dependency)
+                {
+                    if (!Step.Dependencies.Contains(dependency))
+                        Step.Dependencies.Add(dependency);
+                }
+
+                if (ResetDeletedEntities is not null)
+                    ResetDeletedEntities(entity);
+
+                entity.State = EntityState.Unchanged;
+            }
+
+            // Reset changed entities.
+            Context.ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is not null)
+                .ToList()
+                .ForEach(e => e.State = EntityState.Unchanged);
+        }
+    }
+
+    private async Task SubmitStep()
+    {
+        StepError = string.Empty;
+
+        if (StepValidityCheck is not null)
+        {
+            (var result, var message) = StepValidityCheck(Step);
+            if (!result)
+            {
+                StepError = message ?? string.Empty;
+                return;
+            }
+        }
+
+        // Save changes.
+        try
+        {
+            // Existing step
+            if (Step.StepId != Guid.Empty)
+            {
+                Context.Attach(Step).State = EntityState.Modified;
+            }
+            // New step
+            else
+            {
+                Context.Steps.Add(Step);
+            }
+            await Context.SaveChangesAsync();
+
+            await OnStepSubmit.InvokeAsync(Step);
+            Modal.Hide();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await JS.InvokeVoidAsync("alert", "Concurrency error: the step has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error adding/editing step: {ex.Message}\n{ex.InnerException?.Message}");
+        }
+    }
+
+    public void Show() => Modal.Show();
+
+}
