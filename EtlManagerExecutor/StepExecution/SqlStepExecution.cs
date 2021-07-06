@@ -48,12 +48,9 @@ namespace EtlManagerExecutor
                 Log.Information("{ExecutionId} {Step} Starting SQL execution", Configuration.ExecutionId, Step);
                 using var connection = new SqlConnection(ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
-                await connection.OpenAsync(CancellationToken.None);
-                using var sqlCommand = new SqlCommand(SqlStatement, connection)
-                {
-                    CommandTimeout = TimeoutMinutes * 60 // CommandTimeout = 0 => wait indefinitely
-                };
-                await sqlCommand.ExecuteNonQueryAsync(cancellationToken);
+                // command timeout = 0 => wait indefinitely
+                var command = new CommandDefinition(SqlStatement, commandTimeout: TimeoutMinutes * 60, cancellationToken: cancellationToken);
+                await connection.ExecuteAsync(command);
             }
             catch (SqlException ex)
             {

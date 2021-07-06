@@ -163,13 +163,13 @@ namespace EtlManagerExecutor
 
         private async Task StartExecutionAsync(HashSet<Parameter> parameters)
         {
-            using var sqlConnection = new SqlConnection(ConnectionString);
             var commandBuilder = new StringBuilder();
+            
             commandBuilder.Append("USE SSISDB\n");
+            
             if (ExecuteAsLogin is not null)
-            {
                 commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
-            }
+            
             commandBuilder.Append(
                 @"DECLARE @execution_id BIGINT
 
@@ -213,27 +213,22 @@ namespace EtlManagerExecutor
 
                 SELECT @execution_id"
                 );
+
             string commandString = commandBuilder.ToString();
-            using var executionCommand = new SqlCommand(commandString, sqlConnection);
-
+            var dynamicParams = new DynamicParameters();
+            dynamicParams.AddDynamicParams(new { FolderName, ProjectName, PackageName, ExecuteIn32BitMode });
+            
             if (ExecuteAsLogin is not null)
+                dynamicParams.Add("ExecuteAsLogin", ExecuteAsLogin);
+           
+            foreach (var param in parameters)
             {
-                executionCommand.Parameters.AddWithValue("@ExecuteAsLogin", ExecuteAsLogin);
-            }
-            executionCommand.Parameters.AddWithValue("@FolderName", FolderName);
-            executionCommand.Parameters.AddWithValue("@ProjectName", ProjectName);
-            executionCommand.Parameters.AddWithValue("@PackageName", PackageName);
-            executionCommand.Parameters.AddWithValue("@ExecuteIn32BitMode", ExecuteIn32BitMode ? 1 : 0);
-
-            foreach (var parameter in parameters)
-            {
-                executionCommand.Parameters.AddWithValue("@ParameterName" + parameter.Name + parameter.Level, parameter.Name);
-                executionCommand.Parameters.AddWithValue("@ParameterValue" + parameter.Name + parameter.Level, parameter.Value);
+                dynamicParams.Add($"ParameterName{param.Name}{param.Level}", param.Name);
+                dynamicParams.Add($"ParameterValue{param.Name}{param.Level}", param.Value);
             }
 
-            await sqlConnection.OpenAsync(CancellationToken.None);
-
-            PackageOperationId = (long)(await executionCommand.ExecuteScalarAsync())!;
+            using var sqlConnection = new SqlConnection(ConnectionString);
+            PackageOperationId = await sqlConnection.ExecuteScalarAsync<long>(commandString, dynamicParams);
         }
 
         private async Task<HashSet<Parameter>> GetStepParameters()
