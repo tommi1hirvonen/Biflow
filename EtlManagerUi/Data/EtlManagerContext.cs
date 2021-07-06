@@ -151,7 +151,23 @@ namespace EtlManagerUi.Data
                 .WithMany(e => e.StepExecutionParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
+            Func<SubscriptionType?, string?> subscriptionTypeToString = value => value switch
+            {
+                SubscriptionType.OnFailure => "FAILURE",
+                SubscriptionType.OnSuccess => "SUCCESS",
+                SubscriptionType.OnCompletion => "COMPLETION",
+                _ => null
+            };
+            Func<string?, SubscriptionType?> stringToSubscriptionType = value => value switch
+            {
+                "FAILURE" => SubscriptionType.OnFailure,
+                "SUCCESS" => SubscriptionType.OnSuccess,
+                "COMPLETION" => SubscriptionType.OnCompletion,
+                _ => null
+            };
+            var subscriptionTypeConverter = new ValueConverter<SubscriptionType?, string?>(v => subscriptionTypeToString(v), v => stringToSubscriptionType(v));
+
             modelBuilder.Entity<Subscription>()
                 .ToTable("Subscription")
                 .HasOne(subscription => subscription.Job)
@@ -163,6 +179,9 @@ namespace EtlManagerUi.Data
                 .WithMany(user => user.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Subscription>()
+                .Property(s => s.SubscriptionType)
+                .HasConversion(subscriptionTypeConverter);
             
             modelBuilder.Entity<User>()
                 .ToTable("User")

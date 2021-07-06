@@ -22,6 +22,15 @@ namespace EtlManagerUi.Models
         [ForeignKey("User")]
         public string? Username { get; set; }
 
+        public SubscriptionType? SubscriptionType { get; set; }
+
         public User User { get; set; } = null!;
+    }
+
+    public enum SubscriptionType
+    {
+        OnFailure,
+        OnSuccess,
+        OnCompletion
     }
 }

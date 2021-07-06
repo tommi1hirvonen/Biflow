@@ -18,10 +18,11 @@ SELECT
 FROM [etlmanager].[vExecutionJob]
 WHERE [ExecutionId] = @ExecutionId
 
-
-IF ISNULL(@JobStatus, '') <> 'FAILED'
-	RETURN
-
+DECLARE @Color VARCHAR(100) = CASE @JobStatus
+	WHEN 'SUCCEEDED' THEN '#00b400' -- green
+	WHEN 'FAILED' THEN '#dc0000' -- red
+	ELSE '#ffc800' -- orange
+	END
 
 DECLARE @JobDuration VARCHAR(100) = CONVERT(VARCHAR(100), DATEADD(SECOND, @JobExecutionInSeconds, 0), 108)
 
@@ -33,7 +34,7 @@ SET @Body = CONCAT(N'
 <tbody>
 <tr>
 <td><strong>Status:</strong></td>
-<td><span style="color: #ff0000;"><strong>', @JobStatus, N'</strong></span></td>
+<td><span style="color: ', @Color,N';"><strong>', @JobStatus, N'</strong></span></td>
 </tr>
 <tr>
 <td>Start time:</td>
@@ -83,7 +84,7 @@ SELECT
 	ExecutionStatus,
 	ErrorMessage
 FROM etlmanager.Execution
-WHERE ExecutionId = @ExecutionId AND ExecutionStatus IN ('FAILED','SKIPPED')
+WHERE ExecutionId = @ExecutionId AND ExecutionStatus <> 'SUCCEEDED'
 ORDER BY StartDateTime
 
 OPEN StepCursor

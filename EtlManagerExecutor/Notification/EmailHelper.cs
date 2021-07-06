@@ -17,12 +17,9 @@ namespace EtlManagerExecutor
             using var sqlConnection = new SqlConnection(configuration.GetValue<string>("EtlManagerConnectionString"));
             sqlConnection.Open();
 
-            
-
             string jobId = string.Empty;
             string jobName = string.Empty;
             string jobStatus = string.Empty;
-
             try
             {
                 using var jobInfoCmd = new SqlCommand(
@@ -42,22 +39,22 @@ namespace EtlManagerExecutor
                 Log.Error(ex, "{executionId} Error getting execution status for notification evaluation", executionId);
                 return;
             }
-            
 
-            if (jobStatus != "FAILED")
+            string subscriptionTypeFilter = jobStatus switch
             {
-                return;
-            }
-
+                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" => "'FAILURE', 'COMPLETION'",
+                "SUCCEEDED" or "WARNING" => "'SUCCESS', 'COMPLETION'",
+                _ => "'COMPLETION'"
+            };
 
             var recipients = new List<string>();
             try
             {
                 using var recipientsCmd = new SqlCommand(
-                    @"SELECT DISTINCT B.[Email]
-                    FROM [etlmanager].[Subscription] AS A
-                        INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username]
-                    WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL"
+                    "SELECT DISTINCT B.[Email] \n" +
+                    "FROM [etlmanager].[Subscription] AS A \n" +
+                        "INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username] \n" +
+                    $"WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL AND A.[SubscriptionType] IN ({subscriptionTypeFilter})"
                     , sqlConnection);
                 recipientsCmd.Parameters.AddWithValue("@JobId", jobId);
                 using var reader = recipientsCmd.ExecuteReader();
@@ -78,12 +75,12 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            var messageBody = string.Empty;
+            string messageBody = string.Empty;
             try
             {
                 using var messageBodyCmd = new SqlCommand("EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId", sqlConnection);
                 messageBodyCmd.Parameters.AddWithValue("ExecutionId", executionId);
-                messageBody = messageBodyCmd.ExecuteScalar().ToString();
+                messageBody = messageBodyCmd.ExecuteScalar().ToString() ?? string.Empty;
             }
             catch (Exception ex)
             {
@@ -119,7 +116,7 @@ namespace EtlManagerExecutor
                 mailMessage = new MailMessage
                 {
                     From = new MailAddress(emailSettings.FromAddress),
-                    Subject = "ETL Manager Alert: " + jobName + " failed",
+                    Subject = $"{jobName} completed with status {jobStatus} – ETL Manager notification",
                     IsBodyHtml = true,
                     Body = messageBody
                 };

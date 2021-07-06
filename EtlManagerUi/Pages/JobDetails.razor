@@ -36,11 +36,6 @@
 
     <div class="col-xl d-xl-flex justify-content-xl-end mt-4 mt-xl-0">
         <div class="btn-toolbar">
-            <BSButton Color="Subscribed ? Color.Success : Color.Secondary" @onclick="ToggleSubscription">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
-                Subscribe
-            </BSButton>
-
             <AuthorizeView Roles="Admin, Editor">
                 @*Dropdown to change the current job's name*@
                 <BSDropdown Class="ml-3">
@@ -193,8 +188,6 @@ else
 
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
-    private bool Subscribed => CurrentJob?.Subscriptions.Any(sub => sub.Username == Username) ?? false;
-
     private bool DescriptionOpen { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -294,31 +287,6 @@ else
         catch (Exception ex)
         {
             await JsRuntime.InvokeVoidAsync("alert", "Error toggling job dependency mode: " + ex.Message);
-        }
-    }
-
-    private async Task ToggleSubscription()
-    {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = CurrentJob.Subscriptions.FirstOrDefault(sub => sub.Username == Username);
-        try
-        {
-            if (subscription is not null)
-            {
-                context.Subscriptions.Remove(subscription);
-                CurrentJob.Subscriptions.Remove(subscription);
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = CurrentJob.JobId, Username = Username };
-                context.Subscriptions.Add(newSub);
-                CurrentJob.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            await JsRuntime.InvokeVoidAsync("alert", "Error toggling subscription:" + ex.Message);
         }
     }
 
