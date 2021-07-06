@@ -1,3 +1,4 @@
+using Dapper;
 using EtlManagerUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -29,7 +30,7 @@ namespace EtlManagerScheduler
         private byte[] FailureBytes { get; } = Encoding.UTF8.GetBytes("FAILURE");
         private byte[] SuccessBytes { get; } = Encoding.UTF8.GetBytes("SUCCESS");
 
-        private record Schedule(string JobId, string ScheduleId, string CronExpression, bool IsEnabled);
+        private record Schedule(Guid ScheduleId, Guid JobId, string CronExpression, bool IsEnabled);
 
         public Worker(ILogger<Worker> logger, IConfiguration configuration, ISchedulerFactory schedulerFactory)
         {
@@ -73,64 +74,49 @@ namespace EtlManagerScheduler
                     ?? throw new ArgumentNullException("etlManagerConnectionString", "Connection string cannot be null");
 
             using var sqlConnection = new SqlConnection(etlManagerConnectionString);
-            await sqlConnection.OpenAsync(cancellationToken);
-
-            using var sqlCommand = new SqlCommand("SELECT ScheduleId, JobId, CronExpression, IsEnabled FROM etlmanager.Schedule", sqlConnection);
-            var reader = await sqlCommand.ExecuteReaderAsync(cancellationToken);
-            var schedules = new List<Schedule>();
-            
-            // Read schedule objects from the database.
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                try
-                {
-                    var jobId = reader["JobId"].ToString()!;
-                    var scheduleId = reader["ScheduleId"].ToString()!;
-                    var cronExpression = reader["CronExpression"].ToString()!;
-                    if (!CronExpression.IsValidExpression(cronExpression))
-                    {
-                        throw new ArgumentException($"Invalid Cron expression {cronExpression} for schedule id {scheduleId}. The schedule was skipped.");
-                    }
-                    var isEnabled = reader["IsEnabled"] as bool?;
-                    var schedule = new Schedule(jobId, scheduleId, cronExpression, isEnabled == true);
-                    schedules.Add(schedule);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error parsing schedule object");
-                }
-            }
+            var command = new CommandDefinition("SELECT ScheduleId, JobId, CronExpression, IsEnabled FROM etlmanager.Schedule", cancellationToken: cancellationToken);
+            var schedules = (await sqlConnection.QueryAsync<Schedule>(command)).ToList();
 
             // Clear the scheduler if there were any existing jobs or triggers.
             await _scheduler.Clear(cancellationToken);
 
             // Iterate the schedules and add them to the scheduler.
+            var counter = 0;
             foreach (var schedule in schedules)
             {
-                var jobKey = new JobKey(schedule.JobId);
-                var triggerKey = new TriggerKey(schedule.ScheduleId);
-                var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
-                var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(schedule.CronExpression).Build();
-
-                if (!await _scheduler.CheckExists(jobKey, cancellationToken))
+                try
                 {
-                    await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
-                }
-                else
-                {
-                    await _scheduler.ScheduleJob(trigger, cancellationToken);
-                }
+                    var jobKey = new JobKey(schedule.JobId.ToString());
+                    var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
+                    var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
+                    var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(schedule.CronExpression).Build();
 
-                if (!schedule.IsEnabled)
-                {
-                    await _scheduler.PauseTrigger(triggerKey, cancellationToken);
-                }
+                    if (!await _scheduler.CheckExists(jobKey, cancellationToken))
+                    {
+                        await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
+                    }
+                    else
+                    {
+                        await _scheduler.ScheduleJob(trigger, cancellationToken);
+                    }
 
-                var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
-                _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
+                    if (!schedule.IsEnabled)
+                    {
+                        await _scheduler.PauseTrigger(triggerKey, cancellationToken);
+                    }
+
+                    var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
+                    _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
+
+                    counter++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error adding schedule object {schedule}");
+                }
             }
 
-            _logger.LogInformation($"Schedules loaded successfully.");
+            _logger.LogInformation($"{counter}/{schedules.Count} schedules loaded successfully");
         }
 
         private async Task ReadNamedPipeAsync(CancellationToken cancellationToken)

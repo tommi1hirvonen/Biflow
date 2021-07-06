@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using System;
@@ -32,17 +33,16 @@ namespace EtlManagerScheduler
                 var executorFilePath = _configuration.GetValue<string>("EtlManagerExecutorPath")
                     ?? throw new ArgumentNullException("executorFilePath", "Executor file path cannot be null");
 
-                var jobId = context.JobDetail.Key.Name;
-                var scheduleId = context.Trigger.Key.Name;
+                var jobId = Guid.Parse(context.JobDetail.Key.Name);
+                var scheduleId = Guid.Parse(context.Trigger.Key.Name);
 
                 using var sqlConnection = new SqlConnection(etlManagerConnectionString);
                 await sqlConnection.OpenAsync();
 
                 try
                 {
-                    using var jobEnabledCommand = new SqlCommand("SELECT IsEnabled FROM etlmanager.Job WHERE JobId = @JobId", sqlConnection);
-                    jobEnabledCommand.Parameters.AddWithValue("@JobId", jobId);
-                    var isEnabled = (bool)(await jobEnabledCommand.ExecuteScalarAsync())!;
+                    var isEnabled = await sqlConnection.ExecuteScalarAsync<bool>(
+                        "SELECT IsEnabled FROM etlmanager.Job WHERE JobId = @JobId", new { JobId = jobId });
                     if (!isEnabled)
                         return;
                 }
@@ -52,13 +52,12 @@ namespace EtlManagerScheduler
                     return;
                 }
 
-                string executionId;
+                Guid executionId;
                 try
                 {
-                    using var initCommand = new SqlCommand("EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_", sqlConnection);
-                    initCommand.Parameters.AddWithValue("@JobId_", jobId);
-                    initCommand.Parameters.AddWithValue("@ScheduleId_", scheduleId);
-                    executionId = (await initCommand.ExecuteScalarAsync())!.ToString()!;
+                    executionId = await sqlConnection.ExecuteScalarAsync<Guid>(
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_",
+                        new { JobId_ = jobId, ScheduleId_ = scheduleId });
                 }
                 catch (Exception ex)
                 {
