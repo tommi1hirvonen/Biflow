@@ -102,7 +102,7 @@
         {
             try
             {
-                string id = PowerBIServiceId?.ToString() ?? throw new ArgumentNullException(nameof(id), "Power BI Service id cannot be null");
+                Guid id = PowerBIServiceId ?? throw new ArgumentNullException(nameof(id), "Power BI Service id cannot be null");
                 var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration, id);
                 Datasets = await powerBIService.GetAllDatasetsAsync();
                 StateHasChanged();

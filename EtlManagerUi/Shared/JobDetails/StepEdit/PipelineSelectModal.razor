@@ -96,7 +96,7 @@
         {
             try
             {
-                string dataFactoryId = DataFactoryId?.ToString() ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
+                Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
                 var dataFactory = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration, dataFactoryId);
                 Pipelines = await dataFactory.GetPipelinesAsync();
                 StateHasChanged();

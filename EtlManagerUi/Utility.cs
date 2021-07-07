@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Security.Cryptography;
 using System.ServiceProcess;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Dapper;
 using EtlManagerUi.Models;
 using EtlManagerUtils;
 using Microsoft.Data.SqlClient;
@@ -68,26 +70,21 @@ namespace EtlManagerUi
             Guid executionId;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
             {
-                using var sqlCommand = new SqlCommand
-                {
-                    Connection = sqlConnection
-                };
-
+                CommandDefinition command;
+                var parameters = new DynamicParameters();
+                parameters.AddDynamicParams(new { JobId_ = job.JobId, Username_ = username });
                 if (stepIds is not null && stepIds.Count > 0)
                 {
-                    sqlCommand.CommandText = "EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_";
-                    sqlCommand.Parameters.AddWithValue("@StepIds_", string.Join(',', stepIds));
+                    parameters.Add("StepIds_", string.Join(',', stepIds));
+                    command = new CommandDefinition("EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_",
+                        parameters);
                 }
                 else
                 {
-                    sqlCommand.CommandText = "EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_";
+                    command = new CommandDefinition("EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_",
+                        parameters);
                 }
-
-                sqlCommand.Parameters.AddWithValue("@JobId_", job.JobId.ToString());
-                sqlCommand.Parameters.AddWithValue("@Username_", username);
-
-                await sqlConnection.OpenAsync();
-                executionId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
+                executionId = await sqlConnection.ExecuteScalarAsync<Guid>(command);
             }
 
             string executorPath = configuration.GetValue<string>("EtlManagerExecutorPath");
@@ -129,93 +126,61 @@ namespace EtlManagerUi
 
         public async static Task ToggleJobDependencyModeAsync(IConfiguration configuration, Job job, bool enabled)
         {
-            int value = enabled ? 1 : 0;
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"UPDATE [etlmanager].[Job]
                 SET [UseDependencyMode] = @Value
-                WHERE [JobId] = @JobId"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Value", value);
-            await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
         }
 
         public async static Task ToggleJobEnabledAsync(IConfiguration configuration, Job job, bool enabled)
         {
-            int value = enabled ? 1 : 0;
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"UPDATE [etlmanager].[Job]
                 SET [IsEnabled] = @Value
-                WHERE [JobId] = @JobId"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@JobId", job.JobId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Value", value);
-            await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
         }
 
         public async static Task ToggleStepEnabledAsync(IConfiguration configuration, Step step, bool enabled)
         {
-            int value = enabled ? 1 : 0;
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"UPDATE [etlmanager].[Step]
                 SET [IsEnabled] = @Value
-                WHERE [StepId] = @StepId"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Value", value);
-            await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE [StepId] = @StepId", new { step.StepId, Value = enabled });
         }
 
         public async static Task RemoveTagAsync(IConfiguration configuration, Step step, Tag tag)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"DELETE FROM [etlmanager].[StepTag]
-                WHERE [StepsStepId] = @StepId AND [TagsTagId] = @TagId"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@StepId", step.StepId.ToString());
-            sqlCommand.Parameters.AddWithValue("@TagId", tag.TagId);
-            await sqlConnection.OpenAsync();
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE [StepsStepId] = @StepId AND [TagsTagId] = @TagId", new { step.StepId, tag.TagId });
         }
 
         public async static Task AddTagAsync(IConfiguration configuration, Step step, Tag tag)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.OpenAsync();
-
-            // Get id for existing tag.
-            using var cmdGetGuid = new SqlCommand("SELECT TagId FROM etlmanager.Tag WHERE TagName = @TagName_", sqlConnection);
-            cmdGetGuid.Parameters.AddWithValue("@TagName_", tag.TagName);
-            var guid = (Guid?)await cmdGetGuid.ExecuteScalarAsync();
-            
-            // If id is null, then no tag with matching name was found. Insert a new tag.
+            // Get id for existing tag
+            var guid = await sqlConnection.ExecuteScalarAsync<Guid?>(
+                "SELECT TagId FROM etlmanager.Tag WHERE TagName = @TagName", new { tag.TagName });
+            // No tag found => insert a new tag.
             if (guid is null)
             {
                 guid = Guid.NewGuid();
-                using var cmdInsertTag = new SqlCommand("INSERT INTO etlmanager.Tag (TagId, TagName) SELECT @TagId, @TagName", sqlConnection);
-                cmdInsertTag.Parameters.AddWithValue("@TagId", guid);
-                cmdInsertTag.Parameters.AddWithValue("@TagName", tag.TagName);
-                await cmdInsertTag.ExecuteNonQueryAsync();
+                await sqlConnection.ExecuteAsync(
+                    "INSERT INTO etlmanager.Tag (TagId, TagName) SELECT @TagId, @TagName", new { TagId = guid, tag.TagName });
             }
 
             tag.TagId = (Guid)guid;
 
-            // Insert a link between the given step and tag.
-            using var sqlCommand = new SqlCommand(
+            // Insert a link between the step and tag.
+            await sqlConnection.ExecuteAsync(
                 @"INSERT INTO etlmanager.StepTag (StepsStepId, TagsTagId)
                 SELECT @StepId, @TagId
-                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepsStepId = @StepId AND TagsTagId = @TagId)"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@StepId", step.StepId);
-            sqlCommand.Parameters.AddWithValue("@TagId", guid);
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepsStepId = @StepId AND TagsTagId = @TagId)",
+                new { step.StepId, tag.TagId });
         }
 
         public static (bool Running, bool Error, string Status) SchedulerServiceGetStatus()
@@ -328,19 +293,13 @@ namespace EtlManagerUi
 
         public async static Task<bool> ToggleScheduleEnabledAsync(IConfiguration configuration, Schedule schedule, bool enabled)
         {
-            int value = enabled ? 1 : 0;
-            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            
+            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));  
             await sqlConnection.OpenAsync();
             using var transaction = sqlConnection.BeginTransaction();
-            using var sqlCommand = new SqlCommand(
+            await sqlConnection.ExecuteAsync(
                 @"UPDATE [etlmanager].[Schedule]
                 SET [IsEnabled] = @Value
-                WHERE [ScheduleId] = @ScheduleId"
-                , sqlConnection, transaction);
-            sqlCommand.Parameters.AddWithValue("@ScheduleId", schedule.ScheduleId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Value", value);
-            await sqlCommand.ExecuteNonQueryAsync();
+                WHERE [ScheduleId] = @ScheduleId", new { schedule.ScheduleId, Value = enabled }, transaction);
             var commandType = enabled ? SchedulerCommand.CommandType.Resume : SchedulerCommand.CommandType.Pause;
             bool success = await SchedulerServiceSendCommandAsync(commandType, schedule);
             if (success)
@@ -358,29 +317,18 @@ namespace EtlManagerUi
         public async static Task<Guid> JobCopyAsync(IConfiguration configuration, Guid jobId, string username)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[JobCopy] @JobId = @JobId_, @Username = @Username_"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@JobId_", jobId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Username_", username);
-
-            await sqlConnection.OpenAsync();
-            var createdJobId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
+            var createdJobId = await sqlConnection.ExecuteScalarAsync<Guid>(
+                "EXEC [etlmanager].[JobCopy] @JobId = @JobId_, @Username = @Username_",
+                new { JobId_ = jobId, Username_ = username });
             return createdJobId;
         }
 
         public async static Task<Guid> StepCopyAsync(IConfiguration configuration, Guid stepId, Guid targetJobId, string username)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@StepId_", stepId.ToString());
-            sqlCommand.Parameters.AddWithValue("@TargetJobId_", targetJobId.ToString());
-            sqlCommand.Parameters.AddWithValue("@Username_", username);
-
-            await sqlConnection.OpenAsync();
-            var createdStepId = (Guid)(await sqlCommand.ExecuteScalarAsync())!;
+            var createdStepId = await sqlConnection.ExecuteScalarAsync<Guid>(
+                "EXEC [etlmanager].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_",
+                new { StepId_ = stepId, TargetJobId_ = targetJobId, Username_ = username });
             return createdStepId;
         }
 
@@ -389,60 +337,34 @@ namespace EtlManagerUi
             string connectionString = configuration.GetConnectionString("EtlManagerContext");
             string encryptionId = configuration.GetValue<string>("EncryptionId");
             using var sqlConnection = new SqlConnection(connectionString);
-            using var sqlCommand = new SqlCommand("SELECT * FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId", sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@EncryptionId", encryptionId);
-            await sqlConnection.OpenAsync();
-            var reader = sqlCommand.ExecuteReader();
-            if (reader.HasRows)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var count = await sqlConnection.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId",
+                new { EncryptionId = encryptionId });
+            return count > 0;
         }
-
 
         public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[UserAuthenticate] @Username = @Username_, @Password = @Password_"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@Username_", username);
-            sqlCommand.Parameters.AddWithValue("@Password_", password);
-
-            sqlConnection.Open();
-            object result = sqlCommand.ExecuteScalar();
-            if (result is string role)
-            {
-                return new AuthenticationResult(role);
-            }
-            else
-            {
-                return new AuthenticationResult(null);
-            }
+            var role = sqlConnection.ExecuteScalar<string?>(
+                "EXEC [etlmanager].[UserAuthenticate] @Username = @Username_, @Password = @Password_",
+                new { Username_ = username, Password_ = password });
+            return new AuthenticationResult(role);
         }
 
         public static async Task<Dictionary<string, Dictionary<string, List<string>>>> GetSSISCatalogPackages(IConfiguration configuration, string connectionId)
         {
-            Dictionary<string, Dictionary<string, List<string>>> catalog = new();
             var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
             string catalogConnectionString;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
             {
-                await sqlConnection.OpenAsync();
-                using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
-                sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
-                catalogConnectionString = (await sqlCommand.ExecuteScalarAsync())?.ToString()
-                    ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string cannot be null");
+                catalogConnectionString = await sqlConnection.ExecuteScalarAsync<string>(
+                    "SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString",
+                    new { EncryptionKey = encryptionKey, ConnectionId = connectionId });
             }
             using (var sqlConnection = new SqlConnection(catalogConnectionString))
             {
-                await sqlConnection.OpenAsync();
-                using var sqlCommand = new SqlCommand(
+                var rows = await sqlConnection.QueryAsync<(string, string?, string?)>(
                     @"SELECT
 	                    [folders].[name] AS FolderName,
 	                    [projects].[name] AS ProjectName,
@@ -450,79 +372,50 @@ namespace EtlManagerUi
                     FROM [SSISDB].[catalog].[folders]
 	                    LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
 	                    LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-                    ORDER BY FolderName, ProjectName, PackageName"
-                    , sqlConnection);
-                using var reader = await sqlCommand.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    var folder = reader["FolderName"].ToString()!;
-                    var project = reader["ProjectName"].ToString()!;
-                    var package = reader["PackageName"].ToString()!;
-                    if (!catalog.ContainsKey(folder))
-                    {
-                        catalog[folder] = new();
-                    }
-                    if (!catalog[folder].ContainsKey(project))
-                    {
-                        catalog[folder][project] = new();
-                    }
-                    if (package is not null)
-                    {
-                        catalog[folder][project].Add(package);
-                    }
-                }
+                    ORDER BY FolderName, ProjectName, PackageName");
+                var catalog = rows
+                    .GroupBy(key => key.Item1, element => (element.Item2, element.Item3))
+                    .ToDictionary(
+                    grouping => grouping.Key,
+                    grouping => grouping
+                                    .Where(x => x.Item1 is not null)
+                                    .GroupBy(key => key.Item1, element => element.Item2)
+                                    .ToDictionary(
+                                        grouping_ => grouping_.Key ?? "",
+                                        grouping_ => grouping_.Where(x => x is not null).Select(x => x ?? "").ToList()));
+                return catalog;
             }
-            return catalog;
         }
 
         public static async Task<Dictionary<string, List<string>>> GetDatabaseStoredProcedures(IConfiguration configuration, string connectionId)
         {
-            var procedures = new Dictionary<string, List<string>>();
             var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
             string connectionString;
             using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
             {
-                await sqlConnection.OpenAsync();
-                using var sqlCommand = new SqlCommand("SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString", sqlConnection);
-                sqlCommand.Parameters.AddWithValue("@EncryptionKey", encryptionKey);
-                sqlCommand.Parameters.AddWithValue("@ConnectionId", connectionId);
-                connectionString = (await sqlCommand.ExecuteScalarAsync())?.ToString()
-                    ?? throw new ArgumentNullException(nameof(connectionString), "Connection string cannot be null");
+                connectionString = await sqlConnection.ExecuteScalarAsync<string>(
+                    "SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString",
+                    new { EncryptionKey = encryptionKey, ConnectionId = connectionId });
             }
             using (var sqlConnection = new SqlConnection(connectionString))
             {
-                await sqlConnection.OpenAsync();
-                using var sqlCommand = new SqlCommand(
+                var rows = await sqlConnection.QueryAsync<(string, string)>(
                     @"SELECT OBJECT_SCHEMA_NAME([object_id]) AS [schema], [name]
                     FROM [sys].[procedures]
-                    ORDER BY [schema], [name]"
-                    , sqlConnection);
-                using var reader = await sqlCommand.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    var schema = reader["schema"].ToString()!;
-                    var procedure = reader["name"].ToString()!;
-                    if (!procedures.ContainsKey(schema))
-                    {
-                        procedures[schema] = new();
-                    }
-                    procedures[schema].Add(procedure);
-                }
+                    ORDER BY [schema], [name]");
+                var procedures = rows
+                    .GroupBy(key => key.Item1, element => element.Item2)
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+                return procedures;
             }
-            return procedures;
         }
 
         public static async Task<bool> UpdatePasswordAsync(IConfiguration configuration, string username, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[UserUpdatePassword] @Username = @Username_, @Password = @Password_"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@Username_", username);
-            sqlCommand.Parameters.AddWithValue("@Password_", password);
-
-            await sqlConnection.OpenAsync();
-            int result = (int)(await sqlCommand.ExecuteScalarAsync())!;
+            var result = await sqlConnection.ExecuteScalarAsync<int>(
+                "EXEC [etlmanager].[UserUpdatePassword] @Username = @Username_, @Password = @Password_",
+                new { Username_ = username, Password_ = password });
 
             if (result > 0) return true;
             else return false;
@@ -531,24 +424,9 @@ namespace EtlManagerUi
         public static async Task<bool> AddUserAsync(IConfiguration configuration, RoleUser user, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var sqlCommand = new SqlCommand(
-                "EXEC [etlmanager].[UserAdd] @Username = @Username_, @Password = @Password_, @Role = @Role_, @Email = @Email_"
-                , sqlConnection);
-            sqlCommand.Parameters.AddWithValue("@Username_", user.Username);
-            sqlCommand.Parameters.AddWithValue("@Password_", password);
-            sqlCommand.Parameters.AddWithValue("@Role_", user.Role);
-            if (user.Email is not null)
-            {
-                sqlCommand.Parameters.AddWithValue("@Email_", user.Email);
-            }
-            else
-            {
-                sqlCommand.Parameters.AddWithValue("@Email_", DBNull.Value);
-            }
-
-
-            await sqlConnection.OpenAsync();
-            int result = (int)(await sqlCommand.ExecuteScalarAsync())!;
+            var result = await sqlConnection.ExecuteScalarAsync<int>(
+                "EXEC [etlmanager].[UserAdd] @Username = @Username_, @Password = @Password_, @Role = @Role_, @Email = @Email_",
+                new { Username_ = user.Username, Password_ = password, Role_ = user.Role, Email_ = user.Email });
 
             if (result > 0) return true;
             else return false;
