@@ -18,7 +18,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace EtlManagerUi
 {
-    public static class Utility
+    public static partial class Utility
     {
         public static string SecondsToReadableFormat(this int value)
         {

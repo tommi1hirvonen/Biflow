@@ -221,9 +221,28 @@ else
             .Include(step => (step as PackageStep)!.PackageParameters)
             .Include(step => (step as PipelineStep)!.PipelineParameters)
             .Where(step => step.JobId == CurrentJob.JobId)
-            .OrderBy(step => step.ExecutionPhase)
-            .ThenBy(step => step.StepName)
             .ToListAsync();
+        await SortStepsAsync();
+    }
+
+    private async Task SortStepsAsync()
+    {
+        try
+        {
+            if (CurrentJob.UseDependencyMode)
+            {
+                var comparer = new TopologicalStepComparer(Steps);
+                Steps.Sort(comparer);
+            }
+            else
+            {
+                Steps.Sort();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Error sorting steps: {ex.Message}");
+        }
     }
 
     private async Task UpdateJob()
@@ -283,6 +302,7 @@ else
         {
             await Utility.ToggleJobDependencyModeAsync(configuration, CurrentJob, value);
             CurrentJob.UseDependencyMode = !CurrentJob.UseDependencyMode;
+            await SortStepsAsync();
         }
         catch (Exception ex)
         {

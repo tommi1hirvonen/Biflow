@@ -548,7 +548,7 @@
                     .Include(step => step.Tags)
                     .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
                 Steps?.Add(createdStep);
-                Steps?.Sort();
+                await SortStepsAsync();
             }
         }
         catch (Exception ex)
@@ -595,7 +595,7 @@
         }
     }
 
-    private void OnStepSubmit(Step step)
+    private async Task OnStepSubmit(Step step)
     {
         var existingStep = Steps?.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep is not null)
@@ -603,7 +603,28 @@
             Steps?.Remove(existingStep);
         }
         Steps?.Add(step);
-        Steps?.Sort();
+        await SortStepsAsync();
+    }
+
+    private async Task SortStepsAsync()
+    {
+        if (Job is null || Steps is null) return;
+        try
+        {
+            if (Job.UseDependencyMode)
+            {
+                var comparer = new TopologicalStepComparer(Steps);
+                Steps.Sort(comparer);
+            }
+            else
+            {
+                Steps.Sort();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", $"Error sorting steps: {ex.Message}");
+        }
     }
 
     private void ShowStepDetailsModal(Step step)
