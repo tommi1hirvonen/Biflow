@@ -47,7 +47,7 @@
                             </BSFormGroup>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="DataFactory.ClientSecret" placeholder="@(DataFactoryId == Guid.Empty ? null : "Encrypted")"></InputText>
+                                <InputText class="form-control" @bind-Value="DataFactory.ClientSecret"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
                         <div class="row mt-2">
@@ -93,6 +93,9 @@
     [Parameter]
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private DataFactory? DataFactory { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -105,7 +108,10 @@
         if (DataFactoryId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            DataFactory = await context.DataFactories.FindAsync(DataFactoryId);
+            DataFactory = (await context.DataFactories
+                .FromSqlRaw<DataFactory>("etlmanager.DataFactoryGet @DataFactoryId = {0}, @EncryptionKey = {1}",
+                    new string?[] { DataFactoryId.ToString(), EncryptionPassword })
+                .ToListAsync()).First();
         }
         else
         {

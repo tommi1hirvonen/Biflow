@@ -108,6 +108,10 @@
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceAdd.sql" />
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceUpdate.sql" />
     <Build Include="etlmanager\Stored Procedures\ConnectionGet.sql" />
+    <Build Include="etlmanager\Views\vDataFactory.sql" />
+    <Build Include="etlmanager\Views\vPowerBIService.sql" />
+    <Build Include="etlmanager\Stored Procedures\DataFactoryGet.sql" />
+    <Build Include="etlmanager\Stored Procedures\PowerBIServiceGet.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

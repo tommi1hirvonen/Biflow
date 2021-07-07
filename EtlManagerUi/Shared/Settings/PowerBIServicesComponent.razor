@@ -75,9 +75,12 @@ else
     </table>
 </div>
 
-<PowerBIServiceEditModal @ref="PowerBIServiceEditModal" PowerBIServiceId="EditPowerBIServiceId" OnPowerBIServiceSubmit="OnPowerBIServiceSubmit" />
+<PowerBIServiceEditModal @ref="PowerBIServiceEditModal" EncryptionPassword="@EncryptionPassword" PowerBIServiceId="EditPowerBIServiceId" OnPowerBIServiceSubmit="OnPowerBIServiceSubmit" />
 
 @code {
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
 
     private List<PowerBIService>? PowerBIServices { get; set; }
@@ -85,10 +88,9 @@ else
     private Guid EditPowerBIServiceId { get; set; }
     private PowerBIServiceEditModal PowerBIServiceEditModal { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
-
+        IsEncryptionKeySet = EncryptionPassword is not null;
         await LoadData();
     }
 

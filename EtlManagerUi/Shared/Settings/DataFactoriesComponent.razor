@@ -81,9 +81,12 @@ else
 </div>
 
 
-<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" OnDataFactorySubmit="OnDataFactorySubmit" />
+<DataFactoryEditModal @ref="DataFactoryEditModal" EncryptionPassword="@EncryptionPassword" DataFactoryId="EditDataFactoryId" OnDataFactorySubmit="OnDataFactorySubmit" />
 
 @code {
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
 
     private List<DataFactory>? DataFactories { get; set; }
@@ -91,10 +94,9 @@ else
     private Guid EditDataFactoryId { get; set; }
     private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
-
+        IsEncryptionKeySet = EncryptionPassword is not null;
         await LoadData();
     }
 

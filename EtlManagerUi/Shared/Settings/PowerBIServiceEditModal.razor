@@ -32,7 +32,7 @@
                             </BSFormGroup>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="PowerBIService.ClientSecret" placeholder="@(PowerBIServiceId == Guid.Empty ? null : "Encrypted")"></InputText>
+                                <InputText class="form-control" @bind-Value="PowerBIService.ClientSecret"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
                         <div class="row mt-2">
@@ -78,6 +78,9 @@
     [Parameter]
     public EventCallback<PowerBIService> OnPowerBIServiceSubmit { get; set; }
 
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private PowerBIService? PowerBIService { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -90,7 +93,10 @@
         if (PowerBIServiceId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            PowerBIService = await context.PowerBIServices.FindAsync(PowerBIServiceId);
+            PowerBIService = (await context.PowerBIServices
+                .FromSqlRaw<PowerBIService>("etlmanager.PowerBIServiceGet @PowerBIServiceId = {0}, @EncryptionKey = {1}",
+                    new string?[] { PowerBIServiceId.ToString(), EncryptionPassword })
+                .ToListAsync()).First();
         }
         else
         {

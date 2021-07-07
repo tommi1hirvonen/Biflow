@@ -30,7 +30,6 @@ namespace EtlManagerUi.Models
         [MinLength(36)]
         public string? ClientId { get; set; }
 
-        [NotMapped]
         [Required]
         [Display(Name = "Client secret")]
         public string? ClientSecret { get; set; }

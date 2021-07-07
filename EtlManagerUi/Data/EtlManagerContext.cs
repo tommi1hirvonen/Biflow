@@ -197,10 +197,10 @@ namespace EtlManagerUi.Data
                 .ToTable("vUser");
 
             modelBuilder.Entity<DataFactory>()
-                .ToTable("DataFactory");
+                .ToTable("vDataFactory");
 
             modelBuilder.Entity<PowerBIService>()
-                .ToTable("PowerBIService");
+                .ToTable("vPowerBIService");
 
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
