@@ -2,6 +2,7 @@
 
 @attribute [Authorize(Roles = "Admin")]
 
+@inject IConfiguration Configuration
 @inject IWebHostEnvironment WebHostEnvironment
 
 <h4>Settings</h4>
@@ -49,7 +50,7 @@ else if (Page == "encryption")
 }
 else if (Page == "connections")
 {
-    <ConnectionsComponent />
+    <ConnectionsComponent EncryptionPassword="@EncryptionPassword" />
 }
 else if (Page == "datafactories")
 {
@@ -67,4 +68,11 @@ else
 @code {
     [Parameter]
     public string? Page { get; set; }
+
+    private string? EncryptionPassword { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        EncryptionPassword = await CommonUtility.GetEncryptionKeyAsync(Configuration);
+    }
 }

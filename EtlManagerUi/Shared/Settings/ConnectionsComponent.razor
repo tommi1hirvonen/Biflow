@@ -1,4 +1,4 @@
-﻿@inject IConfiguration configuration
+﻿@inject IConfiguration Configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment 
 
@@ -21,6 +21,7 @@
                 <th>
                     Name
                 </th>
+                <th></th>
                 <th></th>
                 <th>
                     Connection string
@@ -60,9 +61,35 @@
                                 </BSDropdown>
                             </BSButtonGroup>
                         </td>
-                        <td class="align-middle">
-                            <pre><code>@connection.ConnectionString</code></pre>
+                        <td>
+                            @if (connection.IsSensitive)
+                            {
+                                <BSButtonGroup Class="btn-row">
+                                    <BSButton Size="Size.Small" Color="Color.Light"
+                                              @onclick="() => ShowSensitiveConnectionString[connection.ConnectionId] = !ShowSensitiveConnectionString[connection.ConnectionId]">
+                                        @if (ShowSensitiveConnectionString[connection.ConnectionId])
+                                        {
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye-off.svg")))
+                                        }
+                                        else
+                                        {
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye.svg")))
+                                        }
+                                    </BSButton>
+                                </BSButtonGroup>
+                            }
                         </td>
+                        <td class="align-middle">
+                            @if (!connection.IsSensitive || ShowSensitiveConnectionString[connection.ConnectionId])
+                            {
+                                <pre><code>@connection.ConnectionString</code></pre>
+                            }
+                            else
+                            {
+                                <pre><code>************************************************************</code></pre>
+                            }
+                        </td>
+                        
                     </tr>
                 }
             }
@@ -70,26 +97,34 @@
     </table>
 </div>
 
-<ConnectionEditModal @ref="ConnectionEditModal" ConnectionId="EditConnectionId" OnConnectionSubmit="OnConnectionSubmit" />
+<ConnectionEditModal @ref="ConnectionEditModal" EncryptionPassword="@EncryptionPassword" ConnectionId="EditConnectionId" OnConnectionSubmit="OnConnectionSubmit" />
 
 @code {
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
+
     private List<Connection>? Connections { get; set; }
+    private Dictionary<Guid, bool> ShowSensitiveConnectionString { get; set; } = new();
 
     private Guid EditConnectionId { get; set; }
     private ConnectionEditModal ConnectionEditModal { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
-
+        IsEncryptionKeySet = EncryptionPassword is not null;
         await LoadData();
     }
 
     private async Task LoadData()
     {
         var context = DbFactory.CreateDbContext();
-        Connections = await context.Connections.OrderBy(conn => conn.ConnectionName).ToListAsync();
+
+        Connections = await context.Connections
+            .FromSqlRaw<Connection>("etlmanager.ConnectionGet @EncryptionKey = {0}", new string?[] { EncryptionPassword })
+            .ToListAsync();
+        ShowSensitiveConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
     private async Task DeleteConnection(Connection connection)
@@ -105,7 +140,7 @@
     {
         var context = DbFactory.CreateDbContext();
         var existingConnection = Connections?.FirstOrDefault(conn => conn.ConnectionId == connection.ConnectionId);
-        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
+        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(Configuration);
 
         if (existingConnection is not null)
         {
@@ -135,7 +170,7 @@
         StateHasChanged();
     }
 
-    private void ShowConnectionEditModal(Connection connection)
+    private void ShowConnectionEditModal(Connection? connection)
     {
         EditConnectionId = connection?.ConnectionId ?? Guid.Empty;
         ConnectionEditModal.Show();

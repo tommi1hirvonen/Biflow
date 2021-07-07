@@ -97,6 +97,9 @@
     [Parameter]
     public EventCallback<Connection> OnConnectionSubmit { get; set; }
 
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
     private Connection? Connection { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -116,7 +119,10 @@
         if (ConnectionId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            Connection = await context.Connections.FindAsync(ConnectionId);
+            Connection = (await context.Connections
+                .FromSqlRaw<Connection>("etlmanager.ConnectionGet @ConnectionId = {0}, @EncryptionKey = {1}",
+                    new string?[] { ConnectionId.ToString(), EncryptionPassword })
+                .ToListAsync()).First();
         }
         else
         {
