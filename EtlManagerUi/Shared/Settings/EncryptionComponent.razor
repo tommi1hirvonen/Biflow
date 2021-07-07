@@ -18,6 +18,26 @@
     <section>
         <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
             <BSFormGroup>
+                <BSLabel>Old encryption key</BSLabel>
+                <div class="input-group">
+                    <input class="form-control" type="@(ShowOldEncryptionPassword ? "text" : "password")" disabled
+                           value="@(ShowOldEncryptionPassword ? EncryptionPassword : "lorem ipsum")" />
+                    <div class="input-group-append">
+                        <div class="input-group-text rounded-right" style="cursor: pointer;"
+                             @onclick="() => ShowOldEncryptionPassword = !ShowOldEncryptionPassword">
+                            @if (ShowOldEncryptionPassword)
+                            {
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye-off.svg")))
+                            }
+                            else
+                            {
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye.svg")))
+                            }
+                        </div>
+                    </div>
+                </div>
+            </BSFormGroup>
+            <BSFormGroup>
                 <BSLabel>New encryption key</BSLabel>
                 <div class="input-group">
                     <div class="input-group-prepend">
@@ -50,13 +70,18 @@
 </div>
 
 @code {
-    private bool IsEncryptionKeySet { get; set; }
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
+    private bool IsEncryptionKeySet { get; set; } = true;
+
+    private bool ShowOldEncryptionPassword { get; set; } = false;
 
     private PasswordModel PasswordModel_ { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
+        IsEncryptionKeySet = EncryptionPassword is not null;
     }
 
     private async Task UpdatePassword()
