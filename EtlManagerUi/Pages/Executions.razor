@@ -428,7 +428,7 @@
         }
         else if (ShowSteps)
         {
-            IQueryable<StepExecution> stepExecutions = context.Executions;
+            IQueryable<StepExecution> stepExecutions = context.StepExecutions;
             stepExecutions = stepExecutions
                 .Include(execution => (execution as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)

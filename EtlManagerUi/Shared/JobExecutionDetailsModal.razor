@@ -368,7 +368,7 @@
             var context = DbFactory.CreateDbContext();
 
             JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            Executions = await context.Executions
+            Executions = await context.StepExecutions
                 .Include(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Where(e => e.ExecutionId == ExecutionId)
                 .ToListAsync();

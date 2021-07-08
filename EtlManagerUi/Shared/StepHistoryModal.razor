@@ -75,7 +75,7 @@
             Executions = null; // Set to null to reset the modal layout.
 
             var context = DbFactory.CreateDbContext();
-            Executions = await context.Executions
+            Executions = await context.StepExecutions
                 .Include(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Where(e => e.StepId == StepId)
                 .OrderByDescending(execution => execution.CreatedDateTime)

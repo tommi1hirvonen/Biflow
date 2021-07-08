@@ -29,7 +29,7 @@ namespace EtlManagerDataAccess
         public DbSet<PackageStep> PackageSteps => Set<PackageStep>();
         public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
-        public DbSet<StepExecution> Executions => Set<StepExecution>();
+        public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
         public DbSet<DatasetStepExecution> DatasetStepExecutions => Set<DatasetStepExecution>();
         public DbSet<ExeStepExecution> ExeStepExecutions => Set<ExeStepExecution>();
         public DbSet<JobStepExecution> JobStepExecutions => Set<JobStepExecution>();

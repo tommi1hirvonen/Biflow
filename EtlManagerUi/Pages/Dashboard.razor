@@ -227,7 +227,7 @@
 
 
         // Get top failed steps
-        var topFailedStepsQuery = context.Executions
+        var topFailedStepsQuery = context.StepExecutions
             .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
 
         if (!IncludeDeleted)
