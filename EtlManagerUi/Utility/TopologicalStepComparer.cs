@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using EtlManagerUi.Models;
+using EtlManagerDataAccess.Models;
 
 namespace EtlManagerUi
 {

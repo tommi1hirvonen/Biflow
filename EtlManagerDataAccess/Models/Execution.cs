@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using EtlManagerUtils;
 
-namespace EtlManagerUi.Models
+namespace EtlManagerDataAccess.Models
 {
     abstract public class Execution
     {

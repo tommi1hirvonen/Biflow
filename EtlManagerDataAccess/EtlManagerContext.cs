@@ -1,23 +1,24 @@
-﻿using System;
+﻿using EtlManagerDataAccess.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using EtlManagerUi.Models;
+using System.Text;
 using System.Threading;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System.Threading.Tasks;
 
-namespace EtlManagerUi.Data
+namespace EtlManagerDataAccess
 {
     public class EtlManagerContext : DbContext
     {
         private readonly HttpContext? HttpContext;
 
-        public EtlManagerContext (DbContextOptions<EtlManagerContext> options, IHttpContextAccessor httpContextAccessor)
+        public EtlManagerContext(DbContextOptions<EtlManagerContext> options, IHttpContextAccessor? httpContextAccessor)
             : base(options)
         {
-            HttpContext = httpContextAccessor.HttpContext;
+            HttpContext = httpContextAccessor?.HttpContext;
         }
 
         public DbSet<Job> Jobs => Set<Job>();
@@ -68,7 +69,7 @@ namespace EtlManagerUi.Data
             var stepTypeConverter = new ValueConverter<StepType?, string?>(v => stepTypeToString(v), v => stringToStepType(v));
 
             modelBuilder.HasDefaultSchema("etlmanager");
-            
+
             // Map executions to views, which have additional logic implemented.
             // We never save or modify the executions via UI, so this is no problem.
             modelBuilder.Entity<StepExecution>()
@@ -77,14 +78,14 @@ namespace EtlManagerUi.Data
                 .HasConversion(stepTypeConverter);
             modelBuilder.Entity<JobExecution>()
                 .ToView("vExecutionJob");
-            
+
             modelBuilder.Entity<Dependency>()
                 .ToTable("Dependency")
                 .HasOne(dependency => dependency.Step)
                 .WithMany(step => step.Dependencies)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             modelBuilder.Entity<Job>()
                 .ToTable("Job")
                 .HasMany(job => job.Steps)
@@ -119,7 +120,7 @@ namespace EtlManagerUi.Data
                 .HasMany(t => t.Steps)
                 .WithMany(s => s.Tags)
                 .UsingEntity(e => e.ToTable("StepTag"));
-            
+
             modelBuilder.Entity<Schedule>()
                 .ToTable("Schedule")
                 .HasOne(schedule => schedule.Job)
@@ -137,7 +138,7 @@ namespace EtlManagerUi.Data
             });
 
             modelBuilder.Entity<PipelineParameter>(e =>
-            { 
+            {
                 e.ToTable("PipelineParameter")
                 .HasOne(parameter => parameter.Step)
                 .WithMany(step => step.PipelineParameters)
@@ -182,7 +183,7 @@ namespace EtlManagerUi.Data
             modelBuilder.Entity<Subscription>()
                 .Property(s => s.SubscriptionType)
                 .HasConversion(subscriptionTypeConverter);
-            
+
             modelBuilder.Entity<User>()
                 .ToTable("User")
                 .HasMany(user => user.Subscriptions)
@@ -207,7 +208,7 @@ namespace EtlManagerUi.Data
                 .ToTable("vConnection");
         }
 
-        
+
         public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
         {
             var user = HttpContext?.User?.Identity?.Name;
@@ -220,7 +221,7 @@ namespace EtlManagerUi.Data
             {
                 entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
                 entity.Property("LastModifiedBy").CurrentValue = user;
-             });
+            });
 
             // If there are Jobs or Steps that have been added, set the audit fields.
             var addedJobsAndSteps = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
@@ -250,7 +251,7 @@ namespace EtlManagerUi.Data
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
-        
+
 
     }
 }

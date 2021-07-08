@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Security.Policy;
 using System.Threading.Tasks;
 
-namespace EtlManagerUi.Models
+namespace EtlManagerDataAccess.Models
 {
     public class StepExecution : Execution
     {

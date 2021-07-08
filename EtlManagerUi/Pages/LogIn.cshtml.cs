@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using EtlManagerUi.Models;
+using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +17,7 @@ namespace EtlManagerUi.Pages
     {
         private readonly IConfiguration _configuration;
 
-        public LogInModel(IConfiguration configuration, EtlManagerUi.Data.EtlManagerContext context)
+        public LogInModel(IConfiguration configuration, EtlManagerContext context)
         {
             _configuration = configuration;
         }

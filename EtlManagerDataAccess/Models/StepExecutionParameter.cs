@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace EtlManagerUi.Models
+namespace EtlManagerDataAccess.Models
 {
     public class StepExecutionParameter
     {
