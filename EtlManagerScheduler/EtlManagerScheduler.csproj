@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EtlManagerDataAccess\EtlManagerDataAccess.csproj" />
     <ProjectReference Include="..\EtlManagerUtils\EtlManagerUtils.csproj" />
   </ItemGroup>
 </Project>

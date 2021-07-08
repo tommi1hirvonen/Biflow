@@ -1,3 +1,6 @@
+using EtlManagerDataAccess;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Quartz;
@@ -28,6 +31,8 @@ namespace EtlManagerScheduler
                 {
                     services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());   
                     services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+                    var connectionString = hostContext.Configuration.GetConnectionString("EtlManagerContext");
+                    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                     services.AddHostedService<Worker>();
                 });
     }

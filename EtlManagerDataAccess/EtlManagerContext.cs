@@ -15,7 +15,7 @@ namespace EtlManagerDataAccess
     {
         private readonly HttpContext? HttpContext;
 
-        public EtlManagerContext(DbContextOptions<EtlManagerContext> options, IHttpContextAccessor? httpContextAccessor)
+        public EtlManagerContext(DbContextOptions<EtlManagerContext> options, IHttpContextAccessor? httpContextAccessor = null)
             : base(options)
         {
             HttpContext = httpContextAccessor?.HttpContext;

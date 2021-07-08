@@ -28,7 +28,7 @@ namespace EtlManagerScheduler
         {
             try
             {
-                var etlManagerConnectionString = _configuration.GetValue<string>("EtlManagerConnectionString")
+                var etlManagerConnectionString = _configuration.GetConnectionString("EtlManagerContext")
                     ?? throw new ArgumentNullException("etlManagerConnectionString", "Connection string cannot be null");
                 var executorFilePath = _configuration.GetValue<string>("EtlManagerExecutorPath")
                     ?? throw new ArgumentNullException("executorFilePath", "Executor file path cannot be null");

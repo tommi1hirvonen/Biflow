@@ -1,14 +1,13 @@
 using Dapper;
+using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using Quartz.Impl.Matchers;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Text;
@@ -22,20 +21,18 @@ namespace EtlManagerScheduler
     public class Worker : BackgroundService
     {
         private readonly ILogger<Worker> _logger;
-        private readonly IConfiguration _configuration;
         private readonly IScheduler _scheduler;
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
         private bool DatabaseReadError { get; set; } = false;
 
         private byte[] FailureBytes { get; } = Encoding.UTF8.GetBytes("FAILURE");
         private byte[] SuccessBytes { get; } = Encoding.UTF8.GetBytes("SUCCESS");
 
-        private record Schedule(Guid ScheduleId, Guid JobId, string CronExpression, bool IsEnabled);
-
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, ISchedulerFactory schedulerFactory)
+        public Worker(ILogger<Worker> logger, IDbContextFactory<EtlManagerContext> dbContextFactory, ISchedulerFactory schedulerFactory)
         {
             _logger = logger;
-            _configuration = configuration;
+            _dbContextFactory = dbContextFactory;
             _scheduler = schedulerFactory.GetScheduler().Result;
         }
 
@@ -70,12 +67,11 @@ namespace EtlManagerScheduler
         {
             _logger.LogInformation("Loading schedules from database");
 
-            var etlManagerConnectionString = _configuration.GetValue<string>("EtlManagerConnectionString")
-                    ?? throw new ArgumentNullException("etlManagerConnectionString", "Connection string cannot be null");
-
-            using var sqlConnection = new SqlConnection(etlManagerConnectionString);
-            var command = new CommandDefinition("SELECT ScheduleId, JobId, CronExpression, IsEnabled FROM etlmanager.Schedule", cancellationToken: cancellationToken);
-            var schedules = (await sqlConnection.QueryAsync<Schedule>(command)).ToList();
+            List<Schedule> schedules;
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                schedules = await context.Schedules.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+            }
 
             // Clear the scheduler if there were any existing jobs or triggers.
             await _scheduler.Clear(cancellationToken);
@@ -86,6 +82,9 @@ namespace EtlManagerScheduler
             {
                 try
                 {
+                    if (schedule.CronExpression is null)
+                        throw new ArgumentNullException(nameof(schedule.CronExpression), "Cron expression cannot be null");
+
                     var jobKey = new JobKey(schedule.JobId.ToString());
                     var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
                     var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
