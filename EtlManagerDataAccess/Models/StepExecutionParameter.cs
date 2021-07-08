@@ -20,6 +20,6 @@ namespace EtlManagerDataAccess.Models
 
         public string? ParameterLevel { get; set; }
 
-        public StepExecution StepExecution { get; set; } = null!;
+        public ParameterizedStepExecution StepExecution { get; set; } = null!;
     }
 }

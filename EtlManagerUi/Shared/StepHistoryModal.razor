@@ -76,7 +76,7 @@
 
             var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
-                .Include(e => e.StepExecutionParameters)
+                .Include(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Where(e => e.StepId == StepId)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(Execution => Execution.StartDateTime)

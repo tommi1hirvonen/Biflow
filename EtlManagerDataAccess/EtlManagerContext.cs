@@ -30,6 +30,12 @@ namespace EtlManagerDataAccess
         public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
         public DbSet<StepExecution> Executions => Set<StepExecution>();
+        public DbSet<DatasetStepExecution> DatasetStepExecutions => Set<DatasetStepExecution>();
+        public DbSet<ExeStepExecution> ExeStepExecutions => Set<ExeStepExecution>();
+        public DbSet<JobStepExecution> JobStepExecutions => Set<JobStepExecution>();
+        public DbSet<PackageStepExecution> PackageStepExecutions => Set<PackageStepExecution>();
+        public DbSet<PipelineStepExecution> PipelineStepExecutions => Set<PipelineStepExecution>();
+        public DbSet<SqlStepExecution> SqlStepExecutions => Set<SqlStepExecution>();
         public DbSet<JobExecution> JobExecutions => Set<JobExecution>();
         public DbSet<Dependency> Dependencies => Set<Dependency>();
         public DbSet<Schedule> Schedules => Set<Schedule>();
@@ -76,6 +82,15 @@ namespace EtlManagerDataAccess
                 .ToView("vExecution")
                 .Property(e => e.StepType)
                 .HasConversion(stepTypeConverter);
+            modelBuilder.Entity<StepExecution>()
+                .HasDiscriminator<StepType?>("StepType")
+                .HasValue<DatasetStepExecution>(StepType.Dataset)
+                .HasValue<ExeStepExecution>(StepType.Exe)
+                .HasValue<JobStepExecution>(StepType.Job)
+                .HasValue<PackageStepExecution>(StepType.Package)
+                .HasValue<PipelineStepExecution>(StepType.Pipeline)
+                .HasValue<SqlStepExecution>(StepType.Sql);
+
             modelBuilder.Entity<JobExecution>()
                 .ToView("vExecutionJob");
 

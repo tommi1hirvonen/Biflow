@@ -70,121 +70,121 @@
             </dd>
         }
 
-        @if (StepExecution.StepType == StepType.Sql)
+        @if (StepExecution is SqlStepExecution sql)
         {
             <dt class="col-sm-3">
                 SQL statement
             </dt>
             <dd class="col-sm-9">
-                <pre><code>@StepExecution.SqlStatement</code></pre>
+                <pre><code>@sql.SqlStatement</code></pre>
             </dd>
             <dt class="col-sm-3">
                 Info message
             </dt>
             <dd class="col-sm-9">
-                <pre><code>@StepExecution.InfoMessage</code></pre>
+                <pre><code>@sql.InfoMessage</code></pre>
             </dd>
         }
-        else if (StepExecution.StepType == StepType.Package)
+        else if (StepExecution is PackageStepExecution package)
         {
             <dt class="col-sm-3">
                 Package path
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.PackagePath
+                @package.PackagePath
             </dd>
             <dt class="col-sm-3">
                 32 bit mode
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExecuteIn32BitMode
+                @package.ExecuteIn32BitMode
             </dd>
             <dt class="col-sm-3">
                 Execute as login
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExecuteAsLogin
+                @package.ExecuteAsLogin
             </dd>
             <dt class="col-sm-3">
                 Operation id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.PackageOperationId
+                @package.PackageOperationId
             </dd>
         }
-        else if (StepExecution.StepType == StepType.Pipeline)
+        else if (StepExecution is PipelineStepExecution pipeline)
         {
             <dt class="col-sm-3">
                 Pipeline name
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.PipelineName
+                @pipeline.PipelineName
             </dd>
             <dt class="col-sm-3">
                 Pipeline run id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.PipelineRunId
+                @pipeline.PipelineRunId
             </dd>
             <dt class="col-sm-3">
                 Data Factory id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.DataFactoryId
+                @pipeline.DataFactoryId
             </dd>
         }
-        else if (StepExecution.StepType == StepType.Exe)
+        else if (StepExecution is ExeStepExecution exe)
         {
             <dt class="col-sm-3">
                 File path
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExeFileName
+                @exe.ExeFileName
             </dd>
             <dt class="col-sm-3">
                 Arguments
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExeArguments
+                @exe.ExeArguments
             </dd>
             <dt class="col-sm-3">
                 Working directory
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExeWorkingDirectory
+                @exe.ExeWorkingDirectory
             </dd>
             <dt class="col-sm-3">
                 Success exit code
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.ExeSuccessExitCode
+                @exe.ExeSuccessExitCode
             </dd>
             <dt class="col-sm-3">
                 Output
             </dt>
             <dd class="col-sm-9">
-                <pre><code>@StepExecution.InfoMessage</code></pre>
+                <pre><code>@exe.InfoMessage</code></pre>
             </dd>
         }
-        else if (StepExecution.StepType == StepType.Dataset)
+        else if (StepExecution is DatasetStepExecution dataset)
         {
             <dt class="col-sm-3">
                 Group id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.DatasetGroupId
+                @dataset.DatasetGroupId
             </dd>
             <dt class="col-sm-3">
                 Dataset id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.DatasetId
+                @dataset.DatasetId
             </dd>
             <dt class="col-sm-3">
                 Power BI Service id
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.PowerBIServiceId
+                @dataset.PowerBIServiceId
             </dd>
         }
         <dt class="col-sm-3">
@@ -194,22 +194,22 @@
             <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
         </dd>
     </dl>
-    @if (StepExecution.StepType == StepType.Package)
+    @if (StepExecution is PackageStepExecution package_)
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in StepExecution.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
+            @foreach (var param in package_.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
             {
                 <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
                 <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
             }
         </dl>
     }
-    else if (StepExecution.StepType == StepType.Pipeline)
+    else if (StepExecution is PipelineStepExecution pipeline)
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in StepExecution.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
+            @foreach (var param in pipeline.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
             {
                 <dt class="col-sm-3">@param.ParameterName</dt>
                 <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
