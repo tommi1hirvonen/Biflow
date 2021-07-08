@@ -87,8 +87,14 @@ namespace EtlManagerScheduler
 
                     var jobKey = new JobKey(schedule.JobId.ToString());
                     var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
-                    var jobDetail = JobBuilder.Create<ExecutionJob>().WithIdentity(jobKey).Build();
-                    var trigger = TriggerBuilder.Create().WithIdentity(triggerKey).ForJob(jobDetail).WithCronSchedule(schedule.CronExpression).Build();
+                    var jobDetail = JobBuilder.Create<ExecutionJob>()
+                        .WithIdentity(jobKey)
+                        .Build();
+                    var trigger = TriggerBuilder.Create()
+                        .WithIdentity(triggerKey)
+                        .ForJob(jobDetail)
+                        .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+                        .Build();
 
                     if (!await _scheduler.CheckExists(jobKey, cancellationToken))
                     {
@@ -254,8 +260,15 @@ namespace EtlManagerScheduler
                 throw new ArgumentException($"Invalid Cron expression for schedule id {command.ScheduleId}: {command.CronExpression}");
 
             var jobKey = new JobKey(command.JobId);
-            var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken) ?? JobBuilder.Create<ExecutionJob>().WithIdentity(command.JobId).Build();
-            var trigger = TriggerBuilder.Create().WithIdentity(command.ScheduleId).ForJob(jobDetail).WithCronSchedule(command.CronExpression).Build();
+            var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken)
+                ?? JobBuilder.Create<ExecutionJob>()
+                .WithIdentity(command.JobId)
+                .Build();
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity(command.ScheduleId)
+                .ForJob(jobDetail)
+                .WithCronSchedule(command.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+                .Build();
 
             if (!await _scheduler.CheckExists(jobKey, cancellationToken))
             {
