@@ -317,17 +317,6 @@ namespace EtlManagerUi
             return createdStepId;
         }
 
-        public static async Task<bool> IsEncryptionKeySetAsync(IConfiguration configuration)
-        {
-            string connectionString = configuration.GetConnectionString("EtlManagerContext");
-            string encryptionId = configuration.GetValue<string>("EncryptionId");
-            using var sqlConnection = new SqlConnection(connectionString);
-            var count = await sqlConnection.ExecuteScalarAsync<int>(
-                "SELECT COUNT(*) FROM etlmanager.EncryptionKey WHERE EncryptionId = @EncryptionId",
-                new { EncryptionId = encryptionId });
-            return count > 0;
-        }
-
         public static AuthenticationResult AuthenticateUser(IConfiguration configuration, string username, string password)
         {
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));

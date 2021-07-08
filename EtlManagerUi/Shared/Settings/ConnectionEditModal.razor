@@ -104,15 +104,10 @@
 
     private BSModal Modal { get; set; } = null!;
 
-    private bool IsEncryptionKeySet { get; set; }
+    private bool IsEncryptionKeySet { get; set; } = false;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        IsEncryptionKeySet = await Utility.IsEncryptionKeySetAsync(configuration);
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -130,6 +125,7 @@
         }
         ConnectionTestSuccess = null;
         TestingConnection = false;
+        IsEncryptionKeySet = EncryptionPassword is not null;
     }
 
     private async Task SubmitConnection()
