@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using EtlManagerDataAccess;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -26,14 +28,17 @@ namespace EtlManagerExecutor
                 .CreateLogger();
 
             var host = Host.CreateDefaultBuilder()
+                .ConfigureHostConfiguration(configHost =>
+                    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .ConfigureServices((context, services) =>
                 {
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
+                    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+                    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                 })
-                .ConfigureHostConfiguration(configHost =>
-                    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
+                
                 .UseSerilog()
                 .Build();
 

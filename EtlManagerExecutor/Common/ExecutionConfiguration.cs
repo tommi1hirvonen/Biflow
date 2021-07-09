@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtlManagerDataAccess;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace EtlManagerExecutor
 {
     public class ExecutionConfiguration
     {
+        public EtlManagerContext DbContext { get; init; }
         public string ConnectionString { get; init; }
         public string ExecutionId { get; init; }
         public string? EncryptionKey { get; init; }
@@ -16,9 +18,10 @@ namespace EtlManagerExecutor
         public int PollingIntervalMs { get; init; }
         public Job Job { get; init; }
         public bool Notify { get; init; }
-        public ExecutionConfiguration(string connectionString, string executionId, string? encryptionKey,
+        public ExecutionConfiguration(EtlManagerContext dbContext, string connectionString, string executionId, string? encryptionKey,
             int maxParallelSteps, int pollingIntervalMs, Job job, bool notify, string username)
         {
+            DbContext = dbContext;
             ConnectionString = connectionString;
             ExecutionId = executionId;
             EncryptionKey = encryptionKey;

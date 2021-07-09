@@ -1,5 +1,7 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerUtils;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
@@ -16,15 +18,17 @@ namespace EtlManagerExecutor
     class JobExecutor : IJobExecutor
     {
         private readonly IConfiguration configuration;
+        private readonly IDbContextFactory<EtlManagerContext> dbContextFactory;
 
-        public JobExecutor(IConfiguration configuration)
+        public JobExecutor(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
         {
             this.configuration = configuration;
+            this.dbContextFactory = dbContextFactory;
         }
 
         public async Task RunAsync(string executionId, bool notify)
         {
-            var connectionString = configuration.GetValue<string>("EtlManagerConnectionString");
+            var connectionString = configuration.GetConnectionString("EtlManagerContext");
             var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             var maxParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
             var encryptionId = configuration.GetValue<string>("EncryptionId");
@@ -40,9 +44,10 @@ namespace EtlManagerExecutor
                 return;
             }
 
+            using var dbContext = dbContextFactory.CreateDbContext();
+
             bool dependencyMode;
             Job job;
-
             using (var sqlConnection = new SqlConnection(connectionString))
             {
                 try
@@ -55,7 +60,10 @@ namespace EtlManagerExecutor
                 }
                 try
                 {
-                    (job, dependencyMode) = await GetExecutionDetailsAsync(executionId, sqlConnection);
+                    (job, dependencyMode) = await dbContext.StepExecutions
+                        .Where(e => e.ExecutionId.ToString() == executionId)
+                        .Select(e => new Tuple<Job, bool>(new Job(e.JobId, e.JobName), e.DependencyMode))
+                        .FirstAsync();
                 }
                 catch (Exception ex)
                 {
@@ -65,6 +73,7 @@ namespace EtlManagerExecutor
             }
 
             var executionConfig = new ExecutionConfiguration(
+                dbContext: dbContext,
                 connectionString: connectionString,
                 encryptionKey: encryptionPassword,
                 maxParallelSteps: maxParallelSteps,
@@ -121,16 +130,6 @@ namespace EtlManagerExecutor
             await sqlConnection.ExecuteAsync(
                 "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId",
                 new { ProcessId = process.Id, ExecutionId = executionId });
-        }
-
-        private static async Task<(Job Job, bool DependencyMode)> GetExecutionDetailsAsync(string executionId, SqlConnection sqlConnection)
-        {
-            // Get execution details.
-            (var dependencymode, var jobId, var jobName) = await sqlConnection.QueryFirstAsync<(bool, Guid, string)>(
-                "SELECT TOP 1 DependencyMode, JobId, JobName FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
-                new { ExecutionId = executionId });
-            var job = new Job(jobId, jobName);
-            return (job, dependencymode);
         }
 
         /// <summary>
