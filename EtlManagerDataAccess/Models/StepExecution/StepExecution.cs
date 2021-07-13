@@ -7,20 +7,15 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract class StepExecution : Execution
+    public abstract class StepExecution
     {
-        public StepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(jobName, createdDateTime, executionStatus)
+        public StepExecution(string stepName)
         {
-            StepExecutionId = stepExecutionId;
             StepName = stepName;
         }
 
-        [Key]
-        public string StepExecutionId { get; set; }
-
         [Display(Name = "Execution id")]
-        override public Guid ExecutionId { get; set; }
+        public Guid ExecutionId { get; set; }
 
         [Display(Name = "Step id")]
         public Guid StepId { get; set; }
@@ -31,19 +26,14 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Step type")]
         public StepType? StepType { get; set; }
 
-        [Display(Name = "Error message")]
-        public string? ErrorMessage { get; set; }
-
-        public int RetryAttemptIndex { get; set; }
+        public int ExecutionPhase { get; set; }
 
         public int RetryAttempts { get; set; }
 
         public int RetryIntervalMinutes { get; set; }
 
-        [Display(Name = "Executor PID")]
-        public int? ExecutorProcessId { get; set; }
+        public Execution Execution { get; set; } = null!;
 
-        [Display(Name = "Stopped by")]
-        public string? StoppedBy { get; set; }
+        public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
     }
 }

@@ -67,9 +67,9 @@
                             // Disable value options that are filtered out by current filter values in other select inputs.
                             <option value="@status"
                                     selected=@(status == Status)
-                                    disabled=@(!string.IsNullOrEmpty(JobName) && ShowSteps && !StepExecutions.Any(e => e.JobName == JobName && e.ExecutionStatus == status)
-                                               || !string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions.Any(e => e.StepName == StepName && e.ExecutionStatus == status)
-                                               || !string.IsNullOrEmpty(JobName) &&!ShowSteps && !JobExecutions.Any(e => e.JobName == JobName && e.ExecutionStatus == status))>
+                                    disabled=@(!string.IsNullOrEmpty(JobName) && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == JobName && e.ExecutionStatus == status) == true
+                                               || !string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.StepName == StepName && e.ExecutionStatus == status) == true
+                                               || !string.IsNullOrEmpty(JobName) &&!ShowSteps && !JobExecutions?.Any(e => e.JobName == JobName && e.ExecutionStatus == status) == true)>
                                 @status
                             </option>
                         }
@@ -91,9 +91,9 @@
                             // Disable value options that are filtered out by current filter values in other select inputs.
                             <option value="@jobName"
                                     selected=@(jobName == JobName)
-                                    disabled=@(!string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions.Any(e => e.JobName == jobName && e.StepName == StepName)
-                                                   || !string.IsNullOrEmpty(Status) && ShowSteps && !StepExecutions.Any(e => e.JobName == jobName && e.ExecutionStatus == Status)
-                                                   || !string.IsNullOrEmpty(Status) && !ShowSteps && !JobExecutions.Any(e => e.JobName == jobName && e.ExecutionStatus == Status))>
+                                    disabled=@(!string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == jobName && e.StepExecution.StepName == StepName) == true
+                                                   || !string.IsNullOrEmpty(Status) && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == jobName && e.ExecutionStatus == Status) == true
+                                                   || !string.IsNullOrEmpty(Status) && !ShowSteps && !JobExecutions?.Any(e => e.JobName == jobName && e.ExecutionStatus == Status) == true)>
                                 @jobName
                             </option>
                         }
@@ -117,8 +117,8 @@
                                 // Disable value options that are filtered out by current filter values in other select inputs.
                                 <option value="@stepName"
                                         selected=@(stepName == StepName)
-                                        disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions.Any(e => e.JobName == JobName && e.StepName == stepName)
-                                                   || !string.IsNullOrEmpty(Status) && !StepExecutions.Any(e => e.StepName == stepName && e.ExecutionStatus == Status))>
+                                        disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == JobName && e.StepExecution.StepName == stepName) == true
+                                                   || !string.IsNullOrEmpty(Status) && !StepExecutions?.Any(e => e.StepExecution.StepName == stepName && e.ExecutionStatus == Status) == true)>
                                     @stepName
                                 </option>
                             }
@@ -215,10 +215,10 @@
                                     <text>@item.GetDurationInReadableFormat()</text>
                                 </td>
                                 <td style="text-align: right;">
-                                    @item.NumberOfSteps
+                                    @item.StepExecutions.Count
                                 </td>
                                 <td style="text-align: right;">
-                                    @item.SuccessPercent.FormatPercentage(2)
+                                    @item.GetSuccessPercent()?.FormatPercentage(2)
                                 </td>
                                 <td>
                                     <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
@@ -274,10 +274,10 @@
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
-                                    @item.JobName
+                                    @item.StepExecution.Execution.JobName
                                 </td>
                                 <td>
-                                    @item.StepName
+                                    @item.StepExecution.StepName
                                 </td>
                                 <td>
                                     <StepTypeIconComponent StepType_="@item.StepType" />
@@ -320,7 +320,7 @@
                                             </AuthorizeView>
                                         </BSButtonGroup>
                                         
-                                        <StepExecutionDetailsComponent StepExecution="item" />
+                                        <StepExecutionDetailsComponent StepExecutionAttempt="item" />
                                     </td>
                                 </tr>
                             }
@@ -357,14 +357,14 @@
 
     private bool Loading { get; set; } = false;
 
-    private List<JobExecution> JobExecutions { get; set; } = null!;
+    private List<Execution>? JobExecutions { get; set; }
 
-    private List<StepExecution> StepExecutions { get; set; } = null!;
+    private List<StepExecutionAttempt>? StepExecutions { get; set; }
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
-    private StepExecution? SelectedStepExecution { get; set; }
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
     private StepHistoryModal StepHistoryModal { get; set; } = null!;
     private string? HistoryModalStepId { get; set; }
@@ -385,6 +385,7 @@
 
             // sessionStorage values have been retrieved. The filter inputs can now be rendered.
             SessionStorageValuesRetrieved = true;
+
             await LoadData();
         }
     }
@@ -398,8 +399,10 @@
 
         if (!ShowSteps)
         {
-            IQueryable<JobExecution> jobExecutions = context.JobExecutions;
+            IQueryable<Execution> jobExecutions = context.Executions;
             jobExecutions = jobExecutions
+                .Include(execution => execution.StepExecutions)
+                .ThenInclude(exec => exec.StepExecutionAttempts)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
                 .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 
@@ -428,13 +431,16 @@
         }
         else if (ShowSteps)
         {
-            IQueryable<StepExecution> stepExecutions = context.StepExecutions;
+            IQueryable<StepExecutionAttempt> stepExecutions = context.StepExecutionAttempts;
             stepExecutions = stepExecutions
-                .Include(execution => (execution as ParameterizedStepExecution)!.StepExecutionParameters)
-                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
-                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(execution => (execution as ParameterizedStepExecution)!.StepExecutionParameters)
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(execution => execution.Execution)
+                .Where(execution => execution.StepExecution.Execution.CreatedDateTime <= DateTimeUntil)
+                .Where(execution => execution.StepExecution.Execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
 
-            JobNames = await stepExecutions.Select(e => e.JobName).Distinct().ToListAsync();
+            JobNames = await stepExecutions.Select(e => e.StepExecution.Execution.JobName).Distinct().ToListAsync();
             if (!JobNames.Contains(JobName) && !string.IsNullOrEmpty(JobName))
                 JobNames.Add(JobName);
 
@@ -442,13 +448,13 @@
             if (!Statuses.Contains(Status) && !string.IsNullOrEmpty(Status))
                 Statuses.Add(Status);
 
-            StepNames = await stepExecutions.Select(e => e.StepName).Distinct().ToListAsync();
+            StepNames = await stepExecutions.Select(e => e.StepExecution.StepName).Distinct().ToListAsync();
             if (!StepNames.Contains(StepName) && !string.IsNullOrEmpty(StepName))
                 StepNames.Add(StepName);
 
             if (!string.IsNullOrEmpty(JobName))
             {
-                stepExecutions = stepExecutions.Where(e => e.JobName == JobName);
+                stepExecutions = stepExecutions.Where(e => e.StepExecution.Execution.JobName == JobName);
             }
 
             if (!string.IsNullOrEmpty(Status))
@@ -458,11 +464,11 @@
 
             if (!string.IsNullOrEmpty(StepName))
             {
-                stepExecutions = stepExecutions.Where(e => e.StepName == StepName);
+                stepExecutions = stepExecutions.Where(e => e.StepExecution.StepName == StepName);
             }
 
             StepExecutions = await stepExecutions
-                .OrderByDescending(e => e.CreatedDateTime)
+                .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
                 .ThenByDescending(e => e.StartDateTime)
                 .ToListAsync();
         }
@@ -481,7 +487,7 @@
         }
     }
 
-    private async Task StopStepExecutionAsync(StepExecution stepExecution)
+    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
     {
         try
         {
@@ -531,7 +537,7 @@
         await LoadData();
     }
 
-    private void ToggleSelectedStepExecution(StepExecution execution)
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.

@@ -160,7 +160,7 @@
         var dateTimeStart = DateTimeUntil.AddDays(-IntervalDays);
 
         // Get duration executions
-        var executionsQuery = context.JobExecutions
+        var executionsQuery = context.Executions
             .Where(e => e.EndDateTime != null && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
 
         if (!IncludeDeleted)
@@ -175,8 +175,8 @@
 
         // Group job executions by job names to day level and calculate each job's average duration as well as the number of executions.
         var executions = await executionsQuery
-            .OrderBy(e => e.CreatedDateTime)
-            .GroupBy(group => new
+            .OrderBy(e => e.CreatedDateTime).ToListAsync();
+        var executions_ = executions.GroupBy(group => new
             {
                 group.JobName,
                 ((DateTime)group.CreatedDateTime).Date
@@ -187,15 +187,17 @@
                 JobName = select.Key.JobName,
                 Date = select.Key.Date,
                 NumberOfExecutions = select.Count()
-            }).ToListAsync();
+            });
 
-        TimeSeriesItems = executions
+        TimeSeriesItems = executions_
             .GroupBy(e => e.JobName)
             .ToDictionary(e => e.Key, e => e.ToList());
 
 
         // Job success rates
-        var jobsQuery = context.JobExecutions
+        var jobsQuery = context.Executions
+            .Include(e => e.StepExecutions)
+            .ThenInclude(e => e.StepExecutionAttempts)
             .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
 
         if (!IncludeDeleted)
@@ -209,15 +211,15 @@
         }
 
         // Group job executions by job name and calculate average success percentage.
-        Jobs = await jobsQuery
-        .GroupBy(group => group.JobName)
+        var jobs = await jobsQuery.ToListAsync();
+        Jobs = jobs.GroupBy(group => group.JobName)
         .Select(select => new ReportingJob
         {
-            SuccessPercent = select.Average(total => total.SuccessPercent),
+            SuccessPercent = select.Average(total => total.GetSuccessPercent() ?? 0),
             JobName = select.Key
         })
         .OrderByDescending(order => order.SuccessPercent)
-        .ToListAsync();
+        .ToList();
 
         // Get a temporary list of all job names to retrieve their colors.
         var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
@@ -228,7 +230,9 @@
 
         // Get top failed steps
         var topFailedStepsQuery = context.StepExecutions
-            .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
+            .Include(e => e.StepExecutionAttempts)
+            .Include(e => e.Execution)
+            .Where(e => e.Execution.CreatedDateTime >= dateTimeStart && e.Execution.CreatedDateTime < DateTimeUntil);
 
         if (!IncludeDeleted)
         {
@@ -237,7 +241,7 @@
 
         if (OnlyScheduled)
         {
-            topFailedStepsQuery = topFailedStepsQuery.Where(e => e.ScheduleId != null);
+            topFailedStepsQuery = topFailedStepsQuery.Where(e => e.Execution.ScheduleId != null);
         }
 
         var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
@@ -245,7 +249,7 @@
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
-            .GroupBy(group => new { group.StepId, group.StepName, group.JobId, group.JobName })
+            .GroupBy(group => new { group.StepId, group.StepName, group.Execution.JobId, group.Execution.JobName })
             .Select(select => new TopStep
             {
                 StepName = select.Key.StepName,
@@ -253,7 +257,7 @@
                 JobName = select.Key.JobName,
                 JobId = select.Key.JobId,
                 NoOfExecutions = select.Count(),
-                SuccessPercent = (decimal)select.Count(e => e.ExecutionStatus == "SUCCEEDED") / select.Count() * 100
+                SuccessPercent = (decimal)select.Count(e => e.StepExecutionAttempts.Any(attempt => attempt.ExecutionStatus == "SUCCEEDED")) / select.Count() * 100
             })
             .OrderBy(order => order.SuccessPercent)
             .Where(e => e.SuccessPercent < 100)

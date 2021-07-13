@@ -22,7 +22,7 @@
 </style>
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@(JobExecution is not null ? JobExecution.JobName : null)</BSModalHeader>
+    <BSModalHeader @onclick="() => Modal.Hide()">@(Execution is not null ? Execution.JobName : null)</BSModalHeader>
     <BSModalBody>
 
         <BSButtonGroup IsToolbar="true">
@@ -58,7 +58,7 @@
         </BSButtonGroup>
 
         <AuthorizeView Roles="Admin, Editor, Operator">
-            @if (JobExecution is not null && JobExecution.ExecutionStatus == "RUNNING")
+            @if (Execution is not null && Execution.ExecutionStatus == "RUNNING")
             {
                 <BSButtonGroup IsToolbar="true" Class="mt-3">
                     <BSDropdown>
@@ -78,68 +78,68 @@
             <p></p>
         </div>
 
-        @if (JobExecution is not null && JobExecutionDetailsOpen)
+        @if (Execution is not null && JobExecutionDetailsOpen)
         {
             <dl class="row">
                 <dt class="col-sm-3">
                     Execution id
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.ExecutionId
+                    @Execution.ExecutionId
                 </dd>
                 <dt class="col-sm-3">
                     Dependency model
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.DependencyMode
+                    @Execution.DependencyMode
                 </dd>
                 <dt class="col-sm-3">
                     Created by
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.CreatedBy
+                    @Execution.CreatedBy
                 </dd>
                 <dt class="col-sm-3">
                     Created
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.CreatedDateTime
+                    @Execution.CreatedDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Started
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.StartDateTime
+                    @Execution.StartDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Ended
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.EndDateTime
+                    @Execution.EndDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Number of steps
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.NumberOfSteps
+                    @Execution.StepExecutions.Count
                 </dd>
                 <dt class="col-sm-3">
                     Success percent
                 </dt>
                 <dd class="col-sm-9">
-                    @JobExecution.SuccessPercent.FormatPercentage(0)
+                    @Execution.GetSuccessPercent()?.FormatPercentage(0)
                 </dd>
                 <dt class="col-sm-3">
                     Duration
                 </dt>
                 <dd class="col-sm-9">
-                    <text>@JobExecution.GetDurationInReadableFormat()</text>
+                    <text>@Execution.GetDurationInReadableFormat()</text>
                 </dd>
                 <dt class="col-sm-3">
                     Status
                 </dt>
                 <dd class="col-sm-9">
-                    <JobExecutionStatusBadgeComponent ExecutionStatus="@JobExecution.ExecutionStatus" />
+                    <JobExecutionStatusBadgeComponent ExecutionStatus="@Execution.ExecutionStatus" />
                 </dd>
             </dl>
         }
@@ -156,9 +156,9 @@
                         </div>
                         <select class="form-control form-control-sm" @bind="StatusFilter">
                             <option value="" selected=@string.IsNullOrEmpty(StatusFilter)>ALL</option>
-                            @if (Executions is not null)
+                            @if (StepExecutionAttempts is not null)
                             {
-                                @foreach (var status in Executions.Select(e => e.ExecutionStatus).Distinct().OrderBy(status => status))
+                                @foreach (var status in StepExecutionAttempts.Select(e => e.ExecutionStatus).Distinct().OrderBy(status => status))
                                 {
                                     <option value="@status"
                                             selected=@(status == StatusFilter)>
@@ -205,21 +205,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Executions is null)
+                    @if (StepExecutionAttempts is null)
                     {
                         <tr><td colspan="6">Loading...</td></tr>
                     }
-                    else if (Executions.Count == 0)
+                    else if (StepExecutionAttempts.Count == 0)
                     {
                         <tr><td colspan="6">No executions</td></tr>
                     }
                     else
                     {
-                        @foreach (var item in Executions.Where(e => string.IsNullOrEmpty(StatusFilter) || e.ExecutionStatus == StatusFilter))
+                        @foreach (var item in StepExecutionAttempts.Where(e => string.IsNullOrEmpty(StatusFilter) || e.ExecutionStatus == StatusFilter))
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
-                                    @item.StepName
+                                    @item.StepExecution.StepName
                                 </td>
                                 <td>
                                     <StepTypeIconComponent StepType_="@item.StepType" />
@@ -248,7 +248,7 @@
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
                                                 @if (item.ExecutionStatus == "RUNNING" || item.ExecutionStatus == "AWAIT RETRY" // Step is running or it is awaiting retry...
-                                                  && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                                  && !StepExecutionAttempts.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
                                                         <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -263,7 +263,7 @@
                                             </AuthorizeView>
                                         </BSButtonGroup>
                                         
-                                        <StepExecutionDetailsComponent StepExecution="item" />
+                                        <StepExecutionDetailsComponent StepExecutionAttempt="item" />
                                     </td>
                                 </tr>
                             }
@@ -282,21 +282,21 @@
     </BSModalFooter>
 </BSModal>
 
-<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecution="SelectedStepExecutionModal" />
+<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionModal" />
 
 <StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" NoBackdrop="true" />
 
 @code {
-        [Parameter]
-        public string? ExecutionId_ { get; set; }
+    [Parameter]
+    public string? ExecutionId_ { get; set; }
 
     private Guid ExecutionId => ExecutionId_ switch { not null => Guid.Parse(ExecutionId_), _ => Guid.Empty };
 
     private BSModal Modal { get; set; } = null!;
 
-    private JobExecution? JobExecution { get; set; }
+    private Execution? Execution { get; set; }
 
-    private List<StepExecution>? Executions { get; set; }
+    private IList<StepExecutionAttempt>? StepExecutionAttempts { get; set; }
 
     private bool ShowGraph { get; set; } = false;
 
@@ -306,7 +306,7 @@
 
     private string StatusFilter { get; set; } = string.Empty;
 
-    private StepExecution? SelectedStepExecution { get; set; }
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
@@ -323,7 +323,7 @@
             if (value == _SortOption)
             {
                 SortAscending = !SortAscending;
-                Executions?.Reverse();
+                StepExecutionAttempts?.Reverse();
             }
             else
             {
@@ -341,7 +341,7 @@
     private List<Guid> StoppingExecutions { get; set; } = new();
 
     private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; } = null!;
-    private StepExecution SelectedStepExecutionModal { get; set; } = null!;
+    private StepExecutionAttempt SelectedStepExecutionModal { get; set; } = null!;
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
     protected override void OnInitialized()
@@ -355,8 +355,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        JobExecution = null;
-        Executions = null;
+        Execution = null;
+        StepExecutionAttempts = null;
         await LoadData();
     }
 
@@ -367,9 +367,12 @@
             Loading = true;
             var context = DbFactory.CreateDbContext();
 
-            JobExecution = await context.JobExecutions.FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            Executions = await context.StepExecutions
-                .Include(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+            Execution = await context.Executions
+                .Include(e => e.StepExecutions)
+                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            StepExecutionAttempts = await context.StepExecutionAttempts
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Where(e => e.ExecutionId == ExecutionId)
                 .ToListAsync();
             SortExecutions();
@@ -377,11 +380,11 @@
             Loading = false;
 
             // Create a JSON dataset that is passed to the JS method used to draw the steps graph via JSInterop.
-            var dataset = Executions.Where(e => e.StartDateTime is not null).Select(e =>
+            var dataset = StepExecutionAttempts.Where(e => e.StartDateTime is not null).Select(e =>
             new
             {
-                id = e.StepExecutionId,
-                content = e.StepName,
+                id = e.UniqueId,
+                content = e.StepExecution.StepName,
                 title = e.ExecutionStatus + ", " + e.GetDurationInReadableFormat(),
                 className = e.ExecutionStatus.ToLower().Replace(' ', '-'),
                 start = e.StartDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss"),
@@ -400,22 +403,22 @@
             switch (SortOption_)
             {
                 case SortOption.Duration:
-                    Executions = Executions?.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepExecution.StepName).ToList();
                     break;
                 case SortOption.StartTime:
                     // false sorts before true => not started steps are placed last
-                    Executions = Executions?.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
                         .ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime)
-                        .ThenBy(e => e.StepName).ToList();
+                        .ThenBy(e => e.StepExecution.StepName).ToList();
                     break;
                 case SortOption.EndTime:
-                    Executions = Executions?.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepExecution.StepName).ToList();
                     break;
                 case SortOption.Name:
-                    Executions = Executions?.OrderBy(e => e.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.StepExecution.StepName).ToList();
                     break;
                 case SortOption.Status:
-                    Executions = Executions?.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepExecution.StepName).ToList();
                     break;
             }
         }
@@ -424,25 +427,25 @@
             switch (SortOption_)
             {
                 case SortOption.Duration:
-                    Executions = Executions?.OrderByDescending(e => e.ExecutionInSeconds).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.ExecutionInSeconds).ToList();
                     break;
                 case SortOption.StartTime:
-                    Executions = Executions?.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
                     break;
                 case SortOption.EndTime:
-                    Executions = Executions?.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
                     break;
                 case SortOption.Name:
-                    Executions = Executions?.OrderByDescending(e => e.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.StepExecution.StepName).ToList();
                     break;
                 case SortOption.Status:
-                    Executions = Executions?.OrderByDescending(e => e.ExecutionStatus).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.ExecutionStatus).ToList();
                     break;
             }
         }
     }
 
-    private void ToggleSelectedStepExecution(StepExecution execution)
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
@@ -497,7 +500,7 @@
 
     private void ShowStepExecutionModal(string text)
     {
-        var execution = Executions?.FirstOrDefault(e => e.StepExecutionId == text);
+        var execution = StepExecutionAttempts?.FirstOrDefault(e => e.UniqueId == text);
         if (execution is not null)
         {
             SelectedStepExecutionModal = execution;

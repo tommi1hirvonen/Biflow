@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using EtlManagerUtils;
+
+namespace EtlManagerDataAccess.Models
+{
+    public class ExeStepExecutionAttempt : StepExecutionAttempt
+    {
+        public ExeStepExecutionAttempt(string executionStatus) : base(executionStatus)
+        {
+        }
+
+        [Column("InfoMessage")]
+        public string? InfoMessage { get; set; }
+    }
+}

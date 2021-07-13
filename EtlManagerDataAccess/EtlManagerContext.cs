@@ -29,6 +29,7 @@ namespace EtlManagerDataAccess
         public DbSet<PackageStep> PackageSteps => Set<PackageStep>();
         public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
+        public DbSet<Execution> Executions => Set<Execution>();
         public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
         public DbSet<DatasetStepExecution> DatasetStepExecutions => Set<DatasetStepExecution>();
         public DbSet<ExeStepExecution> ExeStepExecutions => Set<ExeStepExecution>();
@@ -36,7 +37,7 @@ namespace EtlManagerDataAccess
         public DbSet<PackageStepExecution> PackageStepExecutions => Set<PackageStepExecution>();
         public DbSet<PipelineStepExecution> PipelineStepExecutions => Set<PipelineStepExecution>();
         public DbSet<SqlStepExecution> SqlStepExecutions => Set<SqlStepExecution>();
-        public DbSet<JobExecution> JobExecutions => Set<JobExecution>();
+        public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
         public DbSet<Dependency> Dependencies => Set<Dependency>();
         public DbSet<Schedule> Schedules => Set<Schedule>();
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
@@ -76,12 +77,18 @@ namespace EtlManagerDataAccess
 
             modelBuilder.HasDefaultSchema("etlmanager");
 
-            // Map executions to views, which have additional logic implemented.
-            // We never save or modify the executions via UI, so this is no problem.
+            modelBuilder.Entity<Execution>()
+                .ToTable("Execution");
+
             modelBuilder.Entity<StepExecution>()
-                .ToView("vExecution")
+                .ToTable("ExecutionStep")
+                .HasKey(step => new { step.ExecutionId, step.StepId });
+            modelBuilder.Entity<StepExecution>()
                 .Property(e => e.StepType)
                 .HasConversion(stepTypeConverter);
+            modelBuilder.Entity<StepExecution>()
+                .HasOne(step => step.Execution)
+                .WithMany(e => e.StepExecutions);
             modelBuilder.Entity<StepExecution>()
                 .HasDiscriminator<StepType?>("StepType")
                 .HasValue<DatasetStepExecution>(StepType.Dataset)
@@ -91,8 +98,23 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
                 .HasValue<SqlStepExecution>(StepType.Sql);
 
-            modelBuilder.Entity<JobExecution>()
-                .ToView("vExecutionJob");
+            modelBuilder.Entity<StepExecutionAttempt>()
+                .ToTable("ExecutionStepAttempt")
+                .HasKey(sea => new { sea.ExecutionId, sea.StepId, sea.RetryAttemptIndex });
+            modelBuilder.Entity<StepExecutionAttempt>()
+                .Property(sea => sea.StepType)
+                .HasConversion(stepTypeConverter);
+            modelBuilder.Entity<StepExecutionAttempt>()
+                .HasOne(sea => sea.StepExecution)
+                .WithMany(step => step.StepExecutionAttempts);
+            modelBuilder.Entity<StepExecutionAttempt>()
+                .HasDiscriminator<StepType?>("StepType")
+                .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
+                .HasValue<ExeStepExecutionAttempt>(StepType.Exe)
+                .HasValue<JobStepExecutionAttempt>(StepType.Job)
+                .HasValue<PackageStepExecutionAttempt>(StepType.Package)
+                .HasValue<PipelineStepExecutionAttempt>(StepType.Pipeline)
+                .HasValue<SqlStepExecutionAttempt>(StepType.Sql);
 
             modelBuilder.Entity<Dependency>()
                 .ToTable("Dependency")
@@ -162,7 +184,9 @@ namespace EtlManagerDataAccess
             });
 
             modelBuilder.Entity<StepExecutionParameter>()
-                .ToTable("vExecutionParameter")
+                .ToTable("ExecutionStepParameter")
+                .HasKey(param => new { param.ExecutionId, param.StepId, param.ParameterId });
+            modelBuilder.Entity<StepExecutionParameter>()
                 .HasOne(param => param.StepExecution)
                 .WithMany(e => e.StepExecutionParameters)
                 .IsRequired()

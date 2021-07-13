@@ -14,8 +14,8 @@ SELECT
 	@JobStatus = [ExecutionStatus],
 	@JobStartDateTime = [StartDateTime],
 	@JobEndDateTime = [EndDateTime],
-	@JobExecutionInSeconds = [ExecutionInSeconds]
-FROM [etlmanager].[vExecutionJob]
+	@JobExecutionInSeconds = datediff(second,[StartDateTime],isnull([EndDateTime],getdate()))
+FROM [etlmanager].[Execution]
 WHERE [ExecutionId] = @ExecutionId
 
 DECLARE @Color VARCHAR(100) = CASE @JobStatus
@@ -77,14 +77,15 @@ DECLARE
 
 DECLARE StepCursor CURSOR LOCAL FAST_FORWARD FOR
 SELECT
-	StepName,
-	StartDateTime,
-	EndDateTime,
-	ExecutionInSeconds,
-	ExecutionStatus,
-	ErrorMessage
-FROM etlmanager.Execution
-WHERE ExecutionId = @ExecutionId AND ExecutionStatus <> 'SUCCEEDED'
+	a.StepName,
+	b.StartDateTime,
+	b.EndDateTime,
+	ExecutionInSeconds = datediff(second,b.[StartDateTime],isnull(b.[EndDateTime],getdate())),
+	b.ExecutionStatus,
+	b.ErrorMessage
+FROM etlmanager.ExecutionStep AS a
+	INNER JOIN etlmanager.ExecutionStepAttempt AS b ON a.ExecutionId = b.ExecutionId AND a.StepId = b.StepId
+WHERE a.ExecutionId = @ExecutionId AND b.ExecutionStatus <> 'SUCCEEDED'
 ORDER BY StartDateTime
 
 OPEN StepCursor

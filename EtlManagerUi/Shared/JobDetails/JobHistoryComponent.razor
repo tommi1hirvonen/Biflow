@@ -64,10 +64,10 @@
                             <text>@item.GetDurationInReadableFormat()</text>
                         </td>
                         <td style="text-align: right;">
-                            @item.NumberOfSteps
+                            @item.StepExecutions.Count
                         </td>
                         <td style="text-align: right;">
-                            @item.SuccessPercent.FormatPercentage(2)
+                            @item.GetSuccessPercent()?.FormatPercentage(2)
                         </td>
                         <td>
                             <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
@@ -91,12 +91,12 @@
 
     private Guid PrevId { get; set; }
 
-    public IList<JobExecution>? Executions { get; set; }
+    public IList<Execution>? Executions { get; set; }
 
     public int MaxExecutions { get; set; } = 50;
 
     public decimal AverageSuccessRate { get; set; }
-    public int AverageDurationInSeconds { get; set; }
+    public double AverageDurationInSeconds { get; set; }
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
@@ -107,12 +107,14 @@
         {
             PrevId = Id;
             using var context = DbFactory.CreateDbContext();
-            Executions = await context.JobExecutions
-                    .Where(execution => execution.JobId == Id)
-                    .OrderByDescending(execution => execution.CreatedDateTime)
-                    .ThenByDescending(Execution => Execution.StartDateTime)
-                    .Take(MaxExecutions)
-                    .ToListAsync();
+            Executions = await context.Executions
+                .Include(execution => execution.StepExecutions)
+                .ThenInclude(execution => execution.StepExecutionAttempts)
+                .Where(execution => execution.JobId == Id)
+                .OrderByDescending(execution => execution.CreatedDateTime)
+                .ThenByDescending(Execution => Execution.StartDateTime)
+                .Take(MaxExecutions)
+                .ToListAsync();
 
             if (Executions.Count > 0)
             {

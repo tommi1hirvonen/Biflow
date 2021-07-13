@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Security.Policy;
 using System.Threading.Tasks;
@@ -9,15 +10,21 @@ namespace EtlManagerDataAccess.Models
 {
     public class PackageStepExecution : ParameterizedStepExecution
     {
-        public PackageStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public PackageStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
-        [Display(Name = "Package path")]
-        public string? PackagePath { get; set; }
+        [MaxLength(128)]
+        [Display(Name = "Folder name")]
+        public string? PackageFolderName { get; set; }
+
+        [MaxLength(128)]
+        [Display(Name = "Project name")]
+        public string? PackageProjectName { get; set; }
+
+        [MaxLength(260)]
+        [Display(Name = "Package name")]
+        public string? PackageName { get; set; }
 
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
@@ -25,6 +32,7 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Execute as login")]
         public string? ExecuteAsLogin { get; set; }
 
-        public long? PackageOperationId { get; set; }
+        [NotMapped]
+        public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
     }
 }

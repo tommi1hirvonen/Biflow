@@ -13,7 +13,7 @@ namespace EtlManagerUtils
 {
     public static class CommonUtility
     {
-        public static string SecondsToReadableFormat(this int value)
+        public static string SecondsToReadableFormat(this double value)
         {
             var duration = TimeSpan.FromSeconds(value);
             var result = "";

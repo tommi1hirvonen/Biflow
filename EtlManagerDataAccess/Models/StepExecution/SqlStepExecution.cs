@@ -9,17 +9,11 @@ namespace EtlManagerDataAccess.Models
 {
     public class SqlStepExecution : StepExecution
     {
-        public SqlStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public SqlStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
         [Display(Name = "SQL statement")]
         public string? SqlStatement { get; set; }
-
-        [Display(Name = "Info message")]
-        public string? InfoMessage { get; set; }
     }
 }

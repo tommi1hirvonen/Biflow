@@ -9,11 +9,8 @@ namespace EtlManagerDataAccess.Models
 {
     public class DatasetStepExecution : StepExecution
     {
-        public DatasetStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public DatasetStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
         [Display(Name = "Power BI Service id")]

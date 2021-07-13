@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using EtlManagerUtils;
 
 namespace EtlManagerDataAccess.Models
 {
-    abstract public class Execution
+    public class Execution
     {
 
         public Execution(string jobName, DateTime createdDateTime, string executionStatus)
@@ -17,7 +18,8 @@ namespace EtlManagerDataAccess.Models
             ExecutionStatus = executionStatus;
         }
 
-        abstract public Guid ExecutionId { get; set; }
+        [Key]
+        public Guid ExecutionId { get; set; }
 
         [Display(Name = "Job id")]
         public Guid JobId { get; set; }
@@ -40,9 +42,6 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Status")]
         public string ExecutionStatus { get; set; }
 
-        [Display(Name = "Duration (s)")]
-        public int? ExecutionInSeconds { get; set; }
-
         [Display(Name = "Dependency mode")]
         public bool DependencyMode { get; set; }
 
@@ -52,9 +51,21 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Schedule id")]
         public Guid? ScheduleId { get; set; }
 
-        public string? GetDurationInReadableFormat()
+        [Display(Name = "Executor PID")]
+        public int? ExecutorProcessId { get; set; }
+
+        public ICollection<StepExecution> StepExecutions { get; set; } = null!;
+
+        [NotMapped]
+        public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+
+        public string? GetDurationInReadableFormat() => ExecutionInSeconds?.SecondsToReadableFormat();
+
+        public decimal? GetSuccessPercent()
         {
-            return ExecutionInSeconds?.SecondsToReadableFormat() ?? null;
+            var successCount = StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == "SUCCEEDED") ?? false) ?? 0;
+            var allCount = StepExecutions?.Count ?? 0;
+            return (decimal)successCount / allCount * 100;
         }
     }
 }

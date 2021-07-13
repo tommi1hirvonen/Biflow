@@ -9,11 +9,8 @@ namespace EtlManagerDataAccess.Models
 {
     public abstract class ParameterizedStepExecution : StepExecution
     {
-        public ParameterizedStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public ParameterizedStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
         public ICollection<StepExecutionParameter> StepExecutionParameters { get; set; } = null!;

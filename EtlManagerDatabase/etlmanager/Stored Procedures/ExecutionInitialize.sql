@@ -11,9 +11,6 @@ SET NOCOUNT ON
 -- Create an execution id for ETL Manager.
 DECLARE @EtlManagerExecutionId UNIQUEIDENTIFIER = NEWID()
 
-DECLARE @JobIdString NVARCHAR(36) = CONVERT(NVARCHAR(36), @JobId)
-
-
 -- Split the list of step ids to be executed into a temporary table.
 DECLARE @Delimiter CHAR(1) = ',';
 
@@ -34,25 +31,86 @@ WITH Split AS(
 SELECT StepId = CONVERT(UNIQUEIDENTIFIER, SUBSTRING(@StepIds, StartPos, ISNULL(NULLIF(EndPos, 0), LEN(@StepIds) + 1) - StartPos))
 INTO #StepIds
 FROM Split
+OPTION (MAXRECURSION 10000) -- max 10000 steps
 
 
--- Insert placeholders for steps.
+SELECT
+	a.StepId,
+	a.StepName,
+	a.RetryAttempts,
+	a.RetryIntervalMinutes,
+	a.TimeoutMinutes,
+	a.ExecutionPhase,
+	a.StepType,
+	a.SqlStatement,
+	a.ConnectionId,
+	a.PackageFolderName,
+	a.PackageProjectName,
+	a.PackageName,
+	a.ExecuteIn32BitMode,
+	a.ExecuteAsLogin,
+	a.DataFactoryId,
+	a.PipelineName,
+	a.JobToExecuteId,
+	a.JobExecuteSynchronized,
+	a.ExeFileName,
+	a.ExeArguments,
+	a.ExeWorkingDirectory,
+	a.ExeSuccessExitCode,
+	a.PowerBIServiceId,
+	a.DatasetGroupId,
+	a.DatasetId
+INTO #Steps
+FROM etlmanager.Step AS a
+WHERE a.JobId = @JobId 
+	AND (
+		EXISTS (SELECT * FROM #StepIds AS x WHERE a.StepId = x.StepId) -- If a list of steps was provided, disregard IsEnabled
+		OR NOT EXISTS (SELECT * FROM #StepIds) AND a.IsEnabled = 1 -- If no list was provided, check IsEnabled
+	)
+
+
+IF (SELECT COUNT(*) FROM #Steps) = 0
+	RETURN
+
+
+
+-- Insert job execution
 INSERT INTO etlmanager.Execution (
 	ExecutionId,
 	JobId,
 	JobName,
-	StepId,
-	StepName,
 	CreatedDateTime,
 	StartDateTime,
 	EndDateTime,
 	ExecutionStatus,
-	RetryAttemptIndex,
+	DependencyMode,
+	CreatedBy,
+	ScheduleId
+)
+SELECT
+	ExecutionId = @EtlManagerExecutionId,
+	JobId = a.JobId,
+	JobName = a.JobName,
+	CreatedDateTime = GETDATE(),
+	StartDateTime = NULL,
+	EndDateTime = NULL,
+	ExecutionStatus = 'NOT STARTED',
+	DependencyMode = a.UseDependencyMode,
+	CreatedBy = @Username,
+	ScheduleId = @ScheduleId
+FROM etlmanager.Job AS a
+WHERE a.JobId = @JobId
+
+
+-- Insert placeholders for steps.
+INSERT INTO etlmanager.ExecutionStep (
+	ExecutionId,
+	StepId,
+	StepName,
 	RetryAttempts,
 	RetryIntervalMinutes,
 	TimeoutMinutes,
 	ExecutionPhase,
-	DependencyMode,
 	StepType,
 	SqlStatement,
 	ConnectionId,
@@ -71,26 +129,16 @@ INSERT INTO etlmanager.Execution (
 	ExeSuccessExitCode,
 	PowerBIServiceId,
 	DatasetGroupId,
-	DatasetId,
-	CreatedBy,
-	ScheduleId
+	DatasetId
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
-	JobId = a.JobId,
-	JobName = b.JobName,
 	StepId = a.StepId,
 	StepName = a.StepName,
-	CreatedDateTime = GETDATE(),
-	StartDateTime = NULL,
-	EndDateTime = NULL,
-	ExecutionStatus = 'NOT STARTED',
-	RetryAttempt = 0,
 	RetryAttempts = a.RetryAttempts,
 	RetryIntervalMinutes = a.RetryIntervalMinutes,
 	TimeoutMinutes = a.TimeoutMinutes,
 	ExecutionPhase = a.ExecutionPhase,
-	DependencyMode = b.UseDependencyMode,
 	StepType = a.StepType,
 	SqlStatement = a.SqlStatement,
 	ConnectionId = a.ConnectionId,
@@ -109,20 +157,33 @@ SELECT
 	a.ExeSuccessExitCode,
 	a.PowerBIServiceId,
 	a.DatasetGroupId,
-	a.DatasetId,
-	CreatedBy = @Username,
-	ScheduleId = @ScheduleId
-FROM etlmanager.Step AS a
-	JOIN etlmanager.Job AS b ON a.JobId = b.JobId
-WHERE a.JobId = @JobId 
-	AND (
-		EXISTS (SELECT * FROM #StepIds AS x WHERE a.StepId = x.StepId) -- If a list of steps was provided, disregard IsEnabled
-		OR NOT EXISTS (SELECT * FROM #StepIds) AND a.IsEnabled = 1 -- If no list was provided, check IsEnabled
-	)
+	a.DatasetId
+FROM #Steps AS a
+
+
+-- Insert placeholders for steps.
+INSERT INTO etlmanager.ExecutionStepAttempt (
+	ExecutionId,
+	StepId,
+	StartDateTime,
+	EndDateTime,
+	ExecutionStatus,
+	RetryAttemptIndex,
+	StepType
+)
+SELECT
+	ExecutionId = @EtlManagerExecutionId,
+	StepId = a.StepId,
+	StartDateTime = NULL,
+	EndDateTime = NULL,
+	ExecutionStatus = 'NOT STARTED',
+	RetryAttempt = 0,
+	StepType = a.StepType
+FROM #Steps
 
 
 -- Store and historize package execution parameters.
-INSERT INTO etlmanager.ExecutionParameter (
+INSERT INTO etlmanager.ExecutionStepParameter (
 	ExecutionId,
 	ParameterId,
 	StepId,
@@ -139,12 +200,12 @@ SELECT
 	b.ParameterValue,
 	b.ParameterLevel,
 	b.ParameterType
-FROM etlmanager.Execution AS a
+FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.PackageParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 -- Store and historize pipeline execution parameters.
-INSERT INTO etlmanager.ExecutionParameter (
+INSERT INTO etlmanager.ExecutionStepParameter (
 	ExecutionId,
 	ParameterId,
 	StepId,
@@ -161,7 +222,7 @@ SELECT
 	b.ParameterValue,
 	'Pipeline' AS ParameterLevel,
 	b.ParameterType
-FROM etlmanager.Execution AS a
+FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.PipelineParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 

@@ -194,7 +194,7 @@
 
 @code {
     private IList<Job> jobs { get; set; } = null!;
-    private Dictionary<Guid, JobExecution> LastExecutions { get; set; } = null!;
+    private Dictionary<Guid, Execution> LastExecutions { get; set; } = null!;
     private Job NewJob { get; set; } = new() { IsEnabled = true };
     private Job EditJob { get; set; } = new();
 
@@ -221,14 +221,14 @@
     private async Task LoadLastExecutions(EtlManagerContext context)
     {
         // Get each job's last execution.
-        var lastExecutions = await context.JobExecutions
+        var lastExecutions = await context.Executions
             .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
             {
                 Key = key,
-                Execution = context.JobExecutions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
+                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
             })
             .ToListAsync();
 
@@ -237,9 +237,9 @@
     }
 
     // Helper method for Dictionary TryGet access
-    private JobExecution? GetLastExecution(Job job)
+    private Execution? GetLastExecution(Job job)
     {
-        JobExecution? execution = null;
+        Execution? execution = null;
         LastExecutions?.TryGetValue(job.JobId, out execution);
         return execution;
     }

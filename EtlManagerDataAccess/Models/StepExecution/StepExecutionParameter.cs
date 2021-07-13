@@ -6,10 +6,11 @@ namespace EtlManagerDataAccess.Models
 {
     public class StepExecutionParameter
     {
-        [Key]
-        public string? StepExecutionParameterId { get; set; }
+        public Guid ExecutionId { get; set; }
+        
+        public Guid StepId { get; set; }
 
-        public string? StepExecutionId { get; set; }
+        public Guid ParameterId { get; set; }
 
         public string? ParameterName { get; set; }
 

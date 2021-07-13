@@ -1,35 +1,35 @@
-﻿@if (StepExecution is not null)
+﻿@if (StepExecutionAttempt is not null)
 {
     <dl class="row">
         <dt class="col-sm-3">
             Execution id
         </dt>
         <dd class="col-sm-9">
-            @StepExecution.ExecutionId
+            @StepExecutionAttempt.ExecutionId
         </dd>
         <dt class="col-sm-3">
             Executor PID
         </dt>
         <dd class="col-sm-9">
-            @StepExecution.ExecutorProcessId
+            @StepExecutionAttempt.StepExecution.Execution.ExecutorProcessId
         </dd>
         <dt class="col-sm-3">
             Job
         </dt>
         <dd class="col-sm-9">
-            @StepExecution.JobName
+            @StepExecutionAttempt.StepExecution.Execution.JobName
         </dd>
         <dt class="col-sm-3">
             Created by
         </dt>
         <dd class="col-sm-9">
-            @StepExecution.CreatedBy
+            @StepExecutionAttempt.StepExecution.Execution.CreatedBy
         </dd>
         <dt class="col-sm-3">
             Created
         </dt>
         <dd class="col-sm-9">
-            @StepExecution.CreatedDateTime
+            @StepExecutionAttempt.StepExecution.Execution.CreatedDateTime
         </dd>
 
         @if (ShowExtraDetails)
@@ -38,39 +38,39 @@
                 Started
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.StartDateTime
+                @StepExecutionAttempt.StartDateTime
             </dd>
             <dt class="col-sm-3">
                 Ended
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.EndDateTime
+                @StepExecutionAttempt.EndDateTime
             </dd>
             <dt class="col-sm-3">
                 <text>Duration</text>
             </dt>
             <dd class="col-sm-9">
-                <text>@StepExecution.GetDurationInReadableFormat()</text>
+                <text>@StepExecutionAttempt.GetDurationInReadableFormat()</text>
             </dd>
             <dt class="col-sm-3">
                 Status
             </dt>
             <dd class="col-sm-9">
-                <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecution.ExecutionStatus" />
+                <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecutionAttempt.ExecutionStatus" />
             </dd>
         }
 
-        @if (StepExecution.ExecutionStatus == "STOPPED")
+        @if (StepExecutionAttempt.ExecutionStatus == "STOPPED")
         {
             <dt class="col-sm-3">
                 Stopped by
             </dt>
             <dd class="col-sm-9">
-                @StepExecution.StoppedBy
+                @StepExecutionAttempt.StoppedBy
             </dd>
         }
 
-        @if (StepExecution is SqlStepExecution sql)
+        @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
         {
             <dt class="col-sm-3">
                 SQL statement
@@ -82,10 +82,13 @@
                 Info message
             </dt>
             <dd class="col-sm-9">
-                <pre><code>@sql.InfoMessage</code></pre>
+                @if (StepExecutionAttempt is SqlStepExecutionAttempt sql_)
+                {
+                    <pre><code>@sql_.InfoMessage</code></pre>
+                }
             </dd>
         }
-        else if (StepExecution is PackageStepExecution package)
+        else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
         {
             <dt class="col-sm-3">
                 Package path
@@ -109,10 +112,13 @@
                 Operation id
             </dt>
             <dd class="col-sm-9">
-                @package.PackageOperationId
+                @if (StepExecutionAttempt is PackageStepExecutionAttempt package__)
+                {
+                    @package__.PackageOperationId
+                }
             </dd>
         }
-        else if (StepExecution is PipelineStepExecution pipeline)
+        else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
         {
             <dt class="col-sm-3">
                 Pipeline name
@@ -124,7 +130,10 @@
                 Pipeline run id
             </dt>
             <dd class="col-sm-9">
-                @pipeline.PipelineRunId
+                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipeline__)
+                {
+                    @pipeline__.PipelineRunId
+                }
             </dd>
             <dt class="col-sm-3">
                 Data Factory id
@@ -133,7 +142,7 @@
                 @pipeline.DataFactoryId
             </dd>
         }
-        else if (StepExecution is ExeStepExecution exe)
+        else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
         {
             <dt class="col-sm-3">
                 File path
@@ -163,10 +172,13 @@
                 Output
             </dt>
             <dd class="col-sm-9">
-                <pre><code>@exe.InfoMessage</code></pre>
+                @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
+                {
+                    <pre><code>@exe_.InfoMessage</code></pre>
+                }
             </dd>
         }
-        else if (StepExecution is DatasetStepExecution dataset)
+        else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
         {
             <dt class="col-sm-3">
                 Group id
@@ -191,10 +203,10 @@
             Error message
         </dt>
         <dd class="col-sm-9">
-            <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecution.ErrorMessage</text>
+            <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</text>
         </dd>
     </dl>
-    @if (StepExecution is PackageStepExecution package_)
+    @if (StepExecutionAttempt.StepExecution is PackageStepExecution package_)
     {
         <h6>Parameters</h6>
         <dl class="row">
@@ -205,7 +217,7 @@
             }
         </dl>
     }
-    else if (StepExecution is PipelineStepExecution pipeline)
+    else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
     {
         <h6>Parameters</h6>
         <dl class="row">
@@ -221,7 +233,7 @@
 
 @code {
     [Parameter]
-    public StepExecution? StepExecution { get; set; }
+    public StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
     [Parameter]
     public bool ShowExtraDetails { get; set; } = false;

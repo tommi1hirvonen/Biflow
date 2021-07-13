@@ -9,11 +9,8 @@ namespace EtlManagerDataAccess.Models
 {
     public class ExeStepExecution : StepExecution
     {
-        public ExeStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public ExeStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
         [Display(Name = "File path")]
@@ -27,8 +24,5 @@ namespace EtlManagerDataAccess.Models
 
         [Display(Name = "Success exit code")]
         public int? ExeSuccessExitCode { get; set; }
-
-        [Display(Name = "Info message")]
-        public string? InfoMessage { get; set; }
     }
 }

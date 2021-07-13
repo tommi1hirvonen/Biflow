@@ -9,11 +9,8 @@ namespace EtlManagerDataAccess.Models
 {
     public class JobStepExecution : StepExecution
     {
-        public JobStepExecution(string stepExecutionId, string stepName, string jobName, DateTime createdDateTime, string executionStatus)
-            : base(stepExecutionId, stepName, jobName, createdDateTime, executionStatus)
+        public JobStepExecution(string stepName) : base(stepName)
         {
-            StepExecutionId = stepExecutionId;
-            StepName = stepName;
         }
 
         [Display(Name = "Job to execute")]

@@ -36,7 +36,7 @@
                         {
                             <tr class="table-borderless">
                                 <td colspan="4" class="bg-light">
-                                    <StepExecutionDetailsComponent StepExecution="execution" />
+                                    <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
                                 </td>
                             </tr>
                         }
@@ -62,11 +62,11 @@
 
     private BSModal Modal { get; set; } = null!;
 
-    private List<StepExecution>? Executions { get; set; }
+    private List<StepExecutionAttempt>? Executions { get; set; }
 
     public const int MaxExecutions = 50;
 
-    private StepExecution? SelectedStepExecution { get; set; }
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -75,17 +75,20 @@
             Executions = null; // Set to null to reset the modal layout.
 
             var context = DbFactory.CreateDbContext();
-            Executions = await context.StepExecutions
-                .Include(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+            Executions = await context.StepExecutionAttempts
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(step => (step as ParameterizedStepExecution)!.StepExecutionParameters)
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(step => step.Execution)
                 .Where(e => e.StepId == StepId)
-                .OrderByDescending(execution => execution.CreatedDateTime)
+                .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
                 .ThenByDescending(Execution => Execution.StartDateTime)
                 .Take(MaxExecutions)
                 .ToListAsync();
         }
     }
 
-    private void ToggleSelectedStepExecution(StepExecution execution)
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();

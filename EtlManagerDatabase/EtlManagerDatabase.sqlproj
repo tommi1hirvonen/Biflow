@@ -73,13 +73,11 @@
     <Build Include="etlmanager\Tables\Step.sql" />
     <Build Include="etlmanager\Tables\User.sql" />
     <Build Include="etlmanager\Tables\Schedule.sql" />
-    <Build Include="etlmanager\Views\vExecution.sql" />
     <Build Include="etlmanager\Stored Procedures\UserAdd.sql" />
     <Build Include="etlmanager\Stored Procedures\UserAuthenticate.sql" />
     <Build Include="etlmanager\Stored Procedures\UserUpdatePassword.sql" />
     <Build Include="etlmanager\Stored Procedures\ExecutionInitialize.sql" />
     <Build Include="Security\etlmanager.sql" />
-    <Build Include="etlmanager\Views\vExecutionJob.sql" />
     <Build Include="etlmanager\Stored Procedures\JobCopy.sql" />
     <Build Include="etlmanager\Tables\PackageParameter.sql" />
     <Build Include="etlmanager\Tables\Subscription.sql" />
@@ -99,7 +97,6 @@
     <Build Include="etlmanager\Stored Procedures\EncryptionKeySet.sql" />
     <Build Include="etlmanager\Views\vConnection.sql" />
     <Build Include="etlmanager\Tables\ExecutionParameter.sql" />
-    <Build Include="etlmanager\Views\vExecutionParameter.sql" />
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
     <Build Include="etlmanager\Tables\PipelineParameter.sql" />
@@ -112,6 +109,8 @@
     <Build Include="etlmanager\Views\vPowerBIService.sql" />
     <Build Include="etlmanager\Stored Procedures\DataFactoryGet.sql" />
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceGet.sql" />
+    <Build Include="etlmanager\Tables\ExecutionStep.sql" />
+    <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">
