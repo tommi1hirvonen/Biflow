@@ -173,12 +173,12 @@ INSERT INTO etlmanager.ExecutionStepAttempt (
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
-	StepId = a.StepId,
+	StepId,
 	StartDateTime = NULL,
 	EndDateTime = NULL,
 	ExecutionStatus = 'NOT STARTED',
 	RetryAttempt = 0,
-	StepType = a.StepType
+	StepType
 FROM #Steps
 
 

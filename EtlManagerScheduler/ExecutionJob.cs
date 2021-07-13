@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -17,11 +19,13 @@ namespace EtlManagerScheduler
     {
         private readonly ILogger<ExecutionJob> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
-        public ExecutionJob(ILogger<ExecutionJob> logger, IConfiguration configuration)
+        public ExecutionJob(ILogger<ExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
         {
             _logger = logger;
             _configuration = configuration;
+            _dbContextFactory = dbContextFactory;
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -36,13 +40,13 @@ namespace EtlManagerScheduler
                 var jobId = Guid.Parse(context.JobDetail.Key.Name);
                 var scheduleId = Guid.Parse(context.Trigger.Key.Name);
 
-                using var sqlConnection = new SqlConnection(etlManagerConnectionString);
-                await sqlConnection.OpenAsync();
-
                 try
                 {
-                    var isEnabled = await sqlConnection.ExecuteScalarAsync<bool>(
-                        "SELECT IsEnabled FROM etlmanager.Job WHERE JobId = @JobId", new { JobId = jobId });
+                    using var dbContext = _dbContextFactory.CreateDbContext();
+                    var isEnabled = await dbContext.Jobs
+                        .Where(job => job.JobId == jobId)
+                        .Select(job => job.IsEnabled)
+                        .FirstAsync();
                     if (!isEnabled)
                         return;
                 }
@@ -51,6 +55,9 @@ namespace EtlManagerScheduler
                     _logger.LogError(ex, "Error getting job IsEnabled status");
                     return;
                 }
+
+                using var sqlConnection = new SqlConnection(etlManagerConnectionString);
+                await sqlConnection.OpenAsync();
 
                 Guid executionId;
                 try
