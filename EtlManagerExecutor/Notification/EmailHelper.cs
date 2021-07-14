@@ -1,5 +1,8 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using EtlManagerExecutor.Notification;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
@@ -14,20 +17,14 @@ namespace EtlManagerExecutor
 {
     public static class EmailHelper
     {
-        public static void SendNotification(IConfiguration configuration, string executionId)
+        public static void SendNotification(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, Guid executionId)
         {
-            using var sqlConnection = new SqlConnection(configuration.GetValue<string>("EtlManagerConnectionString"));
-
-            Guid jobId;
-            string jobName;
-            string jobStatus;
+            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
+            using var context = dbContextFactory.CreateDbContext();
+            Execution execution;
             try
             {
-                (jobId, jobName, jobStatus) = sqlConnection.QueryFirst<(Guid, string, string)>(
-                    @"SELECT JobId, JobName, ExecutionStatus
-                    FROM etlmanager.vExecutionJob
-                    WHERE ExecutionId = @ExecutionId",
-                    new { ExecutionId = executionId });
+                execution = context.Executions.Find(executionId);
             }
             catch (Exception ex)
             {
@@ -35,22 +32,27 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            var subscriptionTypeFilter = jobStatus switch
+            var subscriptionTypeFilter = execution.ExecutionStatus switch
             {
-                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" => new string[] { "FAILURE", "COMPLETION" },
-                "SUCCEEDED" or "WARNING" => new string[] { "SUCCESS", "COMPLETION" },
-                _ => new string[] { "COMPLETION" }
+                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" =>
+                new SubscriptionType[] { SubscriptionType.OnFailure, SubscriptionType.OnCompletion },
+                "SUCCEEDED" or "WARNING" =>
+                new SubscriptionType[] { SubscriptionType.OnSuccess, SubscriptionType.OnCompletion },
+                _ =>
+                new SubscriptionType[] { SubscriptionType.OnCompletion }
             };
 
             List<string> recipients;
             try
             {
-                recipients = sqlConnection.Query<string>(
-                    @"SELECT DISTINCT B.[Email]
-                    FROM [etlmanager].[Subscription] AS A
-                        INNER JOIN [etlmanager].[User] AS B ON A.[Username] = B.[Username]
-                    WHERE A.[JobId] = @JobId AND B.[Email] IS NOT NULL AND A.[SubscriptionType] IN @SubscriptionTypeFilter",
-                    new { JobId = jobId, SubscriptionTypeFilter = subscriptionTypeFilter }).ToList();
+                var subscriptions = context.Subscriptions
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
+                    .ToList();
+                recipients = subscriptions
+                    .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
+                    .Select(s => s.User.Email ?? "")
+                    .ToList();
             }
             catch (Exception ex)
             {
@@ -102,7 +104,7 @@ namespace EtlManagerExecutor
                 mailMessage = new MailMessage
                 {
                     From = new MailAddress(emailSettings.FromAddress),
-                    Subject = $"{jobName} completed with status {jobStatus} – ETL Manager notification",
+                    Subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – ETL Manager notification",
                     IsBodyHtml = true,
                     Body = messageBody
                 };

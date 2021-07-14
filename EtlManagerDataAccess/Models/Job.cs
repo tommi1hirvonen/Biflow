@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class Job
+    public record Job
     {
         [Key]
         [Required]
@@ -39,6 +39,7 @@ namespace EtlManagerDataAccess.Models
         public bool IsEnabled { get; set; }
 
         public ICollection<Step> Steps { get; set; } = null!;
+        public ICollection<JobStep> JobSteps { get; set; } = null!;
         public ICollection<Schedule> Schedules { get; set; } = null!;
 
         public ICollection<Subscription> Subscriptions { get; set; } = null!;

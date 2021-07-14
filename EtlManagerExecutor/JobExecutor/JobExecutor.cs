@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,7 +27,7 @@ namespace EtlManagerExecutor
             this.dbContextFactory = dbContextFactory;
         }
 
-        public async Task RunAsync(string executionId, bool notify)
+        public async Task RunAsync(Guid executionId, bool notify)
         {
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
             var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
@@ -44,26 +45,33 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            using var dbContext = dbContextFactory.CreateDbContext();
-
-            bool dependencyMode;
+            Execution execution;
             Job job;
-            using (var sqlConnection = new SqlConnection(connectionString))
+            using (var context = dbContextFactory.CreateDbContext())
             {
                 try
                 {
-                    await UpdateExecutorProcessIdAsync(executionId, sqlConnection);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error updating process id for execution");
-                }
-                try
-                {
-                    (job, dependencyMode) = await dbContext.StepExecutions
-                        .Where(e => e.ExecutionId.ToString() == executionId)
-                        .Select(e => new Tuple<Job, bool>(new Job(e.JobId, e.JobName), e.DependencyMode))
-                        .FirstAsync();
+                    var process = Process.GetCurrentProcess();
+                    execution = await context.Executions
+                        .AsNoTrackingWithIdentityResolution()
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => e.StepExecutionAttempts)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                        .FirstAsync(e => e.ExecutionId == executionId);
+                    
+                    execution.ExecutorProcessId = process.Id;
+                    execution.ExecutionStatus = "RUNNING";
+                    execution.StartDateTime = DateTime.Now;
+                    context.Attach(execution);
+                    context.Entry(execution).Property(e => e.ExecutorProcessId).IsModified = true;
+                    context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
+                    context.Entry(execution).Property(e => e.StartDateTime).IsModified = true;
+                    await context.SaveChangesAsync();
+                    
+                    job = await context.Jobs
+                        .AsNoTrackingWithIdentityResolution()
+                        .FirstAsync(j => j.JobId == execution.JobId);
                 }
                 catch (Exception ex)
                 {
@@ -73,7 +81,7 @@ namespace EtlManagerExecutor
             }
 
             var executionConfig = new ExecutionConfiguration(
-                dbContext: dbContext,
+                dbContextFactory: dbContextFactory,
                 connectionString: connectionString,
                 encryptionKey: encryptionPassword,
                 maxParallelSteps: maxParallelSteps,
@@ -104,32 +112,63 @@ namespace EtlManagerExecutor
             }
 
             ExecutorBase executor;
-            if (dependencyMode)
+            if (execution.DependencyMode)
             {
                 Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
-                executor = new DependencyModeExecutor(executionConfig);
+                executor = new DependencyModeExecutor(executionConfig, execution);
             }
             else
             {
                 Log.Information("{executionId} Starting execution in execution phase mode", executionId);
-                executor = new ExecutionPhaseExecutor(executionConfig);
+                executor = new ExecutionPhaseExecutor(executionConfig, execution);
             }
-            await executor.RunAsync();
+
+            try
+            {
+                await executor.RunAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error during job execution");
+            }
+
+            // Get job execution status based on step execution statuses.
+            var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
+            string status;
+            if (allStepAttempts.All(step => step.ExecutionStatus == "SUCCEEDED"))
+                status = "SUCCEEDED";
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == "FAILED"))
+                status = "FAILED";
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == "AWAIT RETRY" || step.ExecutionStatus == "DUPLICATE"))
+                status = "WARNING";
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == "STOPPED"))
+                status = "STOPPED";
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == "NOT STARTED"))
+                status = "SUSPENDED";
+            else
+                status = "FAILED";
+
+            // Update job execution status.
+            try
+            {
+                using var context = dbContextFactory.CreateDbContext();
+                execution.ExecutionStatus = status;
+                execution.EndDateTime = DateTime.Now;
+                context.Attach(execution);
+                context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
+                context.Entry(execution).Property(e => e.EndDateTime).IsModified = true;
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error updating execution status");
+            }
 
             // Execution finished. Notify subscribers of possible errors.
             if (notify)
             {
-                EmailHelper.SendNotification(configuration, executionId);
+                EmailHelper.SendNotification(configuration, dbContextFactory, executionId);
             }
-        }
-
-        private static async Task UpdateExecutorProcessIdAsync(string executionId, SqlConnection sqlConnection)
-        {
-            // Update this Executor process's PID for the execution.
-            var process = Process.GetCurrentProcess();
-            await sqlConnection.ExecuteAsync(
-                "UPDATE etlmanager.Execution SET ExecutorProcessId = @ProcessId WHERE ExecutionId = @ExecutionId",
-                new { ProcessId = process.Id, ExecutionId = executionId });
         }
 
         /// <summary>
@@ -140,9 +179,9 @@ namespace EtlManagerExecutor
         /// <returns>
         /// JSON string of circular job dependencies or null if there were no circular dependencies.
         /// </returns>
-        private static async Task<string?> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
+        private async Task<string?> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
         {
-            var dependencies = await ReadDependenciesAsync(executionConfig.ConnectionString);
+            var dependencies = await ReadDependenciesAsync();
             List<List<Job>> cycles = dependencies.FindCycles();
 
             var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
@@ -153,22 +192,20 @@ namespace EtlManagerExecutor
                 ? null : json;
         }
 
-        private static async Task<Dictionary<Job, List<Job>>> ReadDependenciesAsync(string connectionString)
+        private async Task<Dictionary<Job, List<Job>>> ReadDependenciesAsync()
         {
-            using var sqlConnection = new SqlConnection(connectionString);
-            var rows = (await sqlConnection.QueryAsync<(Guid, string, Guid, string)>(
-                @"SELECT
-                    a.JobId,
-                    b.JobName,
-                    a.JobToExecuteId,
-                    c.JobName as JobToExecuteName
-                FROM etlmanager.Step AS a
-                    INNER JOIN etlmanager.Job AS b ON a.JobId = b.JobId
-                    INNER JOIN etlmanager.Job AS c ON a.JobToExecuteId = c.JobId
-                WHERE a.StepType = 'JOB'")).ToList();
-            var jobs = rows.Select(row => (new Job(row.Item1, row.Item2), new Job(row.Item3, row.Item4))).ToList();
-            var dependencies = jobs
-                .GroupBy(key => key.Item1, element => element.Item2)
+            using var context = dbContextFactory.CreateDbContext();
+            var steps = await context.JobSteps
+                .Include(step => step.Job)
+                .Include(step => step.JobToExecute)
+                .Select(step => new
+                {
+                    step.Job,
+                    step.JobToExecute
+                })
+                .ToListAsync();
+            var dependencies = steps
+                .GroupBy(key => key.Job, element => element.JobToExecute)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
             return dependencies;
         }

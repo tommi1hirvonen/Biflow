@@ -99,10 +99,7 @@ namespace EtlManagerExecutor
     class JobExecutorOptions
     {
         [Option('i', "id", HelpText = "Execution id", Required = true)]
-        // Safe to suppress because Required = true
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public string ExecutionId { get; set; }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public Guid ExecutionId { get; set; }
 
         [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
         public bool Notify { get; set; }

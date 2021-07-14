@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class JobStep : Step
+    public record JobStep : Step
     {
         [Display(Name = "Job to execute")]
         public Guid? JobToExecuteId { get; set; }
 
         [Display(Name = "Synchronized")]
         public bool JobExecuteSynchronized { get; set; }
+
+        public Job JobToExecute { get; set; } = null!;
     }
 }

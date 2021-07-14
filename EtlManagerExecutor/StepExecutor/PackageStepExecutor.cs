@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -10,77 +11,36 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PackageStepExecutionBuilder : IStepExecutionBuilder
+    class PackageStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            
-            (var packageFolderName, var packageProjectName, var packageName, var executeIn32BitMode,
-                var executeAsLogin, var executePackagesAsLogin, var connectionString, var timeoutMinutes) =
-                await sqlConnection.QueryFirstAsync<(string, string, string, bool, string?, string?, string, int)>(
-                    @"SELECT TOP 1
-                        PackageFolderName,
-                        PackageProjectName,
-                        PackageName,
-                        ExecuteIn32BitMode,
-                        ExecuteAsLogin,
-                        ExecutePackagesAsLogin = etlmanager.GetExecutePackagesAsLogin(ConnectionId),
-                        ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
-                        TimeoutMinutes
-                    FROM etlmanager.Execution with (nolock)
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                    new { config.ExecutionId, step.StepId, EncryptionPassword = config.EncryptionKey });
-            executeAsLogin = string.IsNullOrWhiteSpace(executeAsLogin) ? null : executeAsLogin;
-            executePackagesAsLogin = string.IsNullOrWhiteSpace(executePackagesAsLogin) ? null : executePackagesAsLogin;
-            executeAsLogin ??= executePackagesAsLogin;
-            return new PackageStepExecution(config, step, connectionString,
-                    packageFolderName, packageProjectName, packageName, executeIn32BitMode, timeoutMinutes, executeAsLogin);
-        }
-    }
-
-    class PackageStepExecution : StepExecutionBase
-    {
-        private string ConnectionString { get; init; }
+        private PackageStepExecution Step { get; init; }
         private long PackageOperationId { get; set; }
-        private string FolderName { get; init; }
-        private string ProjectName { get; init; }
-        private string PackageName { get; init; }
-        private bool ExecuteIn32BitMode { get; init; }
-        private string? ExecuteAsLogin { get; set; }
-
-        private int TimeoutMinutes { get; init; }
         private bool Completed { get; set; }
         private bool Success { get; set; }
 
         private const int MaxRefreshRetries = 3;
 
-        public PackageStepExecution(ExecutionConfiguration configuration, Step step, string connectionString,
-            string folderName, string projectName, string packageName, bool executeIn32BitMode, int timeoutMinutes, string? executeAsLogin)
-            : base(configuration, step)
+        public PackageStepExecutor(ExecutionConfiguration configuration, PackageStepExecution step) : base(configuration)
         {
-            ConnectionString = connectionString;
-            FolderName = folderName;
-            ProjectName = projectName;
-            PackageName = packageName;
-            ExecuteIn32BitMode = executeIn32BitMode;
-            TimeoutMinutes = timeoutMinutes;
-            ExecuteAsLogin = executeAsLogin;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Get possible parameters.
-            HashSet<Parameter> parameters;
+            string connectionString;
             try
             {
-                parameters = await GetStepParameters();
+                using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
+                connectionString = await sqlConnection.ExecuteScalarAsync<string>(
+                @"SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionPassword)",
+                new { Step.ConnectionId, EncryptionPassword = Configuration.EncryptionKey });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error retrieving package parameters", Configuration.ExecutionId, Step);
-                return new ExecutionResult.Failure("Error reading package parameters: " + ex.Message);
+                Log.Error(ex, "{ExecutionId} {Step} Error getting connection string for package execution", Configuration.ExecutionId, Step);
+                return new ExecutionResult.Failure($"Error getting connection string for connection id {Step.ConnectionId}: {ex.Message}");
             }
 
             // Start the package execution and capture the SSISDB operation id.
@@ -89,7 +49,7 @@ namespace EtlManagerExecutor
             {
                 Log.Information("{ExecutionId} {Step} Starting package execution", Configuration.ExecutionId, Step);
 
-                await StartExecutionAsync(parameters);
+                await StartExecutionAsync(connectionString);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
@@ -101,12 +61,19 @@ namespace EtlManagerExecutor
             // Update the SSISDB operation id for the target package execution.
             try
             {
-                using var etlManagerConnection = new SqlConnection(Configuration.ConnectionString);
-                await etlManagerConnection.ExecuteAsync(
-                    @"UPDATE etlmanager.Execution
-                    SET PackageOperationId = @OperationId
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex",
-                    new { Configuration.ExecutionId, Step.StepId, RetryAttemptIndex = RetryAttemptCounter, OperationId = PackageOperationId });
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
+                if (attempt is not null && attempt is PackageStepExecutionAttempt package)
+                {
+                    package.PackageOperationId = PackageOperationId;
+                    context.Attach(package);
+                    context.Entry(package).Property(e => e.PackageOperationId).IsModified = true;
+                    await context.SaveChangesAsync(CancellationToken.None);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Could not find step execution attempt to update package operation id");
+                }
             }
             catch (Exception ex)
             {
@@ -116,24 +83,24 @@ namespace EtlManagerExecutor
             // Monitor the package's execution.
             try
             {
-                await TryRefreshStatusAsync(cancellationToken);
+                await TryRefreshStatusAsync(connectionString, cancellationToken);
                 while (!Completed)
                 {
                     // Check for possible timeout.
-                    if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
+                    if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
                     {
-                        await CancelAsync();
+                        await CancelAsync(connectionString);
                         Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
                     await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
-                    await TryRefreshStatusAsync(cancellationToken);
+                    await TryRefreshStatusAsync(connectionString, cancellationToken);
                 }
             }
             catch (OperationCanceledException)
             {
-                await CancelAsync();
+                await CancelAsync(connectionString);
                 throw;
             }
             catch (Exception ex)
@@ -147,7 +114,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    List<string?> errors = await GetErrorMessagesAsync();
+                    List<string?> errors = await GetErrorMessagesAsync(connectionString);
                     return new ExecutionResult.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)
@@ -161,13 +128,13 @@ namespace EtlManagerExecutor
             return new ExecutionResult.Success();
         }
 
-        private async Task StartExecutionAsync(HashSet<Parameter> parameters)
+        private async Task StartExecutionAsync(string connectionString)
         {
             var commandBuilder = new StringBuilder();
             
             commandBuilder.Append("USE SSISDB\n");
             
-            if (ExecuteAsLogin is not null)
+            if (Step.ExecuteAsLogin is not null)
                 commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
             
             commandBuilder.Append(
@@ -176,8 +143,8 @@ namespace EtlManagerExecutor
                 EXEC [SSISDB].[catalog].[create_execution]
                     @package_name = @PackageName,
                     @execution_id = @execution_id OUTPUT,
-                    @folder_name = @FolderName,
-                    @project_name = @ProjectName,
+                    @folder_name = @PackageFolderName,
+                    @project_name = @PackageProjectName,
                     @use32bitruntime = @ExecuteIn32BitMode,
                     @reference_id = NULL
 
@@ -194,17 +161,17 @@ namespace EtlManagerExecutor
                     @parameter_value = 0" + "\n"
                 );
 
-            foreach (var parameter in parameters)
+            foreach (var parameter in Step.StepExecutionParameters)
             {
-                var objectType = parameter.Level == "Project" ? "20" : "30"; // 20 => project parameter; 30 => package parameter
+                var objectType = parameter.ParameterLevel == "Project" ? "20" : "30"; // 20 => project parameter; 30 => package parameter
                 // Same parameter name can be used for project and package parameter.
                 // Use level in addition to name to uniquely identify each parameter.
                 commandBuilder.Append(
                     @"EXEC [SSISDB].[catalog].[set_execution_parameter_value]
                         @execution_id,
                         @object_type = " + objectType + @",
-                        @parameter_name = @ParameterName" + parameter.Name + parameter.Level + @",
-                        @parameter_value = @ParameterValue" + parameter.Name + parameter.Level + "\n"
+                        @parameter_name = @ParameterName" + parameter.ParameterName + parameter.ParameterLevel + @",
+                        @parameter_value = @ParameterValue" + parameter.ParameterName + parameter.ParameterLevel + "\n"
                     );
             }
 
@@ -216,34 +183,22 @@ namespace EtlManagerExecutor
 
             string commandString = commandBuilder.ToString();
             var dynamicParams = new DynamicParameters();
-            dynamicParams.AddDynamicParams(new { FolderName, ProjectName, PackageName, ExecuteIn32BitMode });
+            dynamicParams.AddDynamicParams(new { Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, Step.ExecuteIn32BitMode });
             
-            if (ExecuteAsLogin is not null)
-                dynamicParams.Add("ExecuteAsLogin", ExecuteAsLogin);
+            if (Step.ExecuteAsLogin is not null)
+                dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
            
-            foreach (var param in parameters)
+            foreach (var param in Step.StepExecutionParameters)
             {
-                dynamicParams.Add($"ParameterName{param.Name}{param.Level}", param.Name);
-                dynamicParams.Add($"ParameterValue{param.Name}{param.Level}", param.Value);
+                dynamicParams.Add($"ParameterName{param.ParameterName}{param.ParameterLevel}", param.ParameterName);
+                dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue);
             }
 
-            using var sqlConnection = new SqlConnection(ConnectionString);
+            using var sqlConnection = new SqlConnection(connectionString);
             PackageOperationId = await sqlConnection.ExecuteScalarAsync<long>(commandString, dynamicParams);
         }
 
-        private async Task<HashSet<Parameter>> GetStepParameters()
-        {
-            using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-            var rows = await sqlConnection.QueryAsync<Parameter>(
-                @"SELECT [Name] = [ParameterName], [Value] = [ParameterValue], [Level] = [ParameterLevel]
-                FROM etlmanager.ExecutionParameter
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel IN ('Package','Project')",
-                new { Step.StepId, Configuration.ExecutionId });
-            var parameters = rows.ToHashSet();
-            return parameters;
-        }
-
-        private async Task TryRefreshStatusAsync(CancellationToken cancellationToken)
+        private async Task TryRefreshStatusAsync(string connectionString, CancellationToken cancellationToken)
         {
             int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
@@ -251,7 +206,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    using var sqlConnection = new SqlConnection(ConnectionString);
+                    using var sqlConnection = new SqlConnection(connectionString);
                     var status = await sqlConnection.ExecuteScalarAsync<int>(
                         "SELECT status from SSISDB.catalog.operations where operation_id = @OperationId",
                         new { OperationId = PackageOperationId });
@@ -275,9 +230,9 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
         }
 
-        private async Task<List<string?>> GetErrorMessagesAsync()
+        private async Task<List<string?>> GetErrorMessagesAsync(string connectionString)
         {
-            using var sqlConnection = new SqlConnection(ConnectionString);
+            using var sqlConnection = new SqlConnection(connectionString);
             var messages = await sqlConnection.QueryAsync<string?>(
                 @"SELECT message
                 FROM SSISDB.catalog.operation_messages
@@ -286,14 +241,28 @@ namespace EtlManagerExecutor
             return messages.ToList();
         }
 
-        private async Task CancelAsync()
+        private async Task CancelAsync(string connectionString)
         {
             Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Configuration.ExecutionId, Step, PackageOperationId);
             try
             {
-                using var sqlConnection = new SqlConnection(ConnectionString);
-                await sqlConnection.ExecuteAsync("EXEC SSISDB.catalog.stop_operation @OperationId",
-                    new { OperationId = PackageOperationId });
+                using var sqlConnection = new SqlConnection(connectionString);
+                var commandBuilder = new StringBuilder();
+                commandBuilder.Append("USE SSISDB\n");
+
+                if (Step.ExecuteAsLogin is not null)
+                    commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
+                
+                commandBuilder.Append("EXEC SSISDB.catalog.stop_operation @OperationId");
+                
+                var dynamicParams = new DynamicParameters();
+                dynamicParams.AddDynamicParams(new { OperationId = PackageOperationId });
+                
+                if (Step.ExecuteAsLogin is not null)
+                    dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
+
+                var command = commandBuilder.ToString();
+                await sqlConnection.ExecuteAsync(command, dynamicParams);
             }
             catch (Exception ex)
             {

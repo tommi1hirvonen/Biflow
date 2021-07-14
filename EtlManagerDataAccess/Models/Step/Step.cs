@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract class Step : IComparable
+    public abstract record Step : IComparable
     {
         [Key]
         [Required]
@@ -16,7 +16,7 @@ namespace EtlManagerDataAccess.Models
         [Required]
         public Guid JobId { get; set; }
 
-        public Job? Job { get; set; }
+        public Job Job { get; set; } = null!;
 
         [Required]
         [MaxLength(250)]

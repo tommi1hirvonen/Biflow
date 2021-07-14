@@ -1,4 +1,6 @@
 ﻿using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,19 +11,19 @@ namespace EtlManagerExecutor
 {
     public class ExecutionConfiguration
     {
-        public EtlManagerContext DbContext { get; init; }
+        public IDbContextFactory<EtlManagerContext> DbContextFactory { get; init; }
         public string ConnectionString { get; init; }
-        public string ExecutionId { get; init; }
+        public Guid ExecutionId { get; init; }
         public string? EncryptionKey { get; init; }
         public string Username { get; set; }
         public int MaxParallelSteps { get; init; }
         public int PollingIntervalMs { get; init; }
         public Job Job { get; init; }
         public bool Notify { get; init; }
-        public ExecutionConfiguration(EtlManagerContext dbContext, string connectionString, string executionId, string? encryptionKey,
+        public ExecutionConfiguration(IDbContextFactory<EtlManagerContext> dbContextFactory, string connectionString, Guid executionId, string? encryptionKey,
             int maxParallelSteps, int pollingIntervalMs, Job job, bool notify, string username)
         {
-            DbContext = dbContext;
+            DbContextFactory = dbContextFactory;
             ConnectionString = connectionString;
             ExecutionId = executionId;
             EncryptionKey = encryptionKey;

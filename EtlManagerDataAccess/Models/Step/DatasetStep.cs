@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class DatasetStep : Step
+    public record DatasetStep : Step
     {
         public Guid? PowerBIServiceId { get; set; }
 

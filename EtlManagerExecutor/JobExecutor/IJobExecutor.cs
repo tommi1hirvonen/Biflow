@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
     interface IJobExecutor
     {
-        Task RunAsync(string executionId, bool notify);
+        Task RunAsync(Guid executionId, bool notify);
     }
 }

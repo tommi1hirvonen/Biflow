@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,29 +15,14 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class JobStepExecutionBuilder : IStepExecutionBuilder
+    class JobStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            (var jobToExecuteId, var jobExecuteSynchronized) = await sqlConnection.QueryFirstAsync<(Guid, bool)>(
-                @"SELECT TOP 1 JobToExecuteId, JobExecuteSynchronized
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                new { config.ExecutionId, step.StepId });
-            return new JobStepExecution(config, step, jobToExecuteId, jobExecuteSynchronized);
-        }
-    }
+        private JobStepExecution Step { get; init; }
 
-    class JobStepExecution : StepExecutionBase
-    {
-        private Guid JobToExecuteId { get; init; }
-        private bool JobExecuteSynchronized { get; init; }
-
-        public JobStepExecution(ExecutionConfiguration configuration, Step step, Guid jobToExecuteId, bool jobExecuteSynchronized)
-            : base(configuration, step)
+        public JobStepExecutor(ExecutionConfiguration configuration, JobStepExecution step)
+            : base(configuration)
         {
-            JobToExecuteId = jobToExecuteId;
-            JobExecuteSynchronized = jobExecuteSynchronized;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
@@ -53,11 +39,11 @@ namespace EtlManagerExecutor
                 try
                 {
                     jobExecutionId = await sqlConnection.ExecuteScalarAsync<Guid>(
-                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", new { JobId_ = JobToExecuteId });
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", new { JobId_ = Step.JobToExecuteId });
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Configuration.ExecutionId, Step, JobToExecuteId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Configuration.ExecutionId, Step, Step.JobToExecuteId);
                     return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
                 }
 
@@ -90,7 +76,7 @@ namespace EtlManagerExecutor
 
             }
 
-            if (JobExecuteSynchronized)
+            if (Step.JobExecuteSynchronized)
             {
                 try
                 {
@@ -106,7 +92,7 @@ namespace EtlManagerExecutor
                 {
                     using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
                     var status = await sqlConnection.ExecuteScalarAsync<string>(
-                        "SELECT TOP 1 ExecutionStatus FROM etlmanager.vExecutionJob WHERE ExecutionId = @ExecutionId",
+                        "SELECT TOP 1 ExecutionStatus FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
                         new { ExecutionId = jobExecutionId });
                     return status switch
                     {

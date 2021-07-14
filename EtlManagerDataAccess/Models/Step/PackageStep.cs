@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class PackageStep : Step
+    public record PackageStep : Step
     {
         [Column("ConnectionId")]
         public Guid? ConnectionId { get; set; }

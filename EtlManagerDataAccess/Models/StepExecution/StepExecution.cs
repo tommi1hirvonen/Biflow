@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract class StepExecution
+    public abstract record StepExecution
     {
         public StepExecution(string stepName)
         {

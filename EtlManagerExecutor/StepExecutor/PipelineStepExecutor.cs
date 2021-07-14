@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Serilog;
@@ -12,34 +13,16 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PipelineStepExecutionBuilder : IStepExecutionBuilder
+    class PipelineStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            (var dataFactoryId, var pipelineName, var timeoutMinutes) = await sqlConnection.QueryFirstAsync<(Guid, string, int)>(
-                @"SELECT TOP 1 DataFactoryId, PipelineName, TimeoutMinutes
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                new { config.ExecutionId, step.StepId });
-            return new PipelineStepExecution(config, step, dataFactoryId, pipelineName, timeoutMinutes);
-        }
-    }
-
-    class PipelineStepExecution : StepExecutionBase
-    {
-        private Guid DataFactoryId { get; init; }
+        private PipelineStepExecution Step { get; init; }
         private DataFactoryHelper? DataFactoryHelper { get; set; }
-        private string PipelineName { get; init; }
-        private int TimeoutMinutes { get; init; }
 
         private const int MaxRefreshRetries = 3;
 
-        public PipelineStepExecution(ExecutionConfiguration configuration, Step step, Guid dataFactoryId, string pipelineName, int timeoutMinutes)
-            : base(configuration, step)
+        public PipelineStepExecutor(ExecutionConfiguration configuration, PipelineStepExecution step) : base(configuration)
         {
-            DataFactoryId = dataFactoryId;
-            PipelineName = pipelineName;
-            TimeoutMinutes = timeoutMinutes;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
@@ -50,7 +33,8 @@ namespace EtlManagerExecutor
             IDictionary<string, object> parameters;
             try
             {
-                parameters = await GetStepParameters();
+                parameters = Step.StepExecutionParameters
+                    .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
             }
             catch (Exception ex)
             {
@@ -64,11 +48,11 @@ namespace EtlManagerExecutor
             // Get the target Data Factory information from the database.
             try
             {
-                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.ConnectionString, DataFactoryId, Configuration.EncryptionKey);
+                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.ConnectionString, Step.DataFactoryId, Configuration.EncryptionKey);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error getting Data Factory information for id {DataFactoryId}", DataFactoryId);
+                Log.Error(ex, "Error getting Data Factory information for id {DataFactoryId}", Step.DataFactoryId);
                 return new ExecutionResult.Failure($"Error getting Data Factory object information:\n{ex.Message}");
             }
 
@@ -76,24 +60,31 @@ namespace EtlManagerExecutor
             DateTime startTime;
             try
             {
-                runId = await DataFactoryHelper.StartPipelineRunAsync(PipelineName, parameters, cancellationToken);
+                runId = await DataFactoryHelper.StartPipelineRunAsync(Step.PipelineName, parameters, cancellationToken);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactoryId, PipelineName);
+                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactoryId, Step.PipelineName);
                 return new ExecutionResult.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
 
             try
             {
-                using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                await sqlConnection.ExecuteAsync(
-                    @"UPDATE etlmanager.Execution
-                    SET PipelineRunId = @PipelineRunId
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND RetryAttemptIndex = @RetryAttemptIndex",
-                    new { Configuration.ExecutionId, Step.StepId, RetryAttemptIndex = RetryAttemptCounter, PipelineRunId = runId });
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
+                if (attempt is not null && attempt is PipelineStepExecutionAttempt pipeline)
+                {
+                    pipeline.PipelineRunId = runId;
+                    context.Attach(pipeline);
+                    context.Entry(pipeline).Property(e => e.PipelineRunId).IsModified = true;
+                    await context.SaveChangesAsync(CancellationToken.None);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Could not find step execution attempt to update pipeline run id");
+                }
             }
             catch (Exception ex)
             {
@@ -109,7 +100,7 @@ namespace EtlManagerExecutor
                     if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                     {
                         // Check for timeout.
-                        if (TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > TimeoutMinutes)
+                        if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
                         {
                             await CancelAsync(runId);
                             Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
@@ -138,18 +129,6 @@ namespace EtlManagerExecutor
             {
                 return new ExecutionResult.Failure(pipelineRun.Message);
             }
-        }
-
-        private async Task<Dictionary<string, object>> GetStepParameters()
-        {
-            using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-            var parameters = await sqlConnection.QueryAsync<(string, object)>(
-                @"SELECT ParameterName, ParameterValue
-                FROM etlmanager.ExecutionParameter
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId AND ParameterLevel = 'Pipeline'",
-                new { Configuration.ExecutionId, Step.StepId });
-            var dictionary = parameters.ToDictionary(key => key.Item1, value => value.Item2);
-            return dictionary;
         }
 
         private async Task<PipelineRun> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class ExeStep : Step
+    public record ExeStep : Step
     {
+        [Required]
         [Display(Name = "File path")]
         public string? ExeFileName { get; set; }
 

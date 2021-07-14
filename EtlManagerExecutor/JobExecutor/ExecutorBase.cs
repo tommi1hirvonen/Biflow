@@ -1,4 +1,6 @@
-﻿using Serilog;
+﻿using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +19,8 @@ namespace EtlManagerExecutor
 
         protected ExecutionConfiguration ExecutionConfig { get; init; }
 
+        protected Execution Execution { get; init; }
+
         private SemaphoreSlim Semaphore { get; init; }
 
         protected Dictionary<Guid, CancellationTokenSource> CancellationTokenSources { get; } = new();
@@ -29,11 +33,12 @@ namespace EtlManagerExecutor
             Failed
         };
 
-        protected Dictionary<Step, ExecutionStatus> StepStatuses { get; } = new();
+        protected Dictionary<Guid, ExecutionStatus> StepStatuses { get; } = new();
 
-        public ExecutorBase(ExecutionConfiguration executionConfiguration)
+        public ExecutorBase(ExecutionConfiguration executionConfiguration, Execution execution)
         {
             ExecutionConfig = executionConfiguration;
+            Execution = execution;
             Semaphore = new SemaphoreSlim(ExecutionConfig.MaxParallelSteps, ExecutionConfig.MaxParallelSteps);
         }
 
@@ -47,7 +52,7 @@ namespace EtlManagerExecutor
             _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
         }
 
-        protected async Task StartNewStepWorkerAsync(Step step)
+        protected async Task StartNewStepWorkerAsync(StepExecution step)
         {
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
@@ -64,7 +69,7 @@ namespace EtlManagerExecutor
             finally
             {
                 // Update the status.
-                StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+                StepStatuses[step.StepId] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
                 // Release the semaphore once to make room for new parallel executions.
                 Semaphore.Release();
                 Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
@@ -114,11 +119,11 @@ namespace EtlManagerExecutor
         }
 
 
-        private void ReadCancelPipe(string executionId)
+        private void ReadCancelPipe(Guid executionId)
         {
             while (true)
             {
-                using var pipeServer = new NamedPipeServerStream(executionId.ToLower(), PipeDirection.In);
+                using var pipeServer = new NamedPipeServerStream(executionId.ToString().ToLower(), PipeDirection.In);
                 pipeServer.WaitForConnection();
                 try
                 {

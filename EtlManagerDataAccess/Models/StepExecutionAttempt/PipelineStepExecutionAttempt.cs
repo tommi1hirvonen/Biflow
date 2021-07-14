@@ -9,7 +9,7 @@ using EtlManagerUtils;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class PipelineStepExecutionAttempt : StepExecutionAttempt
+    public record PipelineStepExecutionAttempt : StepExecutionAttempt
     {
         public PipelineStepExecutionAttempt(string executionStatus) : base(executionStatus)
         {

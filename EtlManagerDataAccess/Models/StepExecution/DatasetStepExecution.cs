@@ -7,19 +7,21 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class DatasetStepExecution : StepExecution
+    public record DatasetStepExecution : StepExecution
     {
-        public DatasetStepExecution(string stepName) : base(stepName)
+        public DatasetStepExecution(string stepName, string datasetGroupId, string datasetId) : base(stepName)
         {
+            DatasetGroupId = datasetGroupId;
+            DatasetId = datasetId;
         }
 
         [Display(Name = "Power BI Service id")]
-        public Guid? PowerBIServiceId { get; set; }
+        public Guid PowerBIServiceId { get; set; }
         
         [Display(Name = "Group id")]
-        public string? DatasetGroupId { get; set; }
+        public string DatasetGroupId { get; set; }
 
         [Display(Name = "Dataset id")]
-        public string? DatasetId { get; set; }
+        public string DatasetId { get; set; }
     }
 }

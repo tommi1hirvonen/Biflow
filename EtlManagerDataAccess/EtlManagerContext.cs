@@ -151,6 +151,10 @@ namespace EtlManagerDataAccess
                 .HasValue<PackageStep>(StepType.Package)
                 .HasValue<PipelineStep>(StepType.Pipeline)
                 .HasValue<SqlStep>(StepType.Sql);
+            modelBuilder.Entity<JobStep>()
+                .HasOne(step => step.JobToExecute)
+                .WithMany(job => job.JobSteps)
+                .HasForeignKey(step => step.JobToExecuteId);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")

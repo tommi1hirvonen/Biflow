@@ -18,10 +18,15 @@ namespace EtlManagerExecutor
             {
                 using var sqlConnection = new SqlConnection(executionConfig.ConnectionString);
                 await sqlConnection.ExecuteAsync(
-                    @"UPDATE etlmanager.Execution
+                    @"UPDATE etlmanager.ExecutionStepAttempt
                     SET ExecutionStatus = 'FAILED', ErrorMessage = @ErrorMessage, StartDateTime = GETDATE(), EndDateTime = GETDATE()
                     WHERE ExecutionId = @ExecutionId",
                     new { ErrorMessage = errorMessage, executionConfig.ExecutionId });
+                await sqlConnection.ExecuteAsync(
+                    @"UPDATE etlmanager.Execution
+                    SET ExecutionStatus = 'FAILED' StartDateTime = GETDATE(), EndDateTime = GETDATE()
+                    WHERE ExecutionId = @ExecutionId",
+                    new { executionConfig.ExecutionId });
             }
             catch (Exception ex)
             {

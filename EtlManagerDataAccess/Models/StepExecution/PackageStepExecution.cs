@@ -8,29 +8,38 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class PackageStepExecution : ParameterizedStepExecution
+    public record PackageStepExecution : ParameterizedStepExecution
     {
-        public PackageStepExecution(string stepName) : base(stepName)
+        public PackageStepExecution(string stepName, string packageFolderName, string packageProjectName, string packageName) : base(stepName)
         {
+            PackageFolderName = packageFolderName;
+            PackageProjectName = packageProjectName;
+            PackageName = packageName;
         }
 
         [MaxLength(128)]
         [Display(Name = "Folder name")]
-        public string? PackageFolderName { get; set; }
+        public string PackageFolderName { get; set; }
 
         [MaxLength(128)]
         [Display(Name = "Project name")]
-        public string? PackageProjectName { get; set; }
+        public string PackageProjectName { get; set; }
 
         [MaxLength(260)]
         [Display(Name = "Package name")]
-        public string? PackageName { get; set; }
+        public string PackageName { get; set; }
 
         [Display(Name = "32 bit mode")]
         public bool ExecuteIn32BitMode { get; set; }
 
         [Display(Name = "Execute as login")]
         public string? ExecuteAsLogin { get; set; }
+
+        [Column("ConnectionId")]
+        public Guid ConnectionId { get; set; }
+
+        [Column("TimeoutMinutes")]
+        public int TimeoutMinutes { get; set; }
 
         [NotMapped]
         public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;

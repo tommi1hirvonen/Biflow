@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class SqlStep : Step
+    public record SqlStep : Step
     {
         [Display(Name = "SQL statement")]
         public string? SqlStatement { get; set; }

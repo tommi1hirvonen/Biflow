@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,18 +16,17 @@ namespace EtlManagerExecutor
 {
     class ExecutionPhaseExecutor : ExecutorBase
     {
-        public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration) : base(executionConfiguration) { }
+        public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration, Execution execution)
+            : base(executionConfiguration, execution) { }
 
         public override async Task RunAsync()
         {
-            // Fetch all steps for this execution along with their execution phase.
-            var allSteps = await ReadStepsAsync();
-
             // Initialize CancellationTokenSources
-            allSteps.ForEach(step => CancellationTokenSources[step.StepId] = new());
+            foreach (var step in Execution.StepExecutions)
+                CancellationTokenSources[step.StepId] = new();
 
             // Group steps based on their execution phase
-            var groupedSteps = allSteps
+            var groupedSteps = Execution.StepExecutions
                 .GroupBy(key => key.ExecutionPhase, element => element)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
 
@@ -43,13 +44,5 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task<List<ExecutionPhaseStep>> ReadStepsAsync()
-        {
-            using var sqlConnection = new SqlConnection(ExecutionConfig.ConnectionString);
-            var steps = (await sqlConnection.QueryAsync<ExecutionPhaseStep>(
-                "SELECT DISTINCT StepId, StepName, ExecutionPhase FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
-                new { ExecutionConfig.ExecutionId })).ToList();
-            return steps;
-        }
     }
 }

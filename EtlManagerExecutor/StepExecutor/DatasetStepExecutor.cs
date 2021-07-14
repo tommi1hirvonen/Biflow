@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Serilog;
 using System;
@@ -8,31 +9,13 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class DatasetStepExecutionBuilder : IStepExecutionBuilder
+    class DatasetStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            (var powerBIServiceId, var groupId, var datasetId) = await sqlConnection.QueryFirstAsync<(Guid, string, string)>(
-                @"SELECT TOP 1 PowerBIServiceId, DatasetGroupId, DatasetId
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                new { config.ExecutionId, step.StepId });
-            return new DatasetStepExecution(config, step, powerBIServiceId, groupId, datasetId);
-        }
-    }
+        private DatasetStepExecution Step { get; init; }
 
-    class DatasetStepExecution : StepExecutionBase
-    {
-        private Guid PowerBIServiceId { get; init; }
-        private string GroupId { get; init; }
-        private string DatasetId { get; init; }
-
-        public DatasetStepExecution(ExecutionConfiguration configuration, Step step, Guid powerBIServiceId,
-            string groupId, string datasetId) : base(configuration, step)
+        public DatasetStepExecutor(ExecutionConfiguration configuration, DatasetStepExecution step) : base(configuration)
         {
-            PowerBIServiceId = powerBIServiceId;
-            GroupId = groupId;
-            DatasetId = datasetId;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
@@ -46,18 +29,18 @@ namespace EtlManagerExecutor
             PowerBIServiceHelper powerBIServiceHelper;
             try
             {
-                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.ConnectionString, PowerBIServiceId, Configuration.EncryptionKey);
+                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.ConnectionString, Step.PowerBIServiceId, Configuration.EncryptionKey);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error getting Power BI Service information for id {PowerBIServiceId}", PowerBIServiceId);
+                Log.Error(ex, "Error getting Power BI Service information for id {PowerBIServiceId}", Step.PowerBIServiceId);
                 return new ExecutionResult.Failure($"Error getting Power BI Service object information:\n{ex.Message}");
             }
 
             // Start dataset refresh.
             try
             {
-                await powerBIServiceHelper.RefreshDatasetAsync(GroupId, DatasetId, cancellationToken);
+                await powerBIServiceHelper.RefreshDatasetAsync(Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                 
             }
             catch (OperationCanceledException)
@@ -77,7 +60,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    var refresh = await powerBIServiceHelper.GetDatasetRefreshStatus(GroupId, DatasetId, cancellationToken);
+                    var refresh = await powerBIServiceHelper.GetDatasetRefreshStatus(Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                     if (refresh?.Status == "Completed")
                     {
                         return new ExecutionResult.Success();

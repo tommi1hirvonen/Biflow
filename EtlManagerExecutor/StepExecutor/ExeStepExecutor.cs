@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -11,44 +12,16 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExeStepExecutionBuilder : IStepExecutionBuilder
+    class ExeStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            (var fileName, var arguments, var workingDirectory, var successExitCode, var timeoutMinutes) =
-                await sqlConnection.QueryFirstAsync<(string, string, string, int?, int)>(
-                    @"SELECT TOP 1
-                        ExeFileName,
-                        ExeArguments,
-                        ExeWorkingDirectory,
-                        ExeSuccessExitCode,
-                        TimeoutMinutes
-                    FROM etlmanager.Execution with (nolock)
-                    WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                    new { config.ExecutionId, step.StepId });
-            return new ExeStepExecution(config, step, fileName, arguments, workingDirectory, successExitCode, timeoutMinutes);
-        }
-    }
-
-    class ExeStepExecution : StepExecutionBase
-    {
-        private string FileName { get; init; }
-        private string Arguments { get; init; }
-        private string WorkingDirectory { get; init; }
-        private int? SuccessExitCode { get; init; }
-        private int TimeoutMinutes { get; init; }
+        private ExeStepExecution Step { get; init; }
 
         private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
         private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();
 
-        public ExeStepExecution(ExecutionConfiguration configuration, Step step, string fileName, string arguments, string workingDirectory, int? succcessExitCode, int timeoutMinutes)
-            : base(configuration, step)
+        public ExeStepExecutor(ExecutionConfiguration configuration, ExeStepExecution step) : base(configuration)
         {
-            FileName = fileName;
-            Arguments = arguments;
-            WorkingDirectory = workingDirectory;
-            TimeoutMinutes = timeoutMinutes;
-            SuccessExitCode = succcessExitCode;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
@@ -57,7 +30,7 @@ namespace EtlManagerExecutor
 
             var startInfo = new ProcessStartInfo()
             {
-                FileName = FileName,
+                FileName = Step.ExeFileName,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
@@ -65,11 +38,11 @@ namespace EtlManagerExecutor
                 RedirectStandardOutput = true
             };
 
-            if (!string.IsNullOrWhiteSpace(Arguments))
-                startInfo.Arguments = Arguments;
+            if (!string.IsNullOrWhiteSpace(Step.ExeArguments))
+                startInfo.Arguments = Step.ExeArguments;
 
-            if (!string.IsNullOrWhiteSpace(WorkingDirectory))
-                startInfo.WorkingDirectory = WorkingDirectory;
+            if (!string.IsNullOrWhiteSpace(Step.ExeWorkingDirectory))
+                startInfo.WorkingDirectory = Step.ExeWorkingDirectory;
 
             var process = new Process() { StartInfo = startInfo };
             process.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
@@ -83,7 +56,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Configuration.ExecutionId, Step, FileName);
+                Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Configuration.ExecutionId, Step, Step.ExeFileName);
                 return new ExecutionResult.Failure("Error starting process: " + ex.Message);
             }
 
@@ -92,7 +65,7 @@ namespace EtlManagerExecutor
                 var processTask = process.WaitForExitAsync(cancellationToken);
 
                 // Convert timeout minutes to milliseconds if provided, otherwise -1 to wait indefinitely.
-                var timeoutMs = TimeoutMinutes > 0 ? TimeoutMinutes * 60 * 1000 : -1;
+                var timeoutMs = Step.TimeoutMinutes > 0 ? Step.TimeoutMinutes * 60 * 1000 : -1;
                 var timeoutTask = Task.Delay(timeoutMs, cancellationToken);
 
                 // Wait for either the process to finish or for timeout.
@@ -104,7 +77,7 @@ namespace EtlManagerExecutor
                     throw new OperationCanceledException();
                 }
                 // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
-                else if (SuccessExitCode is null || process.ExitCode == SuccessExitCode)
+                else if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
                 {
                     return new ExecutionResult.Success(OutputMessageBuilder.ToString());
                 }
@@ -130,7 +103,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Configuration.ExecutionId, Step, FileName);
+                Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Configuration.ExecutionId, Step, Step.ExeFileName);
                 return new ExecutionResult.Failure("Error while executing exe: " + ex.Message);
             }
         }

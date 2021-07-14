@@ -84,7 +84,6 @@
     <Build Include="etlmanager\Stored Procedures\StepCopy.sql" />
     <Build Include="etlmanager\Views\vUser.sql" />
     <Build Include="etlmanager\Stored Procedures\GetNotificationMessageBody.sql" />
-    <Build Include="etlmanager\Stored Procedures\ExecutionStepCopy.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
     <Build Include="etlmanager\Tables\Connection.sql" />
     <Build Include="etlmanager\Functions\GetConnectionStringDecrypted.sql" />

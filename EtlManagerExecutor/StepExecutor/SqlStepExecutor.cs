@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -10,46 +11,42 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class SqlStepExecutionBuilder : IStepExecutionBuilder
+    class SqlStepExecutor : StepExecutorBase
     {
-        public async Task<StepExecutionBase> CreateAsync(ExecutionConfiguration config, Step step, SqlConnection sqlConnection)
-        {
-            (var sqlStatement, var connectionString, var timeoutMinutes) = await sqlConnection.QueryFirstAsync<(string, string, int)>(
-                @"SELECT TOP 1
-                    SqlStatement,
-                    ConnectionString = etlmanager.GetConnectionStringDecrypted(ConnectionId, @EncryptionPassword),
-                    TimeoutMinutes
-                FROM etlmanager.Execution with (nolock)
-                WHERE ExecutionId = @ExecutionId AND StepId = @StepId",
-                new { config.ExecutionId, step.StepId, EncryptionPassword = config.EncryptionKey });
-            return new SqlStepExecution(config, step, sqlStatement, connectionString, timeoutMinutes);
-        }
-    }
-
-    class SqlStepExecution : StepExecutionBase
-    {
-        private string SqlStatement { get; init; }
-        private string ConnectionString { get; init; }
-        private int TimeoutMinutes { get; init; }
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
+        private SqlStepExecution Step { get; init; }
 
-        public SqlStepExecution(ExecutionConfiguration executionConfiguration, Step step, string sqlStatement, string connectionString, int timeoutMinutes)
-            : base(executionConfiguration, step)
+        public SqlStepExecutor(ExecutionConfiguration executionConfiguration, SqlStepExecution step)
+            : base(executionConfiguration)
         {
-            SqlStatement = sqlStatement;
-            ConnectionString = connectionString;
-            TimeoutMinutes = timeoutMinutes;
+            Step = step;
         }
 
         public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            string connectionString;
+            try
+            {
+                using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
+                connectionString = await sqlConnection.ExecuteScalarAsync<string>(
+                @"SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionPassword)",
+                new { Step.ConnectionId, EncryptionPassword = Configuration.EncryptionKey });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} {Step} Error getting connection string for SQL step execution", Configuration.ExecutionId, Step);
+                return new ExecutionResult.Failure($"Error getting connection string for connection id {Step.ConnectionId}: {ex.Message}");
+            }
+
             try
             {
                 Log.Information("{ExecutionId} {Step} Starting SQL execution", Configuration.ExecutionId, Step);
-                using var connection = new SqlConnection(ConnectionString);
+                using var connection = new SqlConnection(connectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 // command timeout = 0 => wait indefinitely
-                var command = new CommandDefinition(SqlStatement, commandTimeout: TimeoutMinutes * 60, cancellationToken: cancellationToken);
+                var command = new CommandDefinition(Step.SqlStatement, commandTimeout: Step.TimeoutMinutes * 60, cancellationToken: cancellationToken);
                 await connection.ExecuteAsync(command);
             }
             catch (SqlException ex)
