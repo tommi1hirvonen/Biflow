@@ -106,7 +106,24 @@ namespace EtlManagerExecutor
 
             if (!string.IsNullOrEmpty(circularExecutions))
             {
-                await Utility.UpdateErrorMessageAsync(executionConfig, "Execution was cancelled because of circular job executions:\n" + circularExecutions);
+                var errorMessage = "Execution was cancelled because of circular job executions:\n" + circularExecutions;
+                using var context = dbContextFactory.CreateDbContext();
+                foreach (var attempt in execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
+                {
+                    attempt.StartDateTime = DateTime.Now;
+                    attempt.EndDateTime = DateTime.Now;
+                    attempt.ErrorMessage = errorMessage;
+                    attempt.ExecutionStatus = StepExecutionStatus.Failed;
+                    context.Attach(attempt).State = EntityState.Modified;
+                }
+
+                execution.StartDateTime = DateTime.Now;
+                execution.EndDateTime = DateTime.Now;
+                execution.ExecutionStatus = ExecutionStatus.Failed;
+                context.Attach(execution).State = EntityState.Modified;
+
+                await context.SaveChangesAsync();
+
                 Log.Error("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
                 return;
             }
@@ -183,9 +200,9 @@ namespace EtlManagerExecutor
         {
             var dependencies = await ReadDependenciesAsync();
             List<List<Job>> cycles = dependencies.FindCycles();
-
+            var jobs = cycles.Select(c => c.Select(c_ => new { c_.JobId, c_.JobName })).ToList();
             var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
-            var json = JsonSerializer.Serialize(cycles, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
+            var json = JsonSerializer.Serialize(jobs, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
             // There are no circular dependencies or this job is not among the cycles.
             return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(job => job.JobId == executionConfig.Job.JobId))

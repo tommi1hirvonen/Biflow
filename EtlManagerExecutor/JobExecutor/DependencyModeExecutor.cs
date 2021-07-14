@@ -41,7 +41,19 @@ namespace EtlManagerExecutor
                     var steps = cycles.Select(c => c.Select(c_ => new { c_.StepId, c_.StepName }).ToList()).ToList();
                     var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
                     var json = JsonSerializer.Serialize(steps, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
-                    await Utility.UpdateErrorMessageAsync(ExecutionConfig, "Execution was cancelled because of circular step dependencies:\n" + json);
+                    var errorMessage = "Execution was cancelled because of circular step dependencies:\n" + json;
+
+                    using var context = ExecutionConfig.DbContextFactory.CreateDbContext();
+                    foreach (var attempt in Execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
+                    {
+                        attempt.StartDateTime = DateTime.Now;
+                        attempt.EndDateTime = DateTime.Now;
+                        attempt.ErrorMessage = errorMessage;
+                        attempt.ExecutionStatus = StepExecutionStatus.Failed;
+                        context.Attach(attempt).State = EntityState.Modified;
+                    }
+                    await context.SaveChangesAsync();
+
                     Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, ExecutionConfig.ExecutionId);
                     return;
                 }
