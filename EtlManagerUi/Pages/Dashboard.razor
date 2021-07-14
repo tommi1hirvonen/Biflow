@@ -257,7 +257,7 @@
                 JobName = select.Key.JobName,
                 JobId = select.Key.JobId,
                 NoOfExecutions = select.Count(),
-                SuccessPercent = (decimal)select.Count(e => e.StepExecutionAttempts.Any(attempt => attempt.ExecutionStatus == "SUCCEEDED")) / select.Count() * 100
+                SuccessPercent = (decimal)select.Count(e => e.StepExecutionAttempts.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded)) / select.Count() * 100
             })
             .OrderBy(order => order.SuccessPercent)
             .Where(e => e.SuccessPercent < 100)

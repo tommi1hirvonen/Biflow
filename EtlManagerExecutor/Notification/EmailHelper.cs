@@ -34,9 +34,9 @@ namespace EtlManagerExecutor
 
             var subscriptionTypeFilter = execution.ExecutionStatus switch
             {
-                "FAILED" or "STOPPED" or "SUSPENDED" or "NOT STARTED" or "RUNNING" =>
+                ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running =>
                 new SubscriptionType[] { SubscriptionType.OnFailure, SubscriptionType.OnCompletion },
-                "SUCCEEDED" or "WARNING" =>
+                ExecutionStatus.Succeeded or ExecutionStatus.Warning =>
                 new SubscriptionType[] { SubscriptionType.OnSuccess, SubscriptionType.OnCompletion },
                 _ =>
                 new SubscriptionType[] { SubscriptionType.OnCompletion }

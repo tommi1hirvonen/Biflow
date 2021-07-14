@@ -1,27 +1,27 @@
 ﻿@{
-    switch (ExecutionStatus)
+    switch (ExecutionStatus_)
     {
-        case "SUCCEEDED":
-            <span class="badge badge-success">@ExecutionStatus</span>
+        case ExecutionStatus.Succeeded:
+            <span class="badge badge-success">@ExecutionStatus_</span>
             break;
-        case "FAILED":
-            <span class="badge badge-danger">@ExecutionStatus</span>
+        case ExecutionStatus.Failed:
+            <span class="badge badge-danger">@ExecutionStatus_</span>
             break;
-        case "WARNING":
-        case "STOPPED":
-        case "SUSPENDED":
-            <span class="badge badge-warning">@ExecutionStatus</span>
+        case ExecutionStatus.Warning:
+        case ExecutionStatus.Stopped:
+        case ExecutionStatus.Suspended:
+            <span class="badge badge-warning">@ExecutionStatus_</span>
             break;
-        case "RUNNING":
-            <span class="badge badge-primary">@ExecutionStatus</span>
+        case ExecutionStatus.Running:
+            <span class="badge badge-primary">@ExecutionStatus_</span>
             break;
         default:
-            <span class="badge badge-secondary">@ExecutionStatus</span>
+            <span class="badge badge-secondary">@ExecutionStatus_</span>
             break;
     }
 }
 
 @code {
     [Parameter]
-    public string? ExecutionStatus { get; set; }
+    public ExecutionStatus? ExecutionStatus_ { get; set; }
 }

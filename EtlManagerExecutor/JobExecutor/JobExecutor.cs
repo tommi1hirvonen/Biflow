@@ -61,7 +61,7 @@ namespace EtlManagerExecutor
                         .FirstAsync(e => e.ExecutionId == executionId);
                     
                     execution.ExecutorProcessId = process.Id;
-                    execution.ExecutionStatus = "RUNNING";
+                    execution.ExecutionStatus = ExecutionStatus.Running;
                     execution.StartDateTime = DateTime.Now;
                     context.Attach(execution);
                     context.Entry(execution).Property(e => e.ExecutorProcessId).IsModified = true;
@@ -134,19 +134,19 @@ namespace EtlManagerExecutor
 
             // Get job execution status based on step execution statuses.
             var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
-            string status;
-            if (allStepAttempts.All(step => step.ExecutionStatus == "SUCCEEDED"))
-                status = "SUCCEEDED";
-            else if (allStepAttempts.Any(step => step.ExecutionStatus == "FAILED"))
-                status = "FAILED";
-            else if (allStepAttempts.Any(step => step.ExecutionStatus == "AWAIT RETRY" || step.ExecutionStatus == "DUPLICATE"))
-                status = "WARNING";
-            else if (allStepAttempts.Any(step => step.ExecutionStatus == "STOPPED"))
-                status = "STOPPED";
-            else if (allStepAttempts.Any(step => step.ExecutionStatus == "NOT STARTED"))
-                status = "SUSPENDED";
+            ExecutionStatus status;
+            if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded))
+                status = ExecutionStatus.Succeeded;
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Failed))
+                status = ExecutionStatus.Failed;
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.AwaitRetry || step.ExecutionStatus == StepExecutionStatus.Duplicate))
+                status = ExecutionStatus.Warning;
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Stopped))
+                status = ExecutionStatus.Stopped;
+            else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted))
+                status = ExecutionStatus.Suspended;
             else
-                status = "FAILED";
+                status = ExecutionStatus.Failed;
 
             // Update job execution status.
             try

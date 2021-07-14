@@ -11,11 +11,6 @@ namespace EtlManagerDataAccess.Models
 {
     public abstract record StepExecutionAttempt
     {
-        public StepExecutionAttempt(string executionStatus)
-        {
-            ExecutionStatus = executionStatus;
-        }
-
         public Guid ExecutionId { get; set; }
         
         public Guid StepId { get; set; }
@@ -26,7 +21,7 @@ namespace EtlManagerDataAccess.Models
         
         public DateTime? EndDateTime { get; set; }
         
-        public string ExecutionStatus { get; set; }
+        public StepExecutionStatus? ExecutionStatus { get; set; }
 
         public StepType? StepType { get; set; }
 

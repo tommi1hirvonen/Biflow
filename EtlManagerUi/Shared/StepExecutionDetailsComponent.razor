@@ -60,7 +60,7 @@
             </dd>
         }
 
-        @if (StepExecutionAttempt.ExecutionStatus == "STOPPED")
+        @if (StepExecutionAttempt.ExecutionStatus == StepExecutionStatus.Stopped)
         {
             <dt class="col-sm-3">
                 Stopped by

@@ -11,8 +11,5 @@ namespace EtlManagerDataAccess.Models
 {
     public record DatasetStepExecutionAttempt : StepExecutionAttempt
     {
-        public DatasetStepExecutionAttempt(string executionStatus) : base(executionStatus)
-        {
-        }
     }
 }

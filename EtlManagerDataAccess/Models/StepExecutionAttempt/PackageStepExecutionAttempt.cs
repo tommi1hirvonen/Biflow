@@ -11,10 +11,6 @@ namespace EtlManagerDataAccess.Models
 {
     public record PackageStepExecutionAttempt : StepExecutionAttempt
     {
-        public PackageStepExecutionAttempt(string executionStatus) : base(executionStatus)
-        {
-        }
-
         public long? PackageOperationId { get; set; }
     }
 }

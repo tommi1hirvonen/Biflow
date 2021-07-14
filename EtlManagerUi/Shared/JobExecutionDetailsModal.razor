@@ -58,7 +58,7 @@
         </BSButtonGroup>
 
         <AuthorizeView Roles="Admin, Editor, Operator">
-            @if (Execution is not null && Execution.ExecutionStatus == "RUNNING")
+            @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
             {
                 <BSButtonGroup IsToolbar="true" Class="mt-3">
                     <BSDropdown>
@@ -139,7 +139,7 @@
                     Status
                 </dt>
                 <dd class="col-sm-9">
-                    <JobExecutionStatusBadgeComponent ExecutionStatus="@Execution.ExecutionStatus" />
+                    <JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" />
                 </dd>
             </dl>
         }
@@ -155,7 +155,7 @@
                             </div>
                         </div>
                         <select class="form-control form-control-sm" @bind="StatusFilter">
-                            <option value="" selected=@string.IsNullOrEmpty(StatusFilter)>ALL</option>
+                            <option value="" selected=@(StatusFilter is null)>All</option>
                             @if (StepExecutionAttempts is not null)
                             {
                                 @foreach (var status in StepExecutionAttempts.Select(e => e.ExecutionStatus).Distinct().OrderBy(status => status))
@@ -215,7 +215,7 @@
                     }
                     else
                     {
-                        @foreach (var item in StepExecutionAttempts.Where(e => string.IsNullOrEmpty(StatusFilter) || e.ExecutionStatus == StatusFilter))
+                        @foreach (var item in StepExecutionAttempts.Where(e => StatusFilter is null || e.ExecutionStatus == StatusFilter))
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
@@ -247,7 +247,7 @@
                                                 History
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
-                                                @if (item.ExecutionStatus == "RUNNING" || item.ExecutionStatus == "AWAIT RETRY" // Step is running or it is awaiting retry...
+                                                @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
                                                   && !StepExecutionAttempts.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
@@ -304,7 +304,7 @@
 
     private bool JobExecutionDetailsOpen { get; set; } = false;
 
-    private string StatusFilter { get; set; } = string.Empty;
+    private StepExecutionStatus? StatusFilter { get; set; } = null;
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
@@ -386,7 +386,7 @@
                 id = e.UniqueId,
                 content = e.StepExecution.StepName,
                 title = e.ExecutionStatus + ", " + e.GetDurationInReadableFormat(),
-                className = e.ExecutionStatus.ToLower().Replace(' ', '-'),
+                className = e.ExecutionStatus.ToString().ToLower(),
                 start = e.StartDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss"),
                 end = (e.EndDateTime ?? DateTime.Now).ToString("yyyy-MM-dd HH':'mm':'ss")
             }

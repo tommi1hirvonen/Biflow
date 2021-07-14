@@ -11,10 +11,6 @@ namespace EtlManagerDataAccess.Models
 {
     public record SqlStepExecutionAttempt : StepExecutionAttempt
     {
-        public SqlStepExecutionAttempt(string executionStatus) : base(executionStatus)
-        {
-        }
-
         [Column("InfoMessage")]
         public string? InfoMessage { get; set; }
     }

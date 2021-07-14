@@ -151,19 +151,19 @@
                         <td class="align-middle" align="right">
                             @switch (lastExecution?.ExecutionStatus)
                             {
-                                case "RUNNING":
+                                case ExecutionStatus.Running:
                                     <div class="status-icon running" title="Running" aria-label="running">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                                     </div>
                                     break;
-                                case "FAILED":
+                                case ExecutionStatus.Failed:
                                     <div class="status-icon failed" title="Failed" aria-label="failed">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
                                     </div>
                                     break;
-                                case "WARNING":
-                                case "STOPPED":
-                                case "SUSPENDED":
+                                case ExecutionStatus.Warning:
+                                case ExecutionStatus.Stopped:
+                                case ExecutionStatus.Suspended:
                                     <div class="status-icon warning" title="Warning" aria-label="warning">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
                                     </div>

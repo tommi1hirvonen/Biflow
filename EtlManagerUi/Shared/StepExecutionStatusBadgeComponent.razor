@@ -1,19 +1,19 @@
 ﻿@{
     switch (ExecutionStatus)
     {
-        case "SUCCEEDED":
+        case StepExecutionStatus.Succeeded:
             <span class="badge badge-success">@ExecutionStatus</span>
             break;
-        case "FAILED":
+        case StepExecutionStatus.Failed:
             <span class="badge badge-danger">@ExecutionStatus</span>
             break;
-        case "SKIPPED":
-        case "STOPPED":
-        case "DUPLICATE":
-        case "AWAIT RETRY":
+        case StepExecutionStatus.Skipped:
+        case StepExecutionStatus.Stopped:
+        case StepExecutionStatus.Duplicate:
+        case StepExecutionStatus.AwaitRetry:
             <span class="badge badge-warning">@ExecutionStatus</span>
             break;
-        case "RUNNING":
+        case StepExecutionStatus.Running:
             <span class="badge badge-primary">@ExecutionStatus</span>
             break;
         default:
@@ -24,5 +24,5 @@
 
 @code {
     [Parameter]
-    public string? ExecutionStatus { get; set; }
+    public StepExecutionStatus? ExecutionStatus { get; set; }
 } 

@@ -135,7 +135,7 @@ namespace EtlManagerExecutor
                     var attempt = prevAttempt with
                     {
                         RetryAttemptIndex = stepExecution.RetryAttemptCounter,
-                        ExecutionStatus = "STOPPED",
+                        ExecutionStatus = StepExecutionStatus.Stopped,
                         StartDateTime = DateTime.Now,
                         EndDateTime = DateTime.Now,
                         ErrorMessage = null
@@ -169,7 +169,7 @@ namespace EtlManagerExecutor
             var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
             attempt.EndDateTime = DateTime.Now;
             attempt.StoppedBy = Configuration.Username;
-            attempt.ExecutionStatus = "STOPPED";
+            attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             context.Attach(attempt).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
@@ -177,7 +177,7 @@ namespace EtlManagerExecutor
         private async Task UpdateExecutionFailedAsync(StepExecutorBase stepExecution, ExecutionResult.Failure failureResult)
         {
             // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-            var status = stepExecution.RetryAttemptCounter >= StepExecution.RetryAttempts ? "FAILED" : "AWAIT RETRY";
+            var status = stepExecution.RetryAttemptCounter >= StepExecution.RetryAttempts ? StepExecutionStatus.Failed : StepExecutionStatus.AwaitRetry;
             try
             {
                 using var context = Configuration.DbContextFactory.CreateDbContext();
@@ -211,7 +211,7 @@ namespace EtlManagerExecutor
             {
                 using var context = Configuration.DbContextFactory.CreateDbContext();
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
-                attempt.ExecutionStatus = "SUCCEEDED";
+                attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
                 attempt.EndDateTime = DateTime.Now;
                 switch (attempt)
                 {
@@ -238,7 +238,7 @@ namespace EtlManagerExecutor
             using var context = Configuration.DbContextFactory.CreateDbContext();
             foreach (var attempt in StepExecution.StepExecutionAttempts)
             {
-                attempt.ExecutionStatus = "STOPPED";
+                attempt.ExecutionStatus = StepExecutionStatus.Stopped;
                 attempt.StartDateTime = DateTime.Now;
                 attempt.EndDateTime = DateTime.Now;
                 attempt.StoppedBy = Configuration.Username;
@@ -254,7 +254,7 @@ namespace EtlManagerExecutor
             if (attempt is not null)
             {
                 attempt.StartDateTime = DateTime.Now;
-                attempt.ExecutionStatus = "RUNNING";
+                attempt.ExecutionStatus = StepExecutionStatus.Running;
                 context.Attach(attempt).State = EntityState.Modified;
             }
             else
@@ -263,7 +263,7 @@ namespace EtlManagerExecutor
                 attempt = prevAttempt with
                 {
                     RetryAttemptIndex = stepExecution.RetryAttemptCounter,
-                    ExecutionStatus = "RUNNING",
+                    ExecutionStatus = StepExecutionStatus.Running,
                     StartDateTime = DateTime.Now,
                     EndDateTime = null,
                     ErrorMessage = null
@@ -288,7 +288,7 @@ namespace EtlManagerExecutor
         private async Task<bool> IsDuplicateExecutionAsync(EtlManagerContext context)
         {
             var duplicate = await context.StepExecutionAttempts
-                .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == "RUNNING" && e.StartDateTime >= DateTime.Now.AddDays(-1))
+                .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == StepExecutionStatus.Running && e.StartDateTime >= DateTime.Now.AddDays(-1))
                 .AnyAsync();
             return duplicate;
         }
@@ -297,7 +297,7 @@ namespace EtlManagerExecutor
         {
             foreach (var attempt in StepExecution.StepExecutionAttempts)
             {
-                attempt.ExecutionStatus = "DUPLICATE";
+                attempt.ExecutionStatus = StepExecutionStatus.Duplicate;
                 attempt.StartDateTime = DateTime.Now;
                 attempt.EndDateTime = DateTime.Now;
                 context.Attach(attempt).State = EntityState.Modified;

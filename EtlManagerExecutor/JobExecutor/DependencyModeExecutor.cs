@@ -153,7 +153,7 @@ namespace EtlManagerExecutor
             using var context = ExecutionConfig.DbContextFactory.CreateDbContext();
             foreach (var attempt in step.StepExecutionAttempts)
             {
-                attempt.ExecutionStatus = "SKIPPED";
+                attempt.ExecutionStatus = StepExecutionStatus.Skipped;
                 attempt.StartDateTime = DateTime.Now;
                 attempt.EndDateTime = DateTime.Now;
                 context.Attach(attempt).State = EntityState.Modified;

@@ -77,8 +77,34 @@ namespace EtlManagerDataAccess
 
             modelBuilder.HasDefaultSchema("etlmanager");
 
+            Func<ExecutionStatus?, string?> executionStatusToString = value => value switch
+            {
+                ExecutionStatus.NotStarted => "NOT STARTED",
+                ExecutionStatus.Running => "RUNNING",
+                ExecutionStatus.Succeeded => "SUCCEEDED",
+                ExecutionStatus.Failed => "FAILED",
+                ExecutionStatus.Warning => "WARNING",
+                ExecutionStatus.Stopped => "STOPPED",
+                ExecutionStatus.Suspended => "SUSPENDED",
+                _ => null
+            };
+            Func<string?, ExecutionStatus?> stringToExecutionStatus = value => value switch
+            {
+                "NOT STARTED" => ExecutionStatus.NotStarted,
+                "RUNNING" => ExecutionStatus.Running,
+                "SUCCEEDED" => ExecutionStatus.Succeeded,
+                "FAILED" => ExecutionStatus.Failed,
+                "WARNING" => ExecutionStatus.Warning,
+                "STOPPED" => ExecutionStatus.Stopped,
+                "SUSPENDED" => ExecutionStatus.Suspended,
+                _ => null
+            };
+            var executionStatusConverter = new ValueConverter<ExecutionStatus?, string?>(v => executionStatusToString(v), v => stringToExecutionStatus(v));
+
             modelBuilder.Entity<Execution>()
-                .ToTable("Execution");
+                .ToTable("Execution")
+                .Property(e => e.ExecutionStatus)
+                .HasConversion(executionStatusConverter);
 
             modelBuilder.Entity<StepExecution>()
                 .ToTable("ExecutionStep")
@@ -98,12 +124,41 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
                 .HasValue<SqlStepExecution>(StepType.Sql);
 
+            Func<StepExecutionStatus?, string?> stepExecutionStatusToString = value => value switch
+            {
+                StepExecutionStatus.NotStarted => "NOT STARTED",
+                StepExecutionStatus.Running => "RUNNING",
+                StepExecutionStatus.Succeeded => "SUCCEEDED",
+                StepExecutionStatus.Failed => "FAILED",
+                StepExecutionStatus.Stopped => "STOPPED",
+                StepExecutionStatus.Skipped => "SKIPPED",
+                StepExecutionStatus.AwaitRetry => "AWAIT RETRY",
+                StepExecutionStatus.Duplicate => "DUPLICATE",
+                _ => null
+            };
+            Func<string?, StepExecutionStatus?> stringToStepExecutionStatus = value => value switch
+            {
+                "NOT STARTED" => StepExecutionStatus.NotStarted,
+                "RUNNING" => StepExecutionStatus.Running,
+                "SUCCEEDED" => StepExecutionStatus.Succeeded,
+                "FAILED" => StepExecutionStatus.Failed,
+                "STOPPED" => StepExecutionStatus.Stopped,
+                "SKIPPED" => StepExecutionStatus.Skipped,
+                "AWAIT RETRY" => StepExecutionStatus.AwaitRetry,
+                "DUPLICATE" => StepExecutionStatus.Duplicate,
+                _ => null
+            };
+            var stepExecutionStatusConverter = new ValueConverter<StepExecutionStatus?, string?>(v => stepExecutionStatusToString(v), v => stringToStepExecutionStatus(v));
+
             modelBuilder.Entity<StepExecutionAttempt>()
                 .ToTable("ExecutionStepAttempt")
                 .HasKey(sea => new { sea.ExecutionId, sea.StepId, sea.RetryAttemptIndex });
             modelBuilder.Entity<StepExecutionAttempt>()
                 .Property(sea => sea.StepType)
                 .HasConversion(stepTypeConverter);
+            modelBuilder.Entity<StepExecutionAttempt>()
+                .Property(sea => sea.ExecutionStatus)
+                .HasConversion(stepExecutionStatusConverter);
             modelBuilder.Entity<StepExecutionAttempt>()
                 .HasOne(sea => sea.StepExecution)
                 .WithMany(step => step.StepExecutionAttempts);

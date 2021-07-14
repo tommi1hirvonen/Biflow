@@ -11,10 +11,6 @@ namespace EtlManagerDataAccess.Models
 {
     public record PipelineStepExecutionAttempt : StepExecutionAttempt
     {
-        public PipelineStepExecutionAttempt(string executionStatus) : base(executionStatus)
-        {
-        }
-
         public string? PipelineRunId { get; set; }
     }
 }

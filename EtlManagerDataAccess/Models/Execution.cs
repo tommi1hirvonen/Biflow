@@ -11,7 +11,7 @@ namespace EtlManagerDataAccess.Models
     public class Execution
     {
 
-        public Execution(string jobName, DateTime createdDateTime, string executionStatus)
+        public Execution(string jobName, DateTime createdDateTime, ExecutionStatus executionStatus)
         {
             JobName = jobName;
             CreatedDateTime = createdDateTime;
@@ -40,7 +40,7 @@ namespace EtlManagerDataAccess.Models
         public DateTime? EndDateTime { get; set; }
 
         [Display(Name = "Status")]
-        public string ExecutionStatus { get; set; }
+        public ExecutionStatus ExecutionStatus { get; set; }
 
         [Display(Name = "Dependency mode")]
         public bool DependencyMode { get; set; }
@@ -63,7 +63,7 @@ namespace EtlManagerDataAccess.Models
 
         public decimal? GetSuccessPercent()
         {
-            var successCount = StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == "SUCCEEDED") ?? false) ?? 0;
+            var successCount = StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded) ?? false) ?? 0;
             var allCount = StepExecutions?.Count ?? 0;
             return (decimal)successCount / allCount * 100;
         }

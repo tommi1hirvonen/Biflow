@@ -70,7 +70,7 @@
                             @item.GetSuccessPercent()?.FormatPercentage(2)
                         </td>
                         <td>
-                            <JobExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
                         </td>
                     </tr>
                 }
@@ -118,7 +118,7 @@
 
             if (Executions.Count > 0)
             {
-                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == "SUCCEEDED").Count() / Executions.Count() * 100;
+                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Count() / Executions.Count() * 100;
             }
             else
             {

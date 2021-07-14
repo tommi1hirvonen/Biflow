@@ -388,8 +388,8 @@ tr.disabled {
     border-color: var(--color-warning-extra-dark);
     color: var(--color-warning-extra-dark);
 }
-.steps-graph .await-retry,
-.steps-graph .await-retry.vis-selected {
+.steps-graph .awaitretry,
+.steps-graph .awaitretry.vis-selected {
     background-color: var(--color-warning-super-light);
     border-color: var(--color-warning-extra-dark);
     color: var(--color-warning-extra-dark);
