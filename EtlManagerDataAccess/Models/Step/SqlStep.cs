@@ -10,9 +10,11 @@ namespace EtlManagerDataAccess.Models
     public record SqlStep : Step
     {
         [Display(Name = "SQL statement")]
+        [Required]
         public string? SqlStatement { get; set; }
 
         [Column("ConnectionId")]
+        [Required]
         public Guid? ConnectionId { get; set; }
 
         public Connection? Connection { get; set; }

@@ -8,10 +8,12 @@ namespace EtlManagerDataAccess.Models
 {
     public record PipelineStep : Step
     {
+        [Required]
         public Guid? DataFactoryId { get; set; }
 
         [MaxLength(250)]
         [Display(Name = "Pipeline name")]
+        [Required]
         public string? PipelineName { get; set; }
 
         public IList<PipelineParameter> PipelineParameters { get; set; } = null!;

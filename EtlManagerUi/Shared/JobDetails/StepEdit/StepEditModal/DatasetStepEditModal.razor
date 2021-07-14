@@ -8,8 +8,8 @@
                    Steps="Steps"
                    Step="Step"
                    Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   OnStepSubmit="OnStepSubmit">
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="dataset_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Power BI Service</BSLabel>
@@ -128,21 +128,6 @@
             };
         }
         StateHasChanged();
-    }
-
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is DatasetStep dataset)
-        {
-            if (string.IsNullOrWhiteSpace(dataset.DatasetGroupId) || string.IsNullOrWhiteSpace(dataset.DatasetId) || dataset.PowerBIServiceId is null)
-                return (false, "Power BI Service, group id and dataset id cannot be empty");
-            else
-                return (true, null);
-        }
-        else
-        {
-            return (false, "Not DatasetStep");
-        }
     }
 
     private void OpenDatasetSelectModal() => DatasetSelectModal.Show();

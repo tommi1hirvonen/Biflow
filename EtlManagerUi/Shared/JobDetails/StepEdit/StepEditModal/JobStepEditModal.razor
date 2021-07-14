@@ -8,8 +8,8 @@
                    Steps="Steps"
                    Step="Step"
                    Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   OnStepSubmit="OnStepSubmit">
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="job_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Job</BSLabel>
@@ -101,21 +101,6 @@
             };
         }
         StateHasChanged();
-    }
-
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is JobStep job)
-        {
-            if (job.JobToExecuteId is null)
-                return (false, "Job cannot be empty");
-            else
-                return (true, null);
-        }
-        else
-        {
-            return (false, "Not JobStep");
-        }
     }
 
     public void Show() => Modal.Show();

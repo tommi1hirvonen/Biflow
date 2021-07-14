@@ -11,7 +11,8 @@
                    StepValidityCheck="StepValidityCheck"
                    ResetDeletedEntities="ResetDeletedEntities"
                    ResetAddedEntities="ResetAddedEntities"
-                   OnStepSubmit="OnStepSubmit">
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="pipeline_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
@@ -158,11 +159,7 @@
         if (step is PipelineStep pipeline)
         {
             (var paramResult, var paramMessage) = ParametersCheck();
-            if (string.IsNullOrEmpty(pipeline.PipelineName) || pipeline.DataFactoryId is null)
-            {
-                return (false, "Pipeline name and Data Factory cannot be empty");
-            }
-            else if (!paramResult)
+            if (!paramResult)
             {
                 return (false, paramMessage);
             }

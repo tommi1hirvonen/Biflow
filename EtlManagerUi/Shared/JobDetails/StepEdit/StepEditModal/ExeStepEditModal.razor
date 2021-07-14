@@ -8,8 +8,8 @@
                    Steps="Steps"
                    Step="Step"
                    Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   OnStepSubmit="OnStepSubmit">
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="exe_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col">
             <BSLabel>File path</BSLabel>
@@ -122,21 +122,6 @@
             };
         }
         StateHasChanged();
-    }
-
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is ExeStep exe)
-        {
-            if (string.IsNullOrEmpty(exe.ExeFileName))
-                return (false, "File path cannot be empty");
-            else
-                return (true, null);
-        }
-        else
-        {
-            return (false, "Not ExeStep");
-        }
     }
 
     public void Show() => Modal.Show();

@@ -8,7 +8,7 @@
         <BSModalBody>
             <div class="row">
                 <div class="col mx-3">
-                    <BSForm id="sql_step_edit_form" Model="Step" OnValidSubmit="SubmitStep">
+                    <BSForm id="@FormId" Model="Step" OnValidSubmit="SubmitStep">
 
                         <BSButtonGroup Size="Size.Small" Class="mb-3">
                             <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowDependencies ? "active" : null)"
@@ -105,7 +105,7 @@
             </div>
         </BSModalBody>
         <BSModalFooter>
-            <BSButton ButtonType="ButtonType.Submit" form="sql_step_edit_form" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
+            <BSButton ButtonType="ButtonType.Submit" form="@FormId" Color="Color.Success">@(Step.StepId == Guid.Empty ? "Create" : "Save")</BSButton>
             <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
         </BSModalFooter>
     }
@@ -132,6 +132,8 @@
     public Action<EntityEntry>? ResetDeletedEntities { get; set; }
     [Parameter]
     public EtlManagerContext Context { get; set; } = null!;
+    [Parameter]
+    public string FormId { get; set; } = string.Empty;
 
     private BSModal Modal { get; set; } = null!;
 

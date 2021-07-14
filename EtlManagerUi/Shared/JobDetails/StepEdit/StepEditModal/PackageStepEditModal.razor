@@ -11,7 +11,8 @@
                    StepValidityCheck="StepValidityCheck"
                    ResetDeletedEntities="ResetDeletedEntities"
                    ResetAddedEntities="ResetAddedEntities"
-                   OnStepSubmit="OnStepSubmit">
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="package_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
@@ -204,12 +205,7 @@
         if (step is PackageStep package)
         {
             (var paramResult, var paramMessage) = ParametersCheck();
-            if (string.IsNullOrEmpty(package.PackageFolderName) || string.IsNullOrEmpty(package.PackageProjectName) || string.IsNullOrEmpty(package.PackageName)
-            || package.ConnectionId is null)
-            {
-                return (false, "Connection, folder, project and package names cannot be empty");
-            }
-            else if (!paramResult)
+            if (!paramResult)
             {
                 return (false, paramMessage);
             }
