@@ -29,14 +29,9 @@ namespace EtlManagerDataAccess
         public DbSet<PackageStep> PackageSteps => Set<PackageStep>();
         public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
+        public DbSet<FunctionStep> FunctionSteps => Set<FunctionStep>();
         public DbSet<Execution> Executions => Set<Execution>();
         public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
-        public DbSet<DatasetStepExecution> DatasetStepExecutions => Set<DatasetStepExecution>();
-        public DbSet<ExeStepExecution> ExeStepExecutions => Set<ExeStepExecution>();
-        public DbSet<JobStepExecution> JobStepExecutions => Set<JobStepExecution>();
-        public DbSet<PackageStepExecution> PackageStepExecutions => Set<PackageStepExecution>();
-        public DbSet<PipelineStepExecution> PipelineStepExecutions => Set<PipelineStepExecution>();
-        public DbSet<SqlStepExecution> SqlStepExecutions => Set<SqlStepExecution>();
         public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
         public DbSet<Dependency> Dependencies => Set<Dependency>();
         public DbSet<Schedule> Schedules => Set<Schedule>();
@@ -45,6 +40,7 @@ namespace EtlManagerDataAccess
         public DbSet<RoleUser> EditableUsers => Set<RoleUser>();
         public DbSet<DataFactory> DataFactories => Set<DataFactory>();
         public DbSet<PowerBIService> PowerBIServices => Set<PowerBIService>();
+        public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
         public DbSet<Connection> Connections => Set<Connection>();
         public DbSet<Tag> Tags => Set<Tag>();
         public DbSet<PackageParameter> PackageParameters => Set<PackageParameter>();
@@ -61,6 +57,7 @@ namespace EtlManagerDataAccess
                 StepType.Exe => "EXE",
                 StepType.Pipeline => "PIPELINE",
                 StepType.Dataset => "DATASET",
+                StepType.Function => "FUNCTION",
                 _ => null
             };
             Func<string?, StepType?> stringToStepType = value => value switch
@@ -71,6 +68,7 @@ namespace EtlManagerDataAccess
                 "EXE" => StepType.Exe,
                 "PIPELINE" => StepType.Pipeline,
                 "DATASET" => StepType.Dataset,
+                "FUNCTION" => StepType.Function,
                 _ => null
             };
             var stepTypeConverter = new ValueConverter<StepType?, string?>(v => stepTypeToString(v), v => stringToStepType(v));
@@ -122,7 +120,8 @@ namespace EtlManagerDataAccess
                 .HasValue<JobStepExecution>(StepType.Job)
                 .HasValue<PackageStepExecution>(StepType.Package)
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
-                .HasValue<SqlStepExecution>(StepType.Sql);
+                .HasValue<SqlStepExecution>(StepType.Sql)
+                .HasValue<FunctionStepExecution>(StepType.Function);
 
             Func<StepExecutionStatus?, string?> stepExecutionStatusToString = value => value switch
             {
@@ -169,7 +168,8 @@ namespace EtlManagerDataAccess
                 .HasValue<JobStepExecutionAttempt>(StepType.Job)
                 .HasValue<PackageStepExecutionAttempt>(StepType.Package)
                 .HasValue<PipelineStepExecutionAttempt>(StepType.Pipeline)
-                .HasValue<SqlStepExecutionAttempt>(StepType.Sql);
+                .HasValue<SqlStepExecutionAttempt>(StepType.Sql)
+                .HasValue<FunctionStepExecutionAttempt>(StepType.Function);
 
             modelBuilder.Entity<Dependency>()
                 .ToTable("Dependency")
@@ -205,7 +205,8 @@ namespace EtlManagerDataAccess
                 .HasValue<JobStep>(StepType.Job)
                 .HasValue<PackageStep>(StepType.Package)
                 .HasValue<PipelineStep>(StepType.Pipeline)
-                .HasValue<SqlStep>(StepType.Sql);
+                .HasValue<SqlStep>(StepType.Sql)
+                .HasValue<FunctionStep>(StepType.Function);
             modelBuilder.Entity<JobStep>()
                 .HasOne(step => step.JobToExecute)
                 .WithMany(job => job.JobSteps)
@@ -304,6 +305,9 @@ namespace EtlManagerDataAccess
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
                 .ToTable("vConnection");
+
+            modelBuilder.Entity<FunctionApp>()
+                .ToTable("vFunctionApp");
         }
 
 

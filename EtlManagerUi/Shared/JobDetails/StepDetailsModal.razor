@@ -169,6 +169,33 @@
                         @package.ExecuteAsLogin
                     </dd>
                 }
+                else if (Step is FunctionStep function)
+                {
+                    <dt class="col-sm-3">
+                        Function name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @function.FunctionName
+                    </dd>
+                    <dt class="col-sm-3">
+                        Function input
+                    </dt>
+                    <dd class="col-sm-9">
+                        @function.FunctionInput
+                    </dd>
+                    <dt class="col-sm-3">
+                        Function App id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @function.FunctionAppId
+                    </dd>
+                    <dt class="col-sm-3">
+                        Function App name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @function.FunctionApp?.FunctionAppName
+                    </dd>
+                }
             </dl>
             @if (Step is PackageStep package_)
             {

@@ -38,6 +38,12 @@
             Power BI Services
         </NavLink>
     </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/functionapps">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/zap.svg")))
+            Function Apps
+        </NavLink>
+    </li>
 </ul>
 
 @if (Page is null)
@@ -59,6 +65,10 @@ else if (Page == "datafactories")
 else if (Page == "powerbiservices")
 {
     <PowerBIServicesComponent EncryptionPassword="@EncryptionPassword" />
+}
+else if (Page == "functionapps")
+{
+    <FunctionAppsComponent EncryptionPassword="@EncryptionPassword" />
 }
 else
 {

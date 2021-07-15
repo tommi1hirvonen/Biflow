@@ -199,6 +199,42 @@
                 @dataset.PowerBIServiceId
             </dd>
         }
+        else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
+        {
+            <dt class="col-sm-3">
+                Function name
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionName
+            </dd>
+            <dt class="col-sm-3">
+                Function input
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionInput
+            </dd>
+            <dt class="col-sm-3">
+                Function App id
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionAppId
+            </dd>
+            @if (StepExecutionAttempt is FunctionStepExecutionAttempt function_)
+            {
+                <dt class="col-sm-3">
+                    Instance id
+                </dt>
+                <dd class="col-sm-9">
+                    @function_.FunctionInstanceId    
+                </dd>
+                <dt class="col-sm-3">
+                    Output
+                </dt>
+                <dd class="col-sm-9">
+                    @function_.InfoMessage
+                </dd>
+            }
+        }
         <dt class="col-sm-3">
             Error message
         </dt>

@@ -1,0 +1,82 @@
+﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IConfiguration configuration
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large">
+    @if (FunctionApp is not null)
+    {
+        <BSModalHeader OnClick="() => Modal.Hide()">@(FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + FunctionApp.FunctionAppName)</BSModalHeader>
+        <BSModalBody>
+            <BSForm Model="FunctionApp" id="function_app_edit_form" OnValidSubmit="SubmitFunctionApp">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <BSFormGroup>
+                            <BSLabel>Function App name</BSLabel>
+                            <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppName"></InputText>
+                        </BSFormGroup>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Url</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppUrl"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Function App key</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppKey"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+                    </div>
+                </div>
+            </BSForm>
+        </BSModalBody>
+    }
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="function_app_edit_form" Color="Color.Success">@(FunctionAppId == Guid.Empty ? "Create" : "Save")</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+    [Parameter]
+    public Guid FunctionAppId { get; set; } // empty Guid => new Function App
+
+    [Parameter]
+    public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
+
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
+    private FunctionApp? FunctionApp { get; set; }
+
+    private BSModal Modal { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (FunctionAppId != Guid.Empty)
+        {
+            var context = DbFactory.CreateDbContext();
+            FunctionApp = (await context.FunctionApps
+                .FromSqlRaw<FunctionApp>("etlmanager.FunctionAppGet @FunctionAppId = {0}, @EncryptionKey = {1}",
+                    new string?[] { FunctionAppId.ToString(), EncryptionPassword })
+                .ToListAsync()).First();
+        }
+        else
+        {
+            FunctionApp = new();
+        }
+    }
+
+    private async Task SubmitFunctionApp()
+    {
+        await OnFunctionAppSubmit.InvokeAsync(FunctionApp);
+        Modal.Hide();
+    }
+
+    public void Show() => Modal.Show();
+}

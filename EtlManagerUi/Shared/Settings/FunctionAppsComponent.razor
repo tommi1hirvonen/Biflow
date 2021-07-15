@@ -1,0 +1,148 @@
+﻿@inject IConfiguration configuration
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+
+@if (!IsEncryptionKeySet)
+{
+    <div class="alert alert-danger show" role="alert">
+        Encryption key is not set. Function Apps cannot be added and previously created apps will not work. Set the encryption key and reset the Function App key for previously created apps.
+    </div>
+}
+else
+{
+    <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+        Add Function App
+    </BSButton>
+}
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Url
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (FunctionApps is null)
+            {
+                <tr><td colspan="4">Loading...</td></tr>
+            }
+            else if (FunctionApps.Count == 0)
+            {
+                <tr><td colspan="4">No Function Apps</td></tr>
+            }
+            else
+            {
+                @foreach (var app in FunctionApps)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @app.FunctionAppName
+                        </td>
+                        <td class="align-middle">
+                            <BSButtonGroup Class="btn-row">
+                                @if (IsEncryptionKeySet)
+                                {
+                                    <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    </BSButton>
+                                }
+                                <BSDropdown>
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => DeleteFunctionApp(app)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
+                            </BSButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @app.FunctionAppUrl
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<FunctionAppEditModal @ref="FunctionAppEditModal" EncryptionPassword="@EncryptionPassword" FunctionAppId="EditFunctionAppId" OnFunctionAppSubmit="OnFunctionAppSubmit" />
+
+@code {
+    [Parameter]
+    public string? EncryptionPassword { get; set; }
+
+    private bool IsEncryptionKeySet { get; set; } = true; // Set to true until the exact value is fetched.
+
+    private List<FunctionApp>? FunctionApps { get; set; }
+
+    private Guid EditFunctionAppId { get; set; }
+    private FunctionAppEditModal FunctionAppEditModal { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        IsEncryptionKeySet = EncryptionPassword is not null;
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var context = DbFactory.CreateDbContext();
+        FunctionApps = await context.FunctionApps.OrderBy(f => f.FunctionAppName).ToListAsync();
+    }
+
+    private async Task DeleteFunctionApp(FunctionApp functionApp)
+    {
+        var context = DbFactory.CreateDbContext();
+        context.Remove(functionApp);
+        await context.SaveChangesAsync();
+        FunctionApps?.Remove(functionApp);
+    }
+
+    private async void OnFunctionAppSubmit(FunctionApp functionApp)
+    {
+        var context = DbFactory.CreateDbContext();
+        var existingFunctionApp = FunctionApps?.FirstOrDefault(f => f.FunctionAppId == functionApp.FunctionAppId);
+        string? encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(configuration);
+
+        if (existingFunctionApp is not null)
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.FunctionAppUpdate {0}, {1}, {2}, {3}, {4}", parameters: new string?[]
+            {
+                functionApp.FunctionAppId.ToString(),
+                functionApp.FunctionAppName,
+                functionApp.FunctionAppUrl,
+                functionApp.FunctionAppKey,
+                encryptionPassword
+                });
+        }
+        else
+        {
+            await context.Database.ExecuteSqlRawAsync("etlmanager.FunctionAppAdd {0}, {1}, {2}, {3}", parameters: new string?[]
+            {
+                functionApp.FunctionAppName,
+                functionApp.FunctionAppUrl,
+                functionApp.FunctionAppKey,
+                encryptionPassword
+                });
+        }
+
+        await LoadData();
+        StateHasChanged();
+    }
+
+    private void ShowEditModal(FunctionApp? functionApp)
+    {
+        EditFunctionAppId = functionApp?.FunctionAppId ?? Guid.Empty;
+        FunctionAppEditModal.Show();
+    }
+}

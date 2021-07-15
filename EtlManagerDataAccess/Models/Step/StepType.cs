@@ -7,6 +7,7 @@
         Job,
         Exe,
         Pipeline,
-        Dataset
+        Dataset,
+        Function
     }
 }

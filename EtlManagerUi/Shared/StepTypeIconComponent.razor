@@ -20,6 +20,9 @@
     case StepType.Dataset:
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
         break;
+    case StepType.Function:
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/zap.svg")))
+        break;
     default:
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-circle.svg")))
         break;

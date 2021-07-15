@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerUtils", "EtlManag
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerScheduler", "EtlManagerScheduler\EtlManagerScheduler.csproj", "{B7372122-3775-4734-B32F-26552375F53F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManagerDataAccess", "EtlManagerDataAccess\EtlManagerDataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerDataAccess", "EtlManagerDataAccess\EtlManagerDataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

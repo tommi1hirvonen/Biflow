@@ -58,6 +58,7 @@ namespace EtlManagerExecutor
                 PipelineStepExecution pipeline => new PipelineStepExecutor(Configuration, pipeline),
                 ExeStepExecution exe => new ExeStepExecutor(Configuration, exe),
                 DatasetStepExecution dataset => new DatasetStepExecutor(Configuration, dataset),
+                FunctionStepExecution function => new FunctionStepExecutor(Configuration, function),
                 _ => throw new InvalidOperationException($"{StepExecution.StepType} is not a recognized step type")
             };
 
@@ -140,6 +141,7 @@ namespace EtlManagerExecutor
                         EndDateTime = DateTime.Now,
                         ErrorMessage = null
                     };
+                    // TODO: This does not belong here.
                     switch (attempt)
                     {
                         case SqlStepExecutionAttempt sql:
@@ -147,6 +149,9 @@ namespace EtlManagerExecutor
                             break;
                         case ExeStepExecutionAttempt exe:
                             exe.InfoMessage = null;
+                            break;
+                        case FunctionStepExecutionAttempt function:
+                            function.InfoMessage = null;
                             break;
                         default:
                             break;
@@ -185,6 +190,7 @@ namespace EtlManagerExecutor
                 attempt.ExecutionStatus = status;
                 attempt.EndDateTime = DateTime.Now;
                 attempt.ErrorMessage = failureResult.ErrorMessage;
+                // TODO: This does not belong here.
                 switch (attempt)
                 {
                     case SqlStepExecutionAttempt sql:
@@ -192,6 +198,9 @@ namespace EtlManagerExecutor
                         break;
                     case ExeStepExecutionAttempt exe:
                         exe.InfoMessage = failureResult.InfoMessage;
+                        break;
+                    case FunctionStepExecutionAttempt function:
+                        function.InfoMessage = failureResult.InfoMessage;
                         break;
                     default:
                         break;
@@ -213,6 +222,7 @@ namespace EtlManagerExecutor
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
                 attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
                 attempt.EndDateTime = DateTime.Now;
+                // TODO: This does not belong here.
                 switch (attempt)
                 {
                     case SqlStepExecutionAttempt sql:
@@ -220,6 +230,9 @@ namespace EtlManagerExecutor
                         break;
                     case ExeStepExecutionAttempt exe:
                         exe.InfoMessage = executionResult.InfoMessage;
+                        break;
+                    case FunctionStepExecutionAttempt function:
+                        function.InfoMessage = executionResult.InfoMessage;
                         break;
                     default:
                         break;
@@ -268,6 +281,7 @@ namespace EtlManagerExecutor
                     EndDateTime = null,
                     ErrorMessage = null
                 };
+                // TODO: This does not belong here.
                 switch (attempt)
                 {
                     case SqlStepExecutionAttempt sql:
@@ -275,6 +289,9 @@ namespace EtlManagerExecutor
                         break;
                     case ExeStepExecutionAttempt exe:
                         exe.InfoMessage = null;
+                        break;
+                    case FunctionStepExecutionAttempt function:
+                        function.InfoMessage = null;
                         break;
                     default:
                         break;

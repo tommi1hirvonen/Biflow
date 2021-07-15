@@ -1,0 +1,126 @@
+﻿@implements IDisposable
+@implements IStepEditModal 
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbFactory
+
+<StepEditModalBase @ref="Modal"
+                   Job="Job"
+                   Steps="Steps"
+                   Step="Step"
+                   Context="Context"
+                   OnStepSubmit="OnStepSubmit"
+                   FormId="function_step_edit_modal">
+    <BSFormRow>
+        <BSFormGroup Class="col-lg-6">
+            <BSLabel>Function App</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/zap.svg")))
+                    </div>
+                </div>
+                <InputSelect class="form-control" @bind-Value="Step.FunctionAppId">
+                    @foreach (var app in FunctionApps ?? Enumerable.Empty<FunctionApp>())
+                    {
+                        <option value="@app.FunctionAppId">@app.FunctionAppName</option>
+                    }
+                </InputSelect>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <BSFormRow>
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Function name</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.FunctionName" @oninput="Modal.ResetStepError"></InputText>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+    <BSFormRow>
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Function input</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
+                    </div>
+                </div>
+                <InputTextArea class="form-control" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+</StepEditModalBase>
+
+
+@code {
+    [Parameter]
+    public Guid StepId { get; set; } // empty Guid => new step
+
+    [Parameter]
+    public Job? Job { get; set; }
+
+    [Parameter]
+    public IList<Step>? Steps { get; set; }
+
+    [Parameter]
+    public IList<FunctionApp>? FunctionApps { get; set; }
+
+    [Parameter]
+    public EventCallback<Step> OnStepSubmit { get; set; }
+
+    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
+    private EtlManagerContext Context { get; set; } = null!;
+
+    private Guid PrevStepId { get; set; }
+
+    private FunctionStep Step { get; set; } = null!;
+
+    private StepEditModalBase Modal { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        Context = DbFactory.CreateDbContext();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        if (StepId != Guid.Empty && StepId != PrevStepId)
+        {
+            Step = await Context.FunctionSteps
+                .Include(step => step.Tags)
+                .Include(step => step.Dependencies)
+                .FirstOrDefaultAsync(step => step.StepId == StepId);
+            PrevStepId = StepId;
+        }
+        else if (StepId == Guid.Empty && Job is not null)
+        {
+            Step = new()
+            {
+                JobId = Job.JobId,
+                RetryAttempts = 0,
+                RetryIntervalMinutes = 0,
+                StepType = StepType.Function,
+                IsEnabled = true,
+                FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
+                Dependencies = new List<Dependency>(),
+                Tags = new List<Tag>()
+            };
+        }
+        StateHasChanged();
+    }
+
+    public void Show() => Modal.Show();
+
+    public void Dispose() => Context?.Dispose();
+    
+}

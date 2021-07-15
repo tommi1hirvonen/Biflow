@@ -110,6 +110,11 @@
     <Build Include="etlmanager\Stored Procedures\PowerBIServiceGet.sql" />
     <Build Include="etlmanager\Tables\ExecutionStep.sql" />
     <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
+    <Build Include="etlmanager\Tables\FunctionApp.sql" />
+    <Build Include="etlmanager\Stored Procedures\FunctionAppAdd.sql" />
+    <Build Include="etlmanager\Stored Procedures\FunctionAppUpdate.sql" />
+    <Build Include="etlmanager\Stored Procedures\FunctionAppGet.sql" />
+    <Build Include="etlmanager\Views\vFunctionApp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

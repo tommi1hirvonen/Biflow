@@ -59,7 +59,10 @@ SELECT
 	a.ExeSuccessExitCode,
 	a.PowerBIServiceId,
 	a.DatasetGroupId,
-	a.DatasetId
+	a.DatasetId,
+	a.FunctionAppId,
+	a.FunctionName,
+	a.FunctionInput
 INTO #Steps
 FROM etlmanager.Step AS a
 WHERE a.JobId = @JobId 
@@ -129,35 +132,41 @@ INSERT INTO etlmanager.ExecutionStep (
 	ExeSuccessExitCode,
 	PowerBIServiceId,
 	DatasetGroupId,
-	DatasetId
+	DatasetId,
+	FunctionAppId,
+	FunctionName,
+	FunctionInput
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
-	StepId = a.StepId,
-	StepName = a.StepName,
-	RetryAttempts = a.RetryAttempts,
-	RetryIntervalMinutes = a.RetryIntervalMinutes,
-	TimeoutMinutes = a.TimeoutMinutes,
-	ExecutionPhase = a.ExecutionPhase,
-	StepType = a.StepType,
-	SqlStatement = a.SqlStatement,
-	ConnectionId = a.ConnectionId,
-	PackageFolderName = a.PackageFolderName,
-	PackageProjectName = a.PackageProjectName,
-	PackageName = a.PackageName,
-	ExecuteIn32BitMode = a.ExecuteIn32BitMode,
+	a.StepId,
+	a.StepName,
+	a.RetryAttempts,
+	a.RetryIntervalMinutes,
+	a.TimeoutMinutes,
+	a.ExecutionPhase,
+	a.StepType,
+	a.SqlStatement,
+	a.ConnectionId,
+	a.PackageFolderName,
+	a.PackageProjectName,
+	a.PackageName,
+	a.ExecuteIn32BitMode,
 	a.ExecuteAsLogin,
 	a.DataFactoryId,
 	a.PipelineName,
-	JobToExecuteId = a.JobToExecuteId,
-	JobExecuteSynchronized = a.JobExecuteSynchronized,
+	a.JobToExecuteId,
+	a.JobExecuteSynchronized,
 	a.ExeFileName,
 	a.ExeArguments,
 	a.ExeWorkingDirectory,
 	a.ExeSuccessExitCode,
 	a.PowerBIServiceId,
 	a.DatasetGroupId,
-	a.DatasetId
+	a.DatasetId,
+	a.FunctionAppId,
+	a.FunctionName,
+	a.FunctionInput
 FROM #Steps AS a
 
 

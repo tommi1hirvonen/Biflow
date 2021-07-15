@@ -84,6 +84,7 @@
     <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepId" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @code {
@@ -104,6 +105,8 @@
     public List<DataFactory>? DataFactories { get; set; }
     [Parameter]
     public List<PowerBIService>? PowerBIServices { get; set; }
+    [Parameter]
+    public List<FunctionApp>? FunctionApps { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 

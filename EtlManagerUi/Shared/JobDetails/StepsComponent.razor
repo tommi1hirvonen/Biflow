@@ -241,6 +241,7 @@
     <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepId" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
@@ -417,12 +418,14 @@
     public List<DataFactory>? DataFactories { get; set; }
     [Parameter]
     public List<PowerBIService>? PowerBIServices { get; set; }
+    [Parameter]
+    public List<FunctionApp>? FunctionApps { get; set; }
 
     private IEnumerable<string> Tags => Steps?
-        .SelectMany(step => step.Tags)
-        .Select(tag => tag.TagName ?? string.Empty)
-        .Distinct()
-        .OrderBy(str => str) ?? Enumerable.Empty<string>();
+    .SelectMany(step => step.Tags)
+    .Select(tag => tag.TagName ?? string.Empty)
+    .Distinct()
+    .OrderBy(str => str) ?? Enumerable.Empty<string>();
 
     private Dictionary<StepType, IStepEditModal> StepEditModals = new();
     private Guid EditModalStepId { get; set; }
