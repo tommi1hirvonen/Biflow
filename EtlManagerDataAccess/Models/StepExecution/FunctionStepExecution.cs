@@ -25,6 +25,9 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Function input")]
         public string? FunctionInput { get; set; }
 
+        [Display(Name = "Is durable")]
+        public bool FunctionIsDurable { get; set; }
+
         [Column("TimeoutMinutes")]
         public int TimeoutMinutes { get; set; }
     }

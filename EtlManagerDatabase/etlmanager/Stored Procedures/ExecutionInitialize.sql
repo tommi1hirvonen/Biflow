@@ -62,7 +62,8 @@ SELECT
 	a.DatasetId,
 	a.FunctionAppId,
 	a.FunctionName,
-	a.FunctionInput
+	a.FunctionInput,
+	a.FunctionIsDurable
 INTO #Steps
 FROM etlmanager.Step AS a
 WHERE a.JobId = @JobId 
@@ -135,7 +136,8 @@ INSERT INTO etlmanager.ExecutionStep (
 	DatasetId,
 	FunctionAppId,
 	FunctionName,
-	FunctionInput
+	FunctionInput,
+	FunctionIsDurable
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
@@ -166,7 +168,8 @@ SELECT
 	a.DatasetId,
 	a.FunctionAppId,
 	a.FunctionName,
-	a.FunctionInput
+	a.FunctionInput,
+	a.FunctionIsDurable
 FROM #Steps AS a
 
 

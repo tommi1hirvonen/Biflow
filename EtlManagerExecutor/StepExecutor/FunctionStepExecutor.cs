@@ -77,77 +77,96 @@ namespace EtlManagerExecutor
 
             if (response.IsSuccessStatusCode)
             {
-                var startResponse = JsonSerializer.Deserialize<StartResponse>(content, JsonSerializerOptions)
-                    ?? throw new InvalidOperationException("Start response was null");
-
-                // Update instance id for the step execution attempt
-                try
+                ExecutionResult executionResult;
+                if (Step.FunctionIsDurable)
                 {
-                    using var context = Configuration.DbContextFactory.CreateDbContext();
-                    var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
-                    if (attempt is not null && attempt is FunctionStepExecutionAttempt function)
-                    {
-                        function.FunctionInstanceId = startResponse.Id;
-                        context.Attach(function);
-                        context.Entry(function).Property(e => e.FunctionInstanceId).IsModified = true;
-                        await context.SaveChangesAsync(CancellationToken.None);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Could not find step execution attempt to update function instance id");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "{ExecutionId} {Step} Error updating function instance id", Configuration.ExecutionId, Step);
-                }
-
-                StatusResponse status;
-                while (true)
-                {
-                    try
-                    {
-                        status = await TryGetStatusAsync(client, startResponse.StatusQueryGetUri, cancellationToken);
-                        if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
-                        {
-                            // Check for timeout.
-                            if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
-                            {
-                                await CancelAsync(client, startResponse.TerminatePostUri, "StepTimedOut");
-                                Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
-                                return new ExecutionResult.Failure("Step execution timed out");
-                            }
-
-                            await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        await CancelAsync(client, startResponse.TerminatePostUri, "StepWasCanceled");
-                        throw;
-                    }
-                }
-
-                if (status.RuntimeStatus == "Completed")
-                {
-                    return new ExecutionResult.Success(status.Output.ToString());
-                }
-                else if (status.RuntimeStatus == "Terminated")
-                {
-                    return new ExecutionResult.Failure($"Function was terminated: {status.Output}");
+                    executionResult = await HandleDurableFunctionPolling(client, content, startTime, cancellationToken);
                 }
                 else
                 {
-                    return new ExecutionResult.Failure($"Function failed: {status.Output}");
+                    executionResult = new ExecutionResult.Success(content);
                 }
+
+                return executionResult;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            {
+                return new ExecutionResult.Failure("Error executing function (500 Internal Server Error)");
             }
             else
             {
                 return new ExecutionResult.Failure($"Error sending POST request to start function: {content}");
+            }
+        }
+
+        private async Task<ExecutionResult> HandleDurableFunctionPolling(HttpClient client, string content, DateTime startTime, CancellationToken cancellationToken)
+        {
+            var startResponse = JsonSerializer.Deserialize<StartResponse>(content, JsonSerializerOptions)
+                    ?? throw new InvalidOperationException("Start response was null");
+
+            // Update instance id for the step execution attempt
+            try
+            {
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
+                if (attempt is not null && attempt is FunctionStepExecutionAttempt function)
+                {
+                    function.FunctionInstanceId = startResponse.Id;
+                    context.Attach(function);
+                    context.Entry(function).Property(e => e.FunctionInstanceId).IsModified = true;
+                    await context.SaveChangesAsync(CancellationToken.None);
+                }
+                else
+                {
+                    throw new InvalidOperationException("Could not find step execution attempt to update function instance id");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "{ExecutionId} {Step} Error updating function instance id", Configuration.ExecutionId, Step);
+            }
+
+            StatusResponse status;
+            while (true)
+            {
+                try
+                {
+                    status = await TryGetStatusAsync(client, startResponse.StatusQueryGetUri, cancellationToken);
+                    if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
+                    {
+                        // Check for timeout.
+                        if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
+                        {
+                            await CancelAsync(client, startResponse.TerminatePostUri, "StepTimedOut");
+                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
+                            return new ExecutionResult.Failure("Step execution timed out");
+                        }
+
+                        await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    await CancelAsync(client, startResponse.TerminatePostUri, "StepWasCanceled");
+                    throw;
+                }
+            }
+
+            if (status.RuntimeStatus == "Completed")
+            {
+                return new ExecutionResult.Success(status.Output.ToString());
+            }
+            else if (status.RuntimeStatus == "Terminated")
+            {
+                return new ExecutionResult.Failure($"Function was terminated: {status.Output}");
+            }
+            else
+            {
+                return new ExecutionResult.Failure($"Function failed: {status.Output}");
             }
         }
 

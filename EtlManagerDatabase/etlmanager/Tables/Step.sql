@@ -26,6 +26,7 @@
     [FunctionAppId]             UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_FunctionApp] FOREIGN KEY REFERENCES [etlmanager].[FunctionApp] ([FunctionAppId]),
     [FunctionName]              VARCHAR(250)     NULL,
     [FunctionInput]             NVARCHAR(MAX)    NULL,
+    [FunctionIsDurable]         BIT              CONSTRAINT [DF_Step_FunctionIsDurable] DEFAULT (0) NOT NULL,
     [IsEnabled]                 BIT              CONSTRAINT [DF_Step_IsEnabled] DEFAULT (1) NOT NULL,
     [RetryAttempts]             INT              CONSTRAINT [DF_Step_RetryAttempts] DEFAULT (0) NOT NULL,
     [RetryIntervalMinutes]      INT              CONSTRAINT [DF_Step_RetryIntervalMinutes] DEFAULT (0) NOT NULL,

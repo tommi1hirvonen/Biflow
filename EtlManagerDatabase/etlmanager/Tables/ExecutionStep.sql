@@ -28,6 +28,7 @@
     [FunctionAppId]             UNIQUEIDENTIFIER    NULL,
     [FunctionName]              VARCHAR(250)        NULL,
     [FunctionInput]             NVARCHAR(MAX)       NULL,
+    [FunctionIsDurable]         BIT                 NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [CK_ExecutionStep_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE' OR [StepType]='DATASET' OR [StepType]='FUNCTION')
 );
