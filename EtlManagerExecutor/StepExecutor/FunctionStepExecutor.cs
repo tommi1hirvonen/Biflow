@@ -1,5 +1,4 @@
 ﻿using EtlManagerDataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;

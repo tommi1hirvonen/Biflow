@@ -1,4 +1,3 @@
-using Dapper;
 using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using EtlManagerUtils;

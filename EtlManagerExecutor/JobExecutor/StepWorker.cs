@@ -1,10 +1,8 @@
-﻿using Dapper;
-using EtlManagerDataAccess;
+﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;

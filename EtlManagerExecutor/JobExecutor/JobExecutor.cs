@@ -1,13 +1,10 @@
-﻿using Dapper;
-using EtlManagerDataAccess;
+﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
-using EtlManagerUtils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;

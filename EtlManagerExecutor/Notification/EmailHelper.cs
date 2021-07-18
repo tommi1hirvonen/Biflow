@@ -2,14 +2,13 @@
 using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using EtlManagerExecutor.Notification;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net;
 using System.Net.Mail;
 using System.Text;
 
