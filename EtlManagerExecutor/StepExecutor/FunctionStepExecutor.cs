@@ -1,4 +1,5 @@
 ﻿using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var context = Configuration.DbContextFactory.CreateDbContext();
-                functionApp = await context.FunctionApps.FindAsync(Step.FunctionAppId);
+                functionApp = await context.FunctionApps.FirstAsync(f => f.FunctionAppId == Step.FunctionAppId, cancellationToken);
             }
             catch (Exception ex)
             {

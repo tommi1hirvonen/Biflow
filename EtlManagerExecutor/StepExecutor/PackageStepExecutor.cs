@@ -30,6 +30,8 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            Step.ExecuteAsLogin = string.IsNullOrEmpty(Step.ExecuteAsLogin) ? null : Step.ExecuteAsLogin;
+
             string connectionString;
             try
             {
@@ -38,10 +40,8 @@ namespace EtlManagerExecutor
                     .Where(c => c.ConnectionId == Step.ConnectionId)
                     .FirstOrDefaultAsync(CancellationToken.None);
                 connectionString = connection?.ConnectionString ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-                if (Step.ExecuteAsLogin is null && connection.ExecutePackagesAsLogin is not null)
-                {
-                    Step.ExecuteAsLogin = connection.ExecutePackagesAsLogin;
-                }
+                connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(connection.ExecutePackagesAsLogin) ? null : connection.ExecutePackagesAsLogin;
+                Step.ExecuteAsLogin ??= connection.ExecutePackagesAsLogin;
             }
             catch (Exception ex)
             {
