@@ -19,6 +19,9 @@ namespace EtlManagerDataAccess.Models
         public string? Email { get; set; }
 
         [Required]
+        public string? Role { get; set; }
+
+        [Required]
         public DateTime CreatedDateTime { get; set; }
 
         [Required]

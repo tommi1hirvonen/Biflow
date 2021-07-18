@@ -61,7 +61,6 @@
     <Folder Include="Properties" />
     <Folder Include="etlmanager\" />
     <Folder Include="etlmanager\Tables\" />
-    <Folder Include="etlmanager\Views\" />
     <Folder Include="etlmanager\Stored Procedures\" />
     <Folder Include="Security\" />
   </ItemGroup>
@@ -81,7 +80,6 @@
     <Build Include="etlmanager\Tables\PackageParameter.sql" />
     <Build Include="etlmanager\Tables\Subscription.sql" />
     <Build Include="etlmanager\Stored Procedures\StepCopy.sql" />
-    <Build Include="etlmanager\Views\vUser.sql" />
     <Build Include="etlmanager\Stored Procedures\GetNotificationMessageBody.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
     <Build Include="etlmanager\Tables\Connection.sql" />

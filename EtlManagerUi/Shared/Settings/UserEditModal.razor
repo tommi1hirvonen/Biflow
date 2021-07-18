@@ -92,11 +92,11 @@
     public string? Username { get; set; }
 
     [Parameter]
-    public EventCallback<RoleUser> OnUserSubmit { get; set; }
+    public EventCallback<User> OnUserSubmit { get; set; }
 
     private BSModal Modal { get; set; } = null!;
 
-    private RoleUser? User { get; set; }
+    private User? User { get; set; }
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
@@ -110,7 +110,7 @@
         else
         {
             var context = DbFactory.CreateDbContext();
-            User = await context.EditableUsers.FirstOrDefaultAsync(user => user.Username == Username);
+            User = await context.Users.FirstOrDefaultAsync(user => user.Username == Username);
         }
     }
 

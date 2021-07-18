@@ -37,7 +37,6 @@ namespace EtlManagerDataAccess
         public DbSet<Schedule> Schedules => Set<Schedule>();
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
         public DbSet<User> Users => Set<User>();
-        public DbSet<RoleUser> EditableUsers => Set<RoleUser>();
         public DbSet<DataFactory> DataFactories => Set<DataFactory>();
         public DbSet<PowerBIService> PowerBIServices => Set<PowerBIService>();
         public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
@@ -287,14 +286,6 @@ namespace EtlManagerDataAccess
                 .ToTable("User")
                 .HasMany(user => user.Subscriptions)
                 .WithOne(subscription => subscription.User);
-
-            // Map a secondary user class RoleUser to an additional vUser view that is based on User table.
-            // We cannot map two entity types (i.e. User and RoleUser) to the same table, which is why this is needed.
-
-            // The reason for separating User and RoleUser is a legacy one from the times of the Razor Pages app.
-            // There we couldn't expose RoleUser to the end user in HTML forms, because the user may have been able to edit their own role.
-            modelBuilder.Entity<RoleUser>()
-                .ToTable("vUser");
 
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory");

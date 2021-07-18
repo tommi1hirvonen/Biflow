@@ -112,7 +112,7 @@
 
 
 @code {
-    private List<RoleUser> Users { get; set; } = null!;
+    private List<User> Users { get; set; } = null!;
 
     private UserEditModal UserEditModal { get; set; } = null!;
     private string? EditModalUsername { get; set; }
@@ -123,15 +123,15 @@
     protected override async Task OnInitializedAsync()
     {
         var context = DbFactory.CreateDbContext();
-        Users = await context.EditableUsers.OrderBy(user => user.Username).ToListAsync();
+        Users = await context.Users.OrderBy(user => user.Username).ToListAsync();
     }
 
-    private async Task DeleteUser(RoleUser user)
+    private async Task DeleteUser(User user)
     {
         try
         {
             var context = DbFactory.CreateDbContext();
-            context.EditableUsers.Remove(user);
+            context.Users.Remove(user);
             await context.SaveChangesAsync();
             Users.Remove(user);
         }
@@ -141,7 +141,7 @@
         }
     }
 
-    private void OnUserSubmit(RoleUser user)
+    private void OnUserSubmit(User user)
     {
         var existingUser = Users.FirstOrDefault(u => u.Username == user.Username);
         if (existingUser is not null)
@@ -151,13 +151,13 @@
         Users.Add(user);
     }
 
-    private void ShowEditModal(RoleUser user)
+    private void ShowEditModal(User user)
     {
         EditModalUsername = user?.Username;
         UserEditModal.Show();
     }
 
-    private async Task UpdatePassword(RoleUser user)
+    private async Task UpdatePassword(User user)
     {
         if (!(await PasswordCheck()))
         {
