@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Serilog;
@@ -22,14 +23,11 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (Configuration.EncryptionKey is null)
-                throw new ArgumentNullException(nameof(Configuration.EncryptionKey), "Encryption key cannot be null for dataset step executions");
-
             // Get reference to the Power BI Service helper object.
             PowerBIServiceHelper powerBIServiceHelper;
             try
             {
-                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.ConnectionString, Step.PowerBIServiceId, Configuration.EncryptionKey);
+                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.DbContextFactory, Step.PowerBIServiceId);
             }
             catch (Exception ex)
             {

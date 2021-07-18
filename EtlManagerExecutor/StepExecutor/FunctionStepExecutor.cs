@@ -33,10 +33,7 @@ namespace EtlManagerExecutor
             try
             {
                 using var context = Configuration.DbContextFactory.CreateDbContext();
-                functionApp = (await context.FunctionApps
-                    .FromSqlRaw("etlmanager.FunctionAppGet @FunctionAppId = {0}, @EncryptionKey = {1}",
-                        new string?[] { Step.FunctionAppId.ToString(), Configuration.EncryptionKey })
-                    .ToListAsync(cancellationToken)).First();
+                functionApp = await context.FunctionApps.FindAsync(Step.FunctionAppId);
             }
             catch (Exception ex)
             {

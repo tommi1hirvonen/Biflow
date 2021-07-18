@@ -11,9 +11,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace EtlManagerUi
@@ -326,20 +328,19 @@ namespace EtlManagerUi
             return new AuthenticationResult(role);
         }
 
-        public static async Task<Dictionary<string, Dictionary<string, List<string>>>> GetSSISCatalogPackages(IConfiguration configuration, string connectionId)
+        public static async Task<Dictionary<string, Dictionary<string, List<string>>>> GetSSISCatalogPackages(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid connectionId)
         {
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
             string catalogConnectionString;
-            using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
+            using (var context = dbContextFactory.CreateDbContext())
             {
-                catalogConnectionString = await sqlConnection.ExecuteScalarAsync<string>(
-                    "SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString",
-                    new { EncryptionKey = encryptionKey, ConnectionId = connectionId });
+                catalogConnectionString = await context.Connections
+                    .Where(c => c.ConnectionId == connectionId)
+                    .Select(c => c.ConnectionString)
+                    .FirstAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
             }
-            using (var sqlConnection = new SqlConnection(catalogConnectionString))
-            {
-                var rows = await sqlConnection.QueryAsync<(string, string?, string?)>(
-                    @"SELECT
+            using var sqlConnection = new SqlConnection(catalogConnectionString);
+            var rows = await sqlConnection.QueryAsync<(string, string?, string?)>(
+                @"SELECT
 	                    [folders].[name] AS FolderName,
 	                    [projects].[name] AS ProjectName,
 	                    [packages].[name] AS PackageName
@@ -347,41 +348,38 @@ namespace EtlManagerUi
 	                    LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
 	                    LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
                     ORDER BY FolderName, ProjectName, PackageName");
-                var catalog = rows
-                    .GroupBy(key => key.Item1, element => (element.Item2, element.Item3))
-                    .ToDictionary(
-                    grouping => grouping.Key,
-                    grouping => grouping
-                                    .Where(x => x.Item1 is not null)
-                                    .GroupBy(key => key.Item1, element => element.Item2)
-                                    .ToDictionary(
-                                        grouping_ => grouping_.Key ?? "",
-                                        grouping_ => grouping_.Where(x => x is not null).Select(x => x ?? "").ToList()));
-                return catalog;
-            }
+            var catalog = rows
+                .GroupBy(key => key.Item1, element => (element.Item2, element.Item3))
+                .ToDictionary(
+                grouping => grouping.Key,
+                grouping => grouping
+                                .Where(x => x.Item1 is not null)
+                                .GroupBy(key => key.Item1, element => element.Item2)
+                                .ToDictionary(
+                                    grouping_ => grouping_.Key ?? "",
+                                    grouping_ => grouping_.Where(x => x is not null).Select(x => x ?? "").ToList()));
+            return catalog;
         }
 
-        public static async Task<Dictionary<string, List<string>>> GetDatabaseStoredProcedures(IConfiguration configuration, string connectionId)
+        public static async Task<Dictionary<string, List<string>>> GetDatabaseStoredProcedures(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid connectionId)
         {
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration);
             string connectionString;
-            using (var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext")))
+            using (var context = dbContextFactory.CreateDbContext())
             {
-                connectionString = await sqlConnection.ExecuteScalarAsync<string>(
-                    "SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionKey) AS ConnectionString",
-                    new { EncryptionKey = encryptionKey, ConnectionId = connectionId });
+                connectionString = await context.Connections
+                    .Where(c => c.ConnectionId == connectionId)
+                    .Select(c => c.ConnectionString)
+                    .FirstAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
             }
-            using (var sqlConnection = new SqlConnection(connectionString))
-            {
-                var rows = await sqlConnection.QueryAsync<(string, string)>(
-                    @"SELECT OBJECT_SCHEMA_NAME([object_id]) AS [schema], [name]
+            using var sqlConnection = new SqlConnection(connectionString);
+            var rows = await sqlConnection.QueryAsync<(string, string)>(
+                @"SELECT OBJECT_SCHEMA_NAME([object_id]) AS [schema], [name]
                     FROM [sys].[procedures]
                     ORDER BY [schema], [name]");
-                var procedures = rows
-                    .GroupBy(key => key.Item1, element => element.Item2)
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-                return procedures;
-            }
+            var procedures = rows
+                .GroupBy(key => key.Item1, element => element.Item2)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+            return procedures;
         }
 
         public static async Task<bool> UpdatePasswordAsync(IConfiguration configuration, string username, string password)

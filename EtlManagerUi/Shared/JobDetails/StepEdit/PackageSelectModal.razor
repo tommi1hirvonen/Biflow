@@ -1,6 +1,7 @@
 ﻿@inject IConfiguration Configuration
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory 
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select package</BSModalHeader>
@@ -132,12 +133,11 @@
 
     private async Task ModalOpenChanged(bool isOpen)
     {
-        if (isOpen && ConnectionId != Guid.Empty)
+        if (isOpen && ConnectionId is not null && ConnectionId != Guid.Empty)
         {
             try
             {
-                string connectionId = ConnectionId?.ToString() ?? throw new ArgumentNullException(nameof(connectionId), "Connection id cannot be null");
-                Catalog = await Utility.GetSSISCatalogPackages(Configuration, connectionId);
+                Catalog = await Utility.GetSSISCatalogPackages(DbContextFactory, (Guid)ConnectionId);
                 StateHasChanged();
             }
             catch (Exception ex)

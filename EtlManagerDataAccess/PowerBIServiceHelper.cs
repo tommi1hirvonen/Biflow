@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.PowerBI.Api;
@@ -13,14 +15,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerUtils
+namespace EtlManagerDataAccess
 {
     public class PowerBIServiceHelper
     {
-        public Guid PowerBIServiceId { get; init; }
-        private string TenantId { get; init; }
-        private string ClientId { get; init; }
-        private string ClientSecret { get; init; }
+        public PowerBIService PowerBIService { get; init; }
         private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
@@ -29,19 +28,13 @@ namespace EtlManagerUtils
         private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
 
         private PowerBIServiceHelper(
-            Guid powerBIServiceId,
-            string tenantId,
-            string clientId,
-            string clientSecret,
+            PowerBIService powerBIService,
             string? accessToken,
             DateTime? accessTokenExpiresOn,
             string connectionString
             )
         {
-            PowerBIServiceId = powerBIServiceId;
-            TenantId = tenantId;
-            ClientId = clientId;
-            ClientSecret = clientSecret;
+            PowerBIService = powerBIService;
             AccessToken = accessToken;
             AccessTokenExpiresOn = accessTokenExpiresOn;
             ConnectionString = connectionString;
@@ -81,15 +74,15 @@ namespace EtlManagerUtils
             {
                 try
                 {
-                    var context = new AuthenticationContext(AuthenticationUrl + TenantId);
-                    var clientCredential = new ClientCredential(ClientId, ClientSecret);
+                    var context = new AuthenticationContext(AuthenticationUrl + PowerBIService.TenantId);
+                    var clientCredential = new ClientCredential(PowerBIService.ClientId, PowerBIService.ClientSecret);
                     var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIServiceId);
+                    Log.Error(ex, "Error getting Microsoft OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIService.PowerBIServiceId);
                     throw;
                 }
 
@@ -104,11 +97,11 @@ namespace EtlManagerUtils
                         @"UPDATE etlmanager.PowerBIService
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
                         WHERE PowerBIServiceId = @PowerBIServiceId",
-                        new { AccessToken, AccessTokenExpiresOn, PowerBIServiceId });
+                        new { AccessToken, AccessTokenExpiresOn, PowerBIService.PowerBIServiceId });
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIServiceId);
+                    Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIService.PowerBIServiceId);
                     throw;
                 }
             }
@@ -120,30 +113,20 @@ namespace EtlManagerUtils
             return client;
         }
 
-        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IConfiguration configuration, Guid powerBIServiceId)
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid powerBIServiceId)
         {
-            var connectionString = configuration.GetConnectionString("EtlManagerContext");
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
-                ?? throw new ArgumentNullException("encyptionKey", "Encryption key cannot be null in order to create a PowerBIServiceHelper");
-            return await GetPowerBIServiceHelperAsync(connectionString, powerBIServiceId, encryptionKey);
-        }
-
-        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(string connectionString, Guid powerBIServiceId, string encryptionKey)
-        {
-            using var sqlConnection = new SqlConnection(connectionString);
-            (var tenantId, var clientId, var clientSecret, var accessToken, var accessTokenExpiresOn) =
-                await sqlConnection.QueryFirstAsync<(string, string, string, string?, DateTime?)>(
-                    @"SELECT [TenantId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
-                            [AccessToken], [AccessTokenExpiresOn]
+            using var context = dbContextFactory.CreateDbContext();
+            var connectionString = context.Database.GetConnectionString();
+            var powerBIService = await context.PowerBIServices.FindAsync(powerBIServiceId);
+            using var sqlConnection = new SqlConnection(context.Database.GetConnectionString());
+            (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
+                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
                     FROM etlmanager.PowerBIService
                     WHERE PowerBIServiceId = @PowerBIServiceId",
-                    new { PowerBIServiceId = powerBIServiceId, EncryptionKey = encryptionKey });
+                    new { PowerBIServiceId = powerBIServiceId });
 
             return new PowerBIServiceHelper(
-                powerBIServiceId: powerBIServiceId,
-                tenantId: tenantId,
-                clientId: clientId,
-                clientSecret: clientSecret,
+                powerBIService: powerBIService,
                 accessToken: accessToken,
                 accessTokenExpiresOn: accessTokenExpiresOn,
                 connectionString: connectionString

@@ -297,17 +297,17 @@ namespace EtlManagerDataAccess
                 .ToTable("vUser");
 
             modelBuilder.Entity<DataFactory>()
-                .ToTable("vDataFactory");
+                .ToTable("DataFactory");
 
             modelBuilder.Entity<PowerBIService>()
-                .ToTable("vPowerBIService");
+                .ToTable("PowerBIService");
 
             // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
-                .ToTable("vConnection");
+                .ToTable("Connection");
 
             modelBuilder.Entity<FunctionApp>()
-                .ToTable("vFunctionApp");
+                .ToTable("FunctionApp");
         }
 
 

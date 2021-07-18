@@ -78,9 +78,6 @@
     [Parameter]
     public EventCallback<PowerBIService> OnPowerBIServiceSubmit { get; set; }
 
-    [Parameter]
-    public string? EncryptionPassword { get; set; }
-
     private PowerBIService? PowerBIService { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -93,10 +90,7 @@
         if (PowerBIServiceId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            PowerBIService = (await context.PowerBIServices
-                .FromSqlRaw<PowerBIService>("etlmanager.PowerBIServiceGet @PowerBIServiceId = {0}, @EncryptionKey = {1}",
-                    new string?[] { PowerBIServiceId.ToString(), EncryptionPassword })
-                .ToListAsync()).First();
+            PowerBIService = await context.PowerBIServices.FindAsync(PowerBIServiceId);
         }
         else
         {

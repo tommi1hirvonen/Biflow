@@ -15,12 +15,6 @@
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/encryption">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-            Encryption
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings/connections">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
             Connections
@@ -50,25 +44,21 @@
 {
     <UsersComponent />
 }
-else if (Page == "encryption")
-{
-    <EncryptionComponent EncryptionPassword="@EncryptionPassword" />
-}
 else if (Page == "connections")
 {
-    <ConnectionsComponent EncryptionPassword="@EncryptionPassword" />
+    <ConnectionsComponent />
 }
 else if (Page == "datafactories")
 {
-    <DataFactoriesComponent EncryptionPassword="@EncryptionPassword" />
+    <DataFactoriesComponent />
 }
 else if (Page == "powerbiservices")
 {
-    <PowerBIServicesComponent EncryptionPassword="@EncryptionPassword" />
+    <PowerBIServicesComponent />
 }
 else if (Page == "functionapps")
 {
-    <FunctionAppsComponent EncryptionPassword="@EncryptionPassword" />
+    <FunctionAppsComponent />
 }
 else
 {
@@ -78,11 +68,4 @@ else
 @code {
     [Parameter]
     public string? Page { get; set; }
-
-    private string? EncryptionPassword { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        EncryptionPassword = await CommonUtility.GetEncryptionKeyAsync(Configuration);
-    }
 }

@@ -35,12 +35,6 @@
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>
                         </BSFormGroup>
-                        <div class="custom-control custom-checkbox custom-control-inline">
-                            <input type="checkbox" class="custom-control-input" id="chk_sensitive" disabled=@(!IsEncryptionKeySet)
-                                   checked=@Connection.IsSensitive
-                                   @bind-value="Connection.IsSensitive">
-                            <label class="custom-control-label" for="chk_sensitive">Sensitive</label>
-                        </div>
 
                         <BSFormGroup Class="mt-2">
                             <BSLabel>Execute SSIS packages as login (blank = no impersonation)</BSLabel>
@@ -97,14 +91,9 @@
     [Parameter]
     public EventCallback<Connection> OnConnectionSubmit { get; set; }
 
-    [Parameter]
-    public string? EncryptionPassword { get; set; }
-
     private Connection? Connection { get; set; }
 
     private BSModal Modal { get; set; } = null!;
-
-    private bool IsEncryptionKeySet { get; set; } = false;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -114,10 +103,7 @@
         if (ConnectionId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            Connection = (await context.Connections
-                .FromSqlRaw<Connection>("etlmanager.ConnectionGet @ConnectionId = {0}, @EncryptionKey = {1}",
-                    new string?[] { ConnectionId.ToString(), EncryptionPassword })
-                .ToListAsync()).First();
+            Connection = await context.Connections.FindAsync(ConnectionId);
         }
         else
         {
@@ -125,7 +111,6 @@
         }
         ConnectionTestSuccess = null;
         TestingConnection = false;
-        IsEncryptionKeySet = EncryptionPassword is not null;
     }
 
     private async Task SubmitConnection()

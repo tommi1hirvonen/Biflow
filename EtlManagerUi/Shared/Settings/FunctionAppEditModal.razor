@@ -49,9 +49,6 @@
     [Parameter]
     public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
-    [Parameter]
-    public string? EncryptionPassword { get; set; }
-
     private FunctionApp? FunctionApp { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -61,10 +58,7 @@
         if (FunctionAppId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            FunctionApp = (await context.FunctionApps
-                .FromSqlRaw<FunctionApp>("etlmanager.FunctionAppGet @FunctionAppId = {0}, @EncryptionKey = {1}",
-                    new string?[] { FunctionAppId.ToString(), EncryptionPassword })
-                .ToListAsync()).First();
+            FunctionApp = await context.FunctionApps.FindAsync(FunctionAppId);
         }
         else
         {

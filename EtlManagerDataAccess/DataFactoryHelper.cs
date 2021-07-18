@@ -1,6 +1,8 @@
 ﻿using Dapper;
+using EtlManagerDataAccess.Models;
 using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
@@ -13,17 +15,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerUtils
+namespace EtlManagerDataAccess
 {
     public class DataFactoryHelper
     {
-        public Guid DataFactoryId { get; init; }
-        private string TenantId { get; init; }
-        private string SubscriptionId { get; init; }
-        private string ResourceGroupName { get; init; }
-        private string ResourceName { get; init; }
-        private string ClientId { get; init; }
-        private string ClientSecret { get; init; }
+        public DataFactory DataFactory { get; init; }
         private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
@@ -32,25 +28,13 @@ namespace EtlManagerUtils
         private const string ResourceUrl = "https://management.azure.com/";
 
         private DataFactoryHelper(
-            Guid dataFactoryId,
-            string tenantId,
-            string subscriptionId,
-            string resourceGroupName,
-            string resourceName,
-            string clientId,
-            string clientSecret,
+            DataFactory dataFactory,
             string? accessToken,
             DateTime? accessTokenExpiresOn,
             string connectionString
             )
         {
-            DataFactoryId = dataFactoryId;
-            TenantId = tenantId;
-            SubscriptionId = subscriptionId;
-            ResourceGroupName = resourceGroupName;
-            ResourceName = resourceName;
-            ClientId = clientId;
-            ClientSecret = clientSecret;
+            DataFactory = dataFactory;
             AccessToken = accessToken;
             AccessTokenExpiresOn = accessTokenExpiresOn;
             ConnectionString = connectionString;
@@ -59,7 +43,7 @@ namespace EtlManagerUtils
         public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
         {
             var client = await CheckAccessTokenValidityAsync();
-            var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
+            var createRunResponse = await client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, pipelineName,
                 parameters: parameters, cancellationToken: cancellationToken);
             return createRunResponse.RunId;
         }
@@ -67,19 +51,19 @@ namespace EtlManagerUtils
         public async Task<PipelineRun> GetPipelineRunAsync(string runId, CancellationToken cancellationToken)
         {
             var client = await CheckAccessTokenValidityAsync();
-            return await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+            return await client.PipelineRuns.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, runId, cancellationToken);
         }
 
         public async Task CancelPipelineRunAsync(string runId)
         {
             var client = await CheckAccessTokenValidityAsync();
-            await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+            await client.PipelineRuns.CancelAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, runId, isRecursive: true);
         }
 
         public async Task<Dictionary<string, List<string>>> GetPipelinesAsync()
         {
             var client = await CheckAccessTokenValidityAsync();
-            var pipelines = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+            var pipelines = await client.Pipelines.ListByFactoryAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName);
             // Key = Folder
             // Value = List of pipelines in that folder
             return pipelines
@@ -94,20 +78,20 @@ namespace EtlManagerUtils
             {
                 try
                 {
-                    var context = new AuthenticationContext(AuthenticationUrl + TenantId);
-                    var clientCredential = new ClientCredential(ClientId, ClientSecret);
+                    var context = new AuthenticationContext(AuthenticationUrl + DataFactory.TenantId);
+                    var clientCredential = new ClientCredential(DataFactory.ClientId, DataFactory.ClientSecret);
                     var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
+                    Log.Error(ex, "Error getting Microsoft OAuth access token for Data Factory id {DataFactoryId}", DataFactory.DataFactoryId);
                     throw;
                 }
 
                 var credentials = new TokenCredentials(AccessToken);
-                client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+                client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
 
                 // Update the token and its expiration time to the database for later use.
                 try
@@ -117,50 +101,36 @@ namespace EtlManagerUtils
                         @"UPDATE etlmanager.DataFactory
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
                         WHERE DataFactoryId = @DataFactoryId",
-                        new { AccessToken, AccessTokenExpiresOn, DataFactoryId });
+                        new { AccessToken, AccessTokenExpiresOn, DataFactory.DataFactoryId });
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactoryId);
+                    Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactory.DataFactoryId);
                     throw;
                 }
             }
             else if (client is null)
             {
                 var credentials = new TokenCredentials(AccessToken);
-                client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+                client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
             }
             return client;
         }
 
-        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IConfiguration configuration, Guid dataFactoryId)
+        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid dataFactoryId)
         {
-            var connectionString = configuration.GetConnectionString("EtlManagerContext");
-            var encryptionKey = await CommonUtility.GetEncryptionKeyAsync(configuration)
-                ?? throw new ArgumentNullException("encyptionKey", "Encryption key cannot be null in order to create a DataFactoryHelper");
-            return await GetDataFactoryHelperAsync(connectionString, dataFactoryId, encryptionKey);
-        }
-
-        public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(string connectionString, Guid dataFactoryId, string encryptionKey)
-        {
+            using var context = dbContextFactory.CreateDbContext();
+            var dataFactory = await context.DataFactories.FindAsync(dataFactoryId);
+            var connectionString = context.Database.GetConnectionString();
             using var sqlConnection = new SqlConnection(connectionString);
-            (var tenantId, var subscriptionId, var clientId, var clientSecret,
-                var resourceGroupName, var resourceName, var accessToken, var accessTokenExpiresOn) =
-                await sqlConnection.QueryFirstAsync<(string, string, string, string, string, string, string?, DateTime?)>(
-                    @"SELECT [TenantId], [SubscriptionId], [ClientId], etlmanager.GetDecryptedValue(@EncryptionKey, ClientSecret) AS ClientSecret,
-                            [ResourceGroupName], [ResourceName], [AccessToken], [AccessTokenExpiresOn]
+            (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
+                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
                     FROM etlmanager.DataFactory
                     WHERE DataFactoryId = @DataFactoryId",
-                    new { DataFactoryId = dataFactoryId, EncryptionKey = encryptionKey });
+                    new { DataFactoryId = dataFactoryId });
 
             return new DataFactoryHelper(
-                dataFactoryId: dataFactoryId,
-                tenantId: tenantId,
-                subscriptionId: subscriptionId,
-                resourceGroupName: resourceGroupName,
-                resourceName: resourceName,
-                clientId: clientId,
-                clientSecret: clientSecret,
+                dataFactory: dataFactory,
                 accessToken: accessToken,
                 accessTokenExpiresOn: accessTokenExpiresOn,
                 connectionString: connectionString

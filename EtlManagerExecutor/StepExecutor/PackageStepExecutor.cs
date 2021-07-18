@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -32,10 +33,15 @@ namespace EtlManagerExecutor
             string connectionString;
             try
             {
-                using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
-                connectionString = await sqlConnection.ExecuteScalarAsync<string>(
-                @"SELECT etlmanager.GetConnectionStringDecrypted(@ConnectionId, @EncryptionPassword)",
-                new { Step.ConnectionId, EncryptionPassword = Configuration.EncryptionKey });
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                var connection = await context.Connections
+                    .Where(c => c.ConnectionId == Step.ConnectionId)
+                    .FirstOrDefaultAsync(CancellationToken.None);
+                connectionString = connection?.ConnectionString ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+                if (Step.ExecuteAsLogin is null && connection.ExecutePackagesAsLogin is not null)
+                {
+                    Step.ExecuteAsLogin = connection.ExecutePackagesAsLogin;
+                }
             }
             catch (Exception ex)
             {

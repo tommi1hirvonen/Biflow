@@ -1,6 +1,7 @@
 ﻿@inject IConfiguration Configuration
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select dataset</BSModalHeader>
@@ -103,7 +104,7 @@
             try
             {
                 Guid id = PowerBIServiceId ?? throw new ArgumentNullException(nameof(id), "Power BI Service id cannot be null");
-                var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration, id);
+                var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(DbContextFactory, id);
                 Datasets = await powerBIService.GetAllDatasetsAsync();
                 StateHasChanged();
             }

@@ -32,18 +32,6 @@ namespace EtlManagerExecutor
             var connectionString = configuration.GetConnectionString("EtlManagerContext");
             var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
             var maxParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
-            var encryptionId = configuration.GetValue<string>("EncryptionId");
-
-            string? encryptionPassword;
-            try
-            {
-                encryptionPassword = await CommonUtility.GetEncryptionKeyAsync(encryptionId, connectionString);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{executionId} Error getting encryption password", executionId);
-                return;
-            }
 
             Execution execution;
             Job job;
@@ -83,7 +71,6 @@ namespace EtlManagerExecutor
             var executionConfig = new ExecutionConfiguration(
                 dbContextFactory: dbContextFactory,
                 connectionString: connectionString,
-                encryptionKey: encryptionPassword,
                 maxParallelSteps: maxParallelSteps,
                 pollingIntervalMs: pollingIntervalMs,
                 executionId: executionId,

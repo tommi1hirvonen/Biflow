@@ -1,6 +1,6 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
-using EtlManagerUtils;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Serilog;
 using System;
@@ -42,13 +42,10 @@ namespace EtlManagerExecutor
                 return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
-            if (Configuration.EncryptionKey is null)
-                throw new ArgumentNullException(nameof(Configuration.EncryptionKey), "Encryption key cannot be null for pipeline step executions");
-
             // Get the target Data Factory information from the database.
             try
             {
-                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.ConnectionString, Step.DataFactoryId, Configuration.EncryptionKey);
+                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.DbContextFactory, Step.DataFactoryId);
             }
             catch (Exception ex)
             {
@@ -66,7 +63,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactoryId, Step.PipelineName);
+                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactory.DataFactoryId, Step.PipelineName);
                 return new ExecutionResult.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
 

@@ -64,7 +64,6 @@
     <Folder Include="etlmanager\Views\" />
     <Folder Include="etlmanager\Stored Procedures\" />
     <Folder Include="Security\" />
-    <Folder Include="etlmanager\Functions" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="etlmanager\Tables\Execution.sql" />
@@ -86,35 +85,14 @@
     <Build Include="etlmanager\Stored Procedures\GetNotificationMessageBody.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
     <Build Include="etlmanager\Tables\Connection.sql" />
-    <Build Include="etlmanager\Functions\GetConnectionStringDecrypted.sql" />
-    <Build Include="etlmanager\Functions\GetDecryptedValue.sql" />
-    <Build Include="etlmanager\Stored Procedures\ConnectionAdd.sql" />
-    <Build Include="etlmanager\Stored Procedures\ConnectionUpdate.sql" />
-    <Build Include="etlmanager\Stored Procedures\DataFactoryAdd.sql" />
-    <Build Include="etlmanager\Stored Procedures\DataFactoryUpdate.sql" />
-    <Build Include="etlmanager\Tables\EncryptionKey.sql" />
-    <Build Include="etlmanager\Stored Procedures\EncryptionKeySet.sql" />
-    <Build Include="etlmanager\Views\vConnection.sql" />
     <Build Include="etlmanager\Tables\ExecutionParameter.sql" />
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
     <Build Include="etlmanager\Tables\PipelineParameter.sql" />
-    <Build Include="etlmanager\Functions\GetExecutePackagesAsLogin.sql" />
     <Build Include="etlmanager\Tables\PowerBIService.sql" />
-    <Build Include="etlmanager\Stored Procedures\PowerBIServiceAdd.sql" />
-    <Build Include="etlmanager\Stored Procedures\PowerBIServiceUpdate.sql" />
-    <Build Include="etlmanager\Stored Procedures\ConnectionGet.sql" />
-    <Build Include="etlmanager\Views\vDataFactory.sql" />
-    <Build Include="etlmanager\Views\vPowerBIService.sql" />
-    <Build Include="etlmanager\Stored Procedures\DataFactoryGet.sql" />
-    <Build Include="etlmanager\Stored Procedures\PowerBIServiceGet.sql" />
     <Build Include="etlmanager\Tables\ExecutionStep.sql" />
     <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
     <Build Include="etlmanager\Tables\FunctionApp.sql" />
-    <Build Include="etlmanager\Stored Procedures\FunctionAppAdd.sql" />
-    <Build Include="etlmanager\Stored Procedures\FunctionAppUpdate.sql" />
-    <Build Include="etlmanager\Stored Procedures\FunctionAppGet.sql" />
-    <Build Include="etlmanager\Views\vFunctionApp.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">
