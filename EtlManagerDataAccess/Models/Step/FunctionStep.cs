@@ -17,7 +17,13 @@ namespace EtlManagerDataAccess.Models
         public string? FunctionName { get; set; }
 
         [Display(Name = "Function input")]
-        public string? FunctionInput { get; set; }
+        public string? FunctionInput
+        {
+            get => _functionInput;
+            set => _functionInput = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _functionInput;
 
         [Display(Name = "Is durable")]
         public bool FunctionIsDurable { get; set; }

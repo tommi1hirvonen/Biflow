@@ -33,7 +33,13 @@ namespace EtlManagerDataAccess.Models
         public bool ExecuteIn32BitMode { get; set; }
 
         [Display(Name = "Execute as login")]
-        public string? ExecuteAsLogin { get; set; }
+        public string? ExecuteAsLogin
+        {
+            get => _executeAsLogin;
+            set => _executeAsLogin = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _executeAsLogin;
 
         public Connection? Connection { get; set; }
 

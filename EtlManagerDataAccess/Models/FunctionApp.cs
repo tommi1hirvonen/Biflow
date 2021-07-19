@@ -21,6 +21,12 @@ namespace EtlManagerDataAccess.Models
         public string? FunctionAppUrl { get; set; }
 
         [Display(Name = "Function app key")]
-        public string? FunctionAppKey { get; set; }
+        public string? FunctionAppKey
+        {
+            get => _functionAppKey;
+            set => _functionAppKey = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _functionAppKey;
     }
 }

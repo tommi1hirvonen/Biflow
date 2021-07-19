@@ -24,7 +24,13 @@ namespace EtlManagerDataAccess.Models
         public string? StepName { get; set; }
 
         [Display(Name = "Description")]
-        public string? StepDescription { get; set; }
+        public string? StepDescription
+        {
+            get => _stepDescription;
+            set => _stepDescription = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _stepDescription;
 
         [Required]
         [Display(Name = "Execution phase")]

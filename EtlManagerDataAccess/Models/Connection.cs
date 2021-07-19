@@ -22,7 +22,13 @@ namespace EtlManagerDataAccess
         public string? ConnectionString { get; set; }
 
         [Display(Name = "Execute packages as login")]
-        public string? ExecutePackagesAsLogin { get; set; }
+        public string? ExecutePackagesAsLogin
+        {
+            get => _executePackagesAsLogin;
+            set => _executePackagesAsLogin = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _executePackagesAsLogin;
 
     }
 }

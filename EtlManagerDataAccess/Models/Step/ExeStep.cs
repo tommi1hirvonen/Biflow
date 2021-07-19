@@ -13,10 +13,22 @@ namespace EtlManagerDataAccess.Models
         public string? ExeFileName { get; set; }
 
         [Display(Name = "Arguments")]
-        public string? ExeArguments { get; set; }
+        public string? ExeArguments
+        {
+            get => _exeArguments;
+            set => _exeArguments = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _exeArguments;
 
         [Display(Name = "Working directory")]
-        public string? ExeWorkingDirectory { get; set; }
+        public string? ExeWorkingDirectory
+        {
+            get => _exeWorkingDirectory;
+            set => _exeWorkingDirectory = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _exeWorkingDirectory;
 
         [Display(Name = "Success exit code")]
         public int? ExeSuccessExitCode { get; set; }

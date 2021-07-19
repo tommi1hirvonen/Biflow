@@ -18,7 +18,13 @@ namespace EtlManagerDataAccess.Models
         public string? JobName { get; set; }
 
         [Display(Name = "Description")]
-        public string? JobDescription { get; set; }
+        public string? JobDescription
+        {
+            get => _jobDescription;
+            set => _jobDescription = string.IsNullOrEmpty(value) ? null : value;
+        }
+
+        private string? _jobDescription;
 
         [Required]
         [DataType(DataType.DateTime)]
