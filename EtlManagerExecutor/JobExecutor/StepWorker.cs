@@ -136,24 +136,9 @@ namespace EtlManagerExecutor
                         RetryAttemptIndex = stepExecution.RetryAttemptCounter,
                         ExecutionStatus = StepExecutionStatus.Stopped,
                         StartDateTime = DateTime.Now,
-                        EndDateTime = DateTime.Now,
-                        ErrorMessage = null
+                        EndDateTime = DateTime.Now
                     };
-                    // TODO: This does not belong here.
-                    switch (attempt)
-                    {
-                        case SqlStepExecutionAttempt sql:
-                            sql.InfoMessage = null;
-                            break;
-                        case ExeStepExecutionAttempt exe:
-                            exe.InfoMessage = null;
-                            break;
-                        case FunctionStepExecutionAttempt function:
-                            function.InfoMessage = null;
-                            break;
-                        default:
-                            break;
-                    }
+                    attempt.Reset();
                     context.Attach(attempt).State = EntityState.Added;
                     await context.SaveChangesAsync(CancellationToken.None);
                     StepExecution.StepExecutionAttempts.Add(attempt);
@@ -188,21 +173,7 @@ namespace EtlManagerExecutor
                 attempt.ExecutionStatus = status;
                 attempt.EndDateTime = DateTime.Now;
                 attempt.ErrorMessage = failureResult.ErrorMessage;
-                // TODO: This does not belong here.
-                switch (attempt)
-                {
-                    case SqlStepExecutionAttempt sql:
-                        sql.InfoMessage = failureResult.InfoMessage;
-                        break;
-                    case ExeStepExecutionAttempt exe:
-                        exe.InfoMessage = failureResult.InfoMessage;
-                        break;
-                    case FunctionStepExecutionAttempt function:
-                        function.InfoMessage = failureResult.InfoMessage;
-                        break;
-                    default:
-                        break;
-                }
+                attempt.InfoMessage = failureResult.InfoMessage;
                 context.Attach(attempt).State = EntityState.Modified;
                 await context.SaveChangesAsync();
             }
@@ -220,21 +191,7 @@ namespace EtlManagerExecutor
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
                 attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
                 attempt.EndDateTime = DateTime.Now;
-                // TODO: This does not belong here.
-                switch (attempt)
-                {
-                    case SqlStepExecutionAttempt sql:
-                        sql.InfoMessage = executionResult.InfoMessage;
-                        break;
-                    case ExeStepExecutionAttempt exe:
-                        exe.InfoMessage = executionResult.InfoMessage;
-                        break;
-                    case FunctionStepExecutionAttempt function:
-                        function.InfoMessage = executionResult.InfoMessage;
-                        break;
-                    default:
-                        break;
-                }
+                attempt.InfoMessage = executionResult.InfoMessage;
                 context.Attach(attempt).State = EntityState.Modified;
                 await context.SaveChangesAsync();
             }
@@ -276,24 +233,9 @@ namespace EtlManagerExecutor
                     RetryAttemptIndex = stepExecution.RetryAttemptCounter,
                     ExecutionStatus = StepExecutionStatus.Running,
                     StartDateTime = DateTime.Now,
-                    EndDateTime = null,
-                    ErrorMessage = null
+                    EndDateTime = null
                 };
-                // TODO: This does not belong here.
-                switch (attempt)
-                {
-                    case SqlStepExecutionAttempt sql:
-                        sql.InfoMessage = null;
-                        break;
-                    case ExeStepExecutionAttempt exe:
-                        exe.InfoMessage = null;
-                        break;
-                    case FunctionStepExecutionAttempt function:
-                        function.InfoMessage = null;
-                        break;
-                    default:
-                        break;
-                }
+                attempt.Reset();
                 context.Attach(attempt).State = EntityState.Added;
                 StepExecution.StepExecutionAttempts.Add(attempt);
             }

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EtlManagerUtils;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace EtlManagerDataAccess.Models
 {
@@ -14,7 +7,11 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Function instance id")]
         public string? FunctionInstanceId { get; set; }
 
-        [Column("InfoMessage")]
-        public string? InfoMessage { get; set; }
+        public override void Reset()
+        {
+            base.Reset();
+            FunctionInstanceId = null;
+        }
+
     }
 }

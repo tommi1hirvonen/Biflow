@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EtlManagerUtils;
 
 namespace EtlManagerDataAccess.Models
@@ -28,6 +24,9 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Error message")]
         public string? ErrorMessage { get; set; }
 
+        [Display(Name = "Info message")]
+        public string? InfoMessage { get; set; }
+
         [Display(Name = "Stopped by")]
         public string? StoppedBy { get; set; }
 
@@ -40,5 +39,12 @@ namespace EtlManagerDataAccess.Models
         public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 
         public string? GetDurationInReadableFormat() => ExecutionInSeconds?.SecondsToReadableFormat();
+
+        public virtual void Reset()
+        {
+            ErrorMessage = null;
+            InfoMessage = null;
+        }
+
     }
 }
