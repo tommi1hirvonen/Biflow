@@ -27,6 +27,7 @@
     [FunctionName]              VARCHAR(250)     NULL,
     [FunctionInput]             NVARCHAR(MAX)    NULL,
     [FunctionIsDurable]         BIT              CONSTRAINT [DF_Step_FunctionIsDurable] DEFAULT (0) NOT NULL,
+    [FunctionKey]               VARCHAR(1000)    NULL,
     [IsEnabled]                 BIT              CONSTRAINT [DF_Step_IsEnabled] DEFAULT (1) NOT NULL,
     [RetryAttempts]             INT              CONSTRAINT [DF_Step_RetryAttempts] DEFAULT (0) NOT NULL,
     [RetryIntervalMinutes]      INT              CONSTRAINT [DF_Step_RetryIntervalMinutes] DEFAULT (0) NOT NULL,

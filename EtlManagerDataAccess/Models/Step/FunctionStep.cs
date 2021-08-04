@@ -28,6 +28,9 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Is durable")]
         public bool FunctionIsDurable { get; set; }
 
+        [Display(Name = "Function key")]
+        public string? FunctionKey { get; set; }
+
         public FunctionApp FunctionApp { get; set; } = null!;
     }
 }

@@ -42,6 +42,16 @@
         </BSFormGroup>
     </BSFormRow>
     <BSFormRow>
+        <div class="col">
+            <div class="custom-control custom-checkbox custom-control-inline">
+                <input type="checkbox" class="custom-control-input" id="function_is_durable"
+                       checked=@Step.FunctionIsDurable
+                       @bind-value="Step.FunctionIsDurable">
+                <label class="custom-control-label" for="function_is_durable">Is durable</label>
+            </div>
+        </div>
+    </BSFormRow>
+    <BSFormRow>
         <BSFormGroup Class="col-lg">
             <BSLabel>Function input</BSLabel>
             <div class="input-group">
@@ -55,14 +65,17 @@
         </BSFormGroup>
     </BSFormRow>
     <BSFormRow>
-        <div class="col">
-            <div class="custom-control custom-checkbox custom-control-inline">
-                <input type="checkbox" class="custom-control-input" id="function_is_durable"
-                       checked=@Step.FunctionIsDurable
-                       @bind-value="Step.FunctionIsDurable">
-                <label class="custom-control-label" for="function_is_durable">Is durable</label>
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Function key</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                    </div>
+                </div>
+                <InputText class="form-control" @bind-Value="Step.FunctionKey" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </div>
+        </BSFormGroup>
     </BSFormRow>
 </StepEditModalBase>
 
