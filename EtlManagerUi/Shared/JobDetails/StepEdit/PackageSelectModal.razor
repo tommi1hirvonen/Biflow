@@ -71,7 +71,21 @@
                 </table>
             </div>
         </div>
-        <div class="row">
+        <div class="row mt-3">
+            <div class="col-lg-6">
+                <div class="input-group input-group-sm">
+                    <label class="sr-only">Search</label>
+                    <div class="input-group-prepend">
+                        <div class="input-group-text rounded-left">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        </div>
+                    </div>
+                    <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
+                           placeholder="Filter by name" autocomplete="off" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
             <div class="col">
                 <table class="table table-hover table-sm">
                     <thead>
@@ -92,7 +106,7 @@
                             }
                             else
                             {
-                                foreach (var package in packages)
+                                foreach (var package in packages.Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light font-weight-bold" : null)">
                                         <td>@package</td>
@@ -127,6 +141,8 @@
 
     private Dictionary<string, Dictionary<string, List<string>>>? Catalog { get; set; }
 
+    private string FilterText { get; set; } = string.Empty;
+
     private string? SelectedFolder { get; set; }
     private string? SelectedProject { get; set; }
     private string? SelectedPackage { get; set; }
@@ -151,6 +167,7 @@
             SelectedFolder = null;
             SelectedProject = null;
             SelectedPackage = null;
+            FilterText = string.Empty;
         }
     }
 

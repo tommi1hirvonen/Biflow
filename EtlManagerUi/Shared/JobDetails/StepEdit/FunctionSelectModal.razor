@@ -8,6 +8,42 @@
 
     <BSModalBody>
         <div class="row">
+            <div class="col form-group">
+                <div class="input-group input-group-sm">
+                    <label class="sr-only">Search</label>
+                    <div class="input-group-prepend">
+                        <div class="input-group-text rounded-left">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        </div>
+                    </div>
+                    <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
+                           placeholder="Filter by name" autocomplete="off" />
+                </div>
+            </div>
+            <div class="col-lg form-group">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                        </div>
+                    </div>
+                    <select class="form-control form-control-sm" @bind="TypeFilter">
+                        <option value="" selected=@(TypeFilter == "")>All</option>
+                        @if (Functions is not null)
+                        {
+                            @foreach (var type in Functions.Select(f => f.FunctionType).Distinct().OrderBy(type => type))
+                            {
+                                <option value="@type"
+                                        selected=@(type == TypeFilter)>
+                                    @type
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
                     <thead>
@@ -37,7 +73,10 @@
                         }
                         else
                         {
-                            foreach (var function in Functions.OrderBy(function => function.FunctionName))
+                            foreach (var function in Functions
+                                .Where(function => function.FunctionName.ContainsIgnoreCase(FilterText))
+                                .Where(function => string.IsNullOrEmpty(TypeFilter) || function.FunctionType == TypeFilter)
+                                .OrderBy(function => function.FunctionName))
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedFunctionUrl = function.FunctionUrl"
@@ -77,6 +116,9 @@
 
     private string? SelectedFunctionUrl { get; set; }
 
+    private string FilterText { get; set; } = string.Empty;
+    private string TypeFilter { get; set; } = string.Empty;
+
     private async Task ModalOpenChanged(bool isOpen)
     {
         if (isOpen && FunctionAppId is not null && FunctionAppId != Guid.Empty)
@@ -97,6 +139,7 @@
         {
             Functions = null;
             SelectedFunctionUrl = null;
+            FilterText = string.Empty;
         }
     }
 
