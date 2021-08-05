@@ -20,17 +20,68 @@
 
                         <BSFormRow>
                             <BSFormGroup Class="col-lg">
-                                <BSLabel>Url</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppUrl"></InputText>
+                                <BSLabel>Function App key</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppKey"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-lg">
-                                <BSLabel>Function App key</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppKey"></InputText>
+                                <BSLabel>Tenant id</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.TenantId"></InputText>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Subscription id</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.SubscriptionId"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Resource group name</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.ResourceGroupName"></InputText>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Resource name</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.ResourceName"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Client id</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.ClientId"></InputText>
+                            </BSFormGroup>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Client secret</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.ClientSecret"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                    Test connection
+                                </BSButton>
+                                @if (TestingConnection)
+                                {
+                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                @if (ConnectionTestSuccess == true)
+                                {
+                                    <span class="badge badge-success">Success</span>
+                                }
+                                else if (ConnectionTestSuccess == false)
+                                {
+                                    <span class="badge badge-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             </BSForm>
@@ -53,6 +104,9 @@
 
     private BSModal Modal { get; set; } = null!;
 
+    private bool? ConnectionTestSuccess { get; set; } = null;
+    private bool TestingConnection { get; set; } = false;
+
     protected override async Task OnParametersSetAsync()
     {
         if (FunctionAppId != Guid.Empty)
@@ -70,6 +124,29 @@
     {
         await OnFunctionAppSubmit.InvokeAsync(FunctionApp);
         Modal.Hide();
+    }
+
+    private async Task TestConnection()
+    {
+        ConnectionTestSuccess = null;
+        TestingConnection = true;
+        try
+        {
+            if (FunctionApp?.TenantId is null || FunctionApp.ClientId is null || FunctionApp.ClientSecret is null
+                || FunctionApp.SubscriptionId is null || FunctionApp.ResourceGroupName is null || FunctionApp.ResourceName is null)
+            {
+                throw new ArgumentNullException("One or more of the Function App properties needed for connection testing was null");
+            }
+            await FunctionAppHelper.TestConnection(FunctionApp.TenantId, FunctionApp.ClientId, FunctionApp.ClientSecret,
+                FunctionApp.SubscriptionId, FunctionApp.ResourceGroupName, FunctionApp.ResourceName);
+            ConnectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestSuccess = false;
+            await JS.InvokeVoidAsync("alert", ex.Message);
+        }
+        TestingConnection = false;
     }
 
     public void Show() => Modal.Show();

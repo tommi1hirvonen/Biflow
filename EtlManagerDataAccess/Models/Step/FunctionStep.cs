@@ -11,10 +11,10 @@ namespace EtlManagerDataAccess.Models
         [Required]
         public Guid? FunctionAppId { get; set; }
 
-        [Display(Name = "Function name")]
-        [MaxLength(250)]
+        [Display(Name = "Function url")]
+        [MaxLength(1000)]
         [Required]
-        public string? FunctionName { get; set; }
+        public string? FunctionUrl { get; set; }
 
         [Display(Name = "Function input")]
         public string? FunctionInput

@@ -26,7 +26,7 @@
     [DatasetGroupId]            NVARCHAR(36)        NULL,
     [DatasetId]                 NVARCHAR(36)        NULL,
     [FunctionAppId]             UNIQUEIDENTIFIER    NULL,
-    [FunctionName]              VARCHAR(250)        NULL,
+    [FunctionUrl]               VARCHAR(1000)       NULL,
     [FunctionInput]             NVARCHAR(MAX)       NULL,
     [FunctionIsDurable]         BIT                 NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),

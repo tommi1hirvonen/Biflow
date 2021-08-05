@@ -1,0 +1,113 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select dataset</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Function name
+                            </th>
+                            <th>
+                                Type
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Functions is null)
+                        {
+                            <tr>
+                                <td>Loading...</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else if (Functions.Count == 0)
+                        {
+                            <tr>
+                                <td>No workspaces</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var function in Functions.OrderBy(function => function.FunctionName))
+                            {
+                                <tr style="cursor: pointer;"
+                                    @onclick="() => SelectedFunctionUrl = function.FunctionUrl"
+                                    class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light font-weight-bold" : null)">
+                                    <td>@function.FunctionName</td>
+                                    <td>@function.FunctionType</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectFunction"
+                  IsDisabled="SelectedFunctionUrl is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; } = null!;
+
+    [Parameter]
+    public Guid? FunctionAppId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnFunctionSelected { get; set; }
+
+    private List<(string FunctionName, string FunctionType, string FunctionUrl)>? Functions { get; set; }
+
+    private string? SelectedFunctionUrl { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && FunctionAppId is not null && FunctionAppId != Guid.Empty)
+        {
+            try
+            {
+                Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
+                var functionAppHelper = await FunctionAppHelper.GetFunctionAppHelperAsync(DbContextFactory, id);
+                Functions = await functionAppHelper.GetFunctionsAsync();
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading functions: {ex.Message}");
+            }
+        }
+        else
+        {
+            Functions = null;
+            SelectedFunctionUrl = null;
+        }
+    }
+
+    private void SelectFunction()
+    {
+        if (SelectedFunctionUrl is not null)
+        {
+            OnFunctionSelected.InvokeAsync(SelectedFunctionUrl);
+            Modal.Hide();
+        }
+    }
+
+    public void Show() => Modal.Show();
+}

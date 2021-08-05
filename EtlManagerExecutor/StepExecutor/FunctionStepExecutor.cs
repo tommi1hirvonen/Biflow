@@ -52,8 +52,7 @@ namespace EtlManagerExecutor
                 Log.Error(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Configuration.ExecutionId, Step);
             }
             
-            var functionUrl = functionApp.FunctionAppUrl + "/" + Step.FunctionName;
-            var message = new HttpRequestMessage(HttpMethod.Post, functionUrl);
+            var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);
 
             // Add function security code as a request header. If the function specific code was defined, use that.
             // Otherwise revert to the function app code if it was defined.

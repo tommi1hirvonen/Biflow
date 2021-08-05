@@ -24,7 +24,7 @@
     [DatasetGroupId]            NVARCHAR(36)     NULL,
     [DatasetId]                 NVARCHAR(36)     NULL,
     [FunctionAppId]             UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_FunctionApp] FOREIGN KEY REFERENCES [etlmanager].[FunctionApp] ([FunctionAppId]),
-    [FunctionName]              VARCHAR(250)     NULL,
+    [FunctionUrl]               VARCHAR(1000)    NULL,
     [FunctionInput]             NVARCHAR(MAX)    NULL,
     [FunctionIsDurable]         BIT              CONSTRAINT [DF_Step_FunctionIsDurable] DEFAULT (0) NOT NULL,
     [FunctionKey]               VARCHAR(1000)    NULL,
@@ -45,7 +45,7 @@
         OR [StepType]='PIPELINE' AND [DataFactoryId] IS NOT NULL AND [PipelineName] IS NOT NULL
         OR [StepType]='EXE' AND [ExeFileName] IS NOT NULL
         OR [StepType]='DATASET' AND [PowerBIServiceId] IS NOT NULL AND [DatasetGroupId] IS NOT NULL AND [DatasetId] IS NOT NULL
-        OR [StepType]='FUNCTION' AND [FunctionAppId] IS NOT NULL AND [FunctionName] IS NOT NULL),
+        OR [StepType]='FUNCTION' AND [FunctionAppId] IS NOT NULL AND [FunctionUrl] IS NOT NULL),
     CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)
 );
 

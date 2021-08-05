@@ -30,17 +30,26 @@
     </BSFormRow>
     <BSFormRow>
         <BSFormGroup Class="col-lg">
-            <BSLabel>Function name</BSLabel>
+            <BSLabel>Function url</BSLabel>
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
                     </div>
                 </div>
-                <InputText class="form-control" @bind-Value="Step.FunctionName" @oninput="Modal.ResetStepError"></InputText>
+                <InputText class="form-control" style="font-family: monospace;" @bind-Value="Step.FunctionUrl" @oninput="Modal.ResetStepError"></InputText>
             </div>
         </BSFormGroup>
     </BSFormRow>
+    <div class="row mb-3">
+        <div class="col">
+            <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenFunctionSelectModal">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                Browse functions
+            </BSButton>
+        </div>
+    </div>
+    <FunctionSelectModal @ref="FunctionSelectModal" FunctionAppId="Step.FunctionAppId" OnFunctionSelected="OnFunctionSelected" />
     <BSFormRow>
         <div class="col">
             <div class="custom-control custom-checkbox custom-control-inline">
@@ -105,6 +114,8 @@
 
     private StepEditModalBase Modal { get; set; } = null!;
 
+    private FunctionSelectModal FunctionSelectModal { get; set; } = null!;
+
     protected override void OnInitialized()
     {
         Context = DbFactory.CreateDbContext();
@@ -142,8 +153,15 @@
         StateHasChanged();
     }
 
+    private void OpenFunctionSelectModal() => FunctionSelectModal.Show();
+
+    private void OnFunctionSelected(string functionUrl)
+    {
+        Step.FunctionUrl = functionUrl;
+    }
+
     public void Show() => Modal.Show();
 
     public void Dispose() => Context?.Dispose();
-    
+
 }

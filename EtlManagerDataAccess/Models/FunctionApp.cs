@@ -17,9 +17,6 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Function app name")]
         public string? FunctionAppName { get; set; }
 
-        [Display(Name = "Function app url")]
-        public string? FunctionAppUrl { get; set; }
-
         [Display(Name = "Function app key")]
         public string? FunctionAppKey
         {
@@ -28,5 +25,35 @@ namespace EtlManagerDataAccess.Models
         }
 
         private string? _functionAppKey;
+
+        [Required]
+        [Display(Name = "Tenant id")]
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string? TenantId { get; set; }
+
+        [Required]
+        [Display(Name = "Subscription id")]
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string? SubscriptionId { get; set; }
+
+        [Required]
+        [Display(Name = "Client id")]
+        [MaxLength(36)]
+        [MinLength(36)]
+        public string? ClientId { get; set; }
+
+        [Required]
+        [Display(Name = "Client secret")]
+        public string? ClientSecret { get; set; }
+
+        [Required]
+        [Display(Name = "Resource group name")]
+        public string? ResourceGroupName { get; set; }
+
+        [Required]
+        [Display(Name = "Resource name")]
+        public string? ResourceName { get; set; }
     }
 }
