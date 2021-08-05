@@ -77,8 +77,8 @@ namespace EtlManagerDataAccess
             {
                 try
                 {
-                    var context = new AuthenticationContext(AuthenticationUrl + FunctionApp.TenantId);
-                    var clientCredential = new ClientCredential(FunctionApp.ClientId, FunctionApp.ClientSecret);
+                    var context = new AuthenticationContext(AuthenticationUrl + FunctionApp.AppRegistration.TenantId);
+                    var clientCredential = new ClientCredential(FunctionApp.AppRegistration.ClientId, FunctionApp.AppRegistration.ClientSecret);
                     var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
@@ -94,10 +94,10 @@ namespace EtlManagerDataAccess
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
                     await sqlConnection.ExecuteAsync(
-                        @"UPDATE etlmanager.FunctionApp
+                        @"UPDATE etlmanager.AppRegistration
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE FunctionAppId = @FunctionAppId",
-                        new { AccessToken, AccessTokenExpiresOn, FunctionApp.FunctionAppId });
+                        WHERE AppRegistrationId = @AppRegistrationId",
+                        new { AccessToken, AccessTokenExpiresOn, FunctionApp.AppRegistration.AppRegistrationId });
                 }
                 catch (Exception ex)
                 {
@@ -110,14 +110,16 @@ namespace EtlManagerDataAccess
         public static async Task<FunctionAppHelper> GetFunctionAppHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid functionAppId)
         {
             using var context = dbContextFactory.CreateDbContext();
-            var functionApp = await context.FunctionApps.FindAsync(functionAppId);
+            var functionApp = await context.FunctionApps
+                .Include(fa => fa.AppRegistration)
+                .FirstAsync(fa => fa.FunctionAppId == functionAppId);
             var connectionString = context.Database.GetConnectionString();
             using var sqlConnection = new SqlConnection(connectionString);
             (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
                     @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.FunctionApp
-                    WHERE FunctionAppId = @FunctionAppId",
-                    new { FunctionAppId = functionAppId });
+                    FROM etlmanager.AppRegistration
+                    WHERE AppRegistrationId = @AppRegistrationId",
+                    new { functionApp.AppRegistration.AppRegistrationId });
 
             return new FunctionAppHelper(
                 functionApp: functionApp,
@@ -127,10 +129,10 @@ namespace EtlManagerDataAccess
             );
         }
 
-        public static async Task TestConnection(string tenantId, string clientId, string clientSecret, string subscriptionId, string resourceGroupName, string resourceName)
+        public static async Task TestConnection(AppRegistration appRegistration, string subscriptionId, string resourceGroupName, string resourceName)
         {
-            var context = new AuthenticationContext(AuthenticationUrl + tenantId);
-            var clientCredential = new ClientCredential(clientId, clientSecret);
+            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
+            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
             var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
 
             var functionListUrl = $"https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Web/sites/{resourceName}/functions?api-version=2015-08-01";

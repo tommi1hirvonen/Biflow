@@ -78,8 +78,8 @@ namespace EtlManagerDataAccess
             {
                 try
                 {
-                    var context = new AuthenticationContext(AuthenticationUrl + DataFactory.TenantId);
-                    var clientCredential = new ClientCredential(DataFactory.ClientId, DataFactory.ClientSecret);
+                    var context = new AuthenticationContext(AuthenticationUrl + DataFactory.AppRegistration.TenantId);
+                    var clientCredential = new ClientCredential(DataFactory.AppRegistration.ClientId, DataFactory.AppRegistration.ClientSecret);
                     var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
@@ -98,10 +98,10 @@ namespace EtlManagerDataAccess
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
                     await sqlConnection.ExecuteAsync(
-                        @"UPDATE etlmanager.DataFactory
+                        @"UPDATE etlmanager.AppRegistration
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE DataFactoryId = @DataFactoryId",
-                        new { AccessToken, AccessTokenExpiresOn, DataFactory.DataFactoryId });
+                        WHERE AppRegistrationId = @AppRegistrationId",
+                        new { AccessToken, AccessTokenExpiresOn, DataFactory.AppRegistration.AppRegistrationId });
                 }
                 catch (Exception ex)
                 {
@@ -120,14 +120,16 @@ namespace EtlManagerDataAccess
         public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid dataFactoryId)
         {
             using var context = dbContextFactory.CreateDbContext();
-            var dataFactory = await context.DataFactories.FindAsync(dataFactoryId);
+            var dataFactory = await context.DataFactories
+                .Include(df => df.AppRegistration)
+                .FirstAsync(df => df.DataFactoryId == dataFactoryId);
             var connectionString = context.Database.GetConnectionString();
             using var sqlConnection = new SqlConnection(connectionString);
             (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
                     @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.DataFactory
-                    WHERE DataFactoryId = @DataFactoryId",
-                    new { DataFactoryId = dataFactoryId });
+                    FROM etlmanager.AppRegistration
+                    WHERE AppRegistrationId = @AppRegistrationId",
+                    new { dataFactory.AppRegistration.AppRegistrationId });
 
             return new DataFactoryHelper(
                 dataFactory: dataFactory,
@@ -137,10 +139,10 @@ namespace EtlManagerDataAccess
             );
         }
 
-        public static async Task TestConnection(string tenantId, string clientId, string clientSecret, string subscriptionId, string resourceGroupName, string resourceName)
+        public static async Task TestConnection(AppRegistration appRegistration, string subscriptionId, string resourceGroupName, string resourceName)
         {
-            var context = new AuthenticationContext(AuthenticationUrl + tenantId);
-            var clientCredential = new ClientCredential(clientId, clientSecret);
+            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
+            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
             var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
             var credentials = new TokenCredentials(result.AccessToken);
             var client = new DataFactoryManagementClient(credentials) { SubscriptionId = subscriptionId };

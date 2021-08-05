@@ -21,15 +21,15 @@
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/datafactories">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/factory.svg")))
-            Data Factories
+        <NavLink class="nav-link" href="settings/appregistrations">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
+            App registrations
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/powerbiservices">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
-            Power BI Services
+        <NavLink class="nav-link" href="settings/datafactories">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/factory.svg")))
+            Data Factories
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
@@ -48,14 +48,15 @@ else if (Page == "connections")
 {
     <ConnectionsComponent />
 }
+else if (Page == "appregistrations")
+{
+    <AppRegistrationsComponent />
+}
 else if (Page == "datafactories")
 {
     <DataFactoriesComponent />
 }
-else if (Page == "powerbiservices")
-{
-    <PowerBIServicesComponent />
-}
+
 else if (Page == "functionapps")
 {
     <FunctionAppsComponent />

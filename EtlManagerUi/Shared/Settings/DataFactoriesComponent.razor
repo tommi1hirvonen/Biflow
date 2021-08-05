@@ -69,10 +69,11 @@
 </div>
 
 
-<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" OnDataFactorySubmit="OnDataFactorySubmit" />
+<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
 
 @code {
     private List<DataFactory>? DataFactories { get; set; }
+    private List<AppRegistration>? AppRegistrations { get; set; }
 
     private Guid EditDataFactoryId { get; set; }
     private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
@@ -81,6 +82,7 @@
     {
         var context = DbFactory.CreateDbContext();
         DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
+        AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
     }
 
     private async Task DeleteDataFactory(DataFactory df)

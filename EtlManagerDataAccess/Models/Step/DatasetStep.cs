@@ -9,7 +9,7 @@ namespace EtlManagerDataAccess.Models
     public record DatasetStep : Step
     {
         [Required]
-        public Guid? PowerBIServiceId { get; set; }
+        public Guid? AppRegistrationId { get; set; }
 
         [Display(Name = "Group id")]
         [MaxLength(36)]
@@ -23,6 +23,6 @@ namespace EtlManagerDataAccess.Models
         [Required]
         public string? DatasetId { get; set; }
 
-        public PowerBIService? PowerBIService { get; set; }
+        public AppRegistration? AppRegistration { get; set; }
     }
 }

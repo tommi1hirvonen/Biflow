@@ -19,10 +19,18 @@
                         </BSFormGroup>
 
                         <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Tenant id</BSLabel>
-                                <InputText class="form-control" @bind-Value="DataFactory.TenantId"></InputText>
+                            <BSFormGroup Class="col-lg-6">
+                                <BSLabel>App registration</BSLabel>
+                                <InputSelect class="form-control" @bind-Value="DataFactory.AppRegistrationId">
+                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                        {
+                                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                        }
+                                </InputSelect>
                             </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Subscription id</BSLabel>
                                 <InputText class="form-control" @bind-Value="DataFactory.SubscriptionId"></InputText>
@@ -40,16 +48,6 @@
                             </BSFormGroup>
                         </BSFormRow>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client id</BSLabel>
-                                <InputText class="form-control" @bind-Value="DataFactory.ClientId"></InputText>
-                            </BSFormGroup>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="DataFactory.ClientSecret"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
                         <div class="row mt-2">
                             <div class="col">
                                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
@@ -93,6 +91,9 @@
     [Parameter]
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
+    [Parameter]
+    public List<AppRegistration>? AppRegistrations { get; set; }
+
     private DataFactory? DataFactory { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -127,13 +128,8 @@
         TestingConnection = true;
         try
         {
-            if (DataFactory?.TenantId is null || DataFactory.ClientId is null || DataFactory.ClientSecret is null
-                || DataFactory.SubscriptionId is null || DataFactory.ResourceGroupName is null || DataFactory.ResourceName is null)
-            {
-                throw new ArgumentNullException("One or more of the Data Factory properties needed for connection testing was null");
-            }
-            await DataFactoryHelper.TestConnection(DataFactory.TenantId, DataFactory.ClientId, DataFactory.ClientSecret,
-                DataFactory.SubscriptionId, DataFactory.ResourceGroupName, DataFactory.ResourceName);
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == DataFactory?.AppRegistrationId);
+            await DataFactoryHelper.TestConnection(appRegistration, DataFactory.SubscriptionId, DataFactory.ResourceGroupName, DataFactory.ResourceName);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

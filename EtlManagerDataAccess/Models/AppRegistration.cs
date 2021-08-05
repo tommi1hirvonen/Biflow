@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class PowerBIService
+    public class AppRegistration
     {
         [Key]
         [Required]
-        [Display(Name = "Power BI Service id")]
-        public Guid PowerBIServiceId { get; set; }
+        [Display(Name = "App registration id")]
+        public Guid AppRegistrationId { get; set; }
 
         [Required]
         [Display(Name = "Power BI Service name")]
-        public string? PowerBIServiceName { get; set; }
+        public string? AppRegistrationName { get; set; }
 
         [Required]
         [Display(Name = "Tenant id")]

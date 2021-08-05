@@ -24,11 +24,11 @@ namespace EtlManagerExecutor
             PowerBIServiceHelper powerBIServiceHelper;
             try
             {
-                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.DbContextFactory, Step.PowerBIServiceId);
+                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.DbContextFactory, Step.AppRegistrationId);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error getting Power BI Service information for id {PowerBIServiceId}", Step.PowerBIServiceId);
+                Log.Error(ex, "Error getting App registration information for id {AppRegistrationId}", Step.AppRegistrationId);
                 return new ExecutionResult.Failure($"Error getting Power BI Service object information:\n{ex.Message}");
             }
 

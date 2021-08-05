@@ -3,11 +3,11 @@
 @inject IJSRuntime JS
 
 <BSModal @ref="Modal" Size="Size.Large">
-    @if (PowerBIService is not null)
+    @if (AppRegistration is not null)
     {
-        <BSModalHeader OnClick="() => Modal.Hide()">@(PowerBIServiceId == Guid.Empty ? "New Power BI Service" : "Edit " + PowerBIService.PowerBIServiceName)</BSModalHeader>
+        <BSModalHeader OnClick="() => Modal.Hide()">@(AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration.AppRegistrationName)</BSModalHeader>
         <BSModalBody>
-            <BSForm Model="PowerBIService" id="pbi_edit_form" OnValidSubmit="SubmitPowerBIService">
+            <BSForm Model="AppRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -15,24 +15,24 @@
 
                         <BSFormGroup>
                             <BSLabel>Power BI Service name</BSLabel>
-                            <InputText class="form-control" @bind-Value="PowerBIService.PowerBIServiceName"></InputText>
+                            <InputText class="form-control" @bind-Value="AppRegistration.AppRegistrationName"></InputText>
                         </BSFormGroup>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Tenant id</BSLabel>
-                                <InputText class="form-control" @bind-Value="PowerBIService.TenantId"></InputText>
+                                <InputText class="form-control" @bind-Value="AppRegistration.TenantId"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
 
                         <BSFormRow>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Client id</BSLabel>
-                                <InputText class="form-control" @bind-Value="PowerBIService.ClientId"></InputText>
+                                <InputText class="form-control" @bind-Value="AppRegistration.ClientId"></InputText>
                             </BSFormGroup>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="PowerBIService.ClientSecret"></InputText>
+                                <InputText class="form-control" @bind-Value="AppRegistration.ClientSecret"></InputText>
                             </BSFormGroup>
                         </BSFormRow>
                         <div class="row mt-2">
@@ -40,16 +40,24 @@
                                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
                                     Test connection
                                 </BSButton>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestPowerBIAccess" IsDisabled="TestingConnection">
+                                    Test Power BI access
+                                </BSButton>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
                                 @if (TestingConnection)
                                 {
                                     <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
                                         <span class="sr-only">Loading...</span>
                                     </div>
                                 }
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col">
+
                                 @if (ConnectionTestSuccess == true)
                                 {
                                     <span class="badge badge-success">Success</span>
@@ -66,19 +74,19 @@
         </BSModalBody>
     }
     <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="pbi_edit_form" Color="Color.Success">@(PowerBIServiceId == Guid.Empty ? "Create" : "Save")</BSButton>
+        <BSButton ButtonType="ButtonType.Submit" form="pbi_edit_form" Color="Color.Success">@(AppRegistrationId == Guid.Empty ? "Create" : "Save")</BSButton>
         <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
     </BSModalFooter>
 </BSModal>
 
 @code {
     [Parameter]
-    public Guid PowerBIServiceId { get; set; } // empty Guid => new Power BI Service
+    public Guid AppRegistrationId { get; set; } // empty Guid => new Power BI Service
 
     [Parameter]
-    public EventCallback<PowerBIService> OnPowerBIServiceSubmit { get; set; }
+    public EventCallback<AppRegistration> OnAppRegistrationSubmit { get; set; }
 
-    private PowerBIService? PowerBIService { get; set; }
+    private AppRegistration? AppRegistration { get; set; }
 
     private BSModal Modal { get; set; } = null!;
 
@@ -87,20 +95,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (PowerBIServiceId != Guid.Empty)
+        if (AppRegistrationId != Guid.Empty)
         {
             var context = DbFactory.CreateDbContext();
-            PowerBIService = await context.PowerBIServices.FindAsync(PowerBIServiceId);
+            AppRegistration = await context.AppRegistrations.FindAsync(AppRegistrationId);
         }
         else
         {
-            PowerBIService = new();
+            AppRegistration = new();
         }
     }
 
-    private async Task SubmitPowerBIService()
+    private async Task SubmitAppRegistration()
     {
-        await OnPowerBIServiceSubmit.InvokeAsync(PowerBIService);
+        await OnAppRegistrationSubmit.InvokeAsync(AppRegistration);
         Modal.Hide();
     }
 
@@ -110,11 +118,32 @@
         TestingConnection = true;
         try
         {
-            if (PowerBIService?.TenantId is null || PowerBIService.ClientId is null || PowerBIService.ClientSecret is null)
+            if (AppRegistration?.TenantId is null || AppRegistration.ClientId is null || AppRegistration.ClientSecret is null)
             {
-                throw new ArgumentNullException("One or more of the Power BI Service properties needed for connection testingwas null");
+                throw new ArgumentNullException("One or more of the App registration properties needed for connection testing was null");
             }
-            await PowerBIServiceHelper.TestConnection(PowerBIService.TenantId, PowerBIService.ClientId, PowerBIService.ClientSecret);
+            await AppRegistrationHelper.TestConnection(AppRegistration);
+            ConnectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestSuccess = false;
+            await JS.InvokeVoidAsync("alert", ex.Message);
+        }
+        TestingConnection = false;
+    }
+
+    private async Task TestPowerBIAccess()
+    {
+        ConnectionTestSuccess = null;
+        TestingConnection = true;
+        try
+        {
+            if (AppRegistration?.TenantId is null || AppRegistration.ClientId is null || AppRegistration.ClientSecret is null)
+            {
+                throw new ArgumentNullException("One or more of the App registration properties needed for connection testing was null");
+            }
+            await PowerBIServiceHelper.TestConnection(AppRegistration);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

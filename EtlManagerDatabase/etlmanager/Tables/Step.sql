@@ -20,7 +20,7 @@
     [ExeArguments]              NVARCHAR(MAX)    NULL,
     [ExeWorkingDirectory]       NVARCHAR(1000)   NULL,
     [ExeSuccessExitCode]        INT              NULL,
-    [PowerBIServiceId]          UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_PowerBIService] FOREIGN KEY REFERENCES [etlmanager].[PowerBIService] ([PowerBIServiceId]),
+    [AppRegistrationId]         UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_AppRegistration] FOREIGN KEY REFERENCES [etlmanager].[AppRegistration] ([AppRegistrationId]),
     [DatasetGroupId]            NVARCHAR(36)     NULL,
     [DatasetId]                 NVARCHAR(36)     NULL,
     [FunctionAppId]             UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_FunctionApp] FOREIGN KEY REFERENCES [etlmanager].[FunctionApp] ([FunctionAppId]),
@@ -44,7 +44,7 @@
         OR [StepType]='JOB' AND [JobToExecuteId] IS NOT NULL AND [JobExecuteSynchronized] IS NOT NULL
         OR [StepType]='PIPELINE' AND [DataFactoryId] IS NOT NULL AND [PipelineName] IS NOT NULL
         OR [StepType]='EXE' AND [ExeFileName] IS NOT NULL
-        OR [StepType]='DATASET' AND [PowerBIServiceId] IS NOT NULL AND [DatasetGroupId] IS NOT NULL AND [DatasetId] IS NOT NULL
+        OR [StepType]='DATASET' AND [AppRegistrationId] IS NOT NULL AND [DatasetGroupId] IS NOT NULL AND [DatasetId] IS NOT NULL
         OR [StepType]='FUNCTION' AND [FunctionAppId] IS NOT NULL AND [FunctionUrl] IS NOT NULL),
     CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)
 );

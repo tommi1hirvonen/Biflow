@@ -15,8 +15,8 @@ namespace EtlManagerDataAccess.Models
             DatasetId = datasetId;
         }
 
-        [Display(Name = "Power BI Service id")]
-        public Guid PowerBIServiceId { get; set; }
+        [Display(Name = "App registration id")]
+        public Guid AppRegistrationId { get; set; }
         
         [Display(Name = "Group id")]
         public string DatasetGroupId { get; set; }

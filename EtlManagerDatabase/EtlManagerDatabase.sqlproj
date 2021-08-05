@@ -87,10 +87,10 @@
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
     <Build Include="etlmanager\Tables\PipelineParameter.sql" />
-    <Build Include="etlmanager\Tables\PowerBIService.sql" />
     <Build Include="etlmanager\Tables\ExecutionStep.sql" />
     <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
     <Build Include="etlmanager\Tables\FunctionApp.sql" />
+    <Build Include="etlmanager\Tables\AppRegistration.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

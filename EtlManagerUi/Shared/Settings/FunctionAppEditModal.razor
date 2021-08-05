@@ -26,10 +26,18 @@
                         </BSFormRow>
 
                         <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Tenant id</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.TenantId"></InputText>
+                            <BSFormGroup Class="col-lg-6">
+                                <BSLabel>App registration</BSLabel>
+                                <InputSelect class="form-control" @bind-Value="FunctionApp.AppRegistrationId">
+                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                        {
+                                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                        }
+                                </InputSelect>
                             </BSFormGroup>
+                        </BSFormRow>
+
+                        <BSFormRow>
                             <BSFormGroup Class="col-lg">
                                 <BSLabel>Subscription id</BSLabel>
                                 <InputText class="form-control" @bind-Value="FunctionApp.SubscriptionId"></InputText>
@@ -47,16 +55,7 @@
                             </BSFormGroup>
                         </BSFormRow>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client id</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.ClientId"></InputText>
-                            </BSFormGroup>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.ClientSecret"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
+
                         <div class="row mt-2">
                             <div class="col">
                                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
@@ -100,6 +99,9 @@
     [Parameter]
     public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
+    [Parameter]
+    public List<AppRegistration>? AppRegistrations { get; set; }
+
     private FunctionApp? FunctionApp { get; set; }
 
     private BSModal Modal { get; set; } = null!;
@@ -132,13 +134,8 @@
         TestingConnection = true;
         try
         {
-            if (FunctionApp?.TenantId is null || FunctionApp.ClientId is null || FunctionApp.ClientSecret is null
-                || FunctionApp.SubscriptionId is null || FunctionApp.ResourceGroupName is null || FunctionApp.ResourceName is null)
-            {
-                throw new ArgumentNullException("One or more of the Function App properties needed for connection testing was null");
-            }
-            await FunctionAppHelper.TestConnection(FunctionApp.TenantId, FunctionApp.ClientId, FunctionApp.ClientSecret,
-                FunctionApp.SubscriptionId, FunctionApp.ResourceGroupName, FunctionApp.ResourceName);
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == FunctionApp?.AppRegistrationId);
+            await FunctionAppHelper.TestConnection(appRegistration, FunctionApp.SubscriptionId, FunctionApp.ResourceGroupName, FunctionApp.ResourceName);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

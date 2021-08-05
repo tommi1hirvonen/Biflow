@@ -12,17 +12,17 @@
                    FormId="dataset_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
-            <BSLabel>Power BI Service</BSLabel>
+            <BSLabel>App registration</BSLabel>
             <div class="input-group">
                 <div class="input-group-prepend">
                     <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
                     </div>
                 </div>
-                <InputSelect class="form-control" @bind-Value="Step.PowerBIServiceId">
-                    @foreach (var pbi in PowerBIServices ?? Enumerable.Empty<PowerBIService>())
+                <InputSelect class="form-control" @bind-Value="Step.AppRegistrationId">
+                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                     {
-                        <option value="@pbi.PowerBIServiceId">@pbi.PowerBIServiceName</option>
+                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
                     }
                 </InputSelect>
             </div>
@@ -62,7 +62,7 @@
             </BSButton>
         </div>
     </div>
-    <DatasetSelectModal @ref="DatasetSelectModal" PowerBIServiceId="Step.PowerBIServiceId" OnDatasetSelected="OnDatasetSelected" />
+    <DatasetSelectModal @ref="DatasetSelectModal" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
 </StepEditModalBase>
 
 
@@ -77,7 +77,7 @@
     public IList<Step>? Steps { get; set; }
 
     [Parameter]
-    public IList<PowerBIService>? PowerBIServices { get; set; }
+    public IList<AppRegistration>? AppRegistrations { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -122,7 +122,7 @@
                 RetryIntervalMinutes = 0,
                 StepType = StepType.Dataset,
                 IsEnabled = true,
-                PowerBIServiceId = PowerBIServices?.FirstOrDefault()?.PowerBIServiceId,
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>()
             };
@@ -141,5 +141,5 @@
     public void Show() => Modal.Show();
 
     public void Dispose() => Context?.Dispose();
-    
+
 }

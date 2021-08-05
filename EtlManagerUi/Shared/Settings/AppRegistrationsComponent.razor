@@ -4,7 +4,7 @@
 @inject IJSRuntime JS  
 
 <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
-    Add Power BI Service
+    Add App registration
 </BSButton>
 
 <div class="card shadow-sm pt-2 my-4">
@@ -21,25 +21,25 @@
             </tr>
         </thead>
         <tbody>
-            @if (PowerBIServices is null)
+            @if (AppRegistrations is null)
             {
                 <tr><td colspan="4">Loading...</td></tr>
             }
-            else if (PowerBIServices.Count == 0)
+            else if (AppRegistrations.Count == 0)
             {
-                <tr><td colspan="4">No Power BI Services</td></tr>
+                <tr><td colspan="4">No App registrations</td></tr>
             }
             else
             {
-                @foreach (var pbi in PowerBIServices)
+                @foreach (var app in AppRegistrations)
                 {
                     <tr>
                         <td class="align-middle">
-                            @pbi.PowerBIServiceName
+                            @app.AppRegistrationName
                         </td>
                         <td class="align-middle">
                             <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(pbi)">
+                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </BSButton>
                                 <BSDropdown>
@@ -48,13 +48,13 @@
                                     </BSDropdownToggle>
                                     <BSDropdownMenu>
                                         <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeletePowerBIService(pbi)">Confirm</BSDropdownItem>
+                                        <BSDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</BSDropdownItem>
                                     </BSDropdownMenu>
                                 </BSDropdown>
                             </BSButtonGroup>
                         </td>
                         <td class="align-middle">
-                            @pbi.TenantId
+                            @app.TenantId
                         </td>
                     </tr>
                 }
@@ -63,47 +63,47 @@
     </table>
 </div>
 
-<PowerBIServiceEditModal @ref="PowerBIServiceEditModal" PowerBIServiceId="EditPowerBIServiceId" OnPowerBIServiceSubmit="OnPowerBIServiceSubmit" />
+<AppRegistrationEditModal @ref="AppRegistrationEditModal" AppRegistrationId="EditAppRegistrationId" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
 
 @code {
-    private List<PowerBIService>? PowerBIServices { get; set; }
+    private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private Guid EditPowerBIServiceId { get; set; }
-    private PowerBIServiceEditModal PowerBIServiceEditModal { get; set; } = null!;
+    private Guid EditAppRegistrationId { get; set; }
+    private AppRegistrationEditModal AppRegistrationEditModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
         var context = DbFactory.CreateDbContext();
-        PowerBIServices = await context.PowerBIServices.OrderBy(df => df.PowerBIServiceName).ToListAsync();
+        AppRegistrations = await context.AppRegistrations.OrderBy(df => df.AppRegistrationName).ToListAsync();
     }
 
-    private async Task DeletePowerBIService(PowerBIService powerBIService)
+    private async Task DeleteAppRegistration(AppRegistration appRegistration)
     {
         var context = DbFactory.CreateDbContext();
-        context.Remove(powerBIService);
+        context.Remove(appRegistration);
         await context.SaveChangesAsync();
-        PowerBIServices?.Remove(powerBIService);
+        AppRegistrations?.Remove(appRegistration);
     }
 
-    private async void OnPowerBIServiceSubmit(PowerBIService powerBIService)
+    private async void OnAppRegistrationSubmit(AppRegistration appRegistration)
     {
         var context = DbFactory.CreateDbContext();
-        if (powerBIService.PowerBIServiceId == Guid.Empty)
+        if (appRegistration.AppRegistrationId == Guid.Empty)
         {
-            context.Add(powerBIService);
-            PowerBIServices?.Add(powerBIService);
+            context.Add(appRegistration);
+            AppRegistrations?.Add(appRegistration);
         }
         else
         {
-            context.Attach(powerBIService).State = EntityState.Modified;
+            context.Attach(appRegistration).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
         StateHasChanged();
     }
 
-    private void ShowEditModal(PowerBIService? powerBIService)
+    private void ShowEditModal(AppRegistration? appRegistration)
     {
-        EditPowerBIServiceId = powerBIService?.PowerBIServiceId ?? Guid.Empty;
-        PowerBIServiceEditModal.Show();
+        EditAppRegistrationId = appRegistration?.AppRegistrationId ?? Guid.Empty;
+        AppRegistrationEditModal.Show();
     }
 }

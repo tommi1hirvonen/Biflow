@@ -38,7 +38,7 @@ namespace EtlManagerDataAccess
         public DbSet<Subscription> Subscriptions => Set<Subscription>();
         public DbSet<User> Users => Set<User>();
         public DbSet<DataFactory> DataFactories => Set<DataFactory>();
-        public DbSet<PowerBIService> PowerBIServices => Set<PowerBIService>();
+        public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
         public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
         public DbSet<Connection> Connections => Set<Connection>();
         public DbSet<Tag> Tags => Set<Tag>();
@@ -287,13 +287,12 @@ namespace EtlManagerDataAccess
                 .HasMany(user => user.Subscriptions)
                 .WithOne(subscription => subscription.User);
 
+            modelBuilder.Entity<AppRegistration>()
+                .ToTable("AppRegistration");
+
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory");
 
-            modelBuilder.Entity<PowerBIService>()
-                .ToTable("PowerBIService");
-
-            // Map Connection to a view, that has logic inside to hide encrypted connection strings from the UI.
             modelBuilder.Entity<Connection>()
                 .ToTable("Connection");
 

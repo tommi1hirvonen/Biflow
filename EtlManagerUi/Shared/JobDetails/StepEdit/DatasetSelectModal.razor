@@ -87,7 +87,7 @@
     private BSModal Modal { get; set; } = null!;
 
     [Parameter]
-    public Guid? PowerBIServiceId { get; set; }
+    public Guid? AppRegistrationId { get; set; }
 
     [Parameter]
     public EventCallback<(string GroupId, string DatasetId)> OnDatasetSelected { get; set; }
@@ -99,11 +99,11 @@
 
     private async Task ModalOpenChanged(bool isOpen)
     {
-        if (isOpen && PowerBIServiceId is not null && PowerBIServiceId != Guid.Empty)
+        if (isOpen && AppRegistrationId is not null && AppRegistrationId != Guid.Empty)
         {
             try
             {
-                Guid id = PowerBIServiceId ?? throw new ArgumentNullException(nameof(id), "Power BI Service id cannot be null");
+                Guid id = AppRegistrationId ?? throw new ArgumentNullException(nameof(id), "App registration id cannot be null");
                 var powerBIService = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(DbContextFactory, id);
                 Datasets = await powerBIService.GetAllDatasetsAsync();
                 StateHasChanged();

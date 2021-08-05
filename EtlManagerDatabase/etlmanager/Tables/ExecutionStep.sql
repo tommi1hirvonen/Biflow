@@ -22,7 +22,7 @@
     [ExeArguments]              NVARCHAR(MAX)       NULL,
     [ExeWorkingDirectory]       NVARCHAR(1000)      NULL,
     [ExeSuccessExitCode]        INT                 NULL,
-    [PowerBIServiceId]          UNIQUEIDENTIFIER    NULL,
+    [AppRegistrationId]         UNIQUEIDENTIFIER    NULL,
     [DatasetGroupId]            NVARCHAR(36)        NULL,
     [DatasetId]                 NVARCHAR(36)        NULL,
     [FunctionAppId]             UNIQUEIDENTIFIER    NULL,

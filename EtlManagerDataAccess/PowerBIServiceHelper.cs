@@ -19,7 +19,7 @@ namespace EtlManagerDataAccess
 {
     public class PowerBIServiceHelper
     {
-        public PowerBIService PowerBIService { get; init; }
+        public AppRegistration AppRegistration { get; init; }
         private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
@@ -28,13 +28,13 @@ namespace EtlManagerDataAccess
         private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
 
         private PowerBIServiceHelper(
-            PowerBIService powerBIService,
+            AppRegistration appRegistration,
             string? accessToken,
             DateTime? accessTokenExpiresOn,
             string connectionString
             )
         {
-            PowerBIService = powerBIService;
+            AppRegistration = appRegistration;
             AccessToken = accessToken;
             AccessTokenExpiresOn = accessTokenExpiresOn;
             ConnectionString = connectionString;
@@ -74,15 +74,15 @@ namespace EtlManagerDataAccess
             {
                 try
                 {
-                    var context = new AuthenticationContext(AuthenticationUrl + PowerBIService.TenantId);
-                    var clientCredential = new ClientCredential(PowerBIService.ClientId, PowerBIService.ClientSecret);
+                    var context = new AuthenticationContext(AuthenticationUrl + AppRegistration.TenantId);
+                    var clientCredential = new ClientCredential(AppRegistration.ClientId, AppRegistration.ClientSecret);
                     var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
                     AccessToken = result.AccessToken;
                     AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIService.PowerBIServiceId);
+                    Log.Error(ex, "Error getting Microsoft OAuth access token for Power BI Service id {PowerBIServiceId}", AppRegistration.AppRegistrationId);
                     throw;
                 }
 
@@ -94,14 +94,14 @@ namespace EtlManagerDataAccess
                 {
                     using var sqlConnection = new SqlConnection(ConnectionString);
                     await sqlConnection.ExecuteAsync(
-                        @"UPDATE etlmanager.PowerBIService
+                        @"UPDATE etlmanager.AppRegistration
                         SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE PowerBIServiceId = @PowerBIServiceId",
-                        new { AccessToken, AccessTokenExpiresOn, PowerBIService.PowerBIServiceId });
+                        WHERE AppRegistrationId = @AppRegistrationId",
+                        new { AccessToken, AccessTokenExpiresOn, AppRegistration.AppRegistrationId });
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", PowerBIService.PowerBIServiceId);
+                    Log.Error(ex, "Error updating the OAuth access token for Power BI Service id {PowerBIServiceId}", AppRegistration.AppRegistrationId);
                     throw;
                 }
             }
@@ -113,30 +113,30 @@ namespace EtlManagerDataAccess
             return client;
         }
 
-        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid powerBIServiceId)
+        public static async Task<PowerBIServiceHelper> GetPowerBIServiceHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid appRegistrationId)
         {
             using var context = dbContextFactory.CreateDbContext();
             var connectionString = context.Database.GetConnectionString();
-            var powerBIService = await context.PowerBIServices.FindAsync(powerBIServiceId);
+            var appRegistration = await context.AppRegistrations.FindAsync(appRegistrationId);
             using var sqlConnection = new SqlConnection(context.Database.GetConnectionString());
             (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
                     @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.PowerBIService
-                    WHERE PowerBIServiceId = @PowerBIServiceId",
-                    new { PowerBIServiceId = powerBIServiceId });
+                    FROM etlmanager.AppRegistration
+                    WHERE AppRegistrationId = @AppRegistrationId",
+                    new { appRegistration.AppRegistrationId });
 
             return new PowerBIServiceHelper(
-                powerBIService: powerBIService,
+                appRegistration: appRegistration,
                 accessToken: accessToken,
                 accessTokenExpiresOn: accessTokenExpiresOn,
                 connectionString: connectionString
             );
         }
 
-        public static async Task TestConnection(string tenantId, string clientId, string clientSecret)
+        public static async Task TestConnection(AppRegistration appRegistration)
         {
-            var context = new AuthenticationContext(AuthenticationUrl + tenantId);
-            var clientCredential = new ClientCredential(clientId, clientSecret);
+            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
+            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
             var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
             var credentials = new TokenCredentials(result.AccessToken);
             var client = new PowerBIClient(credentials);

@@ -78,7 +78,7 @@
 </div>
 
 <AuthorizeView Roles="Admin, Editor">
-    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" PowerBIServices="PowerBIServices" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" AppRegistrations="AppRegistrations" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepId" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
     <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
@@ -104,7 +104,7 @@
     [Parameter]
     public List<DataFactory>? DataFactories { get; set; }
     [Parameter]
-    public List<PowerBIService>? PowerBIServices { get; set; }
+    public List<AppRegistration>? AppRegistrations { get; set; }
     [Parameter]
     public List<FunctionApp>? FunctionApps { get; set; }
 
