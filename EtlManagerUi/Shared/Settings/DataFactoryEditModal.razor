@@ -85,14 +85,14 @@
 </BSModal>
 
 @code {
-    [Parameter]
-    public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
+        [Parameter]
+        public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
 
-    [Parameter]
-    public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
+        [Parameter]
+        public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
-    [Parameter]
-    public List<AppRegistration>? AppRegistrations { get; set; }
+        [Parameter]
+        public List<AppRegistration>? AppRegistrations { get; set; }
 
     private DataFactory? DataFactory { get; set; }
 
@@ -110,7 +110,10 @@
         }
         else
         {
-            DataFactory = new();
+            DataFactory = new()
+            {
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId
+            };
         }
         ConnectionTestSuccess = null;
         TestingConnection = false;

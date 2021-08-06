@@ -93,14 +93,14 @@
 </BSModal>
 
 @code {
-    [Parameter]
-    public Guid FunctionAppId { get; set; } // empty Guid => new Function App
+        [Parameter]
+        public Guid FunctionAppId { get; set; } // empty Guid => new Function App
 
-    [Parameter]
-    public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
+        [Parameter]
+        public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
-    [Parameter]
-    public List<AppRegistration>? AppRegistrations { get; set; }
+        [Parameter]
+        public List<AppRegistration>? AppRegistrations { get; set; }
 
     private FunctionApp? FunctionApp { get; set; }
 
@@ -118,7 +118,10 @@
         }
         else
         {
-            FunctionApp = new();
+            FunctionApp = new()
+            {
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId
+            };
         }
     }
 
