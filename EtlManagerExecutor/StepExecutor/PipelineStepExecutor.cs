@@ -61,7 +61,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                    Configuration.ExecutionId, Step, DataFactoryHelper.DataFactory.DataFactoryId, Step.PipelineName);
+                    Configuration.ExecutionId, Step, Step.DataFactoryId, Step.PipelineName);
                 return new ExecutionResult.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
 

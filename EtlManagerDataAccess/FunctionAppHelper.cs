@@ -17,14 +17,10 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess
 {
-    public class FunctionAppHelper
+    public class FunctionAppHelper : AzureHelperBase
     {
         public FunctionApp FunctionApp { get; init; }
-        private string? AccessToken { get; set; }
-        private DateTime? AccessTokenExpiresOn { get; set; }
-        private string ConnectionString { get; init; }
-
-        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        
         private const string ResourceUrl = "https://management.azure.com/";
 
         private FunctionAppHelper(
@@ -32,17 +28,14 @@ namespace EtlManagerDataAccess
             string? accessToken,
             DateTime? accessTokenExpiresOn,
             string connectionString
-            )
+            ) : base(functionApp.AppRegistration, accessToken, accessTokenExpiresOn, connectionString)
         {
             FunctionApp = functionApp;
-            AccessToken = accessToken;
-            AccessTokenExpiresOn = accessTokenExpiresOn;
-            ConnectionString = connectionString;
         }
         
         public async Task<List<(string FunctionName, string FunctionType, string FunctionUrl)>> GetFunctionsAsync()
         {
-            await CheckAccessTokenValidityAsync();
+            await CheckAccessTokenValidityAsync(ResourceUrl);
             var functionListUrl = $"https://management.azure.com/subscriptions/{FunctionApp.SubscriptionId}/resourceGroups/{FunctionApp.ResourceGroupName}/providers/Microsoft.Web/sites/{FunctionApp.ResourceName}/functions?api-version=2015-08-01";
             var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
             message.Headers.Add("authorization", $"Bearer {AccessToken}");
@@ -71,42 +64,6 @@ namespace EtlManagerDataAccess
             return functions;
         }
 
-        private async Task CheckAccessTokenValidityAsync()
-        {
-            if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
-            {
-                try
-                {
-                    var context = new AuthenticationContext(AuthenticationUrl + FunctionApp.AppRegistration.TenantId);
-                    var clientCredential = new ClientCredential(FunctionApp.AppRegistration.ClientId, FunctionApp.AppRegistration.ClientSecret);
-                    var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
-                    AccessToken = result.AccessToken;
-                    AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Function App id {FunctionAppId}", FunctionApp.FunctionAppId);
-                    throw;
-                }
-
-                // Update the token and its expiration time to the database for later use.
-                try
-                {
-                    using var sqlConnection = new SqlConnection(ConnectionString);
-                    await sqlConnection.ExecuteAsync(
-                        @"UPDATE etlmanager.AppRegistration
-                        SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE AppRegistrationId = @AppRegistrationId",
-                        new { AccessToken, AccessTokenExpiresOn, FunctionApp.AppRegistration.AppRegistrationId });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error updating the OAuth access token for Function App id {FunctionAppId}", FunctionApp.FunctionAppId);
-                    throw;
-                }
-            }
-        }
-
         public static async Task<FunctionAppHelper> GetFunctionAppHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid functionAppId)
         {
             using var context = dbContextFactory.CreateDbContext();
@@ -114,12 +71,7 @@ namespace EtlManagerDataAccess
                 .Include(fa => fa.AppRegistration)
                 .FirstAsync(fa => fa.FunctionAppId == functionAppId);
             var connectionString = context.Database.GetConnectionString();
-            using var sqlConnection = new SqlConnection(connectionString);
-            (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
-                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.AppRegistration
-                    WHERE AppRegistrationId = @AppRegistrationId",
-                    new { functionApp.AppRegistration.AppRegistrationId });
+            (var accessToken, var accessTokenExpiresOn) = await GetAccessTokenAsync(functionApp.AppRegistration, connectionString);
 
             return new FunctionAppHelper(
                 functionApp: functionApp,

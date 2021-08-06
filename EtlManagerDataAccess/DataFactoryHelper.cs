@@ -17,32 +17,31 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess
 {
-    public class DataFactoryHelper
+    public class DataFactoryHelper : AzureHelperBase
     {
-        public DataFactory DataFactory { get; init; }
-        private string? AccessToken { get; set; }
-        private DateTime? AccessTokenExpiresOn { get; set; }
-        private string ConnectionString { get; init; }
-
-        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private const string ResourceUrl = "https://management.azure.com/";
+
+        private DataFactory DataFactory { get; init; }
 
         private DataFactoryHelper(
             DataFactory dataFactory,
             string? accessToken,
             DateTime? accessTokenExpiresOn,
             string connectionString
-            )
+            ) : base(dataFactory.AppRegistration, accessToken, accessTokenExpiresOn, connectionString)
         {
             DataFactory = dataFactory;
-            AccessToken = accessToken;
-            AccessTokenExpiresOn = accessTokenExpiresOn;
-            ConnectionString = connectionString;
+        }
+
+        private async Task<DataFactoryManagementClient> GetClientAsync()
+        {
+            var credentials = await CheckAccessTokenValidityAsync(ResourceUrl);
+            return new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
         }
 
         public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
         {
-            var client = await CheckAccessTokenValidityAsync();
+            var client = await GetClientAsync();
             var createRunResponse = await client.Pipelines.CreateRunAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, pipelineName,
                 parameters: parameters, cancellationToken: cancellationToken);
             return createRunResponse.RunId;
@@ -50,71 +49,25 @@ namespace EtlManagerDataAccess
 
         public async Task<PipelineRun> GetPipelineRunAsync(string runId, CancellationToken cancellationToken)
         {
-            var client = await CheckAccessTokenValidityAsync();
+            var client = await GetClientAsync();
             return await client.PipelineRuns.GetAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, runId, cancellationToken);
         }
 
         public async Task CancelPipelineRunAsync(string runId)
         {
-            var client = await CheckAccessTokenValidityAsync();
+            var client = await GetClientAsync();
             await client.PipelineRuns.CancelAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName, runId, isRecursive: true);
         }
 
         public async Task<Dictionary<string, List<string>>> GetPipelinesAsync()
         {
-            var client = await CheckAccessTokenValidityAsync();
+            var client = await GetClientAsync();
             var pipelines = await client.Pipelines.ListByFactoryAsync(DataFactory.ResourceGroupName, DataFactory.ResourceName);
             // Key = Folder
             // Value = List of pipelines in that folder
             return pipelines
                 .GroupBy(p => p.Folder?.Name ?? "/") // Replace null folder (root) with forward slash.
                 .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
-        }
-
-        private async Task<DataFactoryManagementClient> CheckAccessTokenValidityAsync()
-        {
-            DataFactoryManagementClient? client = null;
-            if (AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
-            {
-                try
-                {
-                    var context = new AuthenticationContext(AuthenticationUrl + DataFactory.AppRegistration.TenantId);
-                    var clientCredential = new ClientCredential(DataFactory.AppRegistration.ClientId, DataFactory.AppRegistration.ClientSecret);
-                    var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
-                    AccessToken = result.AccessToken;
-                    AccessTokenExpiresOn = result.ExpiresOn.ToLocalTime().DateTime;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error getting Microsoft OAuth access token for Data Factory id {DataFactoryId}", DataFactory.DataFactoryId);
-                    throw;
-                }
-
-                var credentials = new TokenCredentials(AccessToken);
-                client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
-
-                // Update the token and its expiration time to the database for later use.
-                try
-                {
-                    using var sqlConnection = new SqlConnection(ConnectionString);
-                    await sqlConnection.ExecuteAsync(
-                        @"UPDATE etlmanager.AppRegistration
-                        SET AccessToken = @AccessToken, AccessTokenExpiresOn = @AccessTokenExpiresOn
-                        WHERE AppRegistrationId = @AppRegistrationId",
-                        new { AccessToken, AccessTokenExpiresOn, DataFactory.AppRegistration.AppRegistrationId });
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Error updating the OAuth access token for Data Factory id {DataFactoryId}", DataFactory.DataFactoryId);
-                    throw;
-                }
-            }
-            else if (client is null)
-            {
-                var credentials = new TokenCredentials(AccessToken);
-                client = new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
-            }
-            return client;
         }
 
         public static async Task<DataFactoryHelper> GetDataFactoryHelperAsync(IDbContextFactory<EtlManagerContext> dbContextFactory, Guid dataFactoryId)
@@ -124,12 +77,7 @@ namespace EtlManagerDataAccess
                 .Include(df => df.AppRegistration)
                 .FirstAsync(df => df.DataFactoryId == dataFactoryId);
             var connectionString = context.Database.GetConnectionString();
-            using var sqlConnection = new SqlConnection(connectionString);
-            (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
-                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.AppRegistration
-                    WHERE AppRegistrationId = @AppRegistrationId",
-                    new { dataFactory.AppRegistration.AppRegistrationId });
+            (var accessToken, var accessTokenExpiresOn) = await GetAccessTokenAsync(dataFactory.AppRegistration, connectionString);
 
             return new DataFactoryHelper(
                 dataFactory: dataFactory,
