@@ -2,6 +2,7 @@
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select pipeline</BSModalHeader>
@@ -114,8 +115,11 @@
             try
             {
                 Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
-                var dataFactory = await DataFactoryHelper.GetDataFactoryHelperAsync(DbContextFactory, dataFactoryId);
-                Pipelines = await dataFactory.GetPipelinesAsync();
+                using var context = DbContextFactory.CreateDbContext();
+                var dataFactory = await context.DataFactories
+                    .Include(df => df.AppRegistration)
+                    .FirstAsync(df => df.DataFactoryId == dataFactoryId);
+                Pipelines = await dataFactory.GetPipelinesAsync(TokenService);
                 StateHasChanged();
             }
             catch (Exception ex)

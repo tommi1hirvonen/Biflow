@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
@@ -45,5 +48,53 @@ namespace EtlManagerDataAccess.Models
         public Guid? AppRegistrationId { get; set; }
 
         public AppRegistration AppRegistration { get; set; } = null!;
+
+        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        private const string ResourceUrl = "https://management.azure.com/";
+
+        public async Task<List<(string FunctionName, string FunctionType, string FunctionUrl)>> GetFunctionsAsync(ITokenService tokenService)
+        {
+            var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+            var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
+            var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
+            message.Headers.Add("authorization", $"Bearer {accessToken}");
+            var client = new HttpClient();
+            var response = await client.SendAsync(message);
+            var content = await response.Content.ReadAsStringAsync();
+
+            var json = JsonSerializer.Deserialize<JsonElement>(content);
+            var value = json.GetProperty("value");
+            var functionArray = value.EnumerateArray();
+            var functions = functionArray.Select(func =>
+            {
+                var properties = func.GetProperty("properties");
+                var name = properties.GetProperty("name").GetString() ?? "";
+                var url = properties.GetProperty("invoke_url_template").GetString() ?? "";
+                var config = properties.GetProperty("config");
+                var bindings = config.GetProperty("bindings").EnumerateArray();
+                string type = "";
+                if (bindings.MoveNext())
+                {
+                    type = bindings.Current.GetProperty("type").GetString() ?? "";
+                }
+                return (name, type, url);
+            }).ToList();
+
+            return functions;
+        }
+
+        public async Task TestConnection(AppRegistration appRegistration)
+        {
+            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
+            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
+            var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
+
+            var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
+            var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
+            message.Headers.Add("authorization", $"Bearer {result.AccessToken}");
+            var client = new HttpClient();
+            var response = await client.SendAsync(message);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

@@ -137,8 +137,9 @@
         TestingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == FunctionApp?.AppRegistrationId);
-            await FunctionAppHelper.TestConnection(appRegistration, FunctionApp.SubscriptionId, FunctionApp.ResourceGroupName, FunctionApp.ResourceName);
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == FunctionApp?.AppRegistrationId)
+                ?? throw new ArgumentNullException("App registration cannot be null");
+            await FunctionApp?.TestConnection(appRegistration);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

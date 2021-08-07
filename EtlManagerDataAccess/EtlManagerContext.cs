@@ -39,6 +39,7 @@ namespace EtlManagerDataAccess
         public DbSet<User> Users => Set<User>();
         public DbSet<DataFactory> DataFactories => Set<DataFactory>();
         public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
+        public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
         public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
         public DbSet<Connection> Connections => Set<Connection>();
         public DbSet<Tag> Tags => Set<Tag>();
@@ -289,6 +290,11 @@ namespace EtlManagerDataAccess
 
             modelBuilder.Entity<AppRegistration>()
                 .ToTable("AppRegistration");
+
+            modelBuilder.Entity<AccessToken>()
+                .ToTable("AccessToken");
+            modelBuilder.Entity<AccessToken>()
+                .HasKey(at => new { at.AppRegistrationId, at.ResourceUrl });
 
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory");

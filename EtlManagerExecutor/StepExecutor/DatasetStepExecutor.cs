@@ -1,5 +1,6 @@
 ﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Threading;
@@ -21,10 +22,11 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             // Get reference to the Power BI Service helper object.
-            PowerBIServiceHelper powerBIServiceHelper;
+            AppRegistration appRegistration;
             try
             {
-                powerBIServiceHelper = await PowerBIServiceHelper.GetPowerBIServiceHelperAsync(Configuration.DbContextFactory, Step.AppRegistrationId);
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                appRegistration = await context.AppRegistrations.FirstAsync(ar => ar.AppRegistrationId == Step.AppRegistrationId, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -35,8 +37,7 @@ namespace EtlManagerExecutor
             // Start dataset refresh.
             try
             {
-                await powerBIServiceHelper.RefreshDatasetAsync(Step.DatasetGroupId, Step.DatasetId, cancellationToken);
-                
+                await appRegistration.RefreshDatasetAsync(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);                
             }
             catch (OperationCanceledException)
             {
@@ -55,7 +56,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    var refresh = await powerBIServiceHelper.GetDatasetRefreshStatus(Step.DatasetGroupId, Step.DatasetId, cancellationToken);
+                    var refresh = await appRegistration.GetDatasetRefreshStatus(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                     if (refresh?.Status == "Completed")
                     {
                         return new ExecutionResult.Success();

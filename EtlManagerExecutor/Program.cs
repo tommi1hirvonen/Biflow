@@ -32,11 +32,12 @@ namespace EtlManagerExecutor
                     configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
                 .ConfigureServices((context, services) =>
                 {
+                    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+                    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
+                    services.AddSingleton<ITokenService, TokenService>();
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();
-                    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-                    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                 })
                 
                 .UseSerilog()

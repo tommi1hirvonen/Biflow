@@ -91,6 +91,7 @@
     <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
     <Build Include="etlmanager\Tables\FunctionApp.sql" />
     <Build Include="etlmanager\Tables\AppRegistration.sql" />
+    <Build Include="etlmanager\Tables\AccessToken.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

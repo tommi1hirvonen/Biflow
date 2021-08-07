@@ -1,6 +1,7 @@
 ﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace EtlManagerExecutor
     class PipelineStepExecutor : StepExecutorBase
     {
         private PipelineStepExecution Step { get; init; }
-        private DataFactoryHelper? DataFactoryHelper { get; set; }
+        private DataFactory? DataFactory { get; set; }
 
         private const int MaxRefreshRetries = 3;
 
@@ -43,7 +44,10 @@ namespace EtlManagerExecutor
             // Get the target Data Factory information from the database.
             try
             {
-                DataFactoryHelper = await DataFactoryHelper.GetDataFactoryHelperAsync(Configuration.DbContextFactory, Step.DataFactoryId);
+                using var context = Configuration.DbContextFactory.CreateDbContext();
+                DataFactory = await context.DataFactories
+                    .Include(df => df.AppRegistration)
+                    .FirstAsync(df => df.DataFactoryId == Step.DataFactoryId, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -55,7 +59,7 @@ namespace EtlManagerExecutor
             DateTime startTime;
             try
             {
-                runId = await DataFactoryHelper.StartPipelineRunAsync(Step.PipelineName, parameters, cancellationToken);
+                runId = await DataFactory.StartPipelineRunAsync(Configuration.TokenService, Step.PipelineName, parameters, cancellationToken);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
@@ -133,7 +137,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    return await DataFactoryHelper!.GetPipelineRunAsync(runId, CancellationToken.None);
+                    return await DataFactory!.GetPipelineRunAsync(Configuration.TokenService, runId, CancellationToken.None);
                 }
                 catch (Exception ex)
                 {
@@ -150,7 +154,7 @@ namespace EtlManagerExecutor
             Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Configuration.ExecutionId, Step, runId);
             try
             {
-                await DataFactoryHelper!.CancelPipelineRunAsync(runId);
+                await DataFactory!.CancelPipelineRunAsync(Configuration.TokenService, runId);
             }
             catch (Exception ex)
             {

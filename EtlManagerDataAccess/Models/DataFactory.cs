@@ -1,7 +1,14 @@
-﻿using System;
+﻿using Microsoft.Azure.Management.DataFactory;
+using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Rest;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
@@ -37,5 +44,55 @@ namespace EtlManagerDataAccess.Models
 
         public AppRegistration AppRegistration { get; set; } = null!;
 
+        private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        private const string ResourceUrl = "https://management.azure.com/";
+
+        private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
+        {
+            var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+            var credentials = new TokenCredentials(accessToken);
+            return new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+        }
+
+        public async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+        {
+            var client = await GetClientAsync(tokenService);
+            var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
+                parameters: parameters, cancellationToken: cancellationToken);
+            return createRunResponse.RunId;
+        }
+
+        public async Task<PipelineRun> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
+        {
+            var client = await GetClientAsync(tokenService);
+            return await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+        }
+
+        public async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
+        {
+            var client = await GetClientAsync(tokenService);
+            await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+        }
+
+        public async Task<Dictionary<string, List<string>>> GetPipelinesAsync(ITokenService tokenService)
+        {
+            var client = await GetClientAsync(tokenService);
+            var pipelines = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+            // Key = Folder
+            // Value = List of pipelines in that folder
+            return pipelines
+                .GroupBy(p => p.Folder?.Name ?? "/") // Replace null folder (root) with forward slash.
+                .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
+        }
+
+        public async Task TestConnection(AppRegistration appRegistration)
+        {
+            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
+            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
+            var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
+            var credentials = new TokenCredentials(result.AccessToken);
+            var client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+            var _ = await client.Factories.GetAsync(ResourceGroupName, ResourceName);
+        }
     }
 }

@@ -2,6 +2,7 @@
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select dataset</BSModalHeader>
@@ -126,8 +127,11 @@
             try
             {
                 Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
-                var functionAppHelper = await FunctionAppHelper.GetFunctionAppHelperAsync(DbContextFactory, id);
-                Functions = await functionAppHelper.GetFunctionsAsync();
+                using var context = DbContextFactory.CreateDbContext();
+                var functionApp = await context.FunctionApps
+                    .Include(fa => fa.AppRegistration)
+                    .FirstAsync(fa => fa.FunctionAppId == id);
+                Functions = await functionApp.GetFunctionsAsync(TokenService);
                 StateHasChanged();
             }
             catch (Exception ex)

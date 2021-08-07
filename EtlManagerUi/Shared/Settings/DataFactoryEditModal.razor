@@ -85,14 +85,14 @@
 </BSModal>
 
 @code {
-        [Parameter]
-        public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
+    [Parameter]
+    public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
 
-        [Parameter]
-        public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
+    [Parameter]
+    public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
-        [Parameter]
-        public List<AppRegistration>? AppRegistrations { get; set; }
+    [Parameter]
+    public List<AppRegistration>? AppRegistrations { get; set; }
 
     private DataFactory? DataFactory { get; set; }
 
@@ -131,8 +131,9 @@
         TestingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == DataFactory?.AppRegistrationId);
-            await DataFactoryHelper.TestConnection(appRegistration, DataFactory.SubscriptionId, DataFactory.ResourceGroupName, DataFactory.ResourceName);
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == DataFactory?.AppRegistrationId)
+                ?? throw new ArgumentNullException("App registration cannot be null");
+            await DataFactory?.TestConnection(appRegistration);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

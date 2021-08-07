@@ -17,11 +17,13 @@ namespace EtlManagerExecutor
     {
         private readonly IConfiguration configuration;
         private readonly IDbContextFactory<EtlManagerContext> dbContextFactory;
+        private readonly ITokenService tokenService;
 
-        public JobExecutor(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
+        public JobExecutor(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, ITokenService tokenService)
         {
             this.configuration = configuration;
             this.dbContextFactory = dbContextFactory;
+            this.tokenService = tokenService;
         }
 
         public async Task RunAsync(Guid executionId, bool notify)
@@ -67,6 +69,7 @@ namespace EtlManagerExecutor
 
             var executionConfig = new ExecutionConfiguration(
                 dbContextFactory: dbContextFactory,
+                tokenService: tokenService,
                 connectionString: connectionString,
                 maxParallelSteps: maxParallelSteps,
                 pollingIntervalMs: pollingIntervalMs,

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.90" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <PackageReference Include="Quartz.Extensions.Hosting" Version="3.3.2" />
@@ -15,6 +16,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EtlManagerDataAccess\EtlManagerDataAccess.csproj" />
-    <ProjectReference Include="..\EtlManagerUtils\EtlManagerUtils.csproj" />
   </ItemGroup>
 </Project>
