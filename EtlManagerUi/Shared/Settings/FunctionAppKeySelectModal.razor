@@ -1,0 +1,112 @@
+﻿@inject IConfiguration Configuration
+@inject IJSRuntime JS
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject ITokenService TokenService
+
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">Select key</BSModalHeader>
+
+    <BSModalBody>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Type
+                            </th>
+                            <th>
+                                Value
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Keys is null)
+                        {
+                            <tr>
+                                <td>Loading...</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else if (Keys.Count == 0)
+                        {
+                            <tr>
+                                <td>No keys</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var key in Keys)
+                            {
+                                <tr style="cursor: pointer;"
+                                    @onclick="() => SelectedKey = key.Key"
+                                    class="@(key.Key == SelectedKey ? "bg-light font-weight-bold" : null)">
+                                    <td>@key.Type</td>
+                                    <td style="font-family: monospace;">@key.Key</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectKey"
+                  IsDisabled="SelectedKey is null">
+            Select
+        </BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; } = null!;
+
+    [Parameter]
+    public FunctionApp? FunctionApp { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnKeySelected { get; set; }
+
+    private List<(string Type, string Key)>? Keys { get; set; }
+
+    private string? SelectedKey { get; set; }
+
+    private async Task ModalOpenChanged(bool isOpen)
+    {
+        if (isOpen && FunctionApp is not null)
+        {
+            try
+            {
+                Keys = await FunctionApp.GetHostKeysAsync(TokenService);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error reading keys: {ex.Message}");
+            }
+        }
+        else
+        {
+            Keys = null;
+            SelectedKey = null;
+        }
+    }
+
+    private void SelectKey()
+    {
+        if (SelectedKey is not null)
+        {
+            OnKeySelected.InvokeAsync(SelectedKey);
+            Modal.Hide();
+        }
+    }
+
+    public void Show() => Modal.Show();
+}

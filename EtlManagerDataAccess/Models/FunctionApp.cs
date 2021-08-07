@@ -83,10 +83,30 @@ namespace EtlManagerDataAccess.Models
             return functions;
         }
 
-        public async Task TestConnection(AppRegistration appRegistration)
+        public async Task<List<(string Type, string Key)>> GetHostKeysAsync(ITokenService tokenService)
         {
-            var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
-            var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
+            var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+            var hostKeysUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/host/default/listkeys?api-version=2019-08-01";
+            var message = new HttpRequestMessage(HttpMethod.Post, hostKeysUrl);
+            message.Headers.Add("authorization", $"Bearer {accessToken}");
+            var client = new HttpClient();
+            var response = await client.SendAsync(message);
+            var content = await response.Content.ReadAsStringAsync();
+            var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+            var json = JsonSerializer.Deserialize<HostKeys>(content, options) ?? throw new InvalidOperationException("JSON object was null");
+            var list =
+                new List<(string, string)> { ("masterKey", json.MasterKey) }
+                .Concat(json.FunctionKeys.Select(f => (f.Key, f.Value)))
+                .ToList();
+            return list;
+        }
+
+        private record HostKeys(string MasterKey, Dictionary<string, string> FunctionKeys);
+
+        public async Task TestConnection()
+        {
+            var context = new AuthenticationContext(AuthenticationUrl + AppRegistration.TenantId);
+            var clientCredential = new ClientCredential(AppRegistration.ClientId, AppRegistration.ClientSecret);
             var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
 
             var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";

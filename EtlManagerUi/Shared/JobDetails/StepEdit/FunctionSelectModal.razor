@@ -5,7 +5,7 @@
 @inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select dataset</BSModalHeader>
+    <BSModalHeader OnClick="() => Modal.Hide()">Select function</BSModalHeader>
 
     <BSModalBody>
         <div class="row">
@@ -68,7 +68,7 @@
                         else if (Functions.Count == 0)
                         {
                             <tr>
-                                <td>No workspaces</td>
+                                <td>No functions</td>
                                 <td></td>
                             </tr>
                         }
