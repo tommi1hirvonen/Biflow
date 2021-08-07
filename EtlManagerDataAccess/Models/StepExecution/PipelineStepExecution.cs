@@ -21,6 +21,8 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Data Factory id")]
         public Guid DataFactoryId { get; set; }
 
+        public DataFactory DataFactory { get; set; } = null!;
+
         [Column("TimeoutMinutes")]
         public int TimeoutMinutes { get; set; }
     }

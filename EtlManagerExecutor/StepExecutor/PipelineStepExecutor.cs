@@ -15,7 +15,7 @@ namespace EtlManagerExecutor
     class PipelineStepExecutor : StepExecutorBase
     {
         private PipelineStepExecution Step { get; init; }
-        private DataFactory? DataFactory { get; set; }
+        private DataFactory DataFactory => Step.DataFactory;
 
         private const int MaxRefreshRetries = 3;
 
@@ -41,19 +41,6 @@ namespace EtlManagerExecutor
                 return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
-            // Get the target Data Factory information from the database.
-            try
-            {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
-                DataFactory = await context.DataFactories
-                    .Include(df => df.AppRegistration)
-                    .FirstAsync(df => df.DataFactoryId == Step.DataFactoryId, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error getting Data Factory information for id {DataFactoryId}", Step.DataFactoryId);
-                return new ExecutionResult.Failure($"Error getting Data Factory object information:\n{ex.Message}");
-            }
 
             string runId;
             DateTime startTime;

@@ -18,7 +18,9 @@ namespace EtlManagerDataAccess.Models
 
         [Display(Name = "Function app id")]
         public Guid FunctionAppId { get; set; }
-        
+
+        public FunctionApp FunctionApp { get; set; } = null!;
+
         [Display(Name = "Function url")]
         public string FunctionUrl { get; set; }
 

@@ -45,6 +45,17 @@ namespace EtlManagerExecutor
                         .ThenInclude(e => e.StepExecutionAttempts)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as DatasetStepExecution)!.AppRegistration)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as FunctionStepExecution)!.FunctionApp)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as PipelineStepExecution)!.DataFactory)
+                        .ThenInclude(df => df.AppRegistration)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as SqlStepExecution)!.Connection)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as PackageStepExecution)!.Connection)
                         .FirstAsync(e => e.ExecutionId == executionId);
                     
                     execution.ExecutorProcessId = process.Id;

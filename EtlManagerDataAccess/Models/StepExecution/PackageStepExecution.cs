@@ -38,6 +38,8 @@ namespace EtlManagerDataAccess.Models
         [Column("ConnectionId")]
         public Guid ConnectionId { get; set; }
 
+        public Connection Connection { get; set; } = null!;
+
         [Column("TimeoutMinutes")]
         public int TimeoutMinutes { get; set; }
 

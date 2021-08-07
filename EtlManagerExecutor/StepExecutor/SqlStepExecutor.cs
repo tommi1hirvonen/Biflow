@@ -26,25 +26,10 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            string connectionString;
-            try
-            {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
-                connectionString = await context.Connections
-                    .Where(c => c.ConnectionId == Step.ConnectionId)
-                    .Select(c => c.ConnectionString)
-                    .FirstOrDefaultAsync(CancellationToken.None) ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {Step} Error getting connection string for SQL step execution", Configuration.ExecutionId, Step);
-                return new ExecutionResult.Failure($"Error getting connection string for connection id {Step.ConnectionId}: {ex.Message}");
-            }
-
             try
             {
                 Log.Information("{ExecutionId} {Step} Starting SQL execution", Configuration.ExecutionId, Step);
-                using var connection = new SqlConnection(connectionString);
+                using var connection = new SqlConnection(Step.Connection.ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 // command timeout = 0 => wait indefinitely
                 var command = new CommandDefinition(Step.SqlStatement, commandTimeout: Step.TimeoutMinutes * 60, cancellationToken: cancellationToken);

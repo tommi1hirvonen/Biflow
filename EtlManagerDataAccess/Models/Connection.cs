@@ -8,6 +8,12 @@ namespace EtlManagerDataAccess
 {
     public class Connection
     {
+        public Connection(string connectionName, string connectionString)
+        {
+            ConnectionName = connectionName;
+            ConnectionString = connectionString;
+        }
+
         [Key]
         [Display(Name = "Connection id")]
         public Guid ConnectionId { get; set; }
@@ -15,11 +21,11 @@ namespace EtlManagerDataAccess
         [Required]
         [MaxLength(250)]
         [Display(Name = "Connection name")]
-        public string? ConnectionName { get; set; }
+        public string ConnectionName { get; set; }
 
         [Required]
         [Display(Name = "Connection string")]
-        public string? ConnectionString { get; set; }
+        public string ConnectionString { get; set; }
 
         [Display(Name = "Execute packages as login")]
         public string? ExecutePackagesAsLogin

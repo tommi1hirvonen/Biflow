@@ -17,7 +17,9 @@ namespace EtlManagerDataAccess.Models
 
         [Display(Name = "App registration id")]
         public Guid AppRegistrationId { get; set; }
-        
+
+        public AppRegistration AppRegistration { get; set; } = null!;
+
         [Display(Name = "Group id")]
         public string DatasetGroupId { get; set; }
 

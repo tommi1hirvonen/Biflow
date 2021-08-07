@@ -31,23 +31,8 @@ namespace EtlManagerExecutor
             cancellationToken.ThrowIfCancellationRequested();
 
             Step.ExecuteAsLogin = string.IsNullOrEmpty(Step.ExecuteAsLogin) ? null : Step.ExecuteAsLogin;
-
-            string connectionString;
-            try
-            {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
-                var connection = await context.Connections
-                    .Where(c => c.ConnectionId == Step.ConnectionId)
-                    .FirstOrDefaultAsync(CancellationToken.None);
-                connectionString = connection?.ConnectionString ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-                connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(connection.ExecutePackagesAsLogin) ? null : connection.ExecutePackagesAsLogin;
-                Step.ExecuteAsLogin ??= connection.ExecutePackagesAsLogin;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {Step} Error getting connection string for package execution", Configuration.ExecutionId, Step);
-                return new ExecutionResult.Failure($"Error getting connection string for connection id {Step.ConnectionId}: {ex.Message}");
-            }
+            Step.Connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(Step.Connection.ExecutePackagesAsLogin) ? null : Step.Connection.ExecutePackagesAsLogin;
+            Step.ExecuteAsLogin ??= Step.Connection.ExecutePackagesAsLogin;
 
             // Start the package execution and capture the SSISDB operation id.
             DateTime startTime;
@@ -55,7 +40,7 @@ namespace EtlManagerExecutor
             {
                 Log.Information("{ExecutionId} {Step} Starting package execution", Configuration.ExecutionId, Step);
 
-                await StartExecutionAsync(connectionString);
+                await StartExecutionAsync(Step.Connection.ConnectionString);
                 startTime = DateTime.Now;
             }
             catch (Exception ex)
@@ -89,24 +74,24 @@ namespace EtlManagerExecutor
             // Monitor the package's execution.
             try
             {
-                await TryRefreshStatusAsync(connectionString, cancellationToken);
+                await TryRefreshStatusAsync(Step.Connection.ConnectionString, cancellationToken);
                 while (!Completed)
                 {
                     // Check for possible timeout.
                     if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
                     {
-                        await CancelAsync(connectionString);
+                        await CancelAsync(Step.Connection.ConnectionString);
                         Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
                         return new ExecutionResult.Failure("Step execution timed out");
                     }
 
                     await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
-                    await TryRefreshStatusAsync(connectionString, cancellationToken);
+                    await TryRefreshStatusAsync(Step.Connection.ConnectionString, cancellationToken);
                 }
             }
             catch (OperationCanceledException)
             {
-                await CancelAsync(connectionString);
+                await CancelAsync(Step.Connection.ConnectionString);
                 throw;
             }
             catch (Exception ex)
@@ -120,7 +105,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    List<string?> errors = await GetErrorMessagesAsync(connectionString);
+                    List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString);
                     return new ExecutionResult.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)

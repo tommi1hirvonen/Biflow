@@ -111,6 +111,7 @@
         context.Connections.Remove(conn);
         await context.SaveChangesAsync();
         Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+        ShowConnectionString.Remove(connection.ConnectionId);
     }
 
     private async void OnConnectionSubmit(Connection connection)
@@ -120,6 +121,7 @@
         {
             context.Add(connection);
             Connections?.Add(connection);
+            ShowConnectionString[connection.ConnectionId] = false;
         }
         else
         {

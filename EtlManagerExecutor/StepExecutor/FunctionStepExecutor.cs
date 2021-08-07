@@ -29,18 +29,6 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            FunctionApp functionApp;
-            try
-            {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
-                functionApp = await context.FunctionApps.FirstAsync(f => f.FunctionAppId == Step.FunctionAppId, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{ExecutionId} {Step} Error reading FunctionApp object from database", Configuration.ExecutionId, Step);
-                return new ExecutionResult.Failure($"Error reading FunctionApp object from database: {ex.Message}");
-            }
-
             string? functionKey = null;
             try
             {
@@ -56,7 +44,7 @@ namespace EtlManagerExecutor
 
             // Add function security code as a request header. If the function specific code was defined, use that.
             // Otherwise revert to the function app code if it was defined.
-            functionKey ??= functionApp.FunctionAppKey;
+            functionKey ??= Step.FunctionApp.FunctionAppKey;
             if (!string.IsNullOrEmpty(functionKey))
             {
                 message.Headers.Add("x-functions-key", functionKey);

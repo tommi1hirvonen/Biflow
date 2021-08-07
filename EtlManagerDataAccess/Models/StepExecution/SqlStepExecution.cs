@@ -18,6 +18,8 @@ namespace EtlManagerDataAccess.Models
         [Column("ConnectionId")]
         public Guid ConnectionId { get; set; }
 
+        public Connection Connection { get; set; } = null!;
+
         [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 

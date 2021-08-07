@@ -21,23 +21,11 @@ namespace EtlManagerExecutor
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Get reference to the Power BI Service helper object.
-            AppRegistration appRegistration;
-            try
-            {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
-                appRegistration = await context.AppRegistrations.FirstAsync(ar => ar.AppRegistrationId == Step.AppRegistrationId, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error getting App registration information for id {AppRegistrationId}", Step.AppRegistrationId);
-                return new ExecutionResult.Failure($"Error getting Power BI Service object information:\n{ex.Message}");
-            }
 
             // Start dataset refresh.
             try
             {
-                await appRegistration.RefreshDatasetAsync(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);                
+                await Step.AppRegistration.RefreshDatasetAsync(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);                
             }
             catch (OperationCanceledException)
             {
@@ -56,7 +44,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    var refresh = await appRegistration.GetDatasetRefreshStatus(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
+                    var refresh = await Step.AppRegistration.GetDatasetRefreshStatus(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                     if (refresh?.Status == "Completed")
                     {
                         return new ExecutionResult.Success();
