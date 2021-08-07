@@ -23,19 +23,15 @@ namespace EtlManagerDataAccess
 
         private DataFactory DataFactory { get; init; }
 
-        private DataFactoryHelper(
-            DataFactory dataFactory,
-            string? accessToken,
-            DateTime? accessTokenExpiresOn,
-            string connectionString
-            ) : base(dataFactory.AppRegistration, accessToken, accessTokenExpiresOn, connectionString)
+        private DataFactoryHelper(DataFactory dataFactory,string connectionString) : base(dataFactory.AppRegistration, connectionString)
         {
             DataFactory = dataFactory;
         }
 
         private async Task<DataFactoryManagementClient> GetClientAsync()
         {
-            var credentials = await CheckAccessTokenValidityAsync(ResourceUrl);
+            var accessToken = await CheckAccessTokenValidityAsync(ResourceUrl);
+            var credentials = new TokenCredentials(accessToken);
             return new DataFactoryManagementClient(credentials) { SubscriptionId = DataFactory.SubscriptionId };
         }
 
@@ -77,14 +73,8 @@ namespace EtlManagerDataAccess
                 .Include(df => df.AppRegistration)
                 .FirstAsync(df => df.DataFactoryId == dataFactoryId);
             var connectionString = context.Database.GetConnectionString();
-            (var accessToken, var accessTokenExpiresOn) = await GetAccessTokenAsync(dataFactory.AppRegistration, connectionString);
 
-            return new DataFactoryHelper(
-                dataFactory: dataFactory,
-                accessToken: accessToken,
-                accessTokenExpiresOn: accessTokenExpiresOn,
-                connectionString: connectionString
-            );
+            return new DataFactoryHelper(dataFactory, connectionString);
         }
 
         public static async Task TestConnection(AppRegistration appRegistration, string subscriptionId, string resourceGroupName, string resourceName)

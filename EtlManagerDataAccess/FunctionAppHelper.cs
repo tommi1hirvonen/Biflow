@@ -23,22 +23,17 @@ namespace EtlManagerDataAccess
         
         private const string ResourceUrl = "https://management.azure.com/";
 
-        private FunctionAppHelper(
-            FunctionApp functionApp,
-            string? accessToken,
-            DateTime? accessTokenExpiresOn,
-            string connectionString
-            ) : base(functionApp.AppRegistration, accessToken, accessTokenExpiresOn, connectionString)
+        private FunctionAppHelper(FunctionApp functionApp, string connectionString) : base(functionApp.AppRegistration, connectionString)
         {
             FunctionApp = functionApp;
         }
         
         public async Task<List<(string FunctionName, string FunctionType, string FunctionUrl)>> GetFunctionsAsync()
         {
-            await CheckAccessTokenValidityAsync(ResourceUrl);
+            var accessToken = await CheckAccessTokenValidityAsync(ResourceUrl);
             var functionListUrl = $"https://management.azure.com/subscriptions/{FunctionApp.SubscriptionId}/resourceGroups/{FunctionApp.ResourceGroupName}/providers/Microsoft.Web/sites/{FunctionApp.ResourceName}/functions?api-version=2015-08-01";
             var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
-            message.Headers.Add("authorization", $"Bearer {AccessToken}");
+            message.Headers.Add("authorization", $"Bearer {accessToken}");
             var client = new HttpClient();
             var response = await client.SendAsync(message);
             var content = await response.Content.ReadAsStringAsync();
@@ -71,14 +66,8 @@ namespace EtlManagerDataAccess
                 .Include(fa => fa.AppRegistration)
                 .FirstAsync(fa => fa.FunctionAppId == functionAppId);
             var connectionString = context.Database.GetConnectionString();
-            (var accessToken, var accessTokenExpiresOn) = await GetAccessTokenAsync(functionApp.AppRegistration, connectionString);
 
-            return new FunctionAppHelper(
-                functionApp: functionApp,
-                accessToken: accessToken,
-                accessTokenExpiresOn: accessTokenExpiresOn,
-                connectionString: connectionString
-            );
+            return new FunctionAppHelper(functionApp, connectionString);
         }
 
         public static async Task TestConnection(AppRegistration appRegistration, string subscriptionId, string resourceGroupName, string resourceName)

@@ -15,7 +15,7 @@ namespace EtlManagerDataAccess
     public abstract class AzureHelperBase
     {
         protected AppRegistration AppRegistration { get; init; }
-        protected string? AccessToken { get; set; }
+        private string? AccessToken { get; set; }
         private DateTime? AccessTokenExpiresOn { get; set; }
         private string ConnectionString { get; init; }
 
@@ -23,19 +23,27 @@ namespace EtlManagerDataAccess
 
         protected AzureHelperBase(
             AppRegistration appRegistration,
-            string? accessToken,
-            DateTime? accessTokenExpiresOn,
             string connectionString
             )
         {
             AppRegistration = appRegistration;
-            AccessToken = accessToken;
-            AccessTokenExpiresOn = accessTokenExpiresOn;
             ConnectionString = connectionString;
         }
 
-        protected async Task<TokenCredentials> CheckAccessTokenValidityAsync(string resourceUrl)
+        protected async Task<string> CheckAccessTokenValidityAsync(string resourceUrl)
         {
+            // If the access token is not set, get it from the database first.
+            if (AccessToken is null || AccessTokenExpiresOn is null)
+            {
+                using var sqlConnection = new SqlConnection(ConnectionString);
+                (AccessToken, AccessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
+                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
+                    FROM etlmanager.AppRegistration
+                    WHERE AppRegistrationId = @AppRegistrationId",
+                    new { AppRegistration.AppRegistrationId });
+            }
+
+            // If the access token was not set in database, get it from the API.
             if (AccessToken is null || AccessTokenExpiresOn is null || DateTime.Now >= AccessTokenExpiresOn?.AddMinutes(-5)) // five minute safety margin
             {
                 try
@@ -69,18 +77,7 @@ namespace EtlManagerDataAccess
                 }
             }
 
-            return new TokenCredentials(AccessToken);
-        }
-
-        protected static async Task<(string? AccessToken, DateTime? AccessTokenExpiresOn)> GetAccessTokenAsync(AppRegistration appRegistration, string connectionString)
-        {
-            using var sqlConnection = new SqlConnection(connectionString);
-            (var accessToken, var accessTokenExpiresOn) = await sqlConnection.QueryFirstAsync<(string?, DateTime?)>(
-                    @"SELECT [AccessToken], [AccessTokenExpiresOn]
-                    FROM etlmanager.AppRegistration
-                    WHERE AppRegistrationId = @AppRegistrationId",
-                    new { appRegistration.AppRegistrationId });
-            return (accessToken, accessTokenExpiresOn);
+            return AccessToken;
         }
 
         public static async Task TestConnection(AppRegistration appRegistration)

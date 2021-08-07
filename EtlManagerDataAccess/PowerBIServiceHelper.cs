@@ -22,18 +22,14 @@ namespace EtlManagerDataAccess
        
         private const string ResourceUrl = "https://analysis.windows.net/powerbi/api";
 
-        private PowerBIServiceHelper(
-            AppRegistration appRegistration,
-            string? accessToken,
-            DateTime? accessTokenExpiresOn,
-            string connectionString
-            ) : base(appRegistration, accessToken, accessTokenExpiresOn, connectionString)
+        private PowerBIServiceHelper(AppRegistration appRegistration, string connectionString) : base(appRegistration, connectionString)
         {
         }
 
         private async Task<PowerBIClient> GetClientAsync()
         {
-            var credentials = await CheckAccessTokenValidityAsync(ResourceUrl);
+            var accessToken = await CheckAccessTokenValidityAsync(ResourceUrl);
+            var credentials = new TokenCredentials(accessToken);
             return new PowerBIClient(credentials);
         }
 
@@ -69,14 +65,8 @@ namespace EtlManagerDataAccess
             using var context = dbContextFactory.CreateDbContext();
             var connectionString = context.Database.GetConnectionString();
             var appRegistration = await context.AppRegistrations.FindAsync(appRegistrationId);
-            (var accessToken, var accessTokenExpiresOn) = await GetAccessTokenAsync(appRegistration, connectionString);
 
-            return new PowerBIServiceHelper(
-                appRegistration: appRegistration,
-                accessToken: accessToken,
-                accessTokenExpiresOn: accessTokenExpiresOn,
-                connectionString: connectionString
-            );
+            return new PowerBIServiceHelper(appRegistration, connectionString);
         }
 
         public static new async Task TestConnection(AppRegistration appRegistration)
