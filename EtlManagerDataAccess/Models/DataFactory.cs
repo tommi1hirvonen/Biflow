@@ -2,6 +2,7 @@
 using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
+using Microsoft.Rest.Azure;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -77,11 +78,24 @@ namespace EtlManagerDataAccess.Models
         public async Task<Dictionary<string, List<string>>> GetPipelinesAsync(ITokenService tokenService)
         {
             var client = await GetClientAsync(tokenService);
+            var allPipelines = new List<IPage<PipelineResource>>();
+
             var pipelines = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+            allPipelines.Add(pipelines);
+            var nextPage = pipelines.NextPageLink;
+
+            while (nextPage is not null)
+            {
+                var pipelines_ = await client.Pipelines.ListByFactoryNextAsync(nextPage);
+                allPipelines.Add(pipelines_);
+                nextPage = pipelines_.NextPageLink;
+            }
+
             // Key = Folder
             // Value = List of pipelines in that folder
-            return pipelines
-                .GroupBy(p => p.Folder?.Name ?? "/") // Replace null folder (root) with forward slash.
+            return allPipelines
+                .SelectMany(p => p.Select(p_ => (Folder: p_.Folder?.Name ?? "/", p_.Name))) // Replace null folder (root) with forward slash.
+                .GroupBy(p => p.Folder)
                 .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
         }
 
