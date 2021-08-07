@@ -95,6 +95,8 @@
         }
         else
         {
+            AppRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
+            AppRegistrations?.Add(appRegistration);
             context.Attach(appRegistration).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

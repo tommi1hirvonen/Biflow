@@ -103,6 +103,8 @@
         }
         else
         {
+            FunctionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
+            FunctionApps?.Add(functionApp);
             context.Attach(functionApp).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
