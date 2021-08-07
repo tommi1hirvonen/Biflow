@@ -80,14 +80,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         FunctionApps = await context.FunctionApps.OrderBy(f => f.FunctionAppName).ToListAsync();
         AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
     }
 
     private async Task DeleteFunctionApp(FunctionApp functionApp)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         context.Remove(functionApp);
         await context.SaveChangesAsync();
         FunctionApps?.Remove(functionApp);
@@ -95,7 +95,7 @@
 
     private async void OnFunctionAppSubmit(FunctionApp functionApp)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         if (functionApp.FunctionAppId == Guid.Empty)
         {
             context.Add(functionApp);

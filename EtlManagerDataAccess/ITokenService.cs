@@ -9,7 +9,8 @@ namespace EtlManagerDataAccess
 {
     public interface ITokenService
     {
-
         public Task<string> GetTokenAsync(AppRegistration appRegistration, string resourceUrl);
+
+        public void Clear();
     }
 }

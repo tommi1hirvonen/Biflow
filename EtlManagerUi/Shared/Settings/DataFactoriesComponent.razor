@@ -80,14 +80,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
         AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
     }
 
     private async Task DeleteDataFactory(DataFactory df)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         context.Remove(df);
         await context.SaveChangesAsync();
         DataFactories?.Remove(df);
@@ -95,7 +95,7 @@
 
     private async void OnDataFactorySubmit(DataFactory dataFactory)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         if (dataFactory.DataFactoryId == Guid.Empty)
         {
             context.Add(dataFactory);

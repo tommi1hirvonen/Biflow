@@ -99,14 +99,14 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         Connections = await context.Connections.OrderBy(c => c.ConnectionName).ToListAsync();
         ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
     private async Task DeleteConnection(Connection connection)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         var conn = await context.Connections.FindAsync(connection.ConnectionId);
         context.Connections.Remove(conn);
         await context.SaveChangesAsync();
@@ -116,7 +116,7 @@
 
     private async void OnConnectionSubmit(Connection connection)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         if (connection.ConnectionId == Guid.Empty)
         {
             context.Add(connection);

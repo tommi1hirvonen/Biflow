@@ -1,7 +1,8 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IJSRuntime JS  
+@inject IJSRuntime JS
+@inject ITokenService TokenService 
 
 <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
     Add App registration
@@ -51,6 +52,15 @@
                                         <BSDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</BSDropdownItem>
                                     </BSDropdownMenu>
                                 </BSDropdown>
+                                <BSDropdown>
+                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="clear tokens">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                                    </BSDropdownToggle>
+                                    <BSDropdownMenu>
+                                        <BSDropdownHeader>Clear access tokens?</BSDropdownHeader>
+                                        <BSDropdownItem @onclick="() => ClearTokens(app)">Confirm</BSDropdownItem>
+                                    </BSDropdownMenu>
+                                </BSDropdown>
                             </BSButtonGroup>
                         </td>
                         <td class="align-middle">
@@ -79,7 +89,7 @@
 
     private async Task DeleteAppRegistration(AppRegistration appRegistration)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         context.Remove(appRegistration);
         await context.SaveChangesAsync();
         AppRegistrations?.Remove(appRegistration);
@@ -87,7 +97,7 @@
 
     private async void OnAppRegistrationSubmit(AppRegistration appRegistration)
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         if (appRegistration.AppRegistrationId == Guid.Empty)
         {
             context.Add(appRegistration);
@@ -101,6 +111,15 @@
         }
         await context.SaveChangesAsync();
         StateHasChanged();
+    }
+
+    private async Task ClearTokens(AppRegistration appRegistration)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var tokens = await context.AccessTokens.Where(t => t.AppRegistrationId == appRegistration.AppRegistrationId).ToListAsync();
+        tokens.ForEach(t => context.Remove(t));
+        await context.SaveChangesAsync();
+        TokenService.Clear();
     }
 
     private void ShowEditModal(AppRegistration? appRegistration)

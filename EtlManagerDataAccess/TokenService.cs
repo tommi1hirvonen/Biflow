@@ -78,5 +78,10 @@ namespace EtlManagerDataAccess
             return (result.AccessToken, result.ExpiresOn.ToLocalTime().DateTime);
         }
 
+        public void Clear()
+        {
+            AccessTokens.Clear();
+        }
+
     }
 }

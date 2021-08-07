@@ -122,7 +122,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        using var context = DbFactory.CreateDbContext();
         Users = await context.Users.OrderBy(user => user.Username).ToListAsync();
     }
 
@@ -130,7 +130,7 @@
     {
         try
         {
-            var context = DbFactory.CreateDbContext();
+            using var context = DbFactory.CreateDbContext();
             context.Users.Remove(user);
             await context.SaveChangesAsync();
             Users.Remove(user);
