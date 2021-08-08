@@ -48,17 +48,37 @@
     </AuthorizeView>
 </div>
 
-<BSAlert Class="mt-3" Color="@(ExecuteSuccess ? Color.Success : Color.Danger)" IsOpen="@ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false" IsDismissible="true">
-    @if (ExecuteSuccess)
-    {
-        <text>Execution started successfully - <a class="alert-link" href="javascript:void(0)" @onclick="OpenJobExecutionModal">monitor execution</a></text>
-    }
-    else
-    {
-        <text>Error starting execution: @ExecuteErrorMessage</text>
-    }
-</BSAlert>
-
+@if (ExecuteAlertOpen)
+{
+    <BSToast class="position-fixed bottom-0 right-0 mr-3 mb-3" style="z-index: 5; right: 0; bottom: 0;" IsVisible="ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false">
+        <BSToastHeader>
+            @if (ExecuteSuccess)
+            {
+                <strong class="status-icon running">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+                    Execution started successfully
+                </strong>
+            }
+            else
+            {
+                <strong class="status-icon failed">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                    Error starting execution
+                </strong>
+            }
+        </BSToastHeader>
+        <BSToastBody>
+            @if (ExecuteSuccess)
+            {
+                <a href="javascript:void(0)" @onclick="OpenJobExecutionModal">Monitor execution</a>
+            }
+            else
+            {
+                @ExecuteErrorMessage
+            }
+        </BSToastBody>
+    </BSToast>
+}
 
 <div class="row mt-3">
     <div class="col">
@@ -111,8 +131,8 @@
             {
                 var index = 0;
                 @foreach (var item in Steps
-                   .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                   .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
+                  .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
+                  .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
                 {
                     <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
@@ -385,8 +405,8 @@
             <div class="col mr-auto">
                 <div class="custom-control custom-checkbox custom-control-inline">
                     <input type="checkbox" class="custom-control-input" id="execute_notify"
-                            checked=@ExecuteNotify
-                            @bind-value="ExecuteNotify">
+                           checked=@ExecuteNotify
+                           @bind-value="ExecuteNotify">
                     <label class="custom-control-label" for="execute_notify">Notify based on subscriptions</label>
                 </div>
             </div>
@@ -713,6 +733,7 @@
         ExecuteAlertOpen = true;
         ExecuteButtonDisabled = false;
         ExecuteNotify = false;
+        StateHasChanged();
     }
 
     private void OpenJobExecutionModal()
