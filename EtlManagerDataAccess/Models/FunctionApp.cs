@@ -52,7 +52,7 @@ namespace EtlManagerDataAccess.Models
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private const string ResourceUrl = "https://management.azure.com/";
 
-        public async Task<List<(string FunctionName, string FunctionType, string FunctionUrl)>> GetFunctionsAsync(ITokenService tokenService)
+        public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(ITokenService tokenService)
         {
             var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
             var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
@@ -78,7 +78,10 @@ namespace EtlManagerDataAccess.Models
                     type = bindings.Current.GetProperty("type").GetString() ?? "";
                 }
                 return (name, type, url);
-            }).ToList();
+            })
+            .Where(f => f.url is not null && f.type == "httpTrigger")
+            .Select(f => (f.name, f.url))
+            .ToList();
 
             return functions;
         }

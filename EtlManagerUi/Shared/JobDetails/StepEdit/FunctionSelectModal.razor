@@ -4,12 +4,12 @@
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
+<BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select function</BSModalHeader>
 
     <BSModalBody>
         <div class="row">
-            <div class="col form-group">
+            <div class="col-lg-4 form-group">
                 <div class="input-group input-group-sm">
                     <label class="sr-only">Search</label>
                     <div class="input-group-prepend">
@@ -19,28 +19,6 @@
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
-                </div>
-            </div>
-            <div class="col-lg form-group">
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
-                        </div>
-                    </div>
-                    <select class="form-control form-control-sm" @bind="TypeFilter">
-                        <option value="" selected=@(TypeFilter == "")>All</option>
-                        @if (Functions is not null)
-                        {
-                            @foreach (var type in Functions.Select(f => f.FunctionType).Distinct().OrderBy(type => type))
-                            {
-                                <option value="@type"
-                                        selected=@(type == TypeFilter)>
-                                    @type
-                                </option>
-                            }
-                        }
-                    </select>
                 </div>
             </div>
         </div>
@@ -53,7 +31,7 @@
                                 Function name
                             </th>
                             <th>
-                                Type
+                                Invoke url
                             </th>
                         </tr>
                     </thead>
@@ -76,14 +54,13 @@
                         {
                             foreach (var function in Functions
                                 .Where(function => function.FunctionName.ContainsIgnoreCase(FilterText))
-                                .Where(function => string.IsNullOrEmpty(TypeFilter) || function.FunctionType == TypeFilter)
                                 .OrderBy(function => function.FunctionName))
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedFunctionUrl = function.FunctionUrl"
                                     class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light font-weight-bold" : null)">
                                     <td>@function.FunctionName</td>
-                                    <td>@function.FunctionType</td>
+                                    <td>@function.FunctionUrl</td>
                                 </tr>
                             }
                         }
@@ -113,12 +90,11 @@
     [Parameter]
     public EventCallback<string> OnFunctionSelected { get; set; }
 
-    private List<(string FunctionName, string FunctionType, string FunctionUrl)>? Functions { get; set; }
+    private List<(string FunctionName, string FunctionUrl)>? Functions { get; set; }
 
     private string? SelectedFunctionUrl { get; set; }
 
     private string FilterText { get; set; } = string.Empty;
-    private string TypeFilter { get; set; } = string.Empty;
 
     private async Task ModalOpenChanged(bool isOpen)
     {
