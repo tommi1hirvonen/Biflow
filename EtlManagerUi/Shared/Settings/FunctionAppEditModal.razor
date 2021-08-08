@@ -50,25 +50,7 @@
                             </BSFormGroup>
                         </BSFormRow>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Function App key</BSLabel>
-                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppKey"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
-
-                        <div class="row mt-2">
-                            <div class="col">
-                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenKeySelectModal">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
-                                    Show function app keys
-                                </BSButton>
-                            </div>
-                        </div>
-
-                        <FunctionAppKeySelectModal @ref="KeySelectModal" FunctionApp="FunctionApp" OnKeySelected="OnKeySelected" />
-
-                        <div class="row mt-3">
+                        <div class="row mb-3">
                             <div class="col">
                                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
                                     Test connection
@@ -79,20 +61,35 @@
                                         <span class="sr-only">Loading...</span>
                                     </div>
                                 }
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col">
-                                @if (ConnectionTestSuccess == true)
+                                else if (ConnectionTestSuccess == true)
                                 {
-                                    <span class="badge badge-success">Success</span>
+                                    <span class="badge badge-success ml-3">Success</span>
                                 }
                                 else if (ConnectionTestSuccess == false)
                                 {
-                                    <span class="badge badge-danger">Failed</span>
+                                    <span class="badge badge-danger ml-3">Failed</span>
                                 }
                             </div>
                         </div>
+
+                        <BSFormRow>
+                            <BSFormGroup Class="col-lg">
+                                <BSLabel>Function App key</BSLabel>
+                                <InputText class="form-control" @bind-Value="FunctionApp.FunctionAppKey"></InputText>
+                            </BSFormGroup>
+                        </BSFormRow>
+
+                        <div class="row">
+                            <div class="col">
+                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="OpenKeySelectModal">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                                    Browse function app keys
+                                </BSButton>
+                            </div>
+                        </div>
+
+                        <FunctionAppKeySelectModal @ref="KeySelectModal" FunctionApp="FunctionApp" OnKeySelected="OnKeySelected" />
+
                     </div>
                 </div>
             </BSForm>
