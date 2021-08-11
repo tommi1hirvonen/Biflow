@@ -5,6 +5,7 @@
     [CreatedDateTime]      DATETIME2 (7)    NOT NULL,
     [LastModifiedDateTime] DATETIME2 (7)    NOT NULL,
     [UseDependencyMode]    BIT              NOT NULL,
+    [MaxParallelSteps]     INT              CONSTRAINT [DF_Job_MaxParallelSteps] DEFAULT (0) NOT NULL ,
     [IsEnabled]            BIT              CONSTRAINT [DF_Job_IsEnabled] DEFAULT (1) NOT NULL,
     [CreatedBy]            NVARCHAR(250)    NULL,
     [LastModifiedBy]       NVARCHAR(250)    NULL,

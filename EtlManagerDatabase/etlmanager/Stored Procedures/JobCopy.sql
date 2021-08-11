@@ -17,6 +17,7 @@ INSERT INTO etlmanager.Job (
 	CreatedDateTime,
 	LastModifiedDateTime,
 	UseDependencyMode,
+	MaxParallelSteps,
 	IsEnabled,
 	CreatedBy
 )
@@ -26,6 +27,7 @@ SELECT @JobIdNew,
 	GETDATE(),
 	GETDATE(),
 	UseDependencyMode,
+	MaxParallelSteps,
 	IsEnabled,
 	@Username
 FROM etlmanager.Job

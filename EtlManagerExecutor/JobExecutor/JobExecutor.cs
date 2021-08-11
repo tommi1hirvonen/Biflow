@@ -78,6 +78,9 @@ namespace EtlManagerExecutor
                 }
             }
 
+            // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
+            maxParallelSteps = job.MaxParallelSteps > 0 ? job.MaxParallelSteps : maxParallelSteps;
+
             var executionConfig = new ExecutionConfiguration(
                 dbContextFactory: dbContextFactory,
                 tokenService: tokenService,

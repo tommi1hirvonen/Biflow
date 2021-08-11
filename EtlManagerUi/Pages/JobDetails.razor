@@ -55,6 +55,10 @@
                                 <BSLabel>Description</BSLabel>
                                 <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5"></InputTextArea>
                             </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Max parallel steps (0 = use default)</BSLabel>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
+                            </BSFormGroup>
                             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                         </BSForm>
                     </BSDropdownMenu>
@@ -215,6 +219,7 @@ else
         CurrentJob = Jobs.First(job => job.JobId == Id);
         EditJob.JobName = CurrentJob.JobName;
         EditJob.JobDescription = CurrentJob.JobDescription;
+        EditJob.MaxParallelSteps = CurrentJob.MaxParallelSteps;
 
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
@@ -254,6 +259,7 @@ else
             using var context = DbFactory.CreateDbContext();
             CurrentJob.JobName = EditJob.JobName;
             CurrentJob.JobDescription = EditJob.JobDescription;
+            CurrentJob.MaxParallelSteps = EditJob.MaxParallelSteps;
             context.Attach(CurrentJob).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
