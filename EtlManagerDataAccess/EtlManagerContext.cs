@@ -49,7 +49,7 @@ namespace EtlManagerDataAccess
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            Func<StepType?, string?> stepTypeToString = value => value switch
+            Func<StepType, string> stepTypeToString = value => value switch
             {
                 StepType.Sql => "SQL",
                 StepType.Package => "SSIS",
@@ -58,9 +58,9 @@ namespace EtlManagerDataAccess
                 StepType.Pipeline => "PIPELINE",
                 StepType.Dataset => "DATASET",
                 StepType.Function => "FUNCTION",
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "StepType value cannot be null")
             };
-            Func<string?, StepType?> stringToStepType = value => value switch
+            Func<string, StepType> stringToStepType = value => value switch
             {
                 "SQL" => StepType.Sql,
                 "SSIS" => StepType.Package,
@@ -69,13 +69,13 @@ namespace EtlManagerDataAccess
                 "PIPELINE" => StepType.Pipeline,
                 "DATASET" => StepType.Dataset,
                 "FUNCTION" => StepType.Function,
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "StepType value cannot be null")
             };
-            var stepTypeConverter = new ValueConverter<StepType?, string?>(v => stepTypeToString(v), v => stringToStepType(v));
+            var stepTypeConverter = new ValueConverter<StepType, string>(v => stepTypeToString(v), v => stringToStepType(v));
 
             modelBuilder.HasDefaultSchema("etlmanager");
 
-            Func<ExecutionStatus?, string?> executionStatusToString = value => value switch
+            Func<ExecutionStatus, string> executionStatusToString = value => value switch
             {
                 ExecutionStatus.NotStarted => "NOT STARTED",
                 ExecutionStatus.Running => "RUNNING",
@@ -84,9 +84,9 @@ namespace EtlManagerDataAccess
                 ExecutionStatus.Warning => "WARNING",
                 ExecutionStatus.Stopped => "STOPPED",
                 ExecutionStatus.Suspended => "SUSPENDED",
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "ExecutionStatus value cannot be null")
             };
-            Func<string?, ExecutionStatus?> stringToExecutionStatus = value => value switch
+            Func<string, ExecutionStatus> stringToExecutionStatus = value => value switch
             {
                 "NOT STARTED" => ExecutionStatus.NotStarted,
                 "RUNNING" => ExecutionStatus.Running,
@@ -95,9 +95,9 @@ namespace EtlManagerDataAccess
                 "WARNING" => ExecutionStatus.Warning,
                 "STOPPED" => ExecutionStatus.Stopped,
                 "SUSPENDED" => ExecutionStatus.Suspended,
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "ExecutionStatus value cannot be null")
             };
-            var executionStatusConverter = new ValueConverter<ExecutionStatus?, string?>(v => executionStatusToString(v), v => stringToExecutionStatus(v));
+            var executionStatusConverter = new ValueConverter<ExecutionStatus, string>(v => executionStatusToString(v), v => stringToExecutionStatus(v));
 
             modelBuilder.Entity<Execution>()
                 .ToTable("Execution")
@@ -114,7 +114,7 @@ namespace EtlManagerDataAccess
                 .HasOne(step => step.Execution)
                 .WithMany(e => e.StepExecutions);
             modelBuilder.Entity<StepExecution>()
-                .HasDiscriminator<StepType?>("StepType")
+                .HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStepExecution>(StepType.Dataset)
                 .HasValue<ExeStepExecution>(StepType.Exe)
                 .HasValue<JobStepExecution>(StepType.Job)
@@ -123,7 +123,7 @@ namespace EtlManagerDataAccess
                 .HasValue<SqlStepExecution>(StepType.Sql)
                 .HasValue<FunctionStepExecution>(StepType.Function);
 
-            Func<StepExecutionStatus?, string?> stepExecutionStatusToString = value => value switch
+            Func<StepExecutionStatus, string> stepExecutionStatusToString = value => value switch
             {
                 StepExecutionStatus.NotStarted => "NOT STARTED",
                 StepExecutionStatus.Running => "RUNNING",
@@ -133,9 +133,9 @@ namespace EtlManagerDataAccess
                 StepExecutionStatus.Skipped => "SKIPPED",
                 StepExecutionStatus.AwaitRetry => "AWAIT RETRY",
                 StepExecutionStatus.Duplicate => "DUPLICATE",
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "StepExecutionStatus value cannot be null")
             };
-            Func<string?, StepExecutionStatus?> stringToStepExecutionStatus = value => value switch
+            Func<string, StepExecutionStatus> stringToStepExecutionStatus = value => value switch
             {
                 "NOT STARTED" => StepExecutionStatus.NotStarted,
                 "RUNNING" => StepExecutionStatus.Running,
@@ -145,9 +145,9 @@ namespace EtlManagerDataAccess
                 "SKIPPED" => StepExecutionStatus.Skipped,
                 "AWAIT RETRY" => StepExecutionStatus.AwaitRetry,
                 "DUPLICATE" => StepExecutionStatus.Duplicate,
-                _ => null
+                _ => throw new ArgumentNullException(nameof(value), "StepExecutionStatus value cannot be null")
             };
-            var stepExecutionStatusConverter = new ValueConverter<StepExecutionStatus?, string?>(v => stepExecutionStatusToString(v), v => stringToStepExecutionStatus(v));
+            var stepExecutionStatusConverter = new ValueConverter<StepExecutionStatus, string>(v => stepExecutionStatusToString(v), v => stringToStepExecutionStatus(v));
 
             modelBuilder.Entity<StepExecutionAttempt>()
                 .ToTable("ExecutionStepAttempt")
@@ -162,7 +162,7 @@ namespace EtlManagerDataAccess
                 .HasOne(sea => sea.StepExecution)
                 .WithMany(step => step.StepExecutionAttempts);
             modelBuilder.Entity<StepExecutionAttempt>()
-                .HasDiscriminator<StepType?>("StepType")
+                .HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
                 .HasValue<ExeStepExecutionAttempt>(StepType.Exe)
                 .HasValue<JobStepExecutionAttempt>(StepType.Job)
@@ -199,7 +199,7 @@ namespace EtlManagerDataAccess
                 .Property(s => s.StepType)
                 .HasConversion(stepTypeConverter);
             modelBuilder.Entity<Step>()
-                .HasDiscriminator<StepType?>("StepType")
+                .HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStep>(StepType.Dataset)
                 .HasValue<ExeStep>(StepType.Exe)
                 .HasValue<JobStep>(StepType.Job)

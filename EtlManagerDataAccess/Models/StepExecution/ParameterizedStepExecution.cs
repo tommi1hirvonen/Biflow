@@ -9,7 +9,7 @@ namespace EtlManagerDataAccess.Models
 {
     public abstract record ParameterizedStepExecution : StepExecution
     {
-        public ParameterizedStepExecution(string stepName) : base(stepName)
+        public ParameterizedStepExecution(string stepName, StepType stepType) : base(stepName, stepType)
         {
         }
 

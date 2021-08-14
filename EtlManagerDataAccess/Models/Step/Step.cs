@@ -9,6 +9,11 @@ namespace EtlManagerDataAccess.Models
 {
     public abstract record Step : IComparable
     {
+        public Step(StepType stepType)
+        {
+            StepType = stepType;
+        }
+
         [Key]
         [Required]
         public Guid StepId { get; set; }
@@ -38,7 +43,7 @@ namespace EtlManagerDataAccess.Models
 
         [Required]
         [Display(Name = "Step type")]
-        public StepType? StepType { get; set; }      
+        public StepType StepType { get; private init; }      
 
         [Required]
         [DataType(DataType.DateTime)]

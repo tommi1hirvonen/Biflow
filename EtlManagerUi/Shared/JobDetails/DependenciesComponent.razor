@@ -238,8 +238,7 @@
         EditModalStepId = Guid.Parse(id);
         StateHasChanged();
         var step = Steps.First(s => s.StepId == EditModalStepId);
-        if (step.StepType is not null)
-            StepEditModals[(StepType)step.StepType].Show();
+        StepEditModals[step.StepType].Show();
     }
 
     private async Task OnStepSubmit(Step step)

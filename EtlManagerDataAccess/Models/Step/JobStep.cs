@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record JobStep : Step
+    public record JobStep() : Step(StepType.Job)
     {
         [Display(Name = "Job to execute")]
         [Required]

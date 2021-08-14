@@ -10,7 +10,7 @@ namespace EtlManagerDataAccess.Models
 {
     public record ExeStepExecution : StepExecution
     {
-        public ExeStepExecution(string stepName, string exeFileName) : base(stepName)
+        public ExeStepExecution(string stepName, string exeFileName) : base(stepName, StepType.Exe)
         {
             ExeFileName = exeFileName;
         }

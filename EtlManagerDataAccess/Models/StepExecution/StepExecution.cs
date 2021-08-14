@@ -9,9 +9,10 @@ namespace EtlManagerDataAccess.Models
 {
     public abstract record StepExecution
     {
-        public StepExecution(string stepName)
+        public StepExecution(string stepName, StepType stepType)
         {
             StepName = stepName;
+            StepType = stepType;
         }
 
         [Display(Name = "Execution id")]
@@ -24,7 +25,7 @@ namespace EtlManagerDataAccess.Models
         public string StepName { get; set; }
 
         [Display(Name = "Step type")]
-        public StepType? StepType { get; set; }
+        public StepType StepType { get; private init; }
 
         public int ExecutionPhase { get; set; }
 

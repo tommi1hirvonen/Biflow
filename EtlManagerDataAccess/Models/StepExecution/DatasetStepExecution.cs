@@ -9,7 +9,7 @@ namespace EtlManagerDataAccess.Models
 {
     public record DatasetStepExecution : StepExecution
     {
-        public DatasetStepExecution(string stepName, string datasetGroupId, string datasetId) : base(stepName)
+        public DatasetStepExecution(string stepName, string datasetGroupId, string datasetId) : base(stepName, StepType.Dataset)
         {
             DatasetGroupId = datasetGroupId;
             DatasetId = datasetId;

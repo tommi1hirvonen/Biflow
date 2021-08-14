@@ -10,7 +10,7 @@ namespace EtlManagerDataAccess.Models
 {
     public record SqlStepExecution : StepExecution
     {
-        public SqlStepExecution(string stepName, string sqlStatement) : base(stepName)
+        public SqlStepExecution(string stepName, string sqlStatement) : base(stepName, StepType.Sql)
         {
             SqlStatement = sqlStatement;
         }

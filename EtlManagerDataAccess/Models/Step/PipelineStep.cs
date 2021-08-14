@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record PipelineStep : Step
+    public record PipelineStep() : Step(StepType.Pipeline)
     {
         [Required]
         public Guid? DataFactoryId { get; set; }

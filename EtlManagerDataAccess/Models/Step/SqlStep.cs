@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record SqlStep : Step
+    public record SqlStep() : Step(StepType.Sql)
     {
         [Display(Name = "SQL statement")]
         [Required]

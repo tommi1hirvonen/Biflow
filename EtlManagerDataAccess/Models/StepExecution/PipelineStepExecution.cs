@@ -10,7 +10,7 @@ namespace EtlManagerDataAccess.Models
 {
     public record PipelineStepExecution : ParameterizedStepExecution
     {
-        public PipelineStepExecution(string stepName, string pipelineName) : base(stepName)
+        public PipelineStepExecution(string stepName, string pipelineName) : base(stepName, StepType.Pipeline)
         {
             PipelineName = pipelineName;
         }

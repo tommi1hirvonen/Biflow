@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record DatasetStep : Step
+    public record DatasetStep() : Step(StepType.Dataset)
     {
         [Required]
         public Guid? AppRegistrationId { get; set; }

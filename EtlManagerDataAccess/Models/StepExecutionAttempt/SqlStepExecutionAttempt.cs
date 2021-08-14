@@ -1,4 +1,10 @@
 ﻿namespace EtlManagerDataAccess.Models
 {
-    public record SqlStepExecutionAttempt : StepExecutionAttempt;
+    public record SqlStepExecutionAttempt : StepExecutionAttempt
+    {
+        public SqlStepExecutionAttempt(StepExecutionStatus executionStatus)
+            : base(executionStatus, StepType.Sql)
+        {
+        }
+    }
 }

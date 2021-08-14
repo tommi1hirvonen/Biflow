@@ -1,0 +1,61 @@
+﻿@typeparam TItem
+
+<BSDropdown>
+    <BSDropdownToggle Size="Size.Small" Color="Color.Light" Class="@(FilterSet.Any() ? "font-weight-bold" : null)">
+        @Title
+    </BSDropdownToggle>
+    <BSDropdownMenu Class="p-3" style="min-width: 15rem;">
+        <div class="row">
+            <div class="col">
+                <div class="row mb-2">
+                    <div class="col">
+                        <a href="javascript:void(0)"
+                           @onclick="() => { FilterSet.Clear(); Items.ToList().ForEach(i => FilterSet.Add(i)); OnChange.InvokeAsync(); }">Select all</a>
+                    </div>
+                    <div class="col d-flex justify-content-end">
+                        <a href="javascript:void(0)"
+                           @onclick="() => { FilterSet.Clear(); OnChange.InvokeAsync(); }">Reset</a>
+                    </div>
+                </div>
+                @foreach (var item in Items)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <div class="custom-control custom-checkbox custom-control-inline">
+                                <input type="checkbox" class="custom-control-input" id="@($"{ComponentInstanceId}_{item}")"
+                                       checked=@FilterSet.Contains(item)
+                                       @onchange="args =>
+                                                  {
+                                                      if ((bool)args.Value!)
+                                                          FilterSet.Add(item);
+                                                      else
+                                                          FilterSet.Remove(item);
+                                                      OnChange.InvokeAsync();
+                                                  }">
+                                <label class="custom-control-label" for="@($"{ComponentInstanceId}_{item}")">
+                                    @item.ToString()
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </BSDropdownMenu>
+</BSDropdown>
+
+@code {
+    [Parameter]
+    public RenderFragment Title { get; set; } = @<p></p>;
+
+    [Parameter]
+    public ISet<TItem> FilterSet { get; set; } = new HashSet<TItem>();
+
+    [Parameter]
+    public IEnumerable<TItem> Items { get; set; } = new List<TItem>();
+
+    [Parameter]
+    public EventCallback OnChange { get; set; }
+
+    private Guid ComponentInstanceId { get; } = Guid.NewGuid();
+}

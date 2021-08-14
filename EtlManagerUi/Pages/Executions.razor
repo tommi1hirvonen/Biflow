@@ -1,353 +1,351 @@
 ﻿@page "/executions"
 
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IJSRuntime JS
 @inject IHttpContextAccessor HttpContextAccessor
 
 <h4>Executions</h4>
 
-@*Render everything only after the session storage values have been retrieved or tried to.*@
-@if (SessionStorageValuesRetrieved)
-{
-    <form @onsubmit="LoadData">
-        <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mt-3">
-            <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" IsDisabled="Loading">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-                Refresh
+<form @onsubmit="LoadData">
+    <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mt-3">
+        <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" IsDisabled="Loading">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+            Refresh
+        </BSButton>
+        <BSButtonGroup Size="Size.Small" Class="ml-3">
+            <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = false" Class="@(!ShowSteps ? "active" : null)">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                Jobs
             </BSButton>
-            <BSButtonGroup Size="Size.Small" Class="ml-3">
-                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="async () => { ShowSteps = false; await LoadData(); }" Class="@(!ShowSteps ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                    Jobs
-                </BSButton>
-                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="async () => { ShowSteps = true; await LoadData(); }" Class="@(ShowSteps ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                    Steps
-                </BSButton>
-            </BSButtonGroup>
-            <BSDropdown>
-                <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
-                    Presets
-                </BSDropdownToggle>
-                <BSDropdownMenu>
-                    @*List predefined hour intervals*@
-                    <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
-                </BSDropdownMenu>
-            </BSDropdown>
-            @*If executions are being (re)loaded, show spinner.*@
-            @if (Loading)
-            {
-                <div class="spinner-border text-primary align-middle ml-3" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            }
+            <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = true" Class="@(ShowSteps ? "active" : null)">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                Steps
+            </BSButton>
         </BSButtonGroup>
+        <BSDropdown>
+            <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
+                Presets
+            </BSDropdownToggle>
+            <BSDropdownMenu>
+                @*List predefined hour intervals*@
+                <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
+                <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
+            </BSDropdownMenu>
+        </BSDropdown>
+        @*If executions are being (re)loaded, show spinner.*@
+        @if (Loading)
+        {
+            <div class="spinner-border text-primary align-middle ml-3" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        }
+    </BSButtonGroup>
 
-        <div class="form-row mt-2">
-            <div class="form-group col-xl-3 col-lg-3 col-md-6">
-                <label>Status</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
-                        </div>
-                    </div>
-                    @if (ShowSteps)
-                    {
-                        <select class="form-control form-control-sm" @bind="StepStatus">
-                            <option value="" selected=@(StepStatus is null)>All</option>
-                            @foreach (var status in StepStatuses.OrderBy(status => status))
-                            {
-                                // Disable value options that are filtered out by current filter values in other select inputs.
-                                <option value="@status"
-                                        selected=@(status == StepStatus)
-                                        disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == JobName && e.ExecutionStatus == status) == true
-                                               || !string.IsNullOrEmpty(StepName) && !StepExecutions?.Any(e => e.StepExecution.StepName == StepName && e.ExecutionStatus == status) == true)>
-                                    @status
-                                </option>
-                            }
-                        </select>
-                    }
-                    else
-                    {
-                        <select class="form-control form-control-sm" @bind="JobStatus">
-                            <option value="" selected=@(JobStatus is null)>All</option>
-                            @foreach (var status in JobStatuses.OrderBy(status => status))
-                            {
-                                // Disable value options that are filtered out by current filter values in other select inputs.
-                                <option value="@status"
-                                        selected=@(status == JobStatus)
-                                        disabled=@(!string.IsNullOrEmpty(JobName) && !JobExecutions?.Any(e => e.JobName == JobName && e.ExecutionStatus == status) == true)>
-                                    @status
-                                </option>
-                            }
-                        </select>
-                    }
-
-                </div>
-            </div>
-            <div class="form-group col-xl-4 col-lg-4 col-md-6">
-                <label>Job</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                        </div>
-                    </div>
-                    <select class="form-control form-control-sm" @bind="JobName">
-                        <option value="" selected=@string.IsNullOrEmpty(JobName)>All</option>
-                        @foreach (var jobName in JobNames.OrderBy(name => name))
-                        {
-                            // Disable value options that are filtered out by current filter values in other select inputs.
-                            <option value="@jobName"
-                                    selected=@(jobName == JobName)
-                                    disabled=@(!string.IsNullOrEmpty(StepName) && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == jobName && e.StepExecution.StepName == StepName) == true
-                                                   || StepStatus is not null && ShowSteps && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == jobName && e.ExecutionStatus == StepStatus) == true
-                                                   || JobStatus is not null && !ShowSteps && !JobExecutions?.Any(e => e.JobName == jobName && e.ExecutionStatus == JobStatus) == true)>
-                                @jobName
-                            </option>
-                        }
-                    </select>
-                </div>
-            </div>
-            @if (ShowSteps)
-            {
-                <div class="form-group col-xl-4 col-lg-5 col-md-9">
-                    <label>Step</label>
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                            </div>
-                        </div>
-                        <select class="form-control form-control-sm" @bind="StepName">
-                            <option value="" selected=@string.IsNullOrEmpty(StepName)>All</option>
-                            @foreach (var stepName in StepNames.OrderBy(name => name))
-                            {
-                                // Disable value options that are filtered out by current filter values in other select inputs.
-                                <option value="@stepName"
-                                        selected=@(stepName == StepName)
-                                        disabled=@(!string.IsNullOrEmpty(JobName) && !StepExecutions?.Any(e => e.StepExecution.Execution.JobName == JobName && e.StepExecution.StepName == stepName) == true
-                                                   || StepStatus is not null && !StepExecutions?.Any(e => e.StepExecution.StepName == stepName && e.ExecutionStatus == StepStatus) == true)>
-                                    @stepName
-                                </option>
-                            }
-                        </select>
+    <div class="form-row mt-2">
+        <div class="form-group col-xl-3 col-lg-4 col-md-5 col-sm-5">
+            <label>Date & time until</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                     </div>
                 </div>
-            }
-        </div>
-        <div class="form-row">
-            <div class="form-group col-xl-3 col-lg-4 col-md-5 col-sm-5">
-                <label>Date & time until</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
-                        </div>
-                    </div>
-                    <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
-                </div>
-            </div>
-            <div class="form-group col-xl-2 col-lg-3 col-md-4 col-sm-4">
-                <label>Interval (h)</label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
-                        </div>
-                    </div>
-                    <input @bind-value="IntervalHours" class="form-control form-control-sm">
-                </div>
+                <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
             </div>
         </div>
-    </form>
+        <div class="form-group col-xl-2 col-lg-3 col-md-4 col-sm-4">
+            <label>Interval (h)</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                    </div>
+                </div>
+                <input @bind-value="IntervalHours" class="form-control form-control-sm">
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+            <span class="mr-3">Filters</span>
+        </div>
+    </div>
+    <BSButtonGroup Size="Size.Small" Class="mt-2">
 
-    @if (!ShowSteps)
-    {
-        <div class="card shadow-sm pt-2 mt-2 my-3">
-            <table class="table table-sm table-hover">
-                <thead>
-                    <tr>
-                        <th>
-                            Job
-                        </th>
-                        <th>
-                            Created
-                        </th>
-                        <th>
-                            Started
-                        </th>
-                        <th>
-                            Ended
-                        </th>
-                        <th>
-                            Duration
-                        </th>
-                        <th>
-                            Number of steps
-                        </th>
-                        <th>
-                            Success percent
-                        </th>
-                        <th>
-                            Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (JobExecutions is null)
+        <FilterDropdown TItem="string"
+                        FilterSet="JobFilter"
+                        Items="Executions_?
+                               .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains(s.StepName))) // Limit visible jobs based on step filter
+                               .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
+                               .Select(e => e.JobName)
+                               .Distinct()
+                               .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                        OnChange="StateHasChanged">
+            <Title>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                Job
+            </Title>
+        </FilterDropdown>
+
+        @if (ShowSteps)
+        {
+            <FilterDropdown TItem="string"
+                            FilterSet="StepFilter"
+                            Items="Executions_?
+                                   .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
+                                   .SelectMany(e =>
+                                        e.StepExecutions.Where(s =>
+                                            !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                                StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                        .Select(s => s.StepName))
+                                   .Distinct()
+                                   .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                            OnChange="StateHasChanged">
+                <Title>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                    Step
+                </Title>
+            </FilterDropdown>
+        }
+
+        @if (!ShowSteps)
+        {
+            <FilterDropdown TItem="ExecutionStatus"
+                            FilterSet="JobStatusFilter"
+                            Items="Executions_?
+                                   .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible job statuses based on job filter
+                                   .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains(s.StepName))) // Limit visible job statuses based on step filter
+                                   .Select(e => e.ExecutionStatus)
+                                   .Distinct()
+                                   .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
+                            OnChange="StateHasChanged">
+                <Title>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                    Status
+                </Title>
+            </FilterDropdown>
+        }
+        else
+        {
+            <FilterDropdown TItem="StepExecutionStatus"
+                            FilterSet="StepStatusFilter"
+                            Items="Executions_?
+                                   .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
+                                   .SelectMany(e =>
+                                        e.StepExecutions.Where(s =>
+                                            !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                        .SelectMany(s => s.StepExecutionAttempts))
+                                   .Select(e => e.ExecutionStatus)
+                                   .Distinct()
+                                   .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
+                            OnChange="StateHasChanged">
+                <Title>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                    Status
+                </Title>
+            </FilterDropdown>
+        }
+
+        <BSButton Size="Size.Small" Color="Color.Light"
+                  @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); }">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+            Reset
+        </BSButton>
+    </BSButtonGroup>
+</form>
+
+@if (!ShowSteps)
+{
+    <div class="card shadow-sm pt-2 mt-2 my-3">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Created
+                    </th>
+                    <th>
+                        Started
+                    </th>
+                    <th>
+                        Ended
+                    </th>
+                    <th>
+                        Duration
+                    </th>
+                    <th>
+                        Number of steps
+                    </th>
+                    <th>
+                        Success percent
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Executions_ is null)
+                {
+                    <tr><td colspan="8">Loading...</td></tr>
+                }
+                else if (Executions_.Count == 0)
+                {
+                    <tr><td colspan="8">No executions</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Executions_
+                       .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
+                       .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)))
                     {
-                        <tr><td colspan="8">Loading...</td></tr>
+                        <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                            <td>
+                                @item.JobName
+                            </td>
+                            <td>
+                                @item.CreatedDateTime
+                            </td>
+                            <td>
+                                @item.StartDateTime
+                            </td>
+                            <td>
+                                @item.EndDateTime
+                            </td>
+                            <td>
+                                <text>@item.GetDurationInReadableFormat()</text>
+                            </td>
+                            <td style="text-align: right;">
+                                @item.StepExecutions.Count
+                            </td>
+                            <td style="text-align: right;">
+                                @item.GetSuccessPercent()?.FormatPercentage(2)
+                            </td>
+                            <td>
+                                <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
+                            </td>
+                        </tr>
                     }
-                    else if (JobExecutions.Count == 0)
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-2 my-4">
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Step
+                    </th>
+                    <th>
+                        Step type
+                    </th>
+                    <th>
+                        Started
+                    </th>
+                    <th>
+                        Ended
+                    </th>
+                    <th>
+                        Duration
+                    </th>
+                    <th>
+                        Status
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Executions_ is null)
+                {
+                    <tr><td colspan="7">Loading...</td></tr>
+                }
+                else if (Executions_.Count == 0)
+                {
+                    <tr><td colspan="7">No executions</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Executions_
+                       .SelectMany(e => e.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
+                       .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                       .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
+                       .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                       .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
+                       .ThenByDescending(e => e.StartDateTime))
                     {
-                        <tr><td colspan="8">No executions</td></tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in JobExecutions)
+                        <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                            <td>
+                                @item.StepExecution.Execution.JobName
+                            </td>
+                            <td>
+                                @item.StepExecution.StepName
+                            </td>
+                            <td>
+                                <StepTypeIconComponent StepType_="@item.StepType" />
+                            </td>
+                            <td>
+                                @item.StartDateTime
+                            </td>
+                            <td>
+                                @item.EndDateTime
+                            </td>
+                            <td>
+                                <text>@item.GetDurationInReadableFormat()</text>
+                            </td>
+                            <td>
+                                <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            </td>
+                        </tr>
+                        @if (SelectedStepExecution == item)
                         {
-                            <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
-                                <td>
-                                    @item.JobName
-                                </td>
-                                <td>
-                                    @item.CreatedDateTime
-                                </td>
-                                <td>
-                                    @item.StartDateTime
-                                </td>
-                                <td>
-                                    @item.EndDateTime
-                                </td>
-                                <td>
-                                    <text>@item.GetDurationInReadableFormat()</text>
-                                </td>
-                                <td style="text-align: right;">
-                                    @item.StepExecutions.Count
-                                </td>
-                                <td style="text-align: right;">
-                                    @item.GetSuccessPercent()?.FormatPercentage(2)
-                                </td>
-                                <td>
-                                    <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
+                            <tr class="table-borderless">
+                                <td colspan="7" class="bg-light">
+                                    <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
+                                        <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                            History
+                                        </BSButton>
+                                        <AuthorizeView Roles="Admin, Editor, Operator">
+                                            @if (item.ExecutionStatus == StepExecutionStatus.Running)
+                                            {
+                                                <BSDropdown Class="ml-3">
+                                                    <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                        Stop
+                                                    </BSDropdownToggle>
+                                                    <BSDropdownMenu>
+                                                        <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
+                                                    </BSDropdownMenu>
+                                                </BSDropdown>
+                                            }
+                                        </AuthorizeView>
+                                    </BSButtonGroup>
+
+                                    <StepExecutionDetailsComponent StepExecutionAttempt="item" />
                                 </td>
                             </tr>
                         }
                     }
-                </tbody>
-            </table>
-        </div>
-    }
-    else if (ShowSteps)
-    {
-        <div class="card shadow-sm pt-2 mt-2 my-4">
-            <table class="table table-sm table-hover">
-                <thead>
-                    <tr>
-                        <th>
-                            Job
-                        </th>
-                        <th>
-                            Step
-                        </th>
-                        <th>
-                            Step type
-                        </th>
-                        <th>
-                            Started
-                        </th>
-                        <th>
-                            Ended
-                        </th>
-                        <th>
-                            Duration
-                        </th>
-                        <th>
-                            Status
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (StepExecutions is null)
-                    {
-                        <tr><td colspan="7">Loading...</td></tr>
-                    }
-                    else if (StepExecutions.Count == 0)
-                    {
-                        <tr><td colspan="7">No executions</td></tr>
-                    }
-                    else
-                    {
-                        @foreach (var item in StepExecutions)
-                        {
-                            <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
-                                <td>
-                                    @item.StepExecution.Execution.JobName
-                                </td>
-                                <td>
-                                    @item.StepExecution.StepName
-                                </td>
-                                <td>
-                                    <StepTypeIconComponent StepType_="@item.StepType" />
-                                </td>
-                                <td>
-                                    @item.StartDateTime
-                                </td>
-                                <td>
-                                    @item.EndDateTime
-                                </td>
-                                <td>
-                                    <text>@item.GetDurationInReadableFormat()</text>
-                                </td>
-                                <td>
-                                    <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
-                                </td>
-                            </tr>
-                            @if (SelectedStepExecution == item)
-                            {
-                                <tr class="table-borderless">
-                                    <td colspan="7" class="bg-light">
-                                        <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
-                                            <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
-                                                History
-                                            </BSButton>
-                                            <AuthorizeView Roles="Admin, Editor, Operator">
-                                                @if (item.ExecutionStatus == StepExecutionStatus.Running)
-                                                {
-                                                    <BSDropdown Class="ml-3">
-                                                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
-                                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
-                                                            Stop
-                                                        </BSDropdownToggle>
-                                                        <BSDropdownMenu>
-                                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
-                                                        </BSDropdownMenu>
-                                                    </BSDropdown>
-                                                }
-                                            </AuthorizeView>
-                                        </BSButtonGroup>
-                                        
-                                        <StepExecutionDetailsComponent StepExecutionAttempt="item" />
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 <StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
@@ -355,32 +353,9 @@
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
-    private bool SessionStorageValuesRetrieved { get; set; } = false;
 
-    // If false, jobs executions will be shown.
     private bool ShowSteps { get; set; } = false;
-
-    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
-
-    private int IntervalHours { get; set; } = 3;
-
-    private List<string> JobNames { get; set; } = new();
-    private string JobName { get; set; } = string.Empty; // used to filter executions results
-
-    private List<ExecutionStatus> JobStatuses { get; set; } = new();
-    private ExecutionStatus? JobStatus { get; set; } = null;
-
-    private List<StepExecutionStatus> StepStatuses { get; set; } = new();
-    private StepExecutionStatus? StepStatus { get; set; } = null; // used to filter executions results
-
-    private List<string> StepNames { get; set; } = new();
-    private string StepName { get; set; } = string.Empty; // used to filter executions results
-
     private bool Loading { get; set; } = false;
-
-    private List<Execution>? JobExecutions { get; set; }
-
-    private List<StepExecutionAttempt>? StepExecutions { get; set; }
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
@@ -390,122 +365,63 @@
     private StepHistoryModal StepHistoryModal { get; set; } = null!;
     private string? HistoryModalStepId { get; set; }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+    private int IntervalHours { get; set; } = 3;
+
+    private List<Execution>? Executions_ { get; set; }
+
+    private HashSet<ExecutionStatus> JobStatusFilter { get; } = new();
+    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
+    private HashSet<string> JobFilter { get; } = new();
+    private HashSet<string> StepFilter { get; } = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            // Try getting previously used filter values from the user's sessionStorage.
-            // This is non-critical, so ignore any errors.
-            try
-            {
-                await GetSessionStorageValues();
-            }
-            catch (Exception)
-            {
-            }
-
-            // sessionStorage values have been retrieved. The filter inputs can now be rendered.
-            SessionStorageValuesRetrieved = true;
-
-            await LoadData();
-        }
+        await LoadData();
     }
 
     private async Task LoadData()
     {
         Loading = true;
-        StateHasChanged();
 
-        var context = DbFactory.CreateDbContext();
-
-        if (!ShowSteps)
-        {
-            IQueryable<Execution> jobExecutions = context.Executions;
-            jobExecutions = jobExecutions
+        using var context = DbContextFactory.CreateDbContext();
+        Executions_ = await context.Executions
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
-                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
-
-            JobNames = await jobExecutions.Select(e => e.JobName).Distinct().ToListAsync();
-            if (!JobNames.Contains(JobName) && !string.IsNullOrEmpty(JobName))
-                JobNames.Add(JobName);
-
-            JobStatuses = await jobExecutions.Select(e => e.ExecutionStatus).Distinct().ToListAsync();
-            if (JobStatus is not null && !JobStatuses.Contains((ExecutionStatus)JobStatus))
-                JobStatuses.Add((ExecutionStatus)JobStatus);
-
-            if (!string.IsNullOrEmpty(JobName))
-            {
-                jobExecutions = jobExecutions.Where(e => e.JobName == JobName);
-            }
-
-            if (JobStatus is not null)
-            {
-                jobExecutions = jobExecutions.Where(e => e.ExecutionStatus == JobStatus);
-            }
-
-            JobExecutions = await jobExecutions
+                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours))
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(execution => execution.StartDateTime)
                 .ToListAsync();
-        }
-        else if (ShowSteps)
-        {
-            IQueryable<StepExecutionAttempt> stepExecutions = context.StepExecutionAttempts;
-            stepExecutions = stepExecutions
-                .Include(attempt => attempt.StepExecution)
-                .ThenInclude(execution => (execution as ParameterizedStepExecution)!.StepExecutionParameters)
-                .Include(attempt => attempt.StepExecution)
-                .ThenInclude(execution => execution.Execution)
-                .Where(execution => execution.StepExecution.Execution.CreatedDateTime <= DateTimeUntil)
-                .Where(execution => execution.StepExecution.Execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours));
-
-            JobNames = await stepExecutions.Select(e => e.StepExecution.Execution.JobName).Distinct().ToListAsync();
-            if (!JobNames.Contains(JobName) && !string.IsNullOrEmpty(JobName))
-                JobNames.Add(JobName);
-
-            StepStatuses = await stepExecutions.Select(e => (StepExecutionStatus)e.ExecutionStatus).Distinct().ToListAsync();
-            if (StepStatus is not null && !StepStatuses.Contains((StepExecutionStatus)StepStatus))
-                StepStatuses.Add((StepExecutionStatus)StepStatus);
-
-            StepNames = await stepExecutions.Select(e => e.StepExecution.StepName).Distinct().ToListAsync();
-            if (!StepNames.Contains(StepName) && !string.IsNullOrEmpty(StepName))
-                StepNames.Add(StepName);
-
-            if (!string.IsNullOrEmpty(JobName))
-            {
-                stepExecutions = stepExecutions.Where(e => e.StepExecution.Execution.JobName == JobName);
-            }
-
-            if (StepStatus is not null)
-            {
-                stepExecutions = stepExecutions.Where(e => e.ExecutionStatus == StepStatus);
-            }
-
-            if (!string.IsNullOrEmpty(StepName))
-            {
-                stepExecutions = stepExecutions.Where(e => e.StepExecution.StepName == StepName);
-            }
-
-            StepExecutions = await stepExecutions
-                .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
-                .ThenByDescending(e => e.StartDateTime)
-                .ToListAsync();
-        }
 
         Loading = false;
-        StateHasChanged();
+    }
 
-        // Try to save the filter values to the user's sessionStorage.
-        // This is non-critical, so ignore any errors.
-        try
-        {
-            await SetSessionStorageValues();
-        }
-        catch (Exception)
-        {
-        }
+    private async Task SelectPreset(int hours)
+    {
+        DateTimeUntil = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+        IntervalHours = hours;
+        await LoadData();
+    }
+
+    private void OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        JobExecutionModal.Show();
+    }
+
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    {
+        // If the selected execution is the same that was previously selected, set to null
+        // => hides step execution details component.
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
+    private void ShowStepHistoryModal(string stepId)
+    {
+        HistoryModalStepId = stepId;
+        StepHistoryModal.Show();
     }
 
     private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
@@ -524,87 +440,6 @@
         {
             await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
         }
-    }
-
-    private async Task SetSessionStorageValues()
-    {
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "IntervalHours", IntervalHours);
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "ShowSteps", ShowSteps);
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "DateTimeUntil", DateTimeUntil);
-        if (JobStatus is not null)
-            await JS.InvokeVoidAsync("sessionStorage.setItem", "JobStatus", JobStatus.ToString()!);
-        if (StepStatus is not null)
-            await JS.InvokeVoidAsync("sessionStorage.setItem", "StepStatus", StepStatus.ToString()!);
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "JobName", JobName);
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "StepName", StepName);
-    }
-
-    private async Task GetSessionStorageValues()
-    {
-        int intervalHours = await TryGetSessionStorageValueAsync<int>("IntervalHours", int.Parse);
-        IntervalHours = intervalHours == 0 ? IntervalHours : intervalHours;
-
-        ShowSteps = await TryGetSessionStorageValueAsync<bool>("ShowSteps", bool.Parse);
-
-        var dateTime = await TryGetSessionStorageValueAsync<DateTime>("DateTimeUntil", DateTime.Parse);
-        DateTimeUntil = dateTime == DateTime.MinValue ? DateTimeUntil : dateTime;
-
-        var jobStatus = await TryGetSessionStorageValueAsync("JobStatus") ?? string.Empty;
-        if (jobStatus.Length > 0)
-            JobStatus = Enum.Parse<ExecutionStatus>(jobStatus);
-        var stepStatus = await TryGetSessionStorageValueAsync("StepStatus") ?? string.Empty;
-        if (stepStatus.Length > 0)
-            StepStatus = Enum.Parse<StepExecutionStatus>(stepStatus);
-        JobName = await TryGetSessionStorageValueAsync("JobName") ?? string.Empty;
-        StepName = await TryGetSessionStorageValueAsync("StepName") ?? string.Empty;
-    }
-
-    private async Task SelectPreset(int hours)
-    {
-        DateTimeUntil = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
-        IntervalHours = hours;
-        await LoadData();
-    }
-
-    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
-    {
-        // If the selected execution is the same that was previously selected, set to null
-        // => hides step execution details component.
-        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
-        StateHasChanged();
-    }
-
-    private void OpenJobExecutionModal(Guid executionId)
-    {
-        SelectedJobExecutionId = executionId;
-        JobExecutionModal.Show();
-    }
-
-    private void ShowStepHistoryModal(string stepId)
-    {
-        HistoryModalStepId = stepId;
-        StepHistoryModal.Show();
-    }
-
-#nullable enable
-    // Helper method for reading sessionStorage values from the browser through JSInterop
-    private async Task<T?> TryGetSessionStorageValueAsync<T>(string key, Func<string, T> converter)
-    {
-        var valueString = await JS.InvokeAsync<string>("sessionStorage.getItem", key);
-        if (!string.IsNullOrWhiteSpace(valueString))
-        {
-            return converter(valueString);
-        }
-        else
-        {
-            return default(T);
-        }
-    }
-#nullable disable
-
-    private async Task<string> TryGetSessionStorageValueAsync(string key)
-    {
-        return await JS.InvokeAsync<string>("sessionStorage.getItem", key);
     }
 
 }

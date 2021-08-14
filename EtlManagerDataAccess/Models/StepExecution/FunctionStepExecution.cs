@@ -10,7 +10,7 @@ namespace EtlManagerDataAccess.Models
 {
     public record FunctionStepExecution : StepExecution
     {
-        public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName)
+        public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
         {
             FunctionAppId = functionAppId;
             FunctionUrl = functionUrl;
