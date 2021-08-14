@@ -327,7 +327,7 @@
             using var context = DbFactory.CreateDbContext();
             context.Jobs.Remove(job);
             await context.SaveChangesAsync();
-            await Utility.SchedulerServiceDeleteJobAsync(job);
+            await Utility.SchedulerServiceDeleteJobAsync(configuration, job);
             jobs.Remove(job);
         }
         catch (Exception ex)

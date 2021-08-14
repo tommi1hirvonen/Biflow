@@ -2,6 +2,7 @@ using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using EtlManagerUtils;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -19,6 +20,7 @@ namespace EtlManagerScheduler
 {
     public class Worker : BackgroundService
     {
+        private readonly IConfiguration _config;
         private readonly ILogger<Worker> _logger;
         private readonly IScheduler _scheduler;
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
@@ -28,8 +30,11 @@ namespace EtlManagerScheduler
         private byte[] FailureBytes { get; } = Encoding.UTF8.GetBytes("FAILURE");
         private byte[] SuccessBytes { get; } = Encoding.UTF8.GetBytes("SUCCESS");
 
-        public Worker(ILogger<Worker> logger, IDbContextFactory<EtlManagerContext> dbContextFactory, ISchedulerFactory schedulerFactory)
+        private string PipeName => _config.GetValue<string>("PipeName");
+
+        public Worker(IConfiguration config, ILogger<Worker> logger, IDbContextFactory<EtlManagerContext> dbContextFactory, ISchedulerFactory schedulerFactory)
         {
+            _config = config;
             _logger = logger;
             _dbContextFactory = dbContextFactory;
             _scheduler = schedulerFactory.GetScheduler().Result;
@@ -129,7 +134,7 @@ namespace EtlManagerScheduler
             {
                 _logger.LogInformation("Started waiting for named pipe connection for incoming commands");
 
-                using var pipeServer = new NamedPipeServerStream("ETL Manager Scheduler", PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
+                using var pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.InOut, NamedPipeServerStream.MaxAllowedServerInstances,
 #pragma warning disable CA1416 // Validate platform compatibility
                     PipeTransmissionMode.Message); // Each byte array is transferred as a single message
 #pragma warning restore CA1416 // Validate platform compatibility

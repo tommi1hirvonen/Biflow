@@ -170,12 +170,13 @@ namespace EtlManagerUi
                 new { step.StepId, tag.TagId });
         }
 
-        public static (bool Running, bool Error, string Status) SchedulerServiceGetStatus()
+        public static (bool Running, bool Error, string Status) SchedulerServiceGetStatus(IConfiguration configuration)
         {
             try
             {
+                var serviceName = configuration.GetSection("Scheduler").GetValue<string>("ServiceName");
 #pragma warning disable CA1416 // Validate platform compatibility
-                var serviceController = new ServiceController("EtlManagerScheduler");
+                var serviceController = new ServiceController(serviceName);
                 var status = serviceController.Status switch
                 {
                     ServiceControllerStatus.Running => "Running",
@@ -199,17 +200,18 @@ namespace EtlManagerUi
         private static JsonSerializerOptions SchedulerCommandSerializerOptions() =>
             new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
 
-        public async static Task<bool> SchedulerServiceDeleteJobAsync(Job job)
+        public async static Task<bool> SchedulerServiceDeleteJobAsync(IConfiguration configuration, Job job)
         {
             // If the scheduler service is not running, return true.
             // This way the changes can be committed to the database.
-            (var running, var _, var _) = SchedulerServiceGetStatus();
+            (var running, var _, var _) = SchedulerServiceGetStatus(configuration);
 
             if (!running)
                 return true;
 
             // Connect to the pipe server set up by the scheduler service.
-            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            var pipeName = configuration.GetSection("Scheduler").GetValue<string>("PipeName");
+            using var pipeClient = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut); // "." => the pipe server is on the same computer
             await pipeClient.ConnectAsync(10000); // wait for 10 seconds
 #pragma warning disable CA1416 // Validate platform compatibility
             pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
@@ -228,10 +230,11 @@ namespace EtlManagerUi
             return response == "SUCCESS";
         }
 
-        public async static Task<bool> SchedulerServiceSynchronize()
+        public async static Task<bool> SchedulerServiceSynchronize(IConfiguration configuration)
         {
             // Connect to the pipe server set up by the scheduler service.
-            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            var pipeName = configuration.GetSection("Scheduler").GetValue<string>("PipeName");
+            using var pipeClient = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut); // "." => the pipe server is on the same computer
             await pipeClient.ConnectAsync(10000); // wait for 10 seconds
 #pragma warning disable CA1416 // Validate platform compatibility
             pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
@@ -249,17 +252,18 @@ namespace EtlManagerUi
             return response == "SUCCESS";
         }
 
-        public async static Task<bool> SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType commandType, Schedule? schedule)
+        public async static Task<bool> SchedulerServiceSendCommandAsync(IConfiguration configuration, SchedulerCommand.CommandType commandType, Schedule? schedule)
         {
             // If the scheduler service is not running, return true.
             // This way the changes can be committed to the database.
-            (var running, var _, var _) = SchedulerServiceGetStatus();
+            (var running, var _, var _) = SchedulerServiceGetStatus(configuration);
 
             if (!running)
                 return true;
 
             // Connect to the pipe server set up by the scheduler service.
-            using var pipeClient = new NamedPipeClientStream(".", "ETL Manager Scheduler", PipeDirection.InOut); // "." => the pipe server is on the same computer
+            var pipeName = configuration.GetSection("Scheduler").GetValue<string>("PipeName");
+            using var pipeClient = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut); // "." => the pipe server is on the same computer
             await pipeClient.ConnectAsync(10000); // wait for 10 seconds
 #pragma warning disable CA1416 // Validate platform compatibility
             pipeClient.ReadMode = PipeTransmissionMode.Message; // Each byte array is transferred as a single message
@@ -288,7 +292,7 @@ namespace EtlManagerUi
                 SET [IsEnabled] = @Value
                 WHERE [ScheduleId] = @ScheduleId", new { schedule.ScheduleId, Value = enabled }, transaction);
             var commandType = enabled ? SchedulerCommand.CommandType.Resume : SchedulerCommand.CommandType.Pause;
-            bool success = await SchedulerServiceSendCommandAsync(commandType, schedule);
+            bool success = await SchedulerServiceSendCommandAsync(configuration, commandType, schedule);
             if (success)
             {
                 transaction.Commit();

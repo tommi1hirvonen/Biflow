@@ -67,7 +67,7 @@
             // Get the scheduler service status and notify the user of a possible error.
             try
             {
-                (var running, var error, var status) = Utility.SchedulerServiceGetStatus();
+                (var running, var error, var status) = Utility.SchedulerServiceGetStatus(Configuration);
                 if (error)
                 {
                     SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed correctly.";
@@ -77,7 +77,7 @@
                     SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
                 }
 
-                var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Status, null);
+                var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(Configuration, SchedulerCommand.CommandType.Status, null);
                 if (!schedulerStatus)
                 {
                     SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";

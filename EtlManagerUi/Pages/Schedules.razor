@@ -235,7 +235,7 @@
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
             // Send the schedule to the scheduler service.
-            bool success = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Add, NewSchedule);
+            bool success = await Utility.SchedulerServiceSendCommandAsync(configuration, SchedulerCommand.CommandType.Add, NewSchedule);
             // Commit the database transaction if the scheduler received the schedule. Otherwise rollback the transaction.
             if (success)
             {
@@ -272,7 +272,7 @@
             using var transaction = context.Database.BeginTransaction();
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
-            bool success = await Utility.SchedulerServiceSendCommandAsync(SchedulerCommand.CommandType.Delete, schedule);
+            bool success = await Utility.SchedulerServiceSendCommandAsync(configuration, SchedulerCommand.CommandType.Delete, schedule);
             if (success)
             {
                 transaction.Commit();
@@ -295,7 +295,7 @@
     {
         try
         {
-            var result = await Utility.SchedulerServiceSynchronize();
+            var result = await Utility.SchedulerServiceSynchronize(configuration);
             if (!result)
             {
                 await JS.InvokeVoidAsync("alert", $"Error synchronizing");
