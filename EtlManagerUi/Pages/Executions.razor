@@ -108,7 +108,8 @@
                                         .Select(s => s.StepName))
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<string>()"
-                            OnChange="StateHasChanged">
+                            OnChange="StateHasChanged"
+                            IsSearchable="true">
                 <Title>
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
                     Step

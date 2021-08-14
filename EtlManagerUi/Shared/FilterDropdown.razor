@@ -1,5 +1,7 @@
 ﻿@typeparam TItem
 
+@inject IWebHostEnvironment WebHostEnvironment
+
 <BSDropdown>
     <BSDropdownToggle Size="Size.Small" Color="Color.Light" Class="@(FilterSet.Any() ? "font-weight-bold" : null)">
         @Title
@@ -10,28 +12,36 @@
                 <div class="row mb-2">
                     <div class="col">
                         <a href="javascript:void(0)"
-                           @onclick="() => { FilterSet.Clear(); Items.ToList().ForEach(i => FilterSet.Add(i)); OnChange.InvokeAsync(); }">Select all</a>
+                           @onclick="SelectAll">Select all</a>
                     </div>
                     <div class="col d-flex justify-content-end">
                         <a href="javascript:void(0)"
-                           @onclick="() => { FilterSet.Clear(); OnChange.InvokeAsync(); }">Reset</a>
+                           @onclick="Reset">Reset</a>
                     </div>
                 </div>
-                @foreach (var item in Items)
+                @if (IsSearchable)
+                {
+                    <div class="row mb-2">
+                        <div class="col">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+                                    </div>
+                                </div>
+                                <input type="text" class="form-control" @bind-value="SearchText" @bind-value:event="oninput" placeholder="Search" />
+                            </div>
+                        </div>
+                    </div>
+                }
+                @foreach (var item in FilteredItems)
                 {
                     <div class="row">
                         <div class="col">
                             <div class="custom-control custom-checkbox custom-control-inline">
                                 <input type="checkbox" class="custom-control-input" id="@($"{ComponentInstanceId}_{item}")"
                                        checked=@FilterSet.Contains(item)
-                                       @onchange="args =>
-                                                  {
-                                                      if ((bool)args.Value!)
-                                                          FilterSet.Add(item);
-                                                      else
-                                                          FilterSet.Remove(item);
-                                                      OnChange.InvokeAsync();
-                                                  }">
+                                       @onchange="args => Toggle((bool)args.Value!, item)">
                                 <label class="custom-control-label" for="@($"{ComponentInstanceId}_{item}")">
                                     @item.ToString()
                                 </label>
@@ -54,8 +64,46 @@
     [Parameter]
     public IEnumerable<TItem> Items { get; set; } = new List<TItem>();
 
+    private IEnumerable<TItem> FilteredItems => Items
+        .Where(i => string.IsNullOrEmpty(SearchText) || i?.ToString()?.ContainsIgnoreCase(SearchText) == true);
+
     [Parameter]
     public EventCallback OnChange { get; set; }
 
+    [Parameter]
+    public bool IsSearchable { get; set; } = false;
+
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
+
+    private string SearchText { get; set; } = "";
+
+    private void Toggle(bool selected, TItem item)
+    {
+        if (selected)
+        {
+            FilterSet.Add(item);
+        }
+        else
+        {
+            FilterSet.Remove(item);
+        }
+        OnChange.InvokeAsync();
+    }
+
+    private void Reset()
+    {
+        FilterSet.Clear();
+        OnChange.InvokeAsync();
+    }
+
+    private void SelectAll()
+    {
+        FilterSet.Clear();
+        foreach (var item in FilteredItems)
+        {
+            FilterSet.Add(item);
+        }
+        OnChange.InvokeAsync();
+    }
+
 }
