@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess
@@ -15,8 +16,10 @@ namespace EtlManagerDataAccess
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
+        private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
 
         private Dictionary<Guid, Dictionary<string, (string Token, DateTime ExpiresOn)>> AccessTokens { get; } = new();
+        
 
         public TokenService(IDbContextFactory<EtlManagerContext> dbContextFactory)
         {
@@ -25,48 +28,56 @@ namespace EtlManagerDataAccess
 
         public async Task<string> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
         {
-            // If the token can be found in the dictionary and it is valid.
-            if (AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
-                && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTime.Now.AddMinutes(5))
+            await _semaphore.WaitAsync();
+            try
             {
-                return token.Token;
-            }
-            else
-            {
-                AccessToken resultToken;
-
-                using var context = _dbContextFactory.CreateDbContext();
-                var accessToken = await context.AccessTokens
-                    .FirstOrDefaultAsync(at => at.AppRegistrationId == appRegistration.AppRegistrationId && at.ResourceUrl == resourceUrl);
-                
-                // If the token was set in database and it is valid, use that.
-                if (accessToken is not null && accessToken.ExpiresOn >= DateTime.Now.AddMinutes(5))
+                // If the token can be found in the dictionary and it is valid.
+                if (AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
+                    && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTime.Now.AddMinutes(5))
                 {
-                    resultToken = accessToken;
+                    return token.Token;
                 }
-                // If the token was set but it's no longer valid => get new token from API and update the token in database.
-                else if (accessToken is not null)
-                {
-                    (accessToken.Token, accessToken.ExpiresOn) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    await context.SaveChangesAsync();
-                    resultToken = accessToken;
-                }
-                // Token was not set => create new token from API.
                 else
                 {
-                    (var token_, var expiresOn_) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    accessToken = new AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
-                    context.Add(accessToken);
-                    await context.SaveChangesAsync();
-                    resultToken = accessToken;
-                }
+                    AccessToken resultToken;
 
-                if (!AccessTokens.ContainsKey(appRegistration.AppRegistrationId))
-                {
-                    AccessTokens[appRegistration.AppRegistrationId] = new();
+                    using var context = _dbContextFactory.CreateDbContext();
+                    var accessToken = await context.AccessTokens
+                        .FirstOrDefaultAsync(at => at.AppRegistrationId == appRegistration.AppRegistrationId && at.ResourceUrl == resourceUrl);
+
+                    // If the token was set in database and it is valid, use that.
+                    if (accessToken is not null && accessToken.ExpiresOn >= DateTime.Now.AddMinutes(5))
+                    {
+                        resultToken = accessToken;
+                    }
+                    // If the token was set but it's no longer valid => get new token from API and update the token in database.
+                    else if (accessToken is not null)
+                    {
+                        (accessToken.Token, accessToken.ExpiresOn) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
+                        await context.SaveChangesAsync();
+                        resultToken = accessToken;
+                    }
+                    // Token was not set => create new token from API.
+                    else
+                    {
+                        (var token_, var expiresOn_) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
+                        accessToken = new AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
+                        context.Add(accessToken);
+                        await context.SaveChangesAsync();
+                        resultToken = accessToken;
+                    }
+
+                    if (!AccessTokens.ContainsKey(appRegistration.AppRegistrationId))
+                    {
+                        AccessTokens[appRegistration.AppRegistrationId] = new();
+                    }
+                    AccessTokens[appRegistration.AppRegistrationId][resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
+                    return resultToken.Token;
                 }
-                AccessTokens[appRegistration.AppRegistrationId][resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
-                return resultToken.Token;
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
 
