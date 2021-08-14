@@ -46,12 +46,6 @@
                 </NavLink>
             </li>
         </AuthorizeView>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="about" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                About
-            </NavLink>
-        </li>
         <li class="nav-item mt-3">
             <NavLink class="nav-link" href="logout?returnUrl=/">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-out.svg")))
