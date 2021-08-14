@@ -84,6 +84,7 @@
                         FilterSet="JobFilter"
                         Items="Executions_?
                                .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains(s.StepName))) // Limit visible jobs based on step filter
+                               .Where(e => !StepTypeFilter.Any() || e.StepExecutions.Any(s => StepTypeFilter.Contains(s.StepType))) // Limit visible jobs based on step type filter
                                .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
                                .Select(e => e.JobName)
                                .Distinct()
@@ -102,9 +103,10 @@
                             Items="Executions_?
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
                                    .SelectMany(e =>
-                                        e.StepExecutions.Where(s =>
-                                            !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                        e.StepExecutions
+                                            .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                                 StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                            .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
                                         .Select(s => s.StepName))
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<string>()"
@@ -115,6 +117,24 @@
                     Step
                 </Title>
             </FilterDropdown>
+            <FilterDropdown TItem="StepType"
+                            FilterSet="StepTypeFilter"
+                            Items="Executions_?
+                                   .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step types based on job filter
+                                   .SelectMany(e =>
+                                        e.StepExecutions
+                                            .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                                StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                            .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step types based on step filter
+                                        .Select(s => s.StepType))
+                                   .Distinct()
+                                   .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
+                            OnChange="StateHasChanged">
+                <Title>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                    Step type
+                </Title>
+            </FilterDropdown>
         }
 
         @if (!ShowSteps)
@@ -123,7 +143,6 @@
                             FilterSet="JobStatusFilter"
                             Items="Executions_?
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible job statuses based on job filter
-                                   .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains(s.StepName))) // Limit visible job statuses based on step filter
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
@@ -141,8 +160,9 @@
                             Items="Executions_?
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
                                    .SelectMany(e =>
-                                        e.StepExecutions.Where(s =>
-                                            !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                        e.StepExecutions
+                                            .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                            .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                         .SelectMany(s => s.StepExecutionAttempts))
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
@@ -156,7 +176,7 @@
         }
 
         <BSButton Size="Size.Small" Color="Color.Light"
-                  @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); }">
+                  @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); }">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
             Reset
         </BSButton>
@@ -287,6 +307,7 @@ else
                        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
                        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
                        .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                       .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
                        .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
                        .ThenByDescending(e => e.StartDateTime))
                     {
@@ -375,6 +396,7 @@ else
     private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
     private HashSet<string> JobFilter { get; } = new();
     private HashSet<string> StepFilter { get; } = new();
+    private HashSet<StepType> StepTypeFilter { get; } = new();
 
     protected override async Task OnInitializedAsync()
     {
