@@ -248,7 +248,7 @@
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
                                                 @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                                  && !StepExecutionAttempts.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                                 && !StepExecutionAttempts.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
                                                         <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -262,7 +262,7 @@
                                                 }
                                             </AuthorizeView>
                                         </BSButtonGroup>
-                                        
+
                                         <StepExecutionDetailsComponent StepExecutionAttempt="item" />
                                     </td>
                                 </tr>
@@ -276,15 +276,17 @@
         <div class="steps-graph" id="steps_graph" hidden=@(!ShowGraph)>
         </div>
 
+        <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionModal" />
+
+        <StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
+
     </BSModalBody>
     <BSModalFooter>
         <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
     </BSModalFooter>
 </BSModal>
 
-<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionModal" />
 
-<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" NoBackdrop="true" />
 
 @code {
     [Parameter]

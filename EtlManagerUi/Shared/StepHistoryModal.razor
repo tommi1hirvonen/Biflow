@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" NoBackdrop="NoBackdrop">
-    <BSModalHeader @onclick="() => Modal.Hide()"></BSModalHeader>
+<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
+    <BSModalHeader @onclick="() => Modal.Hide()">@StepName</BSModalHeader>
     <BSModalBody>
         <p class="text-secondary">Showing @MaxExecutions latest executions</p>
         <table class="table table-sm table-hover">
@@ -55,8 +55,7 @@
     [Parameter]
     public string? StepId_ { get; set; }
 
-    [Parameter]
-    public bool NoBackdrop { get; set; } = false;
+    private string StepName => Executions?.FirstOrDefault()?.StepExecution?.StepName ?? "";
 
     private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
