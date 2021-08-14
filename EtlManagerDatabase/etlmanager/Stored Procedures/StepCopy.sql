@@ -148,13 +148,13 @@ END
 
 -- Copy tags
 INSERT INTO etlmanager.StepTag (
-	StepsStepId,
-	TagsTagId
+	StepId,
+	TagId
 )
 SELECT @StepIdNew,
-	A.TagsTagId
+	A.TagId
 FROM etlmanager.StepTag AS A
-WHERE A.StepsStepId = @StepId
+WHERE A.StepId = @StepId
 
 
 COMMIT TRANSACTION

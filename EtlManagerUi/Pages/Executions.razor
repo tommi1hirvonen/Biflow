@@ -250,7 +250,7 @@
                                 @item.StepExecutions.Count
                             </td>
                             <td style="text-align: right;">
-                                @item.GetSuccessPercent()?.FormatPercentage(2)
+                                @item.GetSuccessPercent().FormatPercentage(2)
                             </td>
                             <td>
                                 <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
@@ -411,6 +411,9 @@ else
         Executions_ = await context.Executions
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)
+                .Include(execution => execution.StepExecutions)
+                .ThenInclude(exec => exec.Step)
+                .ThenInclude(s => s!.Tags)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
                 .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours))
                 .OrderByDescending(execution => execution.CreatedDateTime)

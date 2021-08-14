@@ -67,7 +67,7 @@
                             @item.StepExecutions.Count
                         </td>
                         <td style="text-align: right;">
-                            @item.GetSuccessPercent()?.FormatPercentage(2)
+                            @item.GetSuccessPercent().FormatPercentage(2)
                         </td>
                         <td>
                             <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />

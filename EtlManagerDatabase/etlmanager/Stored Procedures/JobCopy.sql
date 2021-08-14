@@ -192,13 +192,13 @@ FROM etlmanager.PipelineParameter AS A
 
 -- Copy tags
 INSERT INTO etlmanager.StepTag (
-	StepsStepId,
-	TagsTagId
+	StepId,
+	TagId
 )
 SELECT B.StepIdNew,
-	A.TagsTagId
+	A.TagId
 FROM etlmanager.StepTag AS A
-	INNER JOIN #StepIdMapping AS B ON a.StepsStepId = B.StepId
+	INNER JOIN #StepIdMapping AS B ON a.StepId = B.StepId
 
 COMMIT TRANSACTION
 

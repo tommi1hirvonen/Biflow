@@ -215,7 +215,7 @@
         Jobs = jobs.GroupBy(group => group.JobName)
         .Select(select => new ReportingJob
         {
-            SuccessPercent = select.Average(total => total.GetSuccessPercent() ?? 0),
+            SuccessPercent = select.Average(total => total.GetSuccessPercent()),
             JobName = select.Key
         })
         .OrderByDescending(order => order.SuccessPercent)
@@ -253,7 +253,7 @@
             .Select(select => new TopStep
             {
                 StepName = select.Key.StepName,
-                StepId = select.Key.StepId,
+                StepId = select.Key.StepId ?? Guid.Empty,
                 JobName = select.Key.JobName,
                 JobId = select.Key.JobId,
                 NoOfExecutions = select.Count(),

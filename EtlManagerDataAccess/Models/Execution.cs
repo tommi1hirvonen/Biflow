@@ -60,11 +60,11 @@ namespace EtlManagerDataAccess.Models
 
         public string? GetDurationInReadableFormat() => ExecutionInSeconds?.SecondsToReadableFormat();
 
-        public decimal? GetSuccessPercent()
+        public decimal GetSuccessPercent()
         {
             var successCount = StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded) ?? false) ?? 0;
             var allCount = StepExecutions?.Count ?? 0;
-            return (decimal)successCount / allCount * 100;
+            return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
         }
     }
 }
