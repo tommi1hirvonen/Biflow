@@ -188,6 +188,10 @@ namespace EtlManagerDataAccess
             modelBuilder.Entity<Job>()
                 .HasMany(job => job.Subscriptions)
                 .WithOne(subscription => subscription.Job);
+            modelBuilder.Entity<Job>()
+                .HasMany(j => j.Executions)
+                .WithOne(e => e.Job!)
+                .IsRequired(false);
 
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
@@ -211,6 +215,10 @@ namespace EtlManagerDataAccess
                 .HasOne(step => step.JobToExecute)
                 .WithMany(job => job.JobSteps)
                 .HasForeignKey(step => step.JobToExecuteId);
+            modelBuilder.Entity<Step>()
+                .HasMany(s => s.StepExecutions)
+                .WithOne(e => e.Step!)
+                .IsRequired(false);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")

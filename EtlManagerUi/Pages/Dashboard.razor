@@ -253,7 +253,7 @@
             .Select(select => new TopStep
             {
                 StepName = select.Key.StepName,
-                StepId = select.Key.StepId ?? Guid.Empty,
+                StepId = select.Key.StepId,
                 JobName = select.Key.JobName,
                 JobId = select.Key.JobId,
                 NoOfExecutions = select.Count(),

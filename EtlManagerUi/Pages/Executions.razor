@@ -411,9 +411,6 @@ else
         Executions_ = await context.Executions
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)
-                .Include(execution => execution.StepExecutions)
-                .ThenInclude(exec => exec.Step)
-                .ThenInclude(s => s!.Tags)
                 .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
                 .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours))
                 .OrderByDescending(execution => execution.CreatedDateTime)

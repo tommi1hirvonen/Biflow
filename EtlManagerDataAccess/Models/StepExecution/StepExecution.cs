@@ -35,6 +35,8 @@ namespace EtlManagerDataAccess.Models
 
         public Execution Execution { get; set; } = null!;
 
+        public Step? Step { get; set; }
+
         public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
     }
 }

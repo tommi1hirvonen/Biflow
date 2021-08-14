@@ -41,6 +41,7 @@ namespace EtlManagerExecutor
                     var process = Process.GetCurrentProcess();
                     execution = await context.Executions
                         .AsNoTrackingWithIdentityResolution()
+                        .Include(e => e.Job)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => e.StepExecutionAttempts)
                         .Include(e => e.StepExecutions)
@@ -66,10 +67,8 @@ namespace EtlManagerExecutor
                     context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
                     context.Entry(execution).Property(e => e.StartDateTime).IsModified = true;
                     await context.SaveChangesAsync();
-                    
-                    job = await context.Jobs
-                        .AsNoTrackingWithIdentityResolution()
-                        .FirstAsync(j => j.JobId == execution.JobId);
+
+                    job = execution.Job ?? throw new InvalidOperationException("Job was null");
                 }
                 catch (Exception ex)
                 {

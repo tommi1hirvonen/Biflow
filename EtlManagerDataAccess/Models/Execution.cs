@@ -55,6 +55,8 @@ namespace EtlManagerDataAccess.Models
 
         public ICollection<StepExecution> StepExecutions { get; set; } = null!;
 
+        public Job? Job { get; set; }
+
         [NotMapped]
         public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 

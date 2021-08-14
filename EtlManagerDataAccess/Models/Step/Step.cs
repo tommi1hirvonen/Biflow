@@ -87,6 +87,8 @@ namespace EtlManagerDataAccess.Models
 
         public IList<Tag> Tags { get; set; } = null!;
 
+        public IList<StepExecution> StepExecutions { get; set; } = null!;
+
         public int CompareTo(object? obj)
         {
             if (obj is null) return 1;
