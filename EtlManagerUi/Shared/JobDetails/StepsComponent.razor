@@ -84,11 +84,11 @@
     <div class="col">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
         <span class="mr-3">Tags</span>
-        @if (Tags.Count() == 0)
+        @if (!TagNames.Any())
         {
             <small class="text-secondary mr-2">No tags</small>
         }
-        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName ?? string.Empty).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+        @foreach (var tag in TagNames)
         {
             <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                   style="cursor: pointer;"
@@ -208,7 +208,7 @@
                         </div>
 
                         <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
-                            @if (item.Tags.Count > 0)
+                            @if (item.Tags.Any())
                             {
                                 @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                                 {
@@ -286,11 +286,11 @@
                     <div class="col">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
                         <span class="mr-3">Tags</span>
-                        @if (Tags.Count() == 0)
+                        @if (!TagNames.Any())
                         {
                             <small class="text-secondary mr-2">No tags</small>
                         }
-                        @foreach (var tag in Steps?.SelectMany(step => step.Tags).Select(tag => tag.TagName ?? string.Empty).Distinct().OrderBy(str => str) ?? Enumerable.Empty<string>())
+                        @foreach (var tag in TagNames)
                         {
                             <span class="mx-1 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
                                   style="cursor: pointer;"
@@ -441,9 +441,9 @@
     [Parameter]
     public List<FunctionApp>? FunctionApps { get; set; }
 
-    private IEnumerable<string> Tags => Steps?
+    private IEnumerable<string> TagNames => Steps?
     .SelectMany(step => step.Tags)
-    .Select(tag => tag.TagName ?? string.Empty)
+    .Select(tag => tag.TagName)
     .Distinct()
     .OrderBy(str => str) ?? Enumerable.Empty<string>();
 
