@@ -143,7 +143,7 @@ namespace EtlManagerUi
             using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
             await sqlConnection.ExecuteAsync(
                 @"DELETE FROM [etlmanager].[StepTag]
-                WHERE [StepsStepId] = @StepId AND [TagsTagId] = @TagId", new { step.StepId, tag.TagId });
+                WHERE [StepId] = @StepId AND [TagId] = @TagId", new { step.StepId, tag.TagId });
         }
 
         public async static Task AddTagAsync(IConfiguration configuration, Step step, Tag tag)
@@ -164,9 +164,9 @@ namespace EtlManagerUi
 
             // Insert a link between the step and tag.
             await sqlConnection.ExecuteAsync(
-                @"INSERT INTO etlmanager.StepTag (StepsStepId, TagsTagId)
+                @"INSERT INTO etlmanager.StepTag (StepId, TagId)
                 SELECT @StepId, @TagId
-                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepsStepId = @StepId AND TagsTagId = @TagId)",
+                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepId = @StepId AND TagId = @TagId)",
                 new { step.StepId, tag.TagId });
         }
 

@@ -216,7 +216,9 @@ namespace EtlManagerDataAccess
                 .ToTable("Tag")
                 .HasMany(t => t.Steps)
                 .WithMany(s => s.Tags)
-                .UsingEntity(e => e.ToTable("StepTag"));
+                .UsingEntity<Dictionary<string, object>>("StepTag",
+                x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
+                x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
 
             modelBuilder.Entity<Schedule>()
                 .ToTable("Schedule")
