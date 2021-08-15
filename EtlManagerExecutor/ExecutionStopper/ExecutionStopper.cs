@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtlManagerUtils;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
@@ -21,7 +22,8 @@ namespace EtlManagerExecutor
                 using var streamWriter = new StreamWriter(pipeClient);
                 // Send cancel command.
                 var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-                var cancelCommand = new { StepId = stepId, Username = username_ };
+                Guid? stepId_ = stepId is null ? null : Guid.Parse(stepId);
+                var cancelCommand = new CancelCommand(stepId_, username_);
                 var json = JsonSerializer.Serialize(cancelCommand);
                 streamWriter.WriteLine(json);    
             }

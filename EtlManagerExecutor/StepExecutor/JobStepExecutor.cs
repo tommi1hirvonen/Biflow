@@ -15,24 +15,29 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class JobStepExecutor : StepExecutorBase
+    class JobStepExecutor : IStepExecutor
     {
+        private readonly IExecutionConfiguration _executionConfiguration;
+
         private JobStepExecution Step { get; init; }
 
-        public JobStepExecutor(ExecutionConfiguration configuration, JobStepExecution step)
-            : base(configuration)
+        public int RetryAttemptCounter { get; set; } = 0;
+
+        public JobStepExecutor(IExecutionConfiguration executionConfiguration, JobStepExecution step)
         {
+            _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
+            var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
 
             Process executorProcess;
             Guid jobExecutionId;
 
-            using (var sqlConnection = new SqlConnection(Configuration.ConnectionString))
+            using (var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString))
             {
                 await sqlConnection.OpenAsync(CancellationToken.None);
 
@@ -43,7 +48,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Configuration.ExecutionId, Step, Step.JobToExecuteId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
                     return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
                 }
 
@@ -56,7 +61,7 @@ namespace EtlManagerExecutor
                         "execute",
                         "--id",
                         jobExecutionId.ToString(),
-                        Configuration.Notify ? "--notify" : ""
+                        _executionConfiguration.Notify ? "--notify" : ""
                     },
                     UseShellExecute = false,
                     CreateNoWindow = true,
@@ -70,7 +75,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
                     return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
                 }
 
@@ -84,13 +89,13 @@ namespace EtlManagerExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    await CancelAsync(jobExecutionId, Configuration.Username);
+                    await CancelAsync(jobExecutionId, cancellationTokenSource.Username);
                     throw;
                 }
 
                 try
                 {
-                    using var sqlConnection = new SqlConnection(Configuration.ConnectionString);
+                    using var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString);
                     var status = await sqlConnection.ExecuteScalarAsync<string>(
                         "SELECT TOP 1 ExecutionStatus FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
                         new { ExecutionId = jobExecutionId });
@@ -107,7 +112,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Configuration.ExecutionId, Step, jobExecutionId);
+                    Log.Error(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
                     return new ExecutionResult.Failure("Error getting sub-execution status");
                 }
             }

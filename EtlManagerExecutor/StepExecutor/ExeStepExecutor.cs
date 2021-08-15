@@ -9,20 +9,23 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExeStepExecutor : StepExecutorBase
+    class ExeStepExecutor : IStepExecutor
     {
         private ExeStepExecution Step { get; init; }
+
+        public int RetryAttemptCounter { get; set; } = 0;
 
         private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
         private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();
 
-        public ExeStepExecutor(ExecutionConfiguration configuration, ExeStepExecution step) : base(configuration)
+        public ExeStepExecutor(ExeStepExecution step)
         {
             Step = step;
         }
 
-        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
+            var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
 
             var startInfo = new ProcessStartInfo()
@@ -53,7 +56,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Configuration.ExecutionId, Step, Step.ExeFileName);
+                Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
                 return new ExecutionResult.Failure("Error starting process: " + ex.Message);
             }
 
@@ -93,14 +96,14 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "{ExecutionId} {Step} Error killing process after timeout", Configuration.ExecutionId, Step);
+                    Log.Error(ex, "{ExecutionId} {Step} Error killing process after timeout", Step.ExecutionId, Step);
                 }
                 
                 throw;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Configuration.ExecutionId, Step, Step.ExeFileName);
+                Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
                 return new ExecutionResult.Failure("Error while executing exe: " + ex.Message);
             }
         }

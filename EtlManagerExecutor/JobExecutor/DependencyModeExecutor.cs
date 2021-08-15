@@ -1,4 +1,5 @@
-﻿using EtlManagerDataAccess.Models;
+﻿using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
@@ -13,12 +14,17 @@ namespace EtlManagerExecutor
 {
     class DependencyModeExecutor : ExecutorBase
     {
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+
         private List<Task> StepWorkers { get; } = new();
 
         private Dictionary<Guid, StepExecution> StepExecutions { get; } = new();
 
-        public DependencyModeExecutor(ExecutionConfiguration executionConfiguration, Execution execution)
-            : base(executionConfiguration, execution) { }
+        public DependencyModeExecutor(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, IDbContextFactory<EtlManagerContext> dbContextFactory, Execution execution)
+            : base(executionConfiguration, serviceProvider, execution)
+        {
+            _dbContextFactory = dbContextFactory;
+        }
 
         public override async Task RunAsync()
         {
@@ -39,7 +45,7 @@ namespace EtlManagerExecutor
                     var json = JsonSerializer.Serialize(steps, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
                     var errorMessage = "Execution was cancelled because of circular step dependencies:\n" + json;
 
-                    using var context = ExecutionConfig.DbContextFactory.CreateDbContext();
+                    using var context = _dbContextFactory.CreateDbContext();
                     foreach (var attempt in Execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
                     {
                         attempt.StartDateTime = DateTime.Now;
@@ -50,13 +56,13 @@ namespace EtlManagerExecutor
                     }
                     await context.SaveChangesAsync();
 
-                    Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, ExecutionConfig.ExecutionId);
+                    Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, Execution.ExecutionId);
                     return;
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", ExecutionConfig.ExecutionId);
+                Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", Execution.ExecutionId);
                 return;
             }
 
@@ -108,11 +114,11 @@ namespace EtlManagerExecutor
                         try
                         {
                             await UpdateStepAsSkipped(step);
-                            Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", ExecutionConfig.ExecutionId, step);
+                            Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
                         }
                         catch (Exception ex)
                         {
-                            Log.Error(ex, "{ExecutionId} {step} Error marking step as SKIPPED", ExecutionConfig.ExecutionId, step);
+                            Log.Error(ex, "{ExecutionId} {step} Error marking step as SKIPPED", Execution.ExecutionId, step);
                         }
                         break;
 
@@ -158,7 +164,7 @@ namespace EtlManagerExecutor
 
         private async Task UpdateStepAsSkipped(StepExecution step)
         {
-            using var context = ExecutionConfig.DbContextFactory.CreateDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             foreach (var attempt in step.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Skipped;
@@ -172,13 +178,13 @@ namespace EtlManagerExecutor
         // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
         private async Task<Dictionary<Step, HashSet<(Step Step, bool StrictDependency)>>> GetStepDependenciesAsync()
         {
-            using var context = ExecutionConfig.DbContextFactory.CreateDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             var steps = await context.Dependencies
                 .AsNoTrackingWithIdentityResolution()
                 .Include(dep => dep.Step)
                 .Include(dep => dep.DependantOnStep)
-                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == ExecutionConfig.ExecutionId && e.StepId == dep.StepId))
-                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == ExecutionConfig.ExecutionId && e.StepId == dep.DependantOnStepId))
+                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == Execution.ExecutionId && e.StepId == dep.StepId))
+                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == Execution.ExecutionId && e.StepId == dep.DependantOnStepId))
                 .ToListAsync();
             var dependencies = steps.GroupBy(key => key.Step, element => (element.DependantOnStep, element.StrictDependency))
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.ToHashSet());

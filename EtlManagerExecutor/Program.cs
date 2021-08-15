@@ -35,6 +35,8 @@ namespace EtlManagerExecutor
                     var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
                     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                     services.AddSingleton<ITokenService, TokenService>();
+                    services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
+                    services.AddTransient<IEmailHelper, EmailHelper>();
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IMailTest, MailTest>();

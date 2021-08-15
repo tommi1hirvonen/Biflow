@@ -1,4 +1,5 @@
-﻿using EtlManagerDataAccess.Models;
+﻿using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
@@ -12,32 +13,43 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class FunctionStepExecutor : StepExecutorBase
+    class FunctionStepExecutor : IStepExecutor
     {
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+        private readonly IExecutionConfiguration _executionConfiguration;
+
         private FunctionStepExecution Step { get; init; }
 
         private const int MaxRefreshRetries = 3;
 
+        public int RetryAttemptCounter { get; set; } = 0;
+
         private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-        public FunctionStepExecutor(ExecutionConfiguration configuration, FunctionStepExecution step) : base(configuration)
+        public FunctionStepExecutor(
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            IExecutionConfiguration executionConfiguration,
+            FunctionStepExecution step)
         {
+            _dbContextFactory = dbContextFactory;
+            _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
+            var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
 
             string? functionKey = null;
             try
             {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
                 functionKey = await context.FunctionSteps.Select(step => step.FunctionKey).FirstOrDefaultAsync(cancellationToken);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Configuration.ExecutionId, Step);
+                Log.Error(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
             }
             
             var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);
@@ -104,7 +116,7 @@ namespace EtlManagerExecutor
             // Update instance id for the step execution attempt
             try
             {
-                using var context = Configuration.DbContextFactory.CreateDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
                 var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
                 if (attempt is not null && attempt is FunctionStepExecutionAttempt function)
                 {
@@ -120,7 +132,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "{ExecutionId} {Step} Error updating function instance id", Configuration.ExecutionId, Step);
+                Log.Warning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
             }
 
             StatusResponse status;
@@ -135,11 +147,11 @@ namespace EtlManagerExecutor
                         if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
                         {
                             await CancelAsync(client, startResponse.TerminatePostUri, "StepTimedOut");
-                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Configuration.ExecutionId, Step);
+                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
                             return new ExecutionResult.Failure("Step execution timed out");
                         }
 
-                        await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                        await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
                     }
                     else
                     {
@@ -177,7 +189,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error stopping function ", Configuration.ExecutionId, Step);
+                Log.Error(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
             }
         }
 
@@ -196,9 +208,9 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "{ExecutionId} {Step} Error getting function instance status", Configuration.ExecutionId, Step);
+                    Log.Warning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step);
                     refreshRetries++;
-                    await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                    await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
                 }
             }
             throw new TimeoutException("The maximum number of function instance status refresh attempts was reached.");

@@ -105,8 +105,7 @@ namespace EtlManagerUi
             using var streamWriter = new StreamWriter(pipeClient);
             // Send cancel command.
             var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-            var stepId_ = stepId?.ToString().ToLower();
-            var cancelCommand = new { StepId = stepId_, Username = username_ };
+            var cancelCommand = new CancelCommand(stepId, username);
             var json = JsonSerializer.Serialize(cancelCommand);
             streamWriter.WriteLine(json);
         }

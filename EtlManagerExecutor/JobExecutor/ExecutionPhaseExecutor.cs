@@ -1,4 +1,5 @@
 ﻿using EtlManagerDataAccess.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -6,8 +7,8 @@ namespace EtlManagerExecutor
 {
     class ExecutionPhaseExecutor : ExecutorBase
     {
-        public ExecutionPhaseExecutor(ExecutionConfiguration executionConfiguration, Execution execution)
-            : base(executionConfiguration, execution) { }
+        public ExecutionPhaseExecutor(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, Execution execution)
+            : base(executionConfiguration, serviceProvider, execution) { }
 
         public override async Task RunAsync()
         {

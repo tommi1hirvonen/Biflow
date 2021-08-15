@@ -14,12 +14,23 @@ using System.Text;
 
 namespace EtlManagerExecutor
 {
-    public static class EmailHelper
+    public class EmailHelper : IEmailHelper
     {
-        public static void SendNotification(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, Guid executionId)
+        private readonly IConfiguration _configuration;
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+        private readonly IExecutionConfiguration _executionConfiguration;
+
+
+        public EmailHelper(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, IExecutionConfiguration executionConfiguration)
         {
-            using var sqlConnection = new SqlConnection(configuration.GetConnectionString("EtlManagerContext"));
-            using var context = dbContextFactory.CreateDbContext();
+            _configuration = configuration;
+            _dbContextFactory = dbContextFactory;
+            _executionConfiguration = executionConfiguration;
+        }
+
+        public void SendNotification(Guid executionId)
+        {
+            using var context = _dbContextFactory.CreateDbContext();
             Execution execution;
             try
             {
@@ -65,6 +76,7 @@ namespace EtlManagerExecutor
             string messageBody = string.Empty;
             try
             {
+                using var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString);
                 messageBody = sqlConnection.ExecuteScalar<string?>(
                     "EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId",
                     new { ExecutionId = executionId }) ?? string.Empty;
@@ -78,7 +90,7 @@ namespace EtlManagerExecutor
             EmailSettings emailSettings;
             try
             {
-                emailSettings = EmailSettings.FromConfiguration(configuration);
+                emailSettings = EmailSettings.FromConfiguration(_configuration);
             }
             catch (Exception ex)
             {

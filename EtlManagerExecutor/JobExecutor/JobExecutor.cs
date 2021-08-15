@@ -2,6 +2,7 @@
 using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -15,26 +16,30 @@ namespace EtlManagerExecutor
 {
     class JobExecutor : IJobExecutor
     {
-        private readonly IConfiguration configuration;
-        private readonly IDbContextFactory<EtlManagerContext> dbContextFactory;
-        private readonly ITokenService tokenService;
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+        private readonly IEmailHelper _emailHelper;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IExecutionConfiguration _executionConfiguration;
 
-        public JobExecutor(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, ITokenService tokenService)
+        public JobExecutor(
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            IEmailHelper emailHelper,
+            IServiceProvider serviceProvider,
+            IExecutionConfiguration executionConfiguration)
         {
-            this.configuration = configuration;
-            this.dbContextFactory = dbContextFactory;
-            this.tokenService = tokenService;
+            _dbContextFactory = dbContextFactory;
+            _emailHelper = emailHelper;
+            _serviceProvider = serviceProvider;
+            _executionConfiguration = executionConfiguration;
         }
 
         public async Task RunAsync(Guid executionId, bool notify)
         {
-            var connectionString = configuration.GetConnectionString("EtlManagerContext");
-            var pollingIntervalMs = configuration.GetValue<int>("PollingIntervalMs");
-            var maxParallelSteps = configuration.GetValue<int>("MaximumParallelSteps");
+            _executionConfiguration.Notify = notify;
 
             Execution execution;
             Job job;
-            using (var context = dbContextFactory.CreateDbContext())
+            using (var context = _dbContextFactory.CreateDbContext())
             {
                 try
                 {
@@ -58,7 +63,9 @@ namespace EtlManagerExecutor
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => (e as PackageStepExecution)!.Connection)
                         .FirstAsync(e => e.ExecutionId == executionId);
-                    
+
+                    job = execution.Job ?? throw new InvalidOperationException("Job was null");
+
                     execution.ExecutorProcessId = process.Id;
                     execution.ExecutionStatus = ExecutionStatus.Running;
                     execution.StartDateTime = DateTime.Now;
@@ -67,8 +74,6 @@ namespace EtlManagerExecutor
                     context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
                     context.Entry(execution).Property(e => e.StartDateTime).IsModified = true;
                     await context.SaveChangesAsync();
-
-                    job = execution.Job ?? throw new InvalidOperationException("Job was null");
                 }
                 catch (Exception ex)
                 {
@@ -77,26 +82,11 @@ namespace EtlManagerExecutor
                 }
             }
 
-            // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-            maxParallelSteps = job.MaxParallelSteps > 0 ? job.MaxParallelSteps : maxParallelSteps;
-
-            var executionConfig = new ExecutionConfiguration(
-                dbContextFactory: dbContextFactory,
-                tokenService: tokenService,
-                connectionString: connectionString,
-                maxParallelSteps: maxParallelSteps,
-                pollingIntervalMs: pollingIntervalMs,
-                executionId: executionId,
-                job: job,
-                notify: notify,
-                // Set the username as timeout. If steps are to be canceled, this will be used by default.
-                username: "timeout");
-
             // Check whether there are circular dependencies between jobs (through steps executing another jobs).
             string? circularExecutions;
             try
             {
-                circularExecutions = await GetCircularJobExecutionsAsync(executionConfig);
+                circularExecutions = await GetCircularJobExecutionsAsync(job);
             }
             catch (Exception ex)
             {
@@ -107,7 +97,7 @@ namespace EtlManagerExecutor
             if (!string.IsNullOrEmpty(circularExecutions))
             {
                 var errorMessage = "Execution was cancelled because of circular job executions:\n" + circularExecutions;
-                using var context = dbContextFactory.CreateDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
                 foreach (var attempt in execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
                 {
                     attempt.StartDateTime = DateTime.Now;
@@ -132,12 +122,12 @@ namespace EtlManagerExecutor
             if (execution.DependencyMode)
             {
                 Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
-                executor = new DependencyModeExecutor(executionConfig, execution);
+                executor = ActivatorUtilities.CreateInstance<DependencyModeExecutor>(_serviceProvider, execution);
             }
             else
             {
                 Log.Information("{executionId} Starting execution in execution phase mode", executionId);
-                executor = new ExecutionPhaseExecutor(executionConfig, execution);
+                executor = ActivatorUtilities.CreateInstance<ExecutionPhaseExecutor>(_serviceProvider, execution);
             }
 
             try
@@ -168,7 +158,7 @@ namespace EtlManagerExecutor
             // Update job execution status.
             try
             {
-                using var context = dbContextFactory.CreateDbContext();
+                using var context = _dbContextFactory.CreateDbContext();
                 execution.ExecutionStatus = status;
                 execution.EndDateTime = DateTime.Now;
                 context.Attach(execution);
@@ -184,7 +174,7 @@ namespace EtlManagerExecutor
             // Execution finished. Notify subscribers of possible errors.
             if (notify)
             {
-                EmailHelper.SendNotification(configuration, dbContextFactory, executionId);
+                _emailHelper.SendNotification(executionId);
             }
         }
 
@@ -196,7 +186,7 @@ namespace EtlManagerExecutor
         /// <returns>
         /// JSON string of circular job dependencies or null if there were no circular dependencies.
         /// </returns>
-        private async Task<string?> GetCircularJobExecutionsAsync(ExecutionConfiguration executionConfig)
+        private async Task<string?> GetCircularJobExecutionsAsync(Job job)
         {
             var dependencies = await ReadDependenciesAsync();
             List<List<Job>> cycles = dependencies.FindCycles();
@@ -205,13 +195,13 @@ namespace EtlManagerExecutor
             var json = JsonSerializer.Serialize(jobs, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
             // There are no circular dependencies or this job is not among the cycles.
-            return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(job => job.JobId == executionConfig.Job.JobId))
+            return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
                 ? null : json;
         }
 
         private async Task<Dictionary<Job, List<Job>>> ReadDependenciesAsync()
         {
-            using var context = dbContextFactory.CreateDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             var steps = await context.JobSteps
                 .Include(step => step.Job)
                 .Include(step => step.JobToExecute)

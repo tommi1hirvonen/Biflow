@@ -11,24 +11,26 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class SqlStepExecutor : StepExecutorBase
+    class SqlStepExecutor : IStepExecutor
     {
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
         private SqlStepExecution Step { get; init; }
 
-        public SqlStepExecutor(ExecutionConfiguration executionConfiguration, SqlStepExecution step)
-            : base(executionConfiguration)
+        public int RetryAttemptCounter { get; set; } = 0;
+
+        public SqlStepExecutor(SqlStepExecution step)
         {
             Step = step;
         }
 
-        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
+            var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
-                Log.Information("{ExecutionId} {Step} Starting SQL execution", Configuration.ExecutionId, Step);
+                Log.Information("{ExecutionId} {Step} Starting SQL execution", Step.ExecutionId, Step);
                 using var connection = new SqlConnection(Step.Connection.ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
                 // command timeout = 0 => wait indefinitely
@@ -41,7 +43,7 @@ namespace EtlManagerExecutor
                 // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
                 cancellationToken.ThrowIfCancellationRequested();
 
-                Log.Warning(ex, "{ExecutionId} {Step} SQL execution failed", Configuration.ExecutionId, Step);
+                Log.Warning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
                 return new ExecutionResult.Failure(errorMessage, GetInfoMessage());

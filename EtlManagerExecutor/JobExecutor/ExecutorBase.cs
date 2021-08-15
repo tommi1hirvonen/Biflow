@@ -1,4 +1,6 @@
 ﻿using EtlManagerDataAccess.Models;
+using EtlManagerUtils;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -14,15 +16,14 @@ namespace EtlManagerExecutor
 {
     abstract class ExecutorBase
     {
-        public record CancelCommand(Guid? StepId, string Username);
-
-        protected ExecutionConfiguration ExecutionConfig { get; init; }
+        protected IExecutionConfiguration _executionConfig;
+        private readonly IServiceProvider _serviceProvider;
 
         protected Execution Execution { get; init; }
 
         private SemaphoreSlim Semaphore { get; init; }
 
-        protected Dictionary<Guid, CancellationTokenSource> CancellationTokenSources { get; } = new();
+        protected Dictionary<Guid, ExtendedCancellationTokenSource> CancellationTokenSources { get; } = new();
 
         protected enum ExecutionStatus
         {
@@ -34,11 +35,16 @@ namespace EtlManagerExecutor
 
         protected Dictionary<Guid, ExecutionStatus> StepStatuses { get; } = new();
 
-        public ExecutorBase(ExecutionConfiguration executionConfiguration, Execution execution)
+        public ExecutorBase(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, Execution execution)
         {
-            ExecutionConfig = executionConfiguration;
+            _executionConfig = executionConfiguration;
+            _serviceProvider = serviceProvider;
             Execution = execution;
-            Semaphore = new SemaphoreSlim(ExecutionConfig.MaxParallelSteps, ExecutionConfig.MaxParallelSteps);
+
+            // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
+            var maxParallelSteps = execution.Job?.MaxParallelSteps ?? 0;
+            maxParallelSteps = maxParallelSteps > 0 ? maxParallelSteps : _executionConfig.MaxParallelSteps;
+            Semaphore = new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
         }
 
         public abstract Task RunAsync();
@@ -48,7 +54,7 @@ namespace EtlManagerExecutor
             // Start listening for cancel key press from the console.
             _ = Task.Run(ReadCancelKey);
             // Start listening for cancel command from the UI application.
-            _ = Task.Run(() => ReadCancelPipe(ExecutionConfig.ExecutionId));
+            _ = Task.Run(() => ReadCancelPipe(Execution.ExecutionId));
         }
 
         protected async Task StartNewStepWorkerAsync(StepExecution step)
@@ -56,9 +62,9 @@ namespace EtlManagerExecutor
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
-            var token = CancellationTokenSources[step.StepId].Token;
-            var task = new StepWorker(ExecutionConfig, step).ExecuteStepAsync(token);
-            Log.Information("{ExecutionId} {step} Started step execution", ExecutionConfig.ExecutionId, step);
+            var worker = ActivatorUtilities.CreateInstance<StepWorker>(_serviceProvider, step);
+            var task = worker.ExecuteStepAsync(CancellationTokenSources[step.StepId]);
+            Log.Information("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
             bool result = false;
             try
             {
@@ -71,7 +77,7 @@ namespace EtlManagerExecutor
                 StepStatuses[step.StepId] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
                 // Release the semaphore once to make room for new parallel executions.
                 Semaphore.Release();
-                Log.Information("{ExecutionId} {step} Finished step execution", ExecutionConfig.ExecutionId, step);
+                Log.Information("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
             }
         }
 
@@ -107,7 +113,7 @@ namespace EtlManagerExecutor
                 var stepId = Guid.Parse(input);
                 if (CancellationTokenSources.ContainsKey(stepId))
                 {
-                    CancellationTokenSources[stepId].Cancel();
+                    CancellationTokenSources[stepId].Cancel("console");
                     Console.WriteLine($"Canceled step {stepId}.");
                 }
                 else
@@ -136,19 +142,17 @@ namespace EtlManagerExecutor
                     var json = builder.ToString();
                     var cancelCommand = JsonSerializer.Deserialize<CancelCommand>(json)
                         ?? throw new ArgumentNullException("cancelCommand", "Cancel command cannot be null");
-                    // Change the user to the one initiated the cancel.
-                    ExecutionConfig.Username = cancelCommand.Username;
                     if (cancelCommand.StepId is not null)
                     {
                         // Cancel just one step
-                        CancellationTokenSources[(Guid)cancelCommand.StepId].Cancel();
+                        CancellationTokenSources[(Guid)cancelCommand.StepId].Cancel(cancelCommand.Username);
                     }
                     else
                     {
                         // Cancel all steps
                         foreach (var pair in CancellationTokenSources)
                         {
-                            pair.Value.Cancel();
+                            pair.Value.Cancel(cancelCommand.Username);
                         }
                     }
                 }

@@ -8,24 +8,32 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class DatasetStepExecutor : StepExecutorBase
+    class DatasetStepExecutor : IStepExecutor
     {
+        private readonly ITokenService _tokenService;
+        private readonly IExecutionConfiguration _executionConfiguration;
+
         private DatasetStepExecution Step { get; init; }
 
-        public DatasetStepExecutor(ExecutionConfiguration configuration, DatasetStepExecution step) : base(configuration)
+        public int RetryAttemptCounter { get; set; } = 0;
+
+        public DatasetStepExecutor(ITokenService tokenService, IExecutionConfiguration executionConfiguration, DatasetStepExecution step)
         {
+            _tokenService = tokenService;
+            _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public override async Task<ExecutionResult> ExecuteAsync(CancellationToken cancellationToken)
+        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
+            var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
 
 
             // Start dataset refresh.
             try
             {
-                await Step.AppRegistration.RefreshDatasetAsync(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);                
+                await Step.AppRegistration.RefreshDatasetAsync(_tokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);                
             }
             catch (OperationCanceledException)
             {
@@ -44,7 +52,7 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    var refresh = await Step.AppRegistration.GetDatasetRefreshStatus(Configuration.TokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
+                    var refresh = await Step.AppRegistration.GetDatasetRefreshStatus(_tokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                     if (refresh?.Status == "Completed")
                     {
                         return new ExecutionResult.Success();
@@ -55,7 +63,7 @@ namespace EtlManagerExecutor
                     }
                     else
                     {
-                        await Task.Delay(Configuration.PollingIntervalMs, cancellationToken);
+                        await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
                     }
                 }
                 catch (OperationCanceledException)
