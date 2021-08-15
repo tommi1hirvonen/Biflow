@@ -237,7 +237,7 @@
                     Output
                 </dt>
                 <dd class="col-sm-9">
-                    <pre><code>@function_.InfoMessage</code></pre>
+                    <code style="white-space: pre-wrap;">@function_.InfoMessage</code>
                 </dd>
             }
         }
@@ -245,7 +245,7 @@
             Error message
         </dt>
         <dd class="col-sm-9">
-            <text class="text-danger" style="font-family: monospace; white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</text>
+            <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
         </dd>
     </dl>
     @if (StepExecutionAttempt.StepExecution is PackageStepExecution package_)
