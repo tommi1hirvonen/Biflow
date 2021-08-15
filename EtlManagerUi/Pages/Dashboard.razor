@@ -255,7 +255,7 @@
                 StepName = select.Key.StepName,
                 StepId = select.Key.StepId,
                 JobName = select.Key.JobName,
-                JobId = select.Key.JobId,
+                JobId = select.Key.JobId ?? Guid.Empty,
                 NoOfExecutions = select.Count(),
                 SuccessPercent = (decimal)select.Count(e => e.StepExecutionAttempts.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded)) / select.Count() * 100
             })

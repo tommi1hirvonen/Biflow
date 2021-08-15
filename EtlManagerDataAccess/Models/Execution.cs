@@ -21,7 +21,7 @@ namespace EtlManagerDataAccess.Models
         public Guid ExecutionId { get; set; }
 
         [Display(Name = "Job id")]
-        public Guid JobId { get; set; }
+        public Guid? JobId { get; set; }
 
         [Display(Name = "Job")]
         public string JobName { get; set; }
