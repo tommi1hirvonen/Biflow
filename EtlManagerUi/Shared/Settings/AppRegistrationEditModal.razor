@@ -2,7 +2,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large">
+<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
     @if (AppRegistration is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration.AppRegistrationName)</BSModalHeader>
@@ -14,7 +14,7 @@
                         <ValidationSummary />
 
                         <BSFormGroup>
-                            <BSLabel>Power BI Service name</BSLabel>
+                            <BSLabel>App registration name</BSLabel>
                             <InputText class="form-control" @bind-Value="AppRegistration.AppRegistrationName"></InputText>
                         </BSFormGroup>
 
@@ -152,6 +152,15 @@
             await JS.InvokeVoidAsync("alert", ex.Message);
         }
         TestingConnection = false;
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        if (!isOpen)
+        {
+            ConnectionTestSuccess = null;
+            
+        }
     }
 
     public void Show() => Modal.Show();

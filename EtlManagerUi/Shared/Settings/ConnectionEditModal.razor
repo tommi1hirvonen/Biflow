@@ -3,7 +3,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large">
+<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
     @if (Connection is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection.ConnectionName)</BSModalHeader>
@@ -135,6 +135,12 @@
             await JS.InvokeVoidAsync("alert", ex.Message);
         }
         TestingConnection = false;
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        if (!isOpen)
+            ConnectionTestSuccess = null;
     }
 
     public void Show() => Modal.Show();

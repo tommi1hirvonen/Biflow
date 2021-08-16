@@ -2,7 +2,7 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large">
+<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
     @if (DataFactory is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory.DataFactoryName)</BSModalHeader>
@@ -142,6 +142,12 @@
             await JS.InvokeVoidAsync("alert", ex.Message);
         }
         TestingConnection = false;
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        if (!isOpen)
+            ConnectionTestSuccess = null;
     }
 
     public void Show() => Modal.Show();

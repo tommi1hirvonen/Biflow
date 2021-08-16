@@ -4,7 +4,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject ITokenService TokenService 
 
-<BSModal @ref="Modal" Size="Size.Large">
+<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
     @if (FunctionApp is not null)
     {
         <BSModalHeader OnClick="() => Modal.Hide()">@(FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + FunctionApp.FunctionAppName)</BSModalHeader>
@@ -166,6 +166,7 @@
 
     private async Task SubmitFunctionApp()
     {
+        if (FunctionApp is not null) FunctionApp.AppRegistration = null!;
         await OnFunctionAppSubmit.InvokeAsync(FunctionApp);
         Modal.Hide();
     }
@@ -185,6 +186,12 @@
             await JS.InvokeVoidAsync("alert", ex.Message);
         }
         TestingConnection = false;
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        if (!isOpen)
+            ConnectionTestSuccess = null;
     }
 
     public void Show() => Modal.Show();
