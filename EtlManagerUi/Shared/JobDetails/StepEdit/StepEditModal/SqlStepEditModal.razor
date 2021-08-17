@@ -91,20 +91,24 @@
 
     private bool ShowDependencies { get; set; } = false;
 
-    protected override void OnInitialized()
-    {
-        Context = DbFactory.CreateDbContext();
-    }
-
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
+    }
+
+    private async Task ResetContext()
+    {
+        if (Context is not null)
+            await Context.DisposeAsync();
+
+        Context = DbFactory.CreateDbContext();
     }
 
     private async Task LoadData()
     {
         if (StepId != Guid.Empty && StepId != PrevStepId)
         {
+            await ResetContext();
             Step = await Context.SqlSteps
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
@@ -113,6 +117,7 @@
         }
         else if (StepId == Guid.Empty && Job is not null)
         {
+            await ResetContext();
             Step = new()
             {
                 JobId = Job.JobId,
