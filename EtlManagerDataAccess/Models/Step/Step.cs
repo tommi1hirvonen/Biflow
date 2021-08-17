@@ -48,12 +48,12 @@ namespace EtlManagerDataAccess.Models
         [Required]
         [DataType(DataType.DateTime)]
         [Display(Name = "Created")]
-        public DateTime CreatedDateTime { get; set; }
+        public DateTimeOffset CreatedDateTime { get; set; }
         
         [Required]
         [DataType(DataType.DateTime)]
         [Display(Name = "Last modified")]
-        public DateTime LastModifiedDateTime { get; set; }
+        public DateTimeOffset LastModifiedDateTime { get; set; }
 
         [Required]
         [Display(Name = "Enabled")]

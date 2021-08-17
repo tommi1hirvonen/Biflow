@@ -26,7 +26,7 @@ namespace EtlManagerDataAccess.Models
 
         [Required]
         [Display(Name = "Created")]
-        public DateTime CreatedDateTime { get; set; }
+        public DateTimeOffset CreatedDateTime { get; set; }
 
         [Display(Name = "Created by")]
         public string? CreatedBy { get; set; }

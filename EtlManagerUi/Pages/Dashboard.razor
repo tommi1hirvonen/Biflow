@@ -179,7 +179,7 @@
         var executions_ = executions.GroupBy(group => new
             {
                 group.JobName,
-                ((DateTime)group.CreatedDateTime).Date
+                ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
             })
             .Select(select => new TimeSeriesItem
             {

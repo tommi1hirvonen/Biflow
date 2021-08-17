@@ -22,10 +22,10 @@ namespace EtlManagerDataAccess.Models
         public string? Role { get; set; }
 
         [Required]
-        public DateTime CreatedDateTime { get; set; }
+        public DateTimeOffset CreatedDateTime { get; set; }
 
         [Required]
-        public DateTime LastModifiedDateTime { get; set; }
+        public DateTimeOffset LastModifiedDateTime { get; set; }
 
         public ICollection<Subscription> Subscriptions { get; set; } = null!;
     }

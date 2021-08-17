@@ -95,7 +95,7 @@ SELECT
 	ExecutionId = @EtlManagerExecutionId,
 	JobId = a.JobId,
 	JobName = a.JobName,
-	CreatedDateTime = GETDATE(),
+	CreatedDateTime = GETUTCDATE(),
 	StartDateTime = NULL,
 	EndDateTime = NULL,
 	ExecutionStatus = 'NOT STARTED',

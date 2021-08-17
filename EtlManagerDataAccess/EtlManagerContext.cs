@@ -327,7 +327,7 @@ namespace EtlManagerDataAccess
                 .ToList();
             editedJobsAndSteps.ForEach(entity =>
             {
-                entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now;
                 entity.Property("LastModifiedBy").CurrentValue = user;
             });
 
@@ -335,8 +335,8 @@ namespace EtlManagerDataAccess
             var addedJobsAndSteps = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
             addedJobsAndSteps.ForEach(entity =>
             {
-                entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
-                entity.Property("LastModifiedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("CreatedDateTime").CurrentValue = DateTimeOffset.Now;
+                entity.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now;
                 entity.Property("CreatedBy").CurrentValue = user;
                 entity.Property("LastModifiedBy").CurrentValue = user;
             });
@@ -349,13 +349,13 @@ namespace EtlManagerDataAccess
 
             addedDependenciesAndSchedules.ForEach(entity =>
             {
-                entity.Property("CreatedDateTime").CurrentValue = DateTime.Now;
+                entity.Property("CreatedDateTime").CurrentValue = DateTimeOffset.Now;
                 entity.Property("CreatedBy").CurrentValue = user;
             });
 
             // Set the audit fields for edited users.
             var editedUsers = ChangeTracker.Entries().Where(entity => entity.Entity is User && entity.State == EntityState.Modified).ToList();
-            editedUsers.ForEach(user => user.Property("LastModifiedDateTime").CurrentValue = DateTime.Now);
+            editedUsers.ForEach(user => user.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now);
 
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }

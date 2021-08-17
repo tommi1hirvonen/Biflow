@@ -18,7 +18,7 @@ namespace EtlManagerDataAccess
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
 
-        private Dictionary<Guid, Dictionary<string, (string Token, DateTime ExpiresOn)>> AccessTokens { get; } = new();
+        private Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> AccessTokens { get; } = new();
         
 
         public TokenService(IDbContextFactory<EtlManagerContext> dbContextFactory)
@@ -33,7 +33,7 @@ namespace EtlManagerDataAccess
             {
                 // If the token can be found in the dictionary and it is valid.
                 if (AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
-                    && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTime.Now.AddMinutes(5))
+                    && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
                 {
                     return token.Token;
                 }
@@ -46,7 +46,7 @@ namespace EtlManagerDataAccess
                         .FirstOrDefaultAsync(at => at.AppRegistrationId == appRegistration.AppRegistrationId && at.ResourceUrl == resourceUrl);
 
                     // If the token was set in database and it is valid, use that.
-                    if (accessToken is not null && accessToken.ExpiresOn >= DateTime.Now.AddMinutes(5))
+                    if (accessToken is not null && accessToken.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
                     {
                         resultToken = accessToken;
                     }
@@ -81,12 +81,12 @@ namespace EtlManagerDataAccess
             }
         }
 
-        private static async Task<(string Token, DateTime ExpiresOn)> GetTokenFromApiAsync(AppRegistration appRegistration, string resourceUrl)
+        private static async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenFromApiAsync(AppRegistration appRegistration, string resourceUrl)
         {
             var authContext = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
             var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
             var result = await authContext.AcquireTokenAsync(resourceUrl, clientCredential);
-            return (result.AccessToken, result.ExpiresOn.ToLocalTime().DateTime);
+            return (result.AccessToken, result.ExpiresOn);
         }
 
         public void Clear()

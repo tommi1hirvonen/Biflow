@@ -24,8 +24,8 @@ INSERT INTO etlmanager.Job (
 SELECT @JobIdNew,
 	JobName + ' - Copy',
 	JobDescription,
-	GETDATE(),
-	GETDATE(),
+	GETUTCDATE(),
+	GETUTCDATE(),
 	UseDependencyMode,
 	MaxParallelSteps,
 	IsEnabled,
@@ -45,7 +45,7 @@ SELECT NEWID(),
 	@JobIdNew,
 	CronExpression,
 	@Username,
-	GETDATE()
+	GETUTCDATE()
 FROM etlmanager.Schedule
 WHERE JobId = @JobId
 
@@ -129,8 +129,8 @@ SELECT @JobIdNew,
 	A.FunctionIsDurable,
 	A.RetryAttempts,
 	A.RetryIntervalMinutes,
-	GETDATE(),
-	GETDATE(),
+	GETUTCDATE(),
+	GETUTCDATE(),
 	A.IsEnabled,
 	@Username
 FROM etlmanager.Step AS A
@@ -151,7 +151,7 @@ SELECT NEWID(),
 	C.StepIdNew,
 	A.StrictDependency,
 	@Username,
-	GETDATE()
+	GETUTCDATE()
 FROM etlmanager.Dependency AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 	INNER JOIN #StepIdMapping AS C ON A.DependantOnStepId = C.StepId

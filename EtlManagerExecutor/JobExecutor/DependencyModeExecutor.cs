@@ -48,8 +48,8 @@ namespace EtlManagerExecutor
                     using var context = _dbContextFactory.CreateDbContext();
                     foreach (var attempt in Execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
                     {
-                        attempt.StartDateTime = DateTime.Now;
-                        attempt.EndDateTime = DateTime.Now;
+                        attempt.StartDateTime = DateTimeOffset.Now;
+                        attempt.EndDateTime = DateTimeOffset.Now;
                         attempt.ErrorMessage = errorMessage;
                         attempt.ExecutionStatus = StepExecutionStatus.Failed;
                         context.Attach(attempt).State = EntityState.Modified;
@@ -168,8 +168,8 @@ namespace EtlManagerExecutor
             foreach (var attempt in step.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Skipped;
-                attempt.StartDateTime = DateTime.Now;
-                attempt.EndDateTime = DateTime.Now;
+                attempt.StartDateTime = DateTimeOffset.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
                 context.Attach(attempt).State = EntityState.Modified;
             }
             await context.SaveChangesAsync();

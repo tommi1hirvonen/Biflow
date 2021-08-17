@@ -4,8 +4,8 @@
     [Salt]                 UNIQUEIDENTIFIER NOT NULL,
     [Email]                VARCHAR(254)     NULL,
     [Role]                 VARCHAR(50)      NOT NULL,
-    [CreatedDateTime]      DATETIME2 (7)    NOT NULL,
-    [LastModifiedDateTime] DATETIME2 (7)    NOT NULL,
+    [CreatedDateTime]      DATETIMEOFFSET   NOT NULL,
+    [LastModifiedDateTime] DATETIMEOFFSET   NOT NULL,
     CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([Username] ASC),
     CONSTRAINT [CK_User] CHECK ([Role] = 'Admin' OR [Role] = 'Editor' OR [Role] = 'Operator' OR [Role] = 'Viewer')
 )

@@ -5,8 +5,8 @@ AS
 DECLARE
 	@JobName NVARCHAR(250),
 	@JobStatus VARCHAR(50),
-	@JobStartDateTime DATETIME2,
-	@JobEndDateTime DATETIME2,
+	@JobStartDateTime DATETIMEOFFSET,
+	@JobEndDateTime DATETIMEOFFSET,
 	@JobExecutionInSeconds INT
 
 SELECT
@@ -68,8 +68,8 @@ SET @Body = CONCAT(N'
 
 DECLARE
 	@StepName NVARCHAR(250),
-	@StepStartDateTime DATETIME2,
-	@StepEndDateTime DATETIME2,
+	@StepStartDateTime DATETIMEOFFSET,
+	@StepEndDateTime DATETIMEOFFSET,
 	@StepExecutionInSeconds INT,
 	@StepExecutionStatus VARCHAR(50),
 	@StepErrorMessage NVARCHAR(MAX),

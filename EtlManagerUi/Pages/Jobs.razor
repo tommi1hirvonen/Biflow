@@ -175,7 +175,7 @@
                         <td class="align-middle">
                             @if (lastExecution is not null)
                             {
-                                <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime</a>
+                                <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime?.LocalDateTime</a>
                             }
                         </td>
                         <td>

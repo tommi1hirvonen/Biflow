@@ -52,13 +52,13 @@
                 {
                     <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                         <td>
-                            @item.CreatedDateTime
+                            @item.CreatedDateTime.LocalDateTime
                         </td>
                         <td>
-                            @item.StartDateTime
+                            @item.StartDateTime?.LocalDateTime
                         </td>
                         <td>
-                            @item.EndDateTime
+                            @item.EndDateTime?.LocalDateTime
                         </td>
                         <td>
                             <text>@item.GetDurationInReadableFormat()</text>

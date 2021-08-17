@@ -3,7 +3,7 @@
     [StepId]            UNIQUEIDENTIFIER NOT NULL,
     [DependantOnStepId] UNIQUEIDENTIFIER NOT NULL,
     [StrictDependency]  BIT              NOT NULL,
-    [CreatedDateTime]   DATETIME2        NOT NULL,
+    [CreatedDateTime]   DATETIMEOFFSET   NOT NULL,
     [CreatedBy]         NVARCHAR(250)    NULL,
     CONSTRAINT [PK_Dependency] PRIMARY KEY CLUSTERED ([DependencyId] ASC),
     CONSTRAINT [CK_Dependency] CHECK ([StepId]<>[DependantOnStepId]),

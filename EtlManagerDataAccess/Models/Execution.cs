@@ -10,7 +10,7 @@ namespace EtlManagerDataAccess.Models
     public class Execution
     {
 
-        public Execution(string jobName, DateTime createdDateTime, ExecutionStatus executionStatus)
+        public Execution(string jobName, DateTimeOffset createdDateTime, ExecutionStatus executionStatus)
         {
             JobName = jobName;
             CreatedDateTime = createdDateTime;
@@ -28,15 +28,15 @@ namespace EtlManagerDataAccess.Models
 
         [Display(Name = "Created")]
         [DataType(DataType.DateTime)]
-        public DateTime CreatedDateTime { get; set; }
+        public DateTimeOffset CreatedDateTime { get; set; }
 
         [Display(Name = "Started")]
         [DataType(DataType.DateTime)]
-        public DateTime? StartDateTime { get; set; }
+        public DateTimeOffset? StartDateTime { get; set; }
 
         [Display(Name = "Ended")]
         [DataType(DataType.DateTime)]
-        public DateTime? EndDateTime { get; set; }
+        public DateTimeOffset? EndDateTime { get; set; }
 
         [Display(Name = "Status")]
         public ExecutionStatus ExecutionStatus { get; set; }

@@ -22,7 +22,7 @@ BEGIN TRY
 
 	UPDATE [etlmanager].[User]
 	SET [PasswordHash] = HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), [Salt])),
-		[LastModifiedDateTime] = GETDATE()
+		[LastModifiedDateTime] = GETUTCDATE()
 	WHERE [Username] = @Username
 	;
 

@@ -68,7 +68,7 @@ namespace EtlManagerExecutor
 
                     execution.ExecutorProcessId = process.Id;
                     execution.ExecutionStatus = ExecutionStatus.Running;
-                    execution.StartDateTime = DateTime.Now;
+                    execution.StartDateTime = DateTimeOffset.Now;
                     context.Attach(execution);
                     context.Entry(execution).Property(e => e.ExecutorProcessId).IsModified = true;
                     context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
@@ -100,15 +100,15 @@ namespace EtlManagerExecutor
                 using var context = _dbContextFactory.CreateDbContext();
                 foreach (var attempt in execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
                 {
-                    attempt.StartDateTime = DateTime.Now;
-                    attempt.EndDateTime = DateTime.Now;
+                    attempt.StartDateTime = DateTimeOffset.Now;
+                    attempt.EndDateTime = DateTimeOffset.Now;
                     attempt.ErrorMessage = errorMessage;
                     attempt.ExecutionStatus = StepExecutionStatus.Failed;
                     context.Attach(attempt).State = EntityState.Modified;
                 }
 
-                execution.StartDateTime = DateTime.Now;
-                execution.EndDateTime = DateTime.Now;
+                execution.StartDateTime = DateTimeOffset.Now;
+                execution.EndDateTime = DateTimeOffset.Now;
                 execution.ExecutionStatus = ExecutionStatus.Failed;
                 context.Attach(execution).State = EntityState.Modified;
 
@@ -160,7 +160,7 @@ namespace EtlManagerExecutor
             {
                 using var context = _dbContextFactory.CreateDbContext();
                 execution.ExecutionStatus = status;
-                execution.EndDateTime = DateTime.Now;
+                execution.EndDateTime = DateTimeOffset.Now;
                 context.Attach(execution);
                 context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
                 context.Entry(execution).Property(e => e.EndDateTime).IsModified = true;

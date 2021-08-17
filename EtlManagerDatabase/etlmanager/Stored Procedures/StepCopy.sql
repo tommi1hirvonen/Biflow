@@ -80,8 +80,8 @@ SELECT @TargetJobId,
 	FunctionKey,
 	RetryAttempts,
 	RetryIntervalMinutes,
-	GETDATE(),
-	GETDATE(),
+	GETUTCDATE(),
+	GETUTCDATE(),
 	IsEnabled,
 	@Username
 FROM etlmanager.Step
@@ -140,7 +140,7 @@ BEGIN
 		DependantOnStepId,
 		StrictDependency,
 		@Username,
-		GETDATE()
+		GETUTCDATE()
 	FROM etlmanager.Dependency
 	WHERE StepId = @StepId
 

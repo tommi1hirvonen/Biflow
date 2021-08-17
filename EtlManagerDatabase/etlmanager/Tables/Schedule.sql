@@ -3,7 +3,7 @@
     [JobId]             UNIQUEIDENTIFIER    NOT NULL,
     [CronExpression]    VARCHAR(200)        NOT NULL,
     [IsEnabled]         BIT                 CONSTRAINT [DF_Schedule_IsEnabled] DEFAULT ((1)) NOT NULL,
-    [CreatedDateTime]   DATETIME2           NOT NULL,
+    [CreatedDateTime]   DATETIMEOFFSET      NOT NULL,
     [CreatedBy]         NVARCHAR(250)       NULL,
     CONSTRAINT [PK_Schedule] PRIMARY KEY CLUSTERED ([ScheduleId] ASC),
     CONSTRAINT [FK_Schedule_Job] FOREIGN KEY ([JobId]) REFERENCES [etlmanager].[Job] ([JobId]) ON DELETE CASCADE,

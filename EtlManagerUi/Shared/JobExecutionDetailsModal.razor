@@ -103,19 +103,19 @@
                     Created
                 </dt>
                 <dd class="col-sm-9">
-                    @Execution.CreatedDateTime
+                    @Execution.CreatedDateTime.LocalDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Started
                 </dt>
                 <dd class="col-sm-9">
-                    @Execution.StartDateTime
+                    @Execution.StartDateTime?.LocalDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Ended
                 </dt>
                 <dd class="col-sm-9">
-                    @Execution.EndDateTime
+                    @Execution.EndDateTime?.LocalDateTime
                 </dd>
                 <dt class="col-sm-3">
                     Number of steps
@@ -225,10 +225,10 @@
                                     <StepTypeIconComponent StepType_="@item.StepType" />
                                 </td>
                                 <td>
-                                    @item.StartDateTime
+                                    @item.StartDateTime?.LocalDateTime
                                 </td>
                                 <td>
-                                    @item.EndDateTime
+                                    @item.EndDateTime?.LocalDateTime
                                 </td>
                                 <td>
                                     <text>@item.GetDurationInReadableFormat()</text>
@@ -389,8 +389,8 @@
                 content = e.StepExecution.StepName,
                 title = e.ExecutionStatus + ", " + e.GetDurationInReadableFormat(),
                 className = e.ExecutionStatus.ToString().ToLower(),
-                start = e.StartDateTime?.ToString("yyyy-MM-dd HH':'mm':'ss"),
-                end = (e.EndDateTime ?? DateTime.Now).ToString("yyyy-MM-dd HH':'mm':'ss")
+                start = e.StartDateTime?.LocalDateTime.ToString("yyyy-MM-dd HH':'mm':'ss"),
+                end = (e.EndDateTime ?? DateTimeOffset.Now).LocalDateTime.ToString("yyyy-MM-dd HH':'mm':'ss")
             }
             );
             var datasetJson = JsonSerializer.Serialize(dataset);

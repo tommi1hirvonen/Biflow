@@ -141,8 +141,8 @@ namespace EtlManagerExecutor
                     {
                         RetryAttemptIndex = stepExecution.RetryAttemptCounter,
                         ExecutionStatus = StepExecutionStatus.Stopped,
-                        StartDateTime = DateTime.Now,
-                        EndDateTime = DateTime.Now
+                        StartDateTime = DateTimeOffset.Now,
+                        EndDateTime = DateTimeOffset.Now
                     };
                     attempt.Reset();
                     context.Attach(attempt).State = EntityState.Added;
@@ -161,7 +161,7 @@ namespace EtlManagerExecutor
         {
             using var context = _dbContextFactory.CreateDbContext();
             var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
-            attempt.EndDateTime = DateTime.Now;
+            attempt.EndDateTime = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             context.Attach(attempt).State = EntityState.Modified;
@@ -177,7 +177,7 @@ namespace EtlManagerExecutor
                 using var context = _dbContextFactory.CreateDbContext();
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
                 attempt.ExecutionStatus = status;
-                attempt.EndDateTime = DateTime.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
                 attempt.ErrorMessage = failureResult.ErrorMessage;
                 attempt.InfoMessage = failureResult.InfoMessage;
                 context.Attach(attempt).State = EntityState.Modified;
@@ -196,7 +196,7 @@ namespace EtlManagerExecutor
                 using var context = _dbContextFactory.CreateDbContext();
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
                 attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
-                attempt.EndDateTime = DateTime.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
                 attempt.InfoMessage = executionResult.InfoMessage;
                 context.Attach(attempt).State = EntityState.Modified;
                 await context.SaveChangesAsync();
@@ -213,8 +213,8 @@ namespace EtlManagerExecutor
             foreach (var attempt in StepExecution.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-                attempt.StartDateTime = DateTime.Now;
-                attempt.EndDateTime = DateTime.Now;
+                attempt.StartDateTime = DateTimeOffset.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
                 attempt.StoppedBy = username;
                 context.Attach(attempt).State = EntityState.Modified;
             }
@@ -227,7 +227,7 @@ namespace EtlManagerExecutor
             var attempt = StepExecution.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
             if (attempt is not null)
             {
-                attempt.StartDateTime = DateTime.Now;
+                attempt.StartDateTime = DateTimeOffset.Now;
                 attempt.ExecutionStatus = StepExecutionStatus.Running;
                 context.Attach(attempt).State = EntityState.Modified;
             }
@@ -238,7 +238,7 @@ namespace EtlManagerExecutor
                 {
                     RetryAttemptIndex = stepExecution.RetryAttemptCounter,
                     ExecutionStatus = StepExecutionStatus.Running,
-                    StartDateTime = DateTime.Now,
+                    StartDateTime = DateTimeOffset.Now,
                     EndDateTime = null
                 };
                 attempt.Reset();
@@ -251,7 +251,7 @@ namespace EtlManagerExecutor
         private async Task<bool> IsDuplicateExecutionAsync(EtlManagerContext context)
         {
             var duplicate = await context.StepExecutionAttempts
-                .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == StepExecutionStatus.Running && e.StartDateTime >= DateTime.Now.AddDays(-1))
+                .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == StepExecutionStatus.Running && e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
                 .AnyAsync();
             return duplicate;
         }
@@ -261,8 +261,8 @@ namespace EtlManagerExecutor
             foreach (var attempt in StepExecution.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Duplicate;
-                attempt.StartDateTime = DateTime.Now;
-                attempt.EndDateTime = DateTime.Now;
+                attempt.StartDateTime = DateTimeOffset.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
                 context.Attach(attempt).State = EntityState.Modified;
             }
             await context.SaveChangesAsync();

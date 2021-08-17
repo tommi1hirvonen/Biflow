@@ -27,8 +27,8 @@
                     @foreach (var execution in Executions)
                     {
                         <tr class="@(SelectedStepExecution == execution ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
-                            <td>@execution.StartDateTime</td>
-                            <td>@execution.EndDateTime</td>
+                            <td>@execution.StartDateTime?.LocalDateTime</td>
+                            <td>@execution.EndDateTime?.LocalDateTime</td>
                             <td>@execution.GetDurationInReadableFormat()</td>
                             <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
                         </tr>

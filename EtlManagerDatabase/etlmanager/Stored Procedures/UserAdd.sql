@@ -38,8 +38,8 @@ BEGIN TRY
 		@Salt,
 		@Role,
 		@Email,
-		GETDATE(),
-		GETDATE()
+		GETUTCDATE(),
+		GETUTCDATE()
 	;
 
 	SELECT 1;

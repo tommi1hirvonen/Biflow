@@ -19,9 +19,9 @@ namespace EtlManagerDataAccess.Models
         
         public int RetryAttemptIndex { get; set; }
         
-        public DateTime? StartDateTime { get; set; }
+        public DateTimeOffset? StartDateTime { get; set; }
         
-        public DateTime? EndDateTime { get; set; }
+        public DateTimeOffset? EndDateTime { get; set; }
         
         public StepExecutionStatus ExecutionStatus { get; set; }
 

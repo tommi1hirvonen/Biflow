@@ -9,7 +9,7 @@ namespace EtlManagerDataAccess.Models
 {
     public class AccessToken
     {
-        public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTime expiresOn)
+        public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
         {
             AppRegistrationId = appRegistrationId;
             ResourceUrl = resourceUrl;
@@ -25,7 +25,7 @@ namespace EtlManagerDataAccess.Models
 
         public string Token { get; set; }
 
-        public DateTime ExpiresOn { get; set; }
+        public DateTimeOffset ExpiresOn { get; set; }
 
     }
 }
