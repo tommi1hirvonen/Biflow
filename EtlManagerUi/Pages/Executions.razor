@@ -335,7 +335,8 @@ else
                         .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
                         .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
                         .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
-                        .ThenByDescending(e => e.StartDateTime))
+                        .ThenByDescending(e => e.StartDateTime)
+                        .ThenByDescending(e => e.StepExecution.ExecutionPhase))
                     {
                         <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                             <td>

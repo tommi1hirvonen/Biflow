@@ -409,9 +409,14 @@
                     break;
                 case SortOption.StartTime:
                     // false sorts before true => not started steps are placed last
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.StartDateTime is null).ThenBy(e => e.StartDateTime)
-                        .ThenBy(e => e.EndDateTime is null).ThenBy(e => e.EndDateTime)
-                        .ThenBy(e => e.StepExecution.StepName).ToList();
+                    StepExecutionAttempts = StepExecutionAttempts?
+                        .OrderBy(e => e.StartDateTime is null)
+                        .ThenBy(e => e.StartDateTime)
+                        .ThenBy(e => e.EndDateTime is null)
+                        .ThenBy(e => e.EndDateTime)
+                        .ThenBy(e => e.StepExecution.ExecutionPhase)
+                        .ThenBy(e => e.StepExecution.StepName)
+                        .ToList();
                     break;
                 case SortOption.EndTime:
                     StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepExecution.StepName).ToList();
