@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IConfiguration configuration
+@inject DbHelperService DbHelperService
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
@@ -532,7 +532,7 @@
         bool value = (bool)args.Value!;
         try
         {
-            await Utility.ToggleStepEnabledAsync(configuration, step, value);
+            await DbHelperService.ToggleStepEnabledAsync(step, value);
             step.IsEnabled = !step.IsEnabled;
         }
         catch (Exception ex)
@@ -561,7 +561,7 @@
         try
         {
             string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
-            Guid createdStepId = await Utility.StepCopyAsync(configuration, step.StepId, job.JobId, user);
+            Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user);
             // If the steps was copied to this job, reload steps.
             if (Job?.JobId == job.JobId)
             {
@@ -584,7 +584,7 @@
     {
         try
         {
-            await Utility.RemoveTagAsync(configuration, step, tag);
+            await DbHelperService.RemoveTagAsync(step, tag);
             step.Tags.Remove(tag);
         }
         catch (Exception ex)
@@ -606,7 +606,7 @@
                 {
                     var tag = new Tag() { TagName = tagText };
                     step.Tags.Add(tag);
-                    await Utility.AddTagAsync(configuration, step, tag);
+                    await DbHelperService.AddTagAsync(step, tag);
                 }
             }
             NewTag = new();
@@ -717,8 +717,7 @@
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            SelectedJobExecutionId = await Utility.StartExecutionAsync(configuration,
-                Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
+            SelectedJobExecutionId = await DbHelperService.StartExecutionAsync(Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
                 user, stepIds, ExecuteNotify);
             ExecuteSuccess = true;
         }

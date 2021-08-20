@@ -1,7 +1,6 @@
-﻿@inject IConfiguration Configuration
-@inject IJSRuntime JS
+﻿@inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IDbContextFactory<EtlManagerContext> DbContextFactory 
+@inject SqlServerHelperService SqlServerHelperService
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
     <BSModalHeader OnClick="() => Modal.Hide()">Select package</BSModalHeader>
@@ -153,7 +152,7 @@
         {
             try
             {
-                Catalog = await Utility.GetSSISCatalogPackages(DbContextFactory, (Guid)ConnectionId);
+                Catalog = await SqlServerHelperService.GetCatalogPackages((Guid)ConnectionId);
                 StateHasChanged();
             }
             catch (Exception ex)

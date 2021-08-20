@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using EtlManagerUtils;
 
 namespace EtlManagerDataAccess.Models
@@ -67,6 +71,19 @@ namespace EtlManagerDataAccess.Models
             var successCount = StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded) ?? false) ?? 0;
             var allCount = StepExecutions?.Count ?? 0;
             return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
+        }
+
+        public async Task StopExecutionAsync(string username)
+        {
+            // Connect to the pipe server set up by the executor process.
+            using var pipeClient = new NamedPipeClientStream(".", ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+            using var streamWriter = new StreamWriter(pipeClient);
+            // Send cancel command.
+            var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
+            var cancelCommand = new CancelCommand(null, username);
+            var json = JsonSerializer.Serialize(cancelCommand);
+            streamWriter.WriteLine(json);
         }
     }
 }

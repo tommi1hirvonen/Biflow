@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Security.Policy;
-using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
@@ -38,5 +35,6 @@ namespace EtlManagerDataAccess.Models
         public Step? Step { get; set; }
 
         public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
+
     }
 }

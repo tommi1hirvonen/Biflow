@@ -453,7 +453,7 @@ else
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
-            await Utility.StopExecutionAsync(stepExecution.ExecutionId, username, stepExecution.StepId);
+            await stepExecution.StopExecutionAsync(username);
         }
         catch (TimeoutException)
         {

@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
+@inject SchedulerService SchedulerService
 @using System.Security.Claims
 @using System.Security.Principal
 
@@ -67,7 +68,7 @@
             // Get the scheduler service status and notify the user of a possible error.
             try
             {
-                (var running, var error, var status) = Utility.SchedulerServiceGetStatus(Configuration);
+                (var running, var error, var status) = SchedulerService.GetStatus();
                 if (error)
                 {
                     SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed correctly.";
@@ -77,7 +78,7 @@
                     SchedulerServiceErrorMessage = $"Scheduler service not running – service status: {status}";
                 }
 
-                var schedulerStatus = await Utility.SchedulerServiceSendCommandAsync(Configuration, SchedulerCommand.CommandType.Status, null);
+                var schedulerStatus = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Status, null);
                 if (!schedulerStatus)
                 {
                     SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";

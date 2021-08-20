@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IConfiguration configuration
+@inject DbHelperService DbHelperService
 @inject IJSRuntime JS
 
 <BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
@@ -164,8 +164,7 @@
             return;
         }
 
-        var result = await Utility.UpdatePasswordAsync(configuration,
-            user.Username ?? throw new ArgumentNullException(nameof(user.Username), "Username was null"),
+        var result = await DbHelperService.UpdatePasswordAsync(user.Username ?? throw new ArgumentNullException(nameof(user.Username), "Username was null"),
             Password!); // PasswordCheck() makes sure Password is not null
         if (result)
         {

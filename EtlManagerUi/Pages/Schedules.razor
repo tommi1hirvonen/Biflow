@@ -2,7 +2,7 @@
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
-@inject IConfiguration configuration
+@inject SchedulerService SchedulerService
 @inject IWebHostEnvironment WebHostEnvironment
 
 <h4>Schedules</h4>
@@ -135,9 +135,9 @@
                                     </div>
                                     <InputSelect class="form-control" @bind-Value="NewSchedule.JobId">
                                         @foreach (var job in Jobs ?? Enumerable.Empty<Job>())
-                                        {
-                                        <option value="@job.JobId">@job.JobName</option>
-                                        }
+                                            {
+                                            <option value="@job.JobId">@job.JobName</option>
+                                            }
                                     </InputSelect>
                                 </div>
                             </BSFormGroup>
@@ -208,7 +208,7 @@
         bool value = (bool)args.Value!;
         try
         {
-            var success = await Utility.ToggleScheduleEnabledAsync(configuration, schedule, value);
+            var success = await SchedulerService.ToggleScheduleEnabledAsync(schedule, value);
             if (success)
             {
                 schedule.IsEnabled = !schedule.IsEnabled;
@@ -235,7 +235,7 @@
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
             // Send the schedule to the scheduler service.
-            bool success = await Utility.SchedulerServiceSendCommandAsync(configuration, SchedulerCommand.CommandType.Add, NewSchedule);
+            bool success = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Add, NewSchedule);
             // Commit the database transaction if the scheduler received the schedule. Otherwise rollback the transaction.
             if (success)
             {
@@ -272,7 +272,7 @@
             using var transaction = context.Database.BeginTransaction();
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
-            bool success = await Utility.SchedulerServiceSendCommandAsync(configuration, SchedulerCommand.CommandType.Delete, schedule);
+            bool success = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Delete, schedule);
             if (success)
             {
                 transaction.Commit();
@@ -295,7 +295,7 @@
     {
         try
         {
-            var result = await Utility.SchedulerServiceSynchronize(configuration);
+            var result = await SchedulerService.Synchronize();
             if (!result)
             {
                 await JS.InvokeVoidAsync("alert", $"Error synchronizing");

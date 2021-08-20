@@ -1,6 +1,10 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using System.IO.Pipes;
+using System.Text.Json;
+using System.Threading.Tasks;
 using EtlManagerUtils;
 
 namespace EtlManagerDataAccess.Models
@@ -50,6 +54,19 @@ namespace EtlManagerDataAccess.Models
         {
             ErrorMessage = null;
             InfoMessage = null;
+        }
+
+        public async Task StopExecutionAsync(string username)
+        {
+            // Connect to the pipe server set up by the executor process.
+            using var pipeClient = new NamedPipeClientStream(".", ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+            await pipeClient.ConnectAsync(10000); // wait for 10 seconds
+            using var streamWriter = new StreamWriter(pipeClient);
+            // Send cancel command.
+            var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
+            var cancelCommand = new CancelCommand(StepId, username);
+            var json = JsonSerializer.Serialize(cancelCommand);
+            streamWriter.WriteLine(json);
         }
 
     }

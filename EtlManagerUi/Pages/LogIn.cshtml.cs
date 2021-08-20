@@ -15,11 +15,11 @@ namespace EtlManagerUi.Pages
 {
     public class LogInModel : PageModel
     {
-        private readonly IConfiguration _configuration;
+        private readonly DbHelperService _dbHelperService;
 
-        public LogInModel(IConfiguration configuration, EtlManagerContext context)
+        public LogInModel(DbHelperService dbHelperService)
         {
-            _configuration = configuration;
+            _dbHelperService = dbHelperService;
         }
 
         [BindProperty]
@@ -43,7 +43,7 @@ namespace EtlManagerUi.Pages
             {
                 if (ModelState.IsValid && Login.Username is not null && Login.Password is not null)
                 {
-                    AuthenticationResult result = Utility.AuthenticateUser(_configuration, Login.Username, Login.Password);
+                    AuthenticationResult result = _dbHelperService.AuthenticateUser(Login.Username, Login.Password);
                     if (result.AuthenticationSuccessful && result.Role is not null)
                     {
                         await SignInUser(Login.Username, result.Role, false);

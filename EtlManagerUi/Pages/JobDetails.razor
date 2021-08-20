@@ -2,7 +2,8 @@
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IConfiguration configuration
+@inject DbHelperService DbHelperService
+@inject SchedulerService SchedulerService
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
@@ -280,7 +281,7 @@ else
             using var context = DbFactory.CreateDbContext();
             context.Jobs.Remove(CurrentJob);
             await context.SaveChangesAsync();
-            await Utility.SchedulerServiceDeleteJobAsync(configuration, CurrentJob);
+            await SchedulerService.DeleteJobAsync(CurrentJob);
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
@@ -294,7 +295,7 @@ else
         bool value = (bool)args.Value!;
         try
         {
-            await Utility.ToggleJobEnabledAsync(configuration, CurrentJob, value);
+            await DbHelperService.ToggleJobEnabledAsync(CurrentJob, value);
             CurrentJob.IsEnabled = !CurrentJob.IsEnabled;
         }
         catch (Exception ex)
@@ -308,7 +309,7 @@ else
         bool value = (bool)args.Value!;
         try
         {
-            await Utility.ToggleJobDependencyModeAsync(configuration, CurrentJob, value);
+            await DbHelperService.ToggleJobDependencyModeAsync(CurrentJob, value);
             CurrentJob.UseDependencyMode = !CurrentJob.UseDependencyMode;
             await SortStepsAsync();
         }

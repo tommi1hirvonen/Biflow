@@ -32,6 +32,9 @@ namespace EtlManagerUi
             services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
             services.AddBootstrapCss();
             services.AddSingleton<ITokenService, TokenService>();
+            services.AddSingleton<DbHelperService>();
+            services.AddSingleton<SchedulerService>();
+            services.AddSingleton<SqlServerHelperService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -256,7 +256,7 @@
                                                             Stop
                                                         </BSDropdownToggle>
                                                         <BSDropdownMenu>
-                                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item.StepId)">Confirm</BSDropdownItem>
+                                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
                                                         </BSDropdownMenu>
                                                     </BSDropdown>
                                                 }
@@ -466,7 +466,7 @@
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await Utility.StopExecutionAsync(ExecutionId, username);
+            await (Execution?.StopExecutionAsync(username) ?? Task.CompletedTask);
         }
         catch (TimeoutException)
         {
@@ -480,13 +480,13 @@
         }
     }
 
-    private async Task StopStepExecutionAsync(Guid stepId)
+    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
     {
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await Utility.StopExecutionAsync(ExecutionId, username, stepId);
+            await stepExecution.StopExecutionAsync(username);
         }
         catch (TimeoutException)
         {
