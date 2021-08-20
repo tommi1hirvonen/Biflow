@@ -71,6 +71,26 @@
                 <input @bind-value="IntervalHours" class="form-control form-control-sm">
             </div>
         </div>
+        <div class="form-group col-xl d-flex align-items-end pb-1 ml-2">
+            <div class="custom-control custom-radio custom-control-inline">
+                <input type="radio" class="custom-control-input" id="radio_all"
+                       checked=@(StartTypeFilter == StartType.All)
+                       @onchange="() => StartTypeFilter = StartType.All">
+                <label class="custom-control-label" for="radio_all">All</label>
+            </div>
+            <div class="custom-control custom-radio custom-control-inline">
+                <input type="radio" class="custom-control-input" id="radio_scheduled"
+                       checked=@(StartTypeFilter == StartType.Scheduled)
+                       @onchange="() => StartTypeFilter = StartType.Scheduled">
+                <label class="custom-control-label" for="radio_scheduled">Scheduled</label>
+            </div>
+            <div class="custom-control custom-radio custom-control-inline">
+                <input type="radio" class="custom-control-input" id="radio_manual"
+                       checked=@(StartTypeFilter == StartType.Manual)
+                       @onchange="() => StartTypeFilter = StartType.Manual">
+                <label class="custom-control-label" for="radio_manual">Manual</label>
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col">
@@ -228,7 +248,10 @@
                 {
                     @foreach (var item in Executions_
                        .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
-                       .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)))
+                       .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
+                       .Where(e => StartTypeFilter == StartType.All ||
+                                    StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                                    StartTypeFilter == StartType.Manual && e.ScheduleId is null))
                     {
                         <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                             <td>
@@ -303,13 +326,16 @@ else
                 else
                 {
                     @foreach (var item in Executions_
-                       .SelectMany(e => e.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
-                       .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-                       .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
-                       .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
-                       .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
-                       .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
-                       .ThenByDescending(e => e.StartDateTime))
+                        .Where(e => StartTypeFilter == StartType.All ||
+                                    StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                                    StartTypeFilter == StartType.Manual && e.ScheduleId is null)
+                        .SelectMany(e => e.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
+                        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
+                        .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+                        .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
+                        .ThenByDescending(e => e.StartDateTime))
                     {
                         <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                             <td>
@@ -397,6 +423,7 @@ else
     private HashSet<string> JobFilter { get; } = new();
     private HashSet<string> StepFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
+    private StartType StartTypeFilter { get; set; } = StartType.All;
 
     protected override async Task OnInitializedAsync()
     {

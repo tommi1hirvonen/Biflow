@@ -1,7 +1,30 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<div class="card shadow-sm pt-2 mb-4">
+<div class="row">
+    <div class="col">
+        <div class="custom-control custom-radio custom-control-inline">
+            <input type="radio" class="custom-control-input" id="radio_all"
+                    checked=@(StartTypeFilter == StartType.All)
+                    @onchange="() => StartTypeFilter = StartType.All">
+            <label class="custom-control-label" for="radio_all">All</label>
+        </div>
+        <div class="custom-control custom-radio custom-control-inline">
+            <input type="radio" class="custom-control-input" id="radio_scheduled"
+                    checked=@(StartTypeFilter == StartType.Scheduled)
+                    @onchange="() => StartTypeFilter = StartType.Scheduled">
+            <label class="custom-control-label" for="radio_scheduled">Scheduled</label>
+        </div>
+        <div class="custom-control custom-radio custom-control-inline">
+            <input type="radio" class="custom-control-input" id="radio_manual"
+                    checked=@(StartTypeFilter == StartType.Manual)
+                    @onchange="() => StartTypeFilter = StartType.Manual">
+            <label class="custom-control-label" for="radio_manual">Manual</label>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm pt-2 mb-4 mt-3">
     <table class="table table-sm table-hover">
         <thead>
             <tr>
@@ -48,7 +71,10 @@
             }
             else
             {
-                @foreach (var item in Executions)
+                @foreach (var item in Executions
+                   .Where(e => StartTypeFilter == StartType.All ||
+                                StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                                StartTypeFilter == StartType.Manual && e.ScheduleId is null))
                 {
                     <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
                         <td>
@@ -100,6 +126,7 @@
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
+    private StartType StartTypeFilter { get; set; } = StartType.All;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -112,7 +139,6 @@
                 .ThenInclude(execution => execution.StepExecutionAttempts)
                 .Where(execution => execution.JobId == Id)
                 .OrderByDescending(execution => execution.CreatedDateTime)
-                .ThenByDescending(Execution => Execution.StartDateTime)
                 .Take(MaxExecutions)
                 .ToListAsync();
 
