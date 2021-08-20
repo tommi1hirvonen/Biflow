@@ -18,105 +18,107 @@
     }
 </style>
 
-<div class="btn-toolbar">
-    <AuthorizeView Roles="Admin, Editor">
-        <BSDropdown>
-            <BSDropdownToggle Color="Color.Success">
-                Add step
-            </BSDropdownToggle>
-            <BSDropdownMenu>
-                <BSDropdownHeader>Step type</BSDropdownHeader>
-                @foreach (var stepType in Enum.GetValues(typeof(StepType)))
-                {
-                    var stepTypeEnum = Enum.Parse<StepType>(stepType.ToString()!);
-                    <BSDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)">
-                        <StepTypeIconComponent StepType_="stepTypeEnum" />
-                        @stepType
-                    </BSDropdownItem>
-                }
-            </BSDropdownMenu>
-        </BSDropdown>
-    </AuthorizeView>
-    <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
-            Execute
-        </BSButton>
-        <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
-    </AuthorizeView>
-</div>
-
-@if (ExecuteAlertOpen)
-{
-    <BSToast class="position-fixed bottom-0 right-0 mr-5 mb-5" style="z-index: 5; right: 0; bottom: 0;" IsVisible="ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false">
-        <BSToastHeader>
-            @if (ExecuteSuccess)
-            {
-                <strong class="status-icon running">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
-                    Execution started successfully
-                </strong>
-            }
-            else
-            {
-                <strong class="status-icon failed">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
-                    Error starting execution
-                </strong>
-            }
-        </BSToastHeader>
-        <BSToastBody>
-            @if (ExecuteSuccess)
-            {
-                <a href="javascript:void(0)" @onclick="OpenJobExecutionModal">Monitor execution</a>
-            }
-            else
-            {
-                @ExecuteErrorMessage
-            }
-        </BSToastBody>
-    </BSToast>
-}
-
-<div class="row mt-3">
-    <div class="col">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-        <span class="mr-3">Tags</span>
-        @if (!TagNames.Any())
-        {
-            <small class="text-secondary mr-2">No tags</small>
-        }
-        @foreach (var tag in TagNames)
-        {
-            <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
-                  style="cursor: pointer;"
-                  @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
-                @tag
-            </span>
-        }
-    </div>
-</div>
-
-<div class="row mt-3 mb-4">
-    <div class="col input-group input-group-sm" style="max-width: 20rem;">
-        <label class="sr-only">Filter</label>
-        <div class="input-group-prepend">
-            <div class="input-group-text rounded-left">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+<div class="sticky-top pt-2 pb-3" style="background-color: rgba(248, 249, 250, 0.9);"> @*Same as bg-light but with slight transparency*@
+    <div class="btn-toolbar">
+        <AuthorizeView Roles="Admin, Editor">
+            <BSDropdown>
+                <BSDropdownToggle Color="Color.Success">
+                    Add step
+                </BSDropdownToggle>
+                <BSDropdownMenu>
+                    <BSDropdownHeader>Step type</BSDropdownHeader>
+                    @foreach (var stepType in Enum.GetValues(typeof(StepType)))
+                    {
+                        var stepTypeEnum = Enum.Parse<StepType>(stepType.ToString()!);
+                        <BSDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)">
+                            <StepTypeIconComponent StepType_="stepTypeEnum" />
+                            @stepType
+                        </BSDropdownItem>
+                    }
+                </BSDropdownMenu>
+            </BSDropdown>
+        </AuthorizeView>
+        <AuthorizeView Roles="Admin, Editor, Operator">
+            <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                Execute
+            </BSButton>
+            <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
+                <span class="sr-only">Loading...</span>
             </div>
-        </div>
-        <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
+        </AuthorizeView>
     </div>
 
-    <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => { TagsFilterSet.Clear(); StepsFilterText = string.Empty; }">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-        Clear
-    </BSButton>
+    @if (ExecuteAlertOpen)
+    {
+        <BSToast class="position-fixed bottom-0 right-0 mr-5 mb-5" style="z-index: 5; right: 0; bottom: 0;" IsVisible="ExecuteAlertOpen" OnDismiss="() => ExecuteAlertOpen = false">
+            <BSToastHeader>
+                @if (ExecuteSuccess)
+                {
+                    <strong class="status-icon running">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+                        Execution started successfully
+                    </strong>
+                }
+                else
+                {
+                    <strong class="status-icon failed">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                        Error starting execution
+                    </strong>
+                }
+            </BSToastHeader>
+            <BSToastBody>
+                @if (ExecuteSuccess)
+                {
+                    <a href="javascript:void(0)" @onclick="OpenJobExecutionModal">Monitor execution</a>
+                }
+                else
+                {
+                    @ExecuteErrorMessage
+                }
+            </BSToastBody>
+        </BSToast>
+    }
+
+    <div class="row mt-3">
+        <div class="col">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+            <span class="mr-3">Tags</span>
+            @if (!TagNames.Any())
+            {
+                <small class="text-secondary mr-2">No tags</small>
+            }
+            @foreach (var tag in TagNames)
+            {
+                <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
+                      style="cursor: pointer;"
+                      @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
+                    @tag
+                </span>
+            }
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col input-group input-group-sm" style="max-width: 20rem;">
+            <label class="sr-only">Filter</label>
+            <div class="input-group-prepend">
+                <div class="input-group-text rounded-left">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                </div>
+            </div>
+            <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
+        </div>
+
+        <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => { TagsFilterSet.Clear(); StepsFilterText = string.Empty; }">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+            Clear
+        </BSButton>
+    </div>
 </div>
 
-<div class="card col shadow-sm my-4">
+<div class="card col shadow-sm mb-4 mt-2">
     <div class="row">
         <div class="col">
             @if (Steps is null || Jobs is null || Job is null)

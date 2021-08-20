@@ -8,6 +8,13 @@
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
 
+<style>
+    .dropdown-menu {
+        @*Increase dropdown menu z-index so that it is displayed over the sticky-top div in StepsComponent.*@
+        z-index: 1100;
+    }
+</style>
+
 <div class="row">
     <div class="col-auto">
         <BSButtonGroup>
