@@ -36,7 +36,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -81,34 +81,34 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                return new ExecutionResult.Failure($"Error sending POST request to start function: {ex.Message}");
+                return Result.Failure($"Error sending POST request to start function: {ex.Message}");
             }
 
             if (response.IsSuccessStatusCode)
             {
-                ExecutionResult executionResult;
+                Result executionResult;
                 if (Step.FunctionIsDurable)
                 {
                     executionResult = await HandleDurableFunctionPolling(client, content, startTime, cancellationToken);
                 }
                 else
                 {
-                    executionResult = new ExecutionResult.Success(content);
+                    executionResult = Result.Success(content);
                 }
 
                 return executionResult;
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
             {
-                return new ExecutionResult.Failure("Error executing function (500 Internal Server Error)");
+                return Result.Failure("Error executing function (500 Internal Server Error)");
             }
             else
             {
-                return new ExecutionResult.Failure($"Error sending POST request to start function: {content}");
+                return Result.Failure($"Error sending POST request to start function: {content}");
             }
         }
 
-        private async Task<ExecutionResult> HandleDurableFunctionPolling(HttpClient client, string content, DateTime startTime, CancellationToken cancellationToken)
+        private async Task<Result> HandleDurableFunctionPolling(HttpClient client, string content, DateTime startTime, CancellationToken cancellationToken)
         {
             var startResponse = JsonSerializer.Deserialize<StartResponse>(content, JsonSerializerOptions)
                     ?? throw new InvalidOperationException("Start response was null");
@@ -148,7 +148,7 @@ namespace EtlManagerExecutor
                         {
                             await CancelAsync(client, startResponse.TerminatePostUri, "StepTimedOut");
                             Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                            return new ExecutionResult.Failure("Step execution timed out");
+                            return Result.Failure("Step execution timed out");
                         }
 
                         await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
@@ -167,15 +167,15 @@ namespace EtlManagerExecutor
 
             if (status.RuntimeStatus == "Completed")
             {
-                return new ExecutionResult.Success(status.Output.ToString());
+                return Result.Success(status.Output.ToString());
             }
             else if (status.RuntimeStatus == "Terminated")
             {
-                return new ExecutionResult.Failure($"Function was terminated: {status.Output}");
+                return Result.Failure($"Function was terminated: {status.Output}");
             }
             else
             {
-                return new ExecutionResult.Failure($"Function failed: {status.Output}");
+                return Result.Failure($"Function failed: {status.Output}");
             }
         }
 

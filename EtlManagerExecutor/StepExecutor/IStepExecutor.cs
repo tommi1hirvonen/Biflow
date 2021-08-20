@@ -7,7 +7,7 @@ namespace EtlManagerExecutor
     {
         public int RetryAttemptCounter { get; set; }
 
-        public Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
+        public Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
 
     }
 }

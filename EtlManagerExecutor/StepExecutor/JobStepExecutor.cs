@@ -29,7 +29,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -49,7 +49,7 @@ namespace EtlManagerExecutor
                 catch (Exception ex)
                 {
                     Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-                    return new ExecutionResult.Failure("Error initializing job execution: " + ex.Message);
+                    return Result.Failure("Error initializing job execution: " + ex.Message);
                 }
 
                 var executorFilePath = Process.GetCurrentProcess().MainModule?.FileName
@@ -76,7 +76,7 @@ namespace EtlManagerExecutor
                 catch (Exception ex)
                 {
                     Log.Error(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                    return new ExecutionResult.Failure("Error starting executor process: " + ex.Message);
+                    return Result.Failure("Error starting executor process: " + ex.Message);
                 }
 
             }
@@ -101,23 +101,23 @@ namespace EtlManagerExecutor
                         new { ExecutionId = jobExecutionId });
                     return status switch
                     {
-                        "SUCCEEDED" or "WARNING" => new ExecutionResult.Success(),
-                        "FAILED" => new ExecutionResult.Failure("Sub-execution failed"),
-                        "STOPPED" => new ExecutionResult.Failure("Sub-execution was stopped"),
-                        "SUSPENDED" => new ExecutionResult.Failure("Sub-execution was suspended"),
-                        "NOT STARTED" => new ExecutionResult.Failure("Sub-execution failed to start"),
-                        "RUNNING" => new ExecutionResult.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing"),
-                        _ => new ExecutionResult.Failure("Unhandled sub-execution status"),
+                        "SUCCEEDED" or "WARNING" => Result.Success(),
+                        "FAILED" => Result.Failure("Sub-execution failed"),
+                        "STOPPED" => Result.Failure("Sub-execution was stopped"),
+                        "SUSPENDED" => Result.Failure("Sub-execution was suspended"),
+                        "NOT STARTED" => Result.Failure("Sub-execution failed to start"),
+                        "RUNNING" => Result.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing"),
+                        _ => Result.Failure("Unhandled sub-execution status"),
                     };
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                    return new ExecutionResult.Failure("Error getting sub-execution status");
+                    return Result.Failure("Error getting sub-execution status");
                 }
             }
 
-            return new ExecutionResult.Success();
+            return Result.Success();
         }
 
         private static async Task CancelAsync(Guid executionId, string username)

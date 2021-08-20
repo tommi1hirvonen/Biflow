@@ -37,7 +37,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -52,7 +52,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
-                return new ExecutionResult.Failure("Error reading pipeline parameters: " + ex.Message);
+                return Result.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
 
@@ -67,7 +67,7 @@ namespace EtlManagerExecutor
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
                     Step.ExecutionId, Step, Step.DataFactoryId, Step.PipelineName);
-                return new ExecutionResult.Failure($"Error starting pipeline run:\n{ex.Message}");
+                return Result.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
 
             try
@@ -104,7 +104,7 @@ namespace EtlManagerExecutor
                         {
                             await CancelAsync(runId);
                             Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                            return new ExecutionResult.Failure("Step execution timed out");
+                            return Result.Failure("Step execution timed out");
                         }
 
                         await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
@@ -123,11 +123,11 @@ namespace EtlManagerExecutor
 
             if (pipelineRun.Status == "Succeeded")
             {
-                return new ExecutionResult.Success();
+                return Result.Success();
             }
             else
             {
-                return new ExecutionResult.Failure(pipelineRun.Message);
+                return Result.Failure(pipelineRun.Message);
             }
         }
 

@@ -23,7 +23,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -57,7 +57,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-                return new ExecutionResult.Failure("Error starting process: " + ex.Message);
+                return Result.Failure("Error starting process: " + ex.Message);
             }
 
             try
@@ -79,12 +79,12 @@ namespace EtlManagerExecutor
                 // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
                 else if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
                 {
-                    return new ExecutionResult.Success(OutputMessageBuilder.ToString());
+                    return Result.Success(OutputMessageBuilder.ToString());
                 }
                 else
                 {
                     var errorMessage = $"{ErrorMessageBuilder}\n\nProcess finished with exit code {process.ExitCode}";
-                    return new ExecutionResult.Failure(errorMessage, OutputMessageBuilder.ToString());
+                    return Result.Failure(errorMessage, OutputMessageBuilder.ToString());
                 }
             }
             catch (OperationCanceledException)
@@ -104,7 +104,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-                return new ExecutionResult.Failure("Error while executing exe: " + ex.Message);
+                return Result.Failure("Error while executing exe: " + ex.Message);
             }
         }
 

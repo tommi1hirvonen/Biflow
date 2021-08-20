@@ -23,7 +23,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -46,10 +46,10 @@ namespace EtlManagerExecutor
                 Log.Warning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
                 var errors = ex.Errors.Cast<SqlError>();
                 var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-                return new ExecutionResult.Failure(errorMessage, GetInfoMessage());
+                return Result.Failure(errorMessage, GetInfoMessage());
             }
 
-            return new ExecutionResult.Success(GetInfoMessage());
+            return Result.Success(GetInfoMessage());
         }
 
         private string? GetInfoMessage()

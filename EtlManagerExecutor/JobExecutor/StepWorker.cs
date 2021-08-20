@@ -72,10 +72,10 @@ namespace EtlManagerExecutor
                 await CheckIfStepExecutionIsRetryAttemptAsync(stepExecutor);
 
                 // Execute the step based on its step type.
-                ExecutionResult executionResult;
+                Result result;
                 try
                 {
-                    executionResult = await stepExecutor.ExecuteAsync(cancellationTokenSource);
+                    result = await stepExecutor.ExecuteAsync(cancellationTokenSource);
                 }
                 catch (OperationCanceledException)
                 {
@@ -84,13 +84,13 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    executionResult = new ExecutionResult.Failure("Error during step execution: " + ex.Message);
+                    result = Result.Failure("Error during step execution: " + ex.Message);
                 }
 
-                if (executionResult is ExecutionResult.Failure failureResult)
+                if (result is Failure failure)
                 {
-                    Log.Warning("{ExecutionId} {Step} Error executing step: " + failureResult.ErrorMessage, StepExecution.ExecutionId, StepExecution);
-                    await UpdateExecutionFailedAsync(stepExecutor, failureResult);
+                    Log.Warning("{ExecutionId} {Step} Error executing step: " + failure.ErrorMessage, StepExecution.ExecutionId, StepExecution);
+                    await UpdateExecutionFailedAsync(stepExecutor, failure);
 
                     // There are attempts left => increase counter and wait for the retry interval.
                     if (stepExecutor.RetryAttemptCounter < StepExecution.RetryAttempts)
@@ -115,7 +115,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Information("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
                     // The step execution was successful. Update the execution accordingly.
-                    await UpdateExecutionSucceededAsync(stepExecutor, executionResult);
+                    await UpdateExecutionSucceededAsync(stepExecutor, result);
                     return true; // Break the loop to end this execution.
                 }
             }
@@ -168,7 +168,7 @@ namespace EtlManagerExecutor
             await context.SaveChangesAsync();
         }
 
-        private async Task UpdateExecutionFailedAsync(IStepExecutor stepExecution, ExecutionResult.Failure failureResult)
+        private async Task UpdateExecutionFailedAsync(IStepExecutor stepExecution, Failure failure)
         {
             // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
             var status = stepExecution.RetryAttemptCounter >= StepExecution.RetryAttempts ? StepExecutionStatus.Failed : StepExecutionStatus.AwaitRetry;
@@ -178,8 +178,8 @@ namespace EtlManagerExecutor
                 var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
                 attempt.ExecutionStatus = status;
                 attempt.EndDateTime = DateTimeOffset.Now;
-                attempt.ErrorMessage = failureResult.ErrorMessage;
-                attempt.InfoMessage = failureResult.InfoMessage;
+                attempt.ErrorMessage = failure.ErrorMessage;
+                attempt.InfoMessage = failure.InfoMessage;
                 context.Attach(attempt).State = EntityState.Modified;
                 await context.SaveChangesAsync();
             }
@@ -189,7 +189,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task UpdateExecutionSucceededAsync(IStepExecutor stepExecution, ExecutionResult executionResult)
+        private async Task UpdateExecutionSucceededAsync(IStepExecutor stepExecution, Result executionResult)
         {
             try
             {

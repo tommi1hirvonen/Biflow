@@ -37,7 +37,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -58,7 +58,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-                return new ExecutionResult.Failure("Error executing package: " + ex.Message);
+                return Result.Failure("Error executing package: " + ex.Message);
             }
 
             // Update the SSISDB operation id for the target package execution.
@@ -94,7 +94,7 @@ namespace EtlManagerExecutor
                     {
                         await CancelAsync(Step.Connection.ConnectionString);
                         Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                        return new ExecutionResult.Failure("Step execution timed out");
+                        return Result.Failure("Step execution timed out");
                     }
 
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
@@ -109,7 +109,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-                return new ExecutionResult.Failure("Error monitoring package execution status: " + ex.Message);
+                return Result.Failure("Error monitoring package execution status: " + ex.Message);
             }
 
             // The package has completed. If the package failed, retrieve error messages.
@@ -118,17 +118,17 @@ namespace EtlManagerExecutor
                 try
                 {
                     List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString);
-                    return new ExecutionResult.Failure(string.Join("\n\n", errors));
+                    return Result.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)
                 {
                     Log.Error(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                    return new ExecutionResult.Failure("Error getting package error messages: " + ex.Message);
+                    return Result.Failure("Error getting package error messages: " + ex.Message);
                 }
 
             }
 
-            return new ExecutionResult.Success();
+            return Result.Success();
         }
 
         private async Task StartExecutionAsync(string connectionString)

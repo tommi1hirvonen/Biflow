@@ -24,7 +24,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<ExecutionResult> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
@@ -42,7 +42,7 @@ namespace EtlManagerExecutor
             catch (Exception ex)
             {
                 Log.Error(ex, "Error starting dataset refresh");
-                return new ExecutionResult.Failure(ex.Message);
+                return Result.Failure(ex.Message);
             }
 
             // Wait for 5 seconds before first attempting to get the dataset refresh status.
@@ -55,11 +55,11 @@ namespace EtlManagerExecutor
                     var refresh = await Step.AppRegistration.GetDatasetRefreshStatus(_tokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                     if (refresh?.Status == "Completed")
                     {
-                        return new ExecutionResult.Success();
+                        return Result.Success();
                     }
                     else if (refresh?.Status == "Failed" || refresh?.Status == "Disabled")
                     {
-                        return new ExecutionResult.Failure(refresh.ServiceExceptionJson);
+                        return Result.Failure(refresh.ServiceExceptionJson);
                     }
                     else
                     {
@@ -72,7 +72,7 @@ namespace EtlManagerExecutor
                 }
                 catch (Exception ex)
                 {
-                    return new ExecutionResult.Failure(ex.Message);
+                    return Result.Failure(ex.Message);
                 }
             }
         }
