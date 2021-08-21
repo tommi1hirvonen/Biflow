@@ -2,7 +2,7 @@
 
 namespace EtlManagerExecutor
 {
-    interface IMailTest
+    interface IEmailTest
     {
         public Task RunAsync(string toAddress);
     }

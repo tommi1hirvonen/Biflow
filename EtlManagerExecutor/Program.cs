@@ -36,22 +36,23 @@ namespace EtlManagerExecutor
                     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                     services.AddSingleton<ITokenService, TokenService>();
                     services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
-                    services.AddTransient<INotificationService, EmailHelper>();
+                    services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
+                    services.AddTransient<INotificationService, EmailService>();
                     services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
                     services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
-                    services.AddTransient<IMailTest, MailTest>();
+                    services.AddTransient<IEmailTest, EmailTest>();
                 })
                 
                 .UseSerilog()
                 .Build();
 
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, MailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (CancelOptions options) => CancelExecutionAsync(host, options),
-                    (MailTestOptions options) => RunMailTest(host, options),
+                    (EmailTestOptions options) => RunEmailTest(host, options),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
                 );
@@ -78,9 +79,9 @@ namespace EtlManagerExecutor
             }
         }
 
-        static async Task<int> RunMailTest(IHost host, MailTestOptions options)
+        static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
         {
-            var service = ActivatorUtilities.CreateInstance<MailTest>(host.Services);
+            var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
             await service.RunAsync(options.ToAddress);
             return 0;
         }
@@ -110,8 +111,8 @@ namespace EtlManagerExecutor
         public bool Notify { get; set; }
     }
 
-    [Verb("test-mail", HelpText = "Send a test mail using email configuration from appsettings.json.")]
-    class MailTestOptions
+    [Verb("test-email", HelpText = "Send a test email using email configuration from appsettings.json.")]
+    class EmailTestOptions
     {
         [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
         // Safe to suppress because Required = true

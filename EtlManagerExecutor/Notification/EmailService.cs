@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
-using EtlManagerExecutor.Notification;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,18 +13,16 @@ using System.Text;
 
 namespace EtlManagerExecutor
 {
-    public class EmailHelper : INotificationService
+    public class EmailService : INotificationService
     {
-        private readonly IConfiguration _configuration;
+        private readonly IEmailConfiguration _emailConfiguration;
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
-        private readonly IExecutionConfiguration _executionConfiguration;
 
 
-        public EmailHelper(IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory, IExecutionConfiguration executionConfiguration)
+        public EmailService(IEmailConfiguration emailConfiguration, IDbContextFactory<EtlManagerContext> dbContextFactory)
         {
-            _configuration = configuration;
+            _emailConfiguration = emailConfiguration;
             _dbContextFactory = dbContextFactory;
-            _executionConfiguration = executionConfiguration;
         }
 
         public void SendNotification(Guid executionId)
@@ -76,7 +73,7 @@ namespace EtlManagerExecutor
             string messageBody = string.Empty;
             try
             {
-                using var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString);
+                using var sqlConnection = new SqlConnection(context.Database.GetConnectionString());
                 messageBody = sqlConnection.ExecuteScalar<string?>(
                     "EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId",
                     new { ExecutionId = executionId }) ?? string.Empty;
@@ -87,21 +84,10 @@ namespace EtlManagerExecutor
                 // Do not return. The notification can be sent even without a body.
             }
 
-            EmailSettings emailSettings;
-            try
-            {
-                emailSettings = EmailSettings.FromConfiguration(_configuration);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{executionId} Error getting email settings from appsettings.json", executionId);
-                return;
-            }
-
             SmtpClient client;
             try
             {
-                client = emailSettings.GetSmtpClient();
+                client = _emailConfiguration.Client;
             }
             catch (Exception ex)
             {
@@ -114,7 +100,7 @@ namespace EtlManagerExecutor
             {
                 mailMessage = new MailMessage
                 {
-                    From = new MailAddress(emailSettings.FromAddress),
+                    From = new MailAddress(_emailConfiguration.FromAddress),
                     Subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – ETL Manager notification",
                     IsBodyHtml = true,
                     Body = messageBody
