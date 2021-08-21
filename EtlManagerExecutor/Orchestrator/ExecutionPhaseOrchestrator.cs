@@ -5,10 +5,13 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExecutionPhaseExecutor : ExecutorBase
+    class ExecutionPhaseOrchestrator : OrchestratorBase
     {
-        public ExecutionPhaseExecutor(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, Execution execution)
-            : base(executionConfiguration, serviceProvider, execution) { }
+        public ExecutionPhaseOrchestrator(
+            IExecutionConfiguration executionConfiguration,
+            IStepExecutorFactory stepExecutorFactory,
+            Execution execution)
+            : base(executionConfiguration, stepExecutorFactory, execution) { }
 
         public override async Task RunAsync()
         {

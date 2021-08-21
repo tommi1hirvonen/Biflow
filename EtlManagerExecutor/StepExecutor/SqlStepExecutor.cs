@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -11,19 +12,20 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class SqlStepExecutor : IStepExecutor
+    class SqlStepExecutor : StepExecutorBase
     {
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
         private SqlStepExecution Step { get; init; }
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
-        public SqlStepExecutor(SqlStepExecution step)
+        public SqlStepExecutor(
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            SqlStepExecution step)
+            : base(dbContextFactory, step)
         {
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

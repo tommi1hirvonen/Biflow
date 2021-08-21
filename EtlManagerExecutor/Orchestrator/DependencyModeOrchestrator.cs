@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class DependencyModeExecutor : ExecutorBase
+    class DependencyModeOrchestrator : OrchestratorBase
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
@@ -20,8 +20,12 @@ namespace EtlManagerExecutor
 
         private Dictionary<Guid, StepExecution> StepExecutions { get; } = new();
 
-        public DependencyModeExecutor(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, IDbContextFactory<EtlManagerContext> dbContextFactory, Execution execution)
-            : base(executionConfiguration, serviceProvider, execution)
+        public DependencyModeOrchestrator(
+            IExecutionConfiguration executionConfiguration,
+            IStepExecutorFactory stepExecutorFactory,
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            Execution execution)
+            : base(executionConfiguration, stepExecutorFactory, execution)
         {
             _dbContextFactory = dbContextFactory;
         }

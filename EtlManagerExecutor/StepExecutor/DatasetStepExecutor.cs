@@ -8,23 +8,26 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class DatasetStepExecutor : IStepExecutor
+    class DatasetStepExecutor : StepExecutorBase
     {
         private readonly ITokenService _tokenService;
         private readonly IExecutionConfiguration _executionConfiguration;
 
         private DatasetStepExecution Step { get; init; }
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
-        public DatasetStepExecutor(ITokenService tokenService, IExecutionConfiguration executionConfiguration, DatasetStepExecution step)
+        public DatasetStepExecutor(
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            ITokenService tokenService,
+            IExecutionConfiguration executionConfiguration,
+            DatasetStepExecution step)
+            : base(dbContextFactory, step)
         {
             _tokenService = tokenService;
             _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

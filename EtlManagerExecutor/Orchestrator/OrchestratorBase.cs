@@ -14,10 +14,10 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    abstract class ExecutorBase
+    public abstract class OrchestratorBase
     {
         protected IExecutionConfiguration _executionConfig;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IStepExecutorFactory _stepExecutorFactory;
 
         protected Execution Execution { get; init; }
 
@@ -35,10 +35,10 @@ namespace EtlManagerExecutor
 
         protected Dictionary<Guid, ExecutionStatus> StepStatuses { get; } = new();
 
-        public ExecutorBase(IExecutionConfiguration executionConfiguration, IServiceProvider serviceProvider, Execution execution)
+        public OrchestratorBase(IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
         {
             _executionConfig = executionConfiguration;
-            _serviceProvider = serviceProvider;
+            _stepExecutorFactory = stepExecutorFactory;
             Execution = execution;
 
             // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
@@ -62,8 +62,8 @@ namespace EtlManagerExecutor
             // Wait until the semaphore can be entered and the step can be started.
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
-            var worker = ActivatorUtilities.CreateInstance<StepWorker>(_serviceProvider, step);
-            var task = worker.ExecuteStepAsync(CancellationTokenSources[step.StepId]);
+            var executor = _stepExecutorFactory.Create(step);
+            var task = executor.RunAsync(CancellationTokenSources[step.StepId]);
             Log.Information("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
             bool result = false;
             try

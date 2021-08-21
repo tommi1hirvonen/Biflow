@@ -17,19 +17,19 @@ namespace EtlManagerExecutor
     class JobExecutor : IJobExecutor
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
-        private readonly IEmailHelper _emailHelper;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly INotificationService _notificationService;
+        private readonly IOrchestratorFactory _orchestratorFactory;
         private readonly IExecutionConfiguration _executionConfiguration;
 
         public JobExecutor(
             IDbContextFactory<EtlManagerContext> dbContextFactory,
-            IEmailHelper emailHelper,
-            IServiceProvider serviceProvider,
+            INotificationService notificationService,
+            IOrchestratorFactory orchestratorFactory,
             IExecutionConfiguration executionConfiguration)
         {
             _dbContextFactory = dbContextFactory;
-            _emailHelper = emailHelper;
-            _serviceProvider = serviceProvider;
+            _notificationService = notificationService;
+            _orchestratorFactory = orchestratorFactory;
             _executionConfiguration = executionConfiguration;
         }
 
@@ -118,21 +118,10 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            ExecutorBase executor;
-            if (execution.DependencyMode)
-            {
-                Log.Information("{ExecutionId} Starting execution in dependency mode", executionId);
-                executor = ActivatorUtilities.CreateInstance<DependencyModeExecutor>(_serviceProvider, execution);
-            }
-            else
-            {
-                Log.Information("{executionId} Starting execution in execution phase mode", executionId);
-                executor = ActivatorUtilities.CreateInstance<ExecutionPhaseExecutor>(_serviceProvider, execution);
-            }
-
+            var orchestrator = _orchestratorFactory.Create(execution);
             try
             {
-                await executor.RunAsync();
+                await orchestrator.RunAsync();
             }
             catch (Exception ex)
             {
@@ -174,7 +163,7 @@ namespace EtlManagerExecutor
             // Execution finished. Notify subscribers of possible errors.
             if (notify)
             {
-                _emailHelper.SendNotification(executionId);
+                _notificationService.SendNotification(executionId);
             }
         }
 

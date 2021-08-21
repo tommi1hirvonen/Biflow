@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    public interface IEmailHelper
+    public interface INotificationService
     {
         public void SendNotification(Guid executionId);
     }

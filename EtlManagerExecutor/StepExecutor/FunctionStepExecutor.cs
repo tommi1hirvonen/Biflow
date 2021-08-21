@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class FunctionStepExecutor : IStepExecutor
+    class FunctionStepExecutor : StepExecutorBase
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
         private readonly IExecutionConfiguration _executionConfiguration;
@@ -22,21 +22,20 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 3;
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
         private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
         public FunctionStepExecutor(
             IDbContextFactory<EtlManagerContext> dbContextFactory,
             IExecutionConfiguration executionConfiguration,
             FunctionStepExecution step)
+            : base(dbContextFactory, step)
         {
             _dbContextFactory = dbContextFactory;
             _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

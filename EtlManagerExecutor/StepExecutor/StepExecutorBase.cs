@@ -1,7 +1,6 @@
 ﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Linq;
@@ -10,31 +9,32 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class StepWorker
+    public abstract class StepExecutorBase
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
-        private readonly IServiceProvider _serviceProvider;
 
+        protected int RetryAttemptCounter { get; set; }
         private StepExecution StepExecution { get; init; }
 
-        public StepWorker(IDbContextFactory<EtlManagerContext> dbContextFactory, IServiceProvider serviceProvider, StepExecution stepExecution)
+        protected StepExecutorBase(IDbContextFactory<EtlManagerContext> dbContextFactory, StepExecution stepExecution)
         {
             _dbContextFactory = dbContextFactory;
-            _serviceProvider = serviceProvider;
             StepExecution = stepExecution;
         }
 
-        public async Task<bool> ExecuteStepAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected abstract Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
+
+        public async Task<bool> RunAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
 
             // If the step was canceled already before it was even started, update the status to STOPPED.
             if (cancellationToken.IsCancellationRequested)
             {
-                await UpdateExecutionStoppedAsync(cancellationTokenSource.Username);
+                await MarkAsStoppedAsync(cancellationTokenSource.Username);
                 return false;
             }
-            
+
             // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
             try
             {
@@ -43,7 +43,7 @@ namespace EtlManagerExecutor
                 // This step execution should be marked as duplicate.
                 if (duplicateExecution)
                 {
-                    await UpdateStepAsDuplicateAsync(context);
+                    await MarkAsDuplicateAsync(context);
                     Log.Warning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
                     return false;
                 }
@@ -54,32 +54,20 @@ namespace EtlManagerExecutor
                 return false;
             }
 
-            IStepExecutor stepExecutor = StepExecution switch
-            {
-                SqlStepExecution sql => ActivatorUtilities.CreateInstance<SqlStepExecutor>(_serviceProvider, sql),
-                PackageStepExecution package => ActivatorUtilities.CreateInstance<PackageStepExecutor>(_serviceProvider, package),
-                JobStepExecution job => ActivatorUtilities.CreateInstance<JobStepExecutor>(_serviceProvider, job),
-                PipelineStepExecution pipeline => ActivatorUtilities.CreateInstance<PipelineStepExecutor>(_serviceProvider, pipeline),
-                ExeStepExecution exe => ActivatorUtilities.CreateInstance<ExeStepExecutor>(_serviceProvider, exe),
-                DatasetStepExecution dataset => ActivatorUtilities.CreateInstance<DatasetStepExecutor>(_serviceProvider, dataset),
-                FunctionStepExecution function => ActivatorUtilities.CreateInstance<FunctionStepExecutor>(_serviceProvider, function),
-                _ => throw new InvalidOperationException($"{StepExecution.StepType} is not a recognized step type")
-            };
-
             // Loop until there are not retry attempts left.
-            while (stepExecutor.RetryAttemptCounter <= StepExecution.RetryAttempts)
+            while (RetryAttemptCounter <= StepExecution.RetryAttempts)
             {
-                await CheckIfStepExecutionIsRetryAttemptAsync(stepExecutor);
+                await CheckIfStepExecutionIsRetryAttemptAsync();
 
                 // Execute the step based on its step type.
                 Result result;
                 try
                 {
-                    result = await stepExecutor.ExecuteAsync(cancellationTokenSource);
+                    result = await ExecuteAsync(cancellationTokenSource);
                 }
                 catch (OperationCanceledException)
                 {
-                    await UpdateExecutionCancelledAsync(stepExecutor, cancellationTokenSource.Username);
+                    await UpdateExecutionCancelledAsync(cancellationTokenSource.Username);
                     return false;
                 }
                 catch (Exception ex)
@@ -90,15 +78,15 @@ namespace EtlManagerExecutor
                 if (result is Failure failure)
                 {
                     Log.Warning("{ExecutionId} {Step} Error executing step: " + failure.ErrorMessage, StepExecution.ExecutionId, StepExecution);
-                    await UpdateExecutionFailedAsync(stepExecutor, failure);
+                    await UpdateExecutionFailedAsync(failure);
 
                     // There are attempts left => increase counter and wait for the retry interval.
-                    if (stepExecutor.RetryAttemptCounter < StepExecution.RetryAttempts)
+                    if (RetryAttemptCounter < StepExecution.RetryAttempts)
                     {
-                        stepExecutor.RetryAttemptCounter++;
+                        RetryAttemptCounter++;
                         try
                         {
-                            await WaitForExecutionRetryAsync(stepExecutor, StepExecution.RetryIntervalMinutes, cancellationToken);
+                            await WaitForExecutionRetryAsync(cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
@@ -115,7 +103,7 @@ namespace EtlManagerExecutor
                 {
                     Log.Information("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
                     // The step execution was successful. Update the execution accordingly.
-                    await UpdateExecutionSucceededAsync(stepExecutor, result);
+                    await UpdateExecutionSucceededAsync(result);
                     return true; // Break the loop to end this execution.
                 }
             }
@@ -123,11 +111,11 @@ namespace EtlManagerExecutor
             return false; // Execution should not arrive here in normal conditions. Return false.
         }
 
-        private async Task WaitForExecutionRetryAsync(IStepExecutor stepExecution, int retryIntervalMinutes, CancellationToken cancellationToken)
+        private async Task WaitForExecutionRetryAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await Task.Delay(retryIntervalMinutes * 60 * 1000, cancellationToken);
+                await Task.Delay(StepExecution.RetryIntervalMinutes * 60 * 1000, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -139,7 +127,7 @@ namespace EtlManagerExecutor
                     var prevAttempt = StepExecution.StepExecutionAttempts.OrderByDescending(e => e.RetryAttemptIndex).First();
                     var attempt = prevAttempt with
                     {
-                        RetryAttemptIndex = stepExecution.RetryAttemptCounter,
+                        RetryAttemptIndex = RetryAttemptCounter,
                         ExecutionStatus = StepExecutionStatus.Stopped,
                         StartDateTime = DateTimeOffset.Now,
                         EndDateTime = DateTimeOffset.Now
@@ -157,10 +145,10 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task UpdateExecutionCancelledAsync(IStepExecutor stepExecution, string username)
+        private async Task UpdateExecutionCancelledAsync(string username)
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
+            var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == RetryAttemptCounter);
             attempt.EndDateTime = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
@@ -168,14 +156,14 @@ namespace EtlManagerExecutor
             await context.SaveChangesAsync();
         }
 
-        private async Task UpdateExecutionFailedAsync(IStepExecutor stepExecution, Failure failure)
+        private async Task UpdateExecutionFailedAsync(Failure failure)
         {
             // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-            var status = stepExecution.RetryAttemptCounter >= StepExecution.RetryAttempts ? StepExecutionStatus.Failed : StepExecutionStatus.AwaitRetry;
+            var status = RetryAttemptCounter >= StepExecution.RetryAttempts ? StepExecutionStatus.Failed : StepExecutionStatus.AwaitRetry;
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
+                var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == RetryAttemptCounter);
                 attempt.ExecutionStatus = status;
                 attempt.EndDateTime = DateTimeOffset.Now;
                 attempt.ErrorMessage = failure.ErrorMessage;
@@ -189,12 +177,12 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task UpdateExecutionSucceededAsync(IStepExecutor stepExecution, Result executionResult)
+        private async Task UpdateExecutionSucceededAsync(Result executionResult)
         {
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
+                var attempt = StepExecution.StepExecutionAttempts.First(e => e.RetryAttemptIndex == RetryAttemptCounter);
                 attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
                 attempt.EndDateTime = DateTimeOffset.Now;
                 attempt.InfoMessage = executionResult.InfoMessage;
@@ -207,7 +195,7 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task UpdateExecutionStoppedAsync(string username)
+        private async Task MarkAsStoppedAsync(string username)
         {
             using var context = _dbContextFactory.CreateDbContext();
             foreach (var attempt in StepExecution.StepExecutionAttempts)
@@ -221,10 +209,10 @@ namespace EtlManagerExecutor
             await context.SaveChangesAsync();
         }
 
-        private async Task CheckIfStepExecutionIsRetryAttemptAsync(IStepExecutor stepExecution)
+        private async Task CheckIfStepExecutionIsRetryAttemptAsync()
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = StepExecution.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == stepExecution.RetryAttemptCounter);
+            var attempt = StepExecution.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
             if (attempt is not null)
             {
                 attempt.StartDateTime = DateTimeOffset.Now;
@@ -236,7 +224,7 @@ namespace EtlManagerExecutor
                 var prevAttempt = StepExecution.StepExecutionAttempts.OrderByDescending(e => e.RetryAttemptIndex).First();
                 attempt = prevAttempt with
                 {
-                    RetryAttemptIndex = stepExecution.RetryAttemptCounter,
+                    RetryAttemptIndex = RetryAttemptCounter,
                     ExecutionStatus = StepExecutionStatus.Running,
                     StartDateTime = DateTimeOffset.Now,
                     EndDateTime = null
@@ -256,7 +244,7 @@ namespace EtlManagerExecutor
             return duplicate;
         }
 
-        private async Task UpdateStepAsDuplicateAsync(EtlManagerContext context)
+        private async Task MarkAsDuplicateAsync(EtlManagerContext context)
         {
             foreach (var attempt in StepExecution.StepExecutionAttempts)
             {
@@ -269,5 +257,4 @@ namespace EtlManagerExecutor
         }
 
     }
-
 }

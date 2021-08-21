@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PipelineStepExecutor : IStepExecutor
+    class PipelineStepExecutor : StepExecutorBase
     {
         private readonly IExecutionConfiguration _executionConfiguration;
         private readonly ITokenService _tokenService;
@@ -23,13 +23,12 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 3;
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
         public PipelineStepExecutor(
             IExecutionConfiguration executionConfiguration,
             ITokenService tokenService,
             IDbContextFactory<EtlManagerContext> dbContextFactory,
             PipelineStepExecution step)
+            : base(dbContextFactory, step)
         {
             _executionConfiguration = executionConfiguration;
             _tokenService = tokenService;
@@ -37,7 +36,7 @@ namespace EtlManagerExecutor
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

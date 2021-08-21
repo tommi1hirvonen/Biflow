@@ -14,7 +14,7 @@ using System.Text;
 
 namespace EtlManagerExecutor
 {
-    public class EmailHelper : IEmailHelper
+    public class EmailHelper : INotificationService
     {
         private readonly IConfiguration _configuration;
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;

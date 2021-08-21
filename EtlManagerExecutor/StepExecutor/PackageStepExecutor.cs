@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class PackageStepExecutor : IStepExecutor
+    class PackageStepExecutor : StepExecutorBase
     {
         private readonly IExecutionConfiguration _executionConfiguration;
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
@@ -25,19 +25,18 @@ namespace EtlManagerExecutor
 
         private const int MaxRefreshRetries = 3;
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
         public PackageStepExecutor(
             IExecutionConfiguration executionConfiguration,
             IDbContextFactory<EtlManagerContext> dbContextFactory,
             PackageStepExecution step)
+            : base(dbContextFactory, step)
         {
             _executionConfiguration = executionConfiguration;
             _dbContextFactory = dbContextFactory;
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

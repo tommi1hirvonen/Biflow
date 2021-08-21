@@ -1,4 +1,6 @@
-﻿using EtlManagerDataAccess.Models;
+﻿using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Diagnostics;
@@ -9,21 +11,20 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class ExeStepExecutor : IStepExecutor
+    class ExeStepExecutor : StepExecutorBase
     {
         private ExeStepExecution Step { get; init; }
-
-        public int RetryAttemptCounter { get; set; } = 0;
 
         private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
         private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();
 
-        public ExeStepExecutor(ExeStepExecution step)
+        public ExeStepExecutor(IDbContextFactory<EtlManagerContext> dbContextFactory, ExeStepExecution step)
+            : base(dbContextFactory, step)
         {
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();

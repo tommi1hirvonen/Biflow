@@ -1,6 +1,8 @@
 ﻿using Dapper;
+using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -15,21 +17,23 @@ using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
-    class JobStepExecutor : IStepExecutor
+    class JobStepExecutor : StepExecutorBase
     {
         private readonly IExecutionConfiguration _executionConfiguration;
 
         private JobStepExecution Step { get; init; }
 
-        public int RetryAttemptCounter { get; set; } = 0;
-
-        public JobStepExecutor(IExecutionConfiguration executionConfiguration, JobStepExecution step)
+        public JobStepExecutor(
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
+            IExecutionConfiguration executionConfiguration,
+            JobStepExecution step)
+            : base(dbContextFactory, step)
         {
             _executionConfiguration = executionConfiguration;
             Step = step;
         }
 
-        public async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
             cancellationToken.ThrowIfCancellationRequested();
