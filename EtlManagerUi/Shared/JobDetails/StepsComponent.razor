@@ -481,7 +481,7 @@
     private Guid SelectedJobExecutionId { get; set; }
 
     private Dictionary<Guid, ElementReference> TagInputs { get; set; } = new();
-    private Tag NewTag { get; set; } = new();
+    private Tag NewTag { get; set; } = new(string.Empty);
     private Guid? TagInputFocusStepId { get; set; } = null;
 
     private string? ScrollIntoViewElementId { get; set; } = null;
@@ -606,12 +606,12 @@
             {
                 if (!step.Tags.Any(t => t.TagName == tagText))
                 {
-                    var tag = new Tag() { TagName = tagText };
+                    var tag = new Tag(tagText);
                     step.Tags.Add(tag);
                     await DbHelperService.AddTagAsync(step, tag);
                 }
             }
-            NewTag = new();
+            NewTag = new(string.Empty);
             TagInputFocusStepId = step.StepId;
         }
         catch (Exception ex)
