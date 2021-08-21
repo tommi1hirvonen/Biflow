@@ -43,16 +43,18 @@ namespace EtlManagerExecutor
                     services.AddTransient<IJobExecutor, JobExecutor>();
                     services.AddTransient<IExecutionStopper, ExecutionStopper>();
                     services.AddTransient<IEmailTest, EmailTest>();
+                    services.AddTransient<IConnectionTest, ConnectionTest>();
                 })
                 
                 .UseSerilog()
                 .Build();
 
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions>(args)
+            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
                 .MapResult(
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (CancelOptions options) => CancelExecutionAsync(host, options),
                     (EmailTestOptions options) => RunEmailTest(host, options),
+                    (ConnectionTestOptions options) => RunConnectionTest(host, options),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
                 );
@@ -83,6 +85,13 @@ namespace EtlManagerExecutor
         {
             var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
             await service.RunAsync(options.ToAddress);
+            return 0;
+        }
+
+        static async Task<int> RunConnectionTest(IHost host, ConnectionTestOptions options)
+        {
+            var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
+            await service.RunAsync();
             return 0;
         }
 
@@ -119,6 +128,11 @@ namespace EtlManagerExecutor
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public string ToAddress { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    }
+
+    [Verb("test-connection", HelpText = "Test connection to database defined in appsettings.json.")]
+    class ConnectionTestOptions
+    {
     }
 
     [Verb("cancel", HelpText = "Cancel a running execution under a different executor process.")]
