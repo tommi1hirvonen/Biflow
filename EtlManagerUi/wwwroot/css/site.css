@@ -395,6 +395,30 @@ tr.disabled {
     color: var(--color-warning-extra-dark);
 }
 
+.progress-bar.running {
+    background-color: var(--color-primary);
+}
+.progress-bar.succeeded {
+    background-color: var(--color-success);
+}
+.progress-bar.failed {
+    background-color: var(--color-danger);
+}
+.progress-bar.skipped {
+    background-color: var(--color-warning);
+}
+.progress-bar.stopped {
+    background-color: var(--color-warning);
+}
+.progress-bar.duplicate {
+    background-color: var(--color-warning);
+}
+.progress-bar.awaitretry {
+    background-color: var(--color-warning);
+}
+.progress-bar:hover {
+    filter: brightness(0.9);
+}
 
 
 

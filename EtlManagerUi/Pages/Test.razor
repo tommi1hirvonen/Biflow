@@ -1,0 +1,103 @@
+﻿@page "/test"
+
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory 
+
+<h3>Test</h3>
+
+<div class="row">
+    <div class="col">
+        <div class="row">
+            <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
+                <small>@GetDateFromPercentage(0)</small>
+            </div>
+            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 0%;"><small>@GetTimeFromPercentage(0)</small></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 10%;"></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 20%;"><small>@GetTimeFromPercentage(10)</small></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 30%;"></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 40%;"><small>@GetTimeFromPercentage(30)</small></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 50%;"></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 60%;"><small>@GetTimeFromPercentage(50)</small></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 70%;"></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 80%;"><small>@GetTimeFromPercentage(70)</small></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 90%;"></div>
+                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 100%;"></div>
+            </div>
+        </div>
+        @foreach (var item in Executions)
+        {
+            (var offset, var width) = item.GetOffsetAndWidth();
+            <div class="row border-top">
+                <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
+                    <small>@item.StepExecution.StepName</small>
+                </div>
+                <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 0%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 10%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 20%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 30%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 40%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 50%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 60%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 70%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 80%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 90%;" />
+                    <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 100%;" />
+
+                    <div class="progress"
+                         style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
+                        <div class="progress-bar @item.ExecutionStatus.ToString().ToLower()"
+                             style="width: 100%; cursor:pointer; " />
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@code {
+
+    List<StepExecutionAttempt> Executions { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        var guid = Guid.Parse("97cdf45f-a102-43df-bce1-b45055a69c80");
+        //var guid = Guid.Parse("cba097d3-a28f-4740-9b30-b15cd22e7f6f");
+        Executions = await context.StepExecutionAttempts
+            .Where(e => e.ExecutionId == guid)
+            .Where(e => e.StartDateTime != null)
+            .Include(e => e.StepExecution)
+            .ThenInclude(e => e.Execution)
+            .OrderBy(e => e.StartDateTime)
+            .ToListAsync();
+    }
+
+    private DateTime MinTime => Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
+    private DateTime MaxTime => Executions.Max(e => e.EndDateTime?.LocalDateTime) ?? DateTime.Now;
+    private long MinTicks => MinTime.Ticks;
+    private long MaxTicks => MaxTime.Ticks;
+
+    private string GetTimeFromPercentage(int percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("HH:mm:ss");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("HH:mm:ss");
+    }
+
+    private string GetDateFromPercentage(int percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("d");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("d");
+    }
+
+}

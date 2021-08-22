@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using EtlManagerUtils;
@@ -67,6 +68,34 @@ namespace EtlManagerDataAccess.Models
             var cancelCommand = new CancelCommand(StepId, username);
             var json = JsonSerializer.Serialize(cancelCommand);
             streamWriter.WriteLine(json);
+        }
+
+        public (int Offset, int Width) GetOffsetAndWidth()
+        {
+            var otherAttempts = StepExecution.Execution.StepExecutions
+                .SelectMany(e => e.StepExecutionAttempts)
+                .Where(e => e.StartDateTime != null);
+            
+            if (!otherAttempts.Any())
+                return (0, 0);
+
+            var minTime = otherAttempts.Min(e => e.StartDateTime?.LocalDateTime) ?? StartDateTime ?? DateTime.Now;
+            var maxTime = otherAttempts.Max(e => e.EndDateTime?.LocalDateTime) ?? EndDateTime ?? DateTime.Now;
+
+            var minTicks = minTime.Ticks;
+            var maxTicks = maxTime.Ticks;
+
+            if (minTicks == maxTicks)
+                return (0, 0);
+
+            var startTicks = (StartDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
+            var endTicks = (EndDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
+
+            var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
+            var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;
+            var width = end - start;
+            width = width < 1 ? 1 : width;
+            return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
         }
 
     }
