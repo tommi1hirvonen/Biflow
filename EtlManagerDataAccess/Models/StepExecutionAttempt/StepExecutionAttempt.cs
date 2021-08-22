@@ -72,15 +72,15 @@ namespace EtlManagerDataAccess.Models
 
         public (int Offset, int Width) GetOffsetAndWidth()
         {
-            var otherAttempts = StepExecution.Execution.StepExecutions
+            var allAttempts = StepExecution.Execution.StepExecutions
                 .SelectMany(e => e.StepExecutionAttempts)
                 .Where(e => e.StartDateTime != null);
             
-            if (!otherAttempts.Any())
+            if (!allAttempts.Any())
                 return (0, 0);
 
-            var minTime = otherAttempts.Min(e => e.StartDateTime?.LocalDateTime) ?? StartDateTime ?? DateTime.Now;
-            var maxTime = otherAttempts.Max(e => e.EndDateTime?.LocalDateTime) ?? EndDateTime ?? DateTime.Now;
+            var minTime = allAttempts.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
+            var maxTime = allAttempts.Max(e => e.EndDateTime?.LocalDateTime) ?? DateTime.Now;
 
             var minTicks = minTime.Ticks;
             var maxTicks = maxTime.Ticks;
@@ -94,7 +94,9 @@ namespace EtlManagerDataAccess.Models
             var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
             var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;
             var width = end - start;
-            width = width < 1 ? 1 : width;
+            width = width < 1 ? 1 : width; // check that width is not 0
+            start = start > 99 ? 99 : start; // check that start is not 100
+
             return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
         }
 

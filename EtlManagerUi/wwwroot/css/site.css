@@ -23,6 +23,7 @@
     --color-danger-super-light: #fedee5;
     --color-danger-shadow: rgba(250, 92, 124, 0.5);
     --color-warning: #dfa100;
+    --color-warning-light: #ffc107;
     --color-warning-super-light: #FFF2CC;
     --color-warning-extra-dark: #856200;
 }
@@ -352,49 +353,6 @@ tr.disabled {
 /*
     Execution Gantt graph
 */
-.steps-graph .running,
-.steps-graph .running.vis-selected {
-    background-color: var(--color-primary-super-light);
-    border-color: var(--color-primary-super-dark);
-    color: var(--color-primary-super-dark);
-}
-.steps-graph .succeeded,
-.steps-graph .succeeded.vis-selected {
-    background-color: var(--color-success-super-light);
-    border-color: var(--color-success-super-dark);
-    color: var(--color-success-super-dark);
-}
-.steps-graph .failed,
-.steps-graph .failed.vis-selected {
-    background-color: var(--color-danger-super-light);
-    border-color: var(--color-danger-super-dark);
-    color: var(--color-danger-super-dark);
-}
-.steps-graph .skipped,
-.steps-graph .skipped.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
-}
-.steps-graph .stopped,
-.steps-graph .stopped.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
-}
-.steps-graph .duplicate,
-.steps-graph .duplicate.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
-}
-.steps-graph .awaitretry,
-.steps-graph .awaitretry.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
-}
-
 .progress-bar.running {
     background-color: var(--color-primary);
 }
@@ -405,16 +363,16 @@ tr.disabled {
     background-color: var(--color-danger);
 }
 .progress-bar.skipped {
-    background-color: var(--color-warning);
+    background-color: var(--color-warning-light);
 }
 .progress-bar.stopped {
-    background-color: var(--color-warning);
+    background-color: var(--color-warning-light);
 }
 .progress-bar.duplicate {
-    background-color: var(--color-warning);
+    background-color: var(--color-warning-light);
 }
 .progress-bar.awaitretry {
-    background-color: var(--color-warning);
+    background-color: var(--color-warning-light);
 }
 .progress-bar:hover {
     filter: brightness(0.9);

@@ -1,31 +1,8 @@
-﻿@implements IDisposable
-
-@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS 
 @inject IConfiguration configuration
 @inject IHttpContextAccessor HttpContextAccessor
-
-<style>
-    .vis-item {
-        cursor: pointer;
-        font-weight: bold;
-    }
-        .vis-item.vis-range {
-            border-radius: 0px;
-        }
-        .vis-item.vis-range:hover {
-            filter: brightness(0.9);
-        }
-        .vis-item .vis-item-overflow {
-            overflow: visible;
-        }
-        .vis-labelset .vis-label .vis-inner,
-        .vis-item .vis-item-content {
-            font-size: 12px;
-            padding: 0 5px;
-        }
-</style>
 
 <BSModal @ref="Modal" IsFullScreen="true" IsScrollable="true">
     <BSModalHeader @onclick="() => Modal.Hide()">@(Execution is not null ? Execution.JobName : null)</BSModalHeader>
@@ -152,76 +129,35 @@
 
         @if (!ShowGraph)
         {
-            <div class="form-inline">
-                <div class="form-group">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
-                            </div>
-                        </div>
-                        <select class="form-control form-control-sm" @bind="StatusFilter">
-                            <option value="" selected=@(StatusFilter is null)>All</option>
-                            @if (StepExecutionAttempts is not null)
-                            {
-                                @foreach (var status in StepExecutionAttempts.Select(e => e.ExecutionStatus).Distinct().OrderBy(status => status))
-                                {
-                                    <option value="@status"
-                                            selected=@(status == StatusFilter)>
-                                        @status
-                                    </option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
             <table class="table table-sm table-hover mt-2">
                 <thead>
                     <tr>
-                        @{ string? Decorate(SortOption sortOption) => sortOption == SortOption_ ? "text-decoration: underline;" : null; }
-                        <th>
-                            <a style="@Decorate(SortOption.Name)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Name">
-                                Step
-                            </a>
-                        </th>
-                        <th>
-                            Step type
-                        </th>
-                        <th>
-                            <a style="@Decorate(SortOption.StartTime)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.StartTime">
-                                Started
-                            </a>
-                        </th>
-                        <th>
-                            <a style="@Decorate(SortOption.EndTime)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.EndTime">
-                                Ended
-                            </a>
-                        </th>
-                        <th>
-                            <a style="@Decorate(SortOption.Duration)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Duration">
-                                Duration
-                            </a>
-                        </th>
-                        <th>
-                            <a style="@Decorate(SortOption.Status)" href="javascript:void(0)" @onclick="() => SortOption_ = SortOption.Status">
-                                Status
-                            </a>
-                        </th>
+                        <th>Step</th>
+                        <th>Step type</th>
+                        <th>Started</th>
+                        <th>Ended</th>
+                        <th>Duration</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (StepExecutionAttempts is null)
+                    @if (Execution is null)
                     {
                         <tr><td colspan="6">Loading...</td></tr>
                     }
-                    else if (StepExecutionAttempts.Count == 0)
+                    else if (!Executions.Any())
                     {
                         <tr><td colspan="6">No executions</td></tr>
                     }
                     else
                     {
-                        @foreach (var item in StepExecutionAttempts.Where(e => StatusFilter is null || e.ExecutionStatus == StatusFilter))
+                        @foreach (var item in Executions
+                            .OrderBy(e => e.StartDateTime is null)
+                            .ThenBy(e => e.StartDateTime)
+                            .ThenBy(e => e.EndDateTime is null)
+                            .ThenBy(e => e.EndDateTime)
+                            .ThenBy(e => e.StepExecution.ExecutionPhase)
+                            .ThenBy(e => e.StepExecution.StepName))
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
@@ -243,7 +179,7 @@
                                     <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                                 </td>
                             </tr>
-                            @if (SelectedStepExecution == item)
+                            if (SelectedStepExecution == item)
                             {
                                 <tr class="table-borderless">
                                     <td colspan="6" class="bg-light">
@@ -254,7 +190,7 @@
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
                                                 @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                                 && !StepExecutionAttempts.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                                && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
                                                         <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -278,11 +214,97 @@
                 </tbody>
             </table>
         }
+        else
+        {
+            <div class="row mx-1">
+                <div class="col">
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
+                            <small>@GetDateFromPercentage(0)</small>
+                        </div>
+                        <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 0%;"><small>@GetTimeFromPercentage(0)</small></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 10%;"></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 20%;"><small>@GetTimeFromPercentage(10)</small></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 30%;"></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 40%;"><small>@GetTimeFromPercentage(30)</small></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 50%;"></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 60%;"><small>@GetTimeFromPercentage(50)</small></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 70%;"></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 80%;"><small>@GetTimeFromPercentage(70)</small></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 90%;"></div>
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 100%;"></div>
+                        </div>
+                    </div>
+                    @foreach (var item in Executions
+                        .Where(e => e.StartDateTime != null)
+                        .OrderBy(e => e.StartDateTime)
+                        .ThenBy(e => e.StepExecution.StepName))
+                    {
+                        (var offset, var width) = item.GetOffsetAndWidth();
+                        <div class="row border-top">
+                            <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
+                                <small>@item.StepExecution.StepName</small>
+                            </div>
+                            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 0%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 10%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 20%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 30%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 40%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 50%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 60%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 70%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 80%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 90%;" />
+                                <div style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: 100%;" />
 
-        <div class="steps-graph mx-4" id="steps_graph" hidden=@(!ShowGraph)>
-        </div>
-
-        <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionModal" />
+                                <div class="progress"
+                                     style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
+                                    <div id="@item.UniqueId"
+                                         class="progress-bar @item.ExecutionStatus.ToString().ToLower()"
+                                         style="width: 100%; cursor:pointer;"
+                                         @onclick="() => ToggleSelectedStepExecution(item)" />
+                                </div>
+                                <BSTooltip Target="@item.UniqueId" Placement="Placement.Top">
+                                    @item.ExecutionStatus
+                                    @item.GetDurationInReadableFormat()
+                                </BSTooltip>
+                            </div>
+                        </div>
+                        if (SelectedStepExecution == item)
+                        {
+                            <div class="row bg-light">
+                                <div class="col">
+                                    <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
+                                        <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                            History
+                                        </BSButton>
+                                        <AuthorizeView Roles="Admin, Editor, Operator">
+                                            @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
+                                           && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                            {
+                                                <BSDropdown Class="ml-3">
+                                                    <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                        Stop
+                                                    </BSDropdownToggle>
+                                                    <BSDropdownMenu>
+                                                        <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
+                                                    </BSDropdownMenu>
+                                                </BSDropdown>
+                                            }
+                                        </AuthorizeView>
+                                    </BSButtonGroup>
+                                    <StepExecutionDetailsComponent StepExecutionAttempt="item" ShowExtraDetails />
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
 
         <StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
 
@@ -303,16 +325,16 @@
     private BSModal Modal { get; set; } = null!;
 
     private Execution? Execution { get; set; }
-
-    private IList<StepExecutionAttempt>? StepExecutionAttempts { get; set; }
+    private IEnumerable<StepExecutionAttempt> Executions =>
+        Execution?.StepExecutions
+        .SelectMany(e => e.StepExecutionAttempts)
+        ?? Enumerable.Empty<StepExecutionAttempt>();
 
     private bool ShowGraph { get; set; } = false;
 
     private bool Loading { get; set; } = false;
 
     private bool JobExecutionDetailsOpen { get; set; } = false;
-
-    private StepExecutionStatus? StatusFilter { get; set; } = null;
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
@@ -321,50 +343,17 @@
     private StepHistoryModal StepHistoryModal { get; set; } = null!;
     private string? HistoryModalStepId { get; set; }
 
-    private SortOption _SortOption = SortOption.StartTime;
-    private bool SortAscending = true;
-    private SortOption SortOption_
-    {
-        get { return _SortOption; }
-        set
-        {
-            if (value == _SortOption)
-            {
-                SortAscending = !SortAscending;
-                StepExecutionAttempts?.Reverse();
-            }
-            else
-            {
-                SortAscending = true;
-                _SortOption = value;
-                SortExecutions();
-            }
-        }
-    }
-
     // Maintain a list executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
     // This list allows for stopping multiple executions concurrently
     // and to modify the view based on which job execution is being shown.
     private List<Guid> StoppingExecutions { get; set; } = new();
 
-    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; } = null!;
     private StepExecutionAttempt SelectedStepExecutionModal { get; set; } = null!;
-    private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
-
-    protected override void OnInitialized()
-    {
-        // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
-        // This will allow JS to call back to a specific instance of this component.
-        // This needs to be done, because multiple users might be using this component concurrently.
-        var helper = new MethodInvokeHelper(ShowStepExecutionModal);
-        ObjectReference = DotNetObjectReference.Create(helper);
-    }
 
     protected override async Task OnParametersSetAsync()
     {
         Execution = null;
-        StepExecutionAttempts = null;
         await LoadData();
     }
 
@@ -377,84 +366,12 @@
 
             Execution = await context.Executions
                 .Include(e => e.StepExecutions)
-                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            StepExecutionAttempts = await context.StepExecutionAttempts
-                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(e => e.StepExecutionAttempts)
+                .Include(e => e.StepExecutions)
                 .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
-                .Where(e => e.ExecutionId == ExecutionId)
-                .ToListAsync();
-            SortExecutions();
+                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             StateHasChanged();
             Loading = false;
-
-            // Create a JSON dataset that is passed to the JS method used to draw the steps graph via JSInterop.
-            var dataset = StepExecutionAttempts.Where(e => e.StartDateTime is not null).Select(e =>
-            new
-            {
-                id = e.UniqueId,
-                content = e.StepExecution.StepName,
-                title = e.ExecutionStatus + ", " + e.GetDurationInReadableFormat(),
-                className = e.ExecutionStatus.ToString().ToLower(),
-                start = e.StartDateTime?.LocalDateTime.ToString("yyyy-MM-dd HH':'mm':'ss"),
-                end = (e.EndDateTime ?? DateTimeOffset.Now).LocalDateTime.ToString("yyyy-MM-dd HH':'mm':'ss")
-            }
-            );
-            var datasetJson = JsonSerializer.Serialize(dataset);
-            await JS.InvokeVoidAsync("drawStepsTimeline", datasetJson, ObjectReference);
-        }
-    }
-
-    private void SortExecutions()
-    {
-        if (SortAscending)
-        {
-            switch (SortOption_)
-            {
-                case SortOption.Duration:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.ExecutionInSeconds).ThenBy(e => e.StepExecution.StepName).ToList();
-                    break;
-                case SortOption.StartTime:
-                    // false sorts before true => not started steps are placed last
-                    StepExecutionAttempts = StepExecutionAttempts?
-                        .OrderBy(e => e.StartDateTime is null)
-                        .ThenBy(e => e.StartDateTime)
-                        .ThenBy(e => e.EndDateTime is null)
-                        .ThenBy(e => e.EndDateTime)
-                        .ThenBy(e => e.StepExecution.ExecutionPhase)
-                        .ThenBy(e => e.StepExecution.StepName)
-                        .ToList();
-                    break;
-                case SortOption.EndTime:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.EndDateTime).ThenBy(e => e.StepExecution.StepName).ToList();
-                    break;
-                case SortOption.Name:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.StepExecution.StepName).ToList();
-                    break;
-                case SortOption.Status:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderBy(e => e.ExecutionStatus).ThenBy(e => e.StartDateTime).ThenBy(e => e.StepExecution.StepName).ToList();
-                    break;
-            }
-        }
-        else
-        {
-            switch (SortOption_)
-            {
-                case SortOption.Duration:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.ExecutionInSeconds).ToList();
-                    break;
-                case SortOption.StartTime:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.StartDateTime).ThenByDescending(e => e.EndDateTime).ToList();
-                    break;
-                case SortOption.EndTime:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.EndDateTime).ThenByDescending(e => e.StartDateTime).ToList();
-                    break;
-                case SortOption.Name:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.StepExecution.StepName).ToList();
-                    break;
-                case SortOption.Status:
-                    StepExecutionAttempts = StepExecutionAttempts?.OrderByDescending(e => e.ExecutionStatus).ToList();
-                    break;
-            }
         }
     }
 
@@ -511,17 +428,6 @@
         }
     }
 
-    private void ShowStepExecutionModal(string text)
-    {
-        var execution = StepExecutionAttempts?.FirstOrDefault(e => e.UniqueId == text);
-        if (execution is not null)
-        {
-            SelectedStepExecutionModal = execution;
-            StateHasChanged();
-            StepExecutionDetailsModal.Show();
-        }
-    }
-
     private void ShowStepHistoryModal(string stepId)
     {
         HistoryModalStepId = stepId;
@@ -530,18 +436,29 @@
 
     public void Show() => Modal.Show();
 
-    public void Dispose()
+    private DateTime MinTime => Executions.Any() ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private long MinTicks => MinTime.Ticks;
+    private long MaxTicks => MaxTime.Ticks;
+
+    private string GetTimeFromPercentage(int percentage)
     {
-        ObjectReference?.Dispose();
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("HH:mm:ss");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("HH:mm:ss");
     }
 
-    private enum SortOption
+    private string GetDateFromPercentage(int percentage)
     {
-        StartTime,
-        EndTime,
-        Duration,
-        Name,
-        Status
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("d");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("d");
     }
 
 }

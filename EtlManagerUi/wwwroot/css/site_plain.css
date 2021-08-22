@@ -78,53 +78,36 @@ tr.disabled {
 /*
     Execution Gantt graph
 */
-.steps-graph .running,
-.steps-graph .running.vis-selected {
-    background-color: var(--color-primary-super-light);
-    border-color: var(--color-primary-super-dark);
-    color: var(--color-primary-super-dark);
+.progress-bar.running {
+    background-color: var(--color-primary);
 }
 
-.steps-graph succeeded,
-.steps-graph .succeeded.vis-selected {
-    background-color: var(--color-success-super-light);
-    border-color: var(--color-success-super-dark);
-    color: var(--color-success-super-dark);
+.progress-bar.succeeded {
+    background-color: var(--color-success);
 }
 
-.steps-graph .failed,
-.steps-graph .failed.vis-selected {
-    background-color: var(--color-danger-super-light);
-    border-color: var(--color-danger-super-dark);
-    color: var(--color-danger-super-dark);
+.progress-bar.failed {
+    background-color: var(--color-danger);
 }
 
-.steps-graph .skipped,
-.steps-graph .skipped.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
+.progress-bar.skipped {
+    background-color: var(--color-warning);
 }
 
-.steps-graph .stopped,
-.steps-graph .stopped.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
+.progress-bar.stopped {
+    background-color: var(--color-warning);
 }
 
-.steps-graph .duplicate,
-.steps-graph .duplicate.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
+.progress-bar.duplicate {
+    background-color: var(--color-warning);
 }
 
-.steps-graph .awaitretry,
-.steps-graph .awaitretry.vis-selected {
-    background-color: var(--color-warning-super-light);
-    border-color: var(--color-warning-extra-dark);
-    color: var(--color-warning-extra-dark);
+.progress-bar.awaitretry {
+    background-color: var(--color-warning);
+}
+
+.progress-bar:hover {
+    filter: brightness(0.9);
 }
 
 

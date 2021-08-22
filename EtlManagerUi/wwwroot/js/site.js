@@ -177,46 +177,6 @@ function drawSuccessRateGraph(datasets_) {
 
 }
 
-function drawStepsTimeline(dataset_, dotNetObject) {
-
-    var dataset = JSON.parse(dataset_);
-
-    var items = new vis.DataSet(dataset);
-
-    var container = document.getElementById('steps_graph');
-
-    // Clear all other previous content.
-    // This way we can all previously set listeners as well
-    // => no duplicate function calls back to.NET.
-    container.innerHTML = '';
-
-    var options = {
-        order: function (a, b) {
-            return b.start - a.start;
-        },
-        editable: false,
-        margin: {
-            item: 2
-        },
-        orientation: {
-            axis: 'both'
-        }
-    };
-
-    var timeline = new vis.Timeline(container, items, options);
-
-    // Set event listeners to pass the clicked item's id back to Blazor.
-    var myFunction = function (id) {
-        dotNetObject.invokeMethodAsync('HelperInvokeCaller', id);
-    };
-
-    timeline.on('select', function (properties) {
-        var item = items.get(properties.items[0]);
-        myFunction(item.id);
-    });
-
-}
-
 function scrollIntoViewCompat(elementId) {
     var element = document.getElementById(elementId);
     if (!isElementInViewport(element))
