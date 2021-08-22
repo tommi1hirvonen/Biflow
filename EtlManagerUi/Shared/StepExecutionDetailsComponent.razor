@@ -38,13 +38,13 @@
                 Started
             </dt>
             <dd class="col-sm-9">
-                @StepExecutionAttempt.StartDateTime
+                @StepExecutionAttempt.StartDateTime?.LocalDateTime
             </dd>
             <dt class="col-sm-3">
                 Ended
             </dt>
             <dd class="col-sm-9">
-                @StepExecutionAttempt.EndDateTime
+                @StepExecutionAttempt.EndDateTime?.LocalDateTime
             </dd>
             <dt class="col-sm-3">
                 <text>Duration</text>

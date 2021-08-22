@@ -11,6 +11,12 @@
         cursor: pointer;
         font-weight: bold;
     }
+        .vis-item.vis-range {
+            border-radius: 0px;
+        }
+        .vis-item.vis-range:hover {
+            filter: brightness(0.9);
+        }
         .vis-item .vis-item-overflow {
             overflow: visible;
         }
@@ -21,7 +27,7 @@
         }
 </style>
 
-<BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true">
+<BSModal @ref="Modal" IsFullScreen="true" IsScrollable="true">
     <BSModalHeader @onclick="() => Modal.Hide()">@(Execution is not null ? Execution.JobName : null)</BSModalHeader>
     <BSModalBody>
 
@@ -273,7 +279,7 @@
             </table>
         }
 
-        <div class="steps-graph" id="steps_graph" hidden=@(!ShowGraph)>
+        <div class="steps-graph mx-4" id="steps_graph" hidden=@(!ShowGraph)>
         </div>
 
         <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionModal" />
