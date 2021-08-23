@@ -80,7 +80,7 @@ namespace EtlManagerDataAccess.Models
                 return (0, 0);
 
             var minTime = allAttempts.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
-            var maxTime = allAttempts.Max(e => e.EndDateTime?.LocalDateTime) ?? DateTime.Now;
+            var maxTime = allAttempts.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now);
 
             var minTicks = minTime.Ticks;
             var maxTicks = maxTime.Ticks;
