@@ -437,7 +437,7 @@
     public void Show() => Modal.Show();
 
     private DateTime MinTime => Executions.Any() ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
-    private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 

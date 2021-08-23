@@ -479,6 +479,8 @@ else
         Executions_ = await context.Executions
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.Step)
                 .ThenInclude(s => s!.Tags)
