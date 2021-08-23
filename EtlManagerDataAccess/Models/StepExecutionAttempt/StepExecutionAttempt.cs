@@ -70,7 +70,7 @@ namespace EtlManagerDataAccess.Models
             streamWriter.WriteLine(json);
         }
 
-        public (int Offset, int Width) GetOffsetAndWidth()
+        public (int Offset, int Width) GetGanttGraphDimensions()
         {
             var allAttempts = StepExecution.Execution.StepExecutions
                 .SelectMany(e => e.StepExecutionAttempts)

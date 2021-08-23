@@ -241,7 +241,7 @@
                         .OrderBy(e => e.StartDateTime)
                         .ThenBy(e => e.StepExecution.StepName))
                     {
-                        (var offset, var width) = item.GetOffsetAndWidth();
+                        (var offset, var width) = item.GetGanttGraphDimensions();
                         <div class="row border-top">
                             <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
                                 <small>@item.StepExecution.StepName</small>
