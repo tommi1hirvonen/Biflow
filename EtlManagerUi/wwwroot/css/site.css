@@ -374,6 +374,12 @@ tr.disabled {
 .progress-bar.awaitretry {
     background-color: var(--color-warning-light);
 }
+.progress-bar.warning {
+    background-color: var(--color-warning-light);
+}
+.progress-bar.suspended {
+    background-color: var(--color-danger);
+}
 .progress-bar:hover {
     filter: brightness(0.9);
 }

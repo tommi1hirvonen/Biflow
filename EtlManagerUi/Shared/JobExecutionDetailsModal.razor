@@ -128,6 +128,15 @@
         }
 
         <div class="row">
+            <div class="col">
+                <small>Progress:</small>
+                <div class="progress">
+                    <div class="progress-bar @Execution?.ExecutionStatus.ToString().ToLower()" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
             <div class="col d-inline">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                 <span class="mr-3">Filter</span>
@@ -212,19 +221,19 @@
                 <span class="mr-3">Sort</span>
                 <div class="custom-control custom-radio custom-control-inline">
                     <input type="radio" class="custom-control-input" id="radio_started"
-                            checked=@(SortMode_ == SortMode.Started)
-                            @onchange="() => SortMode_ = SortMode.Started">
+                           checked=@(SortMode_ == SortMode.Started)
+                           @onchange="() => SortMode_ = SortMode.Started">
                     <label class="custom-control-label" for="radio_started">Started</label>
                 </div>
                 <div class="custom-control custom-radio custom-control-inline">
                     <input type="radio" class="custom-control-input" id="radio_duration"
-                            checked=@(SortMode_ == SortMode.Duration)
-                            @onchange="() => SortMode_ = SortMode.Duration">
+                           checked=@(SortMode_ == SortMode.Duration)
+                           @onchange="() => SortMode_ = SortMode.Duration">
                     <label class="custom-control-label" for="radio_duration">Duration</label>
                 </div>
             </div>
         </div>
-        
+
 
         @if (!ShowGraph)
         {
@@ -251,17 +260,17 @@
                     else
                     {
                         @foreach (var item in Executions
-                           .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-                           .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-                           .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
-                           .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
-                           .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
-                           .ThenBy(e => e.StartDateTime is null)
-                           .ThenBy(e => e.StartDateTime)
-                           .ThenBy(e => e.EndDateTime is null)
-                           .ThenBy(e => e.EndDateTime)
-                           .ThenBy(e => e.StepExecution.ExecutionPhase)
-                           .ThenBy(e => e.StepExecution.StepName))
+                          .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+                          .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                          .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                          .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+                          .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
+                          .ThenBy(e => e.StartDateTime is null)
+                          .ThenBy(e => e.StartDateTime)
+                          .ThenBy(e => e.EndDateTime is null)
+                          .ThenBy(e => e.EndDateTime)
+                          .ThenBy(e => e.StepExecution.ExecutionPhase)
+                          .ThenBy(e => e.StepExecution.StepName))
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
@@ -294,7 +303,7 @@
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
                                                 @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                              && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                             && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
                                                         <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -339,14 +348,14 @@
                         </div>
                     </div>
                     @foreach (var item in Executions
-                       .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-                       .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-                       .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
-                       .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
-                       .Where(e => e.StartDateTime != null)
-                       .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
-                       .ThenBy(e => e.StartDateTime)
-                       .ThenBy(e => e.StepExecution.StepName))
+                      .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+                      .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                      .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                      .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+                      .Where(e => e.StartDateTime != null)
+                      .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
+                      .ThenBy(e => e.StartDateTime)
+                      .ThenBy(e => e.StepExecution.StepName))
                     {
                         (var offset, var width) = item.GetGanttGraphDimensions();
                         <div class="row border-top">
@@ -382,7 +391,7 @@
                                         </BSButton>
                                         <AuthorizeView Roles="Admin, Editor, Operator">
                                             @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                         && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                        && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                             {
                                                 <BSDropdown Class="ml-3">
                                                     <BSDropdownToggle Size="Size.Small" Color="Color.Danger">

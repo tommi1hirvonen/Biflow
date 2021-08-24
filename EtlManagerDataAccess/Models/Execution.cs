@@ -73,6 +73,19 @@ namespace EtlManagerDataAccess.Models
             return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
         }
 
+        public int GetProgressPercent()
+        {
+            var allCount = StepExecutions?.Count ?? 0;
+            var completedCount = StepExecutions?.Count(step =>
+                step.StepExecutionAttempts?.Any(att =>
+                    att.ExecutionStatus == StepExecutionStatus.Succeeded ||
+                    att.ExecutionStatus == StepExecutionStatus.Failed ||
+                    att.ExecutionStatus == StepExecutionStatus.Stopped ||
+                    att.ExecutionStatus == StepExecutionStatus.Skipped ||
+                    att.ExecutionStatus == StepExecutionStatus.Duplicate) ?? false) ?? 0;
+            return allCount > 0 ? (int)Math.Round(completedCount / (double)allCount * 100) : 0;
+        }
+
         public async Task StopExecutionAsync(string username)
         {
             // Connect to the pipe server set up by the executor process.
