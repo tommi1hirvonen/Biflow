@@ -127,6 +127,105 @@
             </dl>
         }
 
+        <div class="row">
+            <div class="col d-inline">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                <span class="mr-3">Filter</span>
+
+                <BSButtonGroup Size="Size.Small">
+                    <FilterDropdown TItem="string"
+                                    FilterSet="StepFilter"
+                                    Items="Execution?.StepExecutions
+                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
+                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                    StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
+                                .Select(s => s.StepName)
+                                .Distinct()
+                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                                    OnChange="StateHasChanged"
+                                    IsSearchable="true">
+                        <Title>
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                            Step
+                        </Title>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="StepType"
+                                    FilterSet="StepTypeFilter"
+                                    Items="Execution?.StepExecutions
+                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
+                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                    StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step types based on step filter
+                                .Select(s => s.StepType)
+                                .Distinct()
+                                .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
+                                    OnChange="StateHasChanged">
+                        <Title>
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                            Step type
+                        </Title>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="StepExecutionStatus"
+                                    FilterSet="StepStatusFilter"
+                                    Items="Execution?.StepExecutions
+                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
+                                .SelectMany(s => s.StepExecutionAttempts)
+                                .Select(e => e.ExecutionStatus)
+                                .Distinct()
+                                .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
+                                    OnChange="StateHasChanged">
+                        <Title>
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                            Status
+                        </Title>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="string"
+                                    FilterSet="TagFilter"
+                                    Items="Execution?.StepExecutions
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible tags based on step filter
+                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
+                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                            StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
+                                .SelectMany(e => e.Step?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
+                                .Distinct()
+                                .OrderBy(s => s) ?? Enumerable.Empty<string>()"
+                                    OnChange="StateHasChanged">
+                        <Title>
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                            Tag
+                        </Title>
+                    </FilterDropdown>
+                    <BSButton Size="Size.Small" Color="Color.Light"
+                              @onclick="() => { StepStatusFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                        Reset
+                    </BSButton>
+                </BSButtonGroup>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col d-inline">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                <span class="mr-3">Sort</span>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" class="custom-control-input" id="radio_started"
+                            checked=@(SortMode_ == SortMode.Started)
+                            @onchange="() => SortMode_ = SortMode.Started">
+                    <label class="custom-control-label" for="radio_started">Started</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" class="custom-control-input" id="radio_duration"
+                            checked=@(SortMode_ == SortMode.Duration)
+                            @onchange="() => SortMode_ = SortMode.Duration">
+                    <label class="custom-control-label" for="radio_duration">Duration</label>
+                </div>
+            </div>
+        </div>
+        
+
         @if (!ShowGraph)
         {
             <table class="table table-sm table-hover mt-2">
@@ -152,12 +251,17 @@
                     else
                     {
                         @foreach (var item in Executions
-                            .OrderBy(e => e.StartDateTime is null)
-                            .ThenBy(e => e.StartDateTime)
-                            .ThenBy(e => e.EndDateTime is null)
-                            .ThenBy(e => e.EndDateTime)
-                            .ThenBy(e => e.StepExecution.ExecutionPhase)
-                            .ThenBy(e => e.StepExecution.StepName))
+                           .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+                           .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                           .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                           .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+                           .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
+                           .ThenBy(e => e.StartDateTime is null)
+                           .ThenBy(e => e.StartDateTime)
+                           .ThenBy(e => e.EndDateTime is null)
+                           .ThenBy(e => e.EndDateTime)
+                           .ThenBy(e => e.StepExecution.ExecutionPhase)
+                           .ThenBy(e => e.StepExecution.StepName))
                         {
                             <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                                 <td>
@@ -190,7 +294,7 @@
                                             </BSButton>
                                             <AuthorizeView Roles="Admin, Editor, Operator">
                                                 @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                                && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                              && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                                 {
                                                     <BSDropdown Class="ml-3">
                                                         <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -216,7 +320,7 @@
         }
         else
         {
-            <div class="row mx-1">
+            <div class="row mx-1 mt-3">
                 <div class="col">
                     <div class="row">
                         <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
@@ -225,19 +329,24 @@
                         <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
                             @for (int i = 0; i <= 100; i += 10)
                             {
-                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
-                                @if (i < 100)
-                                {
-                                    <small class="@(i % 20 == 0 ? "d-none d-xl-block" : null)">@GetTimeFromPercentage(i)</small>
-                                }
-                            </div>
+                                <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
+                                    @if (i < 100)
+                                    {
+                                        <small class="@(i % 20 == 0 ? "d-none d-xl-block" : null)">@GetTimeFromPercentage(i)</small>
+                                    }
+                                </div>
                             }
                         </div>
                     </div>
                     @foreach (var item in Executions
-                        .Where(e => e.StartDateTime != null)
-                        .OrderBy(e => e.StartDateTime)
-                        .ThenBy(e => e.StepExecution.StepName))
+                       .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+                       .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+                       .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                       .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+                       .Where(e => e.StartDateTime != null)
+                       .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
+                       .ThenBy(e => e.StartDateTime)
+                       .ThenBy(e => e.StepExecution.StepName))
                     {
                         (var offset, var width) = item.GetGanttGraphDimensions();
                         <div class="row border-top">
@@ -273,7 +382,7 @@
                                         </BSButton>
                                         <AuthorizeView Roles="Admin, Editor, Operator">
                                             @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                           && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                         && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                             {
                                                 <BSDropdown Class="ml-3">
                                                     <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
@@ -341,6 +450,13 @@
 
     private StepExecutionAttempt SelectedStepExecutionModal { get; set; } = null!;
 
+    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
+    private HashSet<string> StepFilter { get; } = new();
+    private HashSet<StepType> StepTypeFilter { get; } = new();
+    private HashSet<string> TagFilter { get; } = new();
+    private SortMode SortMode_ { get; set; } = SortMode.Started;
+    private enum SortMode { Started, Duration }
+
     protected override async Task OnParametersSetAsync()
     {
         Execution = null;
@@ -359,6 +475,9 @@
                 .ThenInclude(e => e.StepExecutionAttempts)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.Step)
+                .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             StateHasChanged();
             Loading = false;
