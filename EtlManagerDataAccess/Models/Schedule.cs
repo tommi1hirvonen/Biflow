@@ -1,9 +1,5 @@
-﻿using Quartz;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
@@ -34,44 +30,5 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Created by")]
         public string? CreatedBy { get; set; }
 
-        public string GetScheduleSummary()
-        {
-            if (CronExpression is not null && Quartz.CronExpression.IsValidExpression(CronExpression))
-            {
-                var cron = new CronExpression(CronExpression);
-                return cron.GetExpressionSummary();
-            }
-            else
-            {
-                return "Invalid Cron expression";
-            }
-        }
-
-        public DateTime GetNextFireTime()
-        {
-            return NextFireTimesSequence().FirstOrDefault();
-        }
-
-        public IEnumerable<DateTime> GetNextFireTimes(int count)
-        {
-            return NextFireTimesSequence().Take(count);
-        }
-
-        private IEnumerable<DateTime> NextFireTimesSequence()
-        {
-            if (CronExpression is not null && Quartz.CronExpression.IsValidExpression(CronExpression))
-            {
-                var cron = new CronExpression(CronExpression);
-                DateTimeOffset? dateTime = DateTimeOffset.UtcNow;
-                while (dateTime is not null)
-                {
-                    dateTime = cron.GetTimeAfter((DateTimeOffset)dateTime);
-                    if (dateTime is null)
-                        break;
-                    else
-                        yield return dateTime.Value.LocalDateTime;
-                }
-            }
-        }
     }
 }
