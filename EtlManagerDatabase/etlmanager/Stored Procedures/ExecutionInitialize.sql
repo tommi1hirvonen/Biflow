@@ -106,6 +106,24 @@ FROM etlmanager.Job AS a
 WHERE a.JobId = @JobId
 
 
+-- Insert job execution parameters
+INSERT INTO etlmanager.ExecutionParameter (
+	ExecutionId,
+	ParameterId,
+	ParameterName,
+	ParameterType,
+	ParameterValue
+)
+SELECT
+	@EtlManagerExecutionId,
+	ParameterId,
+	ParameterName,
+	ParameterType,
+	ParameterValue
+FROM etlmanager.JobParameter
+where JobId = @JobId
+
+
 -- Insert placeholders for steps.
 INSERT INTO etlmanager.ExecutionStep (
 	ExecutionId,
@@ -202,18 +220,21 @@ INSERT INTO etlmanager.ExecutionStepParameter (
 	ParameterName,
 	ParameterValue,
 	ParameterLevel,
-	ParameterType
+	ParameterType,
+	InheritedFromJob
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
 	b.ParameterName,
-	b.ParameterValue,
+	ISNULL(c.ParameterValue, b.ParameterValue),
 	b.ParameterLevel,
-	b.ParameterType
+	ISNULL(c.ParameterType, b.ParameterType),
+	CASE WHEN c.ParameterId IS NOT NULL THEN 1 ELSE 0 END
 FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.PackageParameter AS b ON b.StepId = a.StepId
+	LEFT JOIN etlmanager.ExecutionParameter AS c ON a.ExecutionId = c.ExecutionId AND b.JobParameterId = c.ParameterId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 -- Store and historize pipeline execution parameters.
@@ -224,18 +245,21 @@ INSERT INTO etlmanager.ExecutionStepParameter (
 	ParameterName,
 	ParameterValue,
 	ParameterLevel,
-	ParameterType
+	ParameterType,
+	InheritedFromJob
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
 	b.ParameterName,
-	b.ParameterValue,
-	'Pipeline' AS ParameterLevel,
-	b.ParameterType
+	ISNULL(c.ParameterValue, b.ParameterValue),
+	'' AS ParameterLevel,
+	ISNULL(c.ParameterType, b.ParameterType),
+	CASE WHEN c.ParameterId IS NOT NULL THEN 1 ELSE 0 END
 FROM etlmanager.ExecutionStep AS a
-	JOIN etlmanager.PipelineParameter AS b ON b.StepId = a.StepId
+	JOIN etlmanager.StepParameter AS b ON b.StepId = a.StepId
+	LEFT JOIN etlmanager.ExecutionParameter AS c ON a.ExecutionId = c.ExecutionId AND b.JobParameterId = c.ParameterId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 

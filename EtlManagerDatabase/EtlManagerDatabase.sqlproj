@@ -86,12 +86,14 @@
     <Build Include="etlmanager\Tables\ExecutionParameter.sql" />
     <Build Include="etlmanager\Tables\Tag.sql" />
     <Build Include="etlmanager\Tables\StepTag.sql" />
-    <Build Include="etlmanager\Tables\PipelineParameter.sql" />
+    <Build Include="etlmanager\Tables\StepParameter.sql" />
     <Build Include="etlmanager\Tables\ExecutionStep.sql" />
     <Build Include="etlmanager\Tables\ExecutionStepAttempt.sql" />
     <Build Include="etlmanager\Tables\FunctionApp.sql" />
     <Build Include="etlmanager\Tables\AppRegistration.sql" />
     <Build Include="etlmanager\Tables\AccessToken.sql" />
+    <Build Include="etlmanager\Tables\JobParameter.sql" />
+    <Build Include="etlmanager\Tables\ExecutionStepParameter.sql" />
   </ItemGroup>
   <ItemGroup>
     <ArtifactReference Include="$(DacPacRootPath)\Extensions\Microsoft\SQLDB\Extensions\SqlServer\150\SqlSchemas\msdb.dacpac">

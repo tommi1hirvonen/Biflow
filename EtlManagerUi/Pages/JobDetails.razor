@@ -234,7 +234,7 @@ else
             .Include(step => step.Dependencies)
             .Include(step => step.Tags)
             .Include(step => (step as PackageStep)!.PackageParameters)
-            .Include(step => (step as PipelineStep)!.PipelineParameters)
+            .Include(step => (step as ParameterizedStep)!.StepParameters)
             .Where(step => step.JobId == CurrentJob.JobId)
             .ToListAsync();
         await SortStepsAsync();

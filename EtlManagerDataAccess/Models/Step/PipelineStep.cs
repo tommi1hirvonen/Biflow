@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record PipelineStep() : Step(StepType.Pipeline)
+    public record PipelineStep() : ParameterizedStep(StepType.Pipeline)
     {
         [Required]
         public Guid? DataFactoryId { get; set; }
@@ -15,8 +15,6 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Pipeline name")]
         [Required]
         public string? PipelineName { get; set; }
-
-        public IList<PipelineParameter> PipelineParameters { get; set; } = null!;
 
         public DataFactory? DataFactory { get; set; }
     }

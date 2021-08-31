@@ -33,6 +33,22 @@ SELECT @JobIdNew,
 FROM etlmanager.Job
 WHERE JobId = @JobId
 
+-- Copy job parameters
+INSERT INTO etlmanager.JobParameter (
+	ParameterId,
+	JobId,
+	ParameterName,
+	ParameterType,
+	ParameterValue
+)
+SELECT NEWID(),
+	@JobIdNew,
+	ParameterName,
+	ParameterType,
+	ParameterValue
+FROM etlmanager.JobParameter
+where JobId = @JobId
+
 -- Copy schedules
 INSERT INTO etlmanager.Schedule (
 	ScheduleId,
@@ -174,8 +190,8 @@ SELECT NEWID(),
 FROM etlmanager.PackageParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 
--- Copy pipeline parameters
-INSERT INTO etlmanager.PipelineParameter (
+-- Copy step parameters
+INSERT INTO etlmanager.StepParameter (
 	ParameterId,
 	StepId,
 	ParameterName,
@@ -187,7 +203,7 @@ SELECT NEWID(),
 	A.ParameterName,
 	A.ParameterType,
 	A.ParameterValue
-FROM etlmanager.PipelineParameter AS A
+FROM etlmanager.StepParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 
 -- Copy tags

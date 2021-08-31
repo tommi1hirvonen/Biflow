@@ -52,10 +52,9 @@ namespace EtlManagerDataAccess.Models
         public ICollection<Step> Steps { get; set; } = null!;
         public ICollection<JobStep> JobSteps { get; set; } = null!;
         public ICollection<Schedule> Schedules { get; set; } = null!;
-
         public ICollection<Execution> Executions { get; set; } = null!;
-
         public ICollection<Subscription> Subscriptions { get; set; } = null!;
+        public ICollection<JobParameter> JobParameters { get; set; } = null!;
 
         [Display(Name = "Created by")]
         public string? CreatedBy { get; set; }

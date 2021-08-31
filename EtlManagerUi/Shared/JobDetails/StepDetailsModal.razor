@@ -211,13 +211,13 @@
                     </dl>
                 }
             }
-            else if (Step is PipelineStep pipeline)
+            else if (Step is ParameterizedStep paramStep)
             {
                 <h6>Parameters</h6>
-                @if (pipeline.PipelineParameters is not null)
+                @if (paramStep.StepParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in pipeline.PipelineParameters)
+                        @foreach (var param in paramStep.StepParameters)
                         {
                             <dt class="col-sm-3">@param.ParameterName</dt>
                             <dd class="col-sm-9">@param.ParameterValue</dd>

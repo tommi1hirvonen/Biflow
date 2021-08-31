@@ -29,6 +29,8 @@ namespace EtlManagerDataAccess.Models
 
         public string ParameterLevel { get; set; }
 
+        public bool InheritedFromJob { get; set; }
+
         public ParameterizedStepExecution StepExecution { get; set; } = null!;
     }
 }

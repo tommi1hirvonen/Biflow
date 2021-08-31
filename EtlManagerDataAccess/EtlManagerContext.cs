@@ -44,7 +44,7 @@ namespace EtlManagerDataAccess
         public DbSet<Connection> Connections => Set<Connection>();
         public DbSet<Tag> Tags => Set<Tag>();
         public DbSet<PackageParameter> PackageParameters => Set<PackageParameter>();
-        public DbSet<PipelineParameter> PipelineParameters => Set<PipelineParameter>();
+        public DbSet<StepParameter> StepParameters => Set<StepParameter>();
         public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -192,6 +192,9 @@ namespace EtlManagerDataAccess
                 .HasMany(j => j.Executions)
                 .WithOne(e => e.Job!)
                 .IsRequired(false);
+            modelBuilder.Entity<Job>()
+                .HasMany(job => job.JobParameters)
+                .WithOne(param => param.Job);
 
             modelBuilder.Entity<Step>()
                 .ToTable("Step")
@@ -244,11 +247,11 @@ namespace EtlManagerDataAccess
                 .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<PipelineParameter>(e =>
+            modelBuilder.Entity<StepParameter>(e =>
             {
-                e.ToTable("PipelineParameter")
+                e.ToTable("StepParameter")
                 .HasOne(parameter => parameter.Step)
-                .WithMany(step => step.PipelineParameters)
+                .WithMany(step => step.StepParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
             });

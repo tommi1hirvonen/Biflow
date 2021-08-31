@@ -106,8 +106,8 @@ SELECT NEWID(),
 FROM etlmanager.PackageParameter
 WHERE StepId = @StepId
 
--- Copy pipeline parameters
-INSERT INTO etlmanager.PipelineParameter (
+-- Copy step parameters
+INSERT INTO etlmanager.StepParameter (
 	ParameterId,
 	StepId,
 	ParameterName,
@@ -119,7 +119,7 @@ SELECT NEWID(),
 	ParameterName,
 	ParameterType,
 	ParameterValue
-FROM etlmanager.PipelineParameter
+FROM etlmanager.StepParameter
 WHERE StepId = @StepId
 
 
