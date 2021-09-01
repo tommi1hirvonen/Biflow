@@ -18,7 +18,14 @@
     }
 </style>
 
-<div class="sticky-top pt-2 pb-3" style="background-color: rgba(248, 249, 250, 0.9);"> @*Same as bg-light but with slight transparency*@
+@if (Job is not null)
+{
+    <JobParametersModal @ref="JobParametersModal" JobId="Job.JobId" />
+}
+
+
+<div class="sticky-top pt-2 pb-3" style="background-color: rgba(248, 249, 250, 0.9);">
+    @*Same as bg-light but with slight transparency*@
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
             <BSDropdown>
@@ -39,6 +46,9 @@
             </BSDropdown>
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
+            <BSButton Class="ml-3" Color="Color.Secondary" @onclick="() => JobParametersModal?.Show()">
+                Parameters
+            </BSButton>
             <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                 Execute
@@ -133,8 +143,8 @@
             {
                 var index = 0;
                 @foreach (var item in Steps
-                  .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                  .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
+                 .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
+                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
                 {
                     <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
@@ -448,6 +458,8 @@
     .Select(tag => tag.TagName)
     .Distinct()
     .OrderBy(str => str) ?? Enumerable.Empty<string>();
+
+    private JobParametersModal JobParametersModal { get; set; } = null!;
 
     private Dictionary<StepType, IStepEditModal> StepEditModals = new();
     private Guid EditModalStepId { get; set; }

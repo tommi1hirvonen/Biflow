@@ -1,0 +1,249 @@
+﻿@implements IDisposable
+
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject IJSRuntime JS
+
+<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="IsModalOpenChanged">
+    <BSModalHeader OnClick="() => Modal.Hide()">
+        Edit job parameters
+    </BSModalHeader>
+
+    <BSModalBody>
+        @if (Job is not null)
+        {
+            <BSForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
+                <p />
+                <h5>Parameters</h5>
+                <table id="parameters_table" class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                        {
+                            <tr>
+                                <td>
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
+                                            <option>Boolean</option>
+                                            <option>Byte</option>
+                                            <option>DateTime</option>
+                                            <option>Decimal</option>
+                                            <option>Double</option>
+                                            <option>Int16</option>
+                                            <option>Int32</option>
+                                            <option>Int64</option>
+                                            <option>SByte</option>
+                                            <option>Single</option>
+                                            <option>String</option>
+                                            <option>UInt32</option>
+                                            <option>UInt64</option>
+                                        </InputSelect>
+                                    </div>
+                                </td>
+                                <td>
+                                    @switch (param.ParameterType)
+                                    {
+                                        case "Boolean":
+                                            <div class="input-group">
+                                                <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
+                                                    <option value="True">True</option>
+                                                    <option value="False">False</option>
+                                                </InputSelectBoolean>
+                                            </div>
+                                            break;
+                                        case "Byte":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
+                                            break;
+                                        case "DateTime":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
+                                            break;
+                                        case "Decimal":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
+                                            break;
+                                        case "Double":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
+                                            break;
+                                        case "Int16":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
+                                            break;
+                                        case "Int32":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
+                                            break;
+                                        case "Int64":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
+                                            break;
+                                        case "SByte":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
+                                            break;
+                                        case "Single":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
+                                            break;
+                                        case "String":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
+                                            break;
+                                        case "UInt32":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
+                                            break;
+                                        case "UInt64":
+                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <BSButtonGroup Size="Size.Small" Class="btn-row">
+                                        <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                        </BSButton>
+                                    </BSButtonGroup>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @{ var type = "String"; }
+                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterType = type })">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+                </BSButton>
+                <p class="text-danger">@ErrorMessage</p>
+            </BSForm>
+        }
+    </BSModalBody>
+
+    <BSModalFooter>
+        <BSButton ButtonType="ButtonType.Submit" form="job_parameter_form" Color="Color.Success">Save</BSButton>
+        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
+    </BSModalFooter>
+</BSModal>
+
+@code {
+
+    private BSModal Modal { get; set; } = null!;
+
+    [Parameter]
+    public Guid JobId { get; set; }
+    private Guid PrevId { get; set; }
+
+    private Job? Job { get; set; }
+
+    private EtlManagerContext Context { get; set; } = null!;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (JobId != Guid.Empty && JobId != PrevId)
+        {
+            await (Context?.DisposeAsync() ?? ValueTask.CompletedTask);
+            Context = DbContextFactory.CreateDbContext();
+            Job = await Context.Jobs
+                .Include(j => j.JobParameters)
+                .FirstAsync(j => j.JobId == JobId);
+        }
+    }
+
+    private void IsModalOpenChanged(bool isOpen)
+    {
+        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
+        // If the user saves their changes, SubmitStep() is called first and changes are saved.
+        if (!isOpen)
+        {
+            // Reset added entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
+            {
+                if (entity.Entity is JobParameter param)
+                {
+                    if (Job?.JobParameters.Contains(param) == true)
+                        Job?.JobParameters.Remove(param);
+                }
+
+                entity.State = EntityState.Detached;
+            }
+
+            // Reset deleted entities.
+            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
+            {
+                if (entity.Entity is JobParameter param)
+                {
+                    if (Job?.JobParameters.Contains(param) == false)
+                        Job?.JobParameters.Add(param);
+                }
+
+                entity.State = EntityState.Unchanged;
+            }
+
+            // Reset changed entities.
+            Context.ChangeTracker
+                .Entries()
+                .Where(e => e.Entity is not null)
+                .ToList()
+                .ForEach(e => e.State = EntityState.Unchanged);
+        }
+    }
+
+    private async Task SubmitParameters()
+    {
+        var (paramResult, paramMessage) = ParametersCheck();
+        if (!paramResult)
+        {
+            ErrorMessage = paramMessage;
+            return;
+        }
+
+        foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        {
+            param.SetParameterValue();
+        }
+
+        try
+        {
+            await Context.SaveChangesAsync();
+            Modal.Hide();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await JS.InvokeVoidAsync("alert", "Concurrency error: the job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error saving parameters: {ex.Message}\n{ex.InnerException?.Message}");
+        }
+        
+    }
+
+    private (bool Result, string? Message) ParametersCheck()
+    {
+        var parameters = Job?.JobParameters
+            .OrderBy(param => param.ParameterName)
+            .ToList() ?? Enumerable.Empty<JobParameter>().ToList();
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName))
+            {
+                return (false, "Parameter name cannot be empty");
+            }
+        }
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                return (false, "Duplicate parameter names");
+            }
+        }
+
+        return (true, null);
+    }
+
+    public void Show() => Modal.Show();
+
+    public void Dispose() => Context?.Dispose();
+}
