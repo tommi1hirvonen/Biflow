@@ -206,11 +206,27 @@ else
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs.Include(job => job.Subscriptions).OrderBy(job => job.JobName).ToListAsync();
-        Connections = await context.Connections.AsNoTracking().OrderBy(c => c.ConnectionName).ToListAsync();
-        DataFactories = await context.DataFactories.AsNoTracking().OrderBy(df => df.DataFactoryName).ToListAsync();
-        AppRegistrations = await context.AppRegistrations.AsNoTracking().OrderBy(app => app.AppRegistrationName).ToListAsync();
-        FunctionApps = await context.FunctionApps.AsNoTracking().OrderBy(app => app.FunctionAppName).ToListAsync();
+        Jobs = await context.Jobs
+            .Include(job => job.Subscriptions)
+            .Include(job => job.JobParameters)
+            .OrderBy(job => job.JobName)
+            .ToListAsync();
+        Connections = await context.Connections
+            .AsNoTracking()
+            .OrderBy(c => c.ConnectionName)
+            .ToListAsync();
+        DataFactories = await context.DataFactories
+            .AsNoTracking()
+            .OrderBy(df => df.DataFactoryName)
+            .ToListAsync();
+        AppRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(app => app.AppRegistrationName)
+            .ToListAsync();
+        FunctionApps = await context.FunctionApps
+            .AsNoTracking()
+            .OrderBy(app => app.FunctionAppName)
+            .ToListAsync();
     }
 
     protected override async Task OnParametersSetAsync()

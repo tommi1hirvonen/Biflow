@@ -20,7 +20,9 @@
 
 @if (Job is not null)
 {
-    <JobParametersModal @ref="JobParametersModal" JobId="Job.JobId" />
+    <JobParametersModal @ref="JobParametersModal"
+                        JobId="Job.JobId"
+                        OnParametersSubmit="parameters => Job.JobParameters = parameters" />
 }
 
 

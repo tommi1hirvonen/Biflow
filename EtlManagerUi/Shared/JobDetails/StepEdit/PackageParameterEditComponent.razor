@@ -9,12 +9,17 @@
             <tr>
                 <th>Level</th>
                 <th>Name</th>
-                <th>Type</th>
-                <th>Value</th>
+                <th>Inherit from job</th>
+                <th></th>
+                <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
+            @if (!Step.PackageParameters.Any())
+            {
+                <tr><td colspan="6">No parameters</td></tr>
+            }
             @foreach (var param in Step.PackageParameters)
             {
                 <tr>
@@ -29,74 +34,109 @@
                     <td>
                         <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
                     </td>
-                    <td>
-                        <div class="input-group">
-                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
-                                <option>Boolean</option>
-                                <option>Byte</option>
-                                <option>DateTime</option>
-                                <option>Decimal</option>
-                                <option>Double</option>
-                                <option>Int16</option>
-                                <option>Int32</option>
-                                <option>Int64</option>
-                                <option>SByte</option>
-                                <option>Single</option>
-                                <option>String</option>
-                                <option>UInt32</option>
-                                <option>UInt64</option>
-                            </InputSelect>
+                    <td class="align-middle">
+                        <div class="custom-control custom-checkbox">
+                            <input type="checkbox" class="custom-control-input" id="inherit_@(param.ParameterId)"
+                                   checked=@(param.JobParameterId is not null)
+                                   disabled=@(!JobParameters.Any())
+                                   @onchange="args => SetJobParameter((bool)args.Value, param)">
+                            <label class="custom-control-label" for="inherit_@(param.ParameterId)"></label>
                         </div>
                     </td>
-                    <td>
-                        @switch (param.ParameterType)
-                        {
-                            case "Boolean":
-                                <div class="input-group">
-                                    <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
-                                        <option value="True">True</option>
-                                        <option value="False">False</option>
-                                    </InputSelectBoolean>
-                                </div>
-                                break;
-                            case "Byte":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
-                                break;
-                            case "DateTime":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
-                                break;
-                            case "Decimal":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
-                                break;
-                            case "Double":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
-                                break;
-                            case "Int16":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
-                                break;
-                            case "Int32":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
-                                break;
-                            case "Int64":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
-                                break;
-                            case "SByte":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
-                                break;
-                            case "Single":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
-                                break;
-                            case "String":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
-                                break;
-                            case "UInt32":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
-                                break;
-                            case "UInt64":
-                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
-                                break;
-                        }
-                    </td>
+                    @if (param.JobParameterId is not null)
+                    {
+                        <td colspan="2">
+                            <InputSelect class="form-control form-control-sm" @bind-Value="param.JobParameterId">
+                                @foreach (var jobParam in JobParameters)
+                                            {
+                                    <option value="@jobParam.ParameterId">
+                                        @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                                    </option>
+                                            }
+                            </InputSelect>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            <div class="input-group">
+                                <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
+                                    <option>Boolean</option>
+                                    <option>Byte</option>
+                                    <option>DateTime</option>
+                                    <option>Decimal</option>
+                                    <option>Double</option>
+                                    <option>Int16</option>
+                                    <option>Int32</option>
+                                    <option>Int64</option>
+                                    <option>SByte</option>
+                                    <option>Single</option>
+                                    <option>String</option>
+                                    <option>UInt32</option>
+                                    <option>UInt64</option>
+                                </InputSelect>
+                            </div>
+                        </td>
+                        <td>
+                            @switch (param.ParameterType)
+                            {
+                                case "JobParameter":
+                                    <InputSelect class="form-control form-control-sm" @bind-Value="param.JobParameterId">
+                                        @foreach (var jobParam in JobParameters)
+                                                            {
+                                            <option value="@jobParam.ParameterId">
+                                                @jobParam.ParameterName (@jobParam.ParameterValue)
+                                            </option>
+                                                            }
+                                    </InputSelect>
+                                    break;
+                                case "Boolean":
+                                    <div class="input-group">
+                                        <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
+                                            <option value="True">True</option>
+                                            <option value="False">False</option>
+                                        </InputSelectBoolean>
+                                    </div>
+                                    break;
+                                case "Byte":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
+                                    break;
+                                case "DateTime":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
+                                    break;
+                                case "Decimal":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
+                                    break;
+                                case "Double":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
+                                    break;
+                                case "Int16":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
+                                    break;
+                                case "Int32":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
+                                    break;
+                                case "Int64":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
+                                    break;
+                                case "SByte":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
+                                    break;
+                                case "Single":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
+                                    break;
+                                case "String":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
+                                    break;
+                                case "UInt32":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
+                                    break;
+                                case "UInt64":
+                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
+                                    break;
+                            }
+                        </td>
+                    }
                     <td>
                         <BSButtonGroup Size="Size.Small" Class="btn-row">
                             <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.PackageParameters.Remove(param)">
@@ -117,4 +157,19 @@
 @code {
     [Parameter]
     public PackageStep? Step { get; set; }
+
+    [Parameter]
+    public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
+
+    private void SetJobParameter(bool inheritFromJob, PackageParameter param)
+    {
+        if (inheritFromJob)
+        {
+            param.JobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+        }
+        else
+        {
+            param.JobParameterId = null;
+        }
+    }
 }

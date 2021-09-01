@@ -111,7 +111,7 @@
             </div>
         </BSFormGroup>
     </BSFormRow>
-    <PackageParameterEditComponent Step="Step" />
+    <PackageParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
 </StepEditModalBase>
 
 
@@ -163,6 +163,7 @@
             await ResetContext();
             Step = await Context.PackageSteps
                 .Include(step => step.PackageParameters)
+                .ThenInclude(p => p.JobParameter)
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);

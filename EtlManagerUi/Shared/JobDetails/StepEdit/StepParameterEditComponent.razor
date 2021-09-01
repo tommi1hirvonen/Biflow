@@ -8,21 +8,51 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Type</th>
-                <th>Value</th>
+                <th>Inherit from job</th>
+                <th></th>
+                <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
+            @if (!Step.StepParameters.Any())
+            {
+                <tr><td colspan="5">No parameters</td></tr>
+            }
             @foreach (var param in Step.StepParameters)
             {
-                <tr>
-                    <td>
-                        <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+            <tr>
+                <td>
+                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+                </td>
+                <td class="align-middle">
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input" id="inherit_@(param.ParameterId)"
+                               checked=@(param.JobParameterId is not null)
+                               disabled=@(!JobParameters.Any())
+                               @onchange="args => SetJobParameter((bool)args.Value, param)">
+                        <label class="custom-control-label" for="inherit_@(param.ParameterId)"></label>
+                    </div>
+                </td>
+                @if (param.JobParameterId is not null)
+                {
+                    <td colspan="2">
+                        <InputSelect class="form-control form-control-sm" @bind-Value="param.JobParameterId">
+                            @foreach (var jobParam in JobParameters)
+                                        {
+                                <option value="@jobParam.ParameterId">
+                                    @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                                </option>
+                                        }
+                        </InputSelect>
                     </td>
+                }
+                else
+                {
                     <td>
                         <div class="input-group">
-                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
+                            <InputSelect class="form-control form-control-sm"
+                                         @bind-Value="param.ParameterType">
                                 <option>Boolean</option>
                                 <option>Byte</option>
                                 <option>DateTime</option>
@@ -88,14 +118,15 @@
                                 break;
                         }
                     </td>
-                    <td>
-                        <BSButtonGroup Size="Size.Small" Class="btn-row">
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                            </BSButton>
-                        </BSButtonGroup>
-                    </td>
-                </tr>
+                }
+                <td>
+                    <BSButtonGroup Size="Size.Small" Class="btn-row">
+                        <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                        </BSButton>
+                    </BSButtonGroup>
+                </td>
+            </tr>
             }
         </tbody>
     </table>
@@ -108,4 +139,19 @@
 @code {
     [Parameter]
     public ParameterizedStep? Step { get; set; }
+
+    [Parameter]
+    public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
+
+    private void SetJobParameter(bool inheritFromJob, StepParameter param)
+    {
+        if (inheritFromJob)
+        {
+            param.JobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+        }
+        else
+        {
+            param.JobParameterId = null;
+        }
+    }
 }

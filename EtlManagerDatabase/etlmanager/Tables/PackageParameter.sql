@@ -6,7 +6,7 @@
 	[ParameterName] NVARCHAR(128) NOT NULL,
 	[ParameterType] VARCHAR(20) NOT NULL,
 	[ParameterValue] SQL_VARIANT NOT NULL,
-	[JobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_PackageParameter_JobParameter] FOREIGN KEY REFERENCES [etlmanager].[JobParameter] ([ParameterId]),
+	[JobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_PackageParameter_JobParameter] FOREIGN KEY REFERENCES [etlmanager].[JobParameter] ([ParameterId]) ON DELETE SET NULL,
     CONSTRAINT [PK_PackageParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_PackageParameter] UNIQUE ([StepId],[ParameterName],[ParameterLevel]),
 	CONSTRAINT [CK_PackageParameter_ParameterLevel] CHECK ([ParameterLevel] = 'Package' OR [ParameterLevel] = 'Project'),

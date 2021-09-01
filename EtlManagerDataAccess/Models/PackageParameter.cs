@@ -17,5 +17,9 @@ namespace EtlManagerDataAccess.Models
         public Guid StepId { get; set; }
 
         public PackageStep Step { get; set; } = null!;
+
+        public Guid? JobParameterId { get; set; }
+
+        public JobParameter? JobParameter { get; set; }
     }
 }

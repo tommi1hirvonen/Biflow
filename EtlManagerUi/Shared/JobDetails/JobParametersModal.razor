@@ -127,6 +127,9 @@
 
 @code {
 
+    [Parameter]
+    public Action<ICollection<JobParameter>?>? OnParametersSubmit { get; set; }
+
     private BSModal Modal { get; set; } = null!;
 
     [Parameter]
@@ -207,6 +210,7 @@
         try
         {
             await Context.SaveChangesAsync();
+            OnParametersSubmit?.Invoke(Job?.JobParameters);
             Modal.Hide();
         }
         catch (DbUpdateConcurrencyException)
@@ -217,7 +221,7 @@
         {
             await JS.InvokeVoidAsync("alert", $"Error saving parameters: {ex.Message}\n{ex.InnerException?.Message}");
         }
-        
+
     }
 
     private (bool Result, string? Message) ParametersCheck()

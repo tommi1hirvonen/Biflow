@@ -111,6 +111,7 @@
             await ResetContext();
             Step = await Context.SqlSteps
                 .Include(step => step.StepParameters)
+                .ThenInclude(p => p.JobParameter)
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
