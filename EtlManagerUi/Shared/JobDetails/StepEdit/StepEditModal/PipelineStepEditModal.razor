@@ -3,14 +3,11 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<StepEditModalBase @ref="Modal"
+<ParameterizedStepEditModal @ref="Modal"
                    Job="Job"
                    Steps="Steps"
                    Step="Step"
                    Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   ResetDeletedEntities="ResetDeletedEntities"
-                   ResetAddedEntities="ResetAddedEntities"
                    OnStepSubmit="OnStepSubmit"
                    FormId="pipeline_step_edit_modal">
     <BSFormRow>
@@ -65,8 +62,7 @@
         </div>
     </div>
     <PipelineSelectModal @ref="PipelineSelectModal" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
-    <ParameterEditComponent Step="Step" />
-</StepEditModalBase>
+</ParameterizedStepEditModal>
 
 
 @code {
@@ -93,7 +89,7 @@
 
     private PipelineStep Step { get; set; } = null!;
 
-    private StepEditModalBase Modal { get; set; } = null!;
+    private ParameterizedStepEditModal Modal { get; set; } = null!;
 
     private PipelineSelectModal PipelineSelectModal { get; set; } = null!;
 
@@ -138,69 +134,6 @@
             };
         }
         StateHasChanged();
-    }
-
-    private void ResetDeletedEntities(EntityEntry entity)
-    {
-        if (entity.Entity is StepParameter pipelineParam)
-        {
-            if (!Step.StepParameters.Contains(pipelineParam))
-                Step.StepParameters.Add(pipelineParam);
-        }
-    }
-
-    private void ResetAddedEntities(EntityEntry entity)
-    {
-        if (entity.Entity is StepParameter pipelineParam)
-        {
-            if (Step.StepParameters.Contains(pipelineParam))
-                Step.StepParameters.Remove(pipelineParam);
-        }
-    }
-
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is PipelineStep pipeline)
-        {
-            (var paramResult, var paramMessage) = ParametersCheck();
-            if (!paramResult)
-            {
-                return (false, paramMessage);
-            }
-            else
-            {
-                foreach (var param in pipeline.StepParameters)
-                {
-                    param.SetParameterValue();
-                }
-                return (true, null);
-            }
-        }
-        else
-        {
-            return (false, "Not PipelineStep");
-        }
-    }
-
-    private (bool Result, string? Message) ParametersCheck()
-    {
-        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
-            {
-                return (false, "Duplicate parameter names");
-            }
-        }
-
-        return (true, null);
     }
 
     private void OpenPipelineSelectModal() => PipelineSelectModal.Show();

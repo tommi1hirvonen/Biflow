@@ -35,8 +35,17 @@ namespace EtlManagerExecutor
                 Log.Information("{ExecutionId} {Step} Starting SQL execution", Step.ExecutionId, Step);
                 using var connection = new SqlConnection(Step.Connection.ConnectionString);
                 connection.InfoMessage += Connection_InfoMessage;
+
+                var parameters = Step.StepExecutionParameters
+                    .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+                var dynamicParams = new DynamicParameters(parameters);
+
                 // command timeout = 0 => wait indefinitely
-                var command = new CommandDefinition(Step.SqlStatement, commandTimeout: Step.TimeoutMinutes * 60, cancellationToken: cancellationToken);
+                var command = new CommandDefinition(
+                    Step.SqlStatement,
+                    commandTimeout: Step.TimeoutMinutes * 60,
+                    parameters: dynamicParams,
+                    cancellationToken: cancellationToken);
                 await connection.ExecuteAsync(command);
             }
             catch (SqlException ex)

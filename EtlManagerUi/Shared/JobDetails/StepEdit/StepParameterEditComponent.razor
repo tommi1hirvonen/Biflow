@@ -1,0 +1,111 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+
+@if (Step is not null)
+{
+    <p />
+    <h5>Parameters</h5>
+    <table id="parameters_table" class="table table-sm">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var param in Step.StepParameters)
+            {
+                <tr>
+                    <td>
+                        <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName"></BSBasicInput>
+                    </td>
+                    <td>
+                        <div class="input-group">
+                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
+                                <option>Boolean</option>
+                                <option>Byte</option>
+                                <option>DateTime</option>
+                                <option>Decimal</option>
+                                <option>Double</option>
+                                <option>Int16</option>
+                                <option>Int32</option>
+                                <option>Int64</option>
+                                <option>SByte</option>
+                                <option>Single</option>
+                                <option>String</option>
+                                <option>UInt32</option>
+                                <option>UInt64</option>
+                            </InputSelect>
+                        </div>
+                    </td>
+                    <td>
+                        @switch (param.ParameterType)
+                        {
+                            case "Boolean":
+                                <div class="input-group">
+                                    <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
+                                        <option value="True">True</option>
+                                        <option value="False">False</option>
+                                    </InputSelectBoolean>
+                                </div>
+                                break;
+                            case "Byte":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte"></BSBasicInput>
+                                break;
+                            case "DateTime":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime"></BSBasicInput>
+                                break;
+                            case "Decimal":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal"></BSBasicInput>
+                                break;
+                            case "Double":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble"></BSBasicInput>
+                                break;
+                            case "Int16":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16"></BSBasicInput>
+                                break;
+                            case "Int32":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32"></BSBasicInput>
+                                break;
+                            case "Int64":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64"></BSBasicInput>
+                                break;
+                            case "SByte":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte"></BSBasicInput>
+                                break;
+                            case "Single":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle"></BSBasicInput>
+                                break;
+                            case "String":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString"></BSBasicInput>
+                                break;
+                            case "UInt32":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32"></BSBasicInput>
+                                break;
+                            case "UInt64":
+                                <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64"></BSBasicInput>
+                                break;
+                        }
+                    </td>
+                    <td>
+                        <BSButtonGroup Size="Size.Small" Class="btn-row">
+                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            </BSButton>
+                        </BSButtonGroup>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    var type = "String";
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterType = type })">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+    </BSButton>
+}
+
+@code {
+    [Parameter]
+    public ParameterizedStep? Step { get; set; }
+}

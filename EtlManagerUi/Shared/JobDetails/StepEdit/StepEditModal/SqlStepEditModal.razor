@@ -3,7 +3,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<StepEditModalBase @ref="Modal"
+<ParameterizedStepEditModal @ref="Modal"
                    Job="Job"
                    Steps="Steps"
                    Step="Step"
@@ -59,7 +59,7 @@
         </div>
     </div>
     <StoredProcedureSelectModal @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
-</StepEditModalBase>
+</ParameterizedStepEditModal>
 
 
 @code {
@@ -85,7 +85,7 @@
 
     private SqlStep Step { get; set; } = null!;
 
-    private StepEditModalBase Modal { get; set; } = null!;
+    private ParameterizedStepEditModal Modal { get; set; } = null!;
 
     private StoredProcedureSelectModal StoredProcedureSelectModal { get; set; } = null!;
 
@@ -110,6 +110,7 @@
         {
             await ResetContext();
             Step = await Context.SqlSteps
+                .Include(step => step.StepParameters)
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
@@ -126,7 +127,8 @@
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
                 Dependencies = new List<Dependency>(),
-                Tags = new List<Tag>()
+                Tags = new List<Tag>(),
+                StepParameters = new List<StepParameter>()
 
             };
         }
