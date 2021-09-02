@@ -39,7 +39,8 @@
                     @foreach (var stepType in Enum.GetValues(typeof(StepType)))
                     {
                         var stepTypeEnum = Enum.Parse<StepType>(stepType.ToString()!);
-                        <BSDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)">
+                        <BSDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)"
+                                        IsDisabled="IsStepTypeDisabled(stepTypeEnum)">
                             <StepTypeIconComponent StepType_="stepTypeEnum" />
                             @stepType
                         </BSDropdownItem>
@@ -49,6 +50,7 @@
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
             <BSButton Class="ml-3" Color="Color.Secondary" @onclick="() => JobParametersModal?.Show()">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
                 Parameters
             </BSButton>
             <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
@@ -522,6 +524,26 @@
         {
             await JsRuntime.InvokeVoidAsync("scrollIntoViewCompat", ScrollIntoViewElementId);
             ScrollIntoViewElementId = null;
+        }
+    }
+
+    private bool IsStepTypeDisabled(StepType type)
+    {
+        switch (type)
+        {
+            case StepType.Sql:
+            case StepType.Package:
+                return Connections?.Any() == false;
+            case StepType.Pipeline:
+                return DataFactories?.Any() == false;
+            case StepType.Function:
+                return FunctionApps?.Any() == false;
+            case StepType.Dataset:
+                return AppRegistrations?.Any() == false;
+            case StepType.Job:
+                return Jobs is null || Jobs.Count == 1;
+            default:
+                return false;
         }
     }
 
