@@ -3,13 +3,13 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<StepEditModalBase @ref="Modal"
-                   Job="Job"
-                   Steps="Steps"
-                   Step="Step"
-                   Context="Context"
-                   OnStepSubmit="OnStepSubmit"
-                   FormId="function_step_edit_modal">
+<ParameterizedStepEditModal @ref="Modal"
+                            Job="Job"
+                            Steps="Steps"
+                            Step="Step"
+                            Context="Context"
+                            OnStepSubmit="OnStepSubmit"
+                            FormId="function_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Function App</BSLabel>
@@ -62,19 +62,6 @@
     </BSFormRow>
     <BSFormRow>
         <BSFormGroup Class="col-lg">
-            <BSLabel>Function input</BSLabel>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
-                    </div>
-                </div>
-                <InputTextArea class="form-control" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
-            </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col-lg">
             <BSLabel>Function key</BSLabel>
             <div class="input-group">
                 <div class="input-group-prepend">
@@ -86,7 +73,20 @@
             </div>
         </BSFormGroup>
     </BSFormRow>
-</StepEditModalBase>
+    <BSFormRow>
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Function input</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
+                    </div>
+                </div>
+                <InputTextArea class="form-control" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
+            </div>
+        </BSFormGroup>
+    </BSFormRow>
+</ParameterizedStepEditModal>
 
 
 @code {
@@ -112,7 +112,7 @@
 
     private FunctionStep Step { get; set; } = null!;
 
-    private StepEditModalBase Modal { get; set; } = null!;
+    private ParameterizedStepEditModal Modal { get; set; } = null!;
 
     private FunctionSelectModal FunctionSelectModal { get; set; } = null!;
 
@@ -135,6 +135,8 @@
         {
             await ResetContext();
             Step = await Context.FunctionSteps
+                .Include(step => step.StepParameters)
+                .ThenInclude(p => p.JobParameter)
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
@@ -151,7 +153,8 @@
                 IsEnabled = true,
                 FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
                 Dependencies = new List<Dependency>(),
-                Tags = new List<Tag>()
+                Tags = new List<Tag>(),
+                StepParameters = new List<StepParameter>()
             };
         }
         StateHasChanged();

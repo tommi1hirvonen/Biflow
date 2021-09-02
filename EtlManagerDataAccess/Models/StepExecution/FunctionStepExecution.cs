@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record FunctionStepExecution : StepExecution
+    public record FunctionStepExecution : ParameterizedStepExecution
     {
         public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
         {

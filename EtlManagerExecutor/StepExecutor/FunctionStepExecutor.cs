@@ -64,7 +64,18 @@ namespace EtlManagerExecutor
             // If the input for the function was defined, add it to the request content.
             if (!string.IsNullOrEmpty(Step.FunctionInput))
             {
-                message.Content = new StringContent(Step.FunctionInput);
+                var input = Step.FunctionInput;
+                // Iterate parameters and replace parameter names with corresponding values.
+                foreach (var param in Step.StepExecutionParameters)
+                {
+                    var value = param.ParameterValue switch
+                    {
+                        DateTime dt => dt.ToString("o"),
+                        _ => param.ParameterValue.ToString()
+                    };
+                    input = input.Replace(param.ParameterName, value);
+                }
+                message.Content = new StringContent(input);
             }
             
             var client = new HttpClient();
