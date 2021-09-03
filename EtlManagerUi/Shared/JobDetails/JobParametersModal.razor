@@ -32,72 +32,10 @@
                                     <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName" placeholder="Name"></BSBasicInput>
                                 </td>
                                 <td>
-                                    <div class="input-group">
-                                        <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterType">
-                                            <option>Boolean</option>
-                                            <option>Byte</option>
-                                            <option>DateTime</option>
-                                            <option>Decimal</option>
-                                            <option>Double</option>
-                                            <option>Int16</option>
-                                            <option>Int32</option>
-                                            <option>Int64</option>
-                                            <option>SByte</option>
-                                            <option>Single</option>
-                                            <option>String</option>
-                                            <option>UInt32</option>
-                                            <option>UInt64</option>
-                                        </InputSelect>
-                                    </div>
+                                    <ParameterTypeEditComponent Parameter="param" />
                                 </td>
                                 <td>
-                                    @switch (param.ParameterType)
-                                    {
-                                        case "Boolean":
-                                            <div class="input-group">
-                                                <InputSelectBoolean class="form-control form-control-sm" @bind-Value="param.ValueBoolean">
-                                                    <option value="True">True</option>
-                                                    <option value="False">False</option>
-                                                </InputSelectBoolean>
-                                            </div>
-                                            break;
-                                        case "Byte":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueByte" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "DateTime":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDateTime" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Decimal":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDecimal" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Double":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueDouble" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Int16":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt16" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Int32":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt32" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Int64":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueInt64" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "SByte":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSByte" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "Single":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueSingle" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "String":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueString" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "UInt32":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt32" placeholder="Value"></BSBasicInput>
-                                            break;
-                                        case "UInt64":
-                                            <BSBasicInput Size="Size.Small" @bind-Value="param.ValueUInt64" placeholder="Value"></BSBasicInput>
-                                            break;
-                                    }
+                                    <ParameterValueEditComponent Parameter="param" />
                                 </td>
                                 <td>
                                     <BSButtonGroup Size="Size.Small" Class="btn-row">
@@ -110,7 +48,7 @@
                         }
                     </tbody>
                 </table>
-                @{ var type = "String"; }
+                @{ var type = ParameterType.String; }
                 <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterType = type })">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
                 </BSButton>

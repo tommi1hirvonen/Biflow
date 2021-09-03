@@ -6,7 +6,7 @@ namespace EtlManagerDataAccess.Models
 {
     public class StepExecutionParameter
     {
-        public StepExecutionParameter(string parameterName, object parameterValue, string parameterType, string parameterLevel)
+        public StepExecutionParameter(string parameterName, object parameterValue, ParameterType parameterType, string parameterLevel)
         {
             ParameterName = parameterName;
             _parameterValue = parameterValue;
@@ -31,7 +31,7 @@ namespace EtlManagerDataAccess.Models
 
         private object _parameterValue;
 
-        public string ParameterType { get; set; }
+        public ParameterType ParameterType { get; set; } = ParameterType.String;
 
         public string ParameterLevel { get; set; }
 

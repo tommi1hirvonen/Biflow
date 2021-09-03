@@ -104,24 +104,26 @@ namespace EtlManagerDataAccess
                 .Property(e => e.ExecutionStatus)
                 .HasConversion(executionStatusConverter);
 
-            modelBuilder.Entity<ExecutionParameter>()
-                .ToTable("ExecutionParameter")
-                .HasKey(p => new { p.ExecutionId, p.ParameterId });
-            modelBuilder.Entity<ExecutionParameter>()
-                .HasOne(p => p.Execution)
-                .WithMany(e => e.ExecutionParameters);
+            var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
 
-            modelBuilder.Entity<StepExecution>()
-                .ToTable("ExecutionStep")
+            modelBuilder.Entity<ExecutionParameter>(e =>
+            {
+                e.ToTable("ExecutionParameter")
+                .HasKey(p => new { p.ExecutionId, p.ParameterId });
+                e.HasOne(p => p.Execution)
+                .WithMany(e => e.ExecutionParameters);
+                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
+            });
+
+            modelBuilder.Entity<StepExecution>(e =>
+            {
+                e.ToTable("ExecutionStep")
                 .HasKey(step => new { step.ExecutionId, step.StepId });
-            modelBuilder.Entity<StepExecution>()
-                .Property(e => e.StepType)
+                e.Property(e => e.StepType)
                 .HasConversion(stepTypeConverter);
-            modelBuilder.Entity<StepExecution>()
-                .HasOne(step => step.Execution)
+                e.HasOne(step => step.Execution)
                 .WithMany(e => e.StepExecutions);
-            modelBuilder.Entity<StepExecution>()
-                .HasDiscriminator<StepType>("StepType")
+                e.HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStepExecution>(StepType.Dataset)
                 .HasValue<ExeStepExecution>(StepType.Exe)
                 .HasValue<JobStepExecution>(StepType.Job)
@@ -129,6 +131,7 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
                 .HasValue<SqlStepExecution>(StepType.Sql)
                 .HasValue<FunctionStepExecution>(StepType.Function);
+            });
 
             Func<StepExecutionStatus, string> stepExecutionStatusToString = value => value switch
             {
@@ -156,20 +159,17 @@ namespace EtlManagerDataAccess
             };
             var stepExecutionStatusConverter = new ValueConverter<StepExecutionStatus, string>(v => stepExecutionStatusToString(v), v => stringToStepExecutionStatus(v));
 
-            modelBuilder.Entity<StepExecutionAttempt>()
-                .ToTable("ExecutionStepAttempt")
+            modelBuilder.Entity<StepExecutionAttempt>(e =>
+            {
+                e.ToTable("ExecutionStepAttempt")
                 .HasKey(sea => new { sea.ExecutionId, sea.StepId, sea.RetryAttemptIndex });
-            modelBuilder.Entity<StepExecutionAttempt>()
-                .Property(sea => sea.StepType)
+                e.Property(sea => sea.StepType)
                 .HasConversion(stepTypeConverter);
-            modelBuilder.Entity<StepExecutionAttempt>()
-                .Property(sea => sea.ExecutionStatus)
+                e.Property(sea => sea.ExecutionStatus)
                 .HasConversion(stepExecutionStatusConverter);
-            modelBuilder.Entity<StepExecutionAttempt>()
-                .HasOne(sea => sea.StepExecution)
+                e.HasOne(sea => sea.StepExecution)
                 .WithMany(step => step.StepExecutionAttempts);
-            modelBuilder.Entity<StepExecutionAttempt>()
-                .HasDiscriminator<StepType>("StepType")
+                e.HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
                 .HasValue<ExeStepExecutionAttempt>(StepType.Exe)
                 .HasValue<JobStepExecutionAttempt>(StepType.Job)
@@ -177,6 +177,7 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecutionAttempt>(StepType.Pipeline)
                 .HasValue<SqlStepExecutionAttempt>(StepType.Sql)
                 .HasValue<FunctionStepExecutionAttempt>(StepType.Function);
+            });
 
             modelBuilder.Entity<Dependency>()
                 .ToTable("Dependency")
@@ -185,35 +186,36 @@ namespace EtlManagerDataAccess
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Job>()
-                .ToTable("Job")
+            modelBuilder.Entity<Job>(e =>
+            {
+                e.ToTable("Job")
                 .HasMany(job => job.Steps)
                 .WithOne(step => step.Job!);
-            modelBuilder.Entity<Job>()
-                .HasMany(job => job.Schedules)
+                e.HasMany(job => job.Schedules)
                 .WithOne(schedule => schedule.Job);
-            modelBuilder.Entity<Job>()
-                .HasMany(job => job.Subscriptions)
+                e.HasMany(job => job.Subscriptions)
                 .WithOne(subscription => subscription.Job);
-            modelBuilder.Entity<Job>()
-                .HasMany(j => j.Executions)
+                e.HasMany(j => j.Executions)
                 .WithOne(e => e.Job!)
                 .IsRequired(false);
-            modelBuilder.Entity<Job>()
-                .HasMany(job => job.JobParameters)
+                e.HasMany(job => job.JobParameters)
                 .WithOne(param => param.Job);
+            }); 
 
-            modelBuilder.Entity<Step>()
-                .ToTable("Step")
+            modelBuilder.Entity<JobParameter>()
+                .Property(p => p.ParameterType)
+                .HasConversion(parameterTypeConverter);
+
+            modelBuilder.Entity<Step>(e =>
+            {
+                e.ToTable("Step")
                 .HasOne(step => step.Job!)
                 .WithMany(job => job.Steps)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Step>()
-                .Property(s => s.StepType)
+                e.Property(s => s.StepType)
                 .HasConversion(stepTypeConverter);
-            modelBuilder.Entity<Step>()
-                .HasDiscriminator<StepType>("StepType")
+                e.HasDiscriminator<StepType>("StepType")
                 .HasValue<DatasetStep>(StepType.Dataset)
                 .HasValue<ExeStep>(StepType.Exe)
                 .HasValue<JobStep>(StepType.Job)
@@ -221,14 +223,15 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStep>(StepType.Pipeline)
                 .HasValue<SqlStep>(StepType.Sql)
                 .HasValue<FunctionStep>(StepType.Function);
-            modelBuilder.Entity<JobStep>()
-                .HasOne(step => step.JobToExecute)
-                .WithMany(job => job.JobSteps)
-                .HasForeignKey(step => step.JobToExecuteId);
-            modelBuilder.Entity<Step>()
-                .HasMany(s => s.StepExecutions)
+                e.HasMany(s => s.StepExecutions)
                 .WithOne(e => e.Step!)
                 .IsRequired(false);
+            });
+
+            modelBuilder.Entity<JobStep>()
+                    .HasOne(step => step.JobToExecute)
+                    .WithMany(job => job.JobSteps)
+                    .HasForeignKey(step => step.JobToExecuteId);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")
@@ -252,6 +255,7 @@ namespace EtlManagerDataAccess
                 .WithMany(step => step.PackageParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
             });
 
             modelBuilder.Entity<StepParameter>(e =>
@@ -261,21 +265,24 @@ namespace EtlManagerDataAccess
                 .WithMany(step => step.StepParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
             });
 
-            modelBuilder.Entity<StepExecutionParameter>()
-                .ToTable("ExecutionStepParameter")
+            modelBuilder.Entity<StepExecutionParameter>(e =>
+            {
+                e.ToTable("ExecutionStepParameter")
                 .HasKey(param => new { param.ExecutionId, param.StepId, param.ParameterId });
-            modelBuilder.Entity<StepExecutionParameter>()
-                .HasOne(param => param.StepExecution)
+                e.HasOne(param => param.StepExecution)
                 .WithMany(e => e.StepExecutionParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<StepExecutionParameter>()
-                .HasOne(p => p.ExecutionParameter)
+                e.HasOne(p => p.ExecutionParameter)
                 .WithMany(p => p!.StepExecutionParameters)
                 .HasForeignKey(p => new { p.ExecutionId, p.ExecutionParameterId })
                 .IsRequired(false);
+                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
+            });
+                
 
             Func<SubscriptionType?, string?> subscriptionTypeToString = value => value switch
             {
@@ -293,20 +300,20 @@ namespace EtlManagerDataAccess
             };
             var subscriptionTypeConverter = new ValueConverter<SubscriptionType?, string?>(v => subscriptionTypeToString(v), v => stringToSubscriptionType(v));
 
-            modelBuilder.Entity<Subscription>()
-                .ToTable("Subscription")
+            modelBuilder.Entity<Subscription>(e =>
+            {
+                e.ToTable("Subscription")
                 .HasOne(subscription => subscription.Job)
                 .WithMany(job => job.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Subscription>()
-                .HasOne(subscription => subscription.User)
+                e.HasOne(subscription => subscription.User)
                 .WithMany(user => user.Subscriptions)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Subscription>()
-                .Property(s => s.SubscriptionType)
+                e.Property(s => s.SubscriptionType)
                 .HasConversion(subscriptionTypeConverter);
+            });
 
             modelBuilder.Entity<User>()
                 .ToTable("User")

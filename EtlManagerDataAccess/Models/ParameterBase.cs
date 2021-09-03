@@ -79,7 +79,7 @@ namespace EtlManagerDataAccess.Models
         private object? parameterValueField;
 
         [Required]
-        public string? ParameterType { get; set; }
+        public ParameterType ParameterType { get; set; } = ParameterType.String;
 
         [NotMapped]
         public bool ValueBoolean { get; set; }
@@ -112,19 +112,19 @@ namespace EtlManagerDataAccess.Models
         {
             ParameterValue = ParameterType switch
             {
-                "Boolean" => ValueBoolean,
-                "Byte" => ValueByte,
-                "DateTime" => ValueDateTime,
-                "Decimal" => ValueDecimal,
-                "Double" => ValueDouble,
-                "Int16" => ValueInt16,
-                "Int32" => ValueInt32,
-                "Int64" => ValueInt64,
-                "SByte" => ValueSByte,
-                "Single" => ValueSingle,
-                "String" => ValueString,
-                "UInt32" => ValueUInt32,
-                "UInt64" => ValueUInt64,
+                ParameterType.Boolean => ValueBoolean,
+                ParameterType.Byte => ValueByte,
+                ParameterType.DateTime => ValueDateTime,
+                ParameterType.Decimal => ValueDecimal,
+                ParameterType.Double => ValueDouble,
+                ParameterType.Int16 => ValueInt16,
+                ParameterType.Int32 => ValueInt32,
+                ParameterType.Int64 => ValueInt64,
+                ParameterType.SByte => ValueSByte,
+                ParameterType.Single => ValueSingle,
+                ParameterType.String => ValueString,
+                ParameterType.UInt32 => ValueUInt32,
+                ParameterType.UInt64 => ValueUInt64,
                 _ => string.Empty
             };
         }

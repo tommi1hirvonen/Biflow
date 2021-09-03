@@ -1,0 +1,52 @@
+﻿@switch (Parameter?.ParameterType)
+{
+    case ParameterType.Boolean:
+        <div class="input-group">
+            <InputSelectBoolean class="form-control form-control-sm" @bind-Value="Parameter.ValueBoolean">
+                <option value="True">True</option>
+                <option value="False">False</option>
+            </InputSelectBoolean>
+        </div>
+        break;
+    case ParameterType.Byte:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueByte" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.DateTime:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDateTime" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Decimal:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Double:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDouble" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Int16:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt16" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Int32:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt32" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Int64:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt64" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.SByte:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSByte" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.Single:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSingle" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.String:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueString" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.UInt32:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueUInt32" placeholder="Value"></BSBasicInput>
+        break;
+    case ParameterType.UInt64:
+        <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueUInt64" placeholder="Value"></BSBasicInput>
+        break;
+}
+
+@code {
+    [Parameter]
+    public ParameterBase? Parameter { get; set; }
+}

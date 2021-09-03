@@ -1,0 +1,16 @@
+﻿@if (Parameter is not null)
+{
+    <div class="input-group">
+        <InputSelect class="form-control form-control-sm" @bind-Value="Parameter.ParameterType">
+            @foreach (var type in Enum.GetValues(typeof(ParameterType)))
+                {
+                <option>@type</option>
+                }
+        </InputSelect>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ParameterBase? Parameter { get; set; }
+}
