@@ -49,55 +49,9 @@ namespace EtlManagerDataAccess
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            Func<StepType, string> stepTypeToString = value => value switch
-            {
-                StepType.Sql => "SQL",
-                StepType.Package => "SSIS",
-                StepType.Job => "JOB",
-                StepType.Exe => "EXE",
-                StepType.Pipeline => "PIPELINE",
-                StepType.Dataset => "DATASET",
-                StepType.Function => "FUNCTION",
-                _ => throw new ArgumentNullException(nameof(value), "StepType value cannot be null")
-            };
-            Func<string, StepType> stringToStepType = value => value switch
-            {
-                "SQL" => StepType.Sql,
-                "SSIS" => StepType.Package,
-                "JOB" => StepType.Job,
-                "EXE" => StepType.Exe,
-                "PIPELINE" => StepType.Pipeline,
-                "DATASET" => StepType.Dataset,
-                "FUNCTION" => StepType.Function,
-                _ => throw new ArgumentNullException(nameof(value), "StepType value cannot be null")
-            };
-            var stepTypeConverter = new ValueConverter<StepType, string>(v => stepTypeToString(v), v => stringToStepType(v));
-
             modelBuilder.HasDefaultSchema("etlmanager");
 
-            Func<ExecutionStatus, string> executionStatusToString = value => value switch
-            {
-                ExecutionStatus.NotStarted => "NOT STARTED",
-                ExecutionStatus.Running => "RUNNING",
-                ExecutionStatus.Succeeded => "SUCCEEDED",
-                ExecutionStatus.Failed => "FAILED",
-                ExecutionStatus.Warning => "WARNING",
-                ExecutionStatus.Stopped => "STOPPED",
-                ExecutionStatus.Suspended => "SUSPENDED",
-                _ => throw new ArgumentNullException(nameof(value), "ExecutionStatus value cannot be null")
-            };
-            Func<string, ExecutionStatus> stringToExecutionStatus = value => value switch
-            {
-                "NOT STARTED" => ExecutionStatus.NotStarted,
-                "RUNNING" => ExecutionStatus.Running,
-                "SUCCEEDED" => ExecutionStatus.Succeeded,
-                "FAILED" => ExecutionStatus.Failed,
-                "WARNING" => ExecutionStatus.Warning,
-                "STOPPED" => ExecutionStatus.Stopped,
-                "SUSPENDED" => ExecutionStatus.Suspended,
-                _ => throw new ArgumentNullException(nameof(value), "ExecutionStatus value cannot be null")
-            };
-            var executionStatusConverter = new ValueConverter<ExecutionStatus, string>(v => executionStatusToString(v), v => stringToExecutionStatus(v));
+            var executionStatusConverter = new EnumToStringConverter<ExecutionStatus>();
 
             modelBuilder.Entity<Execution>()
                 .ToTable("Execution")
@@ -114,6 +68,8 @@ namespace EtlManagerDataAccess
                 .WithMany(e => e.ExecutionParameters);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
             });
+
+            var stepTypeConverter = new EnumToStringConverter<StepType>();
 
             modelBuilder.Entity<StepExecution>(e =>
             {
@@ -133,31 +89,7 @@ namespace EtlManagerDataAccess
                 .HasValue<FunctionStepExecution>(StepType.Function);
             });
 
-            Func<StepExecutionStatus, string> stepExecutionStatusToString = value => value switch
-            {
-                StepExecutionStatus.NotStarted => "NOT STARTED",
-                StepExecutionStatus.Running => "RUNNING",
-                StepExecutionStatus.Succeeded => "SUCCEEDED",
-                StepExecutionStatus.Failed => "FAILED",
-                StepExecutionStatus.Stopped => "STOPPED",
-                StepExecutionStatus.Skipped => "SKIPPED",
-                StepExecutionStatus.AwaitRetry => "AWAIT RETRY",
-                StepExecutionStatus.Duplicate => "DUPLICATE",
-                _ => throw new ArgumentNullException(nameof(value), "StepExecutionStatus value cannot be null")
-            };
-            Func<string, StepExecutionStatus> stringToStepExecutionStatus = value => value switch
-            {
-                "NOT STARTED" => StepExecutionStatus.NotStarted,
-                "RUNNING" => StepExecutionStatus.Running,
-                "SUCCEEDED" => StepExecutionStatus.Succeeded,
-                "FAILED" => StepExecutionStatus.Failed,
-                "STOPPED" => StepExecutionStatus.Stopped,
-                "SKIPPED" => StepExecutionStatus.Skipped,
-                "AWAIT RETRY" => StepExecutionStatus.AwaitRetry,
-                "DUPLICATE" => StepExecutionStatus.Duplicate,
-                _ => throw new ArgumentNullException(nameof(value), "StepExecutionStatus value cannot be null")
-            };
-            var stepExecutionStatusConverter = new ValueConverter<StepExecutionStatus, string>(v => stepExecutionStatusToString(v), v => stringToStepExecutionStatus(v));
+            var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
 
             modelBuilder.Entity<StepExecutionAttempt>(e =>
             {
@@ -229,9 +161,9 @@ namespace EtlManagerDataAccess
             });
 
             modelBuilder.Entity<JobStep>()
-                    .HasOne(step => step.JobToExecute)
-                    .WithMany(job => job.JobSteps)
-                    .HasForeignKey(step => step.JobToExecuteId);
+                .HasOne(step => step.JobToExecute)
+                .WithMany(job => job.JobSteps)
+                .HasForeignKey(step => step.JobToExecuteId);
 
             modelBuilder.Entity<Tag>()
                 .ToTable("Tag")
@@ -282,23 +214,8 @@ namespace EtlManagerDataAccess
                 .IsRequired(false);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
             });
-                
 
-            Func<SubscriptionType?, string?> subscriptionTypeToString = value => value switch
-            {
-                SubscriptionType.OnFailure => "FAILURE",
-                SubscriptionType.OnSuccess => "SUCCESS",
-                SubscriptionType.OnCompletion => "COMPLETION",
-                _ => null
-            };
-            Func<string?, SubscriptionType?> stringToSubscriptionType = value => value switch
-            {
-                "FAILURE" => SubscriptionType.OnFailure,
-                "SUCCESS" => SubscriptionType.OnSuccess,
-                "COMPLETION" => SubscriptionType.OnCompletion,
-                _ => null
-            };
-            var subscriptionTypeConverter = new ValueConverter<SubscriptionType?, string?>(v => subscriptionTypeToString(v), v => stringToSubscriptionType(v));
+            var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
 
             modelBuilder.Entity<Subscription>(e =>
             {

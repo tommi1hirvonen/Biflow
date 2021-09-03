@@ -8,5 +8,5 @@
 	CONSTRAINT [FK_Subscription_JobId] FOREIGN KEY ([JobId]) REFERENCES [etlmanager].[Job] ([JobId]) ON DELETE CASCADE,
 	CONSTRAINT [FK_Subscription_Username] FOREIGN KEY ([Username]) REFERENCES [etlmanager].[User] ([Username]) ON DELETE CASCADE,
 	CONSTRAINT [UQ_Subscription] UNIQUE ([JobId], [Username]),
-	CONSTRAINT [CK_Subscription_SubscriptionType] CHECK ([SubscriptionType] = 'FAILURE' OR [SubscriptionType] = 'SUCCESS' OR [SubscriptionType] = 'COMPLETION')
+	CONSTRAINT [CK_Subscription_SubscriptionType] CHECK ([SubscriptionType] = 'OnFailure' OR [SubscriptionType] = 'OnSuccess' OR [SubscriptionType] = 'OnCompletion')
 )

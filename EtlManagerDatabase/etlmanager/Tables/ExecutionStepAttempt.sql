@@ -14,5 +14,5 @@
     [StoppedBy]                 NVARCHAR(250)       NULL,
     CONSTRAINT [PK_ExecutionStepAttempt] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
     CONSTRAINT [FK_ExecutionStepAttempt_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [etlmanager].ExecutionStep ([ExecutionId], [StepId]),
-    CONSTRAINT [CK_ExecutionStepAttempt_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE' OR [StepType]='DATASET' OR [StepType]='FUNCTION')
+    CONSTRAINT [CK_ExecutionStepAttempt_StepType] CHECK ([StepType]='Package' OR [StepType]='Sql' OR [StepType]='Job' OR [StepType]='Pipeline' OR [StepType]='Exe' OR [StepType]='Dataset' OR [StepType]='Function')
 );

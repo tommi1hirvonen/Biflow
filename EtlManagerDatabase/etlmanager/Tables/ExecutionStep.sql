@@ -32,6 +32,6 @@
     [FunctionIsDurable]             BIT                 NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [etlmanager].[ExecutionParameter] ([ExecutionId], [ParameterId]),
-    CONSTRAINT [CK_ExecutionStep_StepType] CHECK ([StepType]='SSIS' OR [StepType]='SQL' OR [StepType]='JOB' OR [StepType]='PIPELINE' OR [StepType]='EXE' OR [StepType]='DATASET' OR [StepType]='FUNCTION')
+    CONSTRAINT [CK_ExecutionStep_StepType] CHECK ([StepType]='Package' OR [StepType]='Sql' OR [StepType]='Job' OR [StepType]='Pipeline' OR [StepType]='Exe' OR [StepType]='Dataset' OR [StepType]='Function')
 );
 
