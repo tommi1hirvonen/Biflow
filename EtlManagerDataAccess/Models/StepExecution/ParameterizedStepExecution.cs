@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Security.Policy;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace EtlManagerDataAccess.Models
 {

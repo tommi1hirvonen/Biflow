@@ -99,7 +99,7 @@ SELECT
 	CreatedDateTime = GETUTCDATE(),
 	StartDateTime = NULL,
 	EndDateTime = NULL,
-	ExecutionStatus = 'NOT STARTED',
+	ExecutionStatus = 'NotStarted',
 	DependencyMode = a.UseDependencyMode,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId
@@ -209,7 +209,7 @@ SELECT
 	StepId,
 	StartDateTime = NULL,
 	EndDateTime = NULL,
-	ExecutionStatus = 'NOT STARTED',
+	ExecutionStatus = 'NotStarted',
 	RetryAttempt = 0,
 	StepType
 FROM #Steps
@@ -256,7 +256,7 @@ SELECT
 	b.StepId,
 	b.ParameterName,
 	b.ParameterValue,
-	'' AS ParameterLevel,
+	'None' AS ParameterLevel,
 	b.ParameterType,
 	b.JobParameterId
 FROM etlmanager.ExecutionStep AS a

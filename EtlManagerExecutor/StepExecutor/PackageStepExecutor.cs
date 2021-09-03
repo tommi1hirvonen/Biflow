@@ -165,7 +165,7 @@ namespace EtlManagerExecutor
 
             foreach (var parameter in Step.StepExecutionParameters)
             {
-                var objectType = parameter.ParameterLevel == "Project" ? "20" : "30"; // 20 => project parameter; 30 => package parameter
+                var objectType = parameter.ParameterLevel == ParameterLevel.Project ? "20" : "30"; // 20 => project parameter; 30 => package parameter
                 // Same parameter name can be used for project and package parameter.
                 // Use level in addition to name to uniquely identify each parameter.
                 commandBuilder.Append(

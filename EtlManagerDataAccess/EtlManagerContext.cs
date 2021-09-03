@@ -180,6 +180,8 @@ namespace EtlManagerDataAccess
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
 
+            var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
+
             modelBuilder.Entity<PackageParameter>(e =>
             {
                 e.ToTable("PackageParameter")
@@ -188,6 +190,7 @@ namespace EtlManagerDataAccess
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
+                e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
             });
 
             modelBuilder.Entity<StepParameter>(e =>
@@ -213,6 +216,7 @@ namespace EtlManagerDataAccess
                 .HasForeignKey(p => new { p.ExecutionId, p.ExecutionParameterId })
                 .IsRequired(false);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
+                e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
             });
 
             var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();

@@ -26,8 +26,8 @@
                     <td>
                         <div class="input-group">
                             <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterLevel">
-                                <option>Package</option>
-                                <option>Project</option>
+                                <option>@ParameterLevel.Package</option>
+                                <option>@ParameterLevel.Project</option>
                             </InputSelect>
                         </div>
                     </td>
@@ -76,7 +76,7 @@
             }
         </tbody>
     </table>
-    var level = "Package"; var type = ParameterType.String;
+    var level = ParameterLevel.Package; var type = ParameterType.String;
     <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.PackageParameters.Add(new PackageParameter { ParameterLevel = level, ParameterType = type })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>

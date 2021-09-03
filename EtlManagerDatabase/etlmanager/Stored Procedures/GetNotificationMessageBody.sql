@@ -19,8 +19,8 @@ FROM [etlmanager].[Execution]
 WHERE [ExecutionId] = @ExecutionId
 
 DECLARE @Color VARCHAR(100) = CASE @JobStatus
-	WHEN 'SUCCEEDED' THEN '#00b400' -- green
-	WHEN 'FAILED' THEN '#dc0000' -- red
+	WHEN 'Succeeded' THEN '#00b400' -- green
+	WHEN 'Failed' THEN '#dc0000' -- red
 	ELSE '#ffc800' -- orange
 	END
 
@@ -85,7 +85,7 @@ SELECT
 	b.ErrorMessage
 FROM etlmanager.ExecutionStep AS a
 	INNER JOIN etlmanager.ExecutionStepAttempt AS b ON a.ExecutionId = b.ExecutionId AND a.StepId = b.StepId
-WHERE a.ExecutionId = @ExecutionId AND b.ExecutionStatus <> 'SUCCEEDED'
+WHERE a.ExecutionId = @ExecutionId AND b.ExecutionStatus <> 'Succeeded'
 ORDER BY StartDateTime
 
 OPEN StepCursor

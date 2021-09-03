@@ -34,6 +34,16 @@ FROM etlmanager.Job
 WHERE JobId = @JobId
 
 -- Copy job parameters
+
+-- First create mapping table
+SELECT NEWID() AS ParameterIdNew,
+	ParameterId
+INTO #ParameterIdMapping
+FROM etlmanager.JobParameter
+WHERE JobId = @JobId
+
+ALTER TABLE #ParameterIdMapping ADD CONSTRAINT PK_ParameterIdMapping PRIMARY KEY (ParameterId)
+
 INSERT INTO etlmanager.JobParameter (
 	ParameterId,
 	JobId,
@@ -41,13 +51,14 @@ INSERT INTO etlmanager.JobParameter (
 	ParameterType,
 	ParameterValue
 )
-SELECT NEWID(),
+SELECT B.ParameterIdNew,
 	@JobIdNew,
-	ParameterName,
-	ParameterType,
-	ParameterValue
-FROM etlmanager.JobParameter
-where JobId = @JobId
+	A.ParameterName,
+	A.ParameterType,
+	A.ParameterValue
+FROM etlmanager.JobParameter AS A
+	INNER JOIN #ParameterIdMapping AS B ON A.ParameterId = B.ParameterId
+WHERE JobId = @JobId
 
 -- Copy schedules
 INSERT INTO etlmanager.Schedule (
@@ -85,6 +96,7 @@ INSERT INTO etlmanager.Step (
 	ExecutionPhase,
 	StepType,
 	SqlStatement,
+	ResultCaptureJobParameterId,
 	ConnectionId,
 	PackageFolderName,
 	PackageProjectName,
@@ -121,6 +133,7 @@ SELECT @JobIdNew,
 	A.ExecutionPhase,
 	A.StepType,
 	A.SqlStatement,
+	C.ParameterIdNew,
 	A.ConnectionId,
 	A.PackageFolderName,
 	A.PackageProjectName,
@@ -151,6 +164,7 @@ SELECT @JobIdNew,
 	@Username
 FROM etlmanager.Step AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+	LEFT JOIN #ParameterIdMapping AS C ON A.ResultCaptureJobParameterId = C.ParameterId
 WHERE A.JobId = @JobId
 
 -- Copy dependencies
@@ -179,16 +193,19 @@ INSERT INTO etlmanager.PackageParameter (
 	ParameterLevel,
 	ParameterName,
 	ParameterType,
-	ParameterValue
+	ParameterValue,
+	JobParameterId
 )
 SELECT NEWID(),
 	B.StepIdNew,
 	A.ParameterLevel,
 	A.ParameterName,
 	A.ParameterType,
-	A.ParameterValue
+	A.ParameterValue,
+	C.ParameterIdNew
 FROM etlmanager.PackageParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
 
 -- Copy step parameters
 INSERT INTO etlmanager.StepParameter (
@@ -196,15 +213,18 @@ INSERT INTO etlmanager.StepParameter (
 	StepId,
 	ParameterName,
 	ParameterType,
-	ParameterValue
+	ParameterValue,
+	JobParameterId
 )
 SELECT NEWID(),
 	B.StepIdNew,
 	A.ParameterName,
 	A.ParameterType,
-	A.ParameterValue
+	A.ParameterValue,
+	C.ParameterIdNew
 FROM etlmanager.StepParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
 
 -- Copy tags
 INSERT INTO etlmanager.StepTag (
