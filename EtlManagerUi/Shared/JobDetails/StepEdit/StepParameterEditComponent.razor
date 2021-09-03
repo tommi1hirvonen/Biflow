@@ -131,7 +131,7 @@
         </tbody>
     </table>
     var type = "String";
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterType = type })">
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterType = type, ParameterValue = string.Empty })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }

@@ -104,6 +104,13 @@ namespace EtlManagerDataAccess
                 .Property(e => e.ExecutionStatus)
                 .HasConversion(executionStatusConverter);
 
+            modelBuilder.Entity<ExecutionParameter>()
+                .ToTable("ExecutionParameter")
+                .HasKey(p => new { p.ExecutionId, p.ParameterId });
+            modelBuilder.Entity<ExecutionParameter>()
+                .HasOne(p => p.Execution)
+                .WithMany(e => e.ExecutionParameters);
+
             modelBuilder.Entity<StepExecution>()
                 .ToTable("ExecutionStep")
                 .HasKey(step => new { step.ExecutionId, step.StepId });
@@ -264,6 +271,11 @@ namespace EtlManagerDataAccess
                 .WithMany(e => e.StepExecutionParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<StepExecutionParameter>()
+                .HasOne(p => p.ExecutionParameter)
+                .WithMany(p => p!.StepExecutionParameters)
+                .HasForeignKey(p => new { p.ExecutionId, p.ExecutionParameterId })
+                .IsRequired(false);
 
             Func<SubscriptionType?, string?> subscriptionTypeToString = value => value switch
             {

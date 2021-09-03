@@ -43,6 +43,7 @@ SELECT
 	a.ExecutionPhase,
 	a.StepType,
 	a.SqlStatement,
+	a.ResultCaptureJobParameterId,
 	a.ConnectionId,
 	a.PackageFolderName,
 	a.PackageProjectName,
@@ -135,6 +136,7 @@ INSERT INTO etlmanager.ExecutionStep (
 	ExecutionPhase,
 	StepType,
 	SqlStatement,
+	ResultCaptureJobParameterId,
 	ConnectionId,
 	PackageFolderName,
 	PackageProjectName,
@@ -167,6 +169,7 @@ SELECT
 	a.ExecutionPhase,
 	a.StepType,
 	a.SqlStatement,
+	a.ResultCaptureJobParameterId,
 	a.ConnectionId,
 	a.PackageFolderName,
 	a.PackageProjectName,
@@ -221,23 +224,22 @@ INSERT INTO etlmanager.ExecutionStepParameter (
 	ParameterValue,
 	ParameterLevel,
 	ParameterType,
-	InheritedFromJob
+	ExecutionParameterId
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
 	b.ParameterName,
-	ISNULL(c.ParameterValue, b.ParameterValue),
+	b.ParameterValue,
 	b.ParameterLevel,
-	ISNULL(c.ParameterType, b.ParameterType),
-	CASE WHEN c.ParameterId IS NOT NULL THEN 1 ELSE 0 END
+	b.ParameterType,
+	b.JobParameterId
 FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.PackageParameter AS b ON b.StepId = a.StepId
-	LEFT JOIN etlmanager.ExecutionParameter AS c ON a.ExecutionId = c.ExecutionId AND b.JobParameterId = c.ParameterId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
--- Store and historize pipeline execution parameters.
+-- Store and historize step execution parameters.
 INSERT INTO etlmanager.ExecutionStepParameter (
 	ExecutionId,
 	ParameterId,
@@ -246,20 +248,19 @@ INSERT INTO etlmanager.ExecutionStepParameter (
 	ParameterValue,
 	ParameterLevel,
 	ParameterType,
-	InheritedFromJob
+	ExecutionParameterId
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
 	b.ParameterName,
-	ISNULL(c.ParameterValue, b.ParameterValue),
+	b.ParameterValue,
 	'' AS ParameterLevel,
-	ISNULL(c.ParameterType, b.ParameterType),
-	CASE WHEN c.ParameterId IS NOT NULL THEN 1 ELSE 0 END
+	b.ParameterType,
+	b.JobParameterId
 FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.StepParameter AS b ON b.StepId = a.StepId
-	LEFT JOIN etlmanager.ExecutionParameter AS c ON a.ExecutionId = c.ExecutionId AND b.JobParameterId = c.ParameterId
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 

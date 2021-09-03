@@ -4,12 +4,12 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <ParameterizedStepEditModal @ref="Modal"
-                   Job="Job"
-                   Steps="Steps"
-                   Step="Step"
-                   Context="Context"
-                   OnStepSubmit="OnStepSubmit"
-                   FormId="sql_step_edit_modal">
+                            Job="Job"
+                            Steps="Steps"
+                            Step="Step"
+                            Context="Context"
+                            OnStepSubmit="OnStepSubmit"
+                            FormId="sql_step_edit_modal">
     <BSFormRow>
         <BSFormGroup Class="col-lg-6">
             <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
@@ -50,6 +50,7 @@
             <InputTextArea class="form-control" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
         </div>
     </BSFormGroup>
+
     <div class="row mb-3">
         <div class="col">
             <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenStoredProcedureSelectModal">
@@ -59,6 +60,32 @@
         </div>
     </div>
     <StoredProcedureSelectModal @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+
+    <BSFormRow>
+        <BSFormGroup Class="col">
+            <div class="custom-control custom-checkbox custom-control-inline">
+                <input type="checkbox" class="custom-control-input" id="capture_result"
+                       checked=@(Step.ResultCaptureJobParameterId is not null)
+                       disabled=@(Job?.JobParameters.Any() == false)
+                       @onchange="args => SetCaptureResultJobParameter((bool)args.Value)">
+                <label class="custom-control-label" for="capture_result">Capture scalar result</label>
+            </div>
+        </BSFormGroup>
+        <BSFormGroup Class="form-inline col">
+            @if (Step.ResultCaptureJobParameterId is not null)
+            {
+                <BSLabel>To:</BSLabel>
+                <InputSelect class="form-control form-control-sm ml-3" @bind-Value="Step.ResultCaptureJobParameterId">
+                    @foreach (var jobParam in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                        {
+                        <option value="@jobParam.ParameterId">
+                            @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                        </option>
+                        }
+                </InputSelect>
+            }
+        </BSFormGroup>
+    </BSFormRow>
 </ParameterizedStepEditModal>
 
 
@@ -94,6 +121,18 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
+    }
+
+    private void SetCaptureResultJobParameter(bool enabled)
+    {
+        if (enabled)
+        {
+            Step.ResultCaptureJobParameterId = Job?.JobParameters.FirstOrDefault()?.ParameterId;
+        }
+        else
+        {
+            Step.ResultCaptureJobParameterId = null;
+        }
     }
 
     private async Task ResetContext()

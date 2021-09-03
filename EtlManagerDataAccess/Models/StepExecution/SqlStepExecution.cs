@@ -23,6 +23,9 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "SQL statement")]
         public string SqlStatement { get; set; }
 
+        [Display(Name = "Result capture job parameter")]
+        public Guid? ResultCaptureJobParameterId { get; set; }
+
         [Column("TimeoutMinutes")]
         public int TimeoutMinutes { get; set; }
     }

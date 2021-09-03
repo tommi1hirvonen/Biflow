@@ -7,7 +7,8 @@
 	[ParameterValue] SQL_VARIANT NOT NULL,
 	[ParameterLevel] VARCHAR(20) NOT NULL,
 	[ParameterType] VARCHAR(20) NOT NULL,
-	[InheritedFromJob] BIT NOT NULL CONSTRAINT [DF_ExecutionStepParameter_InheritedFromJob] DEFAULT (0),
+	[ExecutionParameterId] UNIQUEIDENTIFIER NULL,
     CONSTRAINT [PK_ExecutionStepParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
+	CONSTRAINT [FK_ExecutionStepParameter_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ExecutionParameterId]) REFERENCES [etlmanager].[ExecutionParameter] ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionStepParameter_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [etlmanager].[ExecutionStep] ([ExecutionId], [StepId])
 )

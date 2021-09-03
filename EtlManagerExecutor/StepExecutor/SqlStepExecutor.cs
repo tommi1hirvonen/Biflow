@@ -14,6 +14,8 @@ namespace EtlManagerExecutor
 {
     class SqlStepExecutor : StepExecutorBase
     {
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+
         private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
         private SqlStepExecution Step { get; init; }
 
@@ -22,6 +24,7 @@ namespace EtlManagerExecutor
             SqlStepExecution step)
             : base(dbContextFactory, step)
         {
+            _dbContextFactory = dbContextFactory;
             Step = step;
         }
 
@@ -46,7 +49,26 @@ namespace EtlManagerExecutor
                     commandTimeout: Step.TimeoutMinutes * 60,
                     parameters: dynamicParams,
                     cancellationToken: cancellationToken);
-                await connection.ExecuteAsync(command);
+
+                // Check whether the query result should be captured to a job parameter.
+                if (Step.ResultCaptureJobParameterId is not null)
+                {
+                    var result = await connection.ExecuteScalarAsync(command);
+
+                    // Update the job execution parameter with the result value.
+                    var param = Step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == Step.ResultCaptureJobParameterId);
+                    if (param is not null)
+                    {
+                        using var context = _dbContextFactory.CreateDbContext();
+                        context.Attach(param);
+                        param.ParameterValue = result;
+                        await context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    await connection.ExecuteAsync(command);
+                }
             }
             catch (SqlException ex)
             {

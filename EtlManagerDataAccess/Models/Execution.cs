@@ -53,6 +53,8 @@ namespace EtlManagerDataAccess.Models
 
         public ICollection<StepExecution> StepExecutions { get; set; } = null!;
 
+        public ICollection<ExecutionParameter> ExecutionParameters { get; set; } = null!;
+
         public Job? Job { get; set; }
 
         [NotMapped]

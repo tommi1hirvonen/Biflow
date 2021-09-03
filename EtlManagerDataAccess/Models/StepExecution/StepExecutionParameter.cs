@@ -9,7 +9,7 @@ namespace EtlManagerDataAccess.Models
         public StepExecutionParameter(string parameterName, object parameterValue, string parameterType, string parameterLevel)
         {
             ParameterName = parameterName;
-            ParameterValue = parameterValue;
+            _parameterValue = parameterValue;
             ParameterType = parameterType;
             ParameterLevel = parameterLevel;
         }
@@ -23,13 +23,21 @@ namespace EtlManagerDataAccess.Models
         public string ParameterName { get; set; }
 
         [Column(TypeName = "sql_variant")]
-        public object ParameterValue { get; set; }
+        public object ParameterValue
+        {
+            get => ExecutionParameter?.ParameterValue ?? _parameterValue;
+            set => _parameterValue = value;
+        }
+
+        private object _parameterValue;
 
         public string ParameterType { get; set; }
 
         public string ParameterLevel { get; set; }
 
-        public bool InheritedFromJob { get; set; }
+        public Guid? ExecutionParameterId { get; set; }
+
+        public ExecutionParameter? ExecutionParameter { get; set; }
 
         public ParameterizedStepExecution StepExecution { get; set; } = null!;
     }

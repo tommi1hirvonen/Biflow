@@ -17,6 +17,9 @@ namespace EtlManagerDataAccess.Models
         [Required]
         public Guid? ConnectionId { get; set; }
 
+        [Display(Name = "Result capture job parameter")]
+        public Guid? ResultCaptureJobParameterId { get; set; }
+
         public Connection? Connection { get; set; }
     }
 }

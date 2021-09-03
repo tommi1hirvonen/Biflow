@@ -47,11 +47,12 @@ namespace EtlManagerExecutor
                     execution = await context.Executions
                         .AsNoTrackingWithIdentityResolution()
                         .Include(e => e.Job)
-                        .ThenInclude(j => j!.JobParameters)
+                        .Include(e => e.ExecutionParameters)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => e.StepExecutionAttempts)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                        .ThenInclude(p => p.ExecutionParameter)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => (e as DatasetStepExecution)!.AppRegistration)
                         .Include(e => e.StepExecutions)
