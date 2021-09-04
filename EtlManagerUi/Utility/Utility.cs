@@ -93,6 +93,32 @@ namespace EtlManagerUi
             return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
         }
 
+        public static (int Offset, int Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
+        {
+            if (!allExecutions.Any())
+                return (0, 0);
+
+            var minTime = allExecutions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
+            var maxTime = allExecutions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now);
+
+            var minTicks = minTime.Ticks;
+            var maxTicks = maxTime.Ticks;
+
+            if (minTicks == maxTicks)
+                return (0, 0);
+
+            var startTicks = (execution.StartDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
+            var endTicks = (execution.EndDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
+
+            var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
+            var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;
+            var width = end - start;
+            width = width < 1 ? 1 : width; // check that width is not 0
+            start = start > 99 ? 99 : start; // check that start is not 100
+
+            return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
+        }
+
         public static decimal GetSuccessPercent(this Execution execution)
         {
             var successCount = execution.StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded) ?? false) ?? 0;

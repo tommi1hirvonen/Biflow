@@ -65,25 +65,25 @@
     <div class="col">
         <form class="form-inline" id="executions_form" @onsubmit="LoadData">
             <div class="form-group">
-                <label class="mr-3">Date & time until</label>
+                <label class="mr-3">From</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <div class="input-group-text">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                         </div>
                     </div>
-                    <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
+                    <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
                 </div>
             </div>
             <div class="form-group ml-3">
-                <label class="mr-3">Interval (h)</label>
+                <label class="mr-3">To</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <div class="input-group-text">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                         </div>
                     </div>
-                    <input @bind-value="IntervalHours" class="form-control form-control-sm">
+                    <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
                 </div>
             </div>
 
@@ -271,7 +271,7 @@
     }
     else if (!ShowSteps)
     {
-
+        <JobExecutionsGraphComponent Executions="FilteredExecutions" />
     }
     else if (!ShowGraph)
     {
@@ -289,8 +289,19 @@
     private bool ShowGraph { get; set; } = false;
     private bool Loading { get; set; } = false;
 
-    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
-    private int IntervalHours { get; set; } = 3;
+    private DateTime FromDateTime
+    {
+        get => _fromDateTime;
+        set => _fromDateTime = value > ToDateTime ? ToDateTime : value;
+    }
+    private DateTime _fromDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-1);
+
+    private DateTime ToDateTime
+    {
+        get => _toDateTime;
+        set => _toDateTime = value < FromDateTime ? FromDateTime : value;
+    }
+    private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
     private List<Execution>? Executions_ { get; set; }
 
@@ -342,8 +353,7 @@
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.Step)
                 .ThenInclude(s => s!.Tags)
-                .Where(execution => execution.CreatedDateTime <= DateTimeUntil)
-                .Where(execution => execution.CreatedDateTime >= DateTimeUntil.AddHours(-IntervalHours))
+                .Where(execution => execution.CreatedDateTime >= FromDateTime && execution.CreatedDateTime <= ToDateTime)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(execution => execution.StartDateTime)
                 .ToListAsync();
@@ -353,8 +363,8 @@
 
     private async Task SelectPreset(int hours)
     {
-        DateTimeUntil = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
-        IntervalHours = hours;
+        ToDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+        FromDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-hours);
         await LoadData();
     }
 
