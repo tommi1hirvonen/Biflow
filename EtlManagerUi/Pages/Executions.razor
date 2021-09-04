@@ -25,13 +25,13 @@
                 </BSButton>
             </BSButtonGroup>
             <BSButtonGroup Size="Size.Small" Class="ml-3">
-                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowGraph = true" Class="@(ShowGraph ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
-                    Graph
-                </BSButton>
                 <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowGraph = false" Class="@(!ShowGraph ? "active" : null)">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
                     Table
+                </BSButton>
+                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowGraph = true" Class="@(ShowGraph ? "active" : null)">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
+                    Graph
                 </BSButton>
             </BSButtonGroup>
             <BSDropdown>
@@ -353,7 +353,10 @@
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.Step)
                 .ThenInclude(s => s!.Tags)
-                .Where(execution => execution.CreatedDateTime >= FromDateTime && execution.CreatedDateTime <= ToDateTime)
+                .Where(execution =>
+                execution.CreatedDateTime >= FromDateTime && execution.CreatedDateTime <= ToDateTime ||
+                execution.EndDateTime >= FromDateTime && execution.EndDateTime <= ToDateTime ||
+                execution.ExecutionStatus == ExecutionStatus.Running && DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(execution => execution.StartDateTime)
                 .ToListAsync();

@@ -20,15 +20,15 @@
             </BSButton>
 
             <BSButtonGroup Class="ml-3">
-                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowGraph ? "active" : null)"
-                          @onclick="() => ShowGraph = true">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
-                    Graph
-                </BSButton>
                 <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(!ShowGraph ? "active" : null)"
                           @onclick="() => ShowGraph = false">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
                     Table
+                </BSButton>
+                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowGraph ? "active" : null)"
+                          @onclick="() => ShowGraph = true">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
+                    Graph
                 </BSButton>
             </BSButtonGroup>
 

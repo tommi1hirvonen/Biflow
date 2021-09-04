@@ -17,7 +17,7 @@
                 }
             </div>
         </div>
-        @foreach (var item in Executions)
+        @foreach (var item in Executions.Where(e => e.StartDateTime is not null))
         {
             (var offset, var width) = item.GetGanttGraphDimensions(Executions);
             <div class="row border-top">
