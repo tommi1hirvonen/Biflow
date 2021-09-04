@@ -264,26 +264,24 @@
     </div>
 </div>
 
-@if (!ShowSteps && !ShowGraph)
-{
-    <div class="card shadow-sm pt-2 mt-2 my-3">
+<div class="card shadow-sm pt-2 mt-2 my-3">
+    @if (!ShowSteps && !ShowGraph)
+    {
         <JobExecutionsTableComponent Executions="FilteredExecutions" />
-    </div>
-}
-else if (!ShowSteps)
-{
-    
-}
-else if (!ShowGraph)
-{
-    <div class="card shadow-sm pt-2 mt-2 my-4">
-        <StepExecutionsTableComponent Executions="FilteredStepExecutions" />
-    </div>
-}
-else
-{
+    }
+    else if (!ShowSteps)
+    {
 
-}
+    }
+    else if (!ShowGraph)
+    {
+        <StepExecutionsTableComponent Executions="FilteredStepExecutions" />
+    }
+    else
+    {
+        <StepExecutionsGraphComponent Executions="FilteredStepExecutions" />
+    }
+</div>
 
 @code {
 

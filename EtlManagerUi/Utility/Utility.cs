@@ -64,6 +64,11 @@ namespace EtlManagerUi
                 .SelectMany(e => e.StepExecutionAttempts)
                 .Where(e => e.StartDateTime != null);
 
+            return attempt.GetGanttGraphDimensions(allAttempts);
+        }
+
+        public static (int Offset, int Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
+        {
             if (!allAttempts.Any())
                 return (0, 0);
 

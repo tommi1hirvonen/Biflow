@@ -1,5 +1,148 @@
-﻿
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+@inject IHttpContextAccessor HttpContextAccessor
+
+<div class="row mx-1 mt-3">
+    <div class="col">
+        <div class="row">
+            <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
+                <small>@GetDateFromPercentage(0)</small>
+            </div>
+            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                @for (int i = 0; i <= 100; i += 10)
+                {
+                    <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
+                        @if (i < 100)
+                        {
+                            <small class="@(i % 20 == 0 ? "d-none d-xl-block" : null)">@GetDateTimeFromPercentage(i)</small>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        @foreach (var item in Executions)
+        {
+            (var offset, var width) = item.GetGanttGraphDimensions(Executions);
+            <div class="row border-top">
+                <div class="col-xl-3 col-lg-4 col-5 text-right py-1">
+                    <small>@item.StepExecution.StepName</small>
+                </div>
+                <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
+                    @for (int i = 0; i <= 100; i += 10)
+                    {
+                        <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");" />
+                    }
+                    <div class="progress"
+                         style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
+                        <div id="@item.UniqueId"
+                             class="progress-bar @item.ExecutionStatus.ToString().ToLower()"
+                             style="width: 100%; cursor:pointer;"
+                             @onclick="() => ToggleSelectedStepExecution(item)" />
+                    </div>
+                    <BSTooltip Target="@item.UniqueId" Placement="Placement.Top">
+                        @item.ExecutionStatus
+                        @item.GetDurationInReadableFormat()
+                    </BSTooltip>
+                </div>
+            </div>
+            if (SelectedStepExecution == item)
+            {
+                <div class="row bg-light">
+                    <div class="col">
+                        <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
+                            <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                History
+                            </BSButton>
+                            <AuthorizeView Roles="Admin, Editor, Operator">
+                                @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
+                         && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                {
+                                    <BSDropdown Class="ml-3">
+                                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                            Stop
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu>
+                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+                                }
+                            </AuthorizeView>
+                        </BSButtonGroup>
+                        <StepExecutionDetailsComponent StepExecutionAttempt="item" ShowExtraDetails />
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
 
 @code {
+
+    [Parameter]
+    public IEnumerable<StepExecutionAttempt> Executions { get; set; } = Enumerable.Empty<StepExecutionAttempt>();
+
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
+
+    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private string? HistoryModalStepId { get; set; }
+
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    {
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
+    private void ShowStepHistoryModal(string stepId)
+    {
+        HistoryModalStepId = stepId;
+        StepHistoryModal.Show();
+    }
+
+    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
+    {
+        try
+        {
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
+            await stepExecution.StopExecutionAsync(username);
+        }
+        catch (TimeoutException)
+        {
+            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+        }
+    }
+
+    private DateTime MinTime => Executions.Any() ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
+    private long MinTicks => MinTime.Ticks;
+    private long MaxTicks => MaxTime.Ticks;
+
+    private string GetDateTimeFromPercentage(int percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("G");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("G");
+    }
+
+    private string GetDateFromPercentage(int percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("d");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
+        var time = new DateTime(ticks);
+        return time.ToString("d");
+    }
 
 }
