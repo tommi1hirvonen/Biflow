@@ -7,71 +7,83 @@
 
 <h4>Executions</h4>
 
-<form @onsubmit="LoadData">
-    <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mt-3">
-        <BSButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" IsDisabled="Loading">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-            Refresh
-        </BSButton>
-        <BSButtonGroup Size="Size.Small" Class="ml-3">
-            <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = false" Class="@(!ShowSteps ? "active" : null)">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                Jobs
+<div class="row mt-3">
+    <div class="col">
+        <BSButtonGroup Size="Size.Small" IsToolbar="true">
+            <BSButton ButtonType="ButtonType.Submit" form="executions_form" Size="Size.Small" Color="Color.Primary" IsDisabled="Loading">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                Refresh
             </BSButton>
-            <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = true" Class="@(ShowSteps ? "active" : null)">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                Steps
-            </BSButton>
+            <BSButtonGroup Size="Size.Small" Class="ml-3">
+                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = false" Class="@(!ShowSteps ? "active" : null)">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    Jobs
+                </BSButton>
+                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="() => ShowSteps = true" Class="@(ShowSteps ? "active" : null)">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                    Steps
+                </BSButton>
+            </BSButtonGroup>
+            <BSDropdown>
+                <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
+                    Presets
+                </BSDropdownToggle>
+                <BSDropdownMenu>
+                    @*List predefined hour intervals*@
+                    <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
+                </BSDropdownMenu>
+            </BSDropdown>
+            @*If executions are being (re)loaded, show spinner.*@
+            @if (Loading)
+            {
+                <div class="spinner-border text-primary align-middle ml-3" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            }
         </BSButtonGroup>
-        <BSDropdown>
-            <BSDropdownToggle Size="Size.Small" Color="Color.Secondary" Class="ml-3">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
-                Presets
-            </BSDropdownToggle>
-            <BSDropdownMenu>
-                @*List predefined hour intervals*@
-                <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
-                <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
-            </BSDropdownMenu>
-        </BSDropdown>
-        @*If executions are being (re)loaded, show spinner.*@
-        @if (Loading)
-        {
-            <div class="spinner-border text-primary align-middle ml-3" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        }
-    </BSButtonGroup>
+    </div>
+</div>
 
-    <div class="form-row mt-2">
-        <div class="form-group col-xl-3 col-lg-4 col-md-5 col-sm-5">
-            <label>Date & time until</label>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+<div class="row mt-3">
+    <div class="col">
+        <form class="form-inline" id="executions_form" @onsubmit="LoadData">
+            <div class="form-group">
+                <label class="mr-3">Date & time until</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                        </div>
                     </div>
+                    <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
                 </div>
-                <input @bind="DateTimeUntil" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
             </div>
-        </div>
-        <div class="form-group col-xl-2 col-lg-3 col-md-4 col-sm-4">
-            <label>Interval (h)</label>
-            <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+            <div class="form-group ml-3">
+                <label class="mr-3">Interval (h)</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                        </div>
                     </div>
+                    <input @bind-value="IntervalHours" class="form-control form-control-sm">
                 </div>
-                <input @bind-value="IntervalHours" class="form-control form-control-sm">
             </div>
-        </div>
-        <div class="form-group col-xl d-flex align-items-end pb-1 ml-2">
+            
+        </form>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col">
+        <div class="form-group">
             <div class="custom-control custom-radio custom-control-inline">
                 <input type="radio" class="custom-control-input" id="radio_all"
                        checked=@(StartTypeFilter == StartType.All)
@@ -92,17 +104,18 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
-            <span class="mr-3">Filters</span>
-        </div>
-    </div>
-    <BSButtonGroup Size="Size.Small" Class="mt-2">
+</div>
 
-        <FilterDropdown TItem="string"
-                        FilterSet="JobFilter"
-                        Items="Executions_?
+<div class="row">
+    <div class="col d-inline">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+        <span class="mr-3">Filters</span>
+
+        <BSButtonGroup Size="Size.Small">
+
+            <FilterDropdown TItem="string"
+                            FilterSet="JobFilter"
+                            Items="Executions_?
                                .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
@@ -113,18 +126,18 @@
                                .Select(e => e.JobName)
                                .Distinct()
                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
-                        OnChange="StateHasChanged">
-            <Title>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                Job
-            </Title>
-        </FilterDropdown>
+                            OnChange="StateHasChanged">
+                <Title>
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    Job
+                </Title>
+            </FilterDropdown>
 
-        @if (ShowSteps)
-        {
-            <FilterDropdown TItem="string"
-                            FilterSet="StepFilter"
-                            Items="Executions_?
+            @if (ShowSteps)
+            {
+                <FilterDropdown TItem="string"
+                                FilterSet="StepFilter"
+                                Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible steps based on start type filter
@@ -137,16 +150,16 @@
                                    .Select(s => s.StepName)
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<string>()"
-                            OnChange="StateHasChanged"
-                            IsSearchable="true">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                    Step
-                </Title>
-            </FilterDropdown>
-            <FilterDropdown TItem="StepType"
-                            FilterSet="StepTypeFilter"
-                            Items="Executions_?
+                                OnChange="StateHasChanged"
+                                IsSearchable="true">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                        Step
+                    </Title>
+                </FilterDropdown>
+                <FilterDropdown TItem="StepType"
+                                FilterSet="StepTypeFilter"
+                                Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step types based on start type filter
@@ -159,19 +172,19 @@
                                    .Select(s => s.StepType)
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
-                            OnChange="StateHasChanged">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
-                    Step type
-                </Title>
-            </FilterDropdown>
-        }
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                        Step type
+                    </Title>
+                </FilterDropdown>
+            }
 
-        @if (!ShowSteps)
-        {
-            <FilterDropdown TItem="ExecutionStatus"
-                            FilterSet="JobStatusFilter"
-                            Items="Executions_?
+            @if (!ShowSteps)
+            {
+                <FilterDropdown TItem="ExecutionStatus"
+                                FilterSet="JobStatusFilter"
+                                Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible job statuses based on start type filter
@@ -179,18 +192,18 @@
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
-                            OnChange="StateHasChanged">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
-                    Status
-                </Title>
-            </FilterDropdown>
-        }
-        else
-        {
-            <FilterDropdown TItem="StepExecutionStatus"
-                            FilterSet="StepStatusFilter"
-                            Items="Executions_?
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                        Status
+                    </Title>
+                </FilterDropdown>
+            }
+            else
+            {
+                <FilterDropdown TItem="StepExecutionStatus"
+                                FilterSet="StepStatusFilter"
+                                Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step statuses based on start type filter
@@ -203,15 +216,15 @@
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
-                            OnChange="StateHasChanged">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
-                    Status
-                </Title>
-            </FilterDropdown>
-            <FilterDropdown TItem="string"
-                            FilterSet="TagFilter"
-                            Items="Executions_?
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                        Status
+                    </Title>
+                </FilterDropdown>
+                <FilterDropdown TItem="string"
+                                FilterSet="TagFilter"
+                                Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
@@ -220,25 +233,26 @@
                                    .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible tags based on step filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                    .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                                StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter  
+                                                StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
                                    .SelectMany(e => e.Step?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
-                            OnChange="StateHasChanged">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                    Tag
-                </Title>
-            </FilterDropdown>
-        }
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                        Tag
+                    </Title>
+                </FilterDropdown>
+            }
 
-        <BSButton Size="Size.Small" Color="Color.Light"
-                  @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-            Reset
-        </BSButton>
-    </BSButtonGroup>
-</form>
+            <BSButton Size="Size.Small" Color="Color.Light"
+                      @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                Reset
+            </BSButton>
+        </BSButtonGroup>
+    </div>
+</div>
 
 @if (!ShowSteps)
 {
