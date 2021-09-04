@@ -40,14 +40,40 @@
                     Presets
                 </BSDropdownToggle>
                 <BSDropdownMenu>
-                    @*List predefined hour intervals*@
-                    <BSDropdownItem @onclick="() => SelectPreset(1)">Last 1 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(3)">Last 3 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(12)">Last 12 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(24)">Last 24 h</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(72)">Last 3 d</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(168)">Last 7 d</BSDropdownItem>
-                    <BSDropdownItem @onclick="() => SelectPreset(336)">Last 14 d</BSDropdownItem>
+                    <BSDropdownHeader>Last</BSDropdownHeader>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(1)">1 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(3)">3 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(12)">12 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(24)">24 h</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(72)">3 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(168)">7 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(336)">14 d</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPresetLast(720)">30 d</BSDropdownItem>
+                    <BSDropdownItem IsDivider="true"></BSDropdownItem>
+                    @{
+                        var today = DateTime.Now.Date;
+                        var endToday = today.AddDays(1).AddTicks(-1);
+                        var startThisWeek = today.StartOfWeek(DayOfWeek.Monday);
+                        var endThisWeek = startThisWeek.AddDays(7).AddTicks(-1);
+                        var startThisMonth = new DateTime(today.Year, today.Month, 1);
+                        var endThisMonth = startThisMonth.AddMonths(1).AddTicks(-1);
+                        var yesterday = today.AddDays(-1);
+                        var endYesterday = today.AddTicks(-1);
+                        var startPrevWeek = today.AddDays(-7).StartOfWeek(DayOfWeek.Monday);
+                        var endPrevWeek = startPrevWeek.AddDays(7).AddTicks(-1);
+                        var prevMonth = today.AddMonths(-1);
+                        var startPrevMonth = new DateTime(prevMonth.Year, prevMonth.Month, 1);
+                        var endPrevMonth = startPrevMonth.AddMonths(1).AddTicks(-1);
+                    }
+                    <BSDropdownHeader>This</BSDropdownHeader>
+                    <BSDropdownItem @onclick="() => SelectPreset(today, endToday)">Day</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(startThisWeek, endThisWeek)">Week</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(startThisMonth, endThisMonth)">Month</BSDropdownItem>
+                    <BSDropdownItem IsDivider="true"></BSDropdownItem>
+                    <BSDropdownHeader>Previous</BSDropdownHeader>
+                    <BSDropdownItem @onclick="() => SelectPreset(yesterday, endYesterday)">Day</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(startPrevWeek, endPrevWeek)">Week</BSDropdownItem>
+                    <BSDropdownItem @onclick="() => SelectPreset(startPrevMonth, endPrevMonth)">Month</BSDropdownItem>
                 </BSDropdownMenu>
             </BSDropdown>
             @*If executions are being (re)loaded, show spinner.*@
@@ -364,10 +390,17 @@
         Loading = false;
     }
 
-    private async Task SelectPreset(int hours)
+    private async Task SelectPresetLast(int hours)
     {
         ToDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
         FromDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-hours);
+        await LoadData();
+    }
+
+    private async Task SelectPreset(DateTime from, DateTime to)
+    {
+        FromDateTime = from;
+        ToDateTime = to;
         await LoadData();
     }
 
