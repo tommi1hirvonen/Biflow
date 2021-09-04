@@ -1,0 +1,143 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+@inject IHttpContextAccessor HttpContextAccessor
+
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>
+                Job
+            </th>
+            <th>
+                Step
+            </th>
+            <th>
+                Step type
+            </th>
+            <th>
+                Started
+            </th>
+            <th>
+                Ended
+            </th>
+            <th>
+                Duration
+            </th>
+            <th>
+                Status
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Executions is null)
+        {
+            <tr><td colspan="7">Loading...</td></tr>
+        }
+        else if (!Executions.Any())
+        {
+            <tr><td colspan="7">No executions</td></tr>
+        }
+        else
+        {
+            @foreach (var item in Executions)
+            {
+                <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                    <td>
+                        @item.StepExecution.Execution.JobName
+                    </td>
+                    <td>
+                        @item.StepExecution.StepName
+                    </td>
+                    <td>
+                        <StepTypeIconComponent StepType_="@item.StepType" />
+                    </td>
+                    <td>
+                        @item.StartDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        @item.EndDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        <text>@item.GetDurationInReadableFormat()</text>
+                    </td>
+                    <td>
+                        <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                    </td>
+                </tr>
+                @if (SelectedStepExecution == item)
+                {
+                    <tr class="table-borderless">
+                        <td colspan="7" class="bg-light">
+                            <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
+                                <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                    History
+                                </BSButton>
+                                <AuthorizeView Roles="Admin, Editor, Operator">
+                                    @if (item.ExecutionStatus == StepExecutionStatus.Running)
+                                    {
+                                        <BSDropdown Class="ml-3">
+                                            <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                Stop
+                                            </BSDropdownToggle>
+                                            <BSDropdownMenu>
+                                                <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
+                                            </BSDropdownMenu>
+                                        </BSDropdown>
+                                    }
+                                </AuthorizeView>
+                            </BSButtonGroup>
+
+                            <StepExecutionDetailsComponent StepExecutionAttempt="item" />
+                        </td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+
+<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
+
+@code {
+    [Parameter]
+    public IEnumerable<StepExecutionAttempt>? Executions { get; set; }
+
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
+
+    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private string? HistoryModalStepId { get; set; }
+
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    {
+        // If the selected execution is the same that was previously selected, set to null
+        // => hides step execution details component.
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
+    private void ShowStepHistoryModal(string stepId)
+    {
+        HistoryModalStepId = stepId;
+        StepHistoryModal.Show();
+    }
+
+    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
+    {
+        try
+        {
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
+            await stepExecution.StopExecutionAsync(username);
+        }
+        catch (TimeoutException)
+        {
+            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+        }
+    }
+}

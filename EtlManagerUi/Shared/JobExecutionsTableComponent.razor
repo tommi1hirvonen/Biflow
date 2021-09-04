@@ -1,0 +1,88 @@
+﻿<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>
+                Job
+            </th>
+            <th>
+                Created
+            </th>
+            <th>
+                Started
+            </th>
+            <th>
+                Ended
+            </th>
+            <th>
+                Duration
+            </th>
+            <th>
+                Number of steps
+            </th>
+            <th>
+                Success percent
+            </th>
+            <th>
+                Status
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Executions is null)
+        {
+            <tr><td colspan="8">Loading...</td></tr>
+        }
+        else if (!Executions.Any())
+        {
+            <tr><td colspan="8">No executions</td></tr>
+        }
+        else
+        {
+            @foreach (var item in Executions)
+            {
+                <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                    <td>
+                        @item.JobName
+                    </td>
+                    <td>
+                        @item.CreatedDateTime.LocalDateTime
+                    </td>
+                    <td>
+                        @item.StartDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        @item.EndDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        <text>@item.GetDurationInReadableFormat()</text>
+                    </td>
+                    <td style="text-align: right;">
+                        @item.StepExecutions.Count
+                    </td>
+                    <td style="text-align: right;">
+                        @item.GetSuccessPercent().FormatPercentage(2)
+                    </td>
+                    <td>
+                        <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
+
+@code {
+    [Parameter]
+    public IEnumerable<Execution>? Executions { get; set; }
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
+    private Guid SelectedJobExecutionId { get; set; }
+
+    private void OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        JobExecutionModal.Show();
+    }
+}
