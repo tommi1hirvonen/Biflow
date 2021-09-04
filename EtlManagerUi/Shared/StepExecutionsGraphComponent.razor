@@ -4,17 +4,18 @@
 
 <div class="row mx-1 mt-3">
     <div class="col">
-        <div class="row">
+        <div class="row" style="height: 40px;">
             <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
-                <small>@GetDateFromPercentage(0)</small>
             </div>
             <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center">
                 @for (int i = 0; i <= 100; i += 10)
                 {
-                    <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
+                    @*With screen sizes < xl only show every other line*@
+                    <div class="@(i / 10 % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center"
+                         style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
                         @if (i < 100)
                         {
-                            <small class="@(i % 20 == 0 ? "d-none d-xl-block" : null)">@GetDateTimeFromPercentage(i)</small>
+                            <small>@GetDateFromPercentage(i)<br />@GetTimeFromPercentage(i)</small>
                         }
                     </div>
                 }
@@ -125,14 +126,14 @@
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 
-    private string GetDateTimeFromPercentage(int percentage)
+    private string GetTimeFromPercentage(int percentage)
     {
         if (MinTicks == MaxTicks)
-            return DateTime.Now.ToString("G");
+            return DateTime.Now.ToString("T");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
         var time = new DateTime(ticks);
-        return time.ToString("G");
+        return time.ToString("T");
     }
 
     private string GetDateFromPercentage(int percentage)
