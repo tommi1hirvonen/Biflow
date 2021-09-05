@@ -20,109 +20,127 @@
 </div>
 
 <div class="form-inline mt-3">
-    <label>Date until:</label>
-    <input @bind-value="DateTimeUntil" class="form-control form-control-sm ml-2" type="date">
-    <label class="ml-5">Interval (d):</label>
-    <input @bind-value="IntervalDays" class="form-control form-control-sm ml-2">
+    <label>From:</label>
+    <input @bind-value="FromDate" class="form-control form-control-sm ml-2" type="date">
+    <label class="ml-4">To:</label>
+    <input @bind-value="ToDate" class="form-control form-control-sm ml-2" type="date">
 </div>
 
 <div class="form-inline mt-3">
     <div class="custom-control custom-checkbox custom-control-inline">
-        <input type="checkbox" class="custom-control-input" id="include_deleted" @bind-value="IncludeDeleted">
-        <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
-    </div>
-    <div class="custom-control custom-checkbox custom-control-inline ml-5">
-        <input type="checkbox" class="custom-control-input" id="only_schedule" @bind-value="OnlyScheduled">
+        <input type="checkbox" class="custom-control-input" id="only_schedule"
+               @bind-value="OnlyScheduled"
+               checked=@OnlyScheduled>
         <label class="custom-control-label" for="only_schedule">Only scheduled executions</label>
+    </div>
+    <div class="custom-control custom-checkbox custom-control-inline ml-3">
+        <input type="checkbox" class="custom-control-input" id="include_deleted"
+               @bind-value="IncludeDeleted"
+               checked=@IncludeDeleted>
+        <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
     </div>
 </div>
 
 
 <div class="container-fluid mt-4">
     <div class="row">
-        <div class="card shadow-sm col-xl mr-xl-3 mb-xl-3 mb-3 pt-3">
-            <h6>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
-                &nbsp;
-                Average execution duration
-            </h6>
-            @if (!ReportLoaded)
-            {
-                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
-            }
-            <canvas class="my-4 w-100" id="myChart1" width="900" height="380"></canvas>
+        <div class="col-xl">
+            <div class="card shadow-sm">
+                <h6 class="card-header">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                    &nbsp;
+                    Average execution duration
+                </h6>
+                <div class="card-body">
+                    @if (!ReportLoaded)
+                    {
+                        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+                    }
+                    <canvas class="w-100" id="myChart1" width="900" height="400"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="card shadow-sm col-xl ml-xl-3 mb-xl-3 mt-xl-0 my-3 pt-3">
-            <h6>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/percent.svg")))
-                &nbsp;
-                Job success rate
-            </h6>
-            @if (!ReportLoaded)
-            {
-        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
-            }
-            <canvas class="my-4 w-100" id="myChart2" width="900" height="380"></canvas>
+        <div class="col-xl mt-4 mt-xl-0">
+            <div class="card shadow-sm">
+                <h6 class="card-header">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/percent.svg")))
+                    &nbsp;
+                    Job success rate
+                </h6>
+                <div class="card-body">
+                    @if (!ReportLoaded)
+                    {
+                        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+                    }
+                    <canvas class="w-100" id="myChart2" width="900" height="400"></canvas>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="card shadow-sm col-xl mr-xl-3 mt-xl-3 my-3 pt-3">
-            <h6>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
-                &nbsp;
-                Number of executions
-            </h6>
-            @if (!ReportLoaded)
-            {
-                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
-            }
-            <canvas class="my-4 w-100" id="myChart3" width="900" height="380"></canvas>
-        </div>
-        <div class="card shadow-sm col-xl ml-xl-3 mt-xl-3 my-3 pt-3">
-            <h6>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
-                &nbsp;
-                Top 5 failing steps
-            </h6>
-            @if (!ReportLoaded)
-            {
-                <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
-            }
-            else
-            {
-                <div class="row mt-4">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th></th>
-                                <th>Step</th>
-                                <th>Job</th>
-                                <th>Success %</th>
-                                <th># of executions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (TopFailedSteps is not null)
-                            {
-                                @for (int i = 0; i < TopFailedSteps.Count; i++)
-                                {
-                                    <tr>
-                                        <td>@(i + 1)</td>
-                                        <td>
-                                            @TopFailedSteps[i].StepName
-                                        </td>
-                                        <td>
-                                            @TopFailedSteps[i].JobName
-                                        </td>
-                                        <td>@TopFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
-                                        <td>@TopFailedSteps[i].NoOfExecutions</td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
+    <div class="row my-4">
+        <div class="col-xl">
+            <div class="card shadow-sm">
+                <h6 class="card-header">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                    &nbsp;
+                    Number of executions
+                </h6>
+                <div class="card-body">
+                    @if (!ReportLoaded)
+                    {
+                        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+                    }
+                    <canvas class="w-100" id="myChart3" width="900" height="400"></canvas>
                 </div>
-            }
+            </div>
+        </div>
+        <div class="col-xl mt-4 mt-xl-0 d-flex align-items-stretch">
+            <div class="card shadow-sm flex-fill">
+                <h6 class="card-header">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                    &nbsp;
+                    Top 5 failing steps
+                </h6>
+                <div class="card-body @(ReportLoaded ? "px-0" : null)">
+                    @if (!ReportLoaded)
+                    {
+                        <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
+                    }
+                    else
+                    {
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Step</th>
+                                    <th>Job</th>
+                                    <th>Success %</th>
+                                    <th># of executions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (TopFailedSteps is not null)
+                                {
+                                    @for (int i = 0; i < TopFailedSteps.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>@(i + 1)</td>
+                                            <td>
+                                                @TopFailedSteps[i].StepName
+                                            </td>
+                                            <td>
+                                                @TopFailedSteps[i].JobName
+                                            </td>
+                                            <td>@TopFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
+                                            <td>@TopFailedSteps[i].NoOfExecutions</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -136,13 +154,12 @@
 
     private List<TopStep>? TopFailedSteps { get; set; }
 
-    private int IntervalDays { get; set; } = 90;
-
-    private DateTime DateTimeUntil { get; set; } = DateTime.Now.Date.AddDays(1);
+    private DateTime FromDate { get; set; } = DateTime.Now.Date.AddDays(-90);
+    private DateTime ToDate { get; set; } = DateTime.Now.Date.AddDays(1);
 
     private bool IncludeDeleted { get; set; } = false;
 
-    private bool OnlyScheduled { get; set; } = false;
+    private bool OnlyScheduled { get; set; } = true;
 
     private bool Loading { get; set; }
 
@@ -155,13 +172,11 @@
     {
         Loading = true;
 
-        var context = DbFactory.CreateDbContext();
-
-        var dateTimeStart = DateTimeUntil.AddDays(-IntervalDays);
+        var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
 
         // Get duration executions
         var executionsQuery = context.Executions
-            .Where(e => e.EndDateTime != null && e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
+            .Where(e => e.EndDateTime != null && e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
 
         if (!IncludeDeleted)
         {
@@ -177,10 +192,10 @@
         var executions = await executionsQuery
             .OrderBy(e => e.CreatedDateTime).ToListAsync();
         var executions_ = executions.GroupBy(group => new
-            {
-                group.JobName,
-                ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
-            })
+        {
+            group.JobName,
+            ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
+        })
             .Select(select => new TimeSeriesItem
             {
                 DurationInMinutes = select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60),
@@ -198,7 +213,7 @@
         var jobsQuery = context.Executions
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.StepExecutionAttempts)
-            .Where(e => e.CreatedDateTime >= dateTimeStart && e.CreatedDateTime < DateTimeUntil);
+            .Where(e => e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
 
         if (!IncludeDeleted)
         {
@@ -232,7 +247,7 @@
         var topFailedStepsQuery = context.StepExecutions
             .Include(e => e.StepExecutionAttempts)
             .Include(e => e.Execution)
-            .Where(e => e.Execution.CreatedDateTime >= dateTimeStart && e.Execution.CreatedDateTime < DateTimeUntil);
+            .Where(e => e.Execution.CreatedDateTime >= FromDate && e.Execution.CreatedDateTime < ToDate);
 
         if (!IncludeDeleted)
         {
