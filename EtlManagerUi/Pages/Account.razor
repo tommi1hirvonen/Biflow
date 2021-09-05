@@ -13,68 +13,32 @@
     @Username
 </h5>
 
-@if (User is null || Jobs is null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <div class="row mt-3">
-        <div class="col-md col-lg-5">
-            <div class="card shadow-sm pt-3 px-3">
-                <h6>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
-                    Email
-                </h6>
-                <BSForm Class="mt-3" Model="User" OnValidSubmit="SubmitEmail">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
-                    <BSFormGroup>
-                        <BSLabel Class="sr-only">Email</BSLabel>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text rounded-left">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
-                                </div>
-                            </div>
-                            <InputText class="form-control" type="email" @bind-Value="User.Email" placeholder="Email"></InputText>
-                        </div>
-                    </BSFormGroup>
-                    <BSFormGroup>
-                        <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                            Save
-                        </BSButton>
-                    </BSFormGroup>
-                </BSForm>
-            </div>
-            <div class="card shadow-sm pt-3 px-3 mt-4">
-                <h6>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                    Password
-                </h6>
-                <section class="mt-3">
-                    <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+<div class="row mt-3">
+    <div class="col-md col-lg-5">
+        <div class="card shadow-sm">
+            <h6 class="card-header">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                Email
+            </h6>
+            <div class="card-body">
+                @if (User is null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                {
+                    <BSForm Class="mt-3" Model="User" OnValidSubmit="SubmitEmail">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
                         <BSFormGroup>
-                            <BSLabel>New password</BSLabel>
+                            <BSLabel Class="sr-only">Email</BSLabel>
                             <div class="input-group">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text rounded-left">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
                                     </div>
                                 </div>
-                                <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
-                            </div>
-                        </BSFormGroup>
-                        <BSFormGroup>
-                            <BSLabel>Confirm new password</BSLabel>
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text rounded-left">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                    </div>
-                                </div>
-                                <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
+                                <InputText class="form-control" type="email" @bind-Value="User.Email" placeholder="Email"></InputText>
                             </div>
                         </BSFormGroup>
                         <BSFormGroup>
@@ -84,69 +48,124 @@ else
                             </BSButton>
                         </BSFormGroup>
                     </BSForm>
-                </section>
+                }
+            </div>
+        </div>
+        <div class="card shadow-sm mt-4">
+            <h6 class="card-header">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                Password
+            </h6>
+            <div class="card-body">
+                @if (User is null)
+                {
+                    <p><em>Loading...</em></p>
+                }
+                else
+                    {
+                        <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+                            <BSFormGroup>
+                                <BSLabel>New password</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text rounded-left">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                        </div>
+                                    </div>
+                                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Confirm new password</BSLabel>
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <div class="input-group-text rounded-left">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                        </div>
+                                    </div>
+                                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
+                                </div>
+                            </BSFormGroup>
+                            <BSFormGroup>
+                                <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                                    Save
+                                </BSButton>
+                            </BSFormGroup>
+                        </BSForm>
+                    }
+                </div>
             </div>
         </div>
         <div class="col-md col-lg-7">
-            <div class="card shadow-sm pt-3 mt-4 mt-md-0">
-                <h6 class="mx-3">
+            <div class="card shadow-smmt-4 mt-md-0">
+                <h6 class="card-header">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
                     Subscriptions
                 </h6>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>
-                                Job
-                            </th>
-                            <th>
-                                Subscription
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var job in Jobs)
-                        {
-                            <tr>
-                                <td>
-                                    @job.JobName
-                                </td>
-                                <td>
-                                    <div class="form-group">
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_none")"
-                                                   checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
-                                                   @onchange="() => ToggleSubscription(job, null)">
-                                            <label class="custom-control-label" for="@(job.JobId.ToString() + "_none")">None</label>
-                                        </div>
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_failure")"
-                                                   checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnFailure)
-                                                   @onchange="() => ToggleSubscription(job, SubscriptionType.OnFailure)">
-                                            <label class="custom-control-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
-                                        </div>
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_success")"
-                                                   checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnSuccess)
-                                                   @onchange="() => ToggleSubscription(job, SubscriptionType.OnSuccess)">
-                                            <label class="custom-control-label" for="@(job.JobId.ToString() + "_success")">On success</label>
-                                        </div>
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_completion")"
-                                                   checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
-                                                   @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
-                                            <label class="custom-control-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <div class="card-body px-0">
+                    @if (User is null || Jobs is null)
+                    {
+                        <p class="px-3"><em>Loading...</em></p>
+                    }
+                    else
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Job
+                                    </th>
+                                    <th>
+                                        Subscription
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var job in Jobs)
+                                {
+                                    <tr>
+                                        <td>
+                                            @job.JobName
+                                        </td>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_none")"
+                                                           checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
+                                                           @onchange="() => ToggleSubscription(job, null)">
+                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_none")">None</label>
+                                                </div>
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_failure")"
+                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnFailure)
+                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnFailure)">
+                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
+                                                </div>
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_success")"
+                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnSuccess)
+                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnSuccess)">
+                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_success")">On success</label>
+                                                </div>
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_completion")"
+                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
+                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
+                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
             </div>
         </div>
     </div>
-}
+
 
 @code {
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
@@ -159,10 +178,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         User = await context.Users
-            .Include(user => user.Subscriptions)
-            .FirstOrDefaultAsync(user => user.Username == Username);
+        .Include(user => user.Subscriptions)
+        .FirstOrDefaultAsync(user => user.Username == Username);
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
     }
 
