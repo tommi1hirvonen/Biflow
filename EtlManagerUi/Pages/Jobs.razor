@@ -33,13 +33,13 @@
                 </BSForm>
             </BSDropdownMenu>
         </BSDropdown>
-        <BSButton Class="ml-3" Color="Color.Primary" @onclick="LoadData">
+        <BSButton Class="ml-3" Color="Color.Primary" @onclick="LoadData" IsDisabled="IsLoading">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
         </BSButton>
     </AuthorizeView>
     <AuthorizeView Roles="Operator, Viewer">
-        <BSButton Color="Color.Primary" @onclick="LoadData">
+        <BSButton Color="Color.Primary" @onclick="LoadData" IsDisabled="IsLoading">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
         </BSButton>
@@ -212,7 +212,7 @@
     private async Task LoadData()
     {
         IsLoading = true;
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         jobs = await context.Jobs.Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).

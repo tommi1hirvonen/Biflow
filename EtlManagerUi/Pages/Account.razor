@@ -178,7 +178,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         User = await context.Users
         .Include(user => user.Subscriptions)
         .FirstOrDefaultAsync(user => user.Username == Username);

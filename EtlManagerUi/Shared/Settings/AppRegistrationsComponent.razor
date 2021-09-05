@@ -4,7 +4,7 @@
 @inject IJSRuntime JS
 @inject ITokenService TokenService 
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)" IsDisabled="AppRegistrations is null">
     Add App registration
 </BSButton>
 
@@ -83,7 +83,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var context = DbFactory.CreateDbContext();
+        var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         AppRegistrations = await context.AppRegistrations.OrderBy(df => df.AppRegistrationName).ToListAsync();
     }
 

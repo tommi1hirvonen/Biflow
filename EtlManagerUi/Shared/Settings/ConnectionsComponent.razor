@@ -3,7 +3,7 @@
 @inject IWebHostEnvironment WebHostEnvironment 
 
 
-<BSButton Color="Color.Success" @onclick="() => ShowConnectionEditModal(null)">
+<BSButton Color="Color.Success" @onclick="() => ShowConnectionEditModal(null)" IsDisabled="Connections is null">
     Add connection
 </BSButton>
 
@@ -99,7 +99,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Connections = await context.Connections.OrderBy(c => c.ConnectionName).ToListAsync();
         ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
     }

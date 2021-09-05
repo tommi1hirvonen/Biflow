@@ -2,7 +2,9 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+<BSButton Color="Color.Success"
+          @onclick="() => ShowEditModal(null)"
+          IsDisabled="DataFactories is null || AppRegistrations is null || !AppRegistrations.Any()">
     Add Data Factory
 </BSButton>
 
@@ -80,7 +82,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
         AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
     }

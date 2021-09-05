@@ -369,8 +369,7 @@
     private async Task LoadData()
     {
         Loading = true;
-
-        using var context = DbContextFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbContextFactory.CreateDbContext);
         Executions_ = await context.Executions
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)

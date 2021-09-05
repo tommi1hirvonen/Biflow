@@ -3,7 +3,9 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IJSRuntime JS
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+<BSButton Color="Color.Success"
+          @onclick="() => ShowEditModal(null)"
+          IsDisabled="FunctionApps is null || AppRegistrations is null || !AppRegistrations.Any()">
     Add Function App
 </BSButton>
 
@@ -80,7 +82,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         FunctionApps = await context.FunctionApps.OrderBy(f => f.FunctionAppName).ToListAsync();
         AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
     }

@@ -3,7 +3,7 @@
 @inject DbHelperService DbHelperService
 @inject IJSRuntime JS
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)">
+<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)" IsDisabled="Users is null">
     Add user
 </BSButton>
 
@@ -122,7 +122,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Users = await context.Users.OrderBy(user => user.Username).ToListAsync();
     }
 

@@ -172,7 +172,7 @@
     {
         Loading = true;
 
-        var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
 
         // Get duration executions
         var executionsQuery = context.Executions

@@ -9,7 +9,7 @@
 
 <AuthorizeView Roles="Admin, Editor, Operator">
     <div class="mt-3">
-        <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()" IsDisabled="Jobs?.Count == 0">
+        <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()" IsDisabled="Jobs is null || !Jobs.Any()">
             Add schedule
         </BSButton>
         <BSButton Class="ml-3" Color="Color.Primary" @onclick="SynchronizeSchedulerService">
@@ -166,7 +166,6 @@
 
 
 @code {
-
     private List<Job>? Jobs { get; set; }
 
     private List<Schedule>? Schedules_ { get; set; }
@@ -182,7 +181,7 @@
 
     private async Task LoadData()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
         Schedules_ = await context.Schedules
             .Include(schedule => schedule.Job)
@@ -200,7 +199,6 @@
             JobId = Jobs.Select(job => job.JobId).First(),
             IsEnabled = true
         };
-
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
