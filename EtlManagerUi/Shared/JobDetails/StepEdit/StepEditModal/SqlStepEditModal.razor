@@ -116,8 +116,6 @@
 
     private StoredProcedureSelectModal StoredProcedureSelectModal { get; set; } = null!;
 
-    private bool ShowDependencies { get; set; } = false;
-
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
@@ -179,7 +177,7 @@
 
     private void OnStoredProcedureSelected((string Schema, string Procedure) procedure) => Step.SqlStatement = $"EXEC [{procedure.Schema}].[{procedure.Procedure}]";
 
-    public void Show() => Modal.Show();
+    public void Show(bool showDependencies) => Modal.Show(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

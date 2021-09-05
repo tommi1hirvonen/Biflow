@@ -233,6 +233,11 @@
         }
     }
 
-    public void Show() => Modal.Show();
+    public void Show(bool showDependencies = false)
+    {
+        ShowDependencies = showDependencies;
+        Modal.Show();
+    }
+
 
 }

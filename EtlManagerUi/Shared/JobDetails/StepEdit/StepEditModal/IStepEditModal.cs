@@ -2,6 +2,6 @@
 {
     interface IStepEditModal
     {
-        public void Show();
+        public void Show(bool showDependencies = false);
     }
 }

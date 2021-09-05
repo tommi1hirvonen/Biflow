@@ -260,7 +260,7 @@
         Step.PackageName = package.Package;
     }
 
-    public void Show()=> Modal.Show();
+    public void Show(bool showDependencies) => Modal.Show(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

@@ -141,7 +141,7 @@
 
     private void OnPipelineSelected(string pipelineName) => Step.PipelineName = pipelineName;
 
-    public void Show() => Modal.Show();
+    public void Show(bool showDependencies) => Modal.Show(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 
