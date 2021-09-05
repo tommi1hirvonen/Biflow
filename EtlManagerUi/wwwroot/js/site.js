@@ -31,10 +31,12 @@
 
     for (var id in steps) {
         var step = steps[id];
+        var className = step.IsEnabled ? "enabled" : "disabled";
         g.setNode(step.Id, {
             label: step.Name,
             rx: 20,
-            ry: 20
+            ry: 20,
+            class: className
         });
         g.node(step.Id).id = step.Id; // Set the id of the node element. Used for onclick purposes.
     }

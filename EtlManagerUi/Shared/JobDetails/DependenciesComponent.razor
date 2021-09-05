@@ -31,6 +31,9 @@
                 stroke: #666;
                 fill: #fff;
             }
+            .dependency-graph .node.disabled rect {
+                fill: #eee;
+            }
 
         .dependency-graph .name {
             margin-top: 4px;
@@ -153,7 +156,7 @@
         if (string.IsNullOrEmpty(StepFilter))
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName });
+            var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName, IsEnabled = step.IsEnabled });
             var dependencies = Steps
                 .SelectMany(step => step.Dependencies)
                 .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
@@ -175,7 +178,7 @@
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
                     .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
 
-                stepsJson = JsonSerializer.Serialize(steps.Select(step => new { Id = step.StepId, Name = step.StepName }));
+                stepsJson = JsonSerializer.Serialize(steps.Select(step => new { Id = step.StepId, Name = step.StepName, IsEnabled = step.IsEnabled }));
                 dependenciesJson = JsonSerializer.Serialize(dependencies);
             }
         }
