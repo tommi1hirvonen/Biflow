@@ -52,13 +52,12 @@ namespace EtlManagerDataAccess.Models
         private const string AuthenticationUrl = "https://login.microsoftonline.com/";
         private const string ResourceUrl = "https://management.azure.com/";
 
-        public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(ITokenService tokenService)
+        public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
         {
             var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
             var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
             var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
             message.Headers.Add("authorization", $"Bearer {accessToken}");
-            var client = new HttpClient();
             var response = await client.SendAsync(message);
             var content = await response.Content.ReadAsStringAsync();
 
@@ -86,13 +85,12 @@ namespace EtlManagerDataAccess.Models
             return functions;
         }
 
-        public async Task<List<(string Type, string Key)>> GetHostKeysAsync(ITokenService tokenService)
+        public async Task<List<(string Type, string Key)>> GetHostKeysAsync(HttpClient client, ITokenService tokenService)
         {
             var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
             var hostKeysUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/host/default/listkeys?api-version=2019-08-01";
             var message = new HttpRequestMessage(HttpMethod.Post, hostKeysUrl);
             message.Headers.Add("authorization", $"Bearer {accessToken}");
-            var client = new HttpClient();
             var response = await client.SendAsync(message);
             var content = await response.Content.ReadAsStringAsync();
             var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -106,7 +104,7 @@ namespace EtlManagerDataAccess.Models
 
         private record HostKeys(string MasterKey, Dictionary<string, string> FunctionKeys);
 
-        public async Task TestConnection()
+        public async Task TestConnection(HttpClient client)
         {
             var context = new AuthenticationContext(AuthenticationUrl + AppRegistration.TenantId);
             var clientCredential = new ClientCredential(AppRegistration.ClientId, AppRegistration.ClientSecret);
@@ -115,7 +113,6 @@ namespace EtlManagerDataAccess.Models
             var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
             var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
             message.Headers.Add("authorization", $"Bearer {result.AccessToken}");
-            var client = new HttpClient();
             var response = await client.SendAsync(message);
             response.EnsureSuccessStatusCode();
         }

@@ -2,7 +2,8 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
-@inject ITokenService TokenService 
+@inject IHttpClientFactory HttpClientFactory
+@inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
     @if (FunctionApp is not null)
@@ -177,7 +178,7 @@
         TestingConnection = true;
         try
         {
-            if (FunctionApp is not null) await FunctionApp.TestConnection();
+            if (FunctionApp is not null) await FunctionApp.TestConnection(HttpClientFactory.CreateClient());
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

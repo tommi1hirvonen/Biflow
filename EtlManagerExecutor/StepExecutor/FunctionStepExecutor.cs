@@ -17,6 +17,7 @@ namespace EtlManagerExecutor
     {
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
         private readonly IExecutionConfiguration _executionConfiguration;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         private FunctionStepExecution Step { get; init; }
 
@@ -27,11 +28,13 @@ namespace EtlManagerExecutor
         public FunctionStepExecutor(
             IDbContextFactory<EtlManagerContext> dbContextFactory,
             IExecutionConfiguration executionConfiguration,
+            IHttpClientFactory httpClientFactory,
             FunctionStepExecution step)
             : base(dbContextFactory, step)
         {
             _dbContextFactory = dbContextFactory;
             _executionConfiguration = executionConfiguration;
+            _httpClientFactory = httpClientFactory;
             Step = step;
         }
 
@@ -78,7 +81,7 @@ namespace EtlManagerExecutor
                 message.Content = new StringContent(input);
             }
             
-            var client = new HttpClient();
+            var client = _httpClientFactory.CreateClient();
             var startTime = DateTime.Now;
             HttpResponseMessage response;
             string content;

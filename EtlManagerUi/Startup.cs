@@ -31,6 +31,7 @@ namespace EtlManagerUi
             services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
             services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
             services.AddBootstrapCss();
+            services.AddHttpClient();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<DbHelperService>();
             services.AddSingleton<SchedulerService>();

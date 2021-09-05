@@ -34,6 +34,7 @@ namespace EtlManagerExecutor
                 {
                     var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
                     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
+                    services.AddHttpClient();
                     services.AddSingleton<ITokenService, TokenService>();
                     services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
                     services.AddSingleton<IEmailConfiguration, EmailConfiguration>();

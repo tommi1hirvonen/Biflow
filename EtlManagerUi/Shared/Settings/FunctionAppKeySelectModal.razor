@@ -2,6 +2,7 @@
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
@@ -84,7 +85,7 @@
         {
             try
             {
-                Keys = await FunctionApp.GetHostKeysAsync(TokenService);
+                Keys = await FunctionApp.GetHostKeysAsync(HttpClientFactory.CreateClient(), TokenService);
                 StateHasChanged();
             }
             catch (Exception ex)

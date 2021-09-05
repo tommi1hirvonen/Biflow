@@ -2,6 +2,7 @@
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
 <BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
@@ -107,7 +108,7 @@
                 var functionApp = await context.FunctionApps
                     .Include(fa => fa.AppRegistration)
                     .FirstAsync(fa => fa.FunctionAppId == id);
-                Functions = await functionApp.GetFunctionsAsync(TokenService);
+                Functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
                 StateHasChanged();
             }
             catch (Exception ex)
