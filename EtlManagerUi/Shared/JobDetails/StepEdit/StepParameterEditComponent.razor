@@ -30,7 +30,7 @@
                         <input type="checkbox" class="custom-control-input" id="inherit_@(param.ParameterId)"
                                checked=@(param.JobParameterId is not null)
                                disabled=@(!JobParameters.Any())
-                               @onchange="args => SetJobParameter((bool)args.Value, param)">
+                               @onchange="args => SetJobParameter((bool)args.Value!, param)">
                         <label class="custom-control-label" for="inherit_@(param.ParameterId)"></label>
                     </div>
                 </td>

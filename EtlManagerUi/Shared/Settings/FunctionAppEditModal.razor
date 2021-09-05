@@ -139,9 +139,9 @@
         }
     }
 
-    private void AppRegistrationChanged(object value)
+    private void AppRegistrationChanged(object? value)
     {
-        var idString = value.ToString();
+        var idString = value?.ToString();
         if (idString is not null)
         {
             var id = Guid.Parse(idString);

@@ -67,7 +67,7 @@
                 <input type="checkbox" class="custom-control-input" id="capture_result"
                        checked=@(Step.ResultCaptureJobParameterId is not null)
                        disabled=@(Job?.JobParameters.Any() == false)
-                       @onchange="args => SetCaptureResultJobParameter((bool)args.Value)">
+                       @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
                 <label class="custom-control-label" for="capture_result">Capture scalar result</label>
             </div>
         </BSFormGroup>

@@ -133,7 +133,7 @@
         {
             var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == DataFactory?.AppRegistrationId)
                 ?? throw new ArgumentNullException("App registration cannot be null");
-            await DataFactory?.TestConnection(appRegistration);
+            await (DataFactory?.TestConnection(appRegistration) ?? Task.CompletedTask);
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)
