@@ -65,38 +65,29 @@
 
 @code {
 
-    [Parameter]
-    public Action<ICollection<JobParameter>?>? OnParametersSubmit { get; set; }
-
     private BSModal Modal { get; set; } = null!;
 
     [Parameter]
-    public Guid JobId { get; set; }
-    private Guid PrevId { get; set; }
-
-    private Job? Job { get; set; }
+    public Job? Job { get; set; }
 
     private EtlManagerContext Context { get; set; } = null!;
 
     private string? ErrorMessage { get; set; }
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnInitialized()
     {
-        if (JobId != Guid.Empty && JobId != PrevId)
-        {
-            await (Context?.DisposeAsync() ?? ValueTask.CompletedTask);
-            Context = DbContextFactory.CreateDbContext();
-            Job = await Context.Jobs
-                .Include(j => j.JobParameters)
-                .FirstAsync(j => j.JobId == JobId);
-        }
+        Context = DbContextFactory.CreateDbContext();
     }
 
     private void IsModalOpenChanged(bool isOpen)
     {
         // If the modal is being simply closed, reset any changes made to entities loaded from the database.
         // If the user saves their changes, SubmitStep() is called first and changes are saved.
-        if (!isOpen)
+        if (isOpen)
+        {
+            Context.Attach(Job);
+        }
+        else
         {
             // Reset added entities.
             foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
@@ -127,7 +118,8 @@
                 .Entries()
                 .Where(e => e.Entity is not null)
                 .ToList()
-                .ForEach(e => e.State = EntityState.Unchanged);
+                .ForEach(e => e.State = EntityState.Detached);
+
         }
     }
 
@@ -148,7 +140,6 @@
         try
         {
             await Context.SaveChangesAsync();
-            OnParametersSubmit?.Invoke(Job?.JobParameters);
             Modal.Hide();
         }
         catch (DbUpdateConcurrencyException)
