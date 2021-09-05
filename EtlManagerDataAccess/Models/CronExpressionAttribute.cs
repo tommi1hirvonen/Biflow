@@ -14,12 +14,12 @@ namespace EtlManagerDataAccess
         {
         }
 
-        public string GetErrorMessage() => "Not a valid Cron expression";
+        public static string GetErrorMessage() => "Not a valid Cron expression";
 
         protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
         {
             var schedule = (Schedule)validationContext.ObjectInstance;
-            if (!CronExpression.IsValidExpression(schedule.CronExpression))
+            if (!CronExpression.IsValidExpression(schedule?.CronExpression ?? string.Empty))
             {
                 return new ValidationResult(GetErrorMessage());
             }
