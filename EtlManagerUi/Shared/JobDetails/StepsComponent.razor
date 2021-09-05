@@ -124,7 +124,17 @@
             <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
         </div>
 
-        <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => { TagsFilterSet.Clear(); StepsFilterText = string.Empty; }">
+        <FilterDropdown TItem="StepType"
+                        FilterSet="StepTypeFilter"
+                        Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                        OnChange="StateHasChanged">
+            <Title>
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                Step type
+            </Title>
+        </FilterDropdown>
+
+        <BSButton Class="ml-3" Size="Size.Small" Color="Color.Light" @onclick="() => { TagsFilterSet.Clear(); StepTypeFilter.Clear(); StepsFilterText = string.Empty; }">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
             Clear
         </BSButton>
@@ -147,7 +157,8 @@
                 var index = 0;
                 @foreach (var item in Steps
                  .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))))
+                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag)))
+                 .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
                 {
                     <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
                         <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
@@ -490,6 +501,7 @@
 
     private string StepsFilterText { get; set; } = string.Empty;
     private HashSet<string> TagsFilterSet { get; set; } = new();
+    private HashSet<StepType> StepTypeFilter { get; } = new();
     private string ExecuteFilterText { get; set; } = string.Empty;
     private HashSet<string> ExecuteTagsFilterSet { get; set; } = new();
 
