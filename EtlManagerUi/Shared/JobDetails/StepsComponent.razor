@@ -270,13 +270,13 @@
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" AppRegistrations="AppRegistrations" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepId" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepId" OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepId" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" AppRegistrations="AppRegistrations" StepId="EditModalStepIds[StepType.Dataset]" OnStepSubmit="OnStepSubmit" />
+    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Exe]" OnStepSubmit="OnStepSubmit" />
+    <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Job]" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.Package]" OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepIds[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
+    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Function]" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 
@@ -465,7 +465,8 @@
     private JobParametersModal JobParametersModal { get; set; } = null!;
 
     private Dictionary<StepType, IStepEditModal> StepEditModals = new();
-    private Guid EditModalStepId { get; set; }
+    // Separate edit modal step ids so that changes to one do not trigger OnParametersSet() for all edit modal components.
+    private Dictionary<StepType, Guid> EditModalStepIds { get; set; } = Enum.GetValues<StepType>().ToDictionary(key => key, _ => new Guid());
 
     private StepDetailsModal StepDetailsModal { get; set; } = null!;
     private Step? DetailsModalStep { get; set; }
@@ -548,13 +549,13 @@
 
     private void ShowEditModal(Step step)
     {
-        EditModalStepId = step.StepId;
+        EditModalStepIds[step.StepType] = step.StepId;
         OpenStepEditModal(step.StepType);
     }
 
-    private void ShowNewStepModal(StepType? stepType)
+    private void ShowNewStepModal(StepType stepType)
     {
-        EditModalStepId = Guid.Empty;
+        EditModalStepIds[stepType] = Guid.Empty;
         OpenStepEditModal(stepType);
     }
 
