@@ -1,33 +1,22 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EtlManagerUi
 {
-    public class InputSelectBoolean<T> : InputSelect<T>
+    public class InputSelectBoolean : InputSelect<bool>
     {
-        protected override bool TryParseValueFromString(string? value, out T result, out string validationErrorMessage)
+        protected override bool TryParseValueFromString(string? value, out bool result, out string validationErrorMessage)
         {
-            if (typeof(T) == typeof(bool))
+            if (bool.TryParse(value, out var resultBool))
             {
-                if (bool.TryParse(value, out var resultBool))
-                {
-                    result = (T)(object)resultBool;
-                    validationErrorMessage = null;
-                    return true;
-                }
-                else
-                {
-                    result = default;
-                    validationErrorMessage = "The chosen value is not a valid boolean.";
-                    return false;
-                }
+                result = resultBool;
+                validationErrorMessage = string.Empty;
+                return true;
             }
             else
             {
-                return base.TryParseValueFromString(value, out result, out validationErrorMessage);
+                result = default;
+                validationErrorMessage = "The chosen value is not a valid boolean.";
+                return false;
             }
         }
     }
