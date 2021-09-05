@@ -29,7 +29,7 @@
                             <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
                         </div>
                     </BSFormGroup>
-                    <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success" IsDisabled="IsLoading">Add</BSButton>
+                    <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success" IsDisabled="jobs is null">Add</BSButton>
                 </BSForm>
             </BSDropdownMenu>
         </BSDropdown>
