@@ -11,7 +11,18 @@
                             OnStepSubmit="OnStepSubmit"
                             FormId="function_step_edit_modal">
     <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
+        <BSFormGroup Class="col-lg">
+            <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                    </div>
+                </div>
+                <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+            </div>
+        </BSFormGroup>
+        <BSFormGroup Class="col-lg">
             <BSLabel>Function App</BSLabel>
             <div class="input-group">
                 <div class="input-group-prepend">
