@@ -111,12 +111,25 @@ namespace EtlManagerDataAccess
                 .HasValue<FunctionStepExecutionAttempt>(StepType.Function);
             });
 
-            modelBuilder.Entity<Dependency>()
-                .ToTable("Dependency")
+            modelBuilder.Entity<Dependency>(e =>
+            {
+                e.ToTable("Dependency")
                 .HasOne(dependency => dependency.Step)
-                .WithMany(step => step.Dependencies)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
+                .WithMany(step => step.Dependencies);
+                e.HasKey(d => new { d.StepId, d.DependantOnStepId });
+            });
+
+            modelBuilder.Entity<ExecutionDependency>(e =>
+            {
+                e.ToTable("ExecutionDependency")
+                .HasOne(d => d.StepExecution)
+                .WithMany(e => e.ExecutionDependencies)
+                .HasForeignKey(d => new { d.ExecutionId, d.StepId });
+                e.HasOne(d => d.DependantOnStepExecution)
+                .WithMany(e => e.DependantExecutions)
+                .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId });
+                e.HasKey(d => new { d.ExecutionId, d.StepId, d.DependantOnStepId });
+            });
 
             modelBuilder.Entity<Job>(e =>
             {

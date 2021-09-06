@@ -264,6 +264,22 @@ FROM etlmanager.ExecutionStep AS a
 WHERE a.ExecutionId = @EtlManagerExecutionId
 
 
+-- Store and historize dependencies
+INSERT INTO etlmanager.ExecutionDependency (
+	ExecutionId,
+	StepId,
+	DependantOnStepId,
+	StrictDependency
+)
+SELECT @EtlManagerExecutionId,
+	a.StepId,
+	a.DependantOnStepId,
+	a.StrictDependency
+FROM etlmanager.Dependency AS a
+	INNER JOIN #Steps AS b ON a.StepId = b.StepId
+	INNER JOIN #Steps AS c ON a.DependantOnStepId = c.StepId
+
+
 -- Finally return the id of the initialized execution.
 SELECT @EtlManagerExecutionId
 

@@ -128,15 +128,13 @@ IF (SELECT JobId FROM etlmanager.Step WHERE StepId = @StepId) = @TargetJobId
 BEGIN
 
 	INSERT INTO etlmanager.Dependency (
-		DependencyId,
 		StepId,
 		DependantOnStepId,
 		StrictDependency,
 		CreatedBy,
 		CreatedDateTime
 	)
-	SELECT NEWID(),
-		@StepIdNew,
+	SELECT @StepIdNew,
 		DependantOnStepId,
 		StrictDependency,
 		@Username,

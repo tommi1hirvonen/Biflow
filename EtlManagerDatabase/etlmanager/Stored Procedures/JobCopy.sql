@@ -169,15 +169,13 @@ WHERE A.JobId = @JobId
 
 -- Copy dependencies
 INSERT INTO etlmanager.Dependency (
-	DependencyId,
 	StepId,
 	DependantOnStepId,
 	StrictDependency,
 	CreatedBy,
 	CreatedDateTime
 )
-SELECT NEWID(),
-	B.StepIdNew,
+SELECT B.StepIdNew,
 	C.StepIdNew,
 	A.StrictDependency,
 	@Username,

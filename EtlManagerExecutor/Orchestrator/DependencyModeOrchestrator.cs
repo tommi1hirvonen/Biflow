@@ -18,8 +18,6 @@ namespace EtlManagerExecutor
 
         private List<Task> StepWorkers { get; } = new();
 
-        private Dictionary<Guid, StepExecution> StepExecutions { get; } = new();
-
         public DependencyModeOrchestrator(
             IExecutionConfiguration executionConfiguration,
             IStepExecutorFactory stepExecutorFactory,
@@ -32,14 +30,15 @@ namespace EtlManagerExecutor
 
         public override async Task RunAsync()
         {
-            // List of steps, their dependency steps and whether it's a strict dependency or not.
-            Dictionary<Step, HashSet<(Step Step, bool StrictDependency)>> stepDependencies;
             try
             {
-                stepDependencies = await GetStepDependenciesAsync();
-
                 // Find circular step dependencies which are not allowed since they would block each other's executions.
-                List<List<Step>> cycles = stepDependencies.ToDictionary(pair => pair.Key, pair => pair.Value.Select(dep => dep.Step)).FindCycles();
+                var cycles = Execution.StepExecutions
+                    .Where(e => e.ExecutionDependencies.Any())
+                    .ToDictionary(
+                    e => e,
+                    e => e.ExecutionDependencies.Select(d => d.DependantOnStepExecution))
+                    .FindCycles();
 
                 // If there are circular dependencies, update error message for all steps and cancel execution.
                 if (cycles.Count > 0)
@@ -70,15 +69,6 @@ namespace EtlManagerExecutor
                 return;
             }
 
-
-            // Populate StepStatuses with a list of steps to execute.
-            foreach (var step in Execution.StepExecutions)
-            {
-                StepStatuses[step.StepId] = ExecutionStatus.NotStarted;
-                CancellationTokenSources[step.StepId] = new();
-                StepExecutions[step.StepId] = step;
-            }
-
             // Start listening for cancel commands.
             RegisterCancelListeners();
 
@@ -86,7 +76,7 @@ namespace EtlManagerExecutor
             while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
             {
                 // Start steps that can be started and skip those that should be skipped.
-                await DoRoundAsync(stepDependencies);
+                await DoRoundAsync();
                 // Wait for at least one step to finish before doing another round.
                 await Task.WhenAny(StepWorkers);
                 // Remove finished tasks from the list so that they don't immediately trigger the next Task.WhenAny().
@@ -97,24 +87,23 @@ namespace EtlManagerExecutor
             await Task.WhenAll(StepWorkers);
         }
 
-        private async Task DoRoundAsync(Dictionary<Step, HashSet<(Step Step, bool StrictDependency)>> stepDependencies)
+        private async Task DoRoundAsync()
         {
-            var unstartedStepIds = StepStatuses
+            var unstartedSteps = StepStatuses
                 .Where(status => status.Value == ExecutionStatus.NotStarted)
                 .Select(status => status.Key);
-            foreach (var stepId in unstartedStepIds)
+            foreach (var step in unstartedSteps)
             {
-                var step = StepExecutions[stepId];
-                var stepAction = GetStepAction(stepDependencies, step);
+                var stepAction = GetStepAction(step);
                 switch (stepAction)
                 {
                     case StepAction.Execute:
-                        StepStatuses[stepId] = ExecutionStatus.Running;
+                        StepStatuses[step] = ExecutionStatus.Running;
                         StepWorkers.Add(StartNewStepWorkerAsync(step));
                         break;
 
                     case StepAction.Skip:
-                        StepStatuses[stepId] = ExecutionStatus.Failed;
+                        StepStatuses[step] = ExecutionStatus.Failed;
                         try
                         {
                             await UpdateStepAsSkipped(step);
@@ -132,38 +121,34 @@ namespace EtlManagerExecutor
             }
         }
 
-        private StepAction GetStepAction(Dictionary<Step, HashSet<(Step Step, bool StrictDependency)>> stepDependencies, StepExecution stepExecution)
+        private StepAction GetStepAction(StepExecution step)
         {
-            // Get the step corresponding the step execution.
-            var step = stepDependencies.Keys.FirstOrDefault(step => step.StepId == stepExecution.StepId);
-            // Step has dependencies
-            if (step is not null)
+            // Step has no dependencies. It can be executed.
+            if (!step.ExecutionDependencies.Any())
             {
-                HashSet<(Step Step, bool StrictDependency)> dependencies = stepDependencies[step];
-                IEnumerable<Step> strictDependencies = dependencies.Where(dep => dep.StrictDependency).Select(dep => dep.Step);
-
-                // If there are any strict dependencies, which have been marked as failed, skip this step.
-                if (strictDependencies.Any(dep => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == dep.StepId)))
-                {
-                    return StepAction.Skip;
-                }
-
-                // If the steps dependencies have been completed (success or failure), the step can be executed.
-                // Also check if the dependency is actually included in the execution. If not, the step can be started.
-                else if (dependencies.All(dep => !StepStatuses.ContainsKey(dep.Step.StepId) ||
-                StepStatuses[dep.Step.StepId] == ExecutionStatus.Success || StepStatuses[dep.Step.StepId] == ExecutionStatus.Failed))
-                {
-                    return StepAction.Execute;
-                }
-
-                // No action should be taken with this step at this time. Wait until next round.
-                return StepAction.Wait;
-            }
-            else
-            {
-                // Step has no dependencies. It can be executed.
                 return StepAction.Execute;
             }
+
+            var dependencies = step.ExecutionDependencies
+                .Select(d => d.DependantOnStepExecution);
+            var strictDependencies = step.ExecutionDependencies
+                .Where(d => d.StrictDependency)
+                .Select(d => d.DependantOnStepExecution);
+
+            // If there are any strict dependencies, which have been marked as failed, skip this step.
+            if (strictDependencies.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == d)))
+            {
+                return StepAction.Skip;
+            }
+
+            // If the steps dependencies have been completed (success or failure), the step can be executed.
+            else if (dependencies.All(dep => StepStatuses[dep] == ExecutionStatus.Success || StepStatuses[dep] == ExecutionStatus.Failed))
+            {
+                return StepAction.Execute;
+            }
+
+            // No action should be taken with this step at this time. Wait until next round.
+            return StepAction.Wait;
         }
 
         private async Task UpdateStepAsSkipped(StepExecution step)
@@ -177,22 +162,6 @@ namespace EtlManagerExecutor
                 context.Attach(attempt).State = EntityState.Modified;
             }
             await context.SaveChangesAsync();
-        }
-
-        // Returns a list of steps, its dependency steps and whether it's a strict dependency or not.
-        private async Task<Dictionary<Step, HashSet<(Step Step, bool StrictDependency)>>> GetStepDependenciesAsync()
-        {
-            using var context = _dbContextFactory.CreateDbContext();
-            var steps = await context.Dependencies
-                .AsNoTrackingWithIdentityResolution()
-                .Include(dep => dep.Step)
-                .Include(dep => dep.DependantOnStep)
-                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == Execution.ExecutionId && e.StepId == dep.StepId))
-                .Where(dep => context.StepExecutions.Any(e => e.ExecutionId == Execution.ExecutionId && e.StepId == dep.DependantOnStepId))
-                .ToListAsync();
-            var dependencies = steps.GroupBy(key => key.Step, element => (element.DependantOnStep, element.StrictDependency))
-                .ToDictionary(grouping => grouping.Key, grouping => grouping.ToHashSet());
-            return dependencies;
         }
 
         private enum StepAction

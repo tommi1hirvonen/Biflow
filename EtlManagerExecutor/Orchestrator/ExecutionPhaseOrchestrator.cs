@@ -15,10 +15,6 @@ namespace EtlManagerExecutor
 
         public override async Task RunAsync()
         {
-            // Initialize CancellationTokenSources
-            foreach (var step in Execution.StepExecutions)
-                CancellationTokenSources[step.StepId] = new();
-
             // Group steps based on their execution phase
             var groupedSteps = Execution.StepExecutions
                 .GroupBy(key => key.ExecutionPhase, element => element)

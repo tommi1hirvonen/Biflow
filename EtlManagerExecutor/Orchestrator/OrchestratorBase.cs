@@ -23,7 +23,7 @@ namespace EtlManagerExecutor
 
         private SemaphoreSlim Semaphore { get; init; }
 
-        protected Dictionary<Guid, ExtendedCancellationTokenSource> CancellationTokenSources { get; } = new();
+        protected Dictionary<StepExecution, ExtendedCancellationTokenSource> CancellationTokenSources { get; init; }
 
         protected enum ExecutionStatus
         {
@@ -33,13 +33,18 @@ namespace EtlManagerExecutor
             Failed
         };
 
-        protected Dictionary<Guid, ExecutionStatus> StepStatuses { get; } = new();
+        protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; init; }
 
         public OrchestratorBase(IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
         {
             _executionConfig = executionConfiguration;
             _stepExecutorFactory = stepExecutorFactory;
             Execution = execution;
+
+            CancellationTokenSources = Execution.StepExecutions
+                .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
+            StepStatuses = Execution.StepExecutions
+                .ToDictionary(e => e, _ => ExecutionStatus.NotStarted);
 
             // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
             var maxParallelSteps = execution.Job?.MaxParallelSteps ?? 0;
@@ -63,7 +68,7 @@ namespace EtlManagerExecutor
             await Semaphore.WaitAsync();
             // Create a new step worker and start it asynchronously.
             var executor = _stepExecutorFactory.Create(step);
-            var task = executor.RunAsync(CancellationTokenSources[step.StepId]);
+            var task = executor.RunAsync(CancellationTokenSources[step]);
             Log.Information("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
             bool result = false;
             try
@@ -74,7 +79,7 @@ namespace EtlManagerExecutor
             finally
             {
                 // Update the status.
-                StepStatuses[step.StepId] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+                StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
                 // Release the semaphore once to make room for new parallel executions.
                 Semaphore.Release();
                 Log.Information("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
@@ -111,9 +116,10 @@ namespace EtlManagerExecutor
             else if (input is not null)
             {
                 var stepId = Guid.Parse(input);
-                if (CancellationTokenSources.ContainsKey(stepId))
+                var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == stepId);
+                if (step is not null && CancellationTokenSources.ContainsKey(step))
                 {
-                    CancellationTokenSources[stepId].Cancel("console");
+                    CancellationTokenSources[step].Cancel("console");
                     Console.WriteLine($"Canceled step {stepId}.");
                 }
                 else
@@ -145,7 +151,11 @@ namespace EtlManagerExecutor
                     if (cancelCommand.StepId is not null)
                     {
                         // Cancel just one step
-                        CancellationTokenSources[(Guid)cancelCommand.StepId].Cancel(cancelCommand.Username);
+                        var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == cancelCommand.StepId);
+                        if (step is not null && CancellationTokenSources.ContainsKey(step))
+                        {
+                            CancellationTokenSources[step].Cancel(cancelCommand.Username);
+                        }
                     }
                     else
                     {
