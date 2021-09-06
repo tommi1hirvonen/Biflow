@@ -87,7 +87,6 @@ namespace EtlManagerExecutor
             
             var client = _httpClientFactory.CreateClient();
             
-            var startTime = DateTime.Now;
             HttpResponseMessage response;
             string content;
 
@@ -124,7 +123,7 @@ namespace EtlManagerExecutor
                 Result executionResult;
                 if (Step.FunctionIsDurable)
                 {
-                    executionResult = await HandleDurableFunctionPolling(client, content, startTime, cancellationToken);
+                    executionResult = await HandleDurableFunctionPolling(client, content, cancellationToken);
                 }
                 else
                 {
@@ -143,10 +142,15 @@ namespace EtlManagerExecutor
             }
         }
 
-        private async Task<Result> HandleDurableFunctionPolling(HttpClient client, string content, DateTime startTime, CancellationToken cancellationToken)
+        private async Task<Result> HandleDurableFunctionPolling(HttpClient client, string content, CancellationToken cancellationToken)
         {
             var startResponse = JsonSerializer.Deserialize<StartResponse>(content, JsonSerializerOptions)
                     ?? throw new InvalidOperationException("Start response was null");
+
+            using var timeoutCts = Step.TimeoutMinutes > 0
+                        ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                        : new CancellationTokenSource();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             // Update instance id for the step execution attempt
             try
@@ -175,18 +179,10 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    status = await TryGetStatusAsync(client, startResponse.StatusQueryGetUri, cancellationToken);
+                    status = await TryGetStatusAsync(client, startResponse.StatusQueryGetUri, linkedCts.Token);
                     if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
                     {
-                        // Check for timeout.
-                        if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
-                        {
-                            await CancelAsync(client, startResponse.TerminatePostUri, "StepTimedOut");
-                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                            return Result.Failure("Step execution timed out");
-                        }
-
-                        await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+                        await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
                     }
                     else
                     {
@@ -195,7 +191,15 @@ namespace EtlManagerExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    await CancelAsync(client, startResponse.TerminatePostUri, "StepWasCanceled");
+                    var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
+                    await CancelAsync(client, startResponse.TerminatePostUri, reason);
+                    if (timeoutCts.IsCancellationRequested)
+                    {
+                        Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                        // Return failure so that the step can be retried if there are attempts left.
+                        return Result.Failure("Step execution timed out");
+                    }
+                    // If the step was canceled, pass the exception.
                     throw;
                 }
             }
