@@ -80,8 +80,13 @@ namespace EtlManagerExecutor
                 }
                 message.Content = new StringContent(input);
             }
+
+            using var timeoutCts = Step.TimeoutMinutes > 0
+                        ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                        : new CancellationTokenSource();
             
             var client = _httpClientFactory.CreateClient();
+            
             var startTime = DateTime.Now;
             HttpResponseMessage response;
             string content;
@@ -89,8 +94,25 @@ namespace EtlManagerExecutor
             // Send the request to the function url. This will start the function, if the request was successful.
             try
             {
-                response = await client.SendAsync(message, cancellationToken);
+                // A durable function will start immediately and return.
+                if (Step.FunctionIsDurable)
+                {
+                    response = await client.SendAsync(message, cancellationToken);
+                }
+                // A regular httpTrigger function can run for longer. Use an HttpClient with no timeout for httpTrigger functions.
+                else
+                {
+                    var noTimeoutClient = _httpClientFactory.CreateClient("notimeout");
+                    // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+                    response = await noTimeoutClient.SendAsync(message, linkedCts.Token);
+                }
                 content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+            }
+            catch (OperationCanceledException)
+            {
+                return timeoutCts.IsCancellationRequested ? Result.Failure("Step execution timed out.") : Result.Failure("Step was canceled.");
             }
             catch (Exception ex)
             {

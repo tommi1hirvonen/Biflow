@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -35,6 +36,7 @@ namespace EtlManagerExecutor
                     var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
                     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
                     services.AddHttpClient();
+                    services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
                     services.AddSingleton<ITokenService, TokenService>();
                     services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
                     services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
