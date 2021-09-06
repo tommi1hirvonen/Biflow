@@ -19,9 +19,6 @@ namespace EtlManagerExecutor
         private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
         private PackageStepExecution Step { get; init; }
-        private long PackageOperationId { get; set; }
-        private bool Completed { get; set; }
-        private bool Success { get; set; }
 
         private const int MaxRefreshRetries = 3;
 
@@ -46,19 +43,22 @@ namespace EtlManagerExecutor
             Step.ExecuteAsLogin ??= Step.Connection.ExecutePackagesAsLogin;
 
             // Start the package execution and capture the SSISDB operation id.
-            DateTime startTime;
+            long packageOperationId;
             try
             {
                 Log.Information("{ExecutionId} {Step} Starting package execution", Step.ExecutionId, Step);
-
-                await StartExecutionAsync(Step.Connection.ConnectionString);
-                startTime = DateTime.Now;
+                packageOperationId = await StartExecutionAsync(Step.Connection.ConnectionString);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
                 return Result.Failure("Error executing package: " + ex.Message);
             }
+
+            using var timeoutCts = Step.TimeoutMinutes > 0
+                ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                : new CancellationTokenSource();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             // Update the SSISDB operation id for the target package execution.
             try
@@ -67,7 +67,7 @@ namespace EtlManagerExecutor
                 var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
                 if (attempt is not null && attempt is PackageStepExecutionAttempt package)
                 {
-                    package.PackageOperationId = PackageOperationId;
+                    package.PackageOperationId = packageOperationId;
                     context.Attach(package);
                     context.Entry(package).Property(e => e.PackageOperationId).IsModified = true;
                     await context.SaveChangesAsync(CancellationToken.None);
@@ -79,31 +79,29 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error updating target package operation id (" + PackageOperationId + ")", Step.ExecutionId, Step);
+                Log.Error(ex, "{ExecutionId} {Step} Error updating target package operation id (" + packageOperationId + ")", Step.ExecutionId, Step);
             }
 
             // Monitor the package's execution.
+            bool completed = false, success = false;
             try
             {
-                await TryRefreshStatusAsync(Step.Connection.ConnectionString, cancellationToken);
-                while (!Completed)
+                while (!completed)
                 {
-                    // Check for possible timeout.
-                    if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
-                    {
-                        await CancelAsync(Step.Connection.ConnectionString);
-                        Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                        return Result.Failure("Step execution timed out");
-                    }
-
-                    await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
-                    await TryRefreshStatusAsync(Step.Connection.ConnectionString, cancellationToken);
+                    (completed, success) = await TryRefreshStatusAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
+                    if (!completed)
+                        await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
                 }
             }
             catch (OperationCanceledException)
             {
-                await CancelAsync(Step.Connection.ConnectionString);
-                throw;
+                await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                    return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
+                }
+                throw; // Step was canceled => pass the exception => no retries
             }
             catch (Exception ex)
             {
@@ -112,11 +110,11 @@ namespace EtlManagerExecutor
             }
 
             // The package has completed. If the package failed, retrieve error messages.
-            if (!Success)
+            if (!success)
             {
                 try
                 {
-                    List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString);
+                    List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
                     return Result.Failure(string.Join("\n\n", errors));
                 }
                 catch (Exception ex)
@@ -124,13 +122,12 @@ namespace EtlManagerExecutor
                     Log.Error(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
                     return Result.Failure("Error getting package error messages: " + ex.Message);
                 }
-
             }
 
             return Result.Success();
         }
 
-        private async Task StartExecutionAsync(string connectionString)
+        private async Task<long> StartExecutionAsync(string connectionString)
         {
             var commandBuilder = new StringBuilder();
             
@@ -197,10 +194,11 @@ namespace EtlManagerExecutor
             }
 
             using var sqlConnection = new SqlConnection(connectionString);
-            PackageOperationId = await sqlConnection.ExecuteScalarAsync<long>(commandString, dynamicParams);
+            var packageOperationId = await sqlConnection.ExecuteScalarAsync<long>(commandString, dynamicParams);
+            return packageOperationId;
         }
 
-        private async Task TryRefreshStatusAsync(string connectionString, CancellationToken cancellationToken)
+        private async Task<(bool Completed, bool Success)> TryRefreshStatusAsync(string connectionString, long packageOperationId, CancellationToken cancellationToken)
         {
             int refreshRetries = 0;
             // Try to refresh the operation status until the maximum number of attempts is reached.
@@ -211,19 +209,22 @@ namespace EtlManagerExecutor
                     using var sqlConnection = new SqlConnection(connectionString);
                     var status = await sqlConnection.ExecuteScalarAsync<int>(
                         "SELECT status from SSISDB.catalog.operations where operation_id = @OperationId",
-                        new { OperationId = PackageOperationId });
+                        new { OperationId = packageOperationId });
                     // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
-                    if (status == 3 || status == 4 || status == 6 || status == 7 || status == 9)
+                    if (status == 3 || status == 4 || status == 6 || status == 9)
                     {
-                        Completed = true;
-                        if (status == 7) Success = true;
+                        return (true, false); // failed
+                    }
+                    else if (status == 7)
+                    {
+                        return (true, true); // success
                     }
 
-                    return;
+                    return (false, false); // running
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", PackageOperationId);
+                    Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", packageOperationId);
                     refreshRetries++;
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
                 }
@@ -232,20 +233,20 @@ namespace EtlManagerExecutor
             throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
         }
 
-        private async Task<List<string?>> GetErrorMessagesAsync(string connectionString)
+        private static async Task<List<string?>> GetErrorMessagesAsync(string connectionString, long packageOperationId)
         {
             using var sqlConnection = new SqlConnection(connectionString);
             var messages = await sqlConnection.QueryAsync<string?>(
                 @"SELECT message
                 FROM SSISDB.catalog.operation_messages
                 WHERE message_type = 120 AND operation_id = @OperationId", // message_type = 120 => error message
-                new { OperationId = PackageOperationId });
+                new { OperationId = packageOperationId });
             return messages.ToList();
         }
 
-        private async Task CancelAsync(string connectionString)
+        private async Task CancelAsync(string connectionString, long packageOperationId)
         {
-            Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Step.ExecutionId, Step, PackageOperationId);
+            Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Step.ExecutionId, Step, packageOperationId);
             try
             {
                 using var sqlConnection = new SqlConnection(connectionString);
@@ -258,7 +259,7 @@ namespace EtlManagerExecutor
                 commandBuilder.Append("EXEC SSISDB.catalog.stop_operation @OperationId");
                 
                 var dynamicParams = new DynamicParameters();
-                dynamicParams.AddDynamicParams(new { OperationId = PackageOperationId });
+                dynamicParams.AddDynamicParams(new { OperationId = packageOperationId });
                 
                 if (Step.ExecuteAsLogin is not null)
                     dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
@@ -268,7 +269,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, PackageOperationId);
+                Log.Error(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
             }
         }
     }

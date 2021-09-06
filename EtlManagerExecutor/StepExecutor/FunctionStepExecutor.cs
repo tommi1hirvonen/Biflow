@@ -196,11 +196,9 @@ namespace EtlManagerExecutor
                     if (timeoutCts.IsCancellationRequested)
                     {
                         Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                        // Return failure so that the step can be retried if there are attempts left.
-                        return Result.Failure("Step execution timed out");
+                        return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
                     }
-                    // If the step was canceled, pass the exception.
-                    throw;
+                    throw; // Step was canceled => pass the exception => no retries
                 }
             }
 

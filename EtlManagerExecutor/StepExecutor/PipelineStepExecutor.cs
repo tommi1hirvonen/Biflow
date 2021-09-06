@@ -54,13 +54,10 @@ namespace EtlManagerExecutor
                 return Result.Failure("Error reading pipeline parameters: " + ex.Message);
             }
 
-
             string runId;
-            DateTime startTime;
             try
             {
                 runId = await DataFactory.StartPipelineRunAsync(_tokenService, Step.PipelineName, parameters, cancellationToken);
-                startTime = DateTime.Now;
             }
             catch (Exception ex)
             {
@@ -68,6 +65,11 @@ namespace EtlManagerExecutor
                     Step.ExecutionId, Step, Step.DataFactoryId, Step.PipelineName);
                 return Result.Failure($"Error starting pipeline run:\n{ex.Message}");
             }
+
+            using var timeoutCts = Step.TimeoutMinutes > 0
+                        ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                        : new CancellationTokenSource();
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             try
             {
@@ -95,18 +97,10 @@ namespace EtlManagerExecutor
             {
                 try
                 {
-                    pipelineRun = await TryGetPipelineRunAsync(runId, cancellationToken);
+                    pipelineRun = await TryGetPipelineRunAsync(runId, linkedCts.Token);
                     if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
                     {
-                        // Check for timeout.
-                        if (Step.TimeoutMinutes > 0 && (DateTime.Now - startTime).TotalMinutes > Step.TimeoutMinutes)
-                        {
-                            await CancelAsync(runId);
-                            Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                            return Result.Failure("Step execution timed out");
-                        }
-
-                        await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+                        await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
                     }
                     else
                     {
@@ -116,7 +110,12 @@ namespace EtlManagerExecutor
                 catch (OperationCanceledException)
                 {
                     await CancelAsync(runId);
-                    throw;
+                    if (timeoutCts.IsCancellationRequested)
+                    {
+                        Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                        return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
+                    }
+                    throw; // Step was canceled => pass the exception => no retries
                 }
             }
 
