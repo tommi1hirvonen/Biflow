@@ -34,7 +34,10 @@ namespace EtlManagerExecutor
                 .ConfigureServices((context, services) =>
                 {
                     var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-                    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
+                    services.AddDbContextFactory<EtlManagerContext>(options =>
+                        options.UseSqlServer(connectionString, o =>
+                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+
                     services.AddHttpClient();
                     services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
                     services.AddSingleton<ITokenService, TokenService>();
@@ -57,7 +60,7 @@ namespace EtlManagerExecutor
                     (JobExecutorOptions options) => RunExecutionAsync(host, options),
                     (CancelOptions options) => CancelExecutionAsync(host, options),
                     (EmailTestOptions options) => RunEmailTest(host, options),
-                    (ConnectionTestOptions options) => RunConnectionTest(host, options),
+                    (ConnectionTestOptions options) => RunConnectionTest(host),
                     (CommitOptions options) => PrintCommit(),
                     errors => HandleParseError(errors)
                 );
@@ -91,7 +94,7 @@ namespace EtlManagerExecutor
             return 0;
         }
 
-        static async Task<int> RunConnectionTest(IHost host, ConnectionTestOptions options)
+        static async Task<int> RunConnectionTest(IHost host)
         {
             var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
             await service.RunAsync();

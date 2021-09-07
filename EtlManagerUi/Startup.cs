@@ -13,12 +13,12 @@ namespace EtlManagerUi
 {
     public class Startup
     {
+        private IConfiguration _configuration;
+
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -28,8 +28,12 @@ namespace EtlManagerUi
             services.AddRazorPages();
             services.AddServerSideBlazor();
             services.AddHttpContextAccessor();
-            services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EtlManagerContext")));
-            services.AddScoped(prop => prop.GetRequiredService<IDbContextFactory<EtlManagerContext>>().CreateDbContext());
+
+            var connectionString = _configuration.GetConnectionString("EtlManagerContext");
+            services.AddDbContextFactory<EtlManagerContext>(options =>
+                options.UseSqlServer(connectionString, o =>
+                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+
             services.AddBootstrapCss();
             services.AddHttpClient();
             services.AddSingleton<ITokenService, TokenService>();
