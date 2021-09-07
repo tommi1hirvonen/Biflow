@@ -267,15 +267,16 @@
                       .ThenBy(e => e.StartDateTime)
                       .ThenBy(e => e.StepExecution.StepName)" />
         }
-        else if (ShowReport == Report.Dependencies)
-        {
-            <div class="container-fluid h-100 flex-column p-0 mt-3">
-                <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
-                    <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
-                        <g id="g_dependency_graph" />
-                    </svg>
-                </div>
+
+        <div class="container-fluid h-100 flex-column p-0 mt-3" hidden=@(ShowReport != Report.Dependencies)>
+            <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
+                <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
+                    <g id="g_dependency_graph" />
+                </svg>
             </div>
+        </div>
+        @if (GraphWasRendered)
+        {
             <div>
                 @foreach (var step in Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>())
                 {
@@ -347,6 +348,7 @@
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
     private bool GraphShouldRender { get; set; } = false;
+    private bool GraphWasRendered { get; set; } = false;
 
     protected override void OnInitialized()
     {
@@ -369,6 +371,8 @@
         {
             Loading = true;
             var context = DbFactory.CreateDbContext();
+
+            GraphWasRendered = false;
 
             Execution = await context.Executions
                 .Include(e => e.StepExecutions)
@@ -414,6 +418,9 @@
 
         if (stepsJson is not null && dependenciesJson is not null)
             await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
+
+        GraphWasRendered = true;
+        StateHasChanged();
     }
 
     private void ShowStepExecutionModal(string text)
