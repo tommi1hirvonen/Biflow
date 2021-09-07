@@ -428,8 +428,12 @@ tr.disabled {
             stroke-width: 3px;
         }
         .dependency-graph .node.skipped rect {
-            stroke: var(--color-warning);
+            stroke: #ddd;
             stroke-width: 3px;
+        }
+
+        .dependency-graph .node.skipped > g.label {
+            fill: #999;
         }
         .dependency-graph .node.stopped rect {
             stroke: var(--color-warning);
