@@ -31,7 +31,7 @@
 
     for (var id in steps) {
         var step = steps[id];
-        var className = step.IsEnabled ? "enabled" : "disabled";
+        var className = step.ClassName;
         g.setNode(step.Id, {
             label: step.Name,
             rx: 20,
@@ -43,7 +43,7 @@
 
     for (var id in dependencies) {
         var dep = dependencies[id];
-        var className = dep.StrictDependency ? 'strict' : 'non-strict';
+        var className = dep.ClassName;
         g.setEdge(dep.DependantOnStepId, dep.StepId, { curve: d3.curveBasis, class: className });
     }
 

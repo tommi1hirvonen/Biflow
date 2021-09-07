@@ -5,9 +5,12 @@
 <table class="table table-sm table-hover">
     <thead>
         <tr>
-            <th>
-                Job
-            </th>
+            @if (ShowDetailed)
+            {
+                <th>
+                    Job
+                </th>
+            }
             <th>
                 Step
             </th>
@@ -31,20 +34,23 @@
     <tbody>
         @if (Executions is null)
         {
-            <tr><td colspan="7">Loading...</td></tr>
+            <tr><td colspan="@(ShowDetailed ? 7 : 6)">Loading...</td></tr>
         }
         else if (!Executions.Any())
         {
-            <tr><td colspan="7">No executions</td></tr>
+            <tr><td colspan="@(ShowDetailed ? 7 : 6)">No executions</td></tr>
         }
         else
         {
             @foreach (var item in Executions)
             {
                 <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
-                    <td>
+                    @if (ShowDetailed)
+                    {
+                        <td>
                         @item.StepExecution.Execution.JobName
                     </td>
+                    }
                     <td>
                         @item.StepExecution.StepName
                     </td>
@@ -103,6 +109,9 @@
 @code {
     [Parameter]
     public IEnumerable<StepExecutionAttempt>? Executions { get; set; }
+
+    [Parameter]
+    public bool ShowDetailed { get; set; } = true;
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 

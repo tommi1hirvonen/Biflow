@@ -8,49 +8,6 @@
     html, body {
         height: 100%;
     }
-
-    .dependency-graph {
-        width: 100%;
-        height: 80%;
-        resize: both;
-        overflow: hidden;
-    }
-
-        .dependency-graph svg {
-            width: 100%;
-            height: 100%;
-            cursor: move;
-        }
-
-        .dependency-graph .node {
-            cursor: pointer;
-        }
-
-            .dependency-graph .node rect {
-                stroke-width: 2px;
-                stroke: #666;
-                fill: #fff;
-            }
-            .dependency-graph .node.disabled rect {
-                fill: #eee;
-            }
-
-        .dependency-graph .name {
-            margin-top: 4px;
-        }
-
-        .dependency-graph .edgePath path {
-            stroke: #888;
-            stroke-width: 2px;
-            fill: #888;
-        }
-
-        .dependency-graph .edgePath.non-strict path {
-            stroke-dasharray: 5,5;
-        }
-
-        .dependency-graph .edgePath.strict path {
-        }
 </style>
 
 <div class="form-row">
@@ -156,10 +113,10 @@
         if (string.IsNullOrEmpty(StepFilter))
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName, IsEnabled = step.IsEnabled });
+            var steps = Steps.Select(step => new { Id = step.StepId, Name = step.StepName, ClassName = step.IsEnabled ? "enabled" : "disabled" });
             var dependencies = Steps
                 .SelectMany(step => step.Dependencies)
-                .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+                .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, ClassName = dep.StrictDependency ? "strict" : "non-strict" });
 
             stepsJson = JsonSerializer.Serialize(steps);
             dependenciesJson = JsonSerializer.Serialize(dependencies);
@@ -176,7 +133,7 @@
                 var dependencies = steps
                     .SelectMany(step => step.Dependencies)
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
-                    .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
+                    .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, ClassName = dep.StrictDependency ? "strict" : "non-strict" });
 
                 stepsJson = JsonSerializer.Serialize(steps.Select(step => new { Id = step.StepId, Name = step.StepName, IsEnabled = step.IsEnabled }));
                 dependenciesJson = JsonSerializer.Serialize(dependencies);
