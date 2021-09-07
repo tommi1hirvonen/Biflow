@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record PipelineStepExecution : ParameterizedStepExecution
+    public class PipelineStepExecution : ParameterizedStepExecution
     {
         public PipelineStepExecution(string stepName, string pipelineName) : base(stepName, StepType.Pipeline)
         {

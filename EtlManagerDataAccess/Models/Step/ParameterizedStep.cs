@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract record ParameterizedStep : Step
+    public abstract class ParameterizedStep : Step
     {
         public ParameterizedStep(StepType stepType) : base(stepType)
         {

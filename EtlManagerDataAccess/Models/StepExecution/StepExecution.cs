@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract record StepExecution
+    public abstract class StepExecution
     {
         public StepExecution(string stepName, StepType stepType)
         {

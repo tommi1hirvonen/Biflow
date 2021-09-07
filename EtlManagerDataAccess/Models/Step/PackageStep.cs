@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record PackageStep() : Step(StepType.Package)
+    public class PackageStep : Step
     {
+        public PackageStep() : base(StepType.Package) { }
+
         [Column("ConnectionId")]
         [Required]
         public Guid? ConnectionId { get; set; }

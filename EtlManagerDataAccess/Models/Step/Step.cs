@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public abstract record Step : IComparable
+    public abstract class Step : IComparable
     {
         public Step(StepType stepType)
         {

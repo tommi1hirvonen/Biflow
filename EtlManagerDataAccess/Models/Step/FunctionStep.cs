@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record FunctionStep() : ParameterizedStep(StepType.Function)
+    public class FunctionStep : ParameterizedStep
     {
+        public FunctionStep() : base(StepType.Function) { }
+
         [Required]
         public Guid? FunctionAppId { get; set; }
 

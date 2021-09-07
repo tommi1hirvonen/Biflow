@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record Job
+    public class Job
     {
         [Key]
         [Required]

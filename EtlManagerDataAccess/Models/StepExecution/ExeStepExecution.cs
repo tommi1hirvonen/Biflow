@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public record ExeStepExecution : StepExecution
+    public class ExeStepExecution : StepExecution
     {
         public ExeStepExecution(string stepName, string exeFileName) : base(stepName, StepType.Exe)
         {
