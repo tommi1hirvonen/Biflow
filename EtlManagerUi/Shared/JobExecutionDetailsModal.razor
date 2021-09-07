@@ -35,7 +35,7 @@
                 @if (Execution?.DependencyMode == true)
                 {
                     <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Dependencies ? "active" : null)"
-                              @onclick="() => { GraphShouldRender = true; ShowReport = Report.Dependencies; }">
+                              @onclick="() => { ShowReport = Report.Dependencies; }">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                         Dependencies
                     </BSButton>
@@ -276,6 +276,15 @@
                     </svg>
                 </div>
             </div>
+            <div>
+                @foreach (var step in Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>())
+                {
+                    <BSTooltip Target="@step.StepId.ToString()" Placement="Placement.Top">
+                        @step.GetExecutionStatus()
+                        @step.GetDurationInSeconds().SecondsToReadableFormat()
+                    </BSTooltip>
+                }
+            </div>
         }
 
     </BSModalBody>
@@ -369,12 +378,14 @@
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
             StateHasChanged();
             Loading = false;
+
+            GraphShouldRender = true;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GraphShouldRender)
+        if (GraphShouldRender && ShowReport == Report.Dependencies)
             await LoadGraph();
     }
 
@@ -383,8 +394,13 @@
         GraphShouldRender = false;
 
         // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-        var steps = Execution.StepExecutions.Select(step => new { Id = step.StepId, Name = step.StepName, ClassName = "enabled" });
-        var dependencies = Execution.StepExecutions
+        var steps = Execution?.StepExecutions
+            .Select(step =>
+            {
+                var status = step.GetExecutionStatus().ToString().ToLower();
+                return new { Id = step.StepId, Name = step.StepName, ClassName = $"enabled {status}" };
+            });
+        var dependencies = Execution?.StepExecutions
             .SelectMany(step => step.ExecutionDependencies)
             .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, StrictDependency = dep.StrictDependency });
 

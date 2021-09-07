@@ -111,6 +111,89 @@ tr.disabled {
 
 
 /*
+    Dependency graph
+*/
+.dependency-graph {
+    width: 100%;
+    height: 80%;
+    resize: both;
+    overflow: hidden;
+}
+
+    .dependency-graph svg {
+        width: 100%;
+        height: 100%;
+        cursor: move;
+    }
+
+    .dependency-graph .node {
+        cursor: pointer;
+    }
+
+        .dependency-graph .node rect {
+            stroke-width: 2px;
+            stroke: #666;
+            fill: #fff;
+        }
+
+        .dependency-graph .node.disabled rect {
+            fill: #eee;
+        }
+
+        .dependency-graph .node.running rect {
+            stroke: var(--color-primary);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.succeeded rect {
+            stroke: var(--color-success);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.failed rect {
+            stroke: var(--color-danger);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.skipped rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.stopped rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.duplicate rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+
+        .dependency-graph .node.awaitretry rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+
+    .dependency-graph .name {
+        margin-top: 4px;
+    }
+
+    .dependency-graph .edgePath path {
+        stroke: #888;
+        stroke-width: 2px;
+        fill: #888;
+    }
+
+    .dependency-graph .edgePath.non-strict path {
+        stroke-dasharray: 5,5;
+    }
+
+    .dependency-graph .edgePath.strict path {
+    }
+
+
+/*
     Feather icons
 */
 .feather {

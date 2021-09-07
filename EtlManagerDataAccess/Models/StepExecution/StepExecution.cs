@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace EtlManagerDataAccess.Models
 {
@@ -39,6 +40,37 @@ namespace EtlManagerDataAccess.Models
         public ICollection<ExecutionDependency> ExecutionDependencies { get; set; } = null!;
 
         public ICollection<ExecutionDependency> DependantExecutions { get; set; } = null!;
+
+        public StepExecutionStatus GetExecutionStatus()
+        {
+            var lastExecution = StepExecutionAttempts
+                .OrderByDescending(e => e.StartDateTime)
+                .First();
+            if (lastExecution.ExecutionStatus == StepExecutionStatus.AwaitRetry)
+            {
+                return StepExecutionStatus.Running;
+            }
+            else
+            {
+                return lastExecution.ExecutionStatus;
+            }
+        }
+
+        public double GetDurationInSeconds()
+        {
+            var lastExecution = StepExecutionAttempts
+                .OrderByDescending(e => e.StartDateTime)
+                .First();
+            var endTime = lastExecution.EndDateTime ?? DateTimeOffset.Now;
+
+            var firstExecution = StepExecutionAttempts
+                .OrderBy(e => e.StartDateTime)
+                .First();
+            var startTime = firstExecution.StartDateTime ?? DateTimeOffset.Now;
+
+            var duration = (endTime - startTime).TotalSeconds;
+            return duration;
+        }
 
     }
 }

@@ -415,6 +415,35 @@ tr.disabled {
             fill: #eee;
         }
 
+        .dependency-graph .node.running rect {
+            stroke: var(--color-primary);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.succeeded rect {
+            stroke: var(--color-success);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.failed rect {
+            stroke: var(--color-danger);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.skipped rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.stopped rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.duplicate rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+        .dependency-graph .node.awaitretry rect {
+            stroke: var(--color-warning);
+            stroke-width: 3px;
+        }
+
     .dependency-graph .name {
         margin-top: 4px;
     }
