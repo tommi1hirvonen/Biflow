@@ -269,7 +269,7 @@
         }
         else if (ShowReport == Report.Dependencies)
         {
-            <div class="container-fluid h-100 flex-column p-0">
+            <div class="container-fluid h-100 flex-column p-0 mt-3">
                 <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
                     <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
                         <g id="g_dependency_graph" />
@@ -286,6 +286,8 @@
                 }
             </div>
         }
+
+        <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionAttempt" />
 
     </BSModalBody>
     <BSModalFooter>
@@ -338,6 +340,9 @@
     private HashSet<string> TagFilter { get; } = new();
     private SortMode SortMode_ { get; set; } = SortMode.Started;
     private enum SortMode { Started, Duration }
+
+    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; } = null!;
+    private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
@@ -413,7 +418,14 @@
 
     private void ShowStepExecutionModal(string text)
     {
-        // TODO
+        if (Guid.TryParse(text, out Guid id))
+        {
+            var step = Execution?.StepExecutions.First(s => s.StepId == id);
+            var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
+            SelectedStepExecutionAttempt = attempt;
+            StateHasChanged();
+            StepExecutionDetailsModal.Show();
+        }
     }
 
     private async Task StopJobExecutionAsync()
