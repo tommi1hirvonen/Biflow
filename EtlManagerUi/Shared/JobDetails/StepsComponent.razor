@@ -421,16 +421,34 @@
                             <thead>
                                 <tr>
                                     <th>Selected steps</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var step in StepsToExecute.OrderBy(step => step.ExecutionPhase).ThenBy(step => step.StepName))
+                                @{
+                                    if (Job?.UseDependencyMode == true)
+                                    {
+                                        var comparer = new TopologicalStepComparer(StepsToExecute);
+                                        StepsToExecute.Sort(comparer);
+                                    }
+                                    else
+                                    {
+                                        StepsToExecute.Sort();
+                                    }
+                                }
+                                @foreach (var step in StepsToExecute)
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
                                         <td class="@(step.IsEnabled ? null : "text-secondary")">
                                             <StepTypeIconComponent StepType_="@step.StepType" />
                                             &nbsp;
                                             @step.StepName
+                                        </td>
+                                        <td class="align-middle"
+                                             style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                            @step.ExecutionPhase
+                                            &nbsp;
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
                                         </td>
                                     </tr>
                                 }
