@@ -175,7 +175,8 @@
                                 </span>
                             </AuthorizeView>
                         </div>
-                        <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-end">
+                        <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-end"
+                             style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">
                             @item.ExecutionPhase
                             &nbsp;
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))

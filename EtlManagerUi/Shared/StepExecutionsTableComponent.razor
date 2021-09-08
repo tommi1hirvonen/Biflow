@@ -15,7 +15,7 @@
                 Step
             </th>
             <th>
-                Step type
+                Execution phase
             </th>
             <th>
                 Started
@@ -52,10 +52,13 @@
                     </td>
                     }
                     <td>
+                        <StepTypeIconComponent StepType_="item.StepType" />
                         @item.StepExecution.StepName
                     </td>
-                    <td>
-                        <StepTypeIconComponent StepType_="@item.StepType" />
+                    <td style="@(item.StepExecution.Execution.DependencyMode ? "color: #ccc;" : null)">
+                        @item.StepExecution.ExecutionPhase
+                        &nbsp;
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
                     </td>
                     <td>
                         @item.StartDateTime?.LocalDateTime

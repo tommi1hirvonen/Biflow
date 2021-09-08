@@ -1,8 +1,7 @@
-﻿@implements IDisposable 
+﻿@implements IDisposable
 
 @inject IJSRuntime JS
 @inject IWebHostEnvironment WebHostEnvironment
-
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
     html, body {
@@ -10,21 +9,30 @@
     }
 </style>
 
-<div class="form-row">
-    <div class="form-group ml-3">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+@if (Job?.UseDependencyMode == false)
+{
+    <BSAlert Color="Color.Warning">
+        Job is in execution phase mode. Dependencies will not be used during execution.
+    </BSAlert>
+}
+
+<div class="row">
+    <div class="col-auto">
+        <div class="form-group">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                    </div>
                 </div>
+                <select class="form-control form-control-sm" @onchange="LimitGraph">
+                    <option selected=@string.IsNullOrEmpty(StepFilter) value="">All</option>
+                    @foreach (var step in Steps ?? Enumerable.Empty<Step>())
+                    {
+                        <option selected=@(StepFilter == step.StepName) value="@step.StepName">@step.StepName</option>
+                    }
+                </select>
             </div>
-            <select class="form-control form-control-sm" @onchange="LimitGraph">
-                <option selected=@string.IsNullOrEmpty(StepFilter) value="">All</option>
-                @foreach (var step in Steps ?? Enumerable.Empty<Step>())
-                {
-                    <option selected=@(StepFilter == step.StepName) value="@step.StepName">@step.StepName</option>
-                }
-            </select>
         </div>
     </div>
 </div>
@@ -52,7 +60,7 @@
     public List<Job> Jobs { get; set; } = null!;
 
     [Parameter]
-    public Job Job { get; set; } = null!;
+    public Job? Job { get; set; }
 
     private Job? PrevJob { get; set; }
 

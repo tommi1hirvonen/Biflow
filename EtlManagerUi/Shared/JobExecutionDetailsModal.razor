@@ -32,14 +32,11 @@
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
                     Gantt
                 </BSButton>
-                @if (Execution?.DependencyMode == true)
-                {
-                    <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Dependencies ? "active" : null)"
-                              @onclick="() => { ShowReport = Report.Dependencies; }">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
-                        Dependencies
-                    </BSButton>
-                }
+                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Dependencies ? "active" : null)"
+                            @onclick="() => { ShowReport = Report.Dependencies; }">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                    Dependencies
+                </BSButton>
             </BSButtonGroup>
 
             @if (Loading)
@@ -266,6 +263,15 @@
                       .OrderByDescending(e => SortMode_ == SortMode.Duration ? e.ExecutionInSeconds : null)
                       .ThenBy(e => e.StartDateTime)
                       .ThenBy(e => e.StepExecution.StepName)" />
+        }
+        else if (ShowReport == Report.Dependencies)
+        {
+            if (Execution?.DependencyMode == false)
+            {
+                <BSAlert Color="Color.Warning" Class="mt-3">
+                    Job is/was executed in execution phase mode. Dependencies have no effect.
+                </BSAlert>
+            }
         }
 
         <div class="container-fluid h-100 flex-column p-0 mt-3" hidden=@(ShowReport != Report.Dependencies)>
