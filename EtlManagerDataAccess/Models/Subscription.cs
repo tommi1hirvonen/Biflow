@@ -9,10 +9,6 @@ namespace EtlManagerDataAccess.Models
 {
     public class Subscription
     {
-        [Key]
-        [Required]
-        public Guid SubscriptionId { get; set; }
-
         [Required]
         public Guid JobId { get; set; }
 

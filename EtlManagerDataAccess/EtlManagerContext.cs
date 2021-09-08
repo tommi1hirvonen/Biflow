@@ -247,6 +247,7 @@ namespace EtlManagerDataAccess
                 .OnDelete(DeleteBehavior.Cascade);
                 e.Property(s => s.SubscriptionType)
                 .HasConversion(subscriptionTypeConverter);
+                e.HasKey(s => new { s.JobId, s.Username });
             });
 
             modelBuilder.Entity<User>()
