@@ -29,7 +29,7 @@
     @*Same as bg-light but with slight transparency*@
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
-            <BSDropdown>
+            <BSDropdown Class="mr-3">
                 <BSDropdownToggle Color="Color.Success">
                     Add step
                 </BSDropdownToggle>
@@ -48,11 +48,11 @@
             </BSDropdown>
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
-            <BSButton Class="ml-3" Color="Color.Secondary" @onclick="() => JobParametersModal?.Show()">
+            <BSButton Class="mr-3" Color="Color.Secondary" @onclick="() => JobParametersModal?.Show()">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
                 Parameters
             </BSButton>
-            <BSButton Class="ml-3" @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
+            <BSButton @onclick="() => ExecuteModal.Show()" IsDisabled="@ExecuteButtonDisabled">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                 Execute
             </BSButton>
@@ -242,9 +242,11 @@
                                 {
                                     <span class="badge badge-pill badge-secondary mx-1">
                                         @tag.TagName
-                                        <span class="tag-remove" @onclick="() => RemoveTag(item, tag)">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-                                        </span>
+                                        <AuthorizeView Roles="Admin, Editor">
+                                            <span class="tag-remove" @onclick="() => RemoveTag(item, tag)">
+                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                                            </span>
+                                        </AuthorizeView>
                                     </span>
                                 }
                             }
@@ -252,26 +254,29 @@
                             {
                                 <small class="text-secondary mr-2">No tags</small>
                             }
-                            <div class="btn-group btn-group-sm btn-row">
-                                <BSDropdown>
-                                    @{ var prefix = "tag_menu"; }
-                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => { TagInputFocusStepId = item.StepId; ScrollIntoViewElementId = prefix + item.StepId; }">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu id="@(prefix + item.StepId)" Class="dropdown-menu-right p-3" style="min-width: 20rem;">
-                                        <BSForm Class="d-flex" IsInline="true" Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
-                                            <DataAnnotationsValidator />
-                                            <ValidationSummary />
-                                            <div class="form-group flex-grow-1">
-                                                <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm flex-fill">
-                                            </div>
-                                            <button type="submit" class="btn btn-sm btn-success ml-2">Add</button>
-                                        </BSForm>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </div>
+                            <AuthorizeView Roles="Admin, Editor">
+                                <div class="btn-group btn-group-sm btn-row">
+                                    <BSDropdown>
+                                        @{ var prefix = "tag_menu"; }
+                                        <BSDropdownToggle Color="Color.Light" Size="Size.Small" @onclick="() => { TagInputFocusStepId = item.StepId; ScrollIntoViewElementId = prefix + item.StepId; }">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                                        </BSDropdownToggle>
+                                        <BSDropdownMenu id="@(prefix + item.StepId)" Class="dropdown-menu-right p-3" style="min-width: 20rem;">
+                                            <BSForm Class="d-flex" IsInline="true" Model="NewTag" OnValidSubmit="() => SubmitTag(item)">
+                                                <ChildContent Context="tag_context">
+                                                    <DataAnnotationsValidator />
+                                                    <ValidationSummary />
+                                                    <div class="form-group flex-grow-1">
+                                                        <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm flex-fill">
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-success ml-2">Add</button>
+                                                </ChildContent>
+                                            </BSForm>
+                                        </BSDropdownMenu>
+                                    </BSDropdown>
+                                </div>
+                            </AuthorizeView>
                         </div>
-
                     </div>
 
                     index++;
