@@ -165,6 +165,7 @@
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                     <StepTypeIconComponent StepType_="@item.StepType" />
+                                    &nbsp;
                                     @item.StepName
                                 </a>
                             </AuthorizeView>
@@ -354,6 +355,7 @@
                             <thead>
                                 <tr>
                                     <th>Available steps</th>
+                                    <th></th>
                                     @if (Job?.UseDependencyMode == true)
                                     {
                                         <th></th>
@@ -365,19 +367,28 @@
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
                                         <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                            <StepTypeIconComponent StepType_="@step.StepType" />
+                                            &nbsp;
                                             @step.StepName
+                                        </td>
+                                        <td class="align-middle"
+                                             style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                            @step.ExecutionPhase
+                                            &nbsp;
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
                                         </td>
                                         @if (Job?.UseDependencyMode == true)
                                         {
-                                            <td>
-                                                <div class="btn-group btn-group-sm btn-row">
-                                                    @if (step.Dependencies?.Count > 0)
-                                                    {
-                                                        <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => SelectStepAndDependencies(step)">
-                                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
-                                                        </BSButton>
-                                                    }
-                                                </div>
+                                            <td class="align-middle">
+                                                @if (step.Dependencies?.Count > 0)
+                                                {
+                                                    <div id="include_dependencies_@step.StepId" @onclick="() => SelectStepAndDependencies(step)">
+                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                                                    </div>
+                                                    <BSTooltip Target="@($"include_dependencies_{step.StepId}")" Placement="Placement.Top">
+                                                        Include dependencies
+                                                    </BSTooltip>
+                                                }
                                             </td>
                                         }
                                     </tr>
@@ -417,6 +428,8 @@
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
                                         <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                            <StepTypeIconComponent StepType_="@step.StepType" />
+                                            &nbsp;
                                             @step.StepName
                                         </td>
                                     </tr>
