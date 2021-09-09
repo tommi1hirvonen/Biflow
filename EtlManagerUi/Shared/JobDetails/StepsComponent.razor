@@ -376,7 +376,7 @@
                                             &nbsp;
                                             @step.StepName
                                         </td>
-                                        <td class="align-middle"
+                                        <td class="text-right"
                                              style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
@@ -384,7 +384,7 @@
                                         </td>
                                         @if (Job?.UseDependencyMode == true)
                                         {
-                                            <td class="align-middle">
+                                            <td class="text-right">
                                                 @if (step.Dependencies?.Count > 0)
                                                 {
                                                     <div id="include_dependencies_@step.StepId" @onclick="() => SelectStepAndDependencies(step)">
@@ -449,7 +449,7 @@
                                             &nbsp;
                                             @step.StepName
                                         </td>
-                                        <td class="align-middle"
+                                        <td class="text-right"
                                              style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
