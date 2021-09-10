@@ -387,12 +387,9 @@
                                             <td class="text-right">
                                                 @if (step.Dependencies?.Count > 0)
                                                 {
-                                                    <div id="include_dependencies_@step.StepId" @onclick="() => SelectStepAndDependencies(step)">
+                                                    <div title="Include dependencies" @onclick="() => SelectStepAndDependencies(step)">
                                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                                                     </div>
-                                                    <BSTooltip Target="@($"include_dependencies_{step.StepId}")" Placement="Placement.Top">
-                                                        Include dependencies
-                                                    </BSTooltip>
                                                 }
                                             </td>
                                         }
