@@ -12,6 +12,12 @@
                     <th>Duration</th>
                     <th>Status</th>
                 </tr>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th>@AverageDurationInSeconds.SecondsToReadableFormat()</th>
+                    <th></th>
+                </tr>
             </thead>
             <tbody>
                 @if (Executions is null)
@@ -66,6 +72,8 @@
     public const int MaxExecutions = 50;
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
+
+    private double AverageDurationInSeconds => (int)(Executions?.Average(e => e.ExecutionInSeconds) ?? 0);
 
     protected override async Task OnParametersSetAsync()
     {

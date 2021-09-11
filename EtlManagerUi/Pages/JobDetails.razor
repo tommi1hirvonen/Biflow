@@ -46,7 +46,7 @@
         <div class="btn-toolbar">
             <AuthorizeView Roles="Admin, Editor">
                 @*Dropdown to change the current job's name*@
-                <BSDropdown Class="ml-3">
+                <BSDropdown>
                     <BSDropdownToggle Color="Color.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         Edit
