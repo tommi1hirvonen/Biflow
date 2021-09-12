@@ -1,19 +1,14 @@
-﻿namespace EtlManagerDataAccess.Models
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EtlManagerDataAccess.Models
 {
     public enum ParameterType
     {
-        Boolean,
-        Byte,
-        DateTime,
-        Decimal,
-        Double,
-        Int16,
-        Int32,
-        Int64,
-        SByte,
-        Single,
-        String,
-        UInt32,
-        UInt64
+        Package,
+        Base
     }
 }

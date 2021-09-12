@@ -41,7 +41,7 @@
                             @foreach (var jobParam in JobParameters)
                                         {
                                 <option value="@jobParam.ParameterId">
-                                    @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                                    @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
                                 </option>
                                         }
                         </InputSelect>
@@ -62,8 +62,8 @@
             }
         </tbody>
     </table>
-    var type = ParameterType.String;
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterType = type, ParameterValue = string.Empty })">
+    var type = ParameterValueType.String;
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterValueType = type, ParameterValue = string.Empty })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }
@@ -75,7 +75,7 @@
     [Parameter]
     public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
 
-    private void SetJobParameter(bool inheritFromJob, StepParameter param)
+    private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {
         if (inheritFromJob)
         {

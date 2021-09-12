@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class PackageStep : Step
+    public class PackageStep : ParameterizedStep
     {
         public PackageStep() : base(StepType.Package) { }
 
@@ -44,7 +44,5 @@ namespace EtlManagerDataAccess.Models
         private string? _executeAsLogin;
 
         public Connection? Connection { get; set; }
-
-        public IList<PackageParameter> PackageParameters { get; set; } = null!;
     }
 }

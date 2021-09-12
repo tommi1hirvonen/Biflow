@@ -2,8 +2,8 @@
 {
     <td>
         <div class="input-group">
-        <InputSelect class="form-control form-control-sm" @bind-Value="Parameter.ParameterType">
-            @foreach (var type in Enum.GetValues(typeof(ParameterType)))
+        <InputSelect class="form-control form-control-sm" @bind-Value="Parameter.ParameterValueType">
+            @foreach (var type in Enum.GetValues(typeof(ParameterValueType)))
                 {
                 <option>@type</option>
                 }
@@ -11,9 +11,9 @@
     </div>
     </td>
     <td>
-        @switch (Parameter?.ParameterType)
+        @switch (Parameter?.ParameterValueType)
         {
-            case ParameterType.Boolean:
+            case ParameterValueType.Boolean:
                 <div class="input-group">
                     <InputSelectBoolean class="form-control form-control-sm" @bind-Value="Parameter.ValueBoolean">
                         <option value="True">True</option>
@@ -21,41 +21,35 @@
                     </InputSelectBoolean>
                 </div>
                 break;
-            case ParameterType.Byte:
+            case ParameterValueType.Byte:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueByte" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.DateTime:
+            case ParameterValueType.DateTime:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDateTime" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Decimal:
+            case ParameterValueType.Decimal:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Double:
+            case ParameterValueType.Double:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDouble" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Int16:
+            case ParameterValueType.Int16:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt16" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Int32:
+            case ParameterValueType.Int32:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt32" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Int64:
+            case ParameterValueType.Int64:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt64" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.SByte:
+            case ParameterValueType.SByte:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSByte" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.Single:
+            case ParameterValueType.Single:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSingle" placeholder="Value"></BSBasicInput>
                 break;
-            case ParameterType.String:
+            case ParameterValueType.String:
                 <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueString" placeholder="Value"></BSBasicInput>
-                break;
-            case ParameterType.UInt32:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueUInt32" placeholder="Value"></BSBasicInput>
-                break;
-            case ParameterType.UInt64:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueUInt64" placeholder="Value"></BSBasicInput>
                 break;
         }
     </td>

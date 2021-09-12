@@ -41,8 +41,8 @@
                         }
                     </tbody>
                 </table>
-                @{ var type = ParameterType.String; }
-                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterType = type })">
+                @{ var type = ParameterValueType.String; }
+                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
                 </BSButton>
                 <p class="text-danger">@ErrorMessage</p>

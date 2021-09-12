@@ -12,6 +12,6 @@ namespace EtlManagerDataAccess.Models
         {
         }
 
-        public IList<StepParameter> StepParameters { get; set; } = null!;
+        public IList<StepParameterBase> StepParameters { get; set; } = null!;
     }
 }

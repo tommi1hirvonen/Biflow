@@ -43,8 +43,7 @@ namespace EtlManagerDataAccess
         public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
         public DbSet<Connection> Connections => Set<Connection>();
         public DbSet<Tag> Tags => Set<Tag>();
-        public DbSet<PackageParameter> PackageParameters => Set<PackageParameter>();
-        public DbSet<StepParameter> StepParameters => Set<StepParameter>();
+        public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
         public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -58,7 +57,7 @@ namespace EtlManagerDataAccess
                 .Property(e => e.ExecutionStatus)
                 .HasConversion(executionStatusConverter);
 
-            var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
+            var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
 
             modelBuilder.Entity<ExecutionParameter>(e =>
             {
@@ -66,7 +65,7 @@ namespace EtlManagerDataAccess
                 .HasKey(p => new { p.ExecutionId, p.ParameterId });
                 e.HasOne(p => p.Execution)
                 .WithMany(e => e.ExecutionParameters);
-                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
+                e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
             });
 
             var stepTypeConverter = new EnumToStringConverter<StepType>();
@@ -148,8 +147,9 @@ namespace EtlManagerDataAccess
             }); 
 
             modelBuilder.Entity<JobParameter>()
-                .Property(p => p.ParameterType)
-                .HasConversion(parameterTypeConverter);
+                .ToTable("JobParameter")
+                .Property(p => p.ParameterValueType)
+                .HasConversion(parameterValueTypeConverter);
 
             modelBuilder.Entity<Step>(e =>
             {
@@ -195,28 +195,33 @@ namespace EtlManagerDataAccess
 
             var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
 
-            modelBuilder.Entity<PackageParameter>(e =>
+            modelBuilder.Entity<PackageStepParameter>(e =>
             {
-                e.ToTable("PackageParameter")
-                .HasOne(parameter => parameter.Step)
-                .WithMany(step => step.PackageParameters)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Cascade);
-                e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
                 e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
             });
 
-            modelBuilder.Entity<StepParameter>(e =>
+            var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
+
+            modelBuilder.Entity<StepParameterBase>(e =>
             {
                 e.ToTable("StepParameter")
                 .HasOne(parameter => parameter.Step)
                 .WithMany(step => step.StepParameters)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+                e.HasDiscriminator<ParameterType>("ParameterType")
+                .HasValue<StepParameter>(ParameterType.Base)
+                .HasValue<PackageStepParameter>(ParameterType.Package);
+                e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
             });
 
-            modelBuilder.Entity<StepExecutionParameter>(e =>
+
+            modelBuilder.Entity<PackageStepExecutionParameter>(e =>
+            {
+                e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
+            });
+            modelBuilder.Entity<StepExecutionParameterBase>(e =>
             {
                 e.ToTable("ExecutionStepParameter")
                 .HasKey(param => new { param.ExecutionId, param.StepId, param.ParameterId });
@@ -228,8 +233,11 @@ namespace EtlManagerDataAccess
                 .WithMany(p => p!.StepExecutionParameters)
                 .HasForeignKey(p => new { p.ExecutionId, p.ExecutionParameterId })
                 .IsRequired(false);
+                e.HasDiscriminator<ParameterType>("ParameterType")
+                .HasValue<StepExecutionParameter>(ParameterType.Base)
+                .HasValue<PackageStepExecutionParameter>(ParameterType.Package);
+                e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
                 e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
-                e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
             });
 
             var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();

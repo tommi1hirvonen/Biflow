@@ -162,7 +162,7 @@
         {
             await ResetContext();
             Step = await Context.PackageSteps
-                .Include(step => step.PackageParameters)
+                .Include(step => step.StepParameters)
                 .ThenInclude(p => p.JobParameter)
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
@@ -179,7 +179,7 @@
                 RetryIntervalMinutes = 0,
                 IsEnabled = true,
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-                PackageParameters = new List<PackageParameter>(),
+                StepParameters = new List<StepParameterBase>(),
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>()
             };
@@ -189,19 +189,19 @@
 
     private void ResetDeletedEntities(EntityEntry entity)
     {
-        if (entity.Entity is PackageParameter packageParam)
+        if (entity.Entity is PackageStepParameter packageParam)
         {
-            if (!Step.PackageParameters.Contains(packageParam))
-                Step.PackageParameters.Add(packageParam);
+            if (!Step.StepParameters.Contains(packageParam))
+                Step.StepParameters.Add(packageParam);
         }
     }
 
     private void ResetAddedEntities(EntityEntry entity)
     {
-        if (entity.Entity is PackageParameter packageParam)
+        if (entity.Entity is PackageStepParameter packageParam)
         {
-            if (Step.PackageParameters.Contains(packageParam))
-                Step.PackageParameters.Remove(packageParam);
+            if (Step.StepParameters.Contains(packageParam))
+                Step.StepParameters.Remove(packageParam);
         }
     }
 
@@ -216,7 +216,7 @@
             }
             else
             {
-                foreach (var param in package.PackageParameters)
+                foreach (var param in package.StepParameters)
                 {
                     param.SetParameterValue();
                 }
@@ -231,7 +231,7 @@
 
     private (bool Result, string? Message) ParametersCheck()
     {
-        var parameters = Step.PackageParameters.OrderBy(param => param.ParameterName).ToList();
+        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
         foreach (var param in parameters)
         {
             if (string.IsNullOrEmpty(param.ParameterName))
@@ -241,8 +241,10 @@
         }
         for (var i = 0; i < parameters.Count - 1; i++)
         {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName
-                && parameters[i + 1].ParameterLevel == parameters[i].ParameterLevel)
+            var currentParam = (PackageStepParameter)parameters[i];
+            var nextParam = (PackageStepParameter)parameters[i + 1];
+            if (nextParam.ParameterName == currentParam.ParameterName
+                && nextParam.ParameterLevel == currentParam.ParameterLevel)
             {
                 return (false, "Duplicate parameter names");
             }

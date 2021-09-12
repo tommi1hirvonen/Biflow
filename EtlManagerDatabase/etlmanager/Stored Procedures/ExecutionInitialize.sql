@@ -112,14 +112,14 @@ INSERT INTO etlmanager.ExecutionParameter (
 	ExecutionId,
 	ParameterId,
 	ParameterName,
-	ParameterType,
+	ParameterValueType,
 	ParameterValue
 )
 SELECT
 	@EtlManagerExecutionId,
 	ParameterId,
 	ParameterName,
-	ParameterType,
+	ParameterValueType,
 	ParameterValue
 FROM etlmanager.JobParameter
 where JobId = @JobId
@@ -215,49 +215,27 @@ SELECT
 FROM #Steps
 
 
--- Store and historize package execution parameters.
-INSERT INTO etlmanager.ExecutionStepParameter (
-	ExecutionId,
-	ParameterId,
-	StepId,
-	ParameterName,
-	ParameterValue,
-	ParameterLevel,
-	ParameterType,
-	ExecutionParameterId
-)
-SELECT
-	a.ExecutionId,
-	b.ParameterId,
-	b.StepId,
-	b.ParameterName,
-	b.ParameterValue,
-	b.ParameterLevel,
-	b.ParameterType,
-	b.JobParameterId
-FROM etlmanager.ExecutionStep AS a
-	JOIN etlmanager.PackageParameter AS b ON b.StepId = a.StepId
-WHERE a.ExecutionId = @EtlManagerExecutionId
-
 -- Store and historize step execution parameters.
 INSERT INTO etlmanager.ExecutionStepParameter (
 	ExecutionId,
 	ParameterId,
 	StepId,
+	ParameterType,
+	ParameterLevel,
 	ParameterName,
 	ParameterValue,
-	ParameterLevel,
-	ParameterType,
+	ParameterValueType,
 	ExecutionParameterId
 )
 SELECT
 	a.ExecutionId,
 	b.ParameterId,
 	b.StepId,
+	b.ParameterType,
+	b.ParameterLevel,
 	b.ParameterName,
 	b.ParameterValue,
-	'None' AS ParameterLevel,
-	b.ParameterType,
+	b.ParameterValueType,
 	b.JobParameterId
 FROM etlmanager.ExecutionStep AS a
 	JOIN etlmanager.StepParameter AS b ON b.StepId = a.StepId

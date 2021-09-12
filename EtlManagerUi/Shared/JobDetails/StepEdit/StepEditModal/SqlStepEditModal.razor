@@ -79,7 +79,7 @@
                     @foreach (var jobParam in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
                         <option value="@jobParam.ParameterId">
-                            @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                            @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
                         </option>
                         }
                 </InputSelect>
@@ -166,7 +166,7 @@
                 ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>(),
-                StepParameters = new List<StepParameter>()
+                StepParameters = new List<StepParameterBase>()
 
             };
         }

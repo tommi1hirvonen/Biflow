@@ -161,7 +161,7 @@
                  .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
                 {
                     <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
-                        <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
+                        <div class="col-xl-4 col-md-5 col-9 pl-2 d-flex align-items-center">
                             <AuthorizeView Roles="Admin, Editor">
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                     <StepTypeIconComponent StepType_="@item.StepType" />
@@ -175,6 +175,15 @@
                                     @item.StepName
                                 </span>
                             </AuthorizeView>
+                        </div>
+                        <div class="col-1 d-flex align-items-center">
+                            @if (item is ParameterizedStep parameterizedStep && parameterizedStep.StepParameters.Any(p => p.JobParameterId is not null)
+                                || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                            {
+                            <div title="Step uses job parameters">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                            </div>
+                            }
                         </div>
                         <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-end"
                              style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">

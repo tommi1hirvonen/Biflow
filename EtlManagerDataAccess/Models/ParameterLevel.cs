@@ -3,7 +3,6 @@
     public enum ParameterLevel
     {
         Package,
-        Project,
-        None
+        Project
     }
 }

@@ -9,11 +9,11 @@ namespace EtlManagerDataAccess.Models
 {
     public class ExecutionParameter
     {
-        public ExecutionParameter(string parameterName, object parameterValue, ParameterType parameterType)
+        public ExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
         {
             ParameterName = parameterName;
             ParameterValue = parameterValue;
-            ParameterType = parameterType;
+            ParameterValueType = parameterValueType;
         }
 
         public Guid ExecutionId { get; set; }
@@ -25,10 +25,10 @@ namespace EtlManagerDataAccess.Models
         [Column(TypeName = "sql_variant")]
         public object ParameterValue { get; set; }
 
-        public ParameterType ParameterType { get; set; } = ParameterType.String;
+        public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
 
         public Execution Execution { get; set; } = null!;
 
-        public ICollection<StepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+        public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
     }
 }

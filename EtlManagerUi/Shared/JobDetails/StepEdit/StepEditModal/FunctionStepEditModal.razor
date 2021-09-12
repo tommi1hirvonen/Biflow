@@ -165,7 +165,7 @@
                 FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>(),
-                StepParameters = new List<StepParameter>()
+                StepParameters = new List<StepParameterBase>()
             };
         }
         StateHasChanged();

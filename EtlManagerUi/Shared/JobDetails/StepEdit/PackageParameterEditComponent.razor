@@ -16,11 +16,11 @@
             </tr>
         </thead>
         <tbody>
-            @if (!Step.PackageParameters.Any())
+            @if (!Step.StepParameters.Any())
             {
                 <tr><td colspan="6">No parameters</td></tr>
             }
-            @foreach (var param in Step.PackageParameters)
+            @foreach (var param in Step.StepParameters.Cast<PackageStepParameter>())
             {
                 <tr>
                     <td>
@@ -50,7 +50,7 @@
                                 @foreach (var jobParam in JobParameters)
                                             {
                                     <option value="@jobParam.ParameterId">
-                                        @jobParam.ParameterName (@jobParam.ParameterType = @jobParam.ParameterValue)
+                                        @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
                                     </option>
                                             }
                             </InputSelect>
@@ -62,7 +62,7 @@
                     }
                     <td>
                         <BSButtonGroup Size="Size.Small" Class="btn-row">
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.PackageParameters.Remove(param)">
+                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
                             </BSButton>
                         </BSButtonGroup>
@@ -71,8 +71,8 @@
             }
         </tbody>
     </table>
-    var level = ParameterLevel.Package; var type = ParameterType.String;
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.PackageParameters.Add(new PackageParameter { ParameterLevel = level, ParameterType = type })">
+    var level = ParameterLevel.Package; var type = ParameterValueType.String;
+    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
     </BSButton>
 }
@@ -84,7 +84,7 @@
     [Parameter]
     public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
 
-    private void SetJobParameter(bool inheritFromJob, PackageParameter param)
+    private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
     {
         if (inheritFromJob)
         {

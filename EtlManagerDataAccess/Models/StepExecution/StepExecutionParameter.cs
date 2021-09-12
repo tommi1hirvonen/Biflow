@@ -1,44 +1,17 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class StepExecutionParameter
+    public class StepExecutionParameter : StepExecutionParameterBase
     {
-        public StepExecutionParameter(string parameterName, object parameterValue, ParameterType parameterType, ParameterLevel parameterLevel)
+        public StepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
+            : base(parameterName, parameterValue, ParameterType.Base, parameterValueType)
         {
-            ParameterName = parameterName;
-            _parameterValue = parameterValue;
-            ParameterType = parameterType;
-            ParameterLevel = parameterLevel;
+
         }
-
-        public Guid ExecutionId { get; set; }
-        
-        public Guid StepId { get; set; }
-
-        public Guid ParameterId { get; set; }
-
-        public string ParameterName { get; set; }
-
-        [Column(TypeName = "sql_variant")]
-        public object ParameterValue
-        {
-            get => ExecutionParameter?.ParameterValue ?? _parameterValue;
-            set => _parameterValue = value;
-        }
-
-        private object _parameterValue;
-
-        public ParameterType ParameterType { get; set; } = ParameterType.String;
-
-        public ParameterLevel ParameterLevel { get; set; }
-
-        public Guid? ExecutionParameterId { get; set; }
-
-        public ExecutionParameter? ExecutionParameter { get; set; }
-
-        public ParameterizedStepExecution StepExecution { get; set; } = null!;
     }
 }

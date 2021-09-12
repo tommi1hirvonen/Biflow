@@ -8,6 +8,6 @@ namespace EtlManagerDataAccess.Models
         {
         }
 
-        public ICollection<StepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+        public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
     }
 }

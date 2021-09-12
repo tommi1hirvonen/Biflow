@@ -7,11 +7,19 @@ using System.Threading.Tasks;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class StepParameter : ParameterBase
+    public abstract class StepParameterBase : ParameterBase
     {
+        public StepParameterBase(ParameterType parameterType)
+        {
+            ParameterType = parameterType;
+        }
+
         [Display(Name = "Step id")]
         [Column("StepId")]
         public Guid StepId { get; set; }
+
+        [Required]
+        public ParameterType ParameterType { get; private init; }
 
         public ParameterizedStep Step { get; set; } = null!;
 

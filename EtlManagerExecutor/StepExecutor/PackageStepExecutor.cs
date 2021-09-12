@@ -160,7 +160,7 @@ namespace EtlManagerExecutor
                     @parameter_value = 0" + "\n"
                 );
 
-            foreach (var parameter in Step.StepExecutionParameters)
+            foreach (var parameter in Step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
             {
                 var objectType = parameter.ParameterLevel == ParameterLevel.Project ? "20" : "30"; // 20 => project parameter; 30 => package parameter
                 // Same parameter name can be used for project and package parameter.
@@ -187,7 +187,7 @@ namespace EtlManagerExecutor
             if (Step.ExecuteAsLogin is not null)
                 dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
            
-            foreach (var param in Step.StepExecutionParameters)
+            foreach (var param in Step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
             {
                 dynamicParams.Add($"ParameterName{param.ParameterName}{param.ParameterLevel}", param.ParameterName);
                 dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue);

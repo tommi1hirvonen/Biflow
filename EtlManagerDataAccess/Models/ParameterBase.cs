@@ -65,12 +65,6 @@ namespace EtlManagerDataAccess.Models
                     case string b:
                         ValueString = b;
                         break;
-                    case uint b:
-                        ValueUInt32 = b;
-                        break;
-                    case ulong b:
-                        ValueUInt64 = b;
-                        break;
                 }
                 parameterValueField = value;
             }
@@ -79,7 +73,7 @@ namespace EtlManagerDataAccess.Models
         private object? parameterValueField;
 
         [Required]
-        public ParameterType ParameterType { get; set; } = ParameterType.String;
+        public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
 
         [NotMapped]
         public bool ValueBoolean { get; set; }
@@ -103,28 +97,22 @@ namespace EtlManagerDataAccess.Models
         public float ValueSingle { get; set; }
         [NotMapped]
         public string? ValueString { get; set; }
-        [NotMapped]
-        public uint ValueUInt32 { get; set; }
-        [NotMapped]
-        public ulong ValueUInt64 { get; set; }
 
         public void SetParameterValue()
         {
-            ParameterValue = ParameterType switch
+            ParameterValue = ParameterValueType switch
             {
-                ParameterType.Boolean => ValueBoolean,
-                ParameterType.Byte => ValueByte,
-                ParameterType.DateTime => ValueDateTime,
-                ParameterType.Decimal => ValueDecimal,
-                ParameterType.Double => ValueDouble,
-                ParameterType.Int16 => ValueInt16,
-                ParameterType.Int32 => ValueInt32,
-                ParameterType.Int64 => ValueInt64,
-                ParameterType.SByte => ValueSByte,
-                ParameterType.Single => ValueSingle,
-                ParameterType.String => ValueString,
-                ParameterType.UInt32 => ValueUInt32,
-                ParameterType.UInt64 => ValueUInt64,
+                ParameterValueType.Boolean => ValueBoolean,
+                ParameterValueType.Byte => ValueByte,
+                ParameterValueType.DateTime => ValueDateTime,
+                ParameterValueType.Decimal => ValueDecimal,
+                ParameterValueType.Double => ValueDouble,
+                ParameterValueType.Int16 => ValueInt16,
+                ParameterValueType.Int32 => ValueInt32,
+                ParameterValueType.Int64 => ValueInt64,
+                ParameterValueType.SByte => ValueSByte,
+                ParameterValueType.Single => ValueSingle,
+                ParameterValueType.String => ValueString,
                 _ => string.Empty
             };
         }

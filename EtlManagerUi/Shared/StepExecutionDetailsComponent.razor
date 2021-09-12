@@ -258,7 +258,7 @@
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in package_.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
+            @foreach (var param in package_.StepExecutionParameters.Cast<PackageStepExecutionParameter>() ?? Enumerable.Empty<PackageStepExecutionParameter>())
             {
                 <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
                 <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
@@ -269,7 +269,7 @@
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in pipeline.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameter>())
+            @foreach (var param in pipeline.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
             {
                 <dt class="col-sm-3">@param.ParameterName</dt>
                 <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>

@@ -200,13 +200,13 @@
             @if (Step is PackageStep package_)
             {
                 <h6>Parameters</h6>
-                @if (package_.PackageParameters is not null)
+                @if (package_.StepParameters is not null)
                 {
                     <dl class="row">
-                        @foreach (var param in package_.PackageParameters)
+                        @foreach (var param in package_.StepParameters.Cast<PackageStepParameter>())
                         {
                             <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
-                            <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
+                            <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterValueType})")</dd>
                         }
                     </dl>
                 }
