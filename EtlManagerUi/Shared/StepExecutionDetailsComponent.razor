@@ -237,7 +237,7 @@
                     Instance id
                 </dt>
                 <dd class="col-sm-9">
-                    @function_.FunctionInstanceId    
+                    @function_.FunctionInstanceId
                 </dd>
                 <dt class="col-sm-3">
                     Output
@@ -254,25 +254,14 @@
             <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
         </dd>
     </dl>
-    @if (StepExecutionAttempt.StepExecution is PackageStepExecution package_)
+    @if (StepExecutionAttempt.StepExecution is ParameterizedStepExecution parameterized)
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in package_.StepExecutionParameters.Cast<PackageStepExecutionParameter>() ?? Enumerable.Empty<PackageStepExecutionParameter>())
+            @foreach (var param in parameterized.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
             {
-                <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
-                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
-            }
-        </dl>
-    }
-    else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
-    {
-        <h6>Parameters</h6>
-        <dl class="row">
-            @foreach (var param in pipeline.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
-            {
-                <dt class="col-sm-3">@param.ParameterName</dt>
-                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterType})")</dd>
+                <dt class="col-sm-3">@(param is PackageStepExecutionParameter p ? $"${p.ParameterLevel}::{p.ParameterName}" : param.ParameterName)</dt>
+                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterValueType})")</dd>
             }
         </dl>
     }
