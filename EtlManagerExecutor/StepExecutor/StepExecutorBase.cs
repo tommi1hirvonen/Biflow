@@ -54,6 +54,19 @@ namespace EtlManagerExecutor
                 return false;
             }
 
+            // If the step execution is parameterized and it's using job parameters,
+            // update the job parameter's current value for this execution.
+            if (StepExecution is ParameterizedStepExecution parameterized)
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                foreach (var param in parameterized.StepExecutionParameters.Where(p => p.ExecutionParameter is not null))
+                {
+                    context.Attach(param);
+                    param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
+                }
+                await context.SaveChangesAsync();
+            }
+
             // Loop until there are not retry attempts left.
             while (RetryAttemptCounter <= StepExecution.RetryAttempts)
             {

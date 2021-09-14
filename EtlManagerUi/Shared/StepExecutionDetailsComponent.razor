@@ -93,6 +93,20 @@
                     <pre><code>@sql_.InfoMessage</code></pre>
                 }
             </dd>
+            <dt class="col-sm-3">
+                Scalar result capture job parameter
+            </dt>
+            <dd class="col-sm-9">
+                @{ var jobParam = sql.Execution.ExecutionParameters
+                          .FirstOrDefault(p => p?.ParameterId == sql.ResultCaptureJobParameterId); }
+                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValueType})" : null)
+            </dd>
+            <dt class="col-sm-3">
+                Capture value
+            </dt>
+            <dd class="col-sm-9">
+                @sql.ResultCaptureJobParameterValue
+            </dd>
         }
         else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
         {
@@ -260,8 +274,14 @@
         <dl class="row">
             @foreach (var param in parameterized.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
             {
-                <dt class="col-sm-3">@(param is PackageStepExecutionParameter p ? $"${p.ParameterLevel}::{p.ParameterName}" : param.ParameterName)</dt>
-                <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterValueType})")</dd>
+                // Append parameter level for package step executions to separate package and project level parameters.
+                <dt class="col-sm-3">
+                    @(param is PackageStepExecutionParameter p ? $"${p.ParameterLevel}::{p.ParameterName}" : param.ParameterName)
+                </dt>
+                <dd class="col-sm-9">
+                    @($"{param.ParameterValue} ({param.ParameterValueType})")
+                    @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.ExecutionParameter?.ParameterName})" : null)
+                </dd>
             }
         </dl>
     }

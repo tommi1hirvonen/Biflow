@@ -27,15 +27,24 @@ namespace EtlManagerDataAccess.Models
         [Column(TypeName = "sql_variant")]
         public object ParameterValue
         {
-            get => ExecutionParameter?.ParameterValue ?? _parameterValue;
+            get => ExecutionParameterValue ?? _parameterValue;
             set => _parameterValue = value;
         }
 
         private object _parameterValue;
 
-        public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
+        public ParameterValueType ParameterValueType
+        {
+            get => ExecutionParameter?.ParameterValueType ?? _parameterValueType;
+            set => _parameterValueType = value;
+        }
+
+        private ParameterValueType _parameterValueType = ParameterValueType.String;
 
         public Guid? ExecutionParameterId { get; set; }
+
+        [Column(TypeName = "sql_variant")]
+        public object? ExecutionParameterValue { get; set; }
 
         public ExecutionParameter? ExecutionParameter { get; set; }
 

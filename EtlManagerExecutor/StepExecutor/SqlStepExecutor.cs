@@ -55,15 +55,18 @@ namespace EtlManagerExecutor
                 {
                     var result = await connection.ExecuteScalarAsync(command);
 
-                    // Update the job execution parameter with the result value.
+                    // Update the capture value.
+                    using var context = _dbContextFactory.CreateDbContext();
+                    context.Attach(Step);
+                    Step.ResultCaptureJobParameterValue = result;
+                    await context.SaveChangesAsync();
+
+                    // Update the job execution parameter with the result value for following steps to use.
                     var param = Step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == Step.ResultCaptureJobParameterId);
                     if (param is not null)
                     {
-                        using var context = _dbContextFactory.CreateDbContext();
-                        context.Attach(param);
                         param.ParameterValue = result;
-                        await context.SaveChangesAsync();
-                    }
+                    }                    
                 }
                 else
                 {
