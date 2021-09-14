@@ -665,6 +665,7 @@
                 var createdStep = await context.Steps
                     .Include(step => step.Dependencies)
                     .Include(step => step.Tags)
+                    .Include(step => (step as ParameterizedStep)!.StepParameters)
                     .FirstOrDefaultAsync(step_ => step_.StepId == createdStepId);
                 Steps?.Add(createdStep);
                 await SortStepsAsync();
