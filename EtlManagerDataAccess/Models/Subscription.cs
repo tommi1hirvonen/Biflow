@@ -20,6 +20,8 @@ namespace EtlManagerDataAccess.Models
 
         public SubscriptionType? SubscriptionType { get; set; }
 
+        public bool NotifyOnOvertime { get; set; }
+
         public User User { get; set; } = null!;
     }
 

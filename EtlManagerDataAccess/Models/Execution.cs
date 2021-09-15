@@ -42,6 +42,12 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Dependency mode")]
         public bool DependencyMode { get; set; }
 
+        [Display(Name = "Max parallel steps (0 = use default)")]
+        public int MaxParallelSteps { get; set; }
+
+        [Display(Name = "Notification time limit (min, 0 = indefinite)")]
+        public int OvertimeNotificationLimitMinutes { get; set; }
+
         [Display(Name = "Created by")]
         public string? CreatedBy { get; set; }
 

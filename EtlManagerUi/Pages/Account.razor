@@ -133,7 +133,7 @@
                                                 <div class="custom-control custom-radio custom-control-inline">
                                                     <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_none")"
                                                            checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
-                                                           @onchange="() => ToggleSubscription(job, null)">
+                                                           @onchange="() => RemoveSubscription(job)">
                                                     <label class="custom-control-label" for="@(job.JobId.ToString() + "_none")">None</label>
                                                 </div>
                                                 <div class="custom-control custom-radio custom-control-inline">
@@ -153,6 +153,12 @@
                                                            checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
                                                            @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
                                                     <label class="custom-control-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
+                                                </div>
+                                                <div class="custom-control custom-checkbox custom-control-inline">
+                                                    <input type="checkbox" class="custom-control-input" id="@(job.JobId.ToString() + "_overtime")"
+                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.NotifyOnOvertime == true)
+                                                           @onchange="args => ToggleSubscription(job, (bool)args.Value!)">
+                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_overtime")">On overtime</label>
                                                 </div>
                                             </div>
                                         </td>
@@ -236,18 +242,62 @@
         }
     }
 
-    private async Task ToggleSubscription(Job job, SubscriptionType? subscriptionType)
+    private async Task RemoveSubscription(Job job)
+    {
+        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
+        if (subscription is null)
+            return;
+
+        using var context = DbFactory.CreateDbContext();
+        try
+        {
+            context.Subscriptions.Remove(subscription);
+            User.Subscriptions.Remove(subscription);
+            await context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "Error removing subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(Job job, bool onOvertime)
     {
         using var context = DbFactory.CreateDbContext();
         var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
         try
         {
-            if (subscription is not null && subscriptionType is null)
+            if (subscription is not null && subscription.SubscriptionType is null && !onOvertime)
             {
                 context.Subscriptions.Remove(subscription);
                 User.Subscriptions.Remove(subscription);
             }
             else if (subscription is not null)
+            {
+                subscription.NotifyOnOvertime = onOvertime;
+                context.Attach(subscription).State = EntityState.Modified;
+            }
+            else
+            {
+                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = null, NotifyOnOvertime = onOvertime };
+                context.Subscriptions.Add(newSub);
+                User.Subscriptions.Add(newSub);
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception)
+        {
+            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(Job job, SubscriptionType subscriptionType)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
+        try
+        {
+            if (subscription is not null)
             {
                 subscription.SubscriptionType = subscriptionType;
                 context.Attach(subscription).State = EntityState.Modified;

@@ -46,6 +46,10 @@ namespace EtlManagerDataAccess.Models
         public int MaxParallelSteps { get; set; }
 
         [Required]
+        [Display(Name = "Notification time limit (min, 0 = indefinite)")]
+        public int OvertimeNotificationLimitMinutes { get; set; }
+
+        [Required]
         [Display(Name = "Enabled")]
         public bool IsEnabled { get; set; }
 

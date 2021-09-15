@@ -19,11 +19,11 @@ namespace EtlManagerExecutor
         protected IExecutionConfiguration _executionConfig;
         private readonly IStepExecutorFactory _stepExecutorFactory;
 
-        protected Execution Execution { get; init; }
+        protected Execution Execution { get; }
 
-        private SemaphoreSlim Semaphore { get; init; }
+        private SemaphoreSlim Semaphore { get; }
 
-        protected Dictionary<StepExecution, ExtendedCancellationTokenSource> CancellationTokenSources { get; init; }
+        protected Dictionary<StepExecution, ExtendedCancellationTokenSource> CancellationTokenSources { get; }
 
         protected enum ExecutionStatus
         {
@@ -33,7 +33,7 @@ namespace EtlManagerExecutor
             Failed
         };
 
-        protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; init; }
+        protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; }
 
         public OrchestratorBase(IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
         {
@@ -47,8 +47,7 @@ namespace EtlManagerExecutor
                 .ToDictionary(e => e, _ => ExecutionStatus.NotStarted);
 
             // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-            var maxParallelSteps = execution.Job?.MaxParallelSteps ?? 0;
-            maxParallelSteps = maxParallelSteps > 0 ? maxParallelSteps : _executionConfig.MaxParallelSteps;
+            var maxParallelSteps = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
             Semaphore = new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
         }
 

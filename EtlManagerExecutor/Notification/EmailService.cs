@@ -25,7 +25,7 @@ namespace EtlManagerExecutor
             _dbContextFactory = dbContextFactory;
         }
 
-        public void SendNotification(Guid executionId)
+        public void SendCompletionNotification(Guid executionId)
         {
             using var context = _dbContextFactory.CreateDbContext();
             Execution execution;
@@ -123,7 +123,72 @@ namespace EtlManagerExecutor
             {
                 Log.Error(ex, "{executionId} Error sending notification email", executionId);
             }
-            
+        }
+
+        public void SendLongRunningExecutionNotification(Execution execution)
+        {
+            List<string> recipients;
+            try
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                var subscriptions = context.Subscriptions
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
+                    .ToList();
+                recipients = subscriptions
+                    .Where(s => s.NotifyOnOvertime)
+                    .Select(s => s.User.Email ?? "")
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
+                return;
+            }
+
+            if (!recipients.Any())
+                return;
+
+            SmtpClient client;
+            try
+            {
+                client = _emailConfiguration.Client;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error building long running execution notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
+                return;
+            }
+
+            MailMessage mailMessage;
+            try
+            {
+                mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_emailConfiguration.FromAddress),
+                    Subject = $"\"{execution.JobName}\" execution is running long – ETL Manager notification",
+                    IsBodyHtml = true,
+                    Body = $"Execution of job \"{execution.JobName}\" started at {execution.StartDateTime?.LocalDateTime}"
+                    + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job."
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
+                return;
+            }
+
+            recipients.ForEach(recipient => mailMessage.To.Add(recipient));
+
+            try
+            {
+                client.Send(mailMessage);
+                Log.Information("{ExecutionId} Long running execution notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
+            }
         }
 
     }

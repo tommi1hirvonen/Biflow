@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EtlManagerDataAccess.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,8 @@ namespace EtlManagerExecutor
 {
     public interface INotificationService
     {
-        public void SendNotification(Guid executionId);
+        public void SendCompletionNotification(Guid executionId);
+
+        public void SendLongRunningExecutionNotification(Execution execution);
     }
 }

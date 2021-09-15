@@ -67,6 +67,10 @@
                                 <BSLabel>Max parallel steps (0 = use default)</BSLabel>
                                 <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
                             </BSFormGroup>
+                            <BSFormGroup>
+                                <BSLabel>Overtime notification limit (min, 0 = indefinite)</BSLabel>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
+                            </BSFormGroup>
                             <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
                         </BSForm>
                     </BSDropdownMenu>
@@ -244,6 +248,7 @@ else
         EditJob.JobName = CurrentJob.JobName;
         EditJob.JobDescription = CurrentJob.JobDescription;
         EditJob.MaxParallelSteps = CurrentJob.MaxParallelSteps;
+        EditJob.OvertimeNotificationLimitMinutes = CurrentJob.OvertimeNotificationLimitMinutes;
 
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
@@ -283,6 +288,7 @@ else
             CurrentJob.JobName = EditJob.JobName;
             CurrentJob.JobDescription = EditJob.JobDescription;
             CurrentJob.MaxParallelSteps = EditJob.MaxParallelSteps;
+            CurrentJob.OvertimeNotificationLimitMinutes = EditJob.OvertimeNotificationLimitMinutes;
             context.Attach(CurrentJob).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }

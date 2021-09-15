@@ -89,6 +89,8 @@ INSERT INTO etlmanager.Execution (
 	EndDateTime,
 	ExecutionStatus,
 	DependencyMode,
+	MaxParallelSteps,
+	OvertimeNotificationLimitMinutes,
 	CreatedBy,
 	ScheduleId
 )
@@ -101,6 +103,8 @@ SELECT
 	EndDateTime = NULL,
 	ExecutionStatus = 'NotStarted',
 	DependencyMode = a.UseDependencyMode,
+	MaxParallelSteps = a.MaxParallelSteps,
+	OvertimeNotificationLimitMinutes = a.OvertimeNotificationLimitMinutes,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId
 FROM etlmanager.Job AS a

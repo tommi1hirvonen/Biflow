@@ -123,10 +123,21 @@ namespace EtlManagerExecutor
                 return;
             }
 
+            var notificationTimeSpan = execution.OvertimeNotificationLimitMinutes > 0
+                ? TimeSpan.FromMinutes(execution.OvertimeNotificationLimitMinutes)
+                : TimeSpan.MaxValue;
             var orchestrator = _orchestratorFactory.Create(execution);
             try
             {
-                await orchestrator.RunAsync();
+                var notificationTask = Task.Delay(notificationTimeSpan); // Task to wait for the long running execution notification duration
+                var orchestrationTask = orchestrator.RunAsync(); // Execution orchestration task
+                await Task.WhenAny(notificationTask, orchestrationTask);
+                if (notificationTask.IsCompleted && notify)
+                {
+                    // Send notification of long running execution.
+                    _notificationService.SendLongRunningExecutionNotification(execution);
+                }
+                await orchestrationTask; // Wait for orchestration to finish.
             }
             catch (Exception ex)
             {
@@ -165,10 +176,10 @@ namespace EtlManagerExecutor
                 Log.Error(ex, "Error updating execution status");
             }
 
-            // Execution finished. Notify subscribers of possible errors.
+            // Execution finished. Notify users based on subscriptions.
             if (notify)
             {
-                _notificationService.SendNotification(executionId);
+                _notificationService.SendCompletionNotification(executionId);
             }
         }
 

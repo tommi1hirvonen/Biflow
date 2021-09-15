@@ -1,15 +1,16 @@
 ﻿CREATE TABLE [etlmanager].[Job] (
-    [JobId]                UNIQUEIDENTIFIER NOT NULL,
-    [JobName]              NVARCHAR(250)    NOT NULL,
-    [JobDescription]       NVARCHAR(MAX)    NULL,
-    [CreatedDateTime]      DATETIMEOFFSET   NOT NULL,
-    [LastModifiedDateTime] DATETIMEOFFSET   NOT NULL,
-    [UseDependencyMode]    BIT              NOT NULL,
-    [MaxParallelSteps]     INT              CONSTRAINT [DF_Job_MaxParallelSteps] DEFAULT (0) NOT NULL ,
-    [IsEnabled]            BIT              CONSTRAINT [DF_Job_IsEnabled] DEFAULT (1) NOT NULL,
-    [CreatedBy]            NVARCHAR(250)    NULL,
-    [LastModifiedBy]       NVARCHAR(250)    NULL,
-    [Timestamp]            ROWVERSION       NOT NULL,
+    [JobId]                             UNIQUEIDENTIFIER NOT NULL,
+    [JobName]                           NVARCHAR(250)    NOT NULL,
+    [JobDescription]                    NVARCHAR(MAX)    NULL,
+    [CreatedDateTime]                   DATETIMEOFFSET   NOT NULL,
+    [LastModifiedDateTime]              DATETIMEOFFSET   NOT NULL,
+    [UseDependencyMode]                 BIT              NOT NULL,
+    [MaxParallelSteps]                  INT              CONSTRAINT [DF_Job_MaxParallelSteps] DEFAULT (0) NOT NULL ,
+    [OvertimeNotificationLimitMinutes]  INT              CONSTRAINT [DF_Job_OvertimeNotificationLimitMinutes] DEFAULT(0) NOT NULL,
+    [IsEnabled]                         BIT              CONSTRAINT [DF_Job_IsEnabled] DEFAULT (1) NOT NULL,
+    [CreatedBy]                         NVARCHAR(250)    NULL,
+    [LastModifiedBy]                    NVARCHAR(250)    NULL,
+    [Timestamp]                         ROWVERSION       NOT NULL,
     CONSTRAINT [PK_Job] PRIMARY KEY CLUSTERED ([JobId] ASC)
 );
 
