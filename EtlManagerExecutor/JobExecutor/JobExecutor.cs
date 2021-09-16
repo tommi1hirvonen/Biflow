@@ -1,15 +1,12 @@
 ﻿using EtlManagerDataAccess;
 using EtlManagerDataAccess.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
@@ -123,20 +120,24 @@ namespace EtlManagerExecutor
                 return;
             }
 
-            var notificationTimeSpan = execution.OvertimeNotificationLimitMinutes > 0
-                ? TimeSpan.FromMinutes(execution.OvertimeNotificationLimitMinutes)
-                : TimeSpan.MaxValue;
             var orchestrator = _orchestratorFactory.Create(execution);
             try
             {
-                var notificationTask = Task.Delay(notificationTimeSpan); // Task to wait for the long running execution notification duration
-                var orchestrationTask = orchestrator.RunAsync(); // Execution orchestration task
+                var notificationTask = execution.OvertimeNotificationLimitMinutes > 0
+                    ? Task.Delay(TimeSpan.FromMinutes(execution.OvertimeNotificationLimitMinutes))
+                    : Task.Delay(-1); // infinite timeout
+
+                var orchestrationTask = orchestrator.RunAsync();
+                
                 await Task.WhenAny(notificationTask, orchestrationTask);
+                
+                // If the notification task completed first and notify is true,
+                // send a notification about a long running execution.
                 if (notificationTask.IsCompleted && notify)
                 {
-                    // Send notification of long running execution.
                     _notificationService.SendLongRunningExecutionNotification(execution);
                 }
+                
                 await orchestrationTask; // Wait for orchestration to finish.
             }
             catch (Exception ex)
