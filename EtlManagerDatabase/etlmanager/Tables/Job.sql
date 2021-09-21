@@ -5,6 +5,7 @@
     [CreatedDateTime]                   DATETIMEOFFSET   NOT NULL,
     [LastModifiedDateTime]              DATETIMEOFFSET   NOT NULL,
     [UseDependencyMode]                 BIT              NOT NULL,
+    [StopOnFirstError]                  BIT              CONSTRAINT [DF_Job_StopOnFirstError] DEFAULT (0) NOT NULL,
     [MaxParallelSteps]                  INT              CONSTRAINT [DF_Job_MaxParallelSteps] DEFAULT (0) NOT NULL ,
     [OvertimeNotificationLimitMinutes]  INT              CONSTRAINT [DF_Job_OvertimeNotificationLimitMinutes] DEFAULT(0) NOT NULL,
     [IsEnabled]                         BIT              CONSTRAINT [DF_Job_IsEnabled] DEFAULT (1) NOT NULL,

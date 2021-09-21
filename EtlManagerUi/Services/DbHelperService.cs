@@ -91,6 +91,15 @@ namespace EtlManagerUi
                 WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
         }
 
+        public async Task ToggleJobStopOnFirstErrorAsync(Job job, bool enabled)
+        {
+            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
+            await sqlConnection.ExecuteAsync(
+                @"UPDATE [etlmanager].[Job]
+                SET [StopOnFirstError] = @Value
+                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
+        }
+
         public async Task ToggleStepEnabledAsync(Step step, bool enabled)
         {
             using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));

@@ -1,4 +1,6 @@
-﻿using EtlManagerDataAccess.Models;
+﻿using EtlManagerDataAccess;
+using EtlManagerDataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,11 +9,17 @@ namespace EtlManagerExecutor
 {
     class ExecutionPhaseOrchestrator : OrchestratorBase
     {
+        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
+
         public ExecutionPhaseOrchestrator(
             IExecutionConfiguration executionConfiguration,
             IStepExecutorFactory stepExecutorFactory,
+            IDbContextFactory<EtlManagerContext> dbContextFactory,
             Execution execution)
-            : base(executionConfiguration, stepExecutorFactory, execution) { }
+            : base(executionConfiguration, stepExecutorFactory, execution)
+        {
+            _dbContextFactory = dbContextFactory;
+        }
 
         public override async Task RunAsync()
         {
@@ -31,7 +39,32 @@ namespace EtlManagerExecutor
 
                 // All steps have been started. Wait until all step worker tasks have finished.
                 await Task.WhenAll(stepWorkers);
+
+                // If StopOnFirstError was set to true and there are any errors,
+                // mark remaining steps as skipped and stop orchestration.
+                if (Execution.StopOnFirstError && StepStatuses.Any(s => s.Value == ExecutionStatus.Failed))
+                {
+                    await MarkUnstartedStepsAsSkipped();
+                    break;
+                }
             }
+        }
+
+        private async Task MarkUnstartedStepsAsSkipped()
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            var unstartedAttempts = StepStatuses
+                .Where(s => s.Value == ExecutionStatus.NotStarted)
+                .Select(s => s.Key)
+                .SelectMany(s => s.StepExecutionAttempts);
+            foreach (var attempt in unstartedAttempts)
+            {
+                attempt.ExecutionStatus = StepExecutionStatus.Skipped;
+                attempt.StartDateTime = DateTimeOffset.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
+                context.Attach(attempt).State = EntityState.Modified;
+            }
+            await context.SaveChangesAsync();
         }
 
     }

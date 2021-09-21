@@ -83,6 +83,15 @@
                 <dd class="col-sm-9">
                     @Execution.DependencyMode
                 </dd>
+                @if (!Execution.DependencyMode)
+                {
+                    <dt class="col-sm-3">
+                        Stop on first error
+                    </dt>
+                    <dd class="col-sm-9">
+                        @Execution.StopOnFirstError
+                    </dd>
+                }
                 <dt class="col-sm-3">
                     Max parallel steps
                 </dt>

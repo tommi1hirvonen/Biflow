@@ -143,6 +143,14 @@
                     <input type="checkbox" class="custom-control-input" id="dependency_mode_toggle" checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)" @onchange="ToggleDependencyMode">
                     <label class="custom-control-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
                 </div>
+                @*Only show StopOnFirstError setting if job uses execution phase mode.*@
+                @if (CurrentJob?.UseDependencyMode == false)
+                {
+                    <div class="custom-control custom-switch ml-4">
+                        <input type="checkbox" class="custom-control-input" id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)" @onchange="ToggleStopOnFirstError">
+                        <label class="custom-control-label" style="cursor: pointer;" for="stop_on_first_error_toggle">Stop on first error</label>
+                    </div>
+                }
             </AuthorizeView>
             <AuthorizeView Roles="Operator, Viewer">
                 <div class="custom-control custom-switch">
@@ -153,6 +161,13 @@
                     <input type="checkbox" class="custom-control-input" disabled id="dependency_mode_toggle" checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)">
                     <label class="custom-control-label" for="dependency_mode_toggle">Dependency mode</label>
                 </div>
+                @if (CurrentJob?.UseDependencyMode == false)
+                {
+                    <div class="custom-control custom-switch ml-4">
+                        <input type="checkbox" class="custom-control-input" disabled id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)">
+                        <label class="custom-control-label" for="stop_on_first_error_toggle">Stop on first error</label>
+                    </div>
+                }
             </AuthorizeView>
         </div>
     </div>
@@ -344,6 +359,20 @@ else
         catch (Exception ex)
         {
             await JsRuntime.InvokeVoidAsync("alert", "Error toggling job dependency mode: " + ex.Message);
+        }
+    }
+
+    private async Task ToggleStopOnFirstError(ChangeEventArgs args)
+    {
+        bool value = (bool)args.Value!;
+        try
+        {
+            await DbHelperService.ToggleJobStopOnFirstErrorAsync(CurrentJob, value);
+            CurrentJob.StopOnFirstError = !CurrentJob.StopOnFirstError;
+        }
+        catch (Exception ex)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Error toggling stop on first error: " + ex.Message);
         }
     }
 

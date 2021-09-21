@@ -42,6 +42,9 @@ namespace EtlManagerDataAccess.Models
         [Display(Name = "Dependency mode")]
         public bool DependencyMode { get; set; }
 
+        [Display(Name = "Stop on first error")]
+        public bool StopOnFirstError { get; set; }
+
         [Display(Name = "Max parallel steps (0 = use default)")]
         public int MaxParallelSteps { get; set; }
 

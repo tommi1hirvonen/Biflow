@@ -17,6 +17,8 @@ INSERT INTO etlmanager.Job (
 	CreatedDateTime,
 	LastModifiedDateTime,
 	UseDependencyMode,
+	StopOnFirstError,
+	OvertimeNotificationLimitMinutes,
 	MaxParallelSteps,
 	IsEnabled,
 	CreatedBy
@@ -27,6 +29,8 @@ SELECT @JobIdNew,
 	GETUTCDATE(),
 	GETUTCDATE(),
 	UseDependencyMode,
+	StopOnFirstError,
+	OvertimeNotificationLimitMinutes,
 	MaxParallelSteps,
 	IsEnabled,
 	@Username
