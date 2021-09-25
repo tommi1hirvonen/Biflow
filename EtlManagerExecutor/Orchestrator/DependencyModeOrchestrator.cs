@@ -106,7 +106,7 @@ namespace EtlManagerExecutor
                         StepStatuses[step] = ExecutionStatus.Failed;
                         try
                         {
-                            await UpdateStepAsSkipped(step);
+                            await UpdateStepAsSkipped(step, "Step was skipped because one or more strict dependencies failed.");
                             Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
                         }
                         catch (Exception ex)
@@ -151,7 +151,7 @@ namespace EtlManagerExecutor
             return StepAction.Wait;
         }
 
-        private async Task UpdateStepAsSkipped(StepExecution step)
+        private async Task UpdateStepAsSkipped(StepExecution step, string errorMessage)
         {
             using var context = _dbContextFactory.CreateDbContext();
             foreach (var attempt in step.StepExecutionAttempts)
@@ -159,6 +159,7 @@ namespace EtlManagerExecutor
                 attempt.ExecutionStatus = StepExecutionStatus.Skipped;
                 attempt.StartDateTime = DateTimeOffset.Now;
                 attempt.EndDateTime = DateTimeOffset.Now;
+                attempt.ErrorMessage = errorMessage;
                 context.Attach(attempt).State = EntityState.Modified;
             }
             await context.SaveChangesAsync();

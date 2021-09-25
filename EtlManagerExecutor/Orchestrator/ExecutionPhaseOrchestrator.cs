@@ -44,13 +44,13 @@ namespace EtlManagerExecutor
                 // mark remaining steps as skipped and stop orchestration.
                 if (Execution.StopOnFirstError && StepStatuses.Any(s => s.Value == ExecutionStatus.Failed))
                 {
-                    await MarkUnstartedStepsAsSkipped();
+                    await MarkUnstartedStepsAsSkipped("Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
                     break;
                 }
             }
         }
 
-        private async Task MarkUnstartedStepsAsSkipped()
+        private async Task MarkUnstartedStepsAsSkipped(string errorMessage)
         {
             using var context = _dbContextFactory.CreateDbContext();
             var unstartedAttempts = StepStatuses
@@ -62,6 +62,7 @@ namespace EtlManagerExecutor
                 attempt.ExecutionStatus = StepExecutionStatus.Skipped;
                 attempt.StartDateTime = DateTimeOffset.Now;
                 attempt.EndDateTime = DateTimeOffset.Now;
+                attempt.ErrorMessage = errorMessage;
                 context.Attach(attempt).State = EntityState.Modified;
             }
             await context.SaveChangesAsync();

@@ -120,16 +120,9 @@ namespace EtlManagerExecutor
 
             if (response.IsSuccessStatusCode)
             {
-                Result executionResult;
-                if (Step.FunctionIsDurable)
-                {
-                    executionResult = await HandleDurableFunctionPolling(client, content, cancellationToken);
-                }
-                else
-                {
-                    executionResult = Result.Success(content);
-                }
-
+                var executionResult = Step.FunctionIsDurable
+                    ? await HandleDurableFunctionPolling(client, content, cancellationToken)
+                    : Result.Success(content);
                 return executionResult;
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
