@@ -88,7 +88,7 @@ tr.disabled {
     background-color: var(--color-danger);
 }
 .progress-bar.skipped {
-    background-color: var(--color-warning);
+    background-color: #aaa;
 }
 .progress-bar.stopped {
     background-color: var(--color-warning);
