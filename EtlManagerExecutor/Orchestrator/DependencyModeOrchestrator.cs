@@ -77,8 +77,13 @@ namespace EtlManagerExecutor
             {
                 // Start steps that can be started and skip those that should be skipped.
                 await DoRoundAsync();
+                
                 // Wait for at least one step to finish before doing another round.
-                await Task.WhenAny(StepWorkers);
+                if (StepWorkers.Any())
+                {
+                    await Task.WhenAny(StepWorkers);
+                }
+                    
                 // Remove finished tasks from the list so that they don't immediately trigger the next Task.WhenAny().
                 StepWorkers.RemoveAll(task => task.IsCompleted);
             }

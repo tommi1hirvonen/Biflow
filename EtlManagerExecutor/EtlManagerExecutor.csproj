@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,6 +9,7 @@
     <Company>Tommi Hirvonen</Company>
     <Product>ETL Manager</Product>
 	<Nullable>enable</Nullable>
+    <UserSecretsId>33163422-1d71-43b2-8e47-dae520ca2eb6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

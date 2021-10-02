@@ -135,7 +135,7 @@ namespace EtlManagerExecutor
                 // send a notification about a long running execution.
                 if (notificationTask.IsCompleted && notify)
                 {
-                    _notificationService.SendLongRunningExecutionNotification(execution);
+                    await _notificationService.SendLongRunningExecutionNotification(execution);
                 }
                 
                 await orchestrationTask; // Wait for orchestration to finish.
@@ -180,7 +180,7 @@ namespace EtlManagerExecutor
             // Execution finished. Notify users based on subscriptions.
             if (notify)
             {
-                _notificationService.SendCompletionNotification(executionId);
+                await _notificationService.SendCompletionNotification(execution);
             }
         }
 

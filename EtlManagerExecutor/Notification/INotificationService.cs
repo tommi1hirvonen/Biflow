@@ -9,8 +9,8 @@ namespace EtlManagerExecutor
 {
     public interface INotificationService
     {
-        public void SendCompletionNotification(Guid executionId);
+        public Task SendCompletionNotification(Execution execution);
 
-        public void SendLongRunningExecutionNotification(Execution execution);
+        public Task SendLongRunningExecutionNotification(Execution execution);
     }
 }

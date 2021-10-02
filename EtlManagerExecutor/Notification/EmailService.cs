@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mail;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace EtlManagerExecutor
 {
@@ -25,20 +26,8 @@ namespace EtlManagerExecutor
             _dbContextFactory = dbContextFactory;
         }
 
-        public void SendCompletionNotification(Guid executionId)
+        public async Task SendCompletionNotification(Execution execution)
         {
-            using var context = _dbContextFactory.CreateDbContext();
-            Execution execution;
-            try
-            {
-                execution = context.Executions.Find(executionId);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "{executionId} Error getting execution status for notification evaluation", executionId);
-                return;
-            }
-
             var subscriptionTypeFilter = execution.ExecutionStatus switch
             {
                 ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running =>
@@ -49,13 +38,16 @@ namespace EtlManagerExecutor
                 new SubscriptionType[] { SubscriptionType.OnCompletion }
             };
 
+            using var context = _dbContextFactory.CreateDbContext();
+
             List<string> recipients;
             try
             {
-                var subscriptions = context.Subscriptions
+                var subscriptions = await context.Subscriptions
+                    .AsNoTrackingWithIdentityResolution()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToList();
+                    .ToListAsync();
                 recipients = subscriptions
                     .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
                     .Select(s => s.User.Email ?? "")
@@ -63,7 +55,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error getting recipients for notification", executionId);
+                Log.Error(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
                 return;
             }
 
@@ -74,13 +66,13 @@ namespace EtlManagerExecutor
             try
             {
                 using var sqlConnection = new SqlConnection(context.Database.GetConnectionString());
-                messageBody = sqlConnection.ExecuteScalar<string?>(
+                messageBody = await sqlConnection.ExecuteScalarAsync<string?>(
                     "EXEC [etlmanager].[GetNotificationMessageBody] @ExecutionId",
-                    new { ExecutionId = executionId }) ?? string.Empty;
+                    new { execution.ExecutionId }) ?? string.Empty;
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error getting notification message body", executionId);
+                Log.Error(ex, "{ExecutionId} Error getting notification message body", execution.ExecutionId);
                 // Do not return. The notification can be sent even without a body.
             }
 
@@ -91,7 +83,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error building notification email SMTP client. Check appsettings.json.", executionId);
+                Log.Error(ex, "{ExecutionId} Error building notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
                 return;
             }
 
@@ -108,7 +100,7 @@ namespace EtlManagerExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error building notification email message object. Check appsettings.json.", executionId);
+                Log.Error(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
                 return;
             }
 
@@ -116,25 +108,26 @@ namespace EtlManagerExecutor
 
             try
             {
-                client.Send(mailMessage);
-                Log.Information("{executionId} Notification email sent to: " + string.Join(", ", recipients), executionId);
+                await client.SendMailAsync(mailMessage);
+                Log.Information("{ExecutionId} Notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{executionId} Error sending notification email", executionId);
+                Log.Error(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
             }
         }
 
-        public void SendLongRunningExecutionNotification(Execution execution)
+        public async Task SendLongRunningExecutionNotification(Execution execution)
         {
             List<string> recipients;
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                var subscriptions = context.Subscriptions
+                var subscriptions = await context.Subscriptions
+                    .AsNoTrackingWithIdentityResolution()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToList();
+                    .ToListAsync();
                 recipients = subscriptions
                     .Where(s => s.NotifyOnOvertime)
                     .Select(s => s.User.Email ?? "")
@@ -182,7 +175,7 @@ namespace EtlManagerExecutor
 
             try
             {
-                client.Send(mailMessage);
+                await client.SendMailAsync(mailMessage);
                 Log.Information("{ExecutionId} Long running execution notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
             }
             catch (Exception ex)
