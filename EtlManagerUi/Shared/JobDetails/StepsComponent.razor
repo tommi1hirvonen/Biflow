@@ -663,6 +663,7 @@
             {
                 using var context = DbFactory.CreateDbContext();
                 var createdStep = await context.Steps
+                    .AsNoTrackingWithIdentityResolution()
                     .Include(step => step.Dependencies)
                     .Include(step => step.Tags)
                     .Include(step => (step as ParameterizedStep)!.StepParameters)

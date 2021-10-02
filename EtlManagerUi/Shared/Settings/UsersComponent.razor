@@ -123,7 +123,10 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        Users = await context.Users.OrderBy(user => user.Username).ToListAsync();
+        Users = await context.Users
+            .AsNoTracking()
+            .OrderBy(user => user.Username)
+            .ToListAsync();
     }
 
     private async Task DeleteUser(User user)

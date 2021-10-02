@@ -226,6 +226,7 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         Jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Subscriptions)
             .Include(job => job.JobParameters)
             .OrderBy(job => job.JobName)
@@ -267,6 +268,7 @@ else
 
         using var context = DbFactory.CreateDbContext();
         Steps = await context.Steps
+            .AsNoTrackingWithIdentityResolution()
             .Include(step => step.Dependencies)
             .Include(step => step.Tags)
             .Include(step => (step as ParameterizedStep)!.StepParameters)

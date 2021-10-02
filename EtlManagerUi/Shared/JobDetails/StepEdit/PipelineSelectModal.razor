@@ -117,6 +117,7 @@
                 Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
                 using var context = DbContextFactory.CreateDbContext();
                 var dataFactory = await context.DataFactories
+                    .AsNoTrackingWithIdentityResolution()
                     .Include(df => df.AppRegistration)
                     .FirstAsync(df => df.DataFactoryId == dataFactoryId);
                 Pipelines = await dataFactory.GetPipelinesAsync(TokenService);

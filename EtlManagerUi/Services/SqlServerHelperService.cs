@@ -24,6 +24,7 @@ namespace EtlManagerUi
             using (var context = _dbContextFactory.CreateDbContext())
             {
                 catalogConnectionString = await context.Connections
+                    .AsNoTracking()
                     .Where(c => c.ConnectionId == connectionId)
                     .Select(c => c.ConnectionString)
                     .FirstAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
@@ -57,6 +58,7 @@ namespace EtlManagerUi
             using (var context = _dbContextFactory.CreateDbContext())
             {
                 connectionString = await context.Connections
+                    .AsNoTracking()
                     .Where(c => c.ConnectionId == connectionId)
                     .Select(c => c.ConnectionString)
                     .FirstAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");

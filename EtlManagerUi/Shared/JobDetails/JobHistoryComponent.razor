@@ -135,6 +135,7 @@
             PrevId = Id;
             using var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
+                .AsNoTrackingWithIdentityResolution()
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(execution => execution.StepExecutionAttempts)
                 .Where(execution => execution.JobId == Id)

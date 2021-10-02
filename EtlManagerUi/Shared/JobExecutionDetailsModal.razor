@@ -397,11 +397,12 @@
         if (ExecutionId != Guid.Empty)
         {
             Loading = true;
-            var context = DbFactory.CreateDbContext();
+            using var context = DbFactory.CreateDbContext();
 
             GraphWasRendered = false;
 
             Execution = await context.Executions
+                .AsNoTrackingWithIdentityResolution()
                 .Include(e => e.ExecutionParameters)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.StepExecutionAttempts)

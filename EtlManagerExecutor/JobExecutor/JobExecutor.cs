@@ -209,6 +209,7 @@ namespace EtlManagerExecutor
         {
             using var context = _dbContextFactory.CreateDbContext();
             var steps = await context.JobSteps
+                .AsNoTrackingWithIdentityResolution()
                 .Include(step => step.Job)
                 .Include(step => step.JobToExecute)
                 .Select(step => new

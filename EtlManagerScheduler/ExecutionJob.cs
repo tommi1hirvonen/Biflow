@@ -43,6 +43,7 @@ namespace EtlManagerScheduler
                 {
                     using var dbContext = _dbContextFactory.CreateDbContext();
                     var isEnabled = await dbContext.Jobs
+                        .AsNoTracking()
                         .Where(job => job.JobId == jobId)
                         .Select(job => job.IsEnabled)
                         .FirstAsync();

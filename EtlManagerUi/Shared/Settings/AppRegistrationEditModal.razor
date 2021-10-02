@@ -97,8 +97,10 @@
     {
         if (AppRegistrationId != Guid.Empty)
         {
-            var context = DbFactory.CreateDbContext();
-            AppRegistration = await context.AppRegistrations.FindAsync(AppRegistrationId);
+            using var context = DbFactory.CreateDbContext();
+            AppRegistration = await context.AppRegistrations
+                .AsNoTracking()
+                .FirstAsync(r => r.AppRegistrationId == AppRegistrationId);
         }
         else
         {

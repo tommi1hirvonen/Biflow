@@ -173,6 +173,7 @@
 
         // Get duration executions
         var executionsQuery = context.Executions
+            .AsNoTrackingWithIdentityResolution()
             .Where(e => e.EndDateTime != null && e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
 
         if (!IncludeDeleted)
@@ -208,6 +209,7 @@
 
         // Job success rates
         var jobsQuery = context.Executions
+            .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.StepExecutionAttempts)
             .Where(e => e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
@@ -242,6 +244,7 @@
 
         // Get top failed steps
         var topFailedStepsQuery = context.StepExecutions
+            .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutionAttempts)
             .Include(e => e.Execution)
             .Where(e => e.Execution.CreatedDateTime >= FromDate && e.Execution.CreatedDateTime < ToDate);

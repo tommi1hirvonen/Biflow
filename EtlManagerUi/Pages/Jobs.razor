@@ -213,7 +213,11 @@
     {
         IsLoading = true;
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        jobs = await context.Jobs.Include(job => job.Schedules).OrderBy(job => job.JobName).ToListAsync();
+        jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .Include(job => job.Schedules)
+            .OrderBy(job => job.JobName)
+            .ToListAsync();
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
         IsLoading = false;
@@ -223,6 +227,7 @@
     {
         // Get each job's last execution.
         var lastExecutions = await context.Executions
+            .AsNoTrackingWithIdentityResolution()
             .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
             .Distinct()

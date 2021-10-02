@@ -109,8 +109,10 @@
         }
         else
         {
-            var context = DbFactory.CreateDbContext();
-            User = await context.Users.FirstOrDefaultAsync(user => user.Username == Username);
+            using var context = DbFactory.CreateDbContext();
+            User = await context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(user => user.Username == Username);
         }
     }
 

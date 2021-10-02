@@ -100,7 +100,10 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        Connections = await context.Connections.OrderBy(c => c.ConnectionName).ToListAsync();
+        Connections = await context.Connections
+            .AsNoTracking()
+            .OrderBy(c => c.ConnectionName)
+            .ToListAsync();
         ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 

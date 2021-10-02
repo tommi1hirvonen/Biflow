@@ -47,7 +47,10 @@ namespace EtlManagerExecutor
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                functionKey = await context.FunctionSteps.Select(step => step.FunctionKey).FirstOrDefaultAsync(cancellationToken);
+                functionKey = await context.FunctionSteps
+                    .AsNoTracking()
+                    .Select(step => step.FunctionKey)
+                    .FirstOrDefaultAsync(cancellationToken);
             }
             catch (Exception ex)
             {

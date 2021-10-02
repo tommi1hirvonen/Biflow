@@ -83,8 +83,14 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        FunctionApps = await context.FunctionApps.OrderBy(f => f.FunctionAppName).ToListAsync();
-        AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
+        FunctionApps = await context.FunctionApps
+            .AsNoTracking()
+            .OrderBy(f => f.FunctionAppName)
+            .ToListAsync();
+        AppRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(ar => ar.AppRegistrationName)
+            .ToListAsync();
     }
 
     private async Task DeleteFunctionApp(FunctionApp functionApp)

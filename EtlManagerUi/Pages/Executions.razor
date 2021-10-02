@@ -371,6 +371,7 @@
         Loading = true;
         using var context = await Task.Run<EtlManagerContext>(DbContextFactory.CreateDbContext);
         Executions_ = await context.Executions
+                .AsNoTrackingWithIdentityResolution()
                 .Include(e => e.ExecutionParameters)
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(exec => exec.StepExecutionAttempts)

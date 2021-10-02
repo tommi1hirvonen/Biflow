@@ -106,6 +106,7 @@
                 Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
                 using var context = DbContextFactory.CreateDbContext();
                 var functionApp = await context.FunctionApps
+                    .AsNoTrackingWithIdentityResolution()
                     .Include(fa => fa.AppRegistration)
                     .FirstAsync(fa => fa.FunctionAppId == id);
                 Functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);

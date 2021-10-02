@@ -156,6 +156,7 @@
     {
         using var context = DbFactory.CreateDbContext();
         Schedules = await context.Schedules
+            .AsNoTrackingWithIdentityResolution()
             .Where(schedule => schedule.JobId == Id)
             .OrderBy(schedule => schedule.CronExpression)
             .ToListAsync();

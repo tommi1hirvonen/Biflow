@@ -83,8 +83,14 @@
     protected override async Task OnParametersSetAsync()
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        DataFactories = await context.DataFactories.OrderBy(df => df.DataFactoryName).ToListAsync();
-        AppRegistrations = await context.AppRegistrations.OrderBy(ar => ar.AppRegistrationName).ToListAsync();
+        DataFactories = await context.DataFactories
+            .AsNoTracking()
+            .OrderBy(df => df.DataFactoryName)
+            .ToListAsync();
+        AppRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(ar => ar.AppRegistrationName)
+            .ToListAsync();
     }
 
     private async Task DeleteDataFactory(DataFactory df)

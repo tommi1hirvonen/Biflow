@@ -186,6 +186,7 @@
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
         Schedules_ = await context.Schedules
+            .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.CronExpression)

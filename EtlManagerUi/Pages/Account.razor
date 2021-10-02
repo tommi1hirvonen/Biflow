@@ -186,16 +186,20 @@
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         User = await context.Users
-        .Include(user => user.Subscriptions)
-        .FirstOrDefaultAsync(user => user.Username == Username);
-        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+            .AsNoTrackingWithIdentityResolution()
+            .Include(user => user.Subscriptions)
+            .FirstOrDefaultAsync(user => user.Username == Username);
+        Jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(job => job.JobName)
+            .ToListAsync();
     }
 
     private async Task SubmitEmail()
     {
         try
         {
-            var context = DbFactory.CreateDbContext();
+            using var context = DbFactory.CreateDbContext();
             context.Attach(User).State = EntityState.Modified;
             await context.SaveChangesAsync();
             await JS.InvokeVoidAsync("alert", "Email updated successfully");

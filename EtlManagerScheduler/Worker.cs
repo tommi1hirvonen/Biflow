@@ -74,7 +74,9 @@ namespace EtlManagerScheduler
             List<Schedule> schedules;
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                schedules = await context.Schedules.AsNoTracking().ToListAsync(cancellationToken: cancellationToken);
+                schedules = await context.Schedules
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken: cancellationToken);
             }
 
             // Clear the scheduler if there were any existing jobs or triggers.

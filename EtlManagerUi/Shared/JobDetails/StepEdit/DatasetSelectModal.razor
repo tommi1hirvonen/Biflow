@@ -107,7 +107,8 @@
                 Guid id = AppRegistrationId ?? throw new ArgumentNullException(nameof(id), "App registration id cannot be null");
                 using var context = DbContextFactory.CreateDbContext();
                 var appRegistration = await context.AppRegistrations
-                    .FindAsync(id);
+                    .AsNoTracking()
+                    .FirstAsync(r => r.AppRegistrationId == id);
                 Datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
                 StateHasChanged();
             }

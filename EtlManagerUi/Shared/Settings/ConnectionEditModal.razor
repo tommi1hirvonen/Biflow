@@ -102,8 +102,10 @@
     {
         if (ConnectionId != Guid.Empty)
         {
-            var context = DbFactory.CreateDbContext();
-            Connection = await context.Connections.FindAsync(ConnectionId);
+            using var context = DbFactory.CreateDbContext();
+            Connection = await context.Connections
+                .AsNoTracking()
+                .FirstAsync(c => c.ConnectionId == ConnectionId);
         }
         else
         {

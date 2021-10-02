@@ -105,8 +105,10 @@
     {
         if (DataFactoryId != Guid.Empty)
         {
-            var context = DbFactory.CreateDbContext();
-            DataFactory = await context.DataFactories.FindAsync(DataFactoryId);
+            using var context = DbFactory.CreateDbContext();
+            DataFactory = await context.DataFactories
+                .AsNoTracking()
+                .FirstAsync(df => df.DataFactoryId == DataFactoryId);
         }
         else
         {

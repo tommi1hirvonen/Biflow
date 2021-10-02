@@ -125,8 +125,9 @@
     {
         if (FunctionAppId != Guid.Empty)
         {
-            var context = DbFactory.CreateDbContext();
+            using var context = DbFactory.CreateDbContext();
             FunctionApp = await context.FunctionApps
+                .AsNoTrackingWithIdentityResolution()
                 .Include(f => f.AppRegistration)
                 .FirstAsync(f => f.FunctionAppId == FunctionAppId);
         }
