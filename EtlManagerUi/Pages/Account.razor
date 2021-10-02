@@ -14,7 +14,7 @@
 </h5>
 
 <div class="row mt-3">
-    <div class="col-md col-lg-5">
+    <div class="col">
         <div class="card shadow-sm">
             <h6 class="card-header">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
@@ -51,7 +51,9 @@
                 }
             </div>
         </div>
-        <div class="card shadow-sm mt-4">
+    </div>
+    <div class="col-lg mt-4 mt-lg-0">
+        <div class="card shadow-sm">
             <h6 class="card-header">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                 Password
@@ -62,123 +64,48 @@
                     <p><em>Loading...</em></p>
                 }
                 else
-                    {
-                        <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
-                            <BSFormGroup>
-                                <BSLabel>New password</BSLabel>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text rounded-left">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
-                                        </div>
+                {
+                    <BSForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+                        <BSFormGroup>
+                            <BSLabel>New password</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
                                 </div>
-                            </BSFormGroup>
-                            <BSFormGroup>
-                                <BSLabel>Confirm new password</BSLabel>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text rounded-left">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                        </div>
+                                <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSLabel>Confirm new password</BSLabel>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text rounded-left">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
                                 </div>
-                            </BSFormGroup>
-                            <BSFormGroup>
-                                <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
-                                    Save
-                                </BSButton>
-                            </BSFormGroup>
-                        </BSForm>
-                    }
-                </div>
-            </div>
-        </div>
-        <div class="col-md col-lg-7">
-            <div class="card shadow-smmt-4 mt-md-0">
-                <h6 class="card-header">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
-                    Subscriptions
-                </h6>
-                <div class="card-body px-0">
-                    @if (User is null || Jobs is null)
-                    {
-                        <p class="px-3"><em>Loading...</em></p>
-                    }
-                    else
-                    {
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        Job
-                                    </th>
-                                    <th>
-                                        Subscription
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var job in Jobs)
-                                {
-                                    <tr>
-                                        <td>
-                                            @job.JobName
-                                        </td>
-                                        <td>
-                                            <div class="form-group">
-                                                <div class="custom-control custom-radio custom-control-inline">
-                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_none")"
-                                                           checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
-                                                           @onchange="() => RemoveSubscription(job)">
-                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_none")">None</label>
-                                                </div>
-                                                <div class="custom-control custom-radio custom-control-inline">
-                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_failure")"
-                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnFailure)
-                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnFailure)">
-                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
-                                                </div>
-                                                <div class="custom-control custom-radio custom-control-inline">
-                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_success")"
-                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnSuccess)
-                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnSuccess)">
-                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_success")">On success</label>
-                                                </div>
-                                                <div class="custom-control custom-radio custom-control-inline">
-                                                    <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_completion")"
-                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
-                                                           @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
-                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
-                                                </div>
-                                                <div class="custom-control custom-checkbox custom-control-inline">
-                                                    <input type="checkbox" class="custom-control-input" id="@(job.JobId.ToString() + "_overtime")"
-                                                           checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.NotifyOnOvertime == true)
-                                                           @onchange="args => ToggleSubscription(job, (bool)args.Value!)">
-                                                    <label class="custom-control-label" for="@(job.JobId.ToString() + "_overtime")">On overtime</label>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                </div>
+                                <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
+                            </div>
+                        </BSFormGroup>
+                        <BSFormGroup>
+                            <BSButton Color="Color.Success" ButtonType="ButtonType.Submit">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                                Save
+                            </BSButton>
+                        </BSFormGroup>
+                    </BSForm>
+                }
             </div>
         </div>
     </div>
+</div>
 
 
 @code {
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
     private User User { get; set; } = null!;
-
-    private IList<Job> Jobs { get; set; } = null!;
 
     private PasswordModel PasswordModel_ { get; set; } = new();
 
@@ -189,10 +116,6 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
             .FirstOrDefaultAsync(user => user.Username == Username);
-        Jobs = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(job => job.JobName)
-            .ToListAsync();
     }
 
     private async Task SubmitEmail()
@@ -243,80 +166,6 @@
         else
         {
             await JS.InvokeVoidAsync("alert", "Error updating password");
-        }
-    }
-
-    private async Task RemoveSubscription(Job job)
-    {
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        if (subscription is null)
-            return;
-
-        using var context = DbFactory.CreateDbContext();
-        try
-        {
-            context.Subscriptions.Remove(subscription);
-            User.Subscriptions.Remove(subscription);
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            await JS.InvokeVoidAsync("alert", "Error removing subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(Job job, bool onOvertime)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        try
-        {
-            if (subscription is not null && subscription.SubscriptionType is null && !onOvertime)
-            {
-                context.Subscriptions.Remove(subscription);
-                User.Subscriptions.Remove(subscription);
-            }
-            else if (subscription is not null)
-            {
-                subscription.NotifyOnOvertime = onOvertime;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = null, NotifyOnOvertime = onOvertime };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(Job job, SubscriptionType subscriptionType)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        try
-        {
-            if (subscription is not null)
-            {
-                subscription.SubscriptionType = subscriptionType;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = subscriptionType };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
         }
     }
 
