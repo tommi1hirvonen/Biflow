@@ -1,11 +1,9 @@
-﻿@inject IJSRuntime JS
+﻿@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject SqlServerHelperService SqlServerHelperService
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select package</BSModalHeader>
-
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select package">
+    <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
@@ -73,7 +71,7 @@
         <div class="row mt-3">
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
-                    <label class="sr-only">Search</label>
+                    <label class="visually-hidden">Search</label>
                     <div class="input-group-prepend">
                         <div class="input-group-text rounded-left">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
@@ -117,20 +115,20 @@
                 </table>
             </div>
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectPackage"
-                  IsDisabled="SelectedPackage is null || SelectedProject is null || SelectedFolder is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectPackageAsync"
+                  Enabled="SelectedPackage is not null && SelectedProject is not null && SelectedFolder is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? ConnectionId { get; set; }
@@ -146,28 +144,13 @@
     private string? SelectedProject { get; set; }
     private string? SelectedPackage { get; set; }
 
-    private async Task ModalOpenChanged(bool isOpen)
+    private void OnClosed()
     {
-        if (isOpen && ConnectionId is not null && ConnectionId != Guid.Empty)
-        {
-            try
-            {
-                Catalog = await SqlServerHelperService.GetCatalogPackages((Guid)ConnectionId);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading catalog: {ex.Message}");
-            }
-        }
-        else
-        {
-            Catalog = null;
-            SelectedFolder = null;
-            SelectedProject = null;
-            SelectedPackage = null;
-            FilterText = string.Empty;
-        }
+        Catalog = null;
+        SelectedFolder = null;
+        SelectedProject = null;
+        SelectedPackage = null;
+        FilterText = string.Empty;
     }
 
     private void OnFolderChanged(string folder)
@@ -189,15 +172,29 @@
         SelectedProject = project;
     }
 
-    private void SelectPackage()
+    private async Task SelectPackageAsync()
     {
         if (SelectedFolder is not null && SelectedProject is not null && SelectedPackage is not null)
         {
             var package = (SelectedFolder, SelectedProject, SelectedPackage);
-            OnPackageSelected.InvokeAsync(package);
-            Modal.Hide();
+            await OnPackageSelected.InvokeAsync(package);
+            await Modal.HideAsync();
         }
     }
 
-    public void Show() => Modal.Show();
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        try
+        {
+            Catalog = await SqlServerHelperService.GetCatalogPackages((Guid)ConnectionId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading catalog", ex.Message);
+        }
+    }
+
 }

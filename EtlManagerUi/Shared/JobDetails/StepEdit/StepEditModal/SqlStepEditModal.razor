@@ -10,72 +10,66 @@
                             Context="Context"
                             OnStepSubmit="OnStepSubmit"
                             FormId="sql_step_edit_modal">
-    <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <label class="form-label">Timeout (min) (0 = indefinite)</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
-        </BSFormGroup>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Connection</BSLabel>
+        </div>
+        <div class="col-lg-6">
+            <label class="form-label">Connection</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                 </div>
-                <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
+                <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
                     @foreach (var connection in Connections ?? Enumerable.Empty<Connection>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                     }
                 </InputSelect>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormGroup>
-        <BSLabel>SQL statement</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <label class="form-label">SQL statement</label>
         <div class="input-group">
-            <div class="input-group-prepend">
-                <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
-                </div>
+            <div class="input-group-text">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
             </div>
             <InputTextArea class="form-control" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
         </div>
-    </BSFormGroup>
+    </div>
 
-    <div class="row mb-3">
+    <div class="row my-3">
         <div class="col">
-            <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenStoredProcedureSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenStoredProcedureSelectModal">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse stored procedures
-            </BSButton>
+            </HxButton>
         </div>
     </div>
     <StoredProcedureSelectModal @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
 
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <div class="custom-control custom-checkbox custom-control-inline">
-                <input type="checkbox" class="custom-control-input" id="capture_result"
+    <div class="row">
+        <div class="col">
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="capture_result"
                        checked=@(Step.ResultCaptureJobParameterId is not null)
                        disabled=@(Job?.JobParameters.Any() == false)
                        @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
-                <label class="custom-control-label" for="capture_result">Capture scalar result</label>
+                <label class="form-check-label" for="capture_result">Capture scalar result</label>
             </div>
-        </BSFormGroup>
-        <BSFormGroup Class="form-inline col">
+        </div>
+        <div class="col d-inline">
             @if (Step.ResultCaptureJobParameterId is not null)
             {
-                <BSLabel>To:</BSLabel>
-                <InputSelect class="form-control form-control-sm ml-3" @bind-Value="Step.ResultCaptureJobParameterId">
+                <label class="form-label">To:</label>
+                <InputSelect class="form-select form-select-sm ml-3" @bind-Value="Step.ResultCaptureJobParameterId">
                     @foreach (var jobParam in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
                         <option value="@jobParam.ParameterId">
@@ -84,8 +78,8 @@
                         }
                 </InputSelect>
             }
-        </BSFormGroup>
-    </BSFormRow>
+        </div>
+    </div>
 </ParameterizedStepEditModal>
 
 
@@ -173,11 +167,11 @@
         StateHasChanged();
     }
 
-    private void OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.Show();
+    private async Task OpenStoredProcedureSelectModal() => await StoredProcedureSelectModal.ShowAsync();
 
     private void OnStoredProcedureSelected((string Schema, string Procedure) procedure) => Step.SqlStatement = $"EXEC [{procedure.Schema}].[{procedure.Procedure}]";
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

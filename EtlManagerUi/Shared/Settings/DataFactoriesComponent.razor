@@ -2,11 +2,11 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 
-<BSButton Color="Color.Success"
+<HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
-          IsDisabled="DataFactories is null || AppRegistrations is null || !AppRegistrations.Any()">
+          Enabled="DataFactories is not null && AppRegistrations is not null && AppRegistrations.Any()">
     Add Data Factory
-</BSButton>
+</HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -42,20 +42,20 @@
                             @df.DataFactoryName
                         </td>
                         <td class="align-middle">
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSButton>
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                </HxButton>
+                                <HxDropdown>
+                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteDataFactory(df)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </BSButtonGroup>
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteDataFactory(df)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
                         </td>
                         <td class="align-middle">
                             @df.ResourceGroupName
@@ -119,9 +119,9 @@
         StateHasChanged();
     }
 
-    private void ShowEditModal(DataFactory? dataFactory)
+    private async Task ShowEditModal(DataFactory? dataFactory)
     {
         EditDataFactoryId = dataFactory?.DataFactoryId ?? Guid.Empty;
-        DataFactoryEditModal.Show();
+        await DataFactoryEditModal.ShowAsync();
     }
 }

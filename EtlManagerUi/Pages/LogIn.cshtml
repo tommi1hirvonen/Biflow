@@ -22,35 +22,28 @@
                             @Html.ValidationSummary(true, "", new { @class = "text-danger" })
                             <p />
                             <p />
-                            <div class="form-group">
+                            <div>
+                                <label class="visually-hidden" asp-for="Login.Username"></label>
                                 <div class="input-group">
-                                    <label class="sr-only" asp-for="Login.Username"></label>
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text rounded-left">
-                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
-                                        </div>
-                                    </div>
+                                    <span class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                    </span>
                                     <input id="username" asp-for="Login.Username" class="form-control" placeholder="Username" />
                                 </div>
                                 @Html.ValidationMessageFor(m => m.Login.Username, "", new { @class = "text-danger" })
                             </div>
-                            <p />
-                            <div class="form-group">
+                            <div class="form-group mt-4">
+                                <label class="visually-hidden" asp-for="Login.Password"></label>
                                 <div class="input-group">
-                                    <label class="sr-only" asp-for="Login.Password"></label>
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text rounded-left">
-                                            @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                        </div>
+                                    <div class="input-group-text">
+                                        @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
                                     </div>
                                     <input type="password" asp-for="Login.Password" class="form-control" placeholder="Password" />
                                 </div>
                                 @Html.ValidationMessageFor(m => m.Login.Password, "", new { @class = "text-danger" })
                             </div>
-                            <p />
-                            <p />
-                            <div class="form-group">
-                                <button id="button_login" asp-page-handler="LogIn" class="btn btn-primary btn-block">
+                            <div class="d-grid mt-4 mb-3">
+                                <button id="button_login" asp-page-handler="LogIn" class="btn btn-primary">
                                     @Html.Raw(System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-in.svg")))
                                     &nbsp;
                                     Log in
@@ -69,14 +62,14 @@
 @section Scripts {
     <script type="text/javascript">
 
-        $(document).ready(function () { focusUsername(); });
+        window.onload = focusUsername;
 
         function focusUsername() {
-            $('#username').focus();
+            document.getElementById('username').focus();
         }
 
         function disableLoginbutton() {
-            $('#button_login').attr("disabled", "true");
+            document.getElementById('button_login').setAttribute('disabled', 'true');
             return true;
         }
     </script>

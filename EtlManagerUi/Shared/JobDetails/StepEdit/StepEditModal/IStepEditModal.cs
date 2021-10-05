@@ -1,7 +1,9 @@
-﻿namespace EtlManagerUi.Shared.JobDetails.StepEdit.StepEditModal
+﻿using System.Threading.Tasks;
+
+namespace EtlManagerUi.Shared.JobDetails.StepEdit.StepEditModal
 {
     interface IStepEditModal
     {
-        public void Show(bool showDependencies = false);
+        public Task ShowAsync(bool showDependencies = false);
     }
 }

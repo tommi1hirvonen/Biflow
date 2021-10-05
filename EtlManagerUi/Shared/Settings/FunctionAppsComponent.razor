@@ -1,13 +1,12 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IJSRuntime JS
 
-<BSButton Color="Color.Success"
+<HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
-          IsDisabled="FunctionApps is null || AppRegistrations is null || !AppRegistrations.Any()">
+          Enabled="FunctionApps is not null && AppRegistrations is not null && AppRegistrations.Any()">
     Add Function App
-</BSButton>
+</HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -43,20 +42,20 @@
                             @app.FunctionAppName
                         </td>
                         <td class="align-middle">
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
+                            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSButton>
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                </HxButton>
+                                <HxDropdown>
+                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteFunctionApp(app)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </BSButtonGroup>
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteFunctionApp(app)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
                         </td>
                         <td class="align-middle">
                             @app.ResourceGroupName
@@ -119,9 +118,9 @@
         StateHasChanged();
     }
 
-    private void ShowEditModal(FunctionApp? functionApp)
+    private async Task ShowEditModal(FunctionApp? functionApp)
     {
         EditFunctionAppId = functionApp?.FunctionAppId ?? Guid.Empty;
-        FunctionAppEditModal.Show();
+        await FunctionAppEditModal.ShowAsync();
     }
 }

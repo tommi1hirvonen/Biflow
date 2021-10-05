@@ -3,64 +3,64 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IConfiguration configuration
 @inject IHttpContextAccessor HttpContextAccessor
 
-<BSModal @ref="Modal" IsFullScreen="true" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@(Execution is not null ? Execution.JobName : null)</BSModalHeader>
-    <BSModalBody>
+<HxModal @ref="Modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="@(Execution is not null ? Execution.JobName : null)">
+    <BodyTemplate>
 
-        <BSButtonGroup IsToolbar="true">
-            <BSButton Size="Size.Small" Color="Color.Primary" @onclick="LoadData" IsDisabled="Loading">
+        <HxButtonToolbar>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
                 Refresh
-            </BSButton>
+            </HxButton>
 
-            <BSButton Size="Size.Small" Color="Color.Secondary" Class="ml-3" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                 Job details
-            </BSButton>
+            </HxButton>
 
-            <BSButtonGroup Class="ml-3">
-                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Table ? "active" : null)"
+            <HxButtonGroup CssClass="ms-3">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Table ? "active" : null)"
                           @onclick="() => ShowReport = Report.Table">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
                     Table
-                </BSButton>
-                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Gantt ? "active" : null)"
+                </HxButton>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Gantt ? "active" : null)"
                           @onclick="() => ShowReport = Report.Gantt">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
                     Gantt
-                </BSButton>
-                <BSButton Size="Size.Small" Color="Color.Secondary" Class="@(ShowReport == Report.Dependencies ? "active" : null)"
+                </HxButton>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Dependencies ? "active" : null)"
                             @onclick="() => { ShowReport = Report.Dependencies; }">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                     Dependencies
-                </BSButton>
-            </BSButtonGroup>
+                </HxButton>
+            </HxButtonGroup>
 
             @if (Loading)
             {
-                <div class="spinner-border text-primary align-middle ml-3" role="status">
-                    <span class="sr-only">Loading...</span>
+                <div class="spinner-border text-primary align-middle ms-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
             }
-        </BSButtonGroup>
+        </HxButtonToolbar>
 
         <AuthorizeView Roles="Admin, Editor, Operator">
             @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
             {
-                <BSButtonGroup IsToolbar="true" Class="mt-3">
-                    <BSDropdown>
-                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger" Class="@(Stopping ? "disabled" : null)">
+                <HxButtonToolbar CssClass="mt-3">
+                    <HxDropdown>
+                        <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                             Stop
-                        </BSDropdownToggle>
-                        <BSDropdownMenu>
-                            <BSDropdownItem @onclick="StopJobExecutionAsync" IsDisabled="Stopping">Confirm</BSDropdownItem>
-                        </BSDropdownMenu>
-                    </BSDropdown>
-                </BSButtonGroup>
+                        </HxDropdownToggle>
+                        <HxDropdownMenu>
+                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
+                        </HxDropdownMenu>
+                    </HxDropdown>
+                </HxButtonToolbar>
             }
         </AuthorizeView>
 
@@ -171,7 +171,7 @@
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                     <span class="mr-3">Filter</span>
 
-                    <BSButtonGroup Size="Size.Small">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
                         <FilterDropdown TItem="string"
                                         FilterSet="StepFilter"
                                         Items="Execution?.StepExecutions
@@ -237,12 +237,12 @@
                                 Tag
                             </Title>
                         </FilterDropdown>
-                        <BSButton Size="Size.Small" Color="Color.Light"
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                   @onclick="() => { StepStatusFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
                             Reset
-                        </BSButton>
-                    </BSButtonGroup>
+                        </HxButton>
+                    </HxButtonGroup>
                 </div>
             </div>
             <div class="row mt-3">
@@ -289,9 +289,9 @@
         {
             if (Execution?.DependencyMode == false)
             {
-                <BSAlert Color="Color.Warning" Class="mt-3">
+                <HxAlert Color="ThemeColor.Warning" Class="mt-3">
                     Job is/was executed in execution phase mode. Dependencies have no effect.
-                </BSAlert>
+                </HxAlert>
             }
         }
 
@@ -304,24 +304,16 @@
         </div>
         @if (GraphWasRendered)
         {
-            <div>
-                @foreach (var step in Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>())
-                {
-                    <BSTooltip Target="@step.StepId.ToString()" Placement="Placement.Top">
-                        @step.GetExecutionStatus()
-                        @step.GetDurationInSeconds().SecondsToReadableFormat()
-                    </BSTooltip>
-                }
-            </div>
+
         }
 
-        <StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionAttempt" />
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxModal>
 
-    </BSModalBody>
-    <BSModalFooter>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
-    </BSModalFooter>
-</BSModal>
+<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionAttempt" />
 
 
 
@@ -331,7 +323,7 @@
 
     private Guid ExecutionId => ExecutionId_ switch { not null => Guid.Parse(ExecutionId_), _ => Guid.Empty };
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     private Execution? Execution { get; set; }
 
@@ -461,7 +453,7 @@
             var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
             SelectedStepExecutionAttempt = attempt;
             StateHasChanged();
-            StepExecutionDetailsModal.Show();
+            StepExecutionDetailsModal.ShowAsync().Wait();
         }
     }
 
@@ -469,7 +461,7 @@
     {
         if (Stopping)
         {
-            await JS.InvokeVoidAsync("alert", "Execution is already stopping");
+            Messenger.AddInformation("Execution is already stopping");
             return;
         }
 
@@ -482,12 +474,12 @@
         }
         catch (TimeoutException)
         {
-            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+            Messenger.AddError("Error stopping execution", ex.Message);
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
@@ -502,17 +494,17 @@
         }
         catch (TimeoutException)
         {
-            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+            Messenger.AddError("Error stopping execution", ex.Message);
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
 
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 
     private DateTime MinTime => Executions.Any() ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
     private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;

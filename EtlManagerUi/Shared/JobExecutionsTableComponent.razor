@@ -40,7 +40,7 @@
         {
             @foreach (var item in Executions)
             {
-                <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                <tr style="cursor: pointer;" @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)">
                     <td>
                         @item.JobName
                     </td>
@@ -80,9 +80,9 @@
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
-    private void OpenJobExecutionModal(Guid executionId)
+    private async Task OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
-        JobExecutionModal.Show();
+        await JobExecutionModal.ShowAsync();
     }
 }

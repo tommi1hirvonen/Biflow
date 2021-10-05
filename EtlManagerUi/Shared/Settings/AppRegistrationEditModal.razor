@@ -2,82 +2,85 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
-    @if (AppRegistration is not null)
-    {
-        <BSModalHeader OnClick="() => Modal.Hide()">@(AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration.AppRegistrationName)</BSModalHeader>
-        <BSModalBody>
-            <BSForm Model="AppRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
-                <div class="row">
-                    <div class="col mx-3">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration?.AppRegistrationName)">
+    <BodyTemplate>
+        @if (AppRegistration is not null)
+        {
+        <EditForm Model="AppRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
+            <div class="row">
+                <div class="col mx-3">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
 
-                        <BSFormGroup>
-                            <BSLabel>App registration name</BSLabel>
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">App registration name</label>
                             <InputText class="form-control" @bind-Value="AppRegistration.AppRegistrationName"></InputText>
-                        </BSFormGroup>
-
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Tenant id</BSLabel>
-                                <InputText class="form-control" @bind-Value="AppRegistration.TenantId"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
-
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client id</BSLabel>
-                                <InputText class="form-control" @bind-Value="AppRegistration.ClientId"></InputText>
-                            </BSFormGroup>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Client secret</BSLabel>
-                                <InputText class="form-control" @bind-Value="AppRegistration.ClientSecret"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
-                        <div class="row mt-2">
-                            <div class="col">
-                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
-                                    Test connection
-                                </BSButton>
-                            </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col">
-                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestPowerBIAccess" IsDisabled="TestingConnection">
-                                    Test Power BI access
-                                </BSButton>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col">
-                                @if (TestingConnection)
-                                {
-                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="sr-only">Loading...</span>
-                                    </div>
-                                }
+                    </div>
 
-                                @if (ConnectionTestSuccess == true)
-                                {
-                                    <span class="badge badge-success">Success</span>
-                                }
-                                else if (ConnectionTestSuccess == false)
-                                {
-                                    <span class="badge badge-danger">Failed</span>
-                                }
-                            </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label class="form-label">Tenant id</label>
+                            <InputText class="form-control" @bind-Value="AppRegistration.TenantId"></InputText>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label class="form-label">Client id</label>
+                            <InputText class="form-control" @bind-Value="AppRegistration.ClientId"></InputText>
+                        </div>
+                        <div class="col-lg">
+                            <label class="form-label">Client secret</label>
+                            <InputText class="form-control" @bind-Value="AppRegistration.ClientSecret"></InputText>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
+                                Test connection
+                            </HxButton>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestPowerBIAccess" Enabled="!TestingConnection">
+                                Test Power BI access
+                            </HxButton>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col">
+                            @if (TestingConnection)
+                            {
+                                <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            }
+
+                            @if (ConnectionTestSuccess == true)
+                            {
+                                <span class="badge badge-success">Success</span>
+                            }
+                            else if (ConnectionTestSuccess == false)
+                            {
+                                <span class="badge badge-danger">Failed</span>
+                            }
                         </div>
                     </div>
                 </div>
-            </BSForm>
-        </BSModalBody>
-    }
-    <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="pbi_edit_form" Color="Color.Success">@(AppRegistrationId == Guid.Empty ? "Create" : "Save")</BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+            </div>
+        </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="pbi_edit_form" Color="ThemeColor.Success">@(AppRegistrationId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate> 
+</HxModal>
 
 @code {
     [Parameter]
@@ -88,7 +91,7 @@
 
     private AppRegistration? AppRegistration { get; set; }
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -111,7 +114,7 @@
     private async Task SubmitAppRegistration()
     {
         await OnAppRegistrationSubmit.InvokeAsync(AppRegistration);
-        Modal.Hide();
+        await Modal.HideAsync();
     }
 
     private async Task TestConnection()
@@ -156,14 +159,5 @@
         TestingConnection = false;
     }
 
-    private void OnOpenChanged(bool isOpen)
-    {
-        if (!isOpen)
-        {
-            ConnectionTestSuccess = null;
-            
-        }
-    }
-
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 }

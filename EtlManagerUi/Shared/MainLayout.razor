@@ -5,11 +5,19 @@
 @using System.Security.Claims
 @using System.Security.Principal
 
+<style> @*Toast container for HxMessenger service*@
+    .hx-toast-container {
+        margin-top: 1.5rem!important;
+        z-index: 2000;
+    }
+</style>
+
 <AuthorizeView>
     <Authorized>
+        <HxMessenger Position="HxToastContainerPosition.TopCenter" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : null)">
-                <text class="navbar-brand navbar-brand-bg mr-0 px-3">ETL Manager</text>
+                <text class="navbar-brand navbar-brand-bg me-0 px-3">ETL Manager</text>
                 <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -21,7 +29,7 @@
                         </li>
                     </ul>
                 }
-                <ul class="navbar-nav ml-auto">
+                <ul class="navbar-nav ms-auto">
                     <li>
                         <strong class="navbar-text px-3">
                             @(Configuration.GetValue<string>("EnvironmentName"))

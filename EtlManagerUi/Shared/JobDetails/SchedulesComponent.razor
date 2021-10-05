@@ -1,12 +1,12 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IJSRuntime JS
 @inject SchedulerService SchedulerService
 @inject IWebHostEnvironment WebHostEnvironment
+@inject IHxMessengerService Messenger
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <BSButton Color="Color.Success" @onclick="() => CreateModal.Show()">
+    <HxButton Color="ThemeColor.Success" @onclick="async () => await CreateModal.ShowAsync()">
         Add schedule
-    </BSButton>
+    </HxButton>
 </AuthorizeView>
 
 <div class="card shadow-sm pt-2 my-4">
@@ -41,14 +41,14 @@
                 {
                     <tr class="@(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
-                            <div class="custom-control custom-switch">
+                            <div class="form-check form-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
-                                    <input type="checkbox" class="custom-control-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
-                                    <label class="custom-control-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
+                                    <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
+                                    <label class="form-check-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Viewer">
-                                    <input type="checkbox" class="custom-control-input" disabled checked=@item.IsEnabled>
-                                    <label class="custom-control-label" for="@item.ScheduleId"></label>
+                                    <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
+                                    <label class="form-check-label" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
                             </div>
                         </td>
@@ -56,37 +56,27 @@
                             <div class="d-inline-flex">
                                 @item.CronExpression
                                 &nbsp;&nbsp;
-                                <div id="@("tooltip_" + item.ScheduleId)">
+                                <HxTooltip Placement="TooltipPlacement.Auto" Text="@item.GetScheduleSummary()">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                                </div>
-                                <BSTooltip Target="@("tooltip_" + item.ScheduleId)" Placement="Placement.Auto">
-                                    <div style="white-space: pre;">
-                                        @item.GetScheduleSummary()
-                                    </div>
-                                </BSTooltip>
+                                </HxTooltip>
                             </div>
                         </td>
                         <td>
                             <div class="d-inline-flex">
                                 @item.GetNextFireTime()
                                 &nbsp;&nbsp;
-                                <div id="@("tooltip2_" + item.ScheduleId)">
+                                <HxTooltip Placement="TooltipPlacement.Auto" Text="@("Next executions:\n" + string.Join("\n", item.GetNextFireTimes(15)))">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
-                                </div>
-                                <BSTooltip Target="@("tooltip2_" + item.ScheduleId)" Placement="Placement.Auto">
-                                    <div style="white-space: pre;">
-                                        @("Next executions:\n" + string.Join("\n", item.GetNextFireTimes(15)))
-                                    </div>
-                                </BSTooltip>
+                                </HxTooltip>
                             </div>
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
-                                <BSButtonGroup Size="Size.Small" Class="btn-row">
-                                    <BSButton Color="Color.Light" Size="Size.Small" aria-label="delete" Class="btn-row" @onclick="() => DeleteSchedule(item)">
+                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete" CssClass="btn-row" @onclick="() => DeleteSchedule(item)">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                    </BSButton>
-                                </BSButtonGroup>
+                                    </HxButton>
+                                </HxButtonGroup>
                             </AuthorizeView>
                         </td>
                     </tr>
@@ -99,34 +89,31 @@
 @if (NewSchedule is not null)
 {
     <AuthorizeView Roles="Admin, Editor, Operator">
-        <BSModal @ref="CreateModal" Size="Size.Large">
-            <BSModalHeader OnClick="() => CreateModal.Hide()">New schedule</BSModalHeader>
-            <BSForm Model="NewSchedule" OnValidSubmit="AddSchedule" Context="_context">
-                <BSModalBody>
+        <HxModal @ref="CreateModal" Size="ModalSize.Large" Title="New schedule">
+            <BodyTemplate>
+                <EditForm Model="NewSchedule" id="new_schedule_form" OnValidSubmit="AddSchedule" Context="_context">
                     <div class="row">
                         <div class="col-md-8 mx-auto">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
-                            <BSFormGroup>
-                                <BSLabel>Cron expression</BSLabel>
+                            <div>
+                                <label class="form-label">Cron expression</label>
                                 <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <div class="input-group-text">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
-                                        </div>
+                                    <div class="input-group-text">
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
                                     </div>
                                     <InputText class="form-control" @bind-Value="NewSchedule.CronExpression"></InputText>
                                 </div>
-                            </BSFormGroup>
+                            </div>
                         </div>
                     </div>
-                </BSModalBody>
-                <BSModalFooter>
-                    <BSButton ButtonType="ButtonType.Submit" Color="Color.Success">Create</BSButton>
-                    <BSButton Color="Color.Secondary" @onclick="() => CreateModal.Hide()">Cancel</BSButton>
-                </BSModalFooter>
-            </BSForm>
-        </BSModal>
+                </EditForm>
+            </BodyTemplate>
+            <FooterTemplate>
+                <HxSubmit FormId="new_schedule_form" Color="ThemeColor.Success">Create</HxSubmit>
+                <HxButton Color="ThemeColor.Secondary" @onclick="async () => await CreateModal.HideAsync()">Cancel</HxButton>
+            </FooterTemplate>
+        </HxModal>
     </AuthorizeView>
 }
 
@@ -141,7 +128,7 @@
 
     private Schedule? NewSchedule { get; set; }
 
-    private BSModal CreateModal { get; set; } = null!;
+    private HxModal CreateModal { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -180,13 +167,13 @@
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error enabling/disabling schedule\n{ex.Message}");
+            Messenger.AddError("Error toggling schedule", ex.Message);
         }
     }
 
     private async Task AddSchedule()
     {
-        CreateModal.Hide();
+        await CreateModal.HideAsync();
         try
         {
             if (NewSchedule is null) throw new InvalidOperationException("NewSchedule was null");
@@ -212,9 +199,9 @@
             Schedules = Schedules?.OrderBy(sched => sched.CronExpression).ToList();
             NewSchedule = new() { JobId = Id, IsEnabled = true };
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error adding schedule");
+            Messenger.AddError("Error adding schedule", ex.Message);
         }
     }
 
@@ -241,7 +228,7 @@
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error deleting schedule\n{ex.Message}");
+            Messenger.AddError("Error deleting schedule", ex.Message);
         }
     }
 

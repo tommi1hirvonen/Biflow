@@ -10,56 +10,50 @@
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
                    FormId="dataset_step_edit_modal">
-    <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>App registration</BSLabel>
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <label class="form-label">App registration</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
                 </div>
-                <InputSelect class="form-control" @bind-Value="Step.AppRegistrationId">
+                <InputSelect class="form-select" @bind-Value="Step.AppRegistrationId">
                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                     {
                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
                     }
                 </InputSelect>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col-lg">
-            <BSLabel>Group id</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg">
+            <label class="form-label">Group id</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.DatasetGroupId" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col-lg">
-            <BSLabel>Dataset id</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg">
+            <label class="form-label">Dataset id</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.DatasetId" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <div class="row mb-3">
+        </div>
+    </div>
+    <div class="row mt-3">
         <div class="col">
-            <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenDatasetSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectModal">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse datasets
-            </BSButton>
+            </HxButton>
         </div>
     </div>
     <DatasetSelectModal @ref="DatasetSelectModal" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
@@ -134,7 +128,7 @@
         StateHasChanged();
     }
 
-    private void OpenDatasetSelectModal() => DatasetSelectModal.Show();
+    private async Task OpenDatasetSelectModal() => await DatasetSelectModal.ShowAsync();
 
     private void OnDatasetSelected((string GroupId, string DatasetId) dataset)
     {
@@ -142,7 +136,7 @@
         Step.DatasetId = dataset.DatasetId;
     }
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

@@ -4,45 +4,43 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject SchedulerService SchedulerService
 @inject DbHelperService DbHelperService
-@inject IJSRuntime JsRuntime
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IHxMessengerService Messenger
 
 <h4>Jobs</h4>
 
 <div class="btn-toolbar mt-3">
     <AuthorizeView Roles="Admin, Editor">
         @*Dropdown to create new jobs*@
-        <BSDropdown>
-            <BSDropdownToggle Color="Color.Success">Add job</BSDropdownToggle>
-            <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                <BSForm Model="NewJob" OnValidSubmit="AddJob" Context="_context">
+        <HxDropdown>
+            <HxDropdownToggle Color="ThemeColor.Success">Add job</HxDropdownToggle>
+            <HxDropdownContent CssClass="p-4">
+                <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    <BSFormGroup>
-                        <BSLabel>Job name</BSLabel>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
-                                </div>
-                            </div>
+                    <div>
+                        <label class="form-label">Job name</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                            </span>
                             <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
                         </div>
-                    </BSFormGroup>
-                    <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success" IsDisabled="jobs is null">Add</BSButton>
-                </BSForm>
-            </BSDropdownMenu>
-        </BSDropdown>
-        <BSButton Class="ml-3" Color="Color.Primary" @onclick="LoadData" IsDisabled="IsLoading">
+                    </div>
+                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null" CssClass="mt-3">Add</HxSubmit>
+                </EditForm>
+            </HxDropdownContent>
+        </HxDropdown>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
-        </BSButton>
+        </HxButton>
     </AuthorizeView>
     <AuthorizeView Roles="Operator, Viewer">
-        <BSButton Color="Color.Primary" @onclick="LoadData" IsDisabled="IsLoading">
+        <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
             Refresh
-        </BSButton>
+        </HxButton>
     </AuthorizeView>
 </div>
 
@@ -63,7 +61,7 @@
                     @if (IsLoading)
                     {
                         <div class="spinner-border spinner-border-sm text-secondary align-middle ml-3" role="status">
-                            <span class="sr-only">Loading...</span>
+                            <span class="visually-hidden">Loading...</span>
                         </div>
                     }
                 </th>
@@ -93,59 +91,59 @@
                         <td>
                             <div class="d-inline-flex align-items-center">
                                 <AuthorizeView Roles="Admin, Editor">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="custom-control-label" style="cursor: pointer;" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                        <label class="form-check-label" for="enabled_@item.JobId"></label>
                                     </div>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Operator, Viewer">
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" disabled id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)">
-                                        <label class="custom-control-label" for="enabled_@item.JobId" aria-label="enabled"></label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                        <label class="form-check-label" for="enabled_@item.JobId"></label>
                                     </div>
                                 </AuthorizeView>
 
                                 <AuthorizeView Roles="Admin, Editor">
-                                    <BSButtonGroup Class="ml-2 btn-row" Size="Size.Small">
+                                    <HxButtonGroup CssClass="ms-2 btn-row" Size="ButtonGroupSize.Small">
 
                                         @*Dropdown to edit the job's name*@
-                                        <BSDropdown>
-                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                        <HxDropdown>
+                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                            </BSDropdownToggle>
-                                            <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                                <BSForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context">
+                                            </HxDropdownToggle>
+                                            <HxDropdownContent CssClass="p-4">
+                                                <EditForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context" style="min-width: 25rem;">
                                                     <DataAnnotationsValidator />
                                                     <ValidationSummary />
-                                                    <BSFormGroup>
-                                                        <BSLabel>New name</BSLabel>
-                                                        <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
-                                                    </BSFormGroup>
-                                                    <BSButton Size="Size.Small" ButtonType="ButtonType.Submit" Color="Color.Success">Save</BSButton>
-                                                </BSForm>
-                                            </BSDropdownMenu>
-                                        </BSDropdown>
+                                                    <div>
+                                                        <label class="form-label">New name</label>
+                                                        <InputText class="form-control form-control-sm" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
+                                                    </div>
+                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
+                                                </EditForm>
+                                            </HxDropdownContent>
+                                        </HxDropdown>
 
-                                        <BSDropdown IsGroup="true">
-                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                        <HxDropdown>
+                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                            </BSDropdownToggle>
-                                            <BSDropdownMenu>
-                                                <BSDropdownItem @onclick="() => CopyJob(item)">Copy</BSDropdownItem>
-                                            </BSDropdownMenu>
-                                        </BSDropdown>
+                                            </HxDropdownToggle>
+                                            <HxDropdownMenu>
+                                                <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
 
-                                        <BSDropdown IsGroup="true">
-                                            <BSDropdownToggle Size="Size.Small" Color="BlazorStrap.Color.Light">
+                                        <HxDropdown>
+                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                            </BSDropdownToggle>
-                                            <BSDropdownMenu>
-                                                <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                                <BSDropdownItem @onclick="() => DeleteJob(item)">Confirm</BSDropdownItem>
-                                            </BSDropdownMenu>
-                                        </BSDropdown>
+                                            </HxDropdownToggle>
+                                            <HxDropdownMenu>
+                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => DeleteJob(item)">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
 
-                                    </BSButtonGroup>
+                                    </HxButtonGroup>
                                 </AuthorizeView>
                             </div>
                         </td>
@@ -266,7 +264,7 @@
         }
         catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error enabling/disabling job: " + ex.Message);
+            Messenger.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -281,11 +279,11 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Concurrency error: the job was modified outside of this session. Reload the page to view the most recent values.");
+            Messenger.AddError("Concurrency error", "The job was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error updating job: " + ex.Message);
+            Messenger.AddError("Error updating job", ex.Message);
         }
     }
 
@@ -303,7 +301,7 @@
         }
         catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error adding job: " + ex.Message);
+            Messenger.AddError("Error adding job", ex.Message);
         }
     }
 
@@ -321,7 +319,7 @@
         }
         catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error copying job: " + ex.Message);
+            Messenger.AddError("Error copying job", ex.Message);
         }
 
     }
@@ -338,13 +336,13 @@
         }
         catch (Exception ex)
         {
-            await JsRuntime.InvokeVoidAsync("alert", "Error deleting job: " + ex.Message);
+            Messenger.AddError("Error deleting job", ex.Message);
         }
     }
 
-    private void OpenJobExecutionModal(Guid executionId)
+    private async Task OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
-        JobExecutionModal.Show();
+        await JobExecutionModal.ShowAsync();
     }
 }

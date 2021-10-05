@@ -100,6 +100,6 @@
 
     public void ResetStepError() => Modal.ResetStepError();
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
 }

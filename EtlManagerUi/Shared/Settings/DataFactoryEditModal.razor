@@ -2,66 +2,66 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
-    @if (DataFactory is not null)
-    {
-        <BSModalHeader OnClick="() => Modal.Hide()">@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory.DataFactoryName)</BSModalHeader>
-        <BSModalBody>
-            <BSForm Model="DataFactory" id="df_edit_form" OnValidSubmit="SubmitDataFactory">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.DataFactoryName)">
+    <BodyTemplate>
+        @if (DataFactory is not null)
+        {
+            <EditForm Model="DataFactory" id="df_edit_form" OnValidSubmit="SubmitDataFactory">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
-                        <BSFormGroup>
-                            <BSLabel>Data Factory name</BSLabel>
+                        <div class="row">
+                            <label class="form-label">Data Factory name</label>
                             <InputText class="form-control" @bind-Value="DataFactory.DataFactoryName"></InputText>
-                        </BSFormGroup>
+                        </div>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg-6">
-                                <BSLabel>App registration</BSLabel>
-                                <InputSelect class="form-control" @bind-Value="DataFactory.AppRegistrationId">
+                        <div class=" row mt-3">
+                            <div class="col-lg-6">
+                                <label class="form-label">App registration</label>
+                                <InputSelect class="form-select" @bind-Value="DataFactory.AppRegistrationId">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
-                                        {
+                                    {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
-                                        }
+                                    }
                                 </InputSelect>
-                            </BSFormGroup>
-                        </BSFormRow>
+                            </div>
+                        </div>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Subscription id</BSLabel>
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Subscription id</label>
                                 <InputText class="form-control" @bind-Value="DataFactory.SubscriptionId"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
+                            </div>
+                        </div>
 
-                        <BSFormRow>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Resource group name</BSLabel>
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Resource group name</label>
                                 <InputText class="form-control" @bind-Value="DataFactory.ResourceGroupName"></InputText>
-                            </BSFormGroup>
-                            <BSFormGroup Class="col-lg">
-                                <BSLabel>Resource name</BSLabel>
+                            </div>
+                            <div class="col-lg">
+                                <label class="form-label">Resource name</label>
                                 <InputText class="form-control" @bind-Value="DataFactory.ResourceName"></InputText>
-                            </BSFormGroup>
-                        </BSFormRow>
+                            </div>
+                        </div>
 
-                        <div class="row mt-2">
+                        <div class="row mt-3">
                             <div class="col">
-                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
                                     Test connection
-                                </BSButton>
+                                </HxButton>
                                 @if (TestingConnection)
                                 {
                                     <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="sr-only">Loading...</span>
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="row mt-2">
+
+                        <div class="row mt-3">
                             <div class="col">
                                 @if (ConnectionTestSuccess == true)
                                 {
@@ -75,14 +75,14 @@
                         </div>
                     </div>
                 </div>
-            </BSForm>
-        </BSModalBody>
-    }
-    <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="df_edit_form" Color="Color.Success">@(DataFactoryId == Guid.Empty ? "Create" : "Save")</BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(DataFactoryId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
     [Parameter]
@@ -96,7 +96,7 @@
 
     private DataFactory? DataFactory { get; set; }
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -124,7 +124,7 @@
     private async Task SubmitDataFactory()
     {
         await OnDataFactorySubmit.InvokeAsync(DataFactory);
-        Modal.Hide();
+        await Modal.HideAsync();
     }
 
     private async Task TestConnection()
@@ -152,5 +152,5 @@
             ConnectionTestSuccess = null;
     }
 
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 }

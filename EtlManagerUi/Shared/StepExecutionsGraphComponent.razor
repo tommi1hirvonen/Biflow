@@ -1,5 +1,5 @@
 ﻿@inject IWebHostEnvironment WebHostEnvironment
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 
 <div class="row mx-1 my-2">
@@ -44,37 +44,33 @@
                              style="width: 100%; cursor:pointer;"
                              @onclick="() => ToggleSelectedStepExecution(item)" />
                     </div>
-                    <BSTooltip Target="@item.UniqueId" Placement="Placement.Top">
-                        @item.ExecutionStatus
-                        @item.GetDurationInReadableFormat()
-                    </BSTooltip>
                 </div>
             </div>
             if (SelectedStepExecution == item)
             {
                 <div class="row bg-light">
                     <div class="col">
-                        <BSButtonGroup Size="Size.Small" IsToolbar="true" Class="mb-3 mt-1 ml-2">
-                            <BSButton Size="Size.Small" Color="Color.Light" @onclick="() => ShowStepHistoryModal(item.StepId.ToString())">
+                        <HxButtonToolbar Size="ButtonSize.Small" CssClass="mb-3 mt-1 ms-2">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryModalAsync(item.StepId.ToString())">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                                 History
-                            </BSButton>
+                            </HxButton>
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
                          && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                 {
-                                    <BSDropdown Class="ml-3">
-                                        <BSDropdownToggle Size="Size.Small" Color="Color.Danger">
+                                    <HxDropdown CssClass="ms-3">
+                                        <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Danger">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                                             Stop
-                                        </BSDropdownToggle>
-                                        <BSDropdownMenu>
-                                            <BSDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</BSDropdownItem>
-                                        </BSDropdownMenu>
-                                    </BSDropdown>
+                                        </HxDropdownToggle>
+                                        <HxDropdownMenu>
+                                            <HxDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdown>
                                 }
                             </AuthorizeView>
-                        </BSButtonGroup>
+                        </HxButtonToolbar>
                         <StepExecutionDetailsComponent StepExecutionAttempt="item" ShowExtraDetails />
                     </div>
                 </div>
@@ -101,10 +97,10 @@
         StateHasChanged();
     }
 
-    private void ShowStepHistoryModal(string stepId)
+    private async Task ShowStepHistoryModalAsync(string stepId)
     {
         HistoryModalStepId = stepId;
-        StepHistoryModal.Show();
+        await StepHistoryModal.ShowAsync();
     }
 
     private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
@@ -117,11 +113,11 @@
         }
         catch (TimeoutException)
         {
-            await JS.InvokeVoidAsync("alert", "Operation timed out. The executor process may no longer be running.");
+            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", "Error stopping execution:" + ex.Message);
+            Messenger.AddError("Error stopping execution", ex.Message);
         }
     }
 

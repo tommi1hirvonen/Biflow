@@ -60,6 +60,21 @@ a:hover {
     background-color: var(--color-primary);
 }
 
+/*
+    Messenger customization
+*/
+.hx-messenger-information .hx-icon {
+    color: var(--color-primary);
+}
+
+.hx-messenger-warning .hx-icon {
+    color: var(--color-warning);
+}
+
+.hx-messenger-error .hx-icon {
+    color: var(--color-danger);
+}
+
 
 /*
     Primary button customization
@@ -181,56 +196,36 @@ a:hover {
     Checkbox, radio and other form customizations
 */
 
-.custom-control-input:checked ~ .custom-control-label::before {
-    background-color: var(--color-primary) !important;
-    border-color: var(--color-primary) !important;
-}
-
-.custom-control-input:checked:focus ~ .custom-control-label::before {
-    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-primary-shadow);
-}
-
-.custom-control-input:focus ~ .custom-control-label::before {
-    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-primary-shadow);
-    border-color: var(--color-primary) !important;
-}
-
-.form-control:focus {
+.form-check-input:checked {
+    background-color: var(--color-primary);
     border-color: var(--color-primary);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px var(--color-primary-shadow);
 }
 
-.custom-checkbox .custom-control-input:active ~ .custom-control-label::before {
-    background-color: var(--color-primary-extra-light);
-    border-color: var(--color-primary-extra-light);
+.form-check-input:focus {
+    border-color: var(--color-primary-light);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem var(--color-primary-shadow);
 }
 
-.custom-radio .custom-control-input:active ~ .custom-control-label::before {
-    background-color: var(--color-primary-extra-light);
-    border-color: var(--color-primary-extra-light);
+.form-switch .form-check-input:checked {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
 }
 
-/*
-    Switch customization
-*/
-.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
-    background-color: var(--color-success) !important;
-    border-color: var(--color-success) !important;
+.form-switch .form-check-input:focus {
+    border-color: var(--color-success-light);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem var(--color-success-shadow);
 }
 
-.custom-switch .custom-control-input:checked:focus ~ .custom-control-label::before {
-    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-success-shadow);
+.form-switch .form-check-input:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ccc'/%3e%3c/svg%3e");
 }
 
-.custom-switch .custom-control-input:focus ~ .custom-control-label::before {
-    box-shadow: 0 0 0 1px #fff, 0 0 0 0.2rem var(--color-success-shadow);
-    border-color: var(--color-success) !important;
+.form-switch .form-check-input:checked {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
 }
 
-.custom-switch .custom-control-input:active ~ .custom-control-label::before {
-    background-color: var(--color-success-extra-light);
-    border-color: var(--color-success-extra-light);
-}
 
 
 /*

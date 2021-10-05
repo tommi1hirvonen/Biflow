@@ -1,13 +1,11 @@
 ﻿@inject IConfiguration Configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select pipeline</BSModalHeader>
-
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select pipeline">
+    <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
@@ -44,7 +42,7 @@
         <div class="row mt-3">
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
-                    <label class="sr-only">Search</label>
+                    <label class="visually-hidden">Search</label>
                     <div class="input-group-prepend">
                         <div class="input-group-text rounded-left">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
@@ -80,20 +78,20 @@
                 </table>
             </div>
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectPipeline"
-                  IsDisabled="SelectedPipeline is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectPipelineAsync"
+                  Enabled="SelectedPipeline is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? DataFactoryId { get; set; }
@@ -108,35 +106,6 @@
     private string? SelectedFolder { get; set; }
     private string? SelectedPipeline { get; set; }
 
-    private async Task ModalOpenChanged(bool isOpen)
-    {
-        if (isOpen && DataFactoryId is not null && DataFactoryId != Guid.Empty)
-        {
-            try
-            {
-                Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
-                using var context = DbContextFactory.CreateDbContext();
-                var dataFactory = await context.DataFactories
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(df => df.AppRegistration)
-                    .FirstAsync(df => df.DataFactoryId == dataFactoryId);
-                Pipelines = await dataFactory.GetPipelinesAsync(TokenService);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading pipelines: {ex.Message}");
-            }
-        }
-        else
-        {
-            Pipelines = null;
-            SelectedFolder = null;
-            SelectedPipeline = null;
-            FilterText = string.Empty;
-        }
-    }
-
     private void OnFolderChanged(string folder)
     {
         if (folder != SelectedFolder)
@@ -146,11 +115,38 @@
         SelectedFolder = folder;
     }
 
-    private void SelectPipeline()
+    private async Task SelectPipelineAsync()
     {
-        OnPipelineSelected.InvokeAsync(SelectedPipeline);
-        Modal.Hide();
+        await OnPipelineSelected.InvokeAsync(SelectedPipeline);
+        await Modal.HideAsync();
     }
 
-    public void Show() => Modal.Show();
+    private void OnClosed()
+    {
+        Pipelines = null;
+        SelectedFolder = null;
+        SelectedPipeline = null;
+        FilterText = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (DataFactoryId is null || DataFactoryId == Guid.Empty) return;
+        try
+        {
+            Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
+            using var context = DbContextFactory.CreateDbContext();
+            var dataFactory = await context.DataFactories
+                .AsNoTrackingWithIdentityResolution()
+                .Include(df => df.AppRegistration)
+                .FirstAsync(df => df.DataFactoryId == dataFactoryId);
+            Pipelines = await dataFactory.GetPipelinesAsync(TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading pipelines", ex.Message);
+        }
+    }
 }

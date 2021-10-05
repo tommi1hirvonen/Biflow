@@ -34,12 +34,8 @@
                         <div id="@item.ExecutionId"
                              class="progress-bar @item.ExecutionStatus.ToString().ToLower()"
                              style="width: 100%; cursor:pointer;"
-                             @onclick="() => OpenJobExecutionModal(item.ExecutionId)" />
+                             @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)" />
                     </div>
-                    <BSTooltip Target="@item.ExecutionId.ToString()" Placement="Placement.Top">
-                        @item.ExecutionStatus
-                        @item.GetDurationInReadableFormat()
-                    </BSTooltip>
                 </div>
             </div>
         }
@@ -80,9 +76,9 @@
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
-    private void OpenJobExecutionModal(Guid executionId)
+    private async Task OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
-        JobExecutionModal.Show();
+        await JobExecutionModal.ShowAsync();
     }
 }

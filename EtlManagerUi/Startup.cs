@@ -1,5 +1,5 @@
-using BlazorStrap;
 using EtlManagerDataAccess;
+using Havit.Blazor.Components.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,7 +13,7 @@ namespace EtlManagerUi
 {
     public class Startup
     {
-        private IConfiguration _configuration;
+        private readonly IConfiguration _configuration;
 
         public Startup(IConfiguration configuration)
         {
@@ -34,7 +34,8 @@ namespace EtlManagerUi
                 options.UseSqlServer(connectionString, o =>
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
-            services.AddBootstrapCss();
+            services.AddHxServices();
+            services.AddHxMessenger();
             services.AddHttpClient();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<DbHelperService>();

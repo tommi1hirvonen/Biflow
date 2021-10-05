@@ -1,8 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@StepName</BSModalHeader>
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" Title="@StepName">
+    <BodyTemplate>
         <p class="text-secondary">Showing @MaxExecutions latest executions</p>
         <table class="table table-sm table-hover">
             <thead>
@@ -50,11 +49,11 @@
                 }
             </tbody>
         </table>
-    </BSModalBody>
-    <BSModalFooter>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
-    </BSModalFooter>
-</BSModal>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
@@ -65,7 +64,7 @@
 
     private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     private List<StepExecutionAttempt>? Executions { get; set; }
 
@@ -103,6 +102,6 @@
         StateHasChanged();
     }
 
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 
 }

@@ -2,7 +2,7 @@
 {
     <td>
         <div class="input-group">
-        <InputSelect class="form-control form-control-sm" @bind-Value="Parameter.ParameterValueType">
+        <InputSelect class="form-select form-select-sm" @bind-Value="Parameter.ParameterValueType">
             @foreach (var type in Enum.GetValues(typeof(ParameterValueType)))
                 {
                 <option>@type</option>
@@ -15,41 +15,41 @@
         {
             case ParameterValueType.Boolean:
                 <div class="input-group">
-                    <InputSelectBoolean class="form-control form-control-sm" @bind-Value="Parameter.ValueBoolean">
+                    <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ValueBoolean">
                         <option value="True">True</option>
                         <option value="False">False</option>
                     </InputSelectBoolean>
                 </div>
                 break;
             case ParameterValueType.Byte:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueByte" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueByte" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.DateTime:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDateTime" placeholder="Value"></BSBasicInput>
+                <HxInputDate InputSize="InputSize.Small" @bind-Value="Parameter.ValueDateTime" placeholder="Value"></HxInputDate>
                 break;
             case ParameterValueType.Decimal:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.Double:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueDouble" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueDouble" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.Int16:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt16" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt16" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.Int32:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt32" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt32" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.Int64:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueInt64" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt64" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.SByte:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSByte" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueSByte" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.Single:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueSingle" placeholder="Value"></BSBasicInput>
+                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueSingle" placeholder="Value"></HxInputNumber>
                 break;
             case ParameterValueType.String:
-                <BSBasicInput Size="Size.Small" @bind-Value="Parameter.ValueString" placeholder="Value"></BSBasicInput>
+                <HxInputText InputSize="InputSize.Small" @bind-Value="Parameter.ValueString" placeholder="Value"></HxInputText>
                 break;
         }
     </td>

@@ -3,23 +3,23 @@
 
 <div class="row">
     <div class="col">
-        <div class="custom-control custom-radio custom-control-inline">
-            <input type="radio" class="custom-control-input" id="radio_all"
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_all"
                     checked=@(StartTypeFilter == StartType.All)
                     @onchange="() => StartTypeFilter = StartType.All">
-            <label class="custom-control-label" for="radio_all">All</label>
+            <label class="form-check-label" for="radio_all">All</label>
         </div>
-        <div class="custom-control custom-radio custom-control-inline">
-            <input type="radio" class="custom-control-input" id="radio_scheduled"
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_scheduled"
                     checked=@(StartTypeFilter == StartType.Scheduled)
                     @onchange="() => StartTypeFilter = StartType.Scheduled">
-            <label class="custom-control-label" for="radio_scheduled">Scheduled</label>
+            <label class="form-check-label" for="radio_scheduled">Scheduled</label>
         </div>
-        <div class="custom-control custom-radio custom-control-inline">
-            <input type="radio" class="custom-control-input" id="radio_manual"
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_manual"
                     checked=@(StartTypeFilter == StartType.Manual)
                     @onchange="() => StartTypeFilter = StartType.Manual">
-            <label class="custom-control-label" for="radio_manual">Manual</label>
+            <label class="form-check-label" for="radio_manual">Manual</label>
         </div>
     </div>
 </div>
@@ -156,10 +156,10 @@
         }
     }
 
-    private void OpenJobExecutionModal(Guid executionId)
+    private async Task OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
-        JobExecutionModal.Show();
+        await JobExecutionModal.ShowAsync();
     }
 
 }

@@ -14,30 +14,34 @@
     @if (Loading)
     {
         <div class="spinner-border text-primary align-middle ml-3" role="status">
-            <span class="sr-only">Loading...</span>
+            <span class="visually-hidden">Loading...</span>
         </div>
     }
 </div>
 
-<div class="form-inline mt-3">
-    <label>From:</label>
-    <input @bind-value="FromDate" class="form-control form-control-sm ml-2" type="date">
-    <label class="ml-4">To:</label>
-    <input @bind-value="ToDate" class="form-control form-control-sm ml-2" type="date">
+<div class="row mt-3">
+    <div class="col-auto d-inline-flex align-items-center">
+        <label>From:</label>
+        <input @bind-value="FromDate" class="form-control form-control-sm ms-2" type="date">
+        <label class="ms-4">To:</label>
+        <input @bind-value="ToDate" class="form-control form-control-sm ms-2" type="date">
+    </div> 
 </div>
 
-<div class="form-inline mt-3">
-    <div class="custom-control custom-checkbox custom-control-inline">
-        <input type="checkbox" class="custom-control-input" id="only_schedule"
-               @bind-value="OnlyScheduled"
-               checked=@OnlyScheduled>
-        <label class="custom-control-label" for="only_schedule">Only scheduled executions</label>
-    </div>
-    <div class="custom-control custom-checkbox custom-control-inline ml-3">
-        <input type="checkbox" class="custom-control-input" id="include_deleted"
-               @bind-value="IncludeDeleted"
-               checked=@IncludeDeleted>
-        <label class="custom-control-label" for="include_deleted">Include deleted jobs/steps</label>
+<div class="row mt-3">
+    <div class="col-auto">
+        <div class="form-check form-check-inline">
+            <input type="checkbox" class="form-check-input" id="only_schedule"
+                   @bind-value="OnlyScheduled"
+                   checked=@OnlyScheduled>
+            <label class="form-check-label" for="only_schedule">Only scheduled executions</label>
+        </div>
+        <div class="form-check form-check-inline ms-3">
+            <input type="checkbox" class="form-check-input" id="include_deleted"
+                   @bind-value="IncludeDeleted"
+                   checked=@IncludeDeleted>
+            <label class="form-check-label" for="include_deleted">Include deleted jobs/steps</label>
+        </div>
     </div>
 </div>
 
@@ -163,7 +167,7 @@
     private bool ReportLoaded { get; set; } = false;
 
     private const string ReportNotLoadedMessage = "Load report to show data.";
-    private const string ReportNotLoadedClass = "text-secondary small font-italic";
+    private const string ReportNotLoadedClass = "text-secondary small fst-italic";
 
     private async Task LoadData()
     {

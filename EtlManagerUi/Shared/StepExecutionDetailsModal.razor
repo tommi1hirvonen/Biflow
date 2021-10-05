@@ -1,19 +1,18 @@
 ﻿
-﻿<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true">
-    <BSModalHeader @onclick="() => Modal.Hide()">@StepExecutionAttempt?.StepExecution.StepName</BSModalHeader>
-    <BSModalBody>
+﻿<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" Title="@StepExecutionAttempt?.StepExecution.StepName">
+    <BodyTemplate>
         <StepExecutionDetailsComponent StepExecutionAttempt="StepExecutionAttempt" ShowExtraDetails="true" />
-    </BSModalBody>
-    <BSModalFooter>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
-    </BSModalFooter>
-</BSModal>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
     [Parameter]
     public StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 }

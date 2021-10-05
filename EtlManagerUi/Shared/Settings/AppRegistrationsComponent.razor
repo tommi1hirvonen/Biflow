@@ -1,12 +1,11 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
-@inject IJSRuntime JS
 @inject ITokenService TokenService 
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)" IsDisabled="AppRegistrations is null">
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
     Add App registration
-</BSButton>
+</HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -39,29 +38,29 @@
                             @app.AppRegistrationName
                         </td>
                         <td class="align-middle">
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
+                            <HxButtonGroup Class="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSButton>
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                </HxButton>
+                                <HxDropdown>
+                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="clear tokens">
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                                <HxDropdown>
+                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="clear tokens">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Clear access tokens?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => ClearTokens(app)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </BSButtonGroup>
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Clear access tokens?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => ClearTokens(app)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
                         </td>
                         <td class="align-middle">
                             @app.TenantId
@@ -125,9 +124,9 @@
         TokenService.Clear();
     }
 
-    private void ShowEditModal(AppRegistration? appRegistration)
+    private async Task ShowEditModalAsync(AppRegistration? appRegistration)
     {
         EditAppRegistrationId = appRegistration?.AppRegistrationId ?? Guid.Empty;
-        AppRegistrationEditModal.Show();
+        await AppRegistrationEditModal.ShowAsync();
     }
 }

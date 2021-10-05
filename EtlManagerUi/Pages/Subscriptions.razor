@@ -3,7 +3,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
 <h4>Subscriptions</h4>
 
@@ -11,9 +11,9 @@
     <div class="col">
         @if (User is not null && string.IsNullOrWhiteSpace(User.Email))
         {
-            <BSAlert Color="Color.Warning" Class="mb-3">
+            <HxAlert Color="ThemeColor.Warning" CssClass="mb-3">
                 Email address for account <strong>@User.Username</strong> was not set. Go to the <a class="alert-link" href="account">Account page</a> to enter a valid email address.
-            </BSAlert>
+            </HxAlert>
         }
         <div class="card shadow-sm">
             <div class="card-body px-0">
@@ -42,36 +42,36 @@
                                         @job.JobName
                                     </td>
                                     <td>
-                                        <div class="form-group">
-                                            <div class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_none")"
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_none")"
                                                        checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
                                                        @onchange="() => RemoveSubscription(job)">
-                                                <label class="custom-control-label" for="@(job.JobId.ToString() + "_none")">None</label>
+                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_none")">None</label>
                                             </div>
-                                            <div class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_failure")"
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_failure")"
                                                        checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnFailure)
                                                        @onchange="() => ToggleSubscription(job, SubscriptionType.OnFailure)">
-                                                <label class="custom-control-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
+                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
                                             </div>
-                                            <div class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_success")"
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_success")"
                                                        checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnSuccess)
                                                        @onchange="() => ToggleSubscription(job, SubscriptionType.OnSuccess)">
-                                                <label class="custom-control-label" for="@(job.JobId.ToString() + "_success")">On success</label>
+                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_success")">On success</label>
                                             </div>
-                                            <div class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" class="custom-control-input" id="@(job.JobId.ToString() + "_completion")"
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_completion")"
                                                        checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
                                                        @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
-                                                <label class="custom-control-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
+                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
                                             </div>
-                                            <div class="custom-control custom-checkbox custom-control-inline">
-                                                <input type="checkbox" class="custom-control-input" id="@(job.JobId.ToString() + "_overtime")"
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" class="form-check-input" id="@(job.JobId.ToString() + "_overtime")"
                                                        checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.NotifyOnOvertime == true)
                                                        @onchange="args => ToggleSubscription(job, (bool)args.Value!)">
-                                                <label class="custom-control-label" for="@(job.JobId.ToString() + "_overtime")">On overtime</label>
+                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_overtime")">On overtime</label>
                                             </div>
                                         </div>
                                     </td>
@@ -120,7 +120,7 @@
         }
         catch (Exception)
         {
-            await JS.InvokeVoidAsync("alert", "Error removing subscription");
+            Messenger.AddError("Error", "Error removing subscription");
         }
     }
 
@@ -150,7 +150,7 @@
         }
         catch (Exception)
         {
-            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
+            Messenger.AddError("Error", "Error toggling subscription");
         }
     }
 
@@ -175,7 +175,7 @@
         }
         catch (Exception)
         {
-            await JS.InvokeVoidAsync("alert", "Error toggling subscription");
+            Messenger.AddError("Error", "Error toggling subscription");
         }
     }
 }

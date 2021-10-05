@@ -1,18 +1,17 @@
 ﻿@inject IConfiguration Configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<BSModal @ref="Modal" Size="Size.ExtraLarge" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select function</BSModalHeader>
+<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Scrollable="true" OnClosed="OnClosed" Title="Select function">
 
-    <BSModalBody>
+    <BodyTemplate>
         <div class="row">
             <div class="col-lg-4 form-group">
                 <div class="input-group input-group-sm">
-                    <label class="sr-only">Search</label>
+                    <label class="visually-hidden">Search</label>
                     <div class="input-group-prepend">
                         <div class="input-group-text rounded-left">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
@@ -70,20 +69,20 @@
             </div>
             
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectFunction"
-                  IsDisabled="SelectedFunctionUrl is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectFunctionAsync"
+                  Enabled="SelectedFunctionUrl is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? FunctionAppId { get; set; }
@@ -97,42 +96,41 @@
 
     private string FilterText { get; set; } = string.Empty;
 
-    private async Task ModalOpenChanged(bool isOpen)
-    {
-        if (isOpen && FunctionAppId is not null && FunctionAppId != Guid.Empty)
-        {
-            try
-            {
-                Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
-                using var context = DbContextFactory.CreateDbContext();
-                var functionApp = await context.FunctionApps
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(fa => fa.AppRegistration)
-                    .FirstAsync(fa => fa.FunctionAppId == id);
-                Functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading functions: {ex.Message}");
-            }
-        }
-        else
-        {
-            Functions = null;
-            SelectedFunctionUrl = null;
-            FilterText = string.Empty;
-        }
-    }
-
-    private void SelectFunction()
+    private async Task SelectFunctionAsync()
     {
         if (SelectedFunctionUrl is not null)
         {
-            OnFunctionSelected.InvokeAsync(SelectedFunctionUrl);
-            Modal.Hide();
+            await OnFunctionSelected.InvokeAsync(SelectedFunctionUrl);
+            await Modal.HideAsync();
         }
     }
 
-    public void Show() => Modal.Show();
+    private void OnClosed()
+    {
+        Functions = null;
+        SelectedFunctionUrl = null;
+        FilterText = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (FunctionAppId is null || FunctionAppId == Guid.Empty) return;
+        try
+        {
+            Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
+            using var context = DbContextFactory.CreateDbContext();
+            var functionApp = await context.FunctionApps
+                .AsNoTrackingWithIdentityResolution()
+                .Include(fa => fa.AppRegistration)
+                .FirstAsync(fa => fa.FunctionAppId == id);
+            Functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading functions", ex.Message);
+        }
+    }
+
 }

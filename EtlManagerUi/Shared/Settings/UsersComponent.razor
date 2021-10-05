@@ -1,11 +1,11 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject DbHelperService DbHelperService
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
-<BSButton Color="Color.Success" @onclick="() => ShowEditModal(null)" IsDisabled="Users is null">
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="Users is not null">
     Add user
-</BSButton>
+</HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -45,52 +45,55 @@
                             @user.Username
                         </td>
                         <td>
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Color="Color.Light" Size="Size.Small" aria-label="edit" @onclick="() => ShowEditModal(user)">
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSButton>
+                                </HxButton>
 
-                                <BSDropdown>
-                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="change password" @onclick="ResetPassword">
+                                <HxDropdown>
+                                    <HxDropdownToggle Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu Class="p-4" style="min-width: 25rem;">
-                                        <BSFormGroup>
-                                            <BSLabel>New password</BSLabel>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
-                                                    </div>
+                                    </HxDropdownToggle>
+                                    <HxDropdownContent CssClass="p-4">
+                                        <div style="min-width: 25rem;">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
+                                                        <InputGroupStartTemplate>
+                                                            <div class="input-group-text">
+                                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                                            </div>
+                                                        </InputGroupStartTemplate>
+                                                    </HxInputText>
                                                 </div>
-                                                <BSBasicInput InputType="InputType.Password" @bind-Value="Password"></BSBasicInput>
                                             </div>
-                                        </BSFormGroup>
-                                        <BSFormGroup>
-                                            <BSLabel>Confirm password</BSLabel>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text">
-                                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                                    </div>
+                                            <div class="row mt-3">
+                                                <div class="col">
+                                                    <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
+                                                        <InputGroupStartTemplate>
+                                                            <div class="input-group-text">
+                                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                                            </div>
+                                                        </InputGroupStartTemplate>
+                                                    </HxInputText>
                                                 </div>
-                                                <BSBasicInput InputType="InputType.Password" @bind-Value="ConfirmPassword"></BSBasicInput>
                                             </div>
-                                        </BSFormGroup>
-                                        <BSButton Size="Size.Small" Color="Color.Success" @onclick="() => UpdatePassword(user)">Save</BSButton>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
+                                        </div>
+                                        
+                                    </HxDropdownContent>
+                                </HxDropdown>
 
-                                <BSDropdown>
-                                    <BSDropdownToggle Color="Color.Light" Size="Size.Small" aria-label="delete">
+                                <HxDropdown>
+                                    <HxDropdownToggle Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteUser(user)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </BSButtonGroup>
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
                         </td>
                         <td>
                             @user.Email
@@ -140,7 +143,7 @@
         }
         catch (Exception)
         {
-            await JS.InvokeVoidAsync("alert", "Error deleting user");
+            Messenger.AddError("Error deleting user");
         }
     }
 
@@ -154,15 +157,15 @@
         Users.Add(user);
     }
 
-    private void ShowEditModal(User? user)
+    private async Task ShowEditModalAsync(User? user)
     {
         EditModalUsername = user?.Username;
-        UserEditModal.Show();
+        await UserEditModal.ShowAsync();
     }
 
     private async Task UpdatePassword(User user)
     {
-        if (!(await PasswordCheck()))
+        if (!PasswordCheck())
         {
             return;
         }
@@ -172,11 +175,11 @@
         if (result)
         {
             ResetPassword();
-            await JS.InvokeVoidAsync("alert", "Password updated successfully");
+            Messenger.AddInformation("Password updated successfully");
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "Error updating password");
+            Messenger.AddError("Error updating password");
         }
     }
 
@@ -186,20 +189,20 @@
         ConfirmPassword = null;
     }
 
-    private async Task<bool> PasswordCheck()
+    private bool PasswordCheck()
     {
         Password = Password ?? string.Empty;
         ConfirmPassword = ConfirmPassword ?? string.Empty;
 
         if (Password.Length < 1 || Password.Length > 250)
         {
-            await JS.InvokeVoidAsync("alert", "The password must be between 1 and 250 characters in length");
+            Messenger.AddInformation("The password must be between 1 and 250 characters in length");
             return false;
         }
 
         if (!Password.Equals(ConfirmPassword))
         {
-            await JS.InvokeVoidAsync("alert", "The two passwords do not match");
+            Messenger.AddInformation("The two passwords do not match");
             return false;
         }
 

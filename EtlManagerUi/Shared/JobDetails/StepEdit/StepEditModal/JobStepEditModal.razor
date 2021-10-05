@@ -10,34 +10,32 @@
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
                    FormId="job_step_edit_modal">
-    <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Job</BSLabel>
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <label class="form-label">Job</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                 </div>
-                <InputSelect class="form-control" @bind-Value="Step.JobToExecuteId">
+                <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId">
                     @foreach (var job in Jobs?.Where(job => job.JobId != Step.JobId) ?? Enumerable.Empty<Job>())
                     {
                         <option value="@job.JobId">@job.JobName</option>
                     }
                 </InputSelect>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
+        </div>
+    </div>
+    <div class="row mt-3">
         <div class="col">
-            <div class="custom-control custom-checkbox custom-control-inline">
-                <input type="checkbox" class="custom-control-input" id="new_step_job_synchronized"
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="new_step_job_synchronized"
                        checked=@Step.JobExecuteSynchronized
                        @bind-value="Step.JobExecuteSynchronized">
-                <label class="custom-control-label" for="new_step_job_synchronized">Synchronized</label>
+                <label class="form-check-label" for="new_step_job_synchronized">Synchronized</label>
             </div>
         </div>
-    </BSFormRow>
+    </div>
 </StepEditModalBase>
 
 @code {
@@ -107,7 +105,7 @@
         StateHasChanged();
     }
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

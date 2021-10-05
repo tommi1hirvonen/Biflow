@@ -1,13 +1,11 @@
 ﻿@inject IConfiguration Configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select dataset</BSModalHeader>
-
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select dataset">
+    <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
@@ -72,20 +70,20 @@
                 </table>
             </div>
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectDataset"
-                  IsDisabled="SelectedDataset is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectDatasetAsync"
+                  Enabled="SelectedDataset is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? AppRegistrationId { get; set; }
@@ -98,33 +96,6 @@
     private (string GroupId, string GroupName)? SelectedGroup { get; set; }
     private (string DatasetId, string DatasetName)? SelectedDataset { get; set; }
 
-    private async Task ModalOpenChanged(bool isOpen)
-    {
-        if (isOpen && AppRegistrationId is not null && AppRegistrationId != Guid.Empty)
-        {
-            try
-            {
-                Guid id = AppRegistrationId ?? throw new ArgumentNullException(nameof(id), "App registration id cannot be null");
-                using var context = DbContextFactory.CreateDbContext();
-                var appRegistration = await context.AppRegistrations
-                    .AsNoTracking()
-                    .FirstAsync(r => r.AppRegistrationId == id);
-                Datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading datasets: {ex.Message}");
-            }
-        }
-        else
-        {
-            Datasets = null;
-            SelectedGroup = null;
-            SelectedDataset = null;
-        }
-    }
-
     private void OnGroupChanged((string Id, string Name) group)
     {
         if (group != SelectedGroup)
@@ -134,16 +105,42 @@
         SelectedGroup = group;
     }
 
-    private void SelectDataset()
+    private async Task SelectDatasetAsync()
     {
         var groupId = SelectedGroup?.GroupId;
         var datasetId = SelectedDataset?.DatasetId;
         if (groupId is not null && datasetId is not null)
         {
-            OnDatasetSelected.InvokeAsync((groupId, datasetId));
-            Modal.Hide();
+            await OnDatasetSelected.InvokeAsync((groupId, datasetId));
+            await Modal.HideAsync();
         }
     }
 
-    public void Show() => Modal.Show();
+    private void OnClosed()
+    {
+        Datasets = null;
+        SelectedGroup = null;
+        SelectedDataset = null;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (AppRegistrationId is null || AppRegistrationId == Guid.Empty) return;
+        try
+        {
+            Guid id = AppRegistrationId ?? throw new ArgumentNullException(nameof(id), "App registration id cannot be null");
+            using var context = DbContextFactory.CreateDbContext();
+            var appRegistration = await context.AppRegistrations
+                .AsNoTracking()
+                .FirstAsync(r => r.AppRegistrationId == id);
+            Datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading datasets", ex.Message);
+        }
+    }
+
 }

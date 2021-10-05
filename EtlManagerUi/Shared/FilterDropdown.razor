@@ -2,12 +2,12 @@
 
 @inject IWebHostEnvironment WebHostEnvironment
 
-<BSDropdown>
-    <BSDropdownToggle Size="Size.Small" Color="Color.Light" Class="@(FilterSet.Any() ? "font-weight-bold" : null)">
+<HxDropdown AutoClose="DropdownAutoClose.Outside">
+    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
         @Title
-    </BSDropdownToggle>
-    <BSDropdownMenu Class="p-3" style="min-width: 15rem; max-height: 380px; overflow-y: auto;">
-        <div class="row">
+    </HxDropdownToggle>
+    <HxDropdownContent CssClass="p-3">
+        <div class="row" style="min-width: 15rem; max-height: 380px; overflow-y: auto;">
             <div class="col">
                 <div class="row mb-2">
                     <div class="col">
@@ -24,10 +24,8 @@
                     <div class="row mb-2">
                         <div class="col">
                             <div class="input-group input-group-sm">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text rounded-left">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
-                                    </div>
+                                <div class="input-group-text">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
                                 </div>
                                 <input type="text" class="form-control" @bind-value="SearchText" @bind-value:event="oninput" placeholder="Search" />
                             </div>
@@ -38,11 +36,11 @@
                 {
                     <div class="row">
                         <div class="col">
-                            <div class="custom-control custom-checkbox custom-control-inline">
-                                <input type="checkbox" class="custom-control-input" id="@($"{ComponentInstanceId}_{item}")"
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="@($"{ComponentInstanceId}_{item}")"
                                        checked=@FilterSet.Contains(item)
                                        @onchange="args => Toggle((bool)args.Value!, item)">
-                                <label class="custom-control-label" for="@($"{ComponentInstanceId}_{item}")">
+                                <label class="form-check-label" for="@($"{ComponentInstanceId}_{item}")">
                                     @item.ToString()
                                 </label>
                             </div>
@@ -51,8 +49,8 @@
                 }
             </div>
         </div>
-    </BSDropdownMenu>
-</BSDropdown>
+    </HxDropdownContent>
+</HxDropdown>
 
 @code {
     [Parameter]

@@ -1,8 +1,7 @@
-﻿<BSModal @ref="Modal" Size="Size.Large">
-    @if (Step is not null)
-    {
-        <BSModalHeader OnClick="() => Modal.Hide()">@Step.StepName</BSModalHeader>
-        <BSModalBody>
+﻿<HxModal @ref="Modal" Size="ModalSize.Large" Title="@Step?.StepName">
+    <BodyTemplate>
+        @if (Step is not null)
+        {
             <dl class="row">
                 <dt class="col-sm-3">
                     Step name
@@ -225,16 +224,17 @@
                     </dl>
                 }
             }
-        </BSModalBody>
-    }
-    <BSModalFooter>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Close</BSButton>
-    </BSModalFooter>
-</BSModal>
+        }
+    </BodyTemplate>
+    
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 
 @code {
-    public BSModal Modal { get; set; } = null!;
+    public HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Step? Step { get; set; }

@@ -3,7 +3,7 @@
 <div class="row">
     <div class="col">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-        <span class="mr-3">Tags</span>
+        <span class="me-3">Tags</span>
         @{
             var tagNames = Steps?
                 .SelectMany(step => step.Tags)
@@ -13,7 +13,7 @@
         }
         @if (!tagNames.Any())
         {
-            <small class="text-secondary mr-2">No tags</small>
+            <small class="text-secondary me-2">No tags</small>
         }
         @foreach (var tag in tagNames)
         {
@@ -27,11 +27,8 @@
 </div>
 <div class="row mt-3 align-items-center">
     <div class="input-group input-group-sm col">
-        <label class="sr-only">Search</label>
-        <div class="input-group-prepend">
-            <div class="input-group-text rounded-left">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
-            </div>
+        <div class="input-group-text rounded-left">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
         </div>
         <input type="text" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>
@@ -46,11 +43,11 @@
             </Title>
         </FilterDropdown>
     </div>
-    <div class="custom-control custom-control-inline custom-checkbox col-lg-auto ml-3 mt-3 mt-lg-0">
-        <input type="checkbox" class="custom-control-input" id="only_active"
+    <div class="form-check form-check-inline col-lg-auto ms-3 mt-3 mt-lg-0 mb-0">
+        <input type="checkbox" class="form-check-input" id="only_active"
                checked=@ShowOnlyActiveDependencies
                @onchange="() => ShowOnlyActiveDependencies = !ShowOnlyActiveDependencies">
-        <label class="custom-control-label" for="only_active">Show only active</label>
+        <label class="form-check-label" for="only_active">Show only active</label>
     </div>
 </div>
 
@@ -77,21 +74,21 @@
                     @step.StepName
                 </td>
                 <td class="align-middle">
-                    <div class="custom-control custom-control-inline custom-checkbox">
-                        <input type="checkbox" class="custom-control-input" id="dependency_@step.StepId"
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="dependency_@step.StepId"
                                checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
                                @onchange="eventArgs => ToggleDependency(step, eventArgs.Value!)">
-                        <label class="custom-control-label" for="dependency_@step.StepId"></label>
+                        <label class="form-check-label" for="dependency_@step.StepId"></label>
                     </div>
                 </td>
                 <td class="align-middle">
                     @if (Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
                     {
-                        <div class="custom-control custom-control-inline custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" id="strict_@step.StepId"
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="strict_@step.StepId"
                                    checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
                                    @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value!)">
-                            <label class="custom-control-label" for="strict_@step.StepId"></label>
+                            <label class="form-check-label" for="strict_@step.StepId"></label>
                         </div>
                     }
                 </td>

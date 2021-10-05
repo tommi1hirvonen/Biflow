@@ -13,104 +13,92 @@
                    ResetAddedEntities="ResetAddedEntities"
                    OnStepSubmit="OnStepSubmit"
                    FormId="package_step_edit_modal">
-    <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Timeout (min) (0 = indefinite)</BSLabel>
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <label class="form-label">Timeout (min) (0 = indefinite)</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
-        </BSFormGroup>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Connection</BSLabel>
+        </div>
+        <div class="col-lg-6">
+            <label class="form-label">Connection</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                 </div>
-                <InputSelect class="form-control" @bind-Value="Step.ConnectionId">
+                <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
                     @foreach (var connection in Connections ?? Enumerable.Empty<Connection>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                     }
                 </InputSelect>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <BSLabel>Folder name</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Folder name</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-        <BSFormGroup Class="col-lg">
-            <BSLabel>Project name</BSLabel>
+        </div>
+        <div class="col-lg">
+            <label class="form-label">Project name</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.PackageProjectName" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <BSLabel>Package name</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Package name</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.PackageName" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <div class="row mb-3">
+        </div>
+    </div>
+    <div class="row mt-3">
         <div class="col">
-            <BSButton Size="Size.Small" Color="Color.Light" @onclick="OpenPackageSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPackageSelectModal">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse catalog
-            </BSButton>
+            </HxButton>
         </div>
     </div>
     <PackageSelectModal @ref="PackageSelectModal" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
-    <BSFormRow>
+    <div class="row mt-3">
         <div class="col">
-            <div class="custom-control custom-checkbox custom-control-inline">
-                <input type="checkbox" class="custom-control-input" id="new_step_32bit_mode"
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="new_step_32bit_mode"
                        checked=@Step.ExecuteIn32BitMode
                        @bind-value="Step.ExecuteIn32BitMode">
-                <label class="custom-control-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+                <label class="form-check-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
             </div>
         </div>
-    </BSFormRow>
-    <BSFormRow Class="mt-2">
-        <BSFormGroup Class="col">
-            <BSLabel>Execute as login (blank = no impersonation)</BSLabel>
+    </div>
+    <div class="row mt-2">
+        <div class="col">
+            <label class="form-label">Execute as login (blank = no impersonation)</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
+        </div>
+    </div>
     <PackageParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
 </StepEditModalBase>
 
@@ -253,7 +241,7 @@
         return (true, null);
     }
 
-    private void OpenPackageSelectModal()=> PackageSelectModal.Show();
+    private async Task OpenPackageSelectModal() => await PackageSelectModal.ShowAsync();
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {
@@ -262,7 +250,7 @@
         Step.PackageName = package.Package;
     }
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

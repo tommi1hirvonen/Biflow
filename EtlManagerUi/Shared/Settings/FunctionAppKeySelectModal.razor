@@ -5,10 +5,8 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select key</BSModalHeader>
-
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select key">
+    <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
@@ -54,20 +52,20 @@
             </div>
 
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectKey"
-                  IsDisabled="SelectedKey is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="SelectKey"
+                  Enabled="SelectedKey is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public FunctionApp? FunctionApp { get; set; }
@@ -79,35 +77,34 @@
 
     private string? SelectedKey { get; set; }
 
-    private async Task ModalOpenChanged(bool isOpen)
-    {
-        if (isOpen && FunctionApp is not null)
-        {
-            try
-            {
-                Keys = await FunctionApp.GetHostKeysAsync(HttpClientFactory.CreateClient(), TokenService);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading keys: {ex.Message}");
-            }
-        }
-        else
-        {
-            Keys = null;
-            SelectedKey = null;
-        }
-    }
-
-    private void SelectKey()
+    private async Task SelectKey()
     {
         if (SelectedKey is not null)
         {
-            OnKeySelected.InvokeAsync(SelectedKey);
-            Modal.Hide();
+            await OnKeySelected.InvokeAsync(SelectedKey);
+            await Modal.HideAsync();
         }
     }
 
-    public void Show() => Modal.Show();
+    public void OnClosed()
+    {
+        Keys = null;
+        SelectedKey = null;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (FunctionApp is null) return;
+        try
+        {
+            Keys = await FunctionApp.GetHostKeysAsync(HttpClientFactory.CreateClient(), TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error reading keys: {ex.Message}");
+        }
+    }
+
 }

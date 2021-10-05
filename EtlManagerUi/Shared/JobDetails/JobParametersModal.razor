@@ -2,17 +2,14 @@
 
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
-<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="IsModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">
-        Edit job parameters
-    </BSModalHeader>
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters">
 
-    <BSModalBody>
+    <BodyTemplate>
         @if (Job is not null)
         {
-            <BSForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
+            <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
                 <table id="parameters_table" class="table table-sm">
                     <thead>
                         <tr>
@@ -27,38 +24,38 @@
                         {
                             <tr>
                                 <td>
-                                    <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName" placeholder="Name"></BSBasicInput>
+                                    <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                 </td>
                                 <ParameterTypeValueEditComponent Parameter="param" />
                                 <td>
-                                    <BSButtonGroup Size="Size.Small" Class="btn-row">
-                                        <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
+                                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
                                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                                        </BSButton>
-                                    </BSButtonGroup>
+                                        </HxButton>
+                                    </HxButtonGroup>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
                 @{ var type = ParameterValueType.String; }
-                <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
+                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
-                </BSButton>
+                </HxButton>
                 <p class="text-danger">@ErrorMessage</p>
-            </BSForm>
+            </EditForm>
         }
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="job_parameter_form" Color="Color.Success">Save</BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+    <FooterTemplate>
+        <HxSubmit form="job_parameter_form" Color="ThemeColor.Success">Save</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Job? Job { get; set; }
@@ -70,50 +67,6 @@
     protected override void OnInitialized()
     {
         Context = DbContextFactory.CreateDbContext();
-    }
-
-    private void IsModalOpenChanged(bool isOpen)
-    {
-        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
-        // If the user saves their changes, SubmitStep() is called first and changes are saved.
-        if (isOpen)
-        {
-            Context.Attach(Job);
-        }
-        else
-        {
-            // Reset added entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
-            {
-                if (entity.Entity is JobParameter param)
-                {
-                    if (Job?.JobParameters.Contains(param) == true)
-                        Job?.JobParameters.Remove(param);
-                }
-
-                entity.State = EntityState.Detached;
-            }
-
-            // Reset deleted entities.
-            foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
-            {
-                if (entity.Entity is JobParameter param)
-                {
-                    if (Job?.JobParameters.Contains(param) == false)
-                        Job?.JobParameters.Add(param);
-                }
-
-                entity.State = EntityState.Unchanged;
-            }
-
-            // Reset changed entities.
-            Context.ChangeTracker
-                .Entries()
-                .Where(e => e.Entity is not null)
-                .ToList()
-                .ForEach(e => e.State = EntityState.Detached);
-
-        }
     }
 
     private async Task SubmitParameters()
@@ -133,15 +86,16 @@
         try
         {
             await Context.SaveChangesAsync();
-            Modal.Hide();
+            await Modal.HideAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
-            await JS.InvokeVoidAsync("alert", "Concurrency error: the job has been modified outside of this session. Reload the page to view the most recent settings.");
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error saving parameters: {ex.Message}\n{ex.InnerException?.Message}");
+            Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
     }
@@ -169,7 +123,46 @@
         return (true, null);
     }
 
-    public void Show() => Modal.Show();
+    public void OnClosed()
+    {
+        // Reset added entities.
+        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
+        {
+            if (entity.Entity is JobParameter param)
+            {
+                if (Job?.JobParameters.Contains(param) == true)
+                    Job?.JobParameters.Remove(param);
+            }
+
+            entity.State = EntityState.Detached;
+        }
+
+        // Reset deleted entities.
+        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
+        {
+            if (entity.Entity is JobParameter param)
+            {
+                if (Job?.JobParameters.Contains(param) == false)
+                    Job?.JobParameters.Add(param);
+            }
+
+            entity.State = EntityState.Unchanged;
+        }
+
+        // Reset changed entities.
+        Context.ChangeTracker
+            .Entries()
+            .Where(e => e.Entity is not null)
+            .ToList()
+            .ForEach(e => e.State = EntityState.Detached);
+    }
+
+    public async Task Show()
+    {
+        await Modal.ShowAsync();
+        Context.Attach(Job);
+    }
+
 
     public void Dispose() => Context?.Dispose();
 }

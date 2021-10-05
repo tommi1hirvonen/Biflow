@@ -1,11 +1,9 @@
-﻿@inject IJSRuntime JS
-@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject IWebHostEnvironment WebHostEnvironment
 @inject SqlServerHelperService SqlServerHelperService
+@inject IHxMessengerService Messenger
 
-<BSModal @ref="Modal" Size="Size.Large" IsScrollable="true" IsOpenChanged="ModalOpenChanged">
-    <BSModalHeader OnClick="() => Modal.Hide()">Select stored procedure</BSModalHeader>
-
-    <BSModalBody>
+<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select stored procedure">
+    <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-hover table-sm">
@@ -37,7 +35,7 @@
         <div class="row mt-3">
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
-                    <label class="sr-only">Search</label>
+                    <label class="visually-hidden">Search</label>
                     <div class="input-group-prepend">
                         <div class="input-group-text rounded-left">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
@@ -80,20 +78,20 @@
                 </table>
             </div>
         </div>
-    </BSModalBody>
+    </BodyTemplate>
 
-    <BSModalFooter>
-        <BSButton Color="Color.Primary" Class="ml-5" @onclick="SelectProcedure"
-                  IsDisabled="SelectedSchema is null || SelectedProcedure is null">
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectProcedure"
+                  Enabled="SelectedSchema is not null && SelectedProcedure is not null">
             Select
-        </BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? ConnectionId { get; set; }
@@ -108,29 +106,6 @@
     private string? SelectedSchema { get; set; }
     private string? SelectedProcedure { get; set; }
 
-    private async Task ModalOpenChanged(bool isOpen)
-    {
-        if (isOpen && ConnectionId is not null && ConnectionId != Guid.Empty)
-        {
-            try
-            {
-                Procedures = await SqlServerHelperService.GetStoredProcedures((Guid)ConnectionId);
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error reading procedures: {ex.Message}");
-            }
-        }
-        else
-        {
-            Procedures = null;
-            SelectedSchema = null;
-            SelectedProcedure = null;
-            FilterText = string.Empty;
-        }
-    }
-
     private void OnSchemaChanged(string schema)
     {
         if (schema != SelectedSchema)
@@ -140,15 +115,37 @@
         SelectedSchema = schema;
     }
 
-    private void SelectProcedure()
+    private async Task SelectProcedure()
     {
         if (SelectedSchema is not null && SelectedProcedure is not null)
         {
             var procedure = (SelectedSchema, SelectedProcedure);
-            OnProcedureSelected.InvokeAsync(procedure);
-            Modal.Hide();
+            await OnProcedureSelected.InvokeAsync(procedure);
+            await Modal.HideAsync();
         }
     }
 
-    public void Show() => Modal.Show();
+    public void OnClosed()
+    {
+        Procedures = null;
+        SelectedSchema = null;
+        SelectedProcedure = null;
+        FilterText = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        try
+        {
+            Procedures = await SqlServerHelperService.GetStoredProcedures((Guid)ConnectionId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading procedure", ex.Message);
+        }
+    }
+
 }

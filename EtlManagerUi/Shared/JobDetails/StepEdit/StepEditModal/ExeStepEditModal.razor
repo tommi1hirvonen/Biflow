@@ -10,58 +10,50 @@
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
                    FormId="exe_step_edit_modal">
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <BSLabel>File path</BSLabel>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">File path</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeFileName" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <BSLabel>Arguments</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Arguments</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/command.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/command.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeArguments" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col">
-            <BSLabel>Working directory</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Working directory</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeWorkingDirectory" @oninput="Modal.ResetStepError"></InputText>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
-    <BSFormRow>
-        <BSFormGroup Class="col-lg-6">
-            <BSLabel>Success exit code (blank if not applicable)</BSLabel>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg-6">
+            <label class="form-label">Success exit code (blank if not applicable)</label>
             <div class="input-group">
-                <div class="input-group-prepend">
-                    <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
-                    </div>
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.ExeSuccessExitCode" @oninput="Modal.ResetStepError"></InputNumber>
             </div>
-        </BSFormGroup>
-    </BSFormRow>
+        </div>
+    </div>
 </StepEditModalBase>
 
 
@@ -128,7 +120,7 @@
         StateHasChanged();
     }
 
-    public void Show(bool showDependencies) => Modal.Show(showDependencies);
+    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
     public void Dispose() => Context?.Dispose();
 

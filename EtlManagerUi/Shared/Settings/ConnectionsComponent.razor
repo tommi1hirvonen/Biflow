@@ -3,9 +3,9 @@
 @inject IWebHostEnvironment WebHostEnvironment 
 
 
-<BSButton Color="Color.Success" @onclick="() => ShowConnectionEditModal(null)" IsDisabled="Connections is null">
+<HxButton Color="ThemeColor.Success" @onclick="() => ShowConnectionEditModal(null)" Enabled="Connections is not null">
     Add connection
-</BSButton>
+</HxButton>
 
 
 <div class="card shadow-sm pt-2 my-4">
@@ -40,24 +40,24 @@
                             @connection.ConnectionName
                         </td>
                         <td class="align-middle">
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light" aria-label="edit" @onclick="() => ShowConnectionEditModal(connection)">
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowConnectionEditModal(connection)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                </BSButton>
-                                <BSDropdown>
-                                    <BSDropdownToggle Size="Size.Small" Color="Color.Light" aria-label="delete">
+                                </HxButton>
+                                <HxDropdown>
+                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </BSDropdownToggle>
-                                    <BSDropdownMenu>
-                                        <BSDropdownHeader>Delete?</BSDropdownHeader>
-                                        <BSDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</BSDropdownItem>
-                                    </BSDropdownMenu>
-                                </BSDropdown>
-                            </BSButtonGroup>
+                                    </HxDropdownToggle>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
                         </td>
                         <td>
-                            <BSButtonGroup Class="btn-row">
-                                <BSButton Size="Size.Small" Color="Color.Light"
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                             @onclick="() => ShowConnectionString[connection.ConnectionId] = !ShowConnectionString[connection.ConnectionId]">
                                     @if (ShowConnectionString[connection.ConnectionId])
                                     {
@@ -67,8 +67,8 @@
                                     {
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye.svg")))
                                     }
-                                </BSButton>
-                            </BSButtonGroup>
+                                </HxButton>
+                            </HxButtonGroup>
                         </td>
                         <td class="align-middle">
                             @if (ShowConnectionString[connection.ConnectionId])
@@ -136,9 +136,9 @@
         StateHasChanged();
     }
 
-    private void ShowConnectionEditModal(Connection? connection)
+    private async Task ShowConnectionEditModal(Connection? connection)
     {
         EditConnectionId = connection?.ConnectionId ?? Guid.Empty;
-        ConnectionEditModal.Show();
+        await ConnectionEditModal.ShowAsync();
     }
 }

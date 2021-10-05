@@ -3,65 +3,58 @@
 @inject IConfiguration configuration
 @inject IJSRuntime JS
 
-<BSModal @ref="Modal" Size="Size.Large" IsOpenChanged="OnOpenChanged">
-    @if (Connection is not null)
-    {
-        <BSModalHeader OnClick="() => Modal.Hide()">@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection.ConnectionName)</BSModalHeader>
-        <BSModalBody>
-            <BSForm Model="Connection" id="connection_edit_form" OnValidSubmit="SubmitConnection">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection?.ConnectionName)">
+    <BodyTemplate>
+        @if (Connection is not null)
+        {
+            <EditForm Model="Connection" id="connection_edit_form" OnValidSubmit="SubmitConnection">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-                        <BSFormGroup>
-                            <BSLabel>Connection name</BSLabel>
+                        <div class="row">
+                            <label class="form-label">Connection name</label>
                             <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                    </div>
+                                <div class="input-group-text">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionName"></InputText>
                             </div>
-                        </BSFormGroup>
-                        <BSFormGroup>
-                            <BSLabel>Connection string</BSLabel>
+                        </div>
+                        <div class="row mt-3">
+                            <label class="form-label">Connection string</label>
                             <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
-                                    </div>
+                                <div class="input-group-text">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>
-                        </BSFormGroup>
+                        </div>
 
-                        <BSFormGroup Class="mt-2">
-                            <BSLabel>Execute SSIS packages as login (blank = no impersonation)</BSLabel>
+                        <dib class="row mt-3">
+                            <label class="form-label">Execute SSIS packages as login (blank = no impersonation)</label>
                             <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
-                                    </div>
+                                <div class="input-group-text">
+                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ExecutePackagesAsLogin"></InputText>
                             </div>
-                        </BSFormGroup>
+                        </dib>
 
-                        <div class="row mt-2">
+                        <div class="row mt-3">
                             <div class="col">
-                                <BSButton Size="Size.Small" Color="Color.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
                                     Test connection
-                                </BSButton>
+                                </HxButton>
                                 @if (TestingConnection)
                                 {
                                     <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="sr-only">Loading...</span>
+                                        <span class="visually-hidden">Loading...</span>
                                     </div>
                                 }
                             </div>
                         </div>
-                        <div class="row mt-2">
+                        <div class="row mt-3">
                             <div class="col">
                                 @if (ConnectionTestSuccess == true)
                                 {
@@ -75,14 +68,14 @@
                         </div>
                     </div>
                 </div>
-            </BSForm>
-        </BSModalBody>
-    }
-    <BSModalFooter>
-        <BSButton ButtonType="ButtonType.Submit" form="connection_edit_form" Color="Color.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</BSButton>
-        <BSButton Color="Color.Secondary" @onclick="() => Modal.Hide()">Cancel</BSButton>
-    </BSModalFooter>
-</BSModal>
+            </EditForm>
+        }
+        </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
 
 @code {
     [Parameter]
@@ -93,7 +86,7 @@
 
     private Connection? Connection { get; set; }
 
-    private BSModal Modal { get; set; } = null!;
+    private HxModal Modal { get; set; } = null!;
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -118,7 +111,7 @@
     private async Task SubmitConnection()
     {
         await OnConnectionSubmit.InvokeAsync(Connection);
-        Modal.Hide();
+        await Modal.HideAsync();
     }
 
     private async Task TestConnection()
@@ -139,11 +132,5 @@
         TestingConnection = false;
     }
 
-    private void OnOpenChanged(bool isOpen)
-    {
-        if (!isOpen)
-            ConnectionTestSuccess = null;
-    }
-
-    public void Show() => Modal.Show();
+    public async Task ShowAsync() => await Modal.ShowAsync();
 }

@@ -25,14 +25,14 @@
                 <tr>
                     <td>
                         <div class="input-group">
-                            <InputSelect class="form-control form-control-sm" @bind-Value="param.ParameterLevel">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.ParameterLevel">
                                 <option>@ParameterLevel.Package</option>
                                 <option>@ParameterLevel.Project</option>
                             </InputSelect>
                         </div>
                     </td>
                     <td>
-                        <BSBasicInput Size="Size.Small" @bind-Value="param.ParameterName" placeholder="Name"></BSBasicInput>
+                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                     </td>
                     <td class="align-middle">
                         <div class="custom-control custom-checkbox">
@@ -46,7 +46,7 @@
                     @if (param.JobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-control form-control-sm" @bind-Value="param.JobParameterId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
                                 @foreach (var jobParam in JobParameters)
                                             {
                                     <option value="@jobParam.ParameterId">
@@ -61,20 +61,20 @@
                         <ParameterTypeValueEditComponent Parameter="param" />
                     }
                     <td>
-                        <BSButtonGroup Size="Size.Small" Class="btn-row">
-                            <BSButton Color="Color.Light" Size="Size.Small" Class="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
+                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
-                            </BSButton>
-                        </BSButtonGroup>
+                            </HxButton>
+                        </HxButtonGroup>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
     var level = ParameterLevel.Package; var type = ParameterValueType.String;
-    <BSButton Color="Color.Light" Size="Size.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
+    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
-    </BSButton>
+    </HxButton>
 }
 
 @code {
