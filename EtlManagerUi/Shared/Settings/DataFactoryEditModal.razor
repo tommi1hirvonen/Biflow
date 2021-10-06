@@ -13,8 +13,10 @@
                         <ValidationSummary />
 
                         <div class="row">
-                            <label class="form-label">Data Factory name</label>
-                            <InputText class="form-control" @bind-Value="DataFactory.DataFactoryName"></InputText>
+                            <div class="col">
+                                <label class="form-label">Data Factory name</label>
+                                <InputText class="form-control" @bind-Value="DataFactory.DataFactoryName"></InputText>
+                            </div>
                         </div>
 
                         <div class=" row mt-3">
@@ -52,12 +54,6 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
                                     Test connection
                                 </HxButton>
-                                @if (TestingConnection)
-                                {
-                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                }
                             </div>
                         </div>
 

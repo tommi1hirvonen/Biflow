@@ -9,11 +9,7 @@
 <div class="row mt-3">
     <div class="col">
         <HxButtonToolbar>
-            <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Enabled="!Loading">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-                Refresh
-            </HxSubmit>
-            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowSteps = false" CssClass="@(!ShowSteps ? "active" : null)">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                     Jobs
@@ -76,13 +72,10 @@
                 </HxDropdownMenu>
             </HxDropdown>
 
-            @*If executions are being (re)loaded, show spinner.*@
-            @if (Loading)
-            {
-                <div class="spinner-border text-primary align-middle ms-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            }
+            <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="Loading" Enabled="!Loading" CssClass="ms-3">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                Refresh
+            </HxSubmit>
         </HxButtonToolbar>
     </div>
 </div>

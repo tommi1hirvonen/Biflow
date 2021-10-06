@@ -43,15 +43,9 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" IsDisabled="TestingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
                                     Test connection
                                 </HxButton>
-                                @if (TestingConnection)
-                                {
-                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                }
                             </div>
                         </div>
                         <div class="row mt-3">

@@ -56,19 +56,13 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
                                     Test connection
                                 </HxButton>
-                                @if (TestingConnection)
+                                @if (ConnectionTestSuccess == true)
                                 {
-                                    <div class="spinner-border spinner-border-sm text-primary align-middle ml-3" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                }
-                                else if (ConnectionTestSuccess == true)
-                                {
-                                    <span class="badge badge-success ml-3">Success</span>
+                                    <span class="badge badge-success ms-3">Success</span>
                                 }
                                 else if (ConnectionTestSuccess == false)
                                 {
-                                    <span class="badge badge-danger ml-3">Failed</span>
+                                    <span class="badge badge-danger ms-3">Failed</span>
                                 }
                             </div>
                         </div>

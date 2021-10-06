@@ -38,7 +38,7 @@
                             @app.AppRegistrationName
                         </td>
                         <td class="align-middle">
-                            <HxButtonGroup Class="btn-row">
+                            <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </HxButton>
