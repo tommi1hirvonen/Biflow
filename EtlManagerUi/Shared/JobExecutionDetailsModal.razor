@@ -11,12 +11,8 @@
     <BodyTemplate>
 
         <HxButtonToolbar>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-                Refresh
-            </HxButton>
 
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
                 Job details
             </HxButton>
@@ -33,18 +29,17 @@
                     Gantt
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Dependencies ? "active" : null)"
-                            @onclick="() => { ShowReport = Report.Dependencies; }">
+                          @onclick="() => { ShowReport = Report.Dependencies; }">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                     Dependencies
                 </HxButton>
             </HxButtonGroup>
 
-            @if (Loading)
-            {
-                <div class="spinner-border text-primary align-middle ms-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            }
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading" CssClass="ms-3">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                Refresh
+            </HxButton>
+
         </HxButtonToolbar>
 
         <AuthorizeView Roles="Admin, Editor, Operator">
@@ -169,7 +164,7 @@
             <div class="row mt-3">
                 <div class="col d-inline">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
-                    <span class="mr-3">Filter</span>
+                    <span class="me-3">Filter</span>
 
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <FilterDropdown TItem="string"
@@ -248,18 +243,18 @@
             <div class="row mt-3">
                 <div class="col d-inline">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
-                    <span class="mr-3">Sort</span>
-                    <div class="custom-control custom-radio custom-control-inline">
-                        <input type="radio" class="custom-control-input" id="radio_started"
+                    <span class="me-3">Sort</span>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_started"
                                checked=@(SortMode_ == SortMode.Started)
                                @onchange="() => SortMode_ = SortMode.Started">
-                        <label class="custom-control-label" for="radio_started">Started</label>
+                        <label class="form-check-label" for="radio_started">Started</label>
                     </div>
-                    <div class="custom-control custom-radio custom-control-inline">
-                        <input type="radio" class="custom-control-input" id="radio_duration"
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_duration"
                                checked=@(SortMode_ == SortMode.Duration)
                                @onchange="() => SortMode_ = SortMode.Duration">
-                        <label class="custom-control-label" for="radio_duration">Duration</label>
+                        <label class="form-check-label" for="radio_duration">Duration</label>
                     </div>
                 </div>
             </div>
