@@ -105,9 +105,11 @@ tr.disabled {
 .progress-bar.suspended {
     background-color: var(--color-danger);
 }
-.progress-bar:hover {
-    filter: brightness(0.9);
+
+.gantt-row:hover {
+    background-color: rgba(0, 0, 0, 0.075);
 }
+
 
 
 /*

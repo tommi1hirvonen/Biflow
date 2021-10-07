@@ -20,21 +20,19 @@
         @foreach (var item in Executions.Where(e => e.StartDateTime is not null))
         {
             (var offset, var width) = item.GetGanttGraphDimensions(Executions);
-            <div class="row border-top">
+            <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)">
                 <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
-                    <small>@item.JobName</small>
+                    <HxTooltip Text="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
+                        <small>@item.JobName</small>
+                    </HxTooltip>
                 </div>
                 <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
                     @for (int i = 0; i <= 100; i += 10)
                     {
-                        <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");" />
+                        <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");"></div>
                     }
-                    <div class="progress"
-                         style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
-                        <div id="@item.ExecutionId"
-                             class="progress-bar @item.ExecutionStatus.ToString().ToLower()"
-                             style="width: 100%; cursor:pointer;"
-                             @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)" />
+                    <div class="progress" style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
+                        <div class="progress-bar @item.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
                     </div>
                 </div>
             </div>

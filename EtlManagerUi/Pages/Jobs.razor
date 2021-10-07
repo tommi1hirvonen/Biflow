@@ -12,7 +12,7 @@
 <div class="btn-toolbar mt-3">
     <AuthorizeView Roles="Admin, Editor">
         @*Dropdown to create new jobs*@
-        <HxDropdown>
+        <HxDropdown CssClass="me-3">
             <HxDropdownToggle Color="ThemeColor.Success">Add job</HxDropdownToggle>
             <HxDropdownContent CssClass="p-4">
                 <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
@@ -31,17 +31,11 @@
                 </EditForm>
             </HxDropdownContent>
         </HxDropdown>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-            Refresh
-        </HxButton>
     </AuthorizeView>
-    <AuthorizeView Roles="Operator, Viewer">
-        <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
-            Refresh
-        </HxButton>
-    </AuthorizeView>
+    <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
+        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+        Refresh
+    </HxButton>
 </div>
 
 
@@ -58,12 +52,6 @@
                 </th>
                 <th>
                     Last execution
-                    @if (IsLoading)
-                    {
-                        <div class="spinner-border spinner-border-sm text-secondary align-middle ml-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    }
                 </th>
                 <th>
                     Next execution
