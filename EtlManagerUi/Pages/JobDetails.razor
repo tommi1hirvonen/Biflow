@@ -34,10 +34,9 @@
                     }
                 </HxDropdownMenu>
             </HxDropdown>
-            <HxButton 
-                      Color="ThemeColor.Secondary"
+            <HxButton Color="ThemeColor.Secondary"
                       @onclick="() => DescriptionOpen = !DescriptionOpen"
-                    CssClass="@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "disabled" : DescriptionOpen ? "active" : null)">
+                      CssClass="@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "disabled" : DescriptionOpen ? "active" : null)">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
             </HxButton>
         </HxButtonGroup>
@@ -54,7 +53,7 @@
                         Edit
                     </HxDropdownToggleButton>
                     <HxDropdownContent CssClass="dropdown-menu-xl-right p-4">
-                        <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context" style="min-width: 30rem;">
+                        <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context" style="min-width: 25rem;">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <div>
