@@ -282,21 +282,18 @@ tr.disabled {
 /*
     Badge
 */
-.badge-primary {
-    background-color: var(--color-primary);
+.badge.bg-primary {
+    background-color: var(--color-primary)!important;
 }
 
-.badge-success {
-    background-color: var(--color-success);
+.badge.bg-success {
+    background-color: var(--color-success) !important;
 }
 
-.badge-danger {
-    background-color: var(--color-danger);
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
 }
 
-.badge-warning {
-    color: #fff;
-}
 
 /*
     Text

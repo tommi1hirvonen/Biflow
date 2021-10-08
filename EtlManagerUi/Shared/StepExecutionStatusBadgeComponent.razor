@@ -2,18 +2,18 @@
     switch (ExecutionStatus)
     {
         case StepExecutionStatus.Succeeded:
-            <span class="badge badge-success">@ExecutionStatus</span>
+            <span class="badge bg-success">@ExecutionStatus</span>
             break;
         case StepExecutionStatus.Failed:
-            <span class="badge badge-danger">@ExecutionStatus</span>
+            <span class="badge bg-danger">@ExecutionStatus</span>
             break;
         case StepExecutionStatus.Stopped:
         case StepExecutionStatus.Duplicate:
         case StepExecutionStatus.AwaitRetry:
-            <span class="badge badge-warning">@ExecutionStatus</span>
+            <span class="badge bg-warning">@ExecutionStatus</span>
             break;
         case StepExecutionStatus.Running:
-            <span class="badge badge-primary">@ExecutionStatus</span>
+            <span class="badge bg-primary">@ExecutionStatus</span>
             break;
         case StepExecutionStatus.Skipped:
         case StepExecutionStatus.NotStarted:

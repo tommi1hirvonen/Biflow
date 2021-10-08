@@ -2,18 +2,18 @@
     switch (ExecutionStatus_)
     {
         case ExecutionStatus.Succeeded:
-            <span class="badge badge-success">@ExecutionStatus_</span>
+            <span class="badge bg-success">@ExecutionStatus_</span>
             break;
         case ExecutionStatus.Failed:
-            <span class="badge badge-danger">@ExecutionStatus_</span>
+            <span class="badge bg-danger">@ExecutionStatus_</span>
             break;
         case ExecutionStatus.Warning:
         case ExecutionStatus.Stopped:
         case ExecutionStatus.Suspended:
-            <span class="badge badge-warning">@ExecutionStatus_</span>
+            <span class="badge bg-warning">@ExecutionStatus_</span>
             break;
         case ExecutionStatus.Running:
-            <span class="badge badge-primary">@ExecutionStatus_</span>
+            <span class="badge bg-primary">@ExecutionStatus_</span>
             break;
         default:
             <span class="badge bg-secondary">@ExecutionStatus_</span>
