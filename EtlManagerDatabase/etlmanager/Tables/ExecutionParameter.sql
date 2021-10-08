@@ -9,14 +9,12 @@
 	CONSTRAINT [FK_ExecutionParameter_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [etlmanager].[Execution] ([ExecutionId]),
 	CONSTRAINT [CK_ExecutionParameter_ParameterValueType] CHECK (
         [ParameterValueType] = 'Boolean' OR
-        [ParameterValueType] = 'Byte' OR
         [ParameterValueType] = 'DateTime' OR
         [ParameterValueType] = 'Decimal' OR
         [ParameterValueType] = 'Double' OR
         [ParameterValueType] = 'Int16' OR
         [ParameterValueType] = 'Int32' OR
         [ParameterValueType] = 'Int64' OR
-        [ParameterValueType] = 'SByte' OR
         [ParameterValueType] = 'Single' OR
         [ParameterValueType] = 'String'
         )

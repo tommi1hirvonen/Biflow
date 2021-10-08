@@ -21,35 +21,29 @@
                     </InputSelectBoolean>
                 </div>
                 break;
-            case ParameterValueType.Byte:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueByte" placeholder="Value"></HxInputNumber>
-                break;
             case ParameterValueType.DateTime:
-                <HxInputDate InputSize="InputSize.Small" @bind-Value="Parameter.ValueDateTime" placeholder="Value"></HxInputDate>
+                <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm"  type="datetime-local">
                 break;
             case ParameterValueType.Decimal:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.Double:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueDouble" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDouble" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.Int16:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt16" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt16" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.Int32:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt32" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt32" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.Int64:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueInt64" placeholder="Value"></HxInputNumber>
-                break;
-            case ParameterValueType.SByte:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueSByte" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt64" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.Single:
-                <HxInputNumber InputSize="InputSize.Small" @bind-Value="Parameter.ValueSingle" placeholder="Value"></HxInputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueSingle" placeholder="Value"></InputNumber>
                 break;
             case ParameterValueType.String:
-                <HxInputText InputSize="InputSize.Small" @bind-Value="Parameter.ValueString" placeholder="Value"></HxInputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Parameter.ValueString" placeholder="Value" />
                 break;
         }
     </td>

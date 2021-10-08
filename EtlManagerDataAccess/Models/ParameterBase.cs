@@ -35,9 +35,6 @@ namespace EtlManagerDataAccess.Models
                     case bool b:
                         ValueBoolean = b;
                         break;
-                    case byte b:
-                        ValueByte = b;
-                        break;
                     case DateTime b:
                         ValueDateTime = b;
                         break;
@@ -55,9 +52,6 @@ namespace EtlManagerDataAccess.Models
                         break;
                     case long b:
                         ValueInt64 = b;
-                        break;
-                    case sbyte b:
-                        ValueSByte = b;
                         break;
                     case float b:
                         ValueSingle = b;
@@ -77,24 +71,28 @@ namespace EtlManagerDataAccess.Models
 
         [NotMapped]
         public bool ValueBoolean { get; set; }
-        [NotMapped]
-        public byte ValueByte { get; set; }
+
         [NotMapped]
         public DateTime ValueDateTime { get; set; }
+        
         [NotMapped]
         public decimal ValueDecimal { get; set; }
+        
         [NotMapped]
         public double ValueDouble { get; set; }
+        
         [NotMapped]
         public short ValueInt16 { get; set; }
+        
         [NotMapped]
         public int ValueInt32 { get; set; }
+        
         [NotMapped]
         public long ValueInt64 { get; set; }
-        [NotMapped]
-        public sbyte ValueSByte { get; set; }
+
         [NotMapped]
         public float ValueSingle { get; set; }
+        
         [NotMapped]
         public string? ValueString { get; set; }
 
@@ -103,14 +101,12 @@ namespace EtlManagerDataAccess.Models
             ParameterValue = ParameterValueType switch
             {
                 ParameterValueType.Boolean => ValueBoolean,
-                ParameterValueType.Byte => ValueByte,
                 ParameterValueType.DateTime => ValueDateTime,
                 ParameterValueType.Decimal => ValueDecimal,
                 ParameterValueType.Double => ValueDouble,
                 ParameterValueType.Int16 => ValueInt16,
                 ParameterValueType.Int32 => ValueInt32,
                 ParameterValueType.Int64 => ValueInt64,
-                ParameterValueType.SByte => ValueSByte,
                 ParameterValueType.Single => ValueSingle,
                 ParameterValueType.String => ValueString,
                 _ => string.Empty

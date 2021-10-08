@@ -17,14 +17,12 @@
     CONSTRAINT [CK_ExecutionStepParameter_ParameterLevel] CHECK ([ParameterLevel] = 'Package' OR [ParameterLevel] = 'Project' OR [ParameterLevel] IS NULL),
     CONSTRAINT [CK_ExecutionStepParameter_ParameterValueType] CHECK (
         [ParameterValueType] = 'Boolean' OR
-        [ParameterValueType] = 'Byte' OR
         [ParameterValueType] = 'DateTime' OR
         [ParameterValueType] = 'Decimal' OR
         [ParameterValueType] = 'Double' OR
         [ParameterValueType] = 'Int16' OR
         [ParameterValueType] = 'Int32' OR
         [ParameterValueType] = 'Int64' OR
-        [ParameterValueType] = 'SByte' OR
         [ParameterValueType] = 'Single' OR
         [ParameterValueType] = 'String'
         )
