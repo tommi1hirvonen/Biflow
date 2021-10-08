@@ -47,10 +47,10 @@
             {
                 <HxButtonToolbar CssClass="mt-3">
                     <HxDropdown>
-                        <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
+                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
                             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                             Stop
-                        </HxDropdownToggle>
+                        </HxDropdownToggleButton>
                         <HxDropdownMenu>
                             <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
                         </HxDropdownMenu>

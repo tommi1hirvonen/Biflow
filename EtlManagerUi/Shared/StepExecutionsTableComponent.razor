@@ -87,10 +87,10 @@
                                     @if (item.ExecutionStatus == StepExecutionStatus.Running)
                                     {
                                         <HxDropdown CssClass="ms-3">
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Danger">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
                                                 Stop
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>

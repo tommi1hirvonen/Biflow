@@ -51,9 +51,9 @@
                                 </HxButton>
 
                                 <HxDropdown>
-                                    <HxDropdownToggle Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
+                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
-                                    </HxDropdownToggle>
+                                    </HxDropdownToggleButton>
                                     <HxDropdownContent CssClass="p-4">
                                         <div style="min-width: 25rem;">
                                             <div class="row">
@@ -85,9 +85,9 @@
                                 </HxDropdown>
 
                                 <HxDropdown>
-                                    <HxDropdownToggle Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
+                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </HxDropdownToggle>
+                                    </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>

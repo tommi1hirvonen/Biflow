@@ -30,9 +30,9 @@
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
             <HxDropdown CssClass="me-3">
-                <HxDropdownToggle Color="ThemeColor.Success">
+                <HxDropdownToggleButton Color="ThemeColor.Success">
                     Add step
-                </HxDropdownToggle>
+                </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Step type</HxDropdownHeader>
                     @foreach (var stepType in Enum.GetValues(typeof(StepType)))
@@ -66,14 +66,14 @@
     {
         if (ExecuteSuccess)
         {
-            <HxAlert Color="ThemeColor.Success" Dismissible="true">
+            <HxAlert CssClass="mt-3" Color="ThemeColor.Success" Dismissible="true">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
-                Execution started successfully - <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">Monitor execution</a>
+                Execution started successfully - <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
             </HxAlert>
         }
         else
         {
-        <HxAlert Color="ThemeColor.Danger" Dismissible="true">
+        <HxAlert CssClass="mt-3" Color="ThemeColor.Danger" Dismissible="true">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
             Error starting execution: @ExecuteErrorMessage
         </HxAlert>
@@ -206,9 +206,9 @@
 
                                     <AuthorizeView Roles="Admin, Editor">
                                         <HxDropdown>
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
                                                 <HxDropdownHeader>Copy to</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="() => CopyStep(item, Job)">here</HxDropdownItem>
@@ -221,9 +221,9 @@
                                         </HxDropdown>
 
                                         <HxDropdown>
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="() => DeleteStep(item)">Confirm</HxDropdownItem>
@@ -255,9 +255,9 @@
                                 <AuthorizeView Roles="Admin, Editor">
                                     <div class="btn-group btn-group-sm btn-row">
                                         <HxDropdown>
-                                            <HxDropdownToggle Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => TagInputFocusStepId = item.StepId">
+                                            <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => TagInputFocusStepId = item.StepId">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownContent CssClass="dropdown-menu-right p-3">
                                                 <EditForm class="d-flex" Model="NewTag" OnValidSubmit="() => SubmitTag(item)" style="min-width: 20rem;">
                                                     <ChildContent Context="tag_context">

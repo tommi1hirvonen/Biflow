@@ -13,7 +13,7 @@
     <AuthorizeView Roles="Admin, Editor">
         @*Dropdown to create new jobs*@
         <HxDropdown CssClass="me-3">
-            <HxDropdownToggle Color="ThemeColor.Success">Add job</HxDropdownToggle>
+            <HxDropdownToggleButton Color="ThemeColor.Success">Add job</HxDropdownToggleButton>
             <HxDropdownContent CssClass="p-4">
                 <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
                     <DataAnnotationsValidator />
@@ -96,9 +96,9 @@
 
                                         @*Dropdown to edit the job's name*@
                                         <HxDropdown>
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownContent CssClass="p-4">
                                                 <EditForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context" style="min-width: 25rem;">
                                                     <DataAnnotationsValidator />
@@ -113,18 +113,18 @@
                                         </HxDropdown>
 
                                         <HxDropdown>
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
                                             </HxDropdownMenu>
                                         </HxDropdown>
 
                                         <HxDropdown>
-                                            <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                            </HxDropdownToggle>
+                                            </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="() => DeleteJob(item)">Confirm</HxDropdownItem>

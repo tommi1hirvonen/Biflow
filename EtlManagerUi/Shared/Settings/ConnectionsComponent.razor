@@ -45,9 +45,9 @@
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </HxButton>
                                 <HxDropdown>
-                                    <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                    </HxDropdownToggle>
+                                    </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</HxDropdownItem>

@@ -30,10 +30,10 @@
                 </HxButton>
             </HxButtonGroup>
             <HxDropdown CssClass="ms-3">
-                <HxDropdownToggle Size="ButtonSize.Small" Color="ThemeColor.Secondary">
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
                     Presets
-                </HxDropdownToggle>
+                </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Last</HxDropdownHeader>
                     <HxDropdownItem @onclick="() => SelectPresetLast(1)">1 h</HxDropdownItem>

@@ -19,10 +19,10 @@
     <div class="col-auto">
         <HxButtonGroup>
             <HxDropdown>
-                <HxDropdownToggle Color="ThemeColor.Secondary">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary">
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
                     @(CurrentJob?.JobName ?? "Loading...")
-                </HxDropdownToggle>
+                </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Show</HxDropdownHeader>
                     @if (Jobs is not null)
@@ -49,10 +49,10 @@
             <AuthorizeView Roles="Admin, Editor">
                 @*Dropdown to change the current job's name*@
                 <HxDropdown>
-                    <HxDropdownToggle Color="ThemeColor.Secondary">
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                         Edit
-                    </HxDropdownToggle>
+                    </HxDropdownToggleButton>
                     <HxDropdownContent CssClass="dropdown-menu-xl-right p-4">
                         <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context" style="min-width: 30rem;">
                             <DataAnnotationsValidator />
@@ -80,10 +80,10 @@
 
                 @*Dropdown to delete the current job*@
                 <HxDropdown CssClass="ms-3">
-                    <HxDropdownToggle Color="ThemeColor.Secondary">
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
                         Delete
-                    </HxDropdownToggle>
+                    </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
                         <HxDropdownHeader>Delete job?</HxDropdownHeader>
                         <HxDropdownItem @onclick="DeleteJob">Confirm</HxDropdownItem>
