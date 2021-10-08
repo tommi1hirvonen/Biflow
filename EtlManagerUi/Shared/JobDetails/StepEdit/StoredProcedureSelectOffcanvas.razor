@@ -1,0 +1,119 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject SqlServerHelperService SqlServerHelperService
+@inject IHxMessengerService Messenger
+
+<HxOffcanvas @ref="Modal" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select stored procedure">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                    </span>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
+                           @bind-value="FilterTextSchema" @bind-value:event="oninput" />
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                           @bind-value="FilterTextName" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Stored procedures
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Procedures is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (Procedures.Count == 0)
+                        {
+                            <tr><td>No stored procedures</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var procedure in ProcedureNames)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedProcedure = procedure" class="@(procedure == SelectedProcedure ? "bg-light fw-bold" : null)">
+                                    <td>@procedure</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectProcedure"
+                  Enabled="SelectedProcedure is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    private HxOffcanvas Modal { get; set; } = null!;
+
+    [Parameter]
+    public Guid? ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnProcedureSelected { get; set; }
+
+    private Dictionary<string, List<string>>? Procedures { get; set; }
+
+    private IEnumerable<string> ProcedureNames => Procedures?
+        .Where(pair => pair.Key.ContainsIgnoreCase(FilterTextSchema))
+        .SelectMany(pair =>
+            pair.Value
+                .Where(str => str.ContainsIgnoreCase(FilterTextName))
+                .Select(str => $"[{pair.Key}].[{str}]")).OrderBy(str => str) ?? Enumerable.Empty<string>();
+
+    private string FilterTextName { get; set; } = string.Empty;
+    private string FilterTextSchema { get; set; } = string.Empty;
+
+    private string? SelectedProcedure { get; set; }
+
+    private async Task SelectProcedure()
+    {
+        if (SelectedProcedure is not null)
+        {
+            await OnProcedureSelected.InvokeAsync(SelectedProcedure);
+            await Modal.HideAsync();
+        }
+    }
+
+    public void OnClosed()
+    {
+        Procedures = null;
+        SelectedProcedure = null;
+        FilterTextSchema = string.Empty;
+        FilterTextName = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Modal.ShowAsync();
+        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        try
+        {
+            Procedures = await SqlServerHelperService.GetStoredProcedures((Guid)ConnectionId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading procedure", ex.Message);
+        }
+    }
+
+}

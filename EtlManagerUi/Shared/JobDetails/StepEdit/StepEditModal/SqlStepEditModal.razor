@@ -53,7 +53,7 @@
             </HxButton>
         </div>
     </div>
-    <StoredProcedureSelectModal @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+    <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
 
     <div class="row">
         <div class="col">
@@ -108,7 +108,7 @@
 
     private ParameterizedStepEditModal Modal { get; set; } = null!;
 
-    private StoredProcedureSelectModal StoredProcedureSelectModal { get; set; } = null!;
+    private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -169,7 +169,7 @@
 
     private async Task OpenStoredProcedureSelectModal() => await StoredProcedureSelectModal.ShowAsync();
 
-    private void OnStoredProcedureSelected((string Schema, string Procedure) procedure) => Step.SqlStatement = $"EXEC [{procedure.Schema}].[{procedure.Procedure}]";
+    private void OnStoredProcedureSelected(string procedure) => Step.SqlStatement = $"EXEC {procedure}";
 
     public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
