@@ -419,11 +419,22 @@
             .Select(step =>
             {
                 var status = step.GetExecutionStatus().ToString().ToLower();
-                return new { Id = step.StepId, Name = step.StepName, ClassName = $"enabled {status}" };
+                return new
+                {
+                    Id = step.StepId,
+                    Name = step.StepName,
+                    ClassName = $"enabled {status}",
+                    Tooltip = $"{step.GetExecutionStatus()}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
+                };
             });
         var dependencies = Execution?.StepExecutions
             .SelectMany(step => step.ExecutionDependencies)
-            .Select(dep => new { StepId = dep.StepId, DependantOnStepId = dep.DependantOnStepId, ClassName = dep.StrictDependency ? "strict" : "non-strict" });
+            .Select(dep => new
+            {
+                StepId = dep.StepId,
+                DependantOnStepId = dep.DependantOnStepId,
+                ClassName = dep.StrictDependency ? "strict" : "non-strict"
+            });
 
         var stepsJson = JsonSerializer.Serialize(steps);
         var dependenciesJson = JsonSerializer.Serialize(dependencies);

@@ -64,11 +64,21 @@
 
     // Set event listeners to pass the clicked node's id back to Blazor.
     var elements = document.getElementsByClassName("node");
+
     var myFunction = function (event) {
         dotNetObject.invokeMethodAsync('HelperInvokeCaller', this.id);
     };
+
     for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener('click', myFunction, false);
+        var element = elements[i];
+        element.addEventListener('click', myFunction, false);
+
+        var title_ = steps.find(s => s.Id == element.id).Tooltip;
+        if (typeof title_ == 'string') {
+            var tooltip = new bootstrap.Tooltip(element, {
+                title: title_
+            });
+        }
     }
 }
 
