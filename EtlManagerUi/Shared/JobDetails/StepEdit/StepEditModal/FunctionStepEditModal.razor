@@ -48,13 +48,13 @@
     </div>
     <div class="row mt-3">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenFunctionSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenFunctionSelectOffcanvas">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse functions
             </HxButton>
         </div>
     </div>
-    <FunctionSelectModal @ref="FunctionSelectModal" FunctionAppId="Step.FunctionAppId" OnFunctionSelected="OnFunctionSelected" />
+    <FunctionSelectOffcanvas @ref="FunctionSelectOffcanvas" FunctionAppId="Step.FunctionAppId" OnFunctionSelected="OnFunctionSelected" />
     <div class="row mt-3">
         <div class="col">
             <div class="form-check form-check-inline">
@@ -115,7 +115,7 @@
 
     private ParameterizedStepEditModal Modal { get; set; } = null!;
 
-    private FunctionSelectModal FunctionSelectModal { get; set; } = null!;
+    private FunctionSelectOffcanvas FunctionSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -161,7 +161,7 @@
         StateHasChanged();
     }
 
-    private async Task OpenFunctionSelectModal() => await FunctionSelectModal.ShowAsync();
+    private async Task OpenFunctionSelectOffcanvas() => await FunctionSelectOffcanvas.ShowAsync();
 
     private void OnFunctionSelected(string functionUrl)
     {

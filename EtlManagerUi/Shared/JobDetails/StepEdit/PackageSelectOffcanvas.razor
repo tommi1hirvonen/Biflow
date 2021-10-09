@@ -2,7 +2,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject SqlServerHelperService SqlServerHelperService
 
-<HxOffcanvas @ref="Modal" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select package">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select package">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -121,13 +121,13 @@
                   Enabled="SelectedPackage is not null && SelectedProject is not null && SelectedFolder is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
 
-    private HxOffcanvas Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
     public Guid? ConnectionId { get; set; }
@@ -177,13 +177,13 @@
         {
             var package = (SelectedFolder, SelectedProject, SelectedPackage);
             await OnPackageSelected.InvokeAsync(package);
-            await Modal.HideAsync();
+            await Offcanvas.HideAsync();
         }
     }
 
     public async Task ShowAsync()
     {
-        await Modal.ShowAsync();
+        await Offcanvas.ShowAsync();
         if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {

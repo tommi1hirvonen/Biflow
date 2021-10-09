@@ -4,7 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select dataset">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select dataset">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -30,7 +30,7 @@
                         {
                             foreach (var group in Datasets.Keys.OrderBy(folder => folder))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == SelectedGroup ? "bg-light font-weight-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == SelectedGroup ? "bg-light fw-bold" : null)">
                                     <td>@group.GroupName</td>
                                 </tr>
                             }
@@ -38,7 +38,9 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-lg">
+        </div>
+        <div class="row mt-3">
+            <div class="col">
                 <table class="table table-hover table-sm">
                     <thead>
                         <tr>
@@ -60,7 +62,7 @@
                             {
                                 foreach (var dataset in datasets.OrderBy(p => p))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-light font-weight-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-light fw-bold" : null)">
                                         <td>@dataset.DatasetName</td>
                                     </tr>
                                 }
@@ -73,17 +75,17 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectDatasetAsync"
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectDatasetAsync"
                   Enabled="SelectedDataset is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
     public Guid? AppRegistrationId { get; set; }
@@ -112,7 +114,7 @@
         if (groupId is not null && datasetId is not null)
         {
             await OnDatasetSelected.InvokeAsync((groupId, datasetId));
-            await Modal.HideAsync();
+            await Offcanvas.HideAsync();
         }
     }
 
@@ -125,7 +127,7 @@
 
     public async Task ShowAsync()
     {
-        await Modal.ShowAsync();
+        await Offcanvas.ShowAsync();
         if (AppRegistrationId is null || AppRegistrationId == Guid.Empty) return;
         try
         {

@@ -5,17 +5,14 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Scrollable="true" OnClosed="OnClosed" Title="Select function">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select function">
 
     <BodyTemplate>
         <div class="row">
-            <div class="col-lg-4 form-group">
+            <div class="col">
                 <div class="input-group input-group-sm">
-                    <label class="visually-hidden">Search</label>
-                    <div class="input-group-prepend">
-                        <div class="input-group-text rounded-left">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
-                        </div>
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -58,9 +55,17 @@
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedFunctionUrl = function.FunctionUrl"
-                                    class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light font-weight-bold" : null)">
-                                    <td>@function.FunctionName</td>
-                                    <td>@function.FunctionUrl</td>
+                                    class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        <small>
+                                            @function.FunctionName
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            @function.FunctionUrl
+                                        </small>
+                                    </td>
                                 </tr>
                             }
                         }
@@ -72,17 +77,17 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectFunctionAsync"
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectFunctionAsync"
                   Enabled="SelectedFunctionUrl is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
     public Guid? FunctionAppId { get; set; }
@@ -101,7 +106,7 @@
         if (SelectedFunctionUrl is not null)
         {
             await OnFunctionSelected.InvokeAsync(SelectedFunctionUrl);
-            await Modal.HideAsync();
+            await Offcanvas.HideAsync();
         }
     }
 
@@ -114,7 +119,7 @@
 
     public async Task ShowAsync()
     {
-        await Modal.ShowAsync();
+        await Offcanvas.ShowAsync();
         if (FunctionAppId is null || FunctionAppId == Guid.Empty) return;
         try
         {

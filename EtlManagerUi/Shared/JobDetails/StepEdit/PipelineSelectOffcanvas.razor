@@ -4,7 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="Modal" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select pipeline">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select pipeline">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -82,13 +82,13 @@
                   Enabled="SelectedPipeline is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
 
-    private HxOffcanvas Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
     public Guid? DataFactoryId { get; set; }
@@ -115,7 +115,7 @@
     private async Task SelectPipelineAsync()
     {
         await OnPipelineSelected.InvokeAsync(SelectedPipeline);
-        await Modal.HideAsync();
+        await Offcanvas.HideAsync();
     }
 
     private void OnClosed()
@@ -128,7 +128,7 @@
 
     public async Task ShowAsync()
     {
-        await Modal.ShowAsync();
+        await Offcanvas.ShowAsync();
         if (DataFactoryId is null || DataFactoryId == Guid.Empty) return;
         try
         {

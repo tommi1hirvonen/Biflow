@@ -50,13 +50,13 @@
     </div>
     <div class="row mt-3">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectOffcanvas">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse datasets
             </HxButton>
         </div>
     </div>
-    <DatasetSelectModal @ref="DatasetSelectModal" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
+    <DatasetSelectOffcanvas @ref="DatasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
 </StepEditModalBase>
 
 
@@ -85,7 +85,7 @@
 
     private StepEditModalBase Modal { get; set; } = null!;
 
-    private DatasetSelectModal DatasetSelectModal { get; set; } = null!;
+    private DatasetSelectOffcanvas DatasetSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -128,7 +128,7 @@
         StateHasChanged();
     }
 
-    private async Task OpenDatasetSelectModal() => await DatasetSelectModal.ShowAsync();
+    private async Task OpenDatasetSelectOffcanvas() => await DatasetSelectOffcanvas.ShowAsync();
 
     private void OnDatasetSelected((string GroupId, string DatasetId) dataset)
     {
