@@ -196,7 +196,7 @@
                                     </div>
                                 </AuthorizeView>
                                 <div class="btn-group btn-row ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepHistoryModal(item)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepHistoryOffcanvas(item)">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                                     </HxButton>
 
@@ -299,7 +299,7 @@
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
 
-<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStep?.StepId.ToString()" />
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStep?.StepId.ToString()" />
 
 
 
@@ -513,7 +513,7 @@
     private StepDetailsModal StepDetailsModal { get; set; } = null!;
     private Step? DetailsModalStep { get; set; }
 
-    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private StepHistoryOffcanvas StepHistoryOffcanvas { get; set; } = null!;
     private Step? HistoryModalStep { get; set; }
 
     private HxModal ExecuteModal { get; set; } = null!;
@@ -730,13 +730,13 @@
         await StepDetailsModal.Modal.ShowAsync();
     }
 
-    private async Task ShowStepHistoryModal(Step step)
+    private async Task ShowStepHistoryOffcanvas(Step step)
     {
         // Do not unnecessarily set the component parameter and start its data load.
         if (step != HistoryModalStep)
             HistoryModalStep = step;
 
-        await StepHistoryModal.ShowAsync();
+        await StepHistoryOffcanvas.ShowAsync();
     }
 
     private void SelectStepAndDependencies(Step step)

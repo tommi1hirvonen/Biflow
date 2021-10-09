@@ -79,7 +79,7 @@
                     <tr class="table-borderless">
                         <td colspan="7" class="bg-light">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryModalAsync(item.StepId.ToString())">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
                                     History
                                 </HxButton>
@@ -108,7 +108,7 @@
     </tbody>
 </table>
 
-<StepHistoryModal @ref="StepHistoryModal" StepId_="@HistoryModalStepId" />
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStepId" />
 
 @code {
     [Parameter]
@@ -119,7 +119,7 @@
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
-    private StepHistoryModal StepHistoryModal { get; set; } = null!;
+    private StepHistoryOffcanvas StepHistoryOffcanvas { get; set; } = null!;
     private string? HistoryModalStepId { get; set; }
 
     private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
@@ -130,10 +130,10 @@
         StateHasChanged();
     }
 
-    private async Task ShowStepHistoryModalAsync(string stepId)
+    private async Task ShowStepHistoryOffcanvasAsync(string stepId)
     {
         HistoryModalStepId = stepId;
-        await StepHistoryModal.ShowAsync();
+        await StepHistoryOffcanvas.ShowAsync();
     }
 
     private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)

@@ -109,11 +109,11 @@
 @if (NewSchedule is not null)
 {
     <AuthorizeView Roles="Admin, Editor, Operator">
-        <HxModal @ref="CreateModal" Size="ModalSize.Large" Title="New schedule">
+        <HxModal @ref="CreateModal" Size="ModalSize.Regular" Title="New schedule">
             <BodyTemplate>
                 <EditForm id="new_schedule_form" Model="NewSchedule" OnValidSubmit="AddSchedule" Context="_context">
                     <div class="row">
-                        <div class="col-md-8 mx-auto">
+                        <div class="col">
                             <DataAnnotationsValidator />
                             <ValidationSummary />
                             <div>

@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 
-<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" Title="@StepName">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
     <BodyTemplate>
         <p class="text-secondary">Showing @MaxExecutions latest executions</p>
         <table class="table table-sm table-hover">
@@ -51,9 +51,9 @@
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
@@ -64,7 +64,7 @@
 
     private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     private List<StepExecutionAttempt>? Executions { get; set; }
 
@@ -102,6 +102,6 @@
         StateHasChanged();
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync() => await Offcanvas.ShowAsync();
 
 }
