@@ -49,13 +49,13 @@
     </div>
     <div class="row my-3">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse pipelines
             </HxButton>
         </div>
     </div>
-    <PipelineSelectModal @ref="PipelineSelectModal" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
+    <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
 </ParameterizedStepEditModal>
 
 
@@ -85,7 +85,7 @@
 
     private ParameterizedStepEditModal Modal { get; set; } = null!;
 
-    private PipelineSelectModal PipelineSelectModal { get; set; } = null!;
+    private PipelineSelectOffcanvas PipelineSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -131,7 +131,7 @@
         StateHasChanged();
     }
 
-    private async Task OpenPipelineSelectModal() => await PipelineSelectModal.ShowAsync();
+    private async Task OpenPipelineSelectOffcanvas() => await PipelineSelectOffcanvas.ShowAsync();
 
     private void OnPipelineSelected(string pipelineName) => Step.PipelineName = pipelineName;
 

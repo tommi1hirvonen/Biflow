@@ -4,7 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select pipeline">
+<HxOffcanvas @ref="Modal" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select pipeline">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -30,7 +30,7 @@
                         {
                             foreach (var folder in Pipelines.Keys.OrderBy(folder => folder))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light font-weight-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light fw-bold" : null)">
                                     <td>@folder</td>
                                 </tr>
                             }
@@ -42,11 +42,8 @@
         <div class="row mt-3">
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
-                    <label class="visually-hidden">Search</label>
-                    <div class="input-group-prepend">
-                        <div class="input-group-text rounded-left">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
-                        </div>
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -69,7 +66,7 @@
                         {
                             foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light font-weight-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light fw-bold" : null)">
                                     <td>@pipeline</td>
                                 </tr>
                             }
@@ -81,17 +78,17 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectPipelineAsync"
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPipelineAsync"
                   Enabled="SelectedPipeline is not null">
             Select
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? DataFactoryId { get; set; }
