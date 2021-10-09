@@ -71,13 +71,13 @@
     </div>
     <div class="row mt-3">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPackageSelectModal">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPackageSelectOffcanvas">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
                 Browse catalog
             </HxButton>
         </div>
     </div>
-    <PackageSelectModal @ref="PackageSelectModal" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
+    <PackageSelectOffcanvas @ref="PackageSelectOffcanvas" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
     <div class="row mt-3">
         <div class="col">
             <div class="form-check form-check-inline">
@@ -129,7 +129,7 @@
 
     private StepEditModalBase Modal { get; set; } = null!;
 
-    private PackageSelectModal PackageSelectModal { get; set; } = null!;
+    private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -241,7 +241,7 @@
         return (true, null);
     }
 
-    private async Task OpenPackageSelectModal() => await PackageSelectModal.ShowAsync();
+    private async Task OpenPackageSelectOffcanvas() => await PackageSelectOffcanvas.ShowAsync();
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {

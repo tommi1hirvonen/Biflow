@@ -2,7 +2,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 @inject SqlServerHelperService SqlServerHelperService
 
-<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select package">
+<HxOffcanvas @ref="Modal" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select package">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -28,7 +28,7 @@
                         {
                             foreach (var folder in Catalog.Keys)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light font-weight-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light fw-bold" : null)">
                                     <td>@folder</td>
                                 </tr>
                             }
@@ -36,7 +36,9 @@
                     </tbody>
                 </table>
             </div>
-            <div class="col-lg">
+        </div>
+        <div class="row mt-3">
+            <div class="col">
                 <table class="table table-hover table-sm">
                     <thead>
                         <tr>
@@ -58,7 +60,7 @@
                             {
                                 foreach (var project in projects)
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light font-weight-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light fw-bold" : null)">
                                         <td>@project</td>
                                     </tr>
                                 }
@@ -69,13 +71,10 @@
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-lg-6">
+            <div class="col">
                 <div class="input-group input-group-sm">
-                    <label class="visually-hidden">Search</label>
-                    <div class="input-group-prepend">
-                        <div class="input-group-text rounded-left">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
-                        </div>
+                    <div class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -105,7 +104,7 @@
                             {
                                 foreach (var package in packages.Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light font-weight-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light fw-bold" : null)">
                                         <td>@package</td>
                                     </tr>
                                 }
@@ -118,17 +117,17 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="ms-5" @onclick="SelectPackageAsync"
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPackageAsync"
                   Enabled="SelectedPackage is not null && SelectedProject is not null && SelectedFolder is not null">
             Select
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Modal { get; set; } = null!;
 
     [Parameter]
     public Guid? ConnectionId { get; set; }
