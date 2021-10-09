@@ -219,13 +219,13 @@
             Steps.Remove(existingStep);
         }
         Steps.Add(step);
-        await SortStepsAsync();
+        SortSteps();
         GrapShouldRender = true;
         await LoadGraph();
         StateHasChanged();
     }
 
-    private async Task SortStepsAsync()
+    private void SortSteps()
     {
         if (Job is null || Steps is null) return;
         try

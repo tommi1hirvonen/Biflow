@@ -1,11 +1,11 @@
 ﻿@inject IConfiguration Configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<HxModal @ref="Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="OnClosed" Title="Select key">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select key">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -41,9 +41,17 @@
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedKey = key.Key"
-                                    class="@(key.Key == SelectedKey ? "bg-light font-weight-bold" : null)">
-                                    <td>@key.Type</td>
-                                    <td style="font-family: monospace;">@key.Key</td>
+                                    class="@(key.Key == SelectedKey ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        <small>
+                                            @key.Type
+                                        </small>
+                                    </td>
+                                    <td style="font-family: monospace;">
+                                        <small>
+                                            @key.Key
+                                        </small>
+                                    </td>
                                 </tr>
                             }
                         }
@@ -55,17 +63,17 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="SelectKey"
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectKey"
                   Enabled="SelectedKey is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
     public FunctionApp? FunctionApp { get; set; }
@@ -82,7 +90,7 @@
         if (SelectedKey is not null)
         {
             await OnKeySelected.InvokeAsync(SelectedKey);
-            await Modal.HideAsync();
+            await Offcanvas.HideAsync();
         }
     }
 
@@ -94,7 +102,7 @@
 
     public async Task ShowAsync()
     {
-        await Modal.ShowAsync();
+        await Offcanvas.ShowAsync();
         if (FunctionApp is null) return;
         try
         {
@@ -103,7 +111,7 @@
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error reading keys: {ex.Message}");
+            Messenger.AddError("Error reading keys", ex.Message);
         }
     }
 
