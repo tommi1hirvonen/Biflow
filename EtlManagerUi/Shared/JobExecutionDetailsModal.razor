@@ -297,19 +297,14 @@
                 </svg>
             </div>
         </div>
-        @if (GraphWasRendered)
-        {
 
-        }
+        <StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" StepExecutionAttempt="SelectedStepExecutionAttempt" />
 
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
     </FooterTemplate>
 </HxModal>
-
-<StepExecutionDetailsModal @ref="StepExecutionDetailsModal" StepExecutionAttempt="SelectedStepExecutionAttempt" />
-
 
 
 @code {
@@ -356,7 +351,7 @@
     private SortMode SortMode_ { get; set; } = SortMode.Started;
     private enum SortMode { Started, Duration }
 
-    private StepExecutionDetailsModal StepExecutionDetailsModal { get; set; } = null!;
+    private StepExecutionDetailsOffcanvas StepExecutionDetailsOffcanvas { get; set; } = null!;
     private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
@@ -369,7 +364,7 @@
         // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
         // This will allow JS to call back to a specific instance of this component.
         // This needs to be done, because multiple users might be using this component concurrently.
-        var helper = new MethodInvokeHelper(ShowStepExecutionModal);
+        var helper = new MethodInvokeHelper(ShowStepExecutionOffcanvas);
         ObjectReference = DotNetObjectReference.Create(helper);
     }
 
@@ -440,7 +435,7 @@
         StateHasChanged();
     }
 
-    private void ShowStepExecutionModal(string text)
+    private void ShowStepExecutionOffcanvas(string text)
     {
         if (Guid.TryParse(text, out Guid id))
         {
@@ -448,7 +443,7 @@
             var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
             SelectedStepExecutionAttempt = attempt;
             StateHasChanged();
-            StepExecutionDetailsModal.ShowAsync().Wait();
+            StepExecutionDetailsOffcanvas.ShowAsync().Wait();
         }
     }
 
