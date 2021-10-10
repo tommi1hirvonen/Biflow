@@ -9,7 +9,8 @@
                    Step="Step"
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
-                   FormId="exe_step_edit_modal">
+                   FormId="exe_step_edit_modal"
+                   AllTags="AllTags">
     <div class="row mt-3">
         <div class="col">
             <label class="form-label">File path</label>
@@ -80,6 +81,8 @@
 
     private StepEditModalBase Modal { get; set; } = null!;
 
+    private IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
@@ -91,6 +94,7 @@
             await Context.DisposeAsync();
 
         Context = DbFactory.CreateDbContext();
+        AllTags = await Context.Tags.ToListAsync();
     }
 
     private async Task LoadData()

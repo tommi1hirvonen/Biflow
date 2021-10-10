@@ -9,7 +9,8 @@
                             Step="Step"
                             Context="Context"
                             OnStepSubmit="OnStepSubmit"
-                            FormId="sql_step_edit_modal">
+                            FormId="sql_step_edit_modal"
+                            AllTags="AllTags">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
@@ -106,6 +107,8 @@
 
     private SqlStep Step { get; set; } = null!;
 
+    private IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+
     private ParameterizedStepEditModal Modal { get; set; } = null!;
 
     private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
@@ -133,6 +136,7 @@
             await Context.DisposeAsync();
 
         Context = DbFactory.CreateDbContext();
+        AllTags = await Context.Tags.ToListAsync();
     }
 
     private async Task LoadData()
@@ -161,7 +165,6 @@
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>(),
                 StepParameters = new List<StepParameterBase>()
-
             };
         }
         StateHasChanged();

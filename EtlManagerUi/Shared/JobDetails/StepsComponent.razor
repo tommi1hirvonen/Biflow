@@ -98,7 +98,7 @@
             }
             @foreach (var tag in TagNames)
             {
-                <span class="mx-1 badge badge-pill @(TagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
+                <span class="mx-1 badge @(TagsFilterSet.Contains(tag) ? "bg-primary" : "bg-secondary")"
                       style="cursor: pointer;"
                       @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
                     @tag
@@ -242,45 +242,12 @@
                             </div>
 
                             <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
-                                @if (item.Tags.Any())
+                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                                 {
-                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
-                                    {
-                                        <span class="badge badge-pill badge-secondary mx-1">
-                                            @tag.TagName
-                                            <AuthorizeView Roles="Admin, Editor">
-                                                <span class="tag-remove" @onclick="() => RemoveTag(item, tag)">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-                                                </span>
-                                            </AuthorizeView>
-                                        </span>
-                                    }
+                                    <span class="badge bg-light text-dark m-1">
+                                        @tag.TagName
+                                    </span>
                                 }
-                                else
-                                {
-                                    <small class="text-secondary me-2">No tags</small>
-                                }
-                                <AuthorizeView Roles="Admin, Editor">
-                                    <div class="btn-group btn-group-sm btn-row">
-                                        <HxDropdown>
-                                            <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => TagInputFocusStepId = item.StepId">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownContent CssClass="dropdown-menu-right p-3">
-                                                <EditForm class="d-flex" Model="NewTag" OnValidSubmit="() => SubmitTag(item)" style="min-width: 20rem;">
-                                                    <ChildContent Context="tag_context">
-                                                        <DataAnnotationsValidator />
-                                                        <ValidationSummary />
-                                                        <div class="form-group flex-grow-1">
-                                                            <input @ref="TagInputs[item.StepId]" @bind-value="NewTag.TagName" placeholder="Add tags" class="form-control form-control-sm flex-fill">
-                                                        </div>
-                                                        <button type="submit" class="btn btn-sm btn-success ms-2">Add</button>
-                                                    </ChildContent>
-                                                </EditForm>
-                                            </HxDropdownContent>
-                                        </HxDropdown>
-                                    </div>
-                                </AuthorizeView>
                             </div>
                         </div>
 
@@ -332,7 +299,7 @@
                         }
                         @foreach (var tag in TagNames)
                         {
-                            <span class="mx-1 badge badge-pill @(ExecuteTagsFilterSet.Contains(tag) ? "badge-primary" : "badge-secondary")"
+                            <span class="mx-1 badge @(ExecuteTagsFilterSet.Contains(tag) ? "bg-primary" : "bg-secondary")"
                                   style="cursor: pointer;"
                                   @onclick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }">
                                 @tag
@@ -659,44 +626,6 @@
         catch (Exception ex)
         {
             Messenger.AddError("Error copying step", ex.Message);
-        }
-    }
-
-    private async Task RemoveTag(Step step, Tag tag)
-    {
-        try
-        {
-            await DbHelperService.RemoveTagAsync(step, tag);
-            step.Tags.Remove(tag);
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error removing tag", ex.Message);
-        }
-    }
-
-    public async Task SubmitTag(Step step)
-    {
-        var tags = NewTag?.TagName?.Split(" ").ToList() ?? new();
-        tags = tags.Select(tag => tag.Trim()).ToList();
-        tags.RemoveAll(tag => string.IsNullOrWhiteSpace(tag));
-        try
-        {
-            foreach (var tagText in tags)
-            {
-                if (!step.Tags.Any(t => t.TagName == tagText))
-                {
-                    var tag = new Tag(tagText);
-                    step.Tags.Add(tag);
-                    await DbHelperService.AddTagAsync(step, tag);
-                }
-            }
-            NewTag = new(string.Empty);
-            TagInputFocusStepId = step.StepId;
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error adding tag", ex.Message);
         }
     }
 

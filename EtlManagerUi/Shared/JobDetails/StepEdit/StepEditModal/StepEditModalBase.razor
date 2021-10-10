@@ -55,6 +55,10 @@
                                 </div>
                             </div>
                             <div class="row mt-3">
+                                <label class="form-label">Tags</label>
+                                <HxInputTags @bind-Value="Tags" DataProvider="GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
+                            </div>
+                            <div class="row">
                                 <div class="col">
                                     <label class="form-label">Execution phase</label>
                                     <div class="input-group">
@@ -104,24 +108,52 @@
 @code {
     [Parameter]
     public Job? Job { get; set; }
+
     [Parameter]
     public IList<Step>? Steps { get; set; }
+
     [Parameter]
     public Step? Step { get; set; }
+
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
+
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
+
     [Parameter]
     public Func<Step, (bool Result, string? ErrorMessage)>? StepValidityCheck { get; set; }
+
     [Parameter]
     public Action<EntityEntry>? ResetAddedEntities { get; set; }
+
     [Parameter]
     public Action<EntityEntry>? ResetDeletedEntities { get; set; }
+
     [Parameter]
     public EtlManagerContext Context { get; set; } = null!;
+
     [Parameter]
     public string FormId { get; set; } = string.Empty;
+
+    [Parameter]
+    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+
+    private Guid PrevStepId { get; set; }
+
+    private List<string> Tags { get; set; } = new();
+
+    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
+    {
+        return new InputTagsDataProviderResult
+        {
+            Data = AllTags
+            .Select(t => t.TagName)
+            .Where(t => t.ContainsIgnoreCase(request.UserInput))
+            .Where(t => !Tags.Any(tag => t == tag))
+            .OrderBy(t => t)
+        };
+    }
 
     private HxModal Modal { get; set; } = null!;
 
@@ -129,10 +161,21 @@
 
     private bool ShowDependencies { get; set; } = false;
 
-    public void ResetStepError()
+    protected override void OnParametersSet()
     {
-        StepError = string.Empty;
+        if (Step is not null && Step.StepId != PrevStepId)
+        {
+            ResetTags();
+            PrevStepId = Step.StepId;
+        }
     }
+
+    private void ResetTags() => Tags = Step?.Tags
+        .Select(t => t.TagName)
+        .OrderBy(t => t)
+        .ToList() ?? new();
+
+    public void ResetStepError() => StepError = string.Empty;
 
     private void OnClosed()
     {
@@ -175,6 +218,8 @@
             .Where(e => e.Entity is not null)
             .ToList()
             .ForEach(e => e.State = EntityState.Unchanged);
+
+        ResetTags();
     }
 
     private async Task SubmitStep()
@@ -189,6 +234,18 @@
                 StepError = message ?? string.Empty;
                 return;
             }
+        }
+
+        // Synchronize tags
+        foreach (var text in Tags.Where(str => !Step?.Tags.Any(t => t.TagName == str) ?? false))
+        {
+            // New tags
+            var tag = AllTags.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
+            Step?.Tags.Add(tag);
+        }
+        foreach (var tag in Step?.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+        {
+            Step?.Tags.Remove(tag);
         }
 
         // Save changes.

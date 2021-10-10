@@ -11,7 +11,8 @@
                    ResetDeletedEntities="ResetDeletedEntities"
                    ResetAddedEntities="ResetAddedEntities"
                    OnStepSubmit="OnStepSubmit"
-                   FormId="@FormId">
+                   FormId="@FormId"
+                   AllTags="AllTags">
     @ChildContent
     <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
 </StepEditModalBase>
@@ -32,6 +33,8 @@
     public EtlManagerContext Context { get; set; } = null!;
     [Parameter]
     public ParameterizedStep Step { get; set; } = null!;
+    [Parameter]
+    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
 
     private StepEditModalBase Modal { get; set; } = null!;
 

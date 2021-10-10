@@ -9,7 +9,8 @@
                    Step="Step"
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
-                   FormId="job_step_edit_modal">
+                   FormId="job_step_edit_modal"
+                   AllTags="AllTags">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Job</label>
@@ -64,6 +65,8 @@
 
     private StepEditModalBase Modal { get; set; } = null!;
 
+    private IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
@@ -75,6 +78,7 @@
             await Context.DisposeAsync();
 
         Context = DbFactory.CreateDbContext();
+        AllTags = await Context.Tags.ToListAsync();
     }
 
     private async Task LoadData()

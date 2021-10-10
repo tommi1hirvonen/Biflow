@@ -109,38 +109,6 @@ namespace EtlManagerUi
                 WHERE [StepId] = @StepId", new { step.StepId, Value = enabled });
         }
 
-        public async Task RemoveTagAsync(Step step, Tag tag)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.ExecuteAsync(
-                @"DELETE FROM [etlmanager].[StepTag]
-                WHERE [StepId] = @StepId AND [TagId] = @TagId", new { step.StepId, tag.TagId });
-        }
-
-        public async Task AddTagAsync(Step step, Tag tag)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            // Get id for existing tag
-            var guid = await sqlConnection.ExecuteScalarAsync<Guid?>(
-                "SELECT TagId FROM etlmanager.Tag WHERE TagName = @TagName", new { tag.TagName });
-            // No tag found => insert a new tag.
-            if (guid is null)
-            {
-                guid = Guid.NewGuid();
-                await sqlConnection.ExecuteAsync(
-                    "INSERT INTO etlmanager.Tag (TagId, TagName) SELECT @TagId, @TagName", new { TagId = guid, tag.TagName });
-            }
-
-            tag.TagId = (Guid)guid;
-
-            // Insert a link between the step and tag.
-            await sqlConnection.ExecuteAsync(
-                @"INSERT INTO etlmanager.StepTag (StepId, TagId)
-                SELECT @StepId, @TagId
-                WHERE NOT EXISTS (SELECT * FROM etlmanager.StepTag WHERE StepId = @StepId AND TagId = @TagId)",
-                new { step.StepId, tag.TagId });
-        }
-
         public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username)
         {
             using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
