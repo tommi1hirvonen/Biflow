@@ -136,8 +136,7 @@
     [Parameter]
     public string FormId { get; set; } = string.Empty;
 
-    [Parameter]
-    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+    public IEnumerable<Tag>? AllTags { get; set; }
 
     private Guid PrevStepId { get; set; }
 
@@ -145,13 +144,17 @@
 
     private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
+        if (AllTags is null)
+        {
+            AllTags = await Context.Tags.ToListAsync();
+        }
         return new InputTagsDataProviderResult
         {
-            Data = AllTags
+            Data = AllTags?
             .Select(t => t.TagName)
             .Where(t => t.ContainsIgnoreCase(request.UserInput))
             .Where(t => !Tags.Any(tag => t == tag))
-            .OrderBy(t => t)
+            .OrderBy(t => t) ?? Enumerable.Empty<string>()
         };
     }
 
@@ -220,6 +223,7 @@
             .ForEach(e => e.State = EntityState.Unchanged);
 
         ResetTags();
+        AllTags = null;
     }
 
     private async Task SubmitStep()
@@ -240,7 +244,7 @@
         foreach (var text in Tags.Where(str => !Step?.Tags.Any(t => t.TagName == str) ?? false))
         {
             // New tags
-            var tag = AllTags.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
+            var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
             Step?.Tags.Add(tag);
         }
         foreach (var tag in Step?.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())

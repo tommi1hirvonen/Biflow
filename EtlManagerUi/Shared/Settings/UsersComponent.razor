@@ -41,7 +41,7 @@
                 @foreach (var user in Users)
                 {
                     <tr>
-                        <td>
+                        <td class="align-middle">
                             @user.Username
                         </td>
                         <td>
@@ -95,13 +95,13 @@
                                 </HxDropdown>
                             </HxButtonGroup>
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @user.Email
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @user.Role
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @user.CreatedDateTime.LocalDateTime
                         </td>
                     </tr>

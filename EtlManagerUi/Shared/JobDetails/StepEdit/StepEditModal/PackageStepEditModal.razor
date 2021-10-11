@@ -12,8 +12,7 @@
                    ResetDeletedEntities="ResetDeletedEntities"
                    ResetAddedEntities="ResetAddedEntities"
                    OnStepSubmit="OnStepSubmit"
-                   FormId="package_step_edit_modal"
-                   AllTags="AllTags">
+                   FormId="package_step_edit_modal">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
@@ -132,8 +131,6 @@
 
     private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
 
-    private IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
-
     protected override async Task OnParametersSetAsync()
     {
         await LoadData();
@@ -145,7 +142,6 @@
             await Context.DisposeAsync();
 
         Context = DbFactory.CreateDbContext();
-        AllTags = await Context.Tags.ToListAsync();
     }
 
     private async Task LoadData()

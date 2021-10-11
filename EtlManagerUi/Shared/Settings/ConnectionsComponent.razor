@@ -70,14 +70,14 @@
                                 </HxButton>
                             </HxButtonGroup>
                         </td>
-                        <td class="align-middle">
+                        <td class="align-middle font-monospace small">
                             @if (ShowConnectionString[connection.ConnectionId])
                             {
-                                <pre><code>@connection.ConnectionString</code></pre>
+                                @connection.ConnectionString
                             }
                             else
                             {
-                                <pre><code>************************************************************</code></pre>
+                                <text>************************************************************</text>
                             }
                         </td>
                         

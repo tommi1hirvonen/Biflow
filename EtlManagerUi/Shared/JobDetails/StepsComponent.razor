@@ -60,32 +60,19 @@
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
                 Parameters
             </HxButton>
-            <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync()" Enabled="@(!ExecuteButtonDisabled)">
+            <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync()">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
                 Execute
             </HxButton>
-            <div id="spinner_starting" class="spinner-border text-primary align-middle ml-3" hidden=@(!ExecuteButtonDisabled) role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
         </AuthorizeView>
     </div>
 
-    @if (ExecuteAlertOpen)
+    @if (ExecuteSuccess)
     {
-        if (ExecuteSuccess)
-        {
-            <HxAlert CssClass="mt-3" Color="ThemeColor.Success" Dismissible="true">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
-                Execution started successfully - <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
-            </HxAlert>
-        }
-        else
-        {
-        <HxAlert CssClass="mt-3" Color="ThemeColor.Danger" Dismissible="true">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
-            Error starting execution: @ExecuteErrorMessage
+        <HxAlert CssClass="mt-3" Color="ThemeColor.Success" Dismissible="true">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+            Execution started successfully – <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
         </HxAlert>
-        }
     }
 
     <div class="row mt-3">
@@ -493,7 +480,6 @@
 
     private HxModal ExecuteModal { get; set; } = null!;
     private List<Step> StepsToExecute { get; set; } = new();
-    private bool ExecuteButtonDisabled { get; set; } = false;
     private IEnumerable<Step> StepsAvailableToExecute =>
         Steps?.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
         .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
@@ -502,8 +488,6 @@
     private bool ExecuteNotify { get; set; } = false;
 
     private bool ExecuteSuccess { get; set; } = false;
-    private bool ExecuteAlertOpen { get; set; } = false;
-    private string ExecuteErrorMessage { get; set; } = string.Empty;
 
     private string StepsFilterText { get; set; } = string.Empty;
     private HashSet<string> TagsFilterSet { get; set; } = new();
@@ -718,12 +702,13 @@
 
     private async Task Execute()
     {
+        ExecuteSuccess = false;
+
         if (StepsToExecute.Count == 0)
         {
             return;
         }
 
-        ExecuteButtonDisabled = true;
         string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
         try
         {
@@ -734,14 +719,11 @@
         }
         catch (Exception ex)
         {
-            ExecuteSuccess = false;
-            ExecuteErrorMessage = ex.Message;
+            Messenger.AddError("Error starting execution", ex.Message);
         }
 
         StepsToExecute.Clear();
         await ExecuteModal.HideAsync();
-        ExecuteAlertOpen = true;
-        ExecuteButtonDisabled = false;
         ExecuteNotify = false;
         StateHasChanged();
     }

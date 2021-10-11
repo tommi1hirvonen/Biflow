@@ -29,6 +29,7 @@
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>
+                            <div class="form-text">MARS must be enabled in the connection string (MultipleActiveResultSets=true)</div>
                         </div>
 
                         <dib class="row mt-3">
@@ -52,11 +53,11 @@
                             <div class="col">
                                 @if (ConnectionTestSuccess == true)
                                 {
-                                    <span class="badge badge-success">Success</span>
+                                    <span class="badge bg-success">Success</span>
                                 }
                                 else if (ConnectionTestSuccess == false)
                                 {
-                                    <span class="badge badge-danger">Failed</span>
+                                    <span class="badge bg-danger">Failed</span>
                                 }
                             </div>
                         </div>
