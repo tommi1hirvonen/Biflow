@@ -144,10 +144,7 @@
 
     private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
-        if (AllTags is null)
-        {
-            AllTags = await Context.Tags.ToListAsync();
-        }
+        AllTags ??= await Context.Tags.ToListAsync();
         return new InputTagsDataProviderResult
         {
             Data = AllTags?
