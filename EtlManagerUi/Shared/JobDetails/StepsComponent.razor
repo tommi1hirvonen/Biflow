@@ -69,10 +69,11 @@
 
     @if (ExecuteSuccess)
     {
-        <HxAlert CssClass="mt-3" Color="ThemeColor.Success" Dismissible="true">
+        <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
             Execution started successfully – <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
-        </HxAlert>
+            <button type="button" class="btn-close" @onclick="() => ExecuteSuccess = false"></button>
+        </div>
     }
 
     <div class="row mt-3">
