@@ -36,6 +36,8 @@ namespace EtlManagerUi
 
             services.AddHxServices();
             services.AddHxMessenger();
+            services.AddHxMessageBoxHost();
+
             services.AddHttpClient();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<DbHelperService>();

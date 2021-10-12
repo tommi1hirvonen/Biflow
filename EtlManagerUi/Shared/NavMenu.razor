@@ -32,6 +32,14 @@
                 Dashboard
             </NavLink>
         </li>
+        <AuthorizeView Roles="Admin,Editor">
+            <li class="nav-item">
+                <NavLink class="nav-link" href="tags" @onclick="NavLinkClick">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                    Tags
+                </NavLink>
+            </li>
+        </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                 @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))

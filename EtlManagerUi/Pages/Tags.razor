@@ -1,0 +1,248 @@
+﻿@page "/tags"
+
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IHxMessengerService Messenger
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
+<h4>Tags</h4>
+
+<div class="row mt-3">
+    <div class="col">
+        <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+            Delete unused
+        </button>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tag</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Tags_ is null)
+                        {
+                            <tr>
+                                <td colspan="4" class="px-3">Loading...</td>
+                            </tr>
+                        }
+                        else if (!Tags_.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="px-3">No tags</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var tag in Tags_)
+                            {
+                                var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
+                                var steps = tag.Steps.Count();
+                                <tr>
+                                    <td class="align-middle">
+                                        <a class="text-dark" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
+                                            @tag.TagName
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-row">
+                                            <HxDropdown>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdown>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        @(jobs > 0 ? $"{jobs} job(s)" : null)
+                                    </td>
+                                    
+                                    <td class="align-middle">
+                                        @(steps > 0 ? $"{steps} step(s)" : null)
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                Delete these unused tags?
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                @foreach (var tag in UnusedTags)
+                {
+                    <span class="badge bg-light text-dark m-1">
+                        @tag.TagName
+                    </span>
+                }
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="ConfirmDeleteModal.HideAsync">Cancel</button>
+        <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
+    </FooterTemplate>
+</HxModal>
+
+<HxModal @ref="EditModal" Size="ModalSize.Large" Title="@($"Edit tag {EditTag?.TagName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in EditTag?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-row">
+                                        <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepTag(step)">
+                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="EditModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+
+@code {
+    private IList<Tag>? Tags_ { get; set; }
+
+    private IEnumerable<Tag> UnusedTags => Tags_?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<Tag>();
+
+    private bool? ConfirmResult { get; set; }
+
+    private HxModal ConfirmDeleteModal { get; set; } = null!;
+
+    private HxModal EditModal { get; set; } = null!;
+
+    private Tag? EditTag { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        Tags_ = await context.Tags
+            .AsNoTrackingWithIdentityResolution()
+            .Include(t => t.Steps)
+            .ThenInclude(t => t.Job)
+            .OrderBy(t => t.TagName)
+            .ToListAsync();
+    }
+
+    private async Task OpenConfirmDeleteModalAsync()
+    {
+        if (!UnusedTags.Any())
+        {
+            Messenger.AddInformation("No unused tags");
+            return;
+        }
+
+        await ConfirmDeleteModal.ShowAsync();
+    }
+
+    private async Task DeleteUnusedTagsAsync()
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        foreach (var tag in UnusedTags.ToList())
+        {
+            context.Tags.Remove(tag);
+            Tags_?.Remove(tag);
+        }
+        await context.SaveChangesAsync();
+        await ConfirmDeleteModal.HideAsync();
+    }
+
+    private async Task DeleteTag(Tag tag)
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        context.Tags.Remove(tag);
+        await context.SaveChangesAsync();
+        Tags_?.Remove(tag);
+    }
+
+    private async Task DeleteStepTag(Step step)
+    {
+        if (EditTag is null)
+        {
+            return;
+        }
+
+        using var context = DbContextFactory.CreateDbContext();
+        var tag = await context.Tags
+            .Include(t => t.Steps)
+            .FirstOrDefaultAsync(t => t.TagId == EditTag.TagId);
+
+        var stepToRemove = tag.Steps.FirstOrDefault(s => s.StepId == step.StepId);
+        if (stepToRemove is not null)
+        {
+            tag.Steps.Remove(stepToRemove);
+            await context.SaveChangesAsync();
+        }
+
+        EditTag.Steps.Remove(step);
+    }
+
+    private async Task ShowEditModalAsync(Tag tag)
+    {
+        EditTag = tag;
+        await EditModal.ShowAsync();
+    }
+}
