@@ -1,0 +1,27 @@
+﻿<span class="badge @ColorClass @CssClass @(Selected ? "text-decoration-underline" : null)" style="@Style" @onclick="OnClick">
+    @Tag?.TagName
+</span>
+
+@code {
+    [Parameter] public Tag? Tag { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public string? Style { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    [Parameter] public bool Selected { get; set; }
+
+    private string? ColorClass => Tag?.Color switch
+    {
+        TagColor.LightGray => "bg-light text-dark",
+        TagColor.DarkGray => "bg-secondary",
+        TagColor.Purple => "bg-primary",
+        TagColor.Green => "bg-success",
+        TagColor.Blue => "bg-info text-dark",
+        TagColor.Yellow => "bg-warning text-dark",
+        TagColor.Red => "bg-danger",
+        _ => null
+    };
+}

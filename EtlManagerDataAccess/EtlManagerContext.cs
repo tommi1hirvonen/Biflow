@@ -178,13 +178,18 @@ namespace EtlManagerDataAccess
                 .WithMany(job => job.JobSteps)
                 .HasForeignKey(step => step.JobToExecuteId);
 
-            modelBuilder.Entity<Tag>()
-                .ToTable("Tag")
+            var tagColorConverter = new EnumToStringConverter<TagColor>();
+            modelBuilder.Entity<Tag>(e =>
+            {
+                e.ToTable("Tag")
                 .HasMany(t => t.Steps)
                 .WithMany(s => s.Tags)
                 .UsingEntity<Dictionary<string, object>>("StepTag",
                 x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
                 x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
+                e.Property(p => p.Color).HasConversion(tagColorConverter);
+            });
+                
 
             modelBuilder.Entity<Schedule>()
                 .ToTable("Schedule")

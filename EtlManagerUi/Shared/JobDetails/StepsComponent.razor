@@ -80,17 +80,17 @@
         <div class="col">
             @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
             <span class="me-3">Tags</span>
-            @if (!TagNames.Any())
+            @if (!Tags.Any())
             {
                 <small class="text-secondary me-2">No tags</small>
             }
-            @foreach (var tag in TagNames)
+            @foreach (var tag in Tags)
             {
-                <span class="mx-1 badge @(TagsFilterSet.Contains(tag) ? "bg-primary" : "bg-secondary")"
-                      style="cursor: pointer;"
-                      @onclick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }">
-                    @tag
-                </span>
+                <TagComponent Tag="tag"
+                              Selected="TagsFilterSet.Contains(tag)"
+                              CssClass="mx-1"
+                              Style="cursor: pointer;"
+                              OnClick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }" />
             }
         </div>
     </div>
@@ -141,7 +141,7 @@
                     var index = 0;
                     @foreach (var item in Steps
                       .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                      .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag)))
+                      .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
                       .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
                     {
                         <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
@@ -232,9 +232,7 @@
                             <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
                                 @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                                 {
-                                    <span class="badge bg-light text-dark m-1">
-                                        @tag.TagName
-                                    </span>
+                                    <TagComponent Tag="tag" CssClass="m-1" />
                                 }
                             </div>
                         </div>
@@ -281,17 +279,17 @@
                     <div class="col">
                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
                         <span class="me-3">Tags</span>
-                        @if (!TagNames.Any())
+                        @if (!Tags.Any())
                         {
                             <small class="text-secondary me-2">No tags</small>
                         }
-                        @foreach (var tag in TagNames)
+                        @foreach (var tag in Tags)
                         {
-                            <span class="mx-1 badge @(ExecuteTagsFilterSet.Contains(tag) ? "bg-primary" : "bg-secondary")"
-                                  style="cursor: pointer;"
-                                  @onclick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }">
-                                @tag
-                            </span>
+                            <TagComponent Tag="tag"
+                                          Selected="ExecuteTagsFilterSet.Contains(tag)"
+                                          CssClass="mx-1"
+                                          Style="cursor: pointer;"
+                                          OnClick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }" />
                         }
                     </div>
                 </div>
@@ -461,11 +459,10 @@
     [Parameter]
     public List<FunctionApp>? FunctionApps { get; set; }
 
-    private IEnumerable<string> TagNames => Steps?
+    private IEnumerable<Tag> Tags => Steps?
     .SelectMany(step => step.Tags)
-    .Select(tag => tag.TagName)
     .Distinct()
-    .OrderBy(str => str) ?? Enumerable.Empty<string>();
+    .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
 
     private JobParametersModal JobParametersModal { get; set; } = null!;
 
@@ -484,17 +481,17 @@
     private IEnumerable<Step> StepsAvailableToExecute =>
         Steps?.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
         .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
-        .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag))) // Tag filter
+        .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
         ?? Enumerable.Empty<Step>();
     private bool ExecuteNotify { get; set; } = false;
 
     private bool ExecuteSuccess { get; set; } = false;
 
     private string StepsFilterText { get; set; } = string.Empty;
-    private HashSet<string> TagsFilterSet { get; set; } = new();
+    private HashSet<Tag> TagsFilterSet { get; set; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private string ExecuteFilterText { get; set; } = string.Empty;
-    private HashSet<string> ExecuteTagsFilterSet { get; set; } = new();
+    private HashSet<Tag> ExecuteTagsFilterSet { get; set; } = new();
 
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }

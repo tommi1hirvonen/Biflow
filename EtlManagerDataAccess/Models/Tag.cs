@@ -21,6 +21,19 @@ namespace EtlManagerDataAccess.Models
         [MinLength(1)]
         public string TagName { get; set; }
 
+        public TagColor Color { get; set; }
+
         public IList<Step> Steps { get; set; } = null!;
+    }
+
+    public enum TagColor
+    {
+        LightGray,
+        DarkGray,
+        Purple,
+        Green,
+        Blue,
+        Yellow,
+        Red
     }
 }
