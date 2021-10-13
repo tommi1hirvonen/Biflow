@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace EtlManagerDataAccess.Models
 {
-    public class Tag
+    public record Tag
     {
 
         public Tag(string tagName)

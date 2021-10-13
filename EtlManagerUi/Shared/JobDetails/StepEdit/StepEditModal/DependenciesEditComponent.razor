@@ -5,23 +5,23 @@
         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
         <span class="me-3">Tags</span>
         @{
-            var tagNames = Steps?
+            var tags = Steps?
                 .SelectMany(step => step.Tags)
-                .Select(tag => tag.TagName)
+                .Select(tag => tag with { Steps = null! })
                 .Distinct()
-                .OrderBy(str => str) ?? Enumerable.Empty<string>();
+                .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
         }
-        @if (!tagNames.Any())
+        @if (!tags.Any())
         {
             <small class="text-secondary me-2">No tags</small>
         }
-        @foreach (var tag in tagNames)
+        @foreach (var tag in tags)
         {
-            <span class="mx-1 badge badge-pill @(TagFilter.Contains(tag) ? "badge-primary" : "badge-secondary")"
-                  style="cursor: pointer;"
-                  @onclick="() => { if (TagFilter.Contains(tag)) TagFilter.Remove(tag); else TagFilter.Add(tag); }">
-                @tag
-            </span>
+            <TagComponent Tag="tag"
+                          Style="cursor: pointer;"
+                          CssClass="mx-1"
+                          Selected="TagFilter.Contains(tag)"
+                          OnClick="() => { if (TagFilter.Contains(tag)) TagFilter.Remove(tag); else TagFilter.Add(tag); }" />
         }
     </div>
 </div>
@@ -64,7 +64,7 @@
             .Where(step => step.StepId != Step.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
-            .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag))) // Filter based on tags
+            .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
             .OrderBy(step => step.StepName) ?? Enumerable.Empty<Step>())
         {
@@ -104,7 +104,7 @@
     [Parameter]
     public IList<Step> Steps { get; set; } = null!;
 
-    private HashSet<string> TagFilter { get; } = new();
+    private HashSet<Tag> TagFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private string DependenciesFilterText { get; set; } = string.Empty;
     private bool ShowOnlyActiveDependencies { get; set; } = false;
