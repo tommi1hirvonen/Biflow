@@ -59,12 +59,36 @@
                                 var steps = tag.Steps.Count();
                                 <tr>
                                     <td class="align-middle">
-                                        <TagComponent Tag="tag"
-                                                      OnClick="async () => await ShowEditModalAsync(tag)"
-                                                      Style="cursor: pointer;" />
+                                        <TagComponent Tag="tag" />
                                     </td>
                                     <td>
                                         <div class="btn-group btn-row">
+                                            @*Dropdown to edit the tag's name*@
+                                            <HxDropdown>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => TemplateTag.TagName = tag.TagName">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownContent CssClass="p-4">
+                                                    <EditForm Model="TemplateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
+                                                        <DataAnnotationsValidator />
+                                                        <ValidationSummary />
+                                                        <div>
+                                                            <label class="form-label">New name</label>
+                                                            <InputText class="form-control form-control-sm" @bind-Value="TemplateTag.TagName" autocomplete="off"></InputText>
+                                                        </div>
+                                                        <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
+                                                    </EditForm>
+                                                </HxDropdownContent>
+                                            </HxDropdown>
+                                            <HxDropdown>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdown>
                                             <HxDropdown>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                     @tag.Color
@@ -77,15 +101,6 @@
                                                     }
                                                 </HxDropdownMenu>
                                             </HxDropdown>
-                                            <HxDropdown>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdown>
                                         </div>
                                     </td>
                                     <td class="align-middle">
@@ -93,7 +108,9 @@
                                     </td>
                                     
                                     <td class="align-middle">
-                                        @(steps > 0 ? $"{steps} step(s)" : null)
+                                        <a class="text-dark" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
+                                            @(steps > 0 ? $"{steps} step(s)" : null)
+                                        </a>
                                     </td>
                                 </tr>
                             }
@@ -186,6 +203,8 @@
 
     private Tag? EditTag { get; set; }
 
+    private Tag TemplateTag { get; set; } = new(string.Empty);
+
     protected override async Task OnInitializedAsync()
     {
         using var context = DbContextFactory.CreateDbContext();
@@ -218,6 +237,25 @@
         }
         await context.SaveChangesAsync();
         await ConfirmDeleteModal.HideAsync();
+    }
+
+    private async Task UpdateTagNameAsync(Tag tag)
+    {
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            tag.TagName = TemplateTag.TagName;
+            context.Attach(tag).State = EntityState.Modified;
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The tag was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating tag", ex.Message);
+        }
     }
 
     private async Task DeleteTag(Tag tag)
