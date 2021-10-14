@@ -74,6 +74,15 @@
                 </div>
                 <InputText class="form-control" @bind-Value="Step.FunctionKey" @oninput="Modal.ResetStepError"></InputText>
             </div>
+            @{ var functionAppKey = FunctionApps?.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey; }
+            @if (functionAppKey is null)
+            {
+                <div class="form-text">No key was configured for the Function App in settings. A function key must be set.</div>
+            }
+            else
+            {
+                <div class="form-text">Set a function key to override the Function App key configured in settings.</div>
+            }
         </div>
     </div>
     <div class="row mt-3">
