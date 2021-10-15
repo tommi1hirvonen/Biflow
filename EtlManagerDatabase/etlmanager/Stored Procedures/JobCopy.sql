@@ -64,21 +64,7 @@ FROM etlmanager.JobParameter AS A
 	INNER JOIN #ParameterIdMapping AS B ON A.ParameterId = B.ParameterId
 WHERE JobId = @JobId
 
--- Copy schedules
-INSERT INTO etlmanager.Schedule (
-	ScheduleId,
-	JobId,
-	CronExpression,
-	CreatedBy,
-	CreatedDateTime
-)
-SELECT NEWID(),
-	@JobIdNew,
-	CronExpression,
-	@Username,
-	GETUTCDATE()
-FROM etlmanager.Schedule
-WHERE JobId = @JobId
+
 
 -- Copy steps
 
