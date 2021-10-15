@@ -182,7 +182,7 @@
                                 <AuthorizeView Roles="Admin, Editor">
                                     <div class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="form-check-label" style="cursor: pointer;" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                        <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
                                     </div>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Operator, Viewer">

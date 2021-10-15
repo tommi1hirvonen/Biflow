@@ -196,6 +196,16 @@ a:hover {
     Checkbox, radio and other form customizations
 */
 
+.form-switch input,
+.form-switch label {
+    cursor: pointer;
+}
+
+    .form-switch input:disabled,
+    .form-switch input:disabled + label {
+        cursor: default;
+    }
+
 .form-check-input:checked {
     background-color: var(--color-primary);
     border-color: var(--color-primary);

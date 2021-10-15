@@ -50,7 +50,7 @@
                             <div class="form-check form-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
                                     <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
-                                    <label class="form-check-label" style="cursor: pointer;" for="@item.ScheduleId"></label>
+                                    <label class="form-check-label" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Viewer">
                                     <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>

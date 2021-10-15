@@ -138,18 +138,18 @@
             <AuthorizeView Roles="Admin, Editor">
                 <div class="form-check form-switch">
                     <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
-                    <label class="form-check-label" style="cursor: pointer;" for="job_enabled_toggle">Enabled</label>
+                    <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
                 </div>
                 <div class="form-check form-switch ms-4">
                     <input type="checkbox" class="form-check-input" id="dependency_mode_toggle" checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)" @onchange="ToggleDependencyMode">
-                    <label class="form-check-label" style="cursor: pointer;" for="dependency_mode_toggle">Dependency mode</label>
+                    <label class="form-check-label" for="dependency_mode_toggle">Dependency mode</label>
                 </div>
                 @*Only show StopOnFirstError setting if job uses execution phase mode.*@
                 @if (CurrentJob?.UseDependencyMode == false)
                 {
                     <div class="form-check form-switch ms-4">
                         <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)" @onchange="ToggleStopOnFirstError">
-                        <label class="form-check-label" style="cursor: pointer;" for="stop_on_first_error_toggle">Stop on first error</label>
+                        <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                     </div>
                 }
             </AuthorizeView>
