@@ -8,12 +8,12 @@
 <style>
     .step-row:hover,
     .step-row:focus,
-    .step-row.disabled:hover,
-    .step-row.disabled:focus {
+    .step-row.step-row-disabled:hover,
+    .step-row.step-row-disabled:focus {
         background-color: #ececec;
     }
 
-    .step-row.disabled {
+    .step-row-disabled {
         background-color: #f3f3f3;
     }
 
@@ -126,25 +126,24 @@
 
 <div class="row">
     <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                @if (Steps is null || Jobs is null || Job is null)
+        <ol class="list-group shadow-sm">
+            @if (Steps is null || Jobs is null || Job is null)
+            {
+                <li class="list-group-item">Loading...</li>
+            }
+            else if (Steps.Count == 0)
+            {
+                <li class="list-group-item">No steps</li>
+            }
+            else
+            {
+                @foreach (var item in Steps
+                 .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
+                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
+                 .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
                 {
-                    <div class="row py-2"><div class="col">Loading...</div></div>
-                }
-                else if (Steps.Count == 0)
-                {
-                    <div class="row py-2"><div class="col">No steps</div></div>
-                }
-                else
-                {
-                    var index = 0;
-                    @foreach (var item in Steps
-                      .Where(step => step.StepName.ContainsIgnoreCase(StepsFilterText))
-                      .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-                      .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
-                    {
-                        <div class="row step-row py-2 @(item.IsEnabled ? null : "disabled") @(index == 0 ? null : "border-top")">
+                    <li class="list-group-item step-row py-2 @(item.IsEnabled ? null : "step-row-disabled")">
+                        <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                                 <AuthorizeView Roles="Admin, Editor">
                                     <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
@@ -162,7 +161,7 @@
                             </div>
                             <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-between">
                                 @if (item is ParameterizedStep parameterizedStep && parameterizedStep.StepParameters.Any(p => p.JobParameterId is not null)
-                                  || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                                || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
                                     <div title="Step uses job parameters">
                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
@@ -236,15 +235,12 @@
                                 }
                             </div>
                         </div>
-
-                        index++;
-                    }
+                    </li>
                 }
-            </div>
-        </div>
+            }
+        </ol>
     </div>
 </div>
-
 
 
 <AuthorizeView Roles="Admin, Editor">
