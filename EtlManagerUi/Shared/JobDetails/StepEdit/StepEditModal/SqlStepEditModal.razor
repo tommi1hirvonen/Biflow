@@ -65,11 +65,11 @@
                 <label class="form-check-label" for="capture_result">Capture scalar result</label>
             </div>
         </div>
-        <div class="col d-inline">
+        <div class="col d-flex align-items-center">
             @if (Step.ResultCaptureJobParameterId is not null)
             {
-                <label class="form-label">To:</label>
-                <InputSelect class="form-select form-select-sm ml-3" @bind-Value="Step.ResultCaptureJobParameterId">
+                <label class="form-label mb-0 me-3">To:</label>
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
                     @foreach (var jobParam in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
                         <option value="@jobParam.ParameterId">
@@ -79,6 +79,10 @@
                 </InputSelect>
             }
         </div>
+        @if (!Job?.JobParameters.Any() ?? false)
+        {
+            <div class="form-text">No job parameters to store result value</div>
+        }
     </div>
 </ParameterizedStepEditModal>
 
