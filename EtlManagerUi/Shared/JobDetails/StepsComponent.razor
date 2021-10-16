@@ -497,28 +497,6 @@
     private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
     private Guid SelectedJobExecutionId { get; set; }
 
-    private Dictionary<Guid, ElementReference> TagInputs { get; set; } = new();
-    private Tag NewTag { get; set; } = new(string.Empty);
-    private Guid? TagInputFocusStepId { get; set; } = null;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (TagInputFocusStepId is not null)
-        {
-            try
-            {
-                await TagInputs[(Guid)TagInputFocusStepId].FocusAsync();
-            }
-            catch (Exception)
-            {
-            }
-            finally
-            {
-                TagInputFocusStepId = null;
-            }
-        }
-    }
-
     private bool IsStepTypeDisabled(StepType type)
     {
         switch (type)
