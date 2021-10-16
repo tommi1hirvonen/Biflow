@@ -175,8 +175,10 @@
                                 <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime?.LocalDateTime</a>
                             }
                         </td>
-                        <td>
-                            @GetNextStartTime(item)
+                        @{ var nextStartTime = GetNextStartTime(item); }
+                        <td style="@(!item.IsEnabled ? "color: #ccc;" : null)">
+                            @nextStartTime
+                            @(!item.IsEnabled && nextStartTime is not null ? "(Job disabled)" : null) 
                         </td>
                     </tr>
                 }
