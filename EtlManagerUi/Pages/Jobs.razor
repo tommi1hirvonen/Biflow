@@ -259,8 +259,10 @@
         bool value = (bool)args.Value!;
         try
         {
-            await DbHelperService.ToggleJobEnabledAsync(job, value);
+            using var context = DbFactory.CreateDbContext();
+            context.Attach(job);
             job.IsEnabled = !job.IsEnabled;
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

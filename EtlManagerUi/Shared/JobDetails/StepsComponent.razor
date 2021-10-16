@@ -540,8 +540,10 @@
         bool value = (bool)args.Value!;
         try
         {
-            await DbHelperService.ToggleStepEnabledAsync(step, value);
+            using var context = DbFactory.CreateDbContext();
+            context.Attach(step);
             step.IsEnabled = !step.IsEnabled;
+            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

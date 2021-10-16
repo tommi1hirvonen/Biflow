@@ -64,15 +64,6 @@ namespace EtlManagerUi
             return executionId;
         }
 
-        public async Task ToggleJobEnabledAsync(Job job, bool enabled)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.ExecuteAsync(
-                @"UPDATE [etlmanager].[Job]
-                SET [IsEnabled] = @Value
-                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
-        }
-
         public async Task<Guid> JobCopyAsync(Guid jobId, string username)
         {
             using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
@@ -80,33 +71,6 @@ namespace EtlManagerUi
                 "EXEC [etlmanager].[JobCopy] @JobId = @JobId_, @Username = @Username_",
                 new { JobId_ = jobId, Username_ = username });
             return createdJobId;
-        }
-
-        public async Task ToggleJobDependencyModeAsync(Job job, bool enabled)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.ExecuteAsync(
-                @"UPDATE [etlmanager].[Job]
-                SET [UseDependencyMode] = @Value
-                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
-        }
-
-        public async Task ToggleJobStopOnFirstErrorAsync(Job job, bool enabled)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.ExecuteAsync(
-                @"UPDATE [etlmanager].[Job]
-                SET [StopOnFirstError] = @Value
-                WHERE [JobId] = @JobId", new { job.JobId, Value = enabled });
-        }
-
-        public async Task ToggleStepEnabledAsync(Step step, bool enabled)
-        {
-            using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-            await sqlConnection.ExecuteAsync(
-                @"UPDATE [etlmanager].[Step]
-                SET [IsEnabled] = @Value
-                WHERE [StepId] = @StepId", new { step.StepId, Value = enabled });
         }
 
         public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username)
