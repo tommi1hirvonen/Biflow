@@ -340,7 +340,7 @@
                                             <td class="text-right">
                                                 @if (step.Dependencies?.Count > 0)
                                                 {
-                                                    <div title="Include dependencies" @onclick="() => SelectStepAndDependencies(step)">
+                                                    <div class="hover-primary" title="Include dependencies" @onclick="() => SelectStepAndDependencies(step)">
                                                         @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
                                                     </div>
                                                 }

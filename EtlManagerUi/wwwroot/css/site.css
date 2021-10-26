@@ -75,6 +75,10 @@ a:hover {
     color: var(--color-danger);
 }
 
+.hover-primary:hover {
+    color: var(--color-primary);
+}
+
 
 /*
     Primary button customization

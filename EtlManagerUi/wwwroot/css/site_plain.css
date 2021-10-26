@@ -33,6 +33,10 @@ tr.disabled {
     background-color: #f3f3f3;
 }
 
+.hover-primary:hover {
+    color: var(--color-primary);
+}
+
 /*
     No-wrap buttons of btn-group in a table
 */
