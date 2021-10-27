@@ -3,7 +3,7 @@
 @inject IWebHostEnvironment WebHostEnvironment
 
 <HxDropdown AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="@(FilterSet.Any() ? "fw-bold" : null)">
         @Title
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">

@@ -105,20 +105,23 @@
                 <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
             </div>
 
-            <FilterDropdown TItem="StepType"
-                            FilterSet="StepTypeFilter"
-                            Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
-                            OnChange="StateHasChanged">
-                <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
-                    Step type
-                </Title>
-            </FilterDropdown>
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <FilterDropdown TItem="StepType"
+                                FilterSet="StepTypeFilter"
+                                Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                        Step type
+                    </Title>
+                </FilterDropdown>
 
-            <HxButton CssClass="ms-3" Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => { TagsFilterSet.Clear(); StepTypeFilter.Clear(); StepsFilterText = string.Empty; }">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
-                Clear
-            </HxButton>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => { TagsFilterSet.Clear(); StepTypeFilter.Clear(); StepsFilterText = string.Empty; }">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                    Clear
+                </HxButton>
+            </HxButtonGroup>
+            
         </div>
         
     </div>
