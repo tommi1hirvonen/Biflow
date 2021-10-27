@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration?.AppRegistrationName)">
     <BodyTemplate>
@@ -126,7 +126,7 @@
         catch (Exception ex)
         {
             ConnectionTestSuccess = false;
-            await JS.InvokeVoidAsync("alert", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         TestingConnection = false;
     }
@@ -147,7 +147,7 @@
         catch (Exception ex)
         {
             ConnectionTestSuccess = false;
-            await JS.InvokeVoidAsync("alert", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         TestingConnection = false;
     }

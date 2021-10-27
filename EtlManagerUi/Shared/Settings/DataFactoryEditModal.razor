@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.DataFactoryName)">
     <BodyTemplate>
@@ -24,9 +24,9 @@
                                 <label class="form-label">App registration</label>
                                 <InputSelect class="form-select" @bind-Value="DataFactory.AppRegistrationId">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
-                                    {
+                                        {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
-                                    }
+                                        }
                                 </InputSelect>
                             </div>
                         </div>
@@ -137,7 +137,7 @@
         catch (Exception ex)
         {
             ConnectionTestSuccess = false;
-            await JS.InvokeVoidAsync("alert", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         TestingConnection = false;
     }

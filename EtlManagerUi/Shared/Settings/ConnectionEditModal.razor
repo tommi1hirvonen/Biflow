@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IConfiguration configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection?.ConnectionName)">
     <BodyTemplate>
@@ -65,7 +65,7 @@
                 </div>
             </EditForm>
         }
-        </BodyTemplate>
+    </BodyTemplate>
     <FooterTemplate>
         <HxSubmit form="connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
@@ -122,7 +122,7 @@
         catch (Exception ex)
         {
             ConnectionTestSuccess = false;
-            await JS.InvokeVoidAsync("alert", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         TestingConnection = false;
     }

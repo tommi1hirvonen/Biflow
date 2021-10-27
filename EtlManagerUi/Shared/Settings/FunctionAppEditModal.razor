@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
-@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
@@ -181,7 +181,7 @@
         catch (Exception ex)
         {
             ConnectionTestSuccess = false;
-            await JS.InvokeVoidAsync("alert", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         TestingConnection = false;
     }
