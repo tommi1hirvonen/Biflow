@@ -13,6 +13,8 @@ for details on configuring this project to bundle and minify static web assets. 
     --color-warning: #ffc107;
     --color-warning-super-light: #FFF3CD;
     --color-warning-extra-dark: #856404;
+    /*Havit.Blazor large offcanvas width*/
+    --hx-offcanvas-horizontal-width-lg: 700px;
 }
 
 .btn-row .btn-light {

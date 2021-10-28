@@ -26,6 +26,8 @@
     --color-warning-light: #ffc107;
     --color-warning-super-light: #FFF2CC;
     --color-warning-extra-dark: #856200;
+    /*Havit.Blazor large offcanvas width*/
+    --hx-offcanvas-horizontal-width-lg: 700px;
 }
 
 a {
