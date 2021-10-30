@@ -42,7 +42,54 @@
 
     </div>
 
-    <div class="col-xl d-flex justify-content-xl-end mt-4 mt-xl-0 align-items-center">
+    <div class="col-xl d-flex flex-row flex-xl-row-reverse justify-content-xl-start mt-4 mt-xl-0 align-items-center">
+        <AuthorizeView Roles="Admin, Editor">
+            <div class="ms-0 ms-xl-4 me-4 me-xl-0">
+                @*Dropdown to change the current job's name*@
+                <HxDropdown>
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                        Edit
+                    </HxDropdownToggleButton>
+                    <HxDropdownContent CssClass="dropdown-menu-xl-right p-4">
+                        <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context" style="min-width: 25rem;">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div>
+                                <label class="form-label">Name</label>
+                                <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Description</label>
+                                <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5"></InputTextArea>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Max parallel steps (0 = use default)</label>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
+                            </div>
+                            <HxSubmit CssClass="mt-3" Size="ButtonSize.Small" Color="ThemeColor.Success">Save</HxSubmit>
+                        </EditForm>
+                    </HxDropdownContent>
+                </HxDropdown>
+
+                @*Dropdown to delete the current job*@
+                <HxDropdown CssClass="ms-3">
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                        Delete
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu CssClass="dropdown-menu-xl-right">
+                        <HxDropdownHeader>Delete job?</HxDropdownHeader>
+                        <HxDropdownItem @onclick="DeleteJob">Confirm</HxDropdownItem>
+                    </HxDropdownMenu>
+                </HxDropdown>
+            </div>
+        </AuthorizeView>
+
         <AuthorizeView Roles="Admin, Editor">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
@@ -55,51 +102,6 @@
                 <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
-        </AuthorizeView>
-
-        <AuthorizeView Roles="Admin, Editor">
-            @*Dropdown to change the current job's name*@
-            <HxDropdown CssClass="ms-4">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
-                    Edit
-                </HxDropdownToggleButton>
-                <HxDropdownContent CssClass="dropdown-menu-xl-right p-4">
-                    <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context" style="min-width: 25rem;">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-                        <div>
-                            <label class="form-label">Name</label>
-                            <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
-                        </div>
-                        <div class="mt-3">
-                            <label class="form-label">Description</label>
-                            <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5"></InputTextArea>
-                        </div>
-                        <div class="mt-3">
-                            <label class="form-label">Max parallel steps (0 = use default)</label>
-                            <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
-                        </div>
-                        <div class="mt-3">
-                            <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
-                            <InputNumber class="form-control form-control-sm" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
-                        </div>
-                        <HxSubmit CssClass="mt-3" Size="ButtonSize.Small" Color="ThemeColor.Success">Save</HxSubmit>
-                    </EditForm>
-                </HxDropdownContent>
-            </HxDropdown>
-
-            @*Dropdown to delete the current job*@
-            <HxDropdown CssClass="ms-3">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
-                    Delete
-                </HxDropdownToggleButton>
-                <HxDropdownMenu CssClass="dropdown-menu-xl-right">
-                    <HxDropdownHeader>Delete job?</HxDropdownHeader>
-                    <HxDropdownItem @onclick="DeleteJob">Confirm</HxDropdownItem>
-                </HxDropdownMenu>
-            </HxDropdown>
         </AuthorizeView>
     </div>
 </div>
