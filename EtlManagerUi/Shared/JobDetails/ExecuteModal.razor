@@ -1,0 +1,277 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject IHxMessengerService Messenger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject DbHelperService DbHelperService
+
+<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Scrollable="true" Title="Execute steps"
+         OnClosed="() => { StepsToExecute.Clear(); ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
+
+    <BodyTemplate>
+        @if (Steps is not null)
+        {
+            <div class="row">
+                <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                    <span class="me-3">Tags</span>
+                    @if (!Tags.Any())
+                    {
+                        <small class="text-secondary me-2">No tags</small>
+                    }
+                    @foreach (var tag in Tags)
+                    {
+                        <TagComponent Tag="tag"
+                                      Selected="ExecuteTagsFilterSet.Contains(tag)"
+                                      CssClass="mx-1"
+                                      Style="cursor: pointer;"
+                                      OnClick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }" />
+                    }
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col">
+                    <div class="row">
+                        <div class="col input-group input-group-sm">
+                            <div class="input-group-text">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                            </div>
+                            <input type="text" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
+                                   placeholder="Filter by name" autocomplete="off" />
+                        </div>
+
+                        <div class="col-auto">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => { ExecuteTagsFilterSet.Clear(); ExecuteFilterText = string.Empty; }">
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                                Clear
+                            </HxButton>
+                        </div>
+                    </div>
+
+                    <table class="table table-hover table-sm mt-2">
+                        <thead>
+                            <tr>
+                                <th>Available steps</th>
+                                <th></th>
+                                @if (Job?.UseDependencyMode == true)
+                                {
+                                    <th></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var step in StepsAvailableToExecute)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
+                                    <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                        <StepTypeIconComponent StepType_="@step.StepType" />
+                                        &nbsp;
+                                        @step.StepName
+                                    </td>
+                                    <td class="text-right"
+                                        style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                        @step.ExecutionPhase
+                                        &nbsp;
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                    </td>
+                                    @if (Job?.UseDependencyMode == true)
+                                    {
+                                        <td class="text-right">
+                                            @if (step.Dependencies?.Count > 0)
+                                            {
+                                                <div class="hover-primary" title="Include dependencies" @onclick="() => SelectStepAndDependencies(step)">
+                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                                                </div>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="col-lg">
+                    <HxButtonGroup>
+                        @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                  @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute.Where(step => step.IsEnabled))">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevron-right.svg")))
+                            Select enabled
+                        </HxButton>
+                        @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                  @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute)">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-right.svg")))
+                            Select all
+                        </HxButton>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => StepsToExecute.Clear()">
+                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/chevrons-left.svg")))
+                            Deselect all
+                        </HxButton>
+                    </HxButtonGroup>
+
+                    <table class="table table-hover table-sm mt-2">
+                        <thead>
+                            <tr>
+                                <th>Selected steps</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                if (Job?.UseDependencyMode == true)
+                                {
+                                    var comparer = new TopologicalStepComparer(StepsToExecute);
+                                    StepsToExecute.Sort(comparer);
+                                }
+                                else
+                                {
+                                    StepsToExecute.Sort();
+                                }
+                            }
+                            @foreach (var step in StepsToExecute)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
+                                    <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                        <StepTypeIconComponent StepType_="@step.StepType" />
+                                        &nbsp;
+                                        @step.StepName
+                                    </td>
+                                    <td class="text-right"
+                                        style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                        @step.ExecutionPhase
+                                        &nbsp;
+                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        }
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <div class="col mr-auto">
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="execute_notify"
+                       checked=@ExecuteNotify
+                       @bind-value="ExecuteNotify">
+                <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+            </div>
+        </div>
+        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute">
+            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+            Execute
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+
+    [Parameter]
+    public Job? Job { get; set; }
+
+    [Parameter]
+    public List<Step>? Steps { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnExecutionStarted { get; set; }
+
+    private IEnumerable<Tag> Tags => Steps?
+    .SelectMany(step => step.Tags)
+    .Select(tag => tag with { Steps = null! })
+    .Distinct()
+    .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
+
+    private HxModal Modal { get; set; } = null!;
+
+    private List<Step> StepsToExecute { get; set; } = new();
+
+    private string ExecuteFilterText { get; set; } = string.Empty;
+    private HashSet<Tag> ExecuteTagsFilterSet { get; set; } = new();
+
+    private IEnumerable<Step> StepsAvailableToExecute =>
+    Steps?.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
+    .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
+    .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
+    ?? Enumerable.Empty<Step>();
+
+    private bool ExecuteNotify { get; set; } = false;
+
+    private async Task Execute()
+    {
+        if (StepsToExecute.Count == 0)
+        {
+            return;
+        }
+
+        string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
+        try
+        {
+            var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
+            var executionId = await DbHelperService.StartExecutionAsync(Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
+                user, stepIds, ExecuteNotify);
+            await OnExecutionStarted.InvokeAsync(executionId);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error starting execution", ex.Message);
+        }
+
+        StepsToExecute.Clear();
+        await Modal.HideAsync();
+        ExecuteNotify = false;
+        StateHasChanged();
+    }
+
+    private void SelectStepAndDependencies(Step step)
+    {
+        RecurseDependencies(step, new());
+    }
+
+    private void RecurseDependencies(Step step, List<Step> processedSteps)
+    {
+        // Add the step to the list of steps to execute if it is not there yet.
+        if (!StepsToExecute.Any(s => s.StepId == step.StepId))
+        {
+            StepsToExecute.Add(step);
+        }
+
+        // Get dependency ids.
+        List<Guid> dependencyStepIds = step.Dependencies.Select(d => d.DependantOnStepId).ToList();
+
+        // If there are no dependencies, return true.
+        if (dependencyStepIds.Count == 0)
+        {
+            return;
+        }
+        // This step was already handled.
+        else if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return;
+        }
+
+        processedSteps.Add(step);
+
+        // Get dependency steps based on ids.
+        List<Step> dependencySteps = Steps?.Where(s => dependencyStepIds.Any(id => s.StepId == id))?.ToList() ?? new();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependencies(depencyStep, processedSteps);
+        }
+
+    }
+
+    public async Task ShowAsync() => await Modal.ShowAsync();
+
+}
