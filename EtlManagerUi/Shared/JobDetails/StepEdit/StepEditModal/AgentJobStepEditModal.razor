@@ -37,6 +37,15 @@
             </div>
         </div>
     </div>
+    <div class="row mt-3">
+        <div class="col">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenAgentJobSelectOffcanvas">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                Browse Agent jobs
+            </HxButton>
+        </div>
+    </div>
+    <AgentJobSelectOffcanvas @ref="AgentJobSelectOffcanvas" ConnectionId="Step.ConnectionId" OnAgentJobSelected="OnAgentJobSelected" />
 </StepEditModalBase>
 
 @code {
@@ -64,6 +73,8 @@
     private AgentJobStep Step { get; set; } = null!;
 
     private StepEditModalBase Modal { get; set; } = null!;
+
+    private AgentJobSelectOffcanvas AgentJobSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -105,6 +116,10 @@
         }
         StateHasChanged();
     }
+
+    private async Task OpenAgentJobSelectOffcanvas() => await AgentJobSelectOffcanvas.ShowAsync();
+
+    private void OnAgentJobSelected(string agentJobName) => Step.AgentJobName = agentJobName;
 
     public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 

@@ -74,5 +74,22 @@ namespace EtlManagerUi
             return procedures;
         }
 
+        public async Task<List<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
+        {
+            string connectionString;
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                connectionString = await context.Connections
+                    .AsNoTracking()
+                    .Where(c => c.ConnectionId == connectionId)
+                    .Select(c => c.ConnectionString)
+                    .FirstAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+            }
+            using var sqlConnection = new SqlConnection(connectionString);
+            var rows = await sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job");
+            var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToList();
+            return agentJobs;
+        }
+
     }
 }

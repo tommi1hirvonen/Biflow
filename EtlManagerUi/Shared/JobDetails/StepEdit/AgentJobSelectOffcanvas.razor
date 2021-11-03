@@ -1,0 +1,127 @@
+﻿@inject IWebHostEnvironment WebHostEnvironment
+@inject SqlServerHelperService SqlServerHelperService
+@inject IHxMessengerService Messenger
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select Agent job">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">
+                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                    </span>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                           @bind-value="FilterTextName" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Agent job name
+                            </th>
+                            <th>
+                                Enabled
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (AgentJobs is null)
+                        {
+                            <tr>
+                                <td colspan="2">Loading...</td>
+                            </tr>
+                        }
+                        else if (!AgentJobs.Any())
+                        {
+                            <tr>
+                                <td colspan="2">No Agent jobs</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var job in AgentJobs
+                                .Where(aj => aj.AgentJobName.ContainsIgnoreCase(FilterTextName))
+                                .OrderBy(aj => aj.AgentJobName))
+                            {
+                                <tr style="cursor: pointer;"
+                                    @onclick="() => SelectedAgentJob = job.AgentJobName"
+                                    class="@(job.AgentJobName == SelectedAgentJob ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        @job.AgentJobName
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" disabled id="agent_job_enabled_@job.AgentJobName" checked="@(job.IsEnabled ? "checked" : null)">
+                                            <label class="form-check-label" for="agent_job_enabled_@job.AgentJobName" aria-label="enabled"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectAgentJob"
+                  Enabled="SelectedAgentJob is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    [Parameter]
+    public Guid? ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnAgentJobSelected { get; set; }
+
+    private List<(string AgentJobName, bool IsEnabled)>? AgentJobs { get; set; }
+
+    private string FilterTextName { get; set; } = string.Empty;
+
+    private string? SelectedAgentJob { get; set; }
+
+    private async Task SelectAgentJob()
+    {
+        if (SelectedAgentJob is not null)
+        {
+            await OnAgentJobSelected.InvokeAsync(SelectedAgentJob);
+            await Offcanvas.HideAsync();
+        }
+    }
+
+    public void OnClosed()
+    {
+        AgentJobs = null;
+        SelectedAgentJob = null;
+        FilterTextName = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Offcanvas.ShowAsync();
+        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        try
+        {
+            AgentJobs = await SqlServerHelperService.GetAgentJobsAsync((Guid)ConnectionId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading Agent jobs", ex.Message);
+        }
+    }
+
+}
