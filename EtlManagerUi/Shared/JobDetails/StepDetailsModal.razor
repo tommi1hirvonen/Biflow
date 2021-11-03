@@ -195,6 +195,15 @@
                         @function.FunctionApp?.FunctionAppName
                     </dd>
                 }
+                else if (Step is AgentJobStep agent)
+                {
+                    <dt class="col-sm-3">
+                        Agent job name
+                    </dt>
+                    <dd class="col-sm-9">
+                        @agent.AgentJobName
+                    </dd>
+                }
             </dl>
             @if (Step is PackageStep package_)
             {

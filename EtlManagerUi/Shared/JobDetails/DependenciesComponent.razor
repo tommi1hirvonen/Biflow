@@ -53,6 +53,7 @@
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepIds[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Function]" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
+    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.AgentJob]" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @code {

@@ -64,6 +64,8 @@ namespace EtlManagerExecutor
                         .ThenInclude(e => (e as SqlStepExecution)!.Connection)
                         .Include(e => e.StepExecutions)
                         .ThenInclude(e => (e as PackageStepExecution)!.Connection)
+                        .Include(e => e.StepExecutions)
+                        .ThenInclude(e => (e as AgentJobStepExecution)!.Connection)
                         .FirstAsync(e => e.ExecutionId == executionId);
 
                     job = execution.Job ?? throw new InvalidOperationException("Job was null");

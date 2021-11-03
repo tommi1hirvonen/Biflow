@@ -30,6 +30,7 @@ namespace EtlManagerDataAccess
         public DbSet<PipelineStep> PipelineSteps => Set<PipelineStep>();
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
         public DbSet<FunctionStep> FunctionSteps => Set<FunctionStep>();
+        public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
         public DbSet<Execution> Executions => Set<Execution>();
         public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
         public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
@@ -85,7 +86,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PackageStepExecution>(StepType.Package)
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
                 .HasValue<SqlStepExecution>(StepType.Sql)
-                .HasValue<FunctionStepExecution>(StepType.Function);
+                .HasValue<FunctionStepExecution>(StepType.Function)
+                .HasValue<AgentJobStepExecution>(StepType.AgentJob);
             });
 
             var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
@@ -107,7 +109,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PackageStepExecutionAttempt>(StepType.Package)
                 .HasValue<PipelineStepExecutionAttempt>(StepType.Pipeline)
                 .HasValue<SqlStepExecutionAttempt>(StepType.Sql)
-                .HasValue<FunctionStepExecutionAttempt>(StepType.Function);
+                .HasValue<FunctionStepExecutionAttempt>(StepType.Function)
+                .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob);
             });
 
             modelBuilder.Entity<Dependency>(e =>
@@ -167,7 +170,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PackageStep>(StepType.Package)
                 .HasValue<PipelineStep>(StepType.Pipeline)
                 .HasValue<SqlStep>(StepType.Sql)
-                .HasValue<FunctionStep>(StepType.Function);
+                .HasValue<FunctionStep>(StepType.Function)
+                .HasValue<AgentJobStep>(StepType.AgentJob);
                 e.HasMany(s => s.StepExecutions)
                 .WithOne(e => e.Step!)
                 .IsRequired(false);

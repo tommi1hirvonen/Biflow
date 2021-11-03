@@ -261,6 +261,24 @@
                 </dd>
             }
         }
+        else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
+        {
+            <dt class="col-sm-3">
+                Agent job name
+            </dt>
+            <dd class="col-sm-9">
+                @agent.AgentJobName
+            </dd>
+            <dt class="col-sm-3">
+                Message
+            </dt>
+            <dd class="col-sm-9">
+                @if (StepExecutionAttempt is AgentJobStepExecutionAttempt agent_)
+                {
+                    <pre><code>@agent_.InfoMessage</code></pre>
+                }
+            </dd>
+        }
         <dt class="col-sm-3">
             Error message
         </dt>

@@ -8,6 +8,7 @@
         Exe,
         Pipeline,
         Dataset,
-        Function
+        Function,
+        AgentJob
     }
 }

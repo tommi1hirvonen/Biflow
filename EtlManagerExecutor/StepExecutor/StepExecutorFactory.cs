@@ -28,6 +28,7 @@ namespace EtlManagerExecutor
                 ExeStepExecution exe => ActivatorUtilities.CreateInstance<ExeStepExecutor>(_serviceProvider, exe),
                 DatasetStepExecution dataset => ActivatorUtilities.CreateInstance<DatasetStepExecutor>(_serviceProvider, dataset),
                 FunctionStepExecution function => ActivatorUtilities.CreateInstance<FunctionStepExecutor>(_serviceProvider, function),
+                AgentJobStepExecution agent => ActivatorUtilities.CreateInstance<AgentJobStepExecutor>(_serviceProvider, agent),
                 _ => throw new InvalidOperationException($"{stepExecution.StepType} is not a recognized step type")
             };
             return stepExecutor;
