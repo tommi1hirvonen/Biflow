@@ -42,7 +42,9 @@ namespace EtlManagerDataAccess
         public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
         public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
         public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
-        public DbSet<Connection> Connections => Set<Connection>();
+        public DbSet<ConnectionInfoBase> Connections => base.Set<ConnectionInfoBase>();
+        public DbSet<SqlConnectionInfo> SqlConnections => Set<SqlConnectionInfo>();
+        public DbSet<AnalysisServicesConnectionInfo> AnalysisServicesConnections => Set<AnalysisServicesConnectionInfo>();
         public DbSet<Tag> Tags => Set<Tag>();
         public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
         public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
@@ -283,8 +285,17 @@ namespace EtlManagerDataAccess
             modelBuilder.Entity<DataFactory>()
                 .ToTable("DataFactory");
 
-            modelBuilder.Entity<Connection>()
-                .ToTable("Connection");
+            var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
+
+            modelBuilder.Entity<ConnectionInfoBase>(e =>
+            {
+                e.ToTable("Connection");
+                e.Property(p => p.ConnectionType)
+                .HasConversion<string>(connectionTypeConverter);
+                e.HasDiscriminator<ConnectionType>("ConnectionType")
+                .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
+                .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
+            });
 
             modelBuilder.Entity<FunctionApp>()
                 .ToTable("FunctionApp");

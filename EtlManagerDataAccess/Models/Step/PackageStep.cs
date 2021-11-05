@@ -43,6 +43,6 @@ namespace EtlManagerDataAccess.Models
 
         private string? _executeAsLogin;
 
-        public Connection? Connection { get; set; }
+        public SqlConnectionInfo? Connection { get; set; }
     }
 }

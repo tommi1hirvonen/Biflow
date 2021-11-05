@@ -1,13 +1,15 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@implements IConnectionEditModal
+
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(ConnectionId == Guid.Empty ? "New connection" : "Edit " + Connection?.ConnectionName)">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(ConnectionId == Guid.Empty ? "New Analysis Services connection" : "Edit " + Connection?.ConnectionName)">
     <BodyTemplate>
         @if (Connection is not null)
         {
-            <EditForm Model="Connection" id="connection_edit_form" OnValidSubmit="SubmitConnection">
+            <EditForm Model="Connection" id="as_connection_edit_form" OnValidSubmit="SubmitConnection">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
                         <DataAnnotationsValidator />
@@ -29,18 +31,7 @@
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>
-                            <div class="form-text">MARS must be enabled in the connection string (MultipleActiveResultSets=true)</div>
                         </div>
-
-                        <dib class="row mt-3">
-                            <label class="form-label">Execute SSIS packages as login (blank = no impersonation)</label>
-                            <div class="input-group">
-                                <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
-                                </div>
-                                <InputText class="form-control" @bind-Value="Connection.ExecutePackagesAsLogin"></InputText>
-                            </div>
-                        </dib>
 
                         <div class="row mt-3">
                             <div class="col">
@@ -67,7 +58,7 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxSubmit form="as_connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
@@ -77,9 +68,9 @@
     public Guid ConnectionId { get; set; } // empty Guid => new connection
 
     [Parameter]
-    public EventCallback<Connection> OnConnectionSubmit { get; set; }
+    public EventCallback<ConnectionInfoBase> OnConnectionSubmit { get; set; }
 
-    private Connection? Connection { get; set; }
+    private AnalysisServicesConnectionInfo? Connection { get; set; }
 
     private HxModal Modal { get; set; } = null!;
 
@@ -91,7 +82,7 @@
         if (ConnectionId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();
-            Connection = await context.Connections
+            Connection = await context.AnalysisServicesConnections
                 .AsNoTracking()
                 .FirstAsync(c => c.ConnectionId == ConnectionId);
         }
@@ -115,8 +106,11 @@
         TestingConnection = true;
         try
         {
-            using var connection = new SqlConnection(Connection?.ConnectionString);
-            await connection.OpenAsync();
+            await Task.Run(() =>
+            {
+                using var server = new Microsoft.AnalysisServices.Tabular.Server();
+                server.Connect(Connection?.ConnectionString);
+            });
             ConnectionTestSuccess = true;
         }
         catch (Exception ex)

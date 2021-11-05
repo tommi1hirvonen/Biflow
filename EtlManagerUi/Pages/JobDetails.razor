@@ -235,7 +235,7 @@ else
 
     private Job EditJob { get; set; } = new();
 
-    private List<Connection>? Connections { get; set; }
+    private List<SqlConnectionInfo>? Connections { get; set; }
     private List<DataFactory>? DataFactories { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
     private List<FunctionApp>? FunctionApps { get; set; }
@@ -253,7 +253,7 @@ else
             .Include(job => job.JobParameters)
             .OrderBy(job => job.JobName)
             .ToListAsync();
-        Connections = await context.Connections
+        Connections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();

@@ -4,19 +4,24 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtlManagerDataAccess
+namespace EtlManagerDataAccess.Models
 {
-    public class Connection
+    public abstract class ConnectionInfoBase
     {
-        public Connection(string connectionName, string connectionString)
+        public ConnectionInfoBase(ConnectionType connectionType, string connectionName, string connectionString)
         {
             ConnectionName = connectionName;
             ConnectionString = connectionString;
+            ConnectionType = connectionType;
         }
 
         [Key]
         [Display(Name = "Connection id")]
         public Guid ConnectionId { get; set; }
+
+        [Required]
+        [Display(Name = "Connection type")]
+        public ConnectionType ConnectionType { get; }
 
         [Required]
         [MaxLength(250)]
@@ -26,15 +31,6 @@ namespace EtlManagerDataAccess
         [Required]
         [Display(Name = "Connection string")]
         public string ConnectionString { get; set; }
-
-        [Display(Name = "Execute packages as login")]
-        public string? ExecutePackagesAsLogin
-        {
-            get => _executePackagesAsLogin;
-            set => _executePackagesAsLogin = string.IsNullOrEmpty(value) ? null : value;
-        }
-
-        private string? _executePackagesAsLogin;
 
     }
 }

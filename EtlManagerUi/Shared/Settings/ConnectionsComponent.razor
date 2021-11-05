@@ -2,10 +2,20 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IWebHostEnvironment WebHostEnvironment 
 
-
-<HxButton Color="ThemeColor.Success" @onclick="() => ShowConnectionEditModal(null)" Enabled="Connections is not null">
-    Add connection
-</HxButton>
+<HxDropdown>
+    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Connections is not null">
+        Add connection
+    </HxDropdownToggleButton>
+    <HxDropdownMenu>
+        <HxDropdownHeader>Connection type</HxDropdownHeader>
+        @foreach (var connectionType in Enum.GetValues<ConnectionType>())
+        {
+            <HxDropdownItem @onclick="() => ShowNewConnectionModal(connectionType)">
+                @connectionType.ToString()
+            </HxDropdownItem>
+        }
+    </HxDropdownMenu>
+</HxDropdown>
 
 
 <div class="card shadow-sm pt-2 my-4">
@@ -14,6 +24,9 @@
             <tr>
                 <th>
                     Name
+                </th>
+                <th>
+                    Type
                 </th>
                 <th></th>
                 <th></th>
@@ -25,11 +38,11 @@
         <tbody>
             @if (Connections is null)
             {
-                <tr><td colspan="3">Loading...</td></tr>
+                <tr><td colspan="5">Loading...</td></tr>
             }
             else if (Connections.Count == 0)
             {
-                <tr><td colspan="3">No connections</td></tr>
+                <tr><td colspan="5">No connections</td></tr>
             }
             else
             {
@@ -40,8 +53,11 @@
                             @connection.ConnectionName
                         </td>
                         <td class="align-middle">
+                            @connection.ConnectionType
+                        </td>
+                        <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowConnectionEditModal(connection)">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(connection)">
                                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
                                 </HxButton>
                                 <HxDropdown>
@@ -88,14 +104,22 @@
     </table>
 </div>
 
-<ConnectionEditModal @ref="ConnectionEditModal" ConnectionId="EditConnectionId" OnConnectionSubmit="OnConnectionSubmit" />
+<AnalysisServicesConnectionEditModal @ref="ConnectionEditModals[ConnectionType.AnalysisServices]"
+                                     ConnectionId="EditModalConnectionIds[ConnectionType.AnalysisServices]"
+                                     OnConnectionSubmit="OnConnectionSubmit" />
+
+<SqlConnectionEditModal @ref="ConnectionEditModals[ConnectionType.Sql]"
+                        ConnectionId="EditModalConnectionIds[ConnectionType.Sql]"
+                        OnConnectionSubmit="OnConnectionSubmit" />
 
 @code {
-    private List<Connection>? Connections { get; set; }
+    private List<ConnectionInfoBase>? Connections { get; set; }
     private Dictionary<Guid, bool> ShowConnectionString { get; set; } = new();
 
-    private Guid EditConnectionId { get; set; }
-    private ConnectionEditModal ConnectionEditModal { get; set; } = null!;
+
+    Dictionary<ConnectionType, IConnectionEditModal> ConnectionEditModals { get; } = new();
+    private Dictionary<ConnectionType, Guid> EditModalConnectionIds { get; } =
+        Enum.GetValues<ConnectionType>().ToDictionary(key => key, _ => new Guid());
 
     protected override async Task OnInitializedAsync()
     {
@@ -107,7 +131,7 @@
         ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
-    private async Task DeleteConnection(Connection connection)
+    private async Task DeleteConnection(ConnectionInfoBase connection)
     {
         using var context = DbFactory.CreateDbContext();
         var conn = await context.Connections.FindAsync(connection.ConnectionId);
@@ -117,7 +141,7 @@
         ShowConnectionString.Remove(connection.ConnectionId);
     }
 
-    private async void OnConnectionSubmit(Connection connection)
+    private async void OnConnectionSubmit(ConnectionInfoBase connection)
     {
         using var context = DbFactory.CreateDbContext();
         if (connection.ConnectionId == Guid.Empty)
@@ -136,9 +160,20 @@
         StateHasChanged();
     }
 
-    private async Task ShowConnectionEditModal(Connection? connection)
+    private async Task ShowEditModal(ConnectionInfoBase connection)
     {
-        EditConnectionId = connection?.ConnectionId ?? Guid.Empty;
-        await ConnectionEditModal.ShowAsync();
+        EditModalConnectionIds[connection.ConnectionType] = connection.ConnectionId;
+        await OpenConnectionEditModal(connection.ConnectionType);
+    }
+
+    private async Task ShowNewConnectionModal(ConnectionType connectionType)
+    {
+        EditModalConnectionIds[connectionType] = Guid.Empty;
+        await OpenConnectionEditModal(connectionType);
+    }
+
+    private async Task OpenConnectionEditModal(ConnectionType connectionType)
+    {
+        await ConnectionEditModals[connectionType].ShowAsync();
     }
 }

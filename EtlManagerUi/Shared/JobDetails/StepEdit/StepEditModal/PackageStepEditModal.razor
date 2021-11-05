@@ -30,7 +30,7 @@
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
-                    @foreach (var connection in Connections ?? Enumerable.Empty<Connection>())
+                    @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                     }
@@ -115,7 +115,7 @@
     public IList<Step>? Steps { get; set; }
 
     [Parameter]
-    public IList<Connection>? Connections { get; set; }
+    public IList<SqlConnectionInfo>? Connections { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
