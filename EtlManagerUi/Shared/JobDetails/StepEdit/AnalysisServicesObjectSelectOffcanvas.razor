@@ -1,0 +1,191 @@
+﻿@inject IHxMessengerService Messenger
+@inject IWebHostEnvironment WebHostEnvironment
+@inject SqlServerHelperService SqlServerHelperService
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select Analysis Services object">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/box.svg")))
+                                Models
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Models is null)
+                        {
+                            <tr><td class="text-secondary">Loading...</td></tr>
+                        }
+                        else if (!Models.Any())
+                        {
+                            <tr><td class="text-secondary">No models</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var model in Models)
+                            {
+                                <tr style="cursor: pointer;"
+                                    class="@(model == SelectedModel ? "bg-light fw-bold" : null)"
+                                    @onclick="() => SelectedModel = model">
+                                    <td>@model.ModelName</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/columns.svg")))
+                                Tables
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Models is null)
+                        {
+                            <tr><td class="text-secondary">Loading...</td></tr>
+                        }
+                        else if (SelectedModel is null)
+                        {
+                            <tr><td class="text-secondary">Select a model to view tables</td></tr>
+                        }
+                        else if (!SelectedModel.Tables.Any())
+                        {
+                            <tr><td class="text-secondary">No tables</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var table in SelectedModel.Tables)
+                            {
+                                <tr style="cursor: pointer;"
+                                    class="@(table == SelectedTable ? "bg-light fw-bold" : null)"
+                                    @onclick="() => SelectedTable = SelectedTable == table ? null : table">
+                                    <td>@table.TableName</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pie-chart.svg")))
+                                Partitions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Models is null)
+                        {
+                            <tr><td class="text-secondary">Loading...</td></tr>
+                        }
+                        else if (SelectedTable is null)
+                        {
+                            <tr><td class="text-secondary">Select a table to view partitions</td></tr>
+                        }
+                        else if (!SelectedTable.Partitions.Any())
+                        {
+                            <tr><td class="text-secondary">No partitions</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var partition in SelectedTable.Partitions)
+                            {
+                                <tr style="cursor: pointer;"
+                                    class="@(partition == SelectedPartition ? "bg-light fw-bold" : null)"
+                                    @onclick="() => SelectedPartition = SelectedPartition == partition ? null : partition">
+                                    <td>@partition.PartitionName</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectObjectAsync"
+                  Enabled="SelectedModel is not null || SelectedTable is not null || SelectedPartition is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    [Parameter]
+    public Guid? ConnectionId { get; set; }
+
+    [Parameter]
+    public EventCallback<(string ModelName, string? TableName, string? PartitionName)> OnObjectSelected { get; set; }
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    private List<AsModel>? Models { get; set; }
+
+    private AsModel? SelectedModel { get; set; }
+    private AsTable? SelectedTable { get; set; }
+    private AsPartition? SelectedPartition { get; set; }
+
+    private void OnClosed()
+    {
+        Models = null;
+        SelectedModel = null;
+        SelectedTable = null;
+        SelectedPartition = null;
+    }
+
+    private async Task SelectObjectAsync()
+    {
+        if (SelectedPartition is not null)
+        {
+            var obj = (SelectedPartition.Table.Model.ModelName, SelectedPartition.Table.TableName, SelectedPartition.PartitionName);
+            await OnObjectSelected.InvokeAsync(obj);
+            await Offcanvas.HideAsync();
+        }
+        else if (SelectedTable is not null)
+        {
+            var obj = (SelectedTable.Model.ModelName, SelectedTable.TableName, (string?)null);
+            await OnObjectSelected.InvokeAsync(obj);
+            await Offcanvas.HideAsync();
+        }
+        else if (SelectedModel is not null)
+        {
+            var obj = (SelectedModel.ModelName, (string?)null, (string?)null);
+            await OnObjectSelected.InvokeAsync(obj);
+            await Offcanvas.HideAsync();
+        }
+    }
+
+    public async Task ShowAsync()
+    {
+        await Offcanvas.ShowAsync();
+        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        try
+        {
+            Models = await SqlServerHelperService.GetAnalysisServicesModelsAsync((Guid)ConnectionId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading Analysis Services objects", ex.Message);
+        }
+    }
+
+}

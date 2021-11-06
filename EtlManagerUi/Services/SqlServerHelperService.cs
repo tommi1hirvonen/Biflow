@@ -23,11 +23,11 @@ namespace EtlManagerUi
             string catalogConnectionString;
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                catalogConnectionString = await context.Connections
+                catalogConnectionString = await context.SqlConnections
                     .AsNoTracking()
                     .Where(c => c.ConnectionId == connectionId)
                     .Select(c => c.ConnectionString)
-                    .FirstAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
+                    .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
             }
             using var sqlConnection = new SqlConnection(catalogConnectionString);
             var rows = await sqlConnection.QueryAsync<(string, string?, string?)>(
@@ -57,11 +57,11 @@ namespace EtlManagerUi
             string connectionString;
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                connectionString = await context.Connections
+                connectionString = await context.SqlConnections
                     .AsNoTracking()
                     .Where(c => c.ConnectionId == connectionId)
                     .Select(c => c.ConnectionString)
-                    .FirstAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+                    .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
             }
             using var sqlConnection = new SqlConnection(connectionString);
             var rows = await sqlConnection.QueryAsync<(string, string)>(
@@ -79,11 +79,11 @@ namespace EtlManagerUi
             string connectionString;
             using (var context = _dbContextFactory.CreateDbContext())
             {
-                connectionString = await context.Connections
+                connectionString = await context.SqlConnections
                     .AsNoTracking()
                     .Where(c => c.ConnectionId == connectionId)
                     .Select(c => c.ConnectionString)
-                    .FirstAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+                    .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
             }
             using var sqlConnection = new SqlConnection(connectionString);
             var rows = await sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job");
@@ -91,5 +91,53 @@ namespace EtlManagerUi
             return agentJobs;
         }
 
+        public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
+        {
+            string connectionString;
+            using (var context = _dbContextFactory.CreateDbContext())
+            {
+                connectionString = await context.AnalysisServicesConnections
+                    .AsNoTracking()
+                    .Where(c => c.ConnectionId == connectionId)
+                    .Select(c => c.ConnectionString)
+                    .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+            }
+
+            var models = new List<AsModel>();
+            await Task.Run(() =>
+            {
+                using var server = new Microsoft.AnalysisServices.Tabular.Server();
+                server.Connect(connectionString);
+                var databases = server.Databases;
+                for (int dbi = 0; dbi < databases.Count; dbi++)
+                {
+                    var database = databases[dbi];
+                    var model = database.Model;
+                    var asModel = new AsModel(database.Name, new());
+                    for (int tbi = 0; tbi < model.Tables.Count; tbi++)
+                    {
+                        var table = model.Tables[tbi];
+                        var asTable = new AsTable(table.Name, asModel, new());
+                        for (int pi = 0; pi < table.Partitions.Count; pi++)
+                        {
+                            var partition = table.Partitions[pi];
+                            var asPartition = new AsPartition(partition.Name, asTable);
+                            asTable.Partitions.Add(asPartition);
+                        }
+                        asModel.Tables.Add(asTable);
+                    }
+                    models.Add(asModel);
+                }
+            });
+            return models;
+        }
+
     }
+
+    public record AsModel(string ModelName, List<AsTable> Tables);
+
+    public record AsTable(string TableName, AsModel Model, List<AsPartition> Partitions);
+
+    public record AsPartition(string PartitionName, AsTable Table);
+
 }

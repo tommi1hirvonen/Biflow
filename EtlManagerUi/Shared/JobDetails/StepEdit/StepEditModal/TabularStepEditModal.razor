@@ -72,6 +72,15 @@
             <div class="form-text">Blank if not applicable</div>
         </div>
     </div>
+    <div class="row mt-3">
+        <div class="col">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.ShowAsync()">
+                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                Browse objects
+            </HxButton>
+        </div>
+    </div>
+    <AnalysisServicesObjectSelectOffcanvas @ref="Offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
 </StepEditModalBase>
 
 @code {
@@ -99,6 +108,8 @@
     private TabularStep Step { get; set; } = null!;
 
     private StepEditModalBase Modal { get; set; } = null!;
+
+    private AnalysisServicesObjectSelectOffcanvas Offcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -139,6 +150,13 @@
             };
         }
         StateHasChanged();
+    }
+
+    private void OnAnalysisServicesObjectSelected((string ModelName, string? TableName, string? PartitionName) obj)
+    {
+        Step.TabularModelName = obj.ModelName;
+        Step.TabularTableName = obj.TableName;
+        Step.TabularPartitionName = obj.PartitionName;
     }
 
     private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
