@@ -14,6 +14,13 @@
     [ScheduleId]                        UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]                 INT                 NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC),
-    CONSTRAINT [CK_Execution_ExecutionStatus] CHECK ([ExecutionStatus] = 'NotStarted' OR [ExecutionStatus] = 'Running' OR [ExecutionStatus] = 'Succeeded' OR [ExecutionStatus] = 'Failed' OR [ExecutionStatus] = 'Warning' OR [ExecutionStatus] = 'Stopped' OR [ExecutionStatus] = 'Suspended')
+    CONSTRAINT [CK_Execution_ExecutionStatus] CHECK (
+        [ExecutionStatus] = 'NotStarted'
+        OR [ExecutionStatus] = 'Running'
+        OR [ExecutionStatus] = 'Succeeded'
+        OR [ExecutionStatus] = 'Failed'
+        OR [ExecutionStatus] = 'Warning'
+        OR [ExecutionStatus] = 'Stopped'
+        OR [ExecutionStatus] = 'Suspended')
 );
 

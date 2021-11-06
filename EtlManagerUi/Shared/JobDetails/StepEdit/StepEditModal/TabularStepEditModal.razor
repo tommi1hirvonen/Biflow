@@ -9,7 +9,8 @@
                    Step="Step"
                    Context="Context"
                    OnStepSubmit="OnStepSubmit"
-                   FormId="agent_job_step_edit_modal">
+                   StepValidityCheck="StepValidityCheck"
+                   FormId="tabular_step_edit_modal">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
@@ -27,7 +28,7 @@
                     @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
-                    @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                    @foreach (var connection in Connections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                     }
@@ -37,24 +38,40 @@
     </div>
     <div class="row mt-3">
         <div class="col">
-            <label class="form-label">Agent job name</label>
+            <label class="form-label">Model name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/box.svg")))
                 </div>
-                <InputText class="form-control" @bind-Value="Step.AgentJobName" @oninput="Modal.ResetStepError" />
+                <InputText class="form-control" @bind-Value="Step.TabularModelName" @oninput="Modal.ResetStepError" />
             </div>
+            <div class="form-text">Required</div>
         </div>
     </div>
     <div class="row mt-3">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenAgentJobSelectOffcanvas">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
-                Browse Agent jobs
-            </HxButton>
+            <label class="form-label">Table name</label>
+            <div class="input-group">
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/columns.svg")))
+                </div>
+                <InputText class="form-control" @bind-Value="Step.TabularTableName" @oninput="Modal.ResetStepError" />
+            </div>
+            <div class="form-text">Blank if not applicable. Required if partition name is defined.</div>
         </div>
     </div>
-    <AgentJobSelectOffcanvas @ref="AgentJobSelectOffcanvas" ConnectionId="Step.ConnectionId" OnAgentJobSelected="OnAgentJobSelected" />
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Partition name</label>
+            <div class="input-group">
+                <div class="input-group-text">
+                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pie-chart.svg")))
+                </div>
+                <InputText class="form-control" @bind-Value="Step.TabularPartitionName" @oninput="Modal.ResetStepError" />
+            </div>
+            <div class="form-text">Blank if not applicable</div>
+        </div>
+    </div>
 </StepEditModalBase>
 
 @code {
@@ -69,7 +86,7 @@
     public IList<Step>? Steps { get; set; }
 
     [Parameter]
-    public IList<SqlConnectionInfo>? Connections { get; set; }
+    public IList<AnalysisServicesConnectionInfo>? Connections { get; set; }
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -79,11 +96,9 @@
 
     private Guid PrevStepId { get; set; }
 
-    private AgentJobStep Step { get; set; } = null!;
+    private TabularStep Step { get; set; } = null!;
 
     private StepEditModalBase Modal { get; set; } = null!;
-
-    private AgentJobSelectOffcanvas AgentJobSelectOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -103,7 +118,7 @@
         if (StepId != Guid.Empty && StepId != PrevStepId)
         {
             await ResetContext();
-            Step = await Context.AgentJobSteps
+            Step = await Context.TabularSteps
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
                 .FirstOrDefaultAsync(step => step.StepId == StepId);
@@ -126,9 +141,24 @@
         StateHasChanged();
     }
 
-    private async Task OpenAgentJobSelectOffcanvas() => await AgentJobSelectOffcanvas.ShowAsync();
-
-    private void OnAgentJobSelected(string agentJobName) => Step.AgentJobName = agentJobName;
+    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
+    {
+        if (step is TabularStep tabular)
+        {
+            if (!string.IsNullOrEmpty(tabular.TabularPartitionName) && string.IsNullOrEmpty(tabular.TabularTableName))
+            {
+                return (false, "Table name is required if partition name has been defined");
+            }
+            else
+            {
+                return (true, null);
+            }
+        }
+        else
+        {
+            return (false, "Not TabularStep");
+        }
+    }
 
     public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 

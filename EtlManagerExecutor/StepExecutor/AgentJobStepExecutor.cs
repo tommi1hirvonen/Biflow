@@ -17,7 +17,6 @@ namespace EtlManagerExecutor
     class AgentJobStepExecutor : StepExecutorBase
     {
         private readonly IExecutionConfiguration _executionConfiguration;
-        private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
         private AgentJobStepExecution Step { get; }
 
@@ -27,7 +26,6 @@ namespace EtlManagerExecutor
             AgentJobStepExecution step) : base(dbContextFactory, step)
         {
             _executionConfiguration = executionConfiguration;
-            _dbContextFactory = dbContextFactory;
             Step = step;
         }
 

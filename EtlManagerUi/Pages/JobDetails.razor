@@ -198,7 +198,14 @@
 
 @if (DetailsPage == "steps")
 {
-    <StepsComponent Job="CurrentJob" Jobs="Jobs" Steps="Steps" Connections="Connections" DataFactories="DataFactories" AppRegistrations="AppRegistrations" FunctionApps="FunctionApps" />
+    <StepsComponent Job="CurrentJob"
+                    Jobs="Jobs"
+                    Steps="Steps"
+                    SqlConnections="SqlConnections"
+                    AsConnections="AsConnections"
+                    DataFactories="DataFactories"
+                    AppRegistrations="AppRegistrations"
+                    FunctionApps="FunctionApps" />
 }
 else if (DetailsPage == "jobhistory")
 {
@@ -206,7 +213,14 @@ else if (DetailsPage == "jobhistory")
 }
 else if (DetailsPage == "dependencies")
 {
-    <DependenciesComponent Jobs="Jobs" Job="CurrentJob" Steps="Steps" Connections="Connections" DataFactories="DataFactories" AppRegistrations="AppRegistrations" FunctionApps="FunctionApps" />
+    <DependenciesComponent Jobs="Jobs"
+                           Job="CurrentJob"
+                           Steps="Steps"
+                           SqlConnections="SqlConnections"
+                           AsConnections="AsConnections"
+                           DataFactories="DataFactories"
+                           AppRegistrations="AppRegistrations"
+                           FunctionApps="FunctionApps" />
 }
 else if (DetailsPage == "schedules")
 {
@@ -235,7 +249,8 @@ else
 
     private Job EditJob { get; set; } = new();
 
-    private List<SqlConnectionInfo>? Connections { get; set; }
+    private List<SqlConnectionInfo>? SqlConnections { get; set; }
+    private List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
     private List<DataFactory>? DataFactories { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
     private List<FunctionApp>? FunctionApps { get; set; }
@@ -253,14 +268,18 @@ else
             .Include(job => job.JobParameters)
             .OrderBy(job => job.JobName)
             .ToListAsync();
-        Connections = await context.SqlConnections
+        SqlConnections = await context.SqlConnections
+            .AsNoTracking()
+            .OrderBy(c => c.ConnectionName)
+            .ToListAsync();
+        AsConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         DataFactories = await context.DataFactories
-            .AsNoTracking()
-            .OrderBy(df => df.DataFactoryName)
-            .ToListAsync();
+        .AsNoTracking()
+        .OrderBy(df => df.DataFactoryName)
+        .ToListAsync();
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(app => app.AppRegistrationName)
@@ -296,7 +315,7 @@ else
             .Include(step => (step as ParameterizedStep)!.StepParameters)
             .Where(step => step.JobId == CurrentJob.JobId)
             .ToListAsync();
-            SortSteps();
+        SortSteps();
     }
 
     private void SortSteps()

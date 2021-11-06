@@ -32,8 +32,20 @@
     [FunctionInput]                     NVARCHAR(MAX)       NULL,
     [FunctionIsDurable]                 BIT                 NULL,
     [AgentJobName]                      NVARCHAR(128)       NULL,
+    [TabularModelName]                  NVARCHAR(128)       NULL,
+    [TabularTableName]                  NVARCHAR(128)       NULL,
+    [TabularPartitionName]              NVARCHAR(128)       NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [etlmanager].[ExecutionParameter] ([ExecutionId], [ParameterId]),
-    CONSTRAINT [CK_ExecutionStep_StepType] CHECK ([StepType]='Package' OR [StepType]='Sql' OR [StepType]='Job' OR [StepType]='Pipeline' OR [StepType]='Exe' OR [StepType]='Dataset' OR [StepType]='Function' OR [StepType]='AgentJob')
+    CONSTRAINT [CK_ExecutionStep_StepType] CHECK (
+        [StepType]='Package'
+        OR [StepType]='Sql'
+        OR [StepType]='Job'
+        OR [StepType]='Pipeline'
+        OR [StepType]='Exe'
+        OR [StepType]='Dataset'
+        OR [StepType]='Function'
+        OR [StepType]='AgentJob'
+        OR [StepType]='Tabular')
 );
 

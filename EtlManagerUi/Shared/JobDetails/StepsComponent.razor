@@ -250,11 +250,12 @@
     <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" AppRegistrations="AppRegistrations" StepId="EditModalStepIds[StepType.Dataset]" OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Exe]" OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Job]" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.Package]" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Package]" OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" DataFactories="DataFactories" StepId="EditModalStepIds[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />
-    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" StepId="EditModalStepIds[StepType.Function]" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]" Job="Job" Steps="Steps" Connections="Connections" StepId="EditModalStepIds[StepType.AgentJob]" OnStepSubmit="OnStepSubmit" />
+    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.AgentJob]" OnStepSubmit="OnStepSubmit" />
+    <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]" Job="Job" Steps="Steps" Connections="AsConnections" StepId="EditModalStepIds[StepType.Tabular]" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
@@ -278,7 +279,9 @@
     public List<Step>? Steps { get; set; }
 
     [Parameter]
-    public List<SqlConnectionInfo>? Connections { get; set; }
+    public List<SqlConnectionInfo>? SqlConnections { get; set; }
+    [Parameter]
+    public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
     [Parameter]
     public List<DataFactory>? DataFactories { get; set; }
     [Parameter]
@@ -321,7 +324,7 @@
         {
             case StepType.Sql:
             case StepType.Package:
-                return Connections?.Any() == false;
+                return SqlConnections?.Any() == false;
             case StepType.Pipeline:
                 return DataFactories?.Any() == false;
             case StepType.Function:
@@ -331,7 +334,9 @@
             case StepType.Job:
                 return Jobs is null || Jobs.Count == 1;
             case StepType.AgentJob:
-                return Connections?.Any() == false;
+                return SqlConnections?.Any() == false;
+            case StepType.Tabular:
+                return AsConnections?.Any() == false;
             default:
                 return false;
         }

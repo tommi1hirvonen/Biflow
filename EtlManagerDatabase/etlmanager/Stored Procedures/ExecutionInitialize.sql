@@ -65,7 +65,10 @@ SELECT
 	a.FunctionUrl,
 	a.FunctionInput,
 	a.FunctionIsDurable,
-	A.AgentJobName
+	a.AgentJobName,
+	a.TabularModelName,
+	a.TabularTableName,
+	a.TabularPartitionName
 INTO #Steps
 FROM etlmanager.Step AS a
 WHERE a.JobId = @JobId 
@@ -165,7 +168,10 @@ INSERT INTO etlmanager.ExecutionStep (
 	FunctionUrl,
 	FunctionInput,
 	FunctionIsDurable,
-	AgentJobName
+	AgentJobName,
+	TabularModelName,
+	TabularTableName,
+	TabularPartitionName
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
@@ -199,7 +205,10 @@ SELECT
 	a.FunctionUrl,
 	a.FunctionInput,
 	a.FunctionIsDurable,
-	a.AgentJobName
+	a.AgentJobName,
+	a.TabularModelName,
+	a.TabularTableName,
+	a.TabularPartitionName
 FROM #Steps AS a
 
 

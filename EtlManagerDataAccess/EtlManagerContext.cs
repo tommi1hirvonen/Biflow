@@ -31,6 +31,7 @@ namespace EtlManagerDataAccess
         public DbSet<SqlStep> SqlSteps => Set<SqlStep>();
         public DbSet<FunctionStep> FunctionSteps => Set<FunctionStep>();
         public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
+        public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
         public DbSet<Execution> Executions => Set<Execution>();
         public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
         public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
@@ -89,7 +90,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecution>(StepType.Pipeline)
                 .HasValue<SqlStepExecution>(StepType.Sql)
                 .HasValue<FunctionStepExecution>(StepType.Function)
-                .HasValue<AgentJobStepExecution>(StepType.AgentJob);
+                .HasValue<AgentJobStepExecution>(StepType.AgentJob)
+                .HasValue<TabularStepExecution>(StepType.Tabular);
             });
 
             var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
@@ -112,7 +114,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStepExecutionAttempt>(StepType.Pipeline)
                 .HasValue<SqlStepExecutionAttempt>(StepType.Sql)
                 .HasValue<FunctionStepExecutionAttempt>(StepType.Function)
-                .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob);
+                .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob)
+                .HasValue<TabularStepExecutionAttempt>(StepType.Tabular);
             });
 
             modelBuilder.Entity<Dependency>(e =>
@@ -173,7 +176,8 @@ namespace EtlManagerDataAccess
                 .HasValue<PipelineStep>(StepType.Pipeline)
                 .HasValue<SqlStep>(StepType.Sql)
                 .HasValue<FunctionStep>(StepType.Function)
-                .HasValue<AgentJobStep>(StepType.AgentJob);
+                .HasValue<AgentJobStep>(StepType.AgentJob)
+                .HasValue<TabularStep>(StepType.Tabular);
                 e.HasMany(s => s.StepExecutions)
                 .WithOne(e => e.Step!)
                 .IsRequired(false);

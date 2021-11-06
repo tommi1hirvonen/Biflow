@@ -9,6 +9,7 @@
         Pipeline,
         Dataset,
         Function,
-        AgentJob
+        AgentJob,
+        Tabular
     }
 }

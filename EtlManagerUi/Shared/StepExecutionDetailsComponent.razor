@@ -279,6 +279,27 @@
                 }
             </dd>
         }
+        else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
+        {
+            <dt class="col-sm-3">
+                Model name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularModelName
+            </dd>
+            <dt class="col-sm-3">
+                Table name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularTableName
+            </dd>
+            <dt class="col-sm-3">
+                Partition name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularPartitionName
+            </dd>
+        }
         <dt class="col-sm-3">
             Error message
         </dt>

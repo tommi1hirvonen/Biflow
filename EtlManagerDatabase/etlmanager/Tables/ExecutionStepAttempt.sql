@@ -14,6 +14,23 @@
     [StoppedBy]                 NVARCHAR(250)       NULL,
     CONSTRAINT [PK_ExecutionStepAttempt] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
     CONSTRAINT [FK_ExecutionStepAttempt_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [etlmanager].ExecutionStep ([ExecutionId], [StepId]),
-    CONSTRAINT [CK_ExecutionStepAttempt_StepType] CHECK ([StepType]='Package' OR [StepType]='Sql' OR [StepType]='Job' OR [StepType]='Pipeline' OR [StepType]='Exe' OR [StepType]='Dataset' OR [StepType]='Function' OR [StepType]='AgentJob'),
-    CONSTRAINT [CK_ExecutionStepAttempt_ExecutionStatus] CHECK ([ExecutionStatus] = 'NotStarted' OR [ExecutionStatus] = 'Running' OR [ExecutionStatus] = 'Succeeded' OR [ExecutionStatus] = 'Failed' OR [ExecutionStatus] = 'Stopped' OR [ExecutionStatus] = 'Skipped' OR [ExecutionStatus] = 'AwaitRetry' OR [ExecutionStatus] = 'Duplicate')
+    CONSTRAINT [CK_ExecutionStepAttempt_StepType] CHECK (
+        [StepType]='Package'
+        OR [StepType]='Sql'
+        OR [StepType]='Job'
+        OR [StepType]='Pipeline'
+        OR [StepType]='Exe'
+        OR [StepType]='Dataset'
+        OR [StepType]='Function'
+        OR [StepType]='AgentJob'
+        OR [StepType]='Tabular'),
+    CONSTRAINT [CK_ExecutionStepAttempt_ExecutionStatus] CHECK (
+        [ExecutionStatus] = 'NotStarted'
+        OR [ExecutionStatus] = 'Running'
+        OR [ExecutionStatus] = 'Succeeded'
+        OR [ExecutionStatus] = 'Failed'
+        OR [ExecutionStatus] = 'Stopped'
+        OR [ExecutionStatus] = 'Skipped'
+        OR [ExecutionStatus] = 'AwaitRetry'
+        OR [ExecutionStatus] = 'Duplicate')
 );
