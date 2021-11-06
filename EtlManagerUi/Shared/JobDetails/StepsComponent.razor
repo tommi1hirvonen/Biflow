@@ -43,12 +43,11 @@
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Step type</HxDropdownHeader>
-                    @foreach (var stepType in Enum.GetValues(typeof(StepType)))
+                    @foreach (var stepType in Enum.GetValues<StepType>())
                     {
-                        var stepTypeEnum = Enum.Parse<StepType>(stepType.ToString()!);
-                        <HxDropdownItem @onclick="() => ShowNewStepModal(stepTypeEnum)"
-                                        Enabled="!IsStepTypeDisabled(stepTypeEnum)">
-                            <StepTypeIconComponent StepType_="stepTypeEnum" />
+                        <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
+                                        Enabled="!IsStepTypeDisabled(stepType)">
+                            <StepTypeIconComponent StepType_="stepType" />
                             @stepType
                         </HxDropdownItem>
                     }

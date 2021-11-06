@@ -4,12 +4,12 @@
     {
         Sql,
         Package,
-        Job,
-        Exe,
         Pipeline,
-        Dataset,
         Function,
+        Tabular,
+        Dataset,
         AgentJob,
-        Tabular
+        Exe,
+        Job
     }
 }
