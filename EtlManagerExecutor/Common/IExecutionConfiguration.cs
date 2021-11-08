@@ -1,13 +1,12 @@
-﻿namespace EtlManagerExecutor
+﻿namespace EtlManagerExecutor;
+
+public interface IExecutionConfiguration
 {
-    public interface IExecutionConfiguration
-    {
-        public string ConnectionString { get; }
+    public string ConnectionString { get; }
 
-        public int MaxParallelSteps { get; }
+    public int MaxParallelSteps { get; }
 
-        public int PollingIntervalMs { get; }
+    public int PollingIntervalMs { get; }
 
-        public bool Notify { get; set; }
-    }
+    public bool Notify { get; set; }
 }

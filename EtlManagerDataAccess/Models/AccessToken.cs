@@ -5,27 +5,26 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtlManagerDataAccess.Models
+namespace EtlManagerDataAccess.Models;
+
+public class AccessToken
 {
-    public class AccessToken
+    public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
     {
-        public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
-        {
-            AppRegistrationId = appRegistrationId;
-            ResourceUrl = resourceUrl;
-            Token = token;
-            ExpiresOn = expiresOn;
-        }
-
-        public Guid AppRegistrationId { get; set; }
-
-        public AppRegistration AppRegistration { get; set; } = null!;
-
-        public string ResourceUrl { get; set; }
-
-        public string Token { get; set; }
-
-        public DateTimeOffset ExpiresOn { get; set; }
-
+        AppRegistrationId = appRegistrationId;
+        ResourceUrl = resourceUrl;
+        Token = token;
+        ExpiresOn = expiresOn;
     }
+
+    public Guid AppRegistrationId { get; set; }
+
+    public AppRegistration AppRegistration { get; set; } = null!;
+
+    public string ResourceUrl { get; set; }
+
+    public string Token { get; set; }
+
+    public DateTimeOffset ExpiresOn { get; set; }
+
 }

@@ -1,9 +1,8 @@
 ﻿using EtlManagerDataAccess.Models;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public interface IStepExecutorFactory
 {
-    public interface IStepExecutorFactory
-    {
-        StepExecutorBase Create(StepExecution stepExecution);
-    }
+    StepExecutorBase Create(StepExecution stepExecution);
 }

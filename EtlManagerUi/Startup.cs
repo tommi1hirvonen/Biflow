@@ -9,63 +9,62 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
 
-namespace EtlManagerUi
+namespace EtlManagerUi;
+
+public class Startup
 {
-    public class Startup
+    private readonly IConfiguration _configuration;
+
+    public Startup(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        _configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    // This method gets called by the runtime. Use this method to add services to the container.
+    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+        services.AddRazorPages();
+        services.AddServerSideBlazor();
+        services.AddHttpContextAccessor();
+
+        var connectionString = _configuration.GetConnectionString("EtlManagerContext");
+        services.AddDbContextFactory<EtlManagerContext>(options =>
+            options.UseSqlServer(connectionString, o =>
+                o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+
+        services.AddHxServices();
+        services.AddHxMessenger();
+        services.AddHxMessageBoxHost();
+
+        services.AddHttpClient();
+        services.AddSingleton<ITokenService, TokenService>();
+        services.AddSingleton<DbHelperService>();
+        services.AddSingleton<SchedulerService>();
+        services.AddSingleton<SqlServerHelperService>();
+    }
+
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            _configuration = configuration;
+            app.UseDeveloperExceptionPage();
+        }
+        else
+        {
+            app.UseExceptionHandler("/Error");
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
+        app.UseStaticFiles();
+        app.UseRouting();
+        app.UseCookiePolicy();
+        app.UseAuthentication();
+        app.UseEndpoints(endpoints =>
         {
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
-            services.AddRazorPages();
-            services.AddServerSideBlazor();
-            services.AddHttpContextAccessor();
-
-            var connectionString = _configuration.GetConnectionString("EtlManagerContext");
-            services.AddDbContextFactory<EtlManagerContext>(options =>
-                options.UseSqlServer(connectionString, o =>
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-            services.AddHxServices();
-            services.AddHxMessenger();
-            services.AddHxMessageBoxHost();
-
-            services.AddHttpClient();
-            services.AddSingleton<ITokenService, TokenService>();
-            services.AddSingleton<DbHelperService>();
-            services.AddSingleton<SchedulerService>();
-            services.AddSingleton<SqlServerHelperService>();
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-            }
-
-            app.UseStaticFiles();
-            app.UseRouting();
-            app.UseCookiePolicy();
-            app.UseAuthentication();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
-            });
-        }
+            endpoints.MapBlazorHub();
+            endpoints.MapFallbackToPage("/_Host");
+        });
     }
 }

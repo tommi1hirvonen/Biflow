@@ -1,10 +1,9 @@
 ﻿using System.Net.Mail;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public interface IEmailConfiguration
 {
-    public interface IEmailConfiguration
-    {
-        public SmtpClient Client { get; }
-        public string FromAddress { get; }
-    }
+    public SmtpClient Client { get; }
+    public string FromAddress { get; }
 }

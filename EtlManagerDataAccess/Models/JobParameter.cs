@@ -6,14 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerDataAccess.Models
-{
-    public class JobParameter : ParameterBase
-    {
-        [Display(Name = "Job")]
-        [Column("JobId")]
-        public Guid JobId { get; set; }
+namespace EtlManagerDataAccess.Models;
 
-        public Job Job { get; set; } = null!;
-    }
+public class JobParameter : ParameterBase
+{
+    [Display(Name = "Job")]
+    [Column("JobId")]
+    public Guid JobId { get; set; }
+
+    public Job Job { get; set; } = null!;
 }

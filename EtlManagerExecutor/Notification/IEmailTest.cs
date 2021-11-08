@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+interface IEmailTest
 {
-    interface IEmailTest
-    {
-        public Task RunAsync(string toAddress);
-    }
+    public Task RunAsync(string toAddress);
 }

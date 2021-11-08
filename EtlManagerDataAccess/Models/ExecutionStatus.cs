@@ -4,16 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerDataAccess.Models
+namespace EtlManagerDataAccess.Models;
+
+public enum ExecutionStatus
 {
-    public enum ExecutionStatus
-    {
-        NotStarted,
-        Running,
-        Succeeded,
-        Failed,
-        Warning,
-        Stopped,
-        Suspended
-    }
+    NotStarted,
+    Running,
+    Succeeded,
+    Failed,
+    Warning,
+    Stopped,
+    Suspended
 }

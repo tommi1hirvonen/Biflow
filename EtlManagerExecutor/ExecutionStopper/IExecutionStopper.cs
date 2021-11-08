@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+interface IExecutionStopper
 {
-    interface IExecutionStopper
-    {
-        public Task<bool> RunAsync(string executionId, string? username, string? stepId);
-    }
+    public Task<bool> RunAsync(string executionId, string? username, string? stepId);
 }

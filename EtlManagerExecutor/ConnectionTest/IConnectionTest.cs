@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public interface IConnectionTest
 {
-    public interface IConnectionTest
-    {
-        public Task RunAsync();
-    }
+    public Task RunAsync();
 }

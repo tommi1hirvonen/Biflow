@@ -5,30 +5,29 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EtlManagerDataAccess.Models
+namespace EtlManagerDataAccess.Models;
+
+public class Subscription
 {
-    public class Subscription
-    {
-        [Required]
-        public Guid JobId { get; set; }
+    [Required]
+    public Guid JobId { get; set; }
 
-        public Job Job { get; set; } = null!;
+    public Job Job { get; set; } = null!;
 
-        [Required]
-        [ForeignKey("User")]
-        public string? Username { get; set; }
+    [Required]
+    [ForeignKey("User")]
+    public string? Username { get; set; }
 
-        public SubscriptionType? SubscriptionType { get; set; }
+    public SubscriptionType? SubscriptionType { get; set; }
 
-        public bool NotifyOnOvertime { get; set; }
+    public bool NotifyOnOvertime { get; set; }
 
-        public User User { get; set; } = null!;
-    }
+    public User User { get; set; } = null!;
+}
 
-    public enum SubscriptionType
-    {
-        OnFailure,
-        OnSuccess,
-        OnCompletion
-    }
+public enum SubscriptionType
+{
+    OnFailure,
+    OnSuccess,
+    OnCompletion
 }

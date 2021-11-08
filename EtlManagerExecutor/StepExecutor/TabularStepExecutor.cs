@@ -9,66 +9,65 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public class TabularStepExecutor : StepExecutorBase
 {
-    public class TabularStepExecutor : StepExecutorBase
+    private TabularStepExecution Step { get; }
+
+    public TabularStepExecutor(
+        IDbContextFactory<EtlManagerContext> dbContextFactory,
+        TabularStepExecution step) : base(dbContextFactory, step)
     {
-        private TabularStepExecution Step { get; }
+        Step = step;
+    }
 
-        public TabularStepExecutor(
-            IDbContextFactory<EtlManagerContext> dbContextFactory,
-            TabularStepExecution step) : base(dbContextFactory, step)
+    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    {
+        var cancellationToken = cancellationTokenSource.Token;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var timeoutCts = Step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+            : new CancellationTokenSource();
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+        try
         {
-            Step = step;
-        }
-
-        protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
-        {
-            var cancellationToken = cancellationTokenSource.Token;
-            cancellationToken.ThrowIfCancellationRequested();
-
-            using var timeoutCts = Step.TimeoutMinutes > 0
-                ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-                : new CancellationTokenSource();
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            try
+            await Task.Run(() =>
             {
-                await Task.Run(() =>
+                using var server = new Server();
+                server.Connect(Step.Connection.ConnectionString);
+
+                var database = server.Databases[Step.TabularModelName];
+                var model = database.Model;
+
+                if (!string.IsNullOrEmpty(Step.TabularTableName))
                 {
-                    using var server = new Server();
-                    server.Connect(Step.Connection.ConnectionString);
-
-                    var database = server.Databases[Step.TabularModelName];
-                    var model = database.Model;
-
-                    if (!string.IsNullOrEmpty(Step.TabularTableName))
+                    var table = model.Tables[Step.TabularTableName];
+                    if (!string.IsNullOrEmpty(Step.TabularPartitionName))
                     {
-                        var table = model.Tables[Step.TabularTableName];
-                        if (!string.IsNullOrEmpty(Step.TabularPartitionName))
-                        {
-                            var partition = table.Partitions[Step.TabularPartitionName];
-                            partition.RequestRefresh(RefreshType.Full);
-                        }
-                        else
-                        {
-                            table.RequestRefresh(RefreshType.Full);
-                        }
+                        var partition = table.Partitions[Step.TabularPartitionName];
+                        partition.RequestRefresh(RefreshType.Full);
                     }
                     else
                     {
-                        model.RequestRefresh(RefreshType.Full);
+                        table.RequestRefresh(RefreshType.Full);
                     }
+                }
+                else
+                {
+                    model.RequestRefresh(RefreshType.Full);
+                }
 
-                    model.SaveChanges();
-                }, linkedCts.Token);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(ex.Message);
-            }
-
-            return Result.Success();
+                model.SaveChanges();
+            }, linkedCts.Token);
         }
+        catch (Exception ex)
+        {
+            return Result.Failure(ex.Message);
+        }
+
+        return Result.Success();
     }
 }

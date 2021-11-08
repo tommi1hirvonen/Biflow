@@ -5,16 +5,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
-{
-    public class ExtendedCancellationTokenSource : CancellationTokenSource
-    {
-        public string Username { get; private set; } = "timeout";
+namespace EtlManagerExecutor;
 
-        public void Cancel(string username)
-        {
-            Username = username;
-            Cancel();
-        }
+public class ExtendedCancellationTokenSource : CancellationTokenSource
+{
+    public string Username { get; private set; } = "timeout";
+
+    public void Cancel(string username)
+    {
+        Username = username;
+        Cancel();
     }
 }

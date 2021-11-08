@@ -12,154 +12,153 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+class Program
 {
-    class Program
+    static async Task<int> Main(string[] args)
     {
-        static async Task<int> Main(string[] args)
-        {
-            var configuration = new ConfigurationBuilder()
-                //.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+        var configuration = new ConfigurationBuilder()
+            //.SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
 
-            Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
-                .Enrich.FromLogContext()
-                .CreateLogger();
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .Enrich.FromLogContext()
+            .CreateLogger();
 
-            var host = Host.CreateDefaultBuilder()
-                .ConfigureHostConfiguration(configHost =>
-                    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
-                .ConfigureServices((context, services) =>
-                {
-                    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-                    services.AddDbContextFactory<EtlManagerContext>(options =>
-                        options.UseSqlServer(connectionString, o =>
-                            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-                    services.AddHttpClient();
-                    services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
-                    services.AddSingleton<ITokenService, TokenService>();
-                    services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
-                    services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-                    services.AddTransient<INotificationService, EmailService>();
-                    services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
-                    services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
-                    services.AddTransient<IJobExecutor, JobExecutor>();
-                    services.AddTransient<IExecutionStopper, ExecutionStopper>();
-                    services.AddTransient<IEmailTest, EmailTest>();
-                    services.AddTransient<IConnectionTest, ConnectionTest>();
-                })
-                
-                .UseSerilog()
-                .Build();
-
-            return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
-                .MapResult(
-                    (JobExecutorOptions options) => RunExecutionAsync(host, options),
-                    (CancelOptions options) => CancelExecutionAsync(host, options),
-                    (EmailTestOptions options) => RunEmailTest(host, options),
-                    (ConnectionTestOptions options) => RunConnectionTest(host),
-                    (CommitOptions options) => PrintCommit(),
-                    errors => HandleParseError(errors)
-                );
-        }
-
-        static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
-        {
-            var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-            await service.RunAsync(options.ExecutionId, options.Notify);
-            return 0;
-        }
-
-        static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
-        {
-            var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
-            try
+        var host = Host.CreateDefaultBuilder()
+            .ConfigureHostConfiguration(configHost =>
+                configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
+            .ConfigureServices((context, services) =>
             {
-                var result = await service.RunAsync(options.ExecutionId, options.Username, options.StepId);
-                return result ? 0 : -1;
-            }
-            catch (Exception)
-            {
-                return -1;
-            }
-        }
+                var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+                services.AddDbContextFactory<EtlManagerContext>(options =>
+                    options.UseSqlServer(connectionString, o =>
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
-        static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
-        {
-            var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
-            await service.RunAsync(options.ToAddress);
-            return 0;
-        }
+                services.AddHttpClient();
+                services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
+                services.AddSingleton<ITokenService, TokenService>();
+                services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
+                services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
+                services.AddTransient<INotificationService, EmailService>();
+                services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
+                services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
+                services.AddTransient<IJobExecutor, JobExecutor>();
+                services.AddTransient<IExecutionStopper, ExecutionStopper>();
+                services.AddTransient<IEmailTest, EmailTest>();
+                services.AddTransient<IConnectionTest, ConnectionTest>();
+            })
 
-        static async Task<int> RunConnectionTest(IHost host)
-        {
-            var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
-            await service.RunAsync();
-            return 0;
-        }
+            .UseSerilog()
+            .Build();
 
-        static async Task<int> HandleParseError(IEnumerable<Error> errors)
-        {
-            Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
-            return await Task.FromResult(-1);
-        }
-
-        static async Task<int> PrintCommit()
-        {
-            var commit = Properties.Resources.CurrentCommit;
-            Console.WriteLine(commit);
-            return await Task.FromResult(0);
-        }
-
+        return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
+            .MapResult(
+                (JobExecutorOptions options) => RunExecutionAsync(host, options),
+                (CancelOptions options) => CancelExecutionAsync(host, options),
+                (EmailTestOptions options) => RunEmailTest(host, options),
+                (ConnectionTestOptions options) => RunConnectionTest(host),
+                (CommitOptions options) => PrintCommit(),
+                errors => HandleParseError(errors)
+            );
     }
 
-    [Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
-    class JobExecutorOptions
+    static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
     {
-        [Option('i', "id", HelpText = "Execution id", Required = true)]
-        public Guid ExecutionId { get; set; }
-
-        [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
-        public bool Notify { get; set; }
+        var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
+        await service.RunAsync(options.ExecutionId, options.Notify);
+        return 0;
     }
 
-    [Verb("test-email", HelpText = "Send a test email using email configuration from appsettings.json.")]
-    class EmailTestOptions
+    static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
     {
-        [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
-        // Safe to suppress because Required = true
+        var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
+        try
+        {
+            var result = await service.RunAsync(options.ExecutionId, options.Username, options.StepId);
+            return result ? 0 : -1;
+        }
+        catch (Exception)
+        {
+            return -1;
+        }
+    }
+
+    static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
+    {
+        var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
+        await service.RunAsync(options.ToAddress);
+        return 0;
+    }
+
+    static async Task<int> RunConnectionTest(IHost host)
+    {
+        var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
+        await service.RunAsync();
+        return 0;
+    }
+
+    static async Task<int> HandleParseError(IEnumerable<Error> errors)
+    {
+        Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
+        return await Task.FromResult(-1);
+    }
+
+    static async Task<int> PrintCommit()
+    {
+        var commit = Properties.Resources.CurrentCommit;
+        Console.WriteLine(commit);
+        return await Task.FromResult(0);
+    }
+
+}
+
+[Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
+class JobExecutorOptions
+{
+    [Option('i', "id", HelpText = "Execution id", Required = true)]
+    public Guid ExecutionId { get; set; }
+
+    [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
+    public bool Notify { get; set; }
+}
+
+[Verb("test-email", HelpText = "Send a test email using email configuration from appsettings.json.")]
+class EmailTestOptions
+{
+    [Option('t', "send-to", HelpText = "The address where the test email should be sent to", Required = true)]
+    // Safe to suppress because Required = true
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public string ToAddress { get; set; }
+    public string ToAddress { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    }
+}
 
-    [Verb("test-connection", HelpText = "Test connection to database defined in appsettings.json.")]
-    class ConnectionTestOptions
-    {
-    }
+[Verb("test-connection", HelpText = "Test connection to database defined in appsettings.json.")]
+class ConnectionTestOptions
+{
+}
 
-    [Verb("cancel", HelpText = "Cancel a running execution under a different executor process.")]
-    class CancelOptions
-    {
-        [Option('i', "execution-id", HelpText = "Execution id", Required = true)]
-        // Safe to suppress because Required = true
+[Verb("cancel", HelpText = "Cancel a running execution under a different executor process.")]
+class CancelOptions
+{
+    [Option('i', "execution-id", HelpText = "Execution id", Required = true)]
+    // Safe to suppress because Required = true
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public string ExecutionId { get; set; }
+    public string ExecutionId { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
-        public string? Username { get; set; }
+    [Option('u', "username", HelpText = "Username for the user who initiated the cancel operation.", Required = false)]
+    public string? Username { get; set; }
 
-        [Option('s', "step-id", HelpText = "Step id for a specific step that should be canceled (optional).", Required = false)]
-        public string? StepId { get; set; }
-    }
+    [Option('s', "step-id", HelpText = "Step id for a specific step that should be canceled (optional).", Required = false)]
+    public string? StepId { get; set; }
+}
 
 
-    [Verb("get-commit", HelpText = "Return the current version's Git commit checksum.")]
-    class CommitOptions
-    {
-    }
+[Verb("get-commit", HelpText = "Return the current version's Git commit checksum.")]
+class CommitOptions
+{
 }

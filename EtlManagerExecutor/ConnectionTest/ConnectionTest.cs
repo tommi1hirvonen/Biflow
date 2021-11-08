@@ -5,30 +5,29 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public class ConnectionTest : IConnectionTest
 {
-    public class ConnectionTest : IConnectionTest
+    private readonly IExecutionConfiguration _executionConfiguration;
+
+    public ConnectionTest(IExecutionConfiguration executionConfiguration)
     {
-        private readonly IExecutionConfiguration _executionConfiguration;
+        _executionConfiguration = executionConfiguration;
+    }
 
-        public ConnectionTest(IExecutionConfiguration executionConfiguration)
+    public async Task RunAsync()
+    {
+        try
         {
-            _executionConfiguration = executionConfiguration;
+            var connectionString = _executionConfiguration.ConnectionString;
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+            Console.WriteLine("Connection test succeeded.");
         }
-
-        public async Task RunAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                var connectionString = _executionConfiguration.ConnectionString;
-                using var connection = new SqlConnection(connectionString);
-                await connection.OpenAsync();
-                Console.WriteLine("Connection test succeeded.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Connection test failed.\n{ex.Message}");
-            }
+            Console.WriteLine($"Connection test failed.\n{ex.Message}");
         }
     }
 }

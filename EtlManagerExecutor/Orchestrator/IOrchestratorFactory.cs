@@ -1,9 +1,8 @@
 ﻿using EtlManagerDataAccess.Models;
 
-namespace EtlManagerExecutor
+namespace EtlManagerExecutor;
+
+public interface IOrchestratorFactory
 {
-    public interface IOrchestratorFactory
-    {
-        OrchestratorBase Create(Execution execution);
-    }
+    OrchestratorBase Create(Execution execution);
 }

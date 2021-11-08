@@ -1,8 +1,7 @@
-﻿namespace EtlManagerDataAccess.Models
+﻿namespace EtlManagerDataAccess.Models;
+
+public enum ParameterLevel
 {
-    public enum ParameterLevel
-    {
-        Package,
-        Project
-    }
+    Package,
+    Project
 }

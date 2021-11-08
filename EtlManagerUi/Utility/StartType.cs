@@ -1,7 +1,6 @@
-﻿namespace EtlManagerUi
+﻿namespace EtlManagerUi;
+
+public enum StartType
 {
-    public enum StartType
-    {
-        All, Scheduled, Manual
-    }
+    All, Scheduled, Manual
 }
