@@ -26,11 +26,11 @@
                         }
                         else
                         {
-                            foreach (var model in Models)
+                            foreach (var model in Models.OrderBy(m => m.ModelName))
                             {
                                 <tr style="cursor: pointer;"
                                     class="@(model == SelectedModel ? "bg-light fw-bold" : null)"
-                                    @onclick="() => SelectedModel = model">
+                                    @onclick="() => SelectModel(model)">
                                     <td>@model.ModelName</td>
                                 </tr>
                             }
@@ -65,11 +65,11 @@
                         }
                         else
                         {
-                            foreach (var table in SelectedModel.Tables)
+                            foreach (var table in SelectedModel.Tables.OrderBy(t => t.TableName))
                             {
                                 <tr style="cursor: pointer;"
                                     class="@(table == SelectedTable ? "bg-light fw-bold" : null)"
-                                    @onclick="() => SelectedTable = SelectedTable == table ? null : table">
+                                    @onclick="() => SelectTable(table)">
                                     <td>@table.TableName</td>
                                 </tr>
                             }
@@ -104,11 +104,11 @@
                         }
                         else
                         {
-                            foreach (var partition in SelectedTable.Partitions)
+                            foreach (var partition in SelectedTable.Partitions.OrderBy(p => p.PartitionName))
                             {
                                 <tr style="cursor: pointer;"
                                     class="@(partition == SelectedPartition ? "bg-light fw-bold" : null)"
-                                    @onclick="() => SelectedPartition = SelectedPartition == partition ? null : partition">
+                                    @onclick="() => SelectPartition(partition)">
                                     <td>@partition.PartitionName</td>
                                 </tr>
                             }
@@ -150,6 +150,21 @@
         SelectedTable = null;
         SelectedPartition = null;
     }
+
+    private void SelectModel(AsModel model)
+    {
+        SelectedPartition = null;
+        SelectedTable = null;
+        SelectedModel = SelectedModel == model ? null : model;
+    }
+
+    private void SelectTable(AsTable table)
+    {
+        SelectedPartition = null;
+        SelectedTable = SelectedTable == table ? null : table;
+    }
+
+    private void SelectPartition(AsPartition partition) => SelectedPartition = SelectedPartition == partition ? null : partition;
 
     private async Task SelectObjectAsync()
     {
