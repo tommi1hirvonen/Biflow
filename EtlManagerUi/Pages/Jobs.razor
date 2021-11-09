@@ -1,6 +1,6 @@
 ﻿@page "/jobs"
 
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupService MarkupService
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject SchedulerService SchedulerService
 @inject DbHelperService DbHelperService
@@ -32,7 +32,7 @@
                         <label class="form-label">Job name</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                @MarkupService.MarkupFromFile("icons/feather/edit-3.svg")
                             </span>
                             <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
                         </div>
@@ -43,7 +43,7 @@
         </HxDropdown>
     </AuthorizeView>
     <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+        @MarkupService.MarkupFromFile("icons/feather/refresh-cw.svg")
         Refresh
     </HxButton>
 </div>
@@ -107,7 +107,7 @@
                                         @*Dropdown to edit the job's name*@
                                         <HxDropdown>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                                @MarkupService.MarkupFromFile("icons/feather/edit-2.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownContent CssClass="p-4">
                                                 <EditForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context" style="min-width: 25rem;">
@@ -124,7 +124,7 @@
 
                                         <HxDropdown>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                                @MarkupService.MarkupFromFile("icons/feather/copy.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
@@ -133,7 +133,7 @@
 
                                         <HxDropdown>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                                @MarkupService.MarkupFromFile("icons/feather/trash-2.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -150,19 +150,19 @@
                             {
                                 case ExecutionStatus.Running:
                                     <div class="status-icon running" title="Running" aria-label="running">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                                        @MarkupService.MarkupFromFile("icons/feather/play.svg")
                                     </div>
                                     break;
                                 case ExecutionStatus.Failed:
                                     <div class="status-icon failed" title="Failed" aria-label="failed">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                                        @MarkupService.MarkupFromFile("icons/feather/alert-octagon.svg")
                                     </div>
                                     break;
                                 case ExecutionStatus.Warning:
                                 case ExecutionStatus.Stopped:
                                 case ExecutionStatus.Suspended:
                                     <div class="status-icon warning" title="Warning" aria-label="warning">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-triangle.svg")))
+                                        @MarkupService.MarkupFromFile("icons/feather/alert-triangle.svg")
                                     </div>
                                     break;
                                 default:
