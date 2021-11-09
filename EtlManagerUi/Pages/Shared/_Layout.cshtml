@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -11,6 +14,13 @@
     <header>
         <nav class="navbar navbar-custom sticky-top flex-md-nowrap p-0 shadow">
             <text class="navbar-brand mr-0 px-3">ETL Manager</text>
+            <ul class="navbar-nav ms-auto">
+                    <li>
+                        <strong class="navbar-text px-3">
+                            @(Configuration.GetValue<string>("EnvironmentName"))
+                        </strong>
+                    </li>
+                </ul>
         </nav>
     </header>
 
