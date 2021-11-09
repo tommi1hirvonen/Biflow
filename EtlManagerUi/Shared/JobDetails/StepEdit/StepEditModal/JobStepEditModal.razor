@@ -41,18 +41,23 @@
 @code {
 
     [Parameter]
+    [EditorRequired]
     public Guid StepId { get; set; } // empty Guid => new step
 
     [Parameter]
-    public Job? Job { get; set; }
+    [EditorRequired]
+    public Job Job { get; set; } = null!;
 
     [Parameter]
-    public IList<Step>? Steps { get; set; }
+    [EditorRequired]
+    public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
 
     [Parameter]
-    public IList<Job>? Jobs { get; set; }
+    [EditorRequired]
+    public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
 
     [Parameter]
+    [EditorRequired]
     public EventCallback<Step> OnStepSubmit { get; set; }
 
     // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
@@ -85,7 +90,7 @@
             Step = await Context.JobSteps
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
-                .FirstOrDefaultAsync(step => step.StepId == StepId);
+                .FirstAsync(step => step.StepId == StepId);
             PrevStepId = StepId;
         }
         else if (StepId == Guid.Empty && Job is not null)
@@ -97,7 +102,7 @@
                 RetryAttempts = 0,
                 RetryIntervalMinutes = 0,
                 IsEnabled = true,
-                JobToExecuteId = Jobs?.FirstOrDefault()?.JobId,
+                JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != Job.JobId)?.JobId,
                 Dependencies = new List<Dependency>(),
                 Tags = new List<Tag>()
             };

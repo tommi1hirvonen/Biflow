@@ -102,7 +102,7 @@
     public Step Step { get; set; } = null!;
 
     [Parameter]
-    public IList<Step> Steps { get; set; } = null!;
+    public IEnumerable<Step> Steps { get; set; } = null!;
 
     private HashSet<Tag> TagFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
