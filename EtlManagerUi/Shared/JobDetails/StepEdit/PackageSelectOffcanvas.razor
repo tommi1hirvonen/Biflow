@@ -1,5 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select package">
@@ -10,7 +10,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                @MarkupHelper.FromFile("icons/feather/folder.svg")
                                 Folders
                             </th>
                         </tr>
@@ -43,7 +43,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/briefcase.svg")))
+                                @MarkupHelper.FromFile("icons/feather/briefcase.svg")
                                 Projects
                             </th>
                         </tr>
@@ -74,7 +74,7 @@
             <div class="col">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        @MarkupHelper.FromFile("icons/feather/filter.svg")
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -87,7 +87,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+                                @MarkupHelper.FromFile("icons/feather/package.svg")
                                 Packages
                             </th>
                         </tr>

@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
@@ -78,7 +78,7 @@
                         <div class="row mt-3">
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="OpenKeySelectOffcanvasAsync">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                     Browse function app keys
                                 </HxButton>
                             </div>

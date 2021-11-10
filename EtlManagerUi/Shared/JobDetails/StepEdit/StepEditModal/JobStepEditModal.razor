@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 @implements IStepEditModal
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <StepEditModalBase @ref="Modal"
@@ -15,7 +15,7 @@
             <label class="form-label">Job</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    @MarkupHelper.FromFile("icons/feather/loader.svg")
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId">
                     @foreach (var job in Jobs?.Where(job => job.JobId != Step.JobId) ?? Enumerable.Empty<Job>())

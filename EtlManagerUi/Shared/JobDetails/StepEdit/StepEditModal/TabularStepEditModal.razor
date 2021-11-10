@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 @implements IStepEditModal
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <StepEditModalBase @ref="Modal"
@@ -16,7 +16,7 @@
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                    @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
@@ -25,7 +25,7 @@
             <label class="form-label">Connection</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                    @MarkupHelper.FromFile("icons/feather/database.svg")
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
                     @foreach (var connection in Connections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
@@ -41,7 +41,7 @@
             <label class="form-label">Model name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/box.svg")))
+                    @MarkupHelper.FromFile("icons/feather/box.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.TabularModelName" @oninput="Modal.ResetStepError" />
             </div>
@@ -53,7 +53,7 @@
             <label class="form-label">Table name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/columns.svg")))
+                    @MarkupHelper.FromFile("icons/feather/columns.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.TabularTableName" @oninput="Modal.ResetStepError" />
             </div>
@@ -65,7 +65,7 @@
             <label class="form-label">Partition name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pie-chart.svg")))
+                    @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.TabularPartitionName" @oninput="Modal.ResetStepError" />
             </div>
@@ -75,7 +75,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.ShowAsync()">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                 Browse objects
             </HxButton>
         </div>

@@ -1,7 +1,7 @@
 ﻿@page "/executions"
 
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
 
 <h4>Executions</h4>
@@ -11,27 +11,27 @@
         <HxButtonToolbar>
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowSteps = false" CssClass="@(!ShowSteps ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    @MarkupHelper.FromFile("icons/feather/loader.svg")
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowSteps = true" CssClass="@(ShowSteps ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                    @MarkupHelper.FromFile("icons/feather/list.svg")
                     Steps
                 </HxButton>
             </HxButtonGroup>
             <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowGraph = false" CssClass="@(!ShowGraph ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/table.svg")))
+                    @MarkupHelper.FromFile("icons/bootstrap/table.svg")
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowGraph = true" CssClass="@(ShowGraph ? "active" : null)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/bar-chart-steps.svg")))
+                    @MarkupHelper.FromFile("icons/bootstrap/bar-chart-steps.svg")
                     Graph
                 </HxButton>
             </HxButtonGroup>
             <HxDropdown CssClass="ms-3">
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bookmark.svg")))
+                    @MarkupHelper.FromFile("icons/feather/bookmark.svg")
                     Presets
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
@@ -73,7 +73,7 @@
             </HxDropdown>
 
             <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="Loading" Enabled="!Loading" CssClass="ms-3">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                 Refresh
             </HxSubmit>
         </HxButtonToolbar>
@@ -86,14 +86,14 @@
             <label class="me-3">From</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
                 </div>
                 <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
             </div>
             <label class="mx-3">To</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
                 </div>
                 <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
             </div>
@@ -126,7 +126,7 @@
 
 <div class="row mt-3">
     <div class="col d-inline">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+        @MarkupHelper.FromFile("icons/feather/filter.svg")
         <span class="me-3">Filters</span>
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -146,7 +146,7 @@
                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                             OnChange="StateHasChanged">
                 <Title>
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    @MarkupHelper.FromFile("icons/feather/loader.svg")
                     Job
                 </Title>
             </FilterDropdown>
@@ -171,7 +171,7 @@
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                        @MarkupHelper.FromFile("icons/feather/list.svg")
                         Step
                     </Title>
                 </FilterDropdown>
@@ -192,7 +192,7 @@
                                    .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                        @MarkupHelper.FromFile("icons/feather/tool.svg")
                         Step type
                     </Title>
                 </FilterDropdown>
@@ -212,7 +212,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
                                 OnChange="StateHasChanged">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                        @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
                         Status
                     </Title>
                 </FilterDropdown>
@@ -236,7 +236,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
                                 OnChange="StateHasChanged">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-circle.svg")))
+                        @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
                         Status
                     </Title>
                 </FilterDropdown>
@@ -257,7 +257,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                        @MarkupHelper.FromFile("icons/feather/tag.svg")
                         Tag
                     </Title>
                 </FilterDropdown>
@@ -265,7 +265,7 @@
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                       @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                @MarkupHelper.FromFile("icons/feather/x.svg")
                 Reset
             </HxButton>
         </HxButtonGroup>

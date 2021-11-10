@@ -1,4 +1,4 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelperService
 @inject IHxMessengerService Messenger
 
@@ -8,7 +8,7 @@
             <div class="col">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        @MarkupHelper.FromFile("icons/feather/filter.svg")
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
                            @bind-value="FilterTextSchema" @bind-value:event="oninput" />

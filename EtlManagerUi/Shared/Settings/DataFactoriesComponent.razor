@@ -1,6 +1,6 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
@@ -44,11 +44,11 @@
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
                                 <HxDropdown>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>

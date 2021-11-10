@@ -1,4 +1,4 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 
@@ -59,7 +59,7 @@
                     <td style="@(item.StepExecution.Execution.DependencyMode ? "color: #ccc;" : null)">
                         @item.StepExecution.ExecutionPhase
                         &nbsp;
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                        @MarkupHelper.FromFile("icons/feather/layers.svg")
                     </td>
                     <td>
                         @item.StartDateTime?.LocalDateTime
@@ -80,7 +80,7 @@
                         <td colspan="7" class="bg-light">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/activity.svg")
                                     History
                                 </HxButton>
                                 <AuthorizeView Roles="Admin, Editor, Operator">
@@ -88,7 +88,7 @@
                                     {
                                         <HxDropdown CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                                                @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                                                 Stop
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>

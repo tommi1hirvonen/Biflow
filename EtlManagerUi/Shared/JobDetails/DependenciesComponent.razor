@@ -1,7 +1,7 @@
 ﻿@implements IDisposable
 
 @inject IJSRuntime JS
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
@@ -23,7 +23,7 @@
         <div class="form-group">
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                    @MarkupHelper.FromFile("icons/feather/filter.svg")
                 </div>
                 <select class="form-select form-select-sm" @onchange="LimitGraph">
                     <option selected=@string.IsNullOrEmpty(StepFilter) value="">All</option>

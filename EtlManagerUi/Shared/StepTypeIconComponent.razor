@@ -1,36 +1,36 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 
 @switch (StepType_)
 {
     case StepType.Sql:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/code.svg")))
+        @MarkupHelper.FromFile("icons/feather/code.svg")
         break;
     case StepType.Package:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/package.svg")))
+        @MarkupHelper.FromFile("icons/feather/package.svg")
         break;
     case StepType.Pipeline:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pipeline.svg")))
+        @MarkupHelper.FromFile("icons/feather/pipeline.svg")
         break;
     case StepType.Job:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+        @MarkupHelper.FromFile("icons/feather/loader.svg")
         break;
     case StepType.Exe:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/terminal.svg")))
+        @MarkupHelper.FromFile("icons/feather/terminal.svg")
         break;
     case StepType.Dataset:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+        @MarkupHelper.FromFile("icons/feather/bar-chart-2.svg")
         break;
     case StepType.Function:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/zap.svg")))
+        @MarkupHelper.FromFile("icons/feather/zap.svg")
         break;
     case StepType.AgentJob:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/server.svg")))
+        @MarkupHelper.FromFile("icons/feather/server.svg")
         break;
     case StepType.Tabular:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/box.svg")))
+        @MarkupHelper.FromFile("icons/feather/box.svg")
         break;
     default:
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-circle.svg")))
+        @MarkupHelper.FromFile("icons/feather/x-circle.svg")
         break;
 }
 

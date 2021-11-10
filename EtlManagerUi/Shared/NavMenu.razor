@@ -1,68 +1,68 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 
 <nav class="sidebar @ClassString" style="z-index: 1040;">
     <ul class="nav flex-column pt-3">
         <li class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/home.svg")))
+                @MarkupHelper.FromFile("icons/feather/home.svg")
                 Home
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                @MarkupHelper.FromFile("icons/feather/loader.svg")
                 Jobs
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="schedules" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                @MarkupHelper.FromFile("icons/feather/calendar.svg")
                 Schedules
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="executions" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                @MarkupHelper.FromFile("icons/feather/activity.svg")
                 Executions
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="dashboard" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/bar-chart-2.svg")))
+                @MarkupHelper.FromFile("icons/feather/bar-chart-2.svg")
                 Dashboard
             </NavLink>
         </li>
         <AuthorizeView Roles="Admin,Editor">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+                    @MarkupHelper.FromFile("icons/feather/tag.svg")
                     Tags
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                @MarkupHelper.FromFile("icons/feather/user.svg")
                 Account
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/mail.svg")))
+                @MarkupHelper.FromFile("icons/feather/mail.svg")
                 Subscriptions
             </NavLink>
         </li>
         <AuthorizeView Roles="Admin">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/settings.svg")))
+                    @MarkupHelper.FromFile("icons/feather/settings.svg")
                     Settings
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item mt-3">
             <NavLink class="nav-link" href="logout?returnUrl=/">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/log-out.svg")))
+                @MarkupHelper.FromFile("icons/feather/log-out.svg")
                 Log out
             </NavLink>
         </li>

@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IJSRuntime JS
 @inject DbHelperService DbHelperService
 
@@ -17,7 +17,7 @@
                             <label class="form-label">Username</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/user.svg")
                                 </div>
                                 <InputText class="form-control" disabled=@(Username is not null) @bind-Value="User.Username"></InputText>
                             </div>
@@ -26,7 +26,7 @@
                             <label class="form-label">Role</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/users.svg")
                                 </div>
                                 <InputSelect class="form-select" @bind-Value="User.Role">
                                     <option>Viewer</option>
@@ -40,7 +40,7 @@
                             <label class="form-label">Email</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                                 </div>
                                 <InputText class="form-control" type="email" @bind-Value="User.Email"></InputText>
                             </div>
@@ -51,7 +51,7 @@
                                 <label class="form-label">Password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/lock.svg")
                                     </div>
                                     <InputText class="form-control" type="password" @bind-Value="Password"></InputText>
                                 </div>
@@ -60,7 +60,7 @@
                                 <label class="form-label">Confirm password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/key.svg")
                                     </div>
                                     <InputText class="form-control" type="password" @bind-Value="ConfirmPassword"></InputText>
                                 </div>

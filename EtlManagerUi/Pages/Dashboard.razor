@@ -1,14 +1,14 @@
 ﻿@page "/dashboard"
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IJSRuntime JS 
 
 <h4>Dashboard</h4>
 
 <div class="btn-toolbar mt-3">
     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" OnClick="LoadData" Enabled="!Loading">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/refresh-cw.svg")))
+        @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
         Load report
     </HxButton>
 </div>
@@ -43,7 +43,7 @@
     <div class="col-xl">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/clock.svg")))
+                @MarkupHelper.FromFile("icons/feather/clock.svg")
                 &nbsp;
                 Average execution duration
             </h6>
@@ -59,7 +59,7 @@
     <div class="col-xl mt-4 mt-xl-0">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/percent.svg")))
+                @MarkupHelper.FromFile("icons/feather/percent.svg")
                 &nbsp;
                 Job success rate
             </h6>
@@ -77,7 +77,7 @@
     <div class="col-xl">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                @MarkupHelper.FromFile("icons/feather/activity.svg")
                 &nbsp;
                 Number of executions
             </h6>
@@ -93,7 +93,7 @@
     <div class="col-xl mt-4 mt-xl-0 d-flex align-items-stretch">
         <div class="card shadow-sm flex-fill">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/alert-octagon.svg")))
+                @MarkupHelper.FromFile("icons/feather/alert-octagon.svg")
                 &nbsp;
                 Top 5 failing steps
             </h6>

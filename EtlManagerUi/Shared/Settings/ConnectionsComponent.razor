@@ -1,6 +1,6 @@
 ﻿@inject IConfiguration Configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment 
+@inject MarkupHelperService MarkupHelper 
 
 <HxDropdown>
     <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Connections is not null">
@@ -58,11 +58,11 @@
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(connection)">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
                                 <HxDropdown>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -77,11 +77,11 @@
                                             @onclick="() => ShowConnectionString[connection.ConnectionId] = !ShowConnectionString[connection.ConnectionId]">
                                     @if (ShowConnectionString[connection.ConnectionId])
                                     {
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye-off.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/eye-off.svg")
                                     }
                                     else
                                     {
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/eye.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/eye.svg")
                                     }
                                 </HxButton>
                             </HxButtonGroup>

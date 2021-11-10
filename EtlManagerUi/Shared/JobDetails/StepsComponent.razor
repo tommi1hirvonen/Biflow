@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
@@ -56,11 +56,11 @@
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
             <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobParametersModal?.Show() ?? Task.CompletedTask)">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                 Parameters
             </HxButton>
             <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync()">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/play.svg")))
+                @MarkupHelper.FromFile("icons/feather/play.svg")
                 Execute
             </HxButton>
         </AuthorizeView>
@@ -69,7 +69,7 @@
     @if (ShowExecutionAlert)
     {
         <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+            @MarkupHelper.FromFile("icons/feather/check-circle.svg")
             Execution started successfully – <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
             <button type="button" class="btn-close" @onclick="() => ShowExecutionAlert = false"></button>
         </div>
@@ -77,7 +77,7 @@
 
     <div class="row mt-3">
         <div class="col">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+            @MarkupHelper.FromFile("icons/feather/tag.svg")
             <span class="me-3">Tags</span>
             @if (!Tags.Any())
             {
@@ -99,7 +99,7 @@
             
             <div class="input-group input-group-sm me-3" style="max-width: 20rem;">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                    @MarkupHelper.FromFile("icons/feather/filter.svg")
                 </div>
                 <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
             </div>
@@ -110,13 +110,13 @@
                                 Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
                     <Title>
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                        @MarkupHelper.FromFile("icons/feather/tool.svg")
                         Step type
                     </Title>
                 </FilterDropdown>
 
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => { TagsFilterSet.Clear(); StepTypeFilter.Clear(); StepsFilterText = string.Empty; }">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                    @MarkupHelper.FromFile("icons/feather/x.svg")
                     Clear
                 </HxButton>
             </HxButtonGroup>
@@ -166,7 +166,7 @@
                                 || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
                                     <div title="Step uses job parameters">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                                     </div>
                                 }
                                 else
@@ -176,7 +176,7 @@
                                 <div class="justify-content-end" style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">
                                     @item.ExecutionPhase
                                     &nbsp;
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/layers.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/layers.svg")
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-4 d-inline-flex align-items-center justify-content-end">
@@ -194,17 +194,17 @@
                                 </AuthorizeView>
                                 <div class="btn-group btn-row ms-2">
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepHistoryOffcanvas(item)">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/activity.svg")
                                     </HxButton>
 
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepDetailsModal(item)">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/info.svg")
                                     </HxButton>
 
                                     <AuthorizeView Roles="Admin, Editor">
                                         <HxDropdown>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/copy.svg")))
+                                                @MarkupHelper.FromFile("icons/feather/copy.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
                                                 <HxDropdownHeader>Copy to</HxDropdownHeader>
@@ -219,7 +219,7 @@
 
                                         <HxDropdown>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>

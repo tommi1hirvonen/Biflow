@@ -1,6 +1,6 @@
 ﻿@page "/account"
 
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject DbHelperService DbHelperService
@@ -9,7 +9,7 @@
 <h4>Account</h4>
 <p></p>
 <h5>
-    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/user.svg")))
+    @MarkupHelper.FromFile("icons/feather/user.svg")
     @Username
 </h5>
 
@@ -17,7 +17,7 @@
     <div class="col">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                 Email
             </h6>
             <div class="card-body">
@@ -33,14 +33,14 @@
                         <div>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/at-sign.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                                 </div>
                                 <InputText class="form-control" type="email" @bind-Value="User.Email" placeholder="Email"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
                             <HxSubmit Color="ThemeColor.Success">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                                @MarkupHelper.FromFile("icons/feather/save.svg")
                                 Save
                             </HxSubmit>
                         </div>
@@ -52,7 +52,7 @@
     <div class="col-lg mt-4 mt-lg-0">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                @MarkupHelper.FromFile("icons/feather/key.svg")
                 Password
             </h6>
             <div class="card-body">
@@ -67,7 +67,7 @@
                             <label class="form-label">New password</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/lock.svg")
                                 </div>
                                 <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
                             </div>
@@ -76,14 +76,14 @@
                             <label class="form-label">Confirm new password</label>
                             <div class="input-group">
                                 <div class="input-group-text rounded-left">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/key.svg")
                                 </div>
                                 <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
                             <HxSubmit Color="ThemeColor.Success">
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/save.svg")))
+                                @MarkupHelper.FromFile("icons/feather/save.svg")
                                 Save
                             </HxSubmit>
                         </div>

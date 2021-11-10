@@ -1,8 +1,8 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 
 <div class="row">
     <div class="col">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tag.svg")))
+        @MarkupHelper.FromFile("icons/feather/tag.svg")
         <span class="me-3">Tags</span>
         @{
             var tags = Steps?
@@ -28,7 +28,7 @@
 <div class="row mt-3 align-items-center">
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/search.svg")))
+            @MarkupHelper.FromFile("icons/feather/search.svg")
         </div>
         <input type="text" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>
@@ -38,7 +38,7 @@
                         Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                         OnChange="StateHasChanged">
             <Title>
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/tool.svg")))
+                @MarkupHelper.FromFile("icons/feather/tool.svg")
                 Step type
             </Title>
         </FilterDropdown>

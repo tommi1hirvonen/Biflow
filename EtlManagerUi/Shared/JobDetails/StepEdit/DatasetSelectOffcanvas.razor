@@ -1,6 +1,6 @@
 ﻿@inject IConfiguration Configuration
 @inject IHxMessengerService Messenger
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
@@ -12,7 +12,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                @MarkupHelper.FromFile("icons/feather/folder.svg")
                                 Workspaces
                             </th>
                         </tr>
@@ -45,7 +45,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
+                                @MarkupHelper.FromFile("icons/feather/file.svg")
                                 Datasets
                             </th>
                         </tr>

@@ -1,7 +1,7 @@
 ﻿@page "/tags"
 
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 <style>
@@ -19,7 +19,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
             Delete unused
         </button>
     </div>
@@ -66,7 +66,7 @@
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdown>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => TemplateTag.TagName = tag.TagName">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-3.svg")))
+                                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
                                                     <EditForm Model="TemplateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
@@ -82,7 +82,7 @@
                                             </HxDropdown>
                                             <HxDropdown>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -173,7 +173,7 @@
                                 <td>
                                     <div class="btn-group btn-row">
                                         <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepTag(step)">
-                                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
                                         </button>
                                     </div>
                                 </td>

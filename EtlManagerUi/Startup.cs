@@ -43,7 +43,7 @@ public class Startup
         services.AddSingleton<DbHelperService>();
         services.AddSingleton<SchedulerService>();
         services.AddSingleton<SqlServerHelperService>();
-        services.AddSingleton<MarkupService>();
+        services.AddSingleton<MarkupHelperService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

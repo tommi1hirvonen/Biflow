@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 @implements IStepEditModal
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <StepEditModalBase @ref="Modal"
@@ -15,7 +15,7 @@
             <label class="form-label">File path</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
+                    @MarkupHelper.FromFile("icons/feather/file.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeFileName" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -26,7 +26,7 @@
             <label class="form-label">Arguments</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/command.svg")))
+                    @MarkupHelper.FromFile("icons/feather/command.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeArguments" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -37,7 +37,7 @@
             <label class="form-label">Working directory</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                    @MarkupHelper.FromFile("icons/feather/folder.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.ExeWorkingDirectory" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -48,7 +48,7 @@
             <label class="form-label">Success exit code (blank if not applicable)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/check-circle.svg")))
+                    @MarkupHelper.FromFile("icons/feather/check-circle.svg")
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.ExeSuccessExitCode" @oninput="Modal.ResetStepError"></InputNumber>
             </div>

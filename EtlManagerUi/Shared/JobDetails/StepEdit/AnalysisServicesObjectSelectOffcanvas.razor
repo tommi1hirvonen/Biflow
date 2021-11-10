@@ -1,5 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select Analysis Services object">
@@ -10,7 +10,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/box.svg")))
+                                @MarkupHelper.FromFile("icons/feather/box.svg")
                                 Models
                             </th>
                         </tr>
@@ -45,7 +45,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/columns.svg")))
+                                @MarkupHelper.FromFile("icons/feather/columns.svg")
                                 Tables
                             </th>
                         </tr>
@@ -84,7 +84,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pie-chart.svg")))
+                                @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
                                 Partitions
                             </th>
                         </tr>

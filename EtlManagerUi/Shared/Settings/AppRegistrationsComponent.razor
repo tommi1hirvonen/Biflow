@@ -1,6 +1,6 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject ITokenService TokenService 
 
 <HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
@@ -40,11 +40,11 @@
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
                                 <HxDropdown>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -53,7 +53,7 @@
                                 </HxDropdown>
                                 <HxDropdown>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="clear tokens">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/x.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Clear access tokens?</HxDropdownHeader>

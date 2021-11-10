@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 @implements IStepEditModal
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <ParameterizedStepEditModal @ref="Modal"
@@ -15,7 +15,7 @@
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/x-octagon.svg")))
+                    @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                 </div>
                 <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
@@ -27,7 +27,7 @@
             <label class="form-label">Data Factory</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/factory.svg")))
+                    @MarkupHelper.FromFile("icons/feather/factory.svg")
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.DataFactoryId">
                     @foreach (var dataFactory in DataFactories ?? Enumerable.Empty<DataFactory>())
@@ -41,7 +41,7 @@
             <label class="form-label">Pipeline name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pipeline.svg")))
+                    @MarkupHelper.FromFile("icons/feather/pipeline.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.PipelineName" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -50,7 +50,7 @@
     <div class="row my-3">
         <div class="col">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                 Browse pipelines
             </HxButton>
         </div>

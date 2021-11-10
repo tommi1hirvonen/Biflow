@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject IHxMessengerService Messenger
 
@@ -47,12 +47,12 @@
                         <td>
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
 
                                 <HxDropdown>
                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/key.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownContent CssClass="p-4">
                                         <div style="min-width: 25rem;">
@@ -61,7 +61,7 @@
                                                     <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
                                                         <InputGroupStartTemplate>
                                                             <div class="input-group-text">
-                                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/lock.svg")))
+                                                                @MarkupHelper.FromFile("icons/feather/lock.svg")
                                                             </div>
                                                         </InputGroupStartTemplate>
                                                     </HxInputText>
@@ -72,7 +72,7 @@
                                                     <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
                                                         <InputGroupStartTemplate>
                                                             <div class="input-group-text">
-                                                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/key.svg")))
+                                                                @MarkupHelper.FromFile("icons/feather/key.svg")
                                                             </div>
                                                         </InputGroupStartTemplate>
                                                     </HxInputText>
@@ -86,7 +86,7 @@
 
                                 <HxDropdown>
                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
-                                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>

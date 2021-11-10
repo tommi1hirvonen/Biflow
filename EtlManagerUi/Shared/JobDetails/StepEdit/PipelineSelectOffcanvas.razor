@@ -1,6 +1,6 @@
 ﻿@inject IConfiguration Configuration
 @inject IHxMessengerService Messenger
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject ITokenService TokenService
 
@@ -12,7 +12,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                                @MarkupHelper.FromFile("icons/feather/folder.svg")
                                 Folders
                             </th>
                         </tr>
@@ -43,7 +43,7 @@
             <div class="col-lg-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/filter.svg")))
+                        @MarkupHelper.FromFile("icons/feather/filter.svg")
                     </div>
                     <input type="text" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -56,7 +56,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/pipeline.svg")))
+                                @MarkupHelper.FromFile("icons/feather/pipeline.svg")
                                 Pipelines
                             </th>
                         </tr>

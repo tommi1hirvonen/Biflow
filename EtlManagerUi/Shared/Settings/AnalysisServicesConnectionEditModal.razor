@@ -1,7 +1,7 @@
 ﻿@implements IConnectionEditModal
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
 
@@ -18,7 +18,7 @@
                             <label class="form-label">Connection name</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionName"></InputText>
                             </div>
@@ -27,7 +27,7 @@
                             <label class="form-label">Connection string</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+                                    @MarkupHelper.FromFile("icons/feather/database.svg")
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>

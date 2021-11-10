@@ -1,7 +1,7 @@
 ﻿@page "/jobs/{DetailsPage}/{Id:guid}"
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject SchedulerService SchedulerService
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
@@ -19,7 +19,7 @@
         <HxButtonGroup>
             <HxDropdown>
                 <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/loader.svg")))
+                    @MarkupHelper.FromFile("icons/feather/loader.svg")
                     @(CurrentJob?.JobName ?? "Loading...")
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
@@ -36,7 +36,7 @@
             <HxButton Color="ThemeColor.Secondary"
                       @onclick="() => DescriptionOpen = !DescriptionOpen"
                       CssClass="@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "disabled" : DescriptionOpen ? "active" : null)">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/info.svg")))
+                @MarkupHelper.FromFile("icons/feather/info.svg")
             </HxButton>
         </HxButtonGroup>
 
@@ -48,7 +48,7 @@
                 @*Dropdown to change the current job's name*@
                 <HxDropdown>
                     <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/edit-2.svg")))
+                        @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                         Edit
                     </HxDropdownToggleButton>
                     <HxDropdownContent CssClass="dropdown-menu-xl-right p-4">
@@ -79,7 +79,7 @@
                 @*Dropdown to delete the current job*@
                 <HxDropdown CssClass="ms-3">
                     <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/trash-2.svg")))
+                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                         Delete
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
@@ -121,25 +121,25 @@
         <ul class="nav nav-pills mt-4 mb-4" role="tablist">
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@("jobs/steps/" + CurrentJob?.JobId)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/list.svg")))
+                    @MarkupHelper.FromFile("icons/feather/list.svg")
                     Steps
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@("jobs/dependencies/" + CurrentJob?.JobId)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/bootstrap/diagram-3-fill.svg")))
+                    @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
                     Dependencies
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@("jobs/schedules/" + CurrentJob?.JobId)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/calendar.svg")))
+                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@("jobs/jobhistory/" + CurrentJob?.JobId)">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/activity.svg")))
+                    @MarkupHelper.FromFile("icons/feather/activity.svg")
                     History
                 </NavLink>
             </li>

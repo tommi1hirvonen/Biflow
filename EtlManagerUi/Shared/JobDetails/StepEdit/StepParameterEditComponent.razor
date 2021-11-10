@@ -1,4 +1,4 @@
-﻿@inject IWebHostEnvironment WebHostEnvironment
+﻿@inject MarkupHelperService MarkupHelper
 
 @if (Step is not null)
 {
@@ -54,7 +54,7 @@
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                         <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
-                            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/delete.svg")))
+                            @MarkupHelper.FromFile("icons/feather/delete.svg")
                         </HxButton>
                     </HxButtonGroup>
                 </td>
@@ -64,7 +64,7 @@
     </table>
     var type = ParameterValueType.String;
     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterValueType = type, ParameterValue = string.Empty })">
-        @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/plus.svg")))
+        @MarkupHelper.FromFile("icons/feather/plus.svg")
     </HxButton>
 }
 

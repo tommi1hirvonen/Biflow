@@ -4,16 +4,16 @@ using System.IO;
 
 namespace EtlManagerUi;
 
-public class MarkupService
+public class MarkupHelperService
 {
     private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public MarkupService(IWebHostEnvironment webHostEnvironment)
+    public MarkupHelperService(IWebHostEnvironment webHostEnvironment)
     {
         _webHostEnvironment = webHostEnvironment;
     }
 
-    public MarkupString MarkupFromFile(string relativeResourcePath)
+    public MarkupString FromFile(string relativeResourcePath)
     {
         var path = Path.Combine(_webHostEnvironment.WebRootPath, relativeResourcePath);
         var text = File.ReadAllText(path);

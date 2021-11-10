@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 @implements IStepEditModal 
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 
 <StepEditModalBase @ref="Modal"
@@ -15,7 +15,7 @@
             <label class="form-label">App registration</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
+                    @MarkupHelper.FromFile("icons/feather/globe.svg")
                 </div>
                 <InputSelect class="form-select" @bind-Value="Step.AppRegistrationId">
                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
@@ -31,7 +31,7 @@
             <label class="form-label">Group id</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/folder.svg")))
+                    @MarkupHelper.FromFile("icons/feather/folder.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.DatasetGroupId" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -42,7 +42,7 @@
             <label class="form-label">Dataset id</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/file.svg")))
+                    @MarkupHelper.FromFile("icons/feather/file.svg")
                 </div>
                 <InputText class="form-control" @bind-Value="Step.DatasetId" @oninput="Modal.ResetStepError"></InputText>
             </div>
@@ -51,7 +51,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectOffcanvas">
-                @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/more-horizontal.svg")))
+                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                 Browse datasets
             </HxButton>
         </div>

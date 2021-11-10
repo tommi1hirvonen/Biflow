@@ -3,38 +3,38 @@
 @attribute [Authorize(Roles = "Admin")]
 
 @inject IConfiguration Configuration
-@inject IWebHostEnvironment WebHostEnvironment
+@inject MarkupHelperService MarkupHelper
 
 <h4>Settings</h4>
 
 <ul class="nav nav-pills mt-3 mb-4" role="tablist">
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/users.svg")))
+            @MarkupHelper.FromFile("icons/feather/users.svg")
             Users
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings/connections">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/database.svg")))
+            @MarkupHelper.FromFile("icons/feather/database.svg")
             Connections
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings/appregistrations">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/globe.svg")))
+            @MarkupHelper.FromFile("icons/feather/globe.svg")
             App registrations
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings/datafactories">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/factory.svg")))
+            @MarkupHelper.FromFile("icons/feather/factory.svg")
             Data Factories
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings/functionapps">
-            @((MarkupString)System.IO.File.ReadAllText(System.IO.Path.Combine(WebHostEnvironment.WebRootPath, "icons/feather/zap.svg")))
+            @MarkupHelper.FromFile("icons/feather/zap.svg")
             Function Apps
         </NavLink>
     </li>
