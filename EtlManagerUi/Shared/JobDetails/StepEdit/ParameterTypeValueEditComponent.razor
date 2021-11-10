@@ -22,7 +22,7 @@
                 </div>
                 break;
             case ParameterValueType.DateTime:
-                <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm"  type="datetime-local">
+                <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss"  type="datetime-local">
                 break;
             case ParameterValueType.Decimal:
                 <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></InputNumber>
