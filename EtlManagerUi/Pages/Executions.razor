@@ -1,30 +1,44 @@
 ﻿@page "/executions"
 
+@implements IAsyncDisposable
+
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
 
 <h4>Executions</h4>
+
+@if (!SessionStorageRetrieved) return;
 
 <div class="row mt-3">
     <div class="col">
         <HxButtonToolbar>
             <HxButtonGroup Size="ButtonGroupSize.Small">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowSteps = false" CssClass="@(!ShowSteps ? "active" : null)">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                @onclick="() => ShowSteps = false"
+                CssClass="@(!ShowSteps ? "active" : null)">
                     @MarkupHelper.FromFile("icons/feather/loader.svg")
                     Jobs
                 </HxButton>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowSteps = true" CssClass="@(ShowSteps ? "active" : null)">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                @onclick="() => ShowSteps = true"
+                CssClass="@(ShowSteps ? "active" : null)">
                     @MarkupHelper.FromFile("icons/feather/list.svg")
                     Steps
                 </HxButton>
             </HxButtonGroup>
             <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowGraph = false" CssClass="@(!ShowGraph ? "active" : null)">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                @onclick="() => ShowGraph = false"
+                CssClass="@(!ShowGraph ? "active" : null)">
                     @MarkupHelper.FromFile("icons/bootstrap/table.svg")
                     Table
                 </HxButton>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ShowGraph = true" CssClass="@(ShowGraph ? "active" : null)">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                @onclick="() => ShowGraph = true"
+                CssClass="@(ShowGraph ? "active" : null)">
                     @MarkupHelper.FromFile("icons/bootstrap/bar-chart-steps.svg")
                     Graph
                 </HxButton>
@@ -88,14 +102,14 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/calendar.svg")
                 </div>
-                <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
+                <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
             </div>
             <label class="mx-3">To</label>
             <div class="input-group">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/calendar.svg")
                 </div>
-                <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm" class="form-control form-control-sm" type="datetime-local">
+                <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
             </div>
         </form>
     </div>
@@ -292,6 +306,7 @@
 </div>
 
 @code {
+    private bool SessionStorageRetrieved { get; set; } = false;
 
     private bool ShowSteps { get; set; } = false;
     private bool ShowGraph { get; set; } = false;
@@ -313,12 +328,12 @@
 
     private List<Execution>? Executions_ { get; set; }
 
-    private HashSet<ExecutionStatus> JobStatusFilter { get; } = new();
-    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
-    private HashSet<string> JobFilter { get; } = new();
-    private HashSet<string> StepFilter { get; } = new();
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-    private HashSet<string> TagFilter { get; } = new();
+    private HashSet<ExecutionStatus> JobStatusFilter { get; set; } = new();
+    private HashSet<StepExecutionStatus> StepStatusFilter { get; set; } = new();
+    private HashSet<string> JobFilter { get; set; } = new();
+    private HashSet<string> StepFilter { get; set; } = new();
+    private HashSet<StepType> StepTypeFilter { get; set; } = new();
+    private HashSet<string> TagFilter { get; set; } = new();
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
     private IEnumerable<Execution>? FilteredExecutions => Executions_?
@@ -343,9 +358,23 @@
                         .ThenByDescending(e => e.StartDateTime)
                         .ThenByDescending(e => e.StepExecution.ExecutionPhase);
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadData();
+        if (firstRender)
+        {
+            try
+            {
+                await GetSessionStorageValues();
+            }
+            catch (Exception ex)
+            {
+                Messenger.AddWarning("Error getting session storage values", ex.Message);
+            }
+
+            SessionStorageRetrieved = true;
+            StateHasChanged();
+            await LoadData();
+        }
     }
 
     private async Task LoadData()
@@ -370,8 +399,8 @@
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .ThenByDescending(execution => execution.StartDateTime)
                 .ToListAsync();
-
         Loading = false;
+        StateHasChanged();
     }
 
     private async Task SelectPresetLast(int hours)
@@ -383,9 +412,72 @@
 
     private async Task SelectPreset(DateTime from, DateTime to)
     {
-        FromDateTime = from;
-        ToDateTime = to;
+        FromDateTime = from.Trim(TimeSpan.TicksPerMinute);
+        ToDateTime = to.Trim(TimeSpan.TicksPerMinute);
         await LoadData();
+    }
+
+    private record SessionStorage(
+        DateTime FromDateTime,
+        DateTime ToDateTime,
+        bool ShowSteps,
+        bool ShowGraph,
+        StartType StartType,
+        HashSet<ExecutionStatus> JobStatuses,
+        HashSet<StepExecutionStatus> StepStatuses,
+        HashSet<string> JobNames,
+        HashSet<string> StepNames,
+        HashSet<StepType> StepTypes,
+        HashSet<string> Tags
+    );
+
+    private async Task SetSessionStorageValues()
+    {
+        var sessionStorage = new SessionStorage(
+            FromDateTime,
+            ToDateTime,
+            ShowSteps,
+            ShowGraph,
+            StartTypeFilter,
+            JobStatusFilter,
+            StepStatusFilter,
+            JobFilter,
+            StepFilter,
+            StepTypeFilter,
+            TagFilter
+        );
+        var text = JsonSerializer.Serialize(sessionStorage);
+        await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
+    }
+
+    private async Task GetSessionStorageValues()
+    {
+        var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
+        if (text is null) return;
+        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text);
+        FromDateTime = sessionStorage?.FromDateTime ?? FromDateTime;
+        ToDateTime = sessionStorage?.ToDateTime ?? ToDateTime;
+        ShowSteps = sessionStorage?.ShowSteps ?? ShowSteps;
+        ShowGraph = sessionStorage?.ShowGraph ?? ShowGraph;
+        StartTypeFilter = sessionStorage?.StartType ?? StartTypeFilter;
+        JobStatusFilter = sessionStorage?.JobStatuses ?? JobStatusFilter;
+        StepStatusFilter = sessionStorage?.StepStatuses ?? StepStatusFilter;
+        JobFilter = sessionStorage?.JobNames ?? JobFilter;
+        StepFilter = sessionStorage?.StepNames ?? StepFilter;
+        StepTypeFilter = sessionStorage?.StepTypes ?? StepTypeFilter;
+        TagFilter = sessionStorage?.Tags ?? TagFilter;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await SetSessionStorageValues();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddWarning("Error saving session storage values", ex.Message);
+        }
     }
 
 }
