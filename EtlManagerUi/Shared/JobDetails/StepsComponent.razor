@@ -97,11 +97,12 @@
     <div class="row mt-3">
         <div class="col d-inline-flex">
             
-            <div class="input-group input-group-sm me-3" style="max-width: 20rem;">
+            <div class="input-group input-group-sm me-3" style="max-width: 30rem;">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/filter.svg")
                 </div>
-                <input type="text" class="form-control" @bind-value="StepsFilterText" @bind-value:event="oninput" placeholder="Filter by name" />
+                <input type="text" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+                <input type="text" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
             </div>
 
             <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -115,7 +116,13 @@
                     </Title>
                 </FilterDropdown>
 
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => { TagsFilterSet.Clear(); StepTypeFilter.Clear(); StepsFilterText = string.Empty; }">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+                    {
+                        TagsFilterSet.Clear();
+                        StepTypeFilter.Clear();
+                        StepNameFilter = string.Empty;
+                        StepDescriptionFilter = string.Empty;
+                    }">
                     @MarkupHelper.FromFile("icons/feather/x.svg")
                     Clear
                 </HxButton>
@@ -140,7 +147,8 @@
             else
             {
                 @foreach (var item in Steps
-                 .Where(step => step.StepName?.ContainsIgnoreCase(StepsFilterText) ?? true)
+                 .Where(step => step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? true)
+                 .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
                  .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
                  .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
                 {
@@ -310,7 +318,8 @@
 
     private bool ShowExecutionAlert { get; set; } = false;
 
-    private string StepsFilterText { get; set; } = string.Empty;
+    private string StepNameFilter { get; set; } = string.Empty;
+    private string StepDescriptionFilter { get; set; } = string.Empty;
     private HashSet<Tag> TagsFilterSet { get; set; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
 
