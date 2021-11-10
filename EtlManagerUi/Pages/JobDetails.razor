@@ -349,6 +349,7 @@ else
             CurrentJob.OvertimeNotificationLimitMinutes = EditJob.OvertimeNotificationLimitMinutes;
             context.Attach(CurrentJob).State = EntityState.Modified;
             await context.SaveChangesAsync();
+            Messenger.AddInformation("Job settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)
         {
