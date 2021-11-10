@@ -113,7 +113,7 @@
     public IEnumerable<Step>? Steps { get; set; }
 
     [Parameter]
-    public Step? Step { get; set; }
+    public Step Step { get; set; } = null!;
 
     [Parameter]
     public EventCallback<Step> OnStepSubmit { get; set; }
@@ -227,7 +227,7 @@
     {
         StepError = string.Empty;
 
-        if (StepValidityCheck is not null && Step is not null)
+        if (StepValidityCheck is not null)
         {
             (var result, var message) = StepValidityCheck(Step);
             if (!result)
@@ -238,22 +238,22 @@
         }
 
         // Synchronize tags
-        foreach (var text in Tags.Where(str => !Step?.Tags.Any(t => t.TagName == str) ?? false))
+        foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
         {
             // New tags
             var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
-            Step?.Tags.Add(tag);
+            Step.Tags.Add(tag);
         }
-        foreach (var tag in Step?.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+        foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
         {
-            Step?.Tags.Remove(tag);
+            Step.Tags.Remove(tag);
         }
 
         // Save changes.
         try
         {
             // Existing step
-            if (Step?.StepId != Guid.Empty)
+            if (Step.StepId != Guid.Empty)
             {
                 Context.Attach(Step).State = EntityState.Modified;
             }

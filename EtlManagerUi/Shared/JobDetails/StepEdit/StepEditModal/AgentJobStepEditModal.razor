@@ -106,7 +106,7 @@
             Step = await Context.AgentJobSteps
                 .Include(step => step.Tags)
                 .Include(step => step.Dependencies)
-                .FirstOrDefaultAsync(step => step.StepId == StepId);
+                .FirstAsync(step => step.StepId == StepId);
             PrevStepId = StepId;
         }
         else if (StepId == Guid.Empty && Job is not null)

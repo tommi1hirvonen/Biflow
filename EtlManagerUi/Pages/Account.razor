@@ -108,7 +108,7 @@
         User = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
-            .FirstOrDefaultAsync(user => user.Username == Username);
+            .FirstAsync(user => user.Username == Username);
     }
 
     private async Task SubmitEmail()

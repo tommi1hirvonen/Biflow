@@ -98,7 +98,7 @@
         User = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
-            .FirstOrDefaultAsync(user => user.Username == Username);
+            .FirstAsync(user => user.Username == Username);
         Jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)

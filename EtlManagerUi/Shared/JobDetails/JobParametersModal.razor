@@ -58,7 +58,8 @@
     private HxModal Modal { get; set; } = null!;
 
     [Parameter]
-    public Job? Job { get; set; }
+    [EditorRequired]
+    public Job Job { get; set; } = null!;
 
     private EtlManagerContext Context { get; set; } = null!;
 

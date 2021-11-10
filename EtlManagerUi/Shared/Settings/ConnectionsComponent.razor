@@ -134,7 +134,7 @@
     private async Task DeleteConnection(ConnectionInfoBase connection)
     {
         using var context = DbFactory.CreateDbContext();
-        var conn = await context.Connections.FindAsync(connection.ConnectionId);
+        var conn = await context.Connections.FirstAsync(c => c.ConnectionId == connection.ConnectionId);
         context.Connections.Remove(conn);
         await context.SaveChangesAsync();
         Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);

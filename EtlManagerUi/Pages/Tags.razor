@@ -268,15 +268,14 @@
 
     private async Task DeleteStepTag(Step step)
     {
-        if (EditTag is null)
-        {
-            return;
-        }
+        if (EditTag is null) return;
 
         using var context = DbContextFactory.CreateDbContext();
         var tag = await context.Tags
             .Include(t => t.Steps)
             .FirstOrDefaultAsync(t => t.TagId == EditTag.TagId);
+
+        if (tag is null) return;
 
         var stepToRemove = tag.Steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (stepToRemove is not null)

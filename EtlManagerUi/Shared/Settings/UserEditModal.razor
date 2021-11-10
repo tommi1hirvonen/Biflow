@@ -87,7 +87,7 @@
 
     private HxModal Modal { get; set; } = null!;
 
-    private User? User { get; set; }
+    private User User { get; set; } = null!;
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
@@ -103,7 +103,7 @@
             using var context = DbFactory.CreateDbContext();
             User = await context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(user => user.Username == Username);
+                .FirstAsync(user => user.Username == Username);
         }
     }
 
