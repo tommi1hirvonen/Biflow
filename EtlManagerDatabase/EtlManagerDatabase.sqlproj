@@ -79,7 +79,6 @@
     <Build Include="etlmanager\Stored Procedures\JobCopy.sql" />
     <Build Include="etlmanager\Tables\Subscription.sql" />
     <Build Include="etlmanager\Stored Procedures\StepCopy.sql" />
-    <Build Include="etlmanager\Stored Procedures\GetNotificationMessageBody.sql" />
     <Build Include="etlmanager\Tables\DataFactory.sql" />
     <Build Include="etlmanager\Tables\Connection.sql" />
     <Build Include="etlmanager\Tables\ExecutionParameter.sql" />

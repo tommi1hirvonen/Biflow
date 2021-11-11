@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30002.166
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerExecutor", "EtlManagerExecutor\EtlManagerExecutor.csproj", "{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerScheduler", "EtlManagerScheduler\EtlManagerScheduler.csproj", "{B7372122-3775-4734-B32F-26552375F53F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManagerDataAccess", "EtlManagerDataAccess\EtlManagerDataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManagerExecutor.Test", "EtlManagerExecutorTest\EtlManagerExecutor.Test.csproj", "{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
