@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using EtlManager.DataAccess;
+using EtlManager.Executor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,108 +13,102 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EtlManager.Executor;
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .Build();
 
-class Program
-{
-    static async Task<int> Main(string[] args)
-    {
-        var configuration = new ConfigurationBuilder()
-            //.SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        Log.Logger = new LoggerConfiguration()
+Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
             .Enrich.FromLogContext()
             .CreateLogger();
 
-        var host = Host.CreateDefaultBuilder()
-            .ConfigureHostConfiguration(configHost =>
-                configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
-            .ConfigureServices((context, services) =>
-            {
-                var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-                services.AddDbContextFactory<EtlManagerContext>(options =>
-                    options.UseSqlServer(connectionString, o =>
-                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+var builder = Host.CreateDefaultBuilder();
 
-                services.AddHttpClient();
-                services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
-                services.AddSingleton<ITokenService, TokenService>();
-                services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
-                services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-                services.AddTransient<INotificationService, EmailService>();
-                services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
-                services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
-                services.AddTransient<IJobExecutor, JobExecutor>();
-                services.AddTransient<IExecutionStopper, ExecutionStopper>();
-                services.AddTransient<IEmailTest, EmailTest>();
-                services.AddTransient<IConnectionTest, ConnectionTest>();
-            })
+builder.ConfigureHostConfiguration(configHost =>
+    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true));
 
-            .UseSerilog()
-            .Build();
+builder.ConfigureServices((context, services) =>
+{
+    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+    services.AddDbContextFactory<EtlManagerContext>(options =>
+        options.UseSqlServer(connectionString, o =>
+            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
-        return await Parser.Default.ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
-            .MapResult(
-                (JobExecutorOptions options) => RunExecutionAsync(host, options),
-                (CancelOptions options) => CancelExecutionAsync(host, options),
-                (EmailTestOptions options) => RunEmailTest(host, options),
-                (ConnectionTestOptions options) => RunConnectionTest(host),
-                (CommitOptions options) => PrintCommit(),
-                errors => HandleParseError(errors)
-            );
-    }
+    services.AddHttpClient();
+    services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
+    services.AddSingleton<ITokenService, TokenService>();
+    services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
+    services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
+    services.AddTransient<INotificationService, EmailService>();
+    services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
+    services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
+    services.AddTransient<IJobExecutor, JobExecutor>();
+    services.AddTransient<IExecutionStopper, ExecutionStopper>();
+    services.AddTransient<IEmailTest, EmailTest>();
+    services.AddTransient<IConnectionTest, ConnectionTest>();
+});
 
-    static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
+builder.UseSerilog();
+
+var host = builder.Build();
+
+return await Parser.Default
+    .ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
+    .MapResult(
+        (JobExecutorOptions options) => RunExecutionAsync(host, options),
+        (CancelOptions options) => CancelExecutionAsync(host, options),
+        (EmailTestOptions options) => RunEmailTest(host, options),
+        (ConnectionTestOptions options) => RunConnectionTest(host),
+        (CommitOptions options) => PrintCommit(),
+        errors => HandleParseError(errors)
+    );
+
+static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
+{
+    var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
+    await service.RunAsync(options.ExecutionId, options.Notify);
+    return 0;
+}
+
+static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
+{
+    var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
+    try
     {
-        var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-        await service.RunAsync(options.ExecutionId, options.Notify);
-        return 0;
+        var result = await service.RunAsync(options.ExecutionId, options.Username, options.StepId);
+        return result ? 0 : -1;
     }
-
-    static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
+    catch (Exception)
     {
-        var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
-        try
-        {
-            var result = await service.RunAsync(options.ExecutionId, options.Username, options.StepId);
-            return result ? 0 : -1;
-        }
-        catch (Exception)
-        {
-            return -1;
-        }
+        return -1;
     }
+}
 
-    static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
-    {
-        var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
-        await service.RunAsync(options.ToAddress);
-        return 0;
-    }
+static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
+{
+    var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
+    await service.RunAsync(options.ToAddress);
+    return 0;
+}
 
-    static async Task<int> RunConnectionTest(IHost host)
-    {
-        var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
-        await service.RunAsync();
-        return 0;
-    }
+static async Task<int> RunConnectionTest(IHost host)
+{
+    var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
+    await service.RunAsync();
+    return 0;
+}
 
-    static async Task<int> HandleParseError(IEnumerable<Error> errors)
-    {
-        Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
-        return await Task.FromResult(-1);
-    }
+static async Task<int> HandleParseError(IEnumerable<Error> errors)
+{
+    Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
+    return await Task.FromResult(-1);
+}
 
-    static async Task<int> PrintCommit()
-    {
-        var commit = Properties.Resources.CurrentCommit;
-        Console.WriteLine(commit);
-        return await Task.FromResult(0);
-    }
-
+static async Task<int> PrintCommit()
+{
+    var commit = EtlManager.Executor.Properties.Resources.CurrentCommit;
+    Console.WriteLine(commit);
+    return await Task.FromResult(0);
 }
 
 [Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
