@@ -2,12 +2,8 @@
 using EtlManager.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtlManager.Executor;
 

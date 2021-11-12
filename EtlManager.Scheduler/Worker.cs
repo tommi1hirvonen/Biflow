@@ -2,19 +2,11 @@ using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
 using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Quartz;
-using System;
-using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtlManager.Scheduler;
 

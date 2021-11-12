@@ -4,6 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <UserSecretsId>dotnet-EtlManagerScheduler-EBE07DBD-F3C1-4203-9DA9-0AFDF7385430</UserSecretsId>
 	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
 	<AssemblyName>$(MSBuildProjectName.Replace(".", ""))</AssemblyName>
   </PropertyGroup>
 

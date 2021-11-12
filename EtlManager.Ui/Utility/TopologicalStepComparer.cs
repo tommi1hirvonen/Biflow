@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using EtlManager.DataAccess.Models;
+﻿using EtlManager.DataAccess.Models;
 
 namespace EtlManager.Ui;
 

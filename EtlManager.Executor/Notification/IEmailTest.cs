@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace EtlManager.Executor;
+﻿namespace EtlManager.Executor;
 
 interface IEmailTest
 {

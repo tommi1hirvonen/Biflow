@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace EtlManager.DataAccess.Models;
+﻿namespace EtlManager.DataAccess.Models;
 
 public abstract class ParameterizedStepExecution : StepExecution
 {

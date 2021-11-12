@@ -1,16 +1,9 @@
 ﻿using EtlManager.DataAccess.Models;
 using EtlManager.Utilities;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtlManager.Executor;
 

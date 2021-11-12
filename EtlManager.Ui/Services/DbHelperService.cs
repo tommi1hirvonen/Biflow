@@ -1,12 +1,7 @@
 ﻿using Dapper;
 using EtlManager.DataAccess.Models;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EtlManager.Ui;
 

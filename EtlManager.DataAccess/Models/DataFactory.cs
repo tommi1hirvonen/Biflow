@@ -3,13 +3,7 @@ using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EtlManager.DataAccess.Models;
 

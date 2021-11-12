@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Hosting;
-using System.IO;
 
 namespace EtlManager.Ui;
 

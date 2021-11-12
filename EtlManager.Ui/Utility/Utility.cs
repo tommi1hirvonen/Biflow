@@ -1,13 +1,8 @@
 ﻿using EtlManager.DataAccess.Models;
 using EtlManager.Utilities;
-using System;
-using System.IO;
-using System.IO.Pipes;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Quartz;
-using System.Collections.Generic;
+using System.IO.Pipes;
+using System.Text.Json;
 
 namespace EtlManager.Ui;
 

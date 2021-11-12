@@ -3,14 +3,8 @@ using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace EtlManager.Executor;
 

@@ -2,16 +2,11 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Utilities;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 using System.IO.Pipes;
-using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace EtlManager.Ui;
 
