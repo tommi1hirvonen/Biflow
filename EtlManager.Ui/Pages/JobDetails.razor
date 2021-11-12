@@ -165,8 +165,10 @@
             @*Only show StopOnFirstError setting if job uses execution phase mode.*@
             @if (CurrentJob?.UseDependencyMode == false)
             {
-                <div class="form-check form-switch ms-4 ms-xxl-0 me-xxl-4">
-                    <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)" @onchange="ToggleStopOnFirstError">
+                <div class="form-check ms-4 ms-xxl-0 me-xxl-4">
+                    <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle"
+                           checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)"
+                           @onchange="ToggleStopOnFirstError">
                     <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                 </div>
             }
@@ -186,7 +188,7 @@
             </div>
             @if (CurrentJob?.UseDependencyMode == false)
             {
-                <div class="form-check form-switch ms-4 ms-xxl-0 me-xxl-4">
+                <div class="form-check ms-4 ms-xxl-0 me-xxl-4">
                     <input type="checkbox" class="form-check-input" disabled id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)">
                     <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                 </div>

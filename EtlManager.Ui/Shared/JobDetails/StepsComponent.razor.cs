@@ -1,0 +1,201 @@
+﻿using EtlManager.DataAccess;
+using EtlManager.DataAccess.Models;
+using EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+using Havit.Blazor.Components.Web;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
+
+namespace EtlManager.Ui.Shared.JobDetails;
+
+public partial class StepsComponent : ComponentBase
+{
+    [Inject] private IDbContextFactory<EtlManagerContext> DbFactory { get; set; } = null!;
+    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
+    [Inject] private DbHelperService DbHelperService { get; set; } = null!;
+    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Parameter] public Job? Job { get; set; }
+    [Parameter] public IList<Job>? Jobs { get; set; }
+    [Parameter] public List<Step>? Steps { get; set; }
+    [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
+    [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    [Parameter] public List<DataFactory>? DataFactories { get; set; }
+    [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
+    [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
+
+    private IEnumerable<Tag> Tags => Steps?
+    .SelectMany(step => step.Tags)
+    .Select(tag => tag with { Steps = null! })
+    .Distinct()
+    .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
+
+    private JobParametersModal JobParametersModal { get; set; } = null!;
+
+    private Dictionary<StepType, IStepEditModal> StepEditModals { get; } = new();
+    // Separate edit modal step ids so that changes to one do not trigger OnParametersSet() for all edit modal components.
+    private Dictionary<StepType, Guid> EditModalStepIds { get; set; } = Enum.GetValues<StepType>().ToDictionary(key => key, _ => new Guid());
+
+    private StepDetailsModal StepDetailsModal { get; set; } = null!;
+    private Step? DetailsModalStep { get; set; }
+
+    private StepHistoryOffcanvas StepHistoryOffcanvas { get; set; } = null!;
+    private Step? HistoryModalStep { get; set; }
+
+    private ExecuteModal ExecuteModal { get; set; } = null!;
+
+    private bool ShowExecutionAlert { get; set; } = false;
+
+    private string StepNameFilter { get; set; } = string.Empty;
+    private string StepDescriptionFilter { get; set; } = string.Empty;
+    private string SqlStatementFilter { get; set; } = string.Empty;
+    private HashSet<Tag> TagsFilterSet { get; set; } = new();
+    private HashSet<StepType> StepTypeFilter { get; } = new();
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
+    private Guid SelectedJobExecutionId { get; set; }
+
+    private bool ShowDetails { get; set; } = false;
+
+    private bool IsStepTypeDisabled(StepType type) => type switch
+    {
+        StepType.Sql or StepType.Package => SqlConnections?.Any() == false,
+        StepType.Pipeline => DataFactories?.Any() == false,
+        StepType.Function => FunctionApps?.Any() == false,
+        StepType.Dataset => AppRegistrations?.Any() == false,
+        StepType.Job => Jobs is null || Jobs.Count == 1,
+        StepType.AgentJob => SqlConnections?.Any() == false,
+        StepType.Tabular => AsConnections?.Any() == false,
+        _ => false,
+    };
+
+    private async Task ShowEditModal(Step step)
+    {
+        EditModalStepIds[step.StepType] = step.StepId;
+        await OpenStepEditModal(step.StepType);
+    }
+
+    private async Task ShowNewStepModal(StepType stepType)
+    {
+        EditModalStepIds[stepType] = Guid.Empty;
+        await OpenStepEditModal(stepType);
+    }
+
+    private async Task OpenStepEditModal(StepType? stepType)
+    {
+        if (stepType is not null)
+            await StepEditModals[(StepType)stepType].ShowAsync();
+    }
+
+    private async Task ToggleEnabled(ChangeEventArgs args, Step step)
+    {
+        bool value = (bool)args.Value!;
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Attach(step);
+            step.IsEnabled = value;
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling step", ex.Message);
+        }
+    }
+
+    private async Task DeleteStep(Step step)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Steps.Remove(step);
+            await context.SaveChangesAsync();
+            Steps?.Remove(step);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting step", ex.Message);
+        }
+    }
+
+    private async Task CopyStep(Step step, Job job)
+    {
+        try
+        {
+            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
+            Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user);
+            // If the steps was copied to this job, reload steps.
+            if (Job?.JobId == job.JobId)
+            {
+                using var context = DbFactory.CreateDbContext();
+                var createdStep = await context.Steps
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(step => step.Dependencies)
+                    .Include(step => step.Tags)
+                    .Include(step => (step as ParameterizedStep)!.StepParameters)
+                    .FirstAsync(step_ => step_.StepId == createdStepId);
+                Steps?.Add(createdStep);
+                SortSteps();
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error copying step", ex.Message);
+        }
+    }
+
+    private void OnStepSubmit(Step step)
+    {
+        var existingStep = Steps?.FirstOrDefault(s => s.StepId == step.StepId);
+        if (existingStep is not null)
+        {
+            Steps?.Remove(existingStep);
+        }
+        Steps?.Add(step);
+        SortSteps();
+    }
+
+    private void SortSteps()
+    {
+        if (Job is null || Steps is null) return;
+        try
+        {
+            if (Job.UseDependencyMode)
+            {
+                var comparer = new TopologicalStepComparer(Steps);
+                Steps.Sort(comparer);
+            }
+            else
+            {
+                Steps.Sort();
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error sorting steps", ex.Message);
+        }
+    }
+
+    private async Task ShowStepDetailsModal(Step step)
+    {
+        DetailsModalStep = step;
+        await StepDetailsModal.Modal.ShowAsync();
+    }
+
+    private async Task ShowStepHistoryOffcanvas(Step step)
+    {
+        // Do not unnecessarily set the component parameter and start its data load.
+        if (step != HistoryModalStep)
+            HistoryModalStep = step;
+
+        await StepHistoryOffcanvas.ShowAsync();
+    }
+
+    private void OnExecutionStarted(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        ShowExecutionAlert = true;
+    }
+
+    private async Task OpenJobExecutionModal() => await JobExecutionModal.ShowAsync();
+}
