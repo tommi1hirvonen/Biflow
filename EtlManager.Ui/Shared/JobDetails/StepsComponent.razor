@@ -249,6 +249,22 @@
                                 }
                             </div>
                         </div>
+                        @if (!string.IsNullOrEmpty(StepDescriptionFilter))
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter"/></em></small>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(SqlStatementFilter) && item is SqlStep sqlStep)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter"/></small>
+                                </div>
+                            </div>
+                        }
                     </li>
                 }
             }
