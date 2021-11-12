@@ -358,5 +358,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/EtlManagerUi/CurrentCommit.txt
-/EtlManagerExecutor/CurrentCommit.txt
+/EtlManager.Ui/CurrentCommit.txt
+/EtlManager.Executor/CurrentCommit.txt
