@@ -37,7 +37,7 @@ public class EtlManagerContext : DbContext
     public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
-    public DbSet<ConnectionInfoBase> Connections => base.Set<ConnectionInfoBase>();
+    public DbSet<ConnectionInfoBase> Connections => Set<ConnectionInfoBase>();
     public DbSet<SqlConnectionInfo> SqlConnections => Set<SqlConnectionInfo>();
     public DbSet<AnalysisServicesConnectionInfo> AnalysisServicesConnections => Set<AnalysisServicesConnectionInfo>();
     public DbSet<Tag> Tags => Set<Tag>();
@@ -289,7 +289,7 @@ public class EtlManagerContext : DbContext
         {
             e.ToTable("Connection");
             e.Property(p => p.ConnectionType)
-            .HasConversion<string>(connectionTypeConverter);
+            .HasConversion(connectionTypeConverter);
             e.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
             .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
