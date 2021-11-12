@@ -1,4 +1,5 @@
-﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@using System.Text.RegularExpressions
+@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject NavigationManager NavigationManager
@@ -162,13 +163,13 @@
                                     <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         &nbsp;
-                                        @item.StepName
+                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
                                     </a>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Operator, Viewer">
                                     <span>
                                         <StepTypeIconComponent StepType_="@item.StepType" />
-                                        @item.StepName
+                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
                                     </span>
                                 </AuthorizeView>
                             </div>

@@ -69,7 +69,7 @@
                                     <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
                                         <StepTypeIconComponent StepType_="@step.StepType" />
                                         &nbsp;
-                                        @step.StepName
+                                        <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                     </td>
                                     <td class="text-right"
                                         style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">

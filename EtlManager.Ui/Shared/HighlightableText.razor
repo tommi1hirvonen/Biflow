@@ -1,0 +1,18 @@
+﻿@using System.Text.RegularExpressions
+
+@if (!string.IsNullOrEmpty(PartToHighlight) && (Text?.ContainsIgnoreCase(PartToHighlight) ?? false))
+{
+    @((MarkupString)Regex.Replace(Text, PartToHighlight, m => $"<mark>{m.Groups[0].Value}</mark>", RegexOptions.IgnoreCase))
+}
+else
+{
+    @Text
+}
+
+@code {
+    [Parameter]
+    public string? Text { get; set; }
+
+    [Parameter]
+    public string? PartToHighlight { get; set; }
+}
