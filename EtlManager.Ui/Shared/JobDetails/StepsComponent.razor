@@ -140,20 +140,37 @@
         <ol class="list-group shadow-sm">
             @if (Steps is null || Jobs is null || Job is null)
             {
-                <li class="list-group-item">Loading...</li>
-            }
-            else if (Steps.Count == 0)
-            {
-                <li class="list-group-item">No steps</li>
+                <li class="list-group-item" style="background-color: #fafafa">
+                    <div class="row">
+                        <div class="col fw-bold text-secondary small">
+                            Loading...
+                        </div>
+                    </div>
+                </li>
             }
             else
             {
-                @foreach (var item in Steps
-                 .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
-                 .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
-                 .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
-                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-                 .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)))
+                var count = FilteredSteps.Count();
+                var disabledCount = FilteredSteps.Where(s => !s.IsEnabled).Count();
+                var countText = Steps.Count switch
+                {
+                    0 => "No steps",
+                    1 => count == Steps.Count ? $"Showing {count} step" : $"Showing {count} of {Steps.Count} step",
+                    > 1 => count == Steps.Count ? $"Showing all {Steps.Count} steps" : $"Showing {count} of {Steps.Count} steps",
+                    _ => string.Empty
+                };
+                var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
+                <li class="list-group-item" style="background-color: #fafafa">
+                    <div class="row fw-bold text-secondary small">
+                        <div class="col">
+                            @countText
+                        </div>
+                        <div class="col text-end">
+                            @disabledCountText
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in FilteredSteps)
                 {
                     <li class="list-group-item step-row py-2 @(item.IsEnabled ? null : "step-row-disabled")">
                         <div class="row">

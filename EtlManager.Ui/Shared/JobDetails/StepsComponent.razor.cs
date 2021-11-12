@@ -24,6 +24,13 @@ public partial class StepsComponent : ComponentBase
     [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
+    private IEnumerable<Step> FilteredSteps => Steps?
+                 .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
+                 .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
+                 .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
+                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
+                 .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) ?? Enumerable.Empty<Step>();
+
     private IEnumerable<Tag> Tags => Steps?
     .SelectMany(step => step.Tags)
     .Select(tag => tag with { Steps = null! })
