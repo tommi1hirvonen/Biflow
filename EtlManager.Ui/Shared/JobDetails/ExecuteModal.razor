@@ -324,6 +324,13 @@
 
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(IEnumerable<Step>? initiallySelectedSteps = null)
+    {
+        if (initiallySelectedSteps is not null)
+        {
+            StepsToExecute.AddRange(initiallySelectedSteps);
+        }
+        await Modal.ShowAsync();
+    }
 
 }
