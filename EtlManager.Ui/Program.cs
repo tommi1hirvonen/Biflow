@@ -26,6 +26,7 @@ builder.Services.AddSingleton<DbHelperService>();
 builder.Services.AddSingleton<SchedulerService>();
 builder.Services.AddSingleton<SqlServerHelperService>();
 builder.Services.AddSingleton<MarkupHelperService>();
+builder.Services.AddSingleton<SubscriptionsHelperService>();
 
 var app = builder.Build();
 

@@ -1,6 +1,7 @@
 ﻿@inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<EtlManagerContext> DbFactory
+@inject SubscriptionsHelperService SubscriptionHelper
 @inject IHxMessengerService Messenger
 
 <div class="row mt-4">
@@ -13,24 +14,24 @@
         }
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                @if (User is null || Jobs is null)
-                {
-                    <p class="px-3">Loading...</p>
-                }
-                else
-                {
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>
-                                    Job
-                                </th>
-                                <th>
-                                    Subscription
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                Job
+                            </th>
+                            <th>
+                                Subscription
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (User is null || Jobs is null)
+                        {
+                            <tr><td colspan="2">Loading...</td></tr>
+                        }
+                        else
+                        {
                             @foreach (var job in Jobs)
                             {
                                 <tr>
@@ -73,9 +74,9 @@
                                     </td>
                                 </tr>
                             }
-                        </tbody>
-                    </table>
-                }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -103,16 +104,9 @@
 
     private async Task RemoveSubscription(Job job)
     {
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        if (subscription is null)
-            return;
-
-        using var context = DbFactory.CreateDbContext();
         try
         {
-            context.Subscriptions.Remove(subscription);
-            User.Subscriptions.Remove(subscription);
-            await context.SaveChangesAsync();
+            await SubscriptionHelper.RemoveSubscription(User, job);
         }
         catch (Exception)
         {
@@ -120,29 +114,11 @@
         }
     }
 
-    private async Task ToggleSubscription(Job job, bool onOvertime)
+    private async Task ToggleSubscription(Job job, SubscriptionType subscriptionType)
     {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
         try
         {
-            if (subscription is not null && subscription.SubscriptionType is null && !onOvertime)
-            {
-                context.Subscriptions.Remove(subscription);
-                User.Subscriptions.Remove(subscription);
-            }
-            else if (subscription is not null)
-            {
-                subscription.NotifyOnOvertime = onOvertime;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = null, NotifyOnOvertime = onOvertime };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
+            await SubscriptionHelper.ToggleSubscription(User, job, subscriptionType);
         }
         catch (Exception)
         {
@@ -150,24 +126,11 @@
         }
     }
 
-    private async Task ToggleSubscription(Job job, SubscriptionType subscriptionType)
+    private async Task ToggleSubscription(Job job, bool onOvertime)
     {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
         try
         {
-            if (subscription is not null)
-            {
-                subscription.SubscriptionType = subscriptionType;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = subscriptionType };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
+            await SubscriptionHelper.ToggleSubscription(User, job, onOvertime);
         }
         catch (Exception)
         {
