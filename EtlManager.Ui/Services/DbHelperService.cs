@@ -14,7 +14,13 @@ public class DbHelperService
         _configuration = configuration;
     }
 
-    public async Task<Guid> StartExecutionAsync(Job job, string username, List<string>? stepIds = null, bool notify = false)
+    public async Task<Guid> StartExecutionAsync(
+        Job job,
+        string username,
+        List<string>? stepIds = null,
+        bool notify = false,
+        SubscriptionType? notifyMe = null,
+        bool notifyMeOvertime = false)
     {
         Guid executionId;
         using (var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext")))
@@ -46,7 +52,9 @@ public class DbHelperService
                     "execute",
                     "--id",
                     executionId.ToString(),
-                    notify ? "--notify" : ""
+                    notify ? "--notify" : "",
+                    notifyMe is not null ? $"--notify-me \"{notifyMe}\"" : "",
+                    notifyMeOvertime ? "--notify-me-overtime" : ""
                 },
             UseShellExecute = false,
             CreateNoWindow = true,

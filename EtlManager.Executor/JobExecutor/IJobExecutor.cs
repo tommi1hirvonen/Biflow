@@ -1,6 +1,8 @@
-﻿namespace EtlManager.Executor;
+﻿using EtlManager.DataAccess.Models;
+
+namespace EtlManager.Executor;
 
 interface IJobExecutor
 {
-    Task RunAsync(Guid executionId, bool notify);
+    Task RunAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime);
 }

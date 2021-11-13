@@ -2,7 +2,7 @@
   "profiles": {
     "EtlManagerExecutor": {
       "commandName": "Project",
-      "commandLineArgs": "execute -i \"6D556B4A-7F0B-4701-969B-A7AD9231C02D\""
+      "commandLineArgs": "execute -i \"6D556B4A-7F0B-4701-969B-A7AD9231C02D\" --notify-me-overtime"
     }
   }
 }

@@ -19,8 +19,10 @@ public class EmailService : INotificationService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task SendCompletionNotification(Execution execution)
+    public async Task SendCompletionNotification(Execution execution, bool notify, SubscriptionType? notifyMe)
     {
+        if (!notify && notifyMe is null) return;
+
         var subscriptionTypeFilter = execution.ExecutionStatus switch
         {
             ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running =>
@@ -33,23 +35,43 @@ public class EmailService : INotificationService
 
         using var context = _dbContextFactory.CreateDbContext();
 
-        List<string> recipients;
-        try
+        List<string> recipients = new();
+
+        if (notify)
         {
-            var subscriptions = await context.Subscriptions
-                .AsNoTrackingWithIdentityResolution()
-                .Include(s => s.User)
-                .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                .ToListAsync();
-            recipients = subscriptions
-                .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
-                .Select(s => s.User.Email ?? "")
-                .ToList();
+            try
+            {
+                var subscriptions = await context.Subscriptions
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
+                    .ToListAsync();
+                var subscribers = subscriptions
+                    .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
+                    .Select(s => s.User.Email ?? "");
+                recipients.AddRange(subscribers);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
+                return;
+            }
         }
-        catch (Exception ex)
+        
+        if (notifyMe is not null && subscriptionTypeFilter.Any(f => f == notifyMe))
         {
-            Log.Error(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
-            return;
+            try
+            {
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Username == execution.CreatedBy);
+                if (user?.Email is not null && !recipients.Contains(user.Email))
+                {
+                    recipients.Add(user.Email);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting launcher user name for notification", execution.ExecutionId);
+            }
         }
 
         if (!recipients.Any())
@@ -196,26 +218,47 @@ public class EmailService : INotificationService
         }
     }
 
-    public async Task SendLongRunningExecutionNotification(Execution execution)
+    public async Task SendLongRunningExecutionNotification(Execution execution, bool notify, bool notifyMeOvertime)
     {
-        List<string> recipients;
-        try
+        if (!notify && !notifyMeOvertime) return;
+        
+        List<string> recipients = new();
+        using var context = _dbContextFactory.CreateDbContext();
+        if (notify)
         {
-            using var context = _dbContextFactory.CreateDbContext();
-            var subscriptions = await context.Subscriptions
-                .AsNoTrackingWithIdentityResolution()
-                .Include(s => s.User)
-                .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                .ToListAsync();
-            recipients = subscriptions
-                .Where(s => s.NotifyOnOvertime)
-                .Select(s => s.User.Email ?? "")
-                .ToList();
+            try
+            {
+                var subscriptions = await context.Subscriptions
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
+                    .ToListAsync();
+                var subscribers = subscriptions
+                    .Where(s => s.NotifyOnOvertime)
+                    .Select(s => s.User.Email ?? "");
+                recipients.AddRange(subscribers);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
+                return;
+            }
         }
-        catch (Exception ex)
+        
+        if (notifyMeOvertime)
         {
-            Log.Error(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
-            return;
+            try
+            {
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Username == execution.CreatedBy);
+                if (user?.Email is not null && !recipients.Contains(user.Email))
+                {
+                    recipients.Add(user.Email);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "{ExecutionId} Error getting launcher user name for long running execution notification", execution.ExecutionId);
+            }
         }
 
         if (!recipients.Any())

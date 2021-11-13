@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using EtlManager.DataAccess;
+using EtlManager.DataAccess.Models;
 using EtlManager.Executor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -60,7 +61,7 @@ return await Parser.Default
 static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
 {
     var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-    await service.RunAsync(options.ExecutionId, options.Notify);
+    await service.RunAsync(options.ExecutionId, options.Notify, options.NotifyMe, options.NotifyMeOvertime);
     return 0;
 }
 
@@ -105,14 +106,23 @@ static async Task<int> PrintCommit()
     return await Task.FromResult(0);
 }
 
-[Verb("execute", HelpText = "Start the execution of an initilized execution (execution rows have been addd to the Execution table).")]
+[Verb("execute", HelpText = "Start the execution of an initialized execution (execution placeholder created in database).")]
 class JobExecutorOptions
 {
     [Option('i', "id", HelpText = "Execution id", Required = true)]
     public Guid ExecutionId { get; set; }
 
-    [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email in case there were failed steps.", Required = false)]
+    [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email based on their subscription.", Required = false)]
     public bool Notify { get; set; }
+
+    [Option("notify-me",
+        Default = null,
+        HelpText = "Notify me with an email after the execution has finished. Possible values are null (omitted), OnCompletion, OnFailure, OnSuccess",
+        Required = false)]
+    public SubscriptionType? NotifyMe { get; set; }
+
+    [Option("notify-me-overtime", Default = false, HelpText = "Notify me with an email if the execution exceeds the overtime limit set for the job.", Required = false)]
+    public bool NotifyMeOvertime { get; set; }
 }
 
 [Verb("test-email", HelpText = "Send a test email using email configuration from appsettings.json.")]

@@ -26,7 +26,7 @@ class JobExecutor : IJobExecutor
         _executionConfiguration = executionConfiguration;
     }
 
-    public async Task RunAsync(Guid executionId, bool notify)
+    public async Task RunAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
     {
         _executionConfiguration.Notify = notify;
 
@@ -133,9 +133,9 @@ class JobExecutor : IJobExecutor
 
             // If the notification task completed first and notify is true,
             // send a notification about a long running execution.
-            if (notificationTask.IsCompleted && notify)
+            if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotification(execution);
+                await _notificationService.SendLongRunningExecutionNotification(execution, notify, notifyMeOvertime);
             }
 
             await orchestrationTask; // Wait for orchestration to finish.
@@ -177,11 +177,7 @@ class JobExecutor : IJobExecutor
             Log.Error(ex, "Error updating execution status");
         }
 
-        // Execution finished. Notify users based on subscriptions.
-        if (notify)
-        {
-            await _notificationService.SendCompletionNotification(execution);
-        }
+        await _notificationService.SendCompletionNotification(execution, notify, notifyMe);
     }
 
     /// <summary>

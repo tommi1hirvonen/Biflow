@@ -159,12 +159,55 @@
 
     <FooterTemplate>
         <div class="col mr-auto">
-            <div class="form-check form-check-inline">
-                <input type="checkbox" class="form-check-input" id="execute_notify"
-                       checked=@ExecuteNotify
-                       @bind-value="ExecuteNotify">
-                <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
-            </div>
+            <HxDropdown AutoClose="DropdownAutoClose.Outside">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                    @MarkupHelper.FromFile("icons/feather/bell.svg")
+                    Notifications
+                </HxDropdownToggleButton>
+                <HxDropdownContent>
+                    <div class="row p-3" style="min-width: 20rem;">
+                        <div class="col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="execute_notify"
+                                       checked=@Notify
+                                       @bind-value="Notify">
+                                <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+                            </div>
+                            <h6 class="mt-3">Notify me</h6>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="radio_notify_me_none"
+                                       checked=@(NotifyMe is null)
+                                       @onchange="() => NotifyMe = null">
+                                <label class="form-check-label" for="radio_notify_me_none">None</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="radio_notify_me_completion"
+                                       checked=@(NotifyMe == SubscriptionType.OnCompletion)
+                                       @onchange="() => NotifyMe = SubscriptionType.OnCompletion">
+                                <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="radio_notify_me_failure"
+                                       checked=@(NotifyMe == SubscriptionType.OnFailure)
+                                       @onchange="() => NotifyMe = SubscriptionType.OnFailure">
+                                <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="radio" class="form-check-input" id="radio_notify_me_success"
+                                       checked=@(NotifyMe == SubscriptionType.OnSuccess)
+                                       @onchange="() => NotifyMe = SubscriptionType.OnSuccess">
+                                <label class="form-check-label" for="radio_notify_me_success">On success</label>
+                            </div>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
+                                       checked=@NotifyMeOvertime
+                                       @bind-value="NotifyMeOvertime">
+                                <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                            </div>
+                        </div>
+                    </div>
+                </HxDropdownContent>
+            </HxDropdown>
         </div>
         <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute">
             @MarkupHelper.FromFile("icons/feather/play.svg")
@@ -204,7 +247,9 @@
     .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
     ?? Enumerable.Empty<Step>();
 
-    private bool ExecuteNotify { get; set; } = false;
+    private bool Notify { get; set; } = false;
+    private SubscriptionType? NotifyMe { get; set; } = null;
+    private bool NotifyMeOvertime { get; set; } = false;
 
     private async Task Execute()
     {
@@ -217,8 +262,13 @@
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            var executionId = await DbHelperService.StartExecutionAsync(Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
-                user, stepIds, ExecuteNotify);
+            var executionId = await DbHelperService.StartExecutionAsync(
+                job: Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
+                username: user,
+                stepIds: stepIds,
+                notify: Notify,
+                notifyMe: NotifyMe,
+                notifyMeOvertime: NotifyMeOvertime);
             await OnExecutionStarted.InvokeAsync(executionId);
         }
         catch (Exception ex)
@@ -228,7 +278,9 @@
 
         StepsToExecute.Clear();
         await Modal.HideAsync();
-        ExecuteNotify = false;
+        Notify = false;
+        NotifyMe = null;
+        NotifyMeOvertime = false;
         StateHasChanged();
     }
 
