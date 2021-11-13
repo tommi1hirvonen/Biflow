@@ -9,6 +9,8 @@
     }
 </style>
 
+<PageTitle>@Job?.JobName | Schedules | ETL Manager</PageTitle>
+
 <AuthorizeView Roles="Admin, Editor, Operator">
     <HxButton Color="ThemeColor.Success" @onclick="async () => { EditScheduleId = Guid.Empty; await EditModal.ShowAsync(); }">
         Add schedule

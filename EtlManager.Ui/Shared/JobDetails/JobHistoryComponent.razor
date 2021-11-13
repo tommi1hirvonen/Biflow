@@ -1,6 +1,8 @@
 ﻿@inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject NavigationManager NavigationManager
 
+<PageTitle>@Job?.JobName | History | ETL Manager</PageTitle>
+
 <div class="row">
     <div class="col">
         <div class="form-check form-check-inline">
@@ -113,6 +115,9 @@
 @code {
     [Parameter]
     public Guid Id { get; set; }
+
+    [Parameter]
+    public Job? Job { get; set; }
 
     private Guid PrevId { get; set; }
 

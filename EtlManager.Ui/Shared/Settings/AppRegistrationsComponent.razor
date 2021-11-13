@@ -1,7 +1,9 @@
 ﻿@inject IConfiguration configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject MarkupHelperService MarkupHelper
-@inject ITokenService TokenService 
+@inject ITokenService TokenService
+
+<PageTitle>App registrations | ETL Manager</PageTitle>
 
 <HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
     Add App registration

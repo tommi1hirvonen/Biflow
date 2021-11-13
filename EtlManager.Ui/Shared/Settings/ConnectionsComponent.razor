@@ -1,6 +1,8 @@
 ﻿@inject IConfiguration Configuration
 @inject IDbContextFactory<EtlManagerContext> DbFactory
-@inject MarkupHelperService MarkupHelper 
+@inject MarkupHelperService MarkupHelper
+
+<PageTitle>Connections | ETL Manager</PageTitle>
 
 <HxDropdown>
     <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Connections is not null">

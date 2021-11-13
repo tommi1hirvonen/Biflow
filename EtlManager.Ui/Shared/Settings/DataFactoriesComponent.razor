@@ -2,6 +2,8 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject MarkupHelperService MarkupHelper
 
+<PageTitle>Data Factories | ETL Manager</PageTitle>
+
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
           Enabled="DataFactories is not null && AppRegistrations is not null && AppRegistrations.Any()">
