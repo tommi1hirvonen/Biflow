@@ -1,4 +1,4 @@
-﻿@page "/subscriptions"
+﻿@page "/subscriptions/{Page?}"
 
 @inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
@@ -7,175 +7,41 @@
 
 <h4>Subscriptions</h4>
 
-<div class="row mt-4">
-    <div class="col">
-        @if (User is not null && string.IsNullOrWhiteSpace(User.Email))
-        {
-            <HxAlert Color="ThemeColor.Warning" CssClass="mb-3">
-                Email address for account <strong>@User.Username</strong> was not set. Go to the <a class="alert-link" href="account">Account page</a> to enter a valid email address.
-            </HxAlert>
-        }
-        <div class="card shadow-sm">
-            <div class="card-body px-0">
-                @if (User is null || Jobs is null)
-                {
-                    <p class="px-3">Loading...</p>
-                }
-                else
-                {
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>
-                                    Job
-                                </th>
-                                <th>
-                                    Subscription
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var job in Jobs)
-                            {
-                                <tr>
-                                    <td>
-                                        @job.JobName
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_none")"
-                                                       checked=@(!User.Subscriptions.Any(sub => sub.JobId == job.JobId))
-                                                       @onchange="() => RemoveSubscription(job)">
-                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_none")">None</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_failure")"
-                                                       checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnFailure)
-                                                       @onchange="() => ToggleSubscription(job, SubscriptionType.OnFailure)">
-                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_failure")">On failure</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_success")"
-                                                       checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnSuccess)
-                                                       @onchange="() => ToggleSubscription(job, SubscriptionType.OnSuccess)">
-                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_success")">On success</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="radio" class="form-check-input" id="@(job.JobId.ToString() + "_completion")"
-                                                       checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.SubscriptionType == SubscriptionType.OnCompletion)
-                                                       @onchange="() => ToggleSubscription(job, SubscriptionType.OnCompletion)">
-                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_completion")">On completion</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input type="checkbox" class="form-check-input" id="@(job.JobId.ToString() + "_overtime")"
-                                                       checked=@(User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId)?.NotifyOnOvertime == true)
-                                                       @onchange="args => ToggleSubscription(job, (bool)args.Value!)">
-                                                <label class="form-check-label" for="@(job.JobId.ToString() + "_overtime")">On overtime</label>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-            </div>
-        </div>
-    </div>
-</div>
+<AuthorizeView Roles="Admin">
+    <ul class="nav nav-pills mt-3 mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.All">
+                My subscriptions
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="subscriptions/all">
+                All subscriptions
+            </NavLink>
+        </li>
+    </ul>
+</AuthorizeView>
+
+@if (Page is null)
+{
+    <MySubscriptionsComponent />
+}
+else if (Page == "all")
+{
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <AllSubscriptionsComponent />
+        </Authorized>
+        <NotAuthorized>
+            <p class="mt-4">Not authorized</p>
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else
+{
+    <p>Sorry, nothing at this address.</p>
+}
 
 @code {
-    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-
-    private User User { get; set; } = null!;
-
-    private IList<Job> Jobs { get; set; } = null!;
-
-    protected override async Task OnInitializedAsync()
-    {
-        using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
-        User = await context.Users
-            .AsNoTrackingWithIdentityResolution()
-            .Include(user => user.Subscriptions)
-            .FirstAsync(user => user.Username == Username);
-        Jobs = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(job => job.JobName)
-            .ToListAsync();
-    }
-
-    private async Task RemoveSubscription(Job job)
-    {
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        if (subscription is null)
-            return;
-
-        using var context = DbFactory.CreateDbContext();
-        try
-        {
-            context.Subscriptions.Remove(subscription);
-            User.Subscriptions.Remove(subscription);
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error", "Error removing subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(Job job, bool onOvertime)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        try
-        {
-            if (subscription is not null && subscription.SubscriptionType is null && !onOvertime)
-            {
-                context.Subscriptions.Remove(subscription);
-                User.Subscriptions.Remove(subscription);
-            }
-            else if (subscription is not null)
-            {
-                subscription.NotifyOnOvertime = onOvertime;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = null, NotifyOnOvertime = onOvertime };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error", "Error toggling subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(Job job, SubscriptionType subscriptionType)
-    {
-        using var context = DbFactory.CreateDbContext();
-        var subscription = User.Subscriptions.FirstOrDefault(sub => sub.JobId == job.JobId);
-        try
-        {
-            if (subscription is not null)
-            {
-                subscription.SubscriptionType = subscriptionType;
-                context.Attach(subscription).State = EntityState.Modified;
-            }
-            else
-            {
-                var newSub = new Subscription { JobId = job.JobId, Username = Username, SubscriptionType = subscriptionType };
-                context.Subscriptions.Add(newSub);
-                User.Subscriptions.Add(newSub);
-            }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error", "Error toggling subscription");
-        }
-    }
+    [Parameter] public string? Page { get; set; }
 }
