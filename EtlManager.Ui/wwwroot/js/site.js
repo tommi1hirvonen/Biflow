@@ -188,3 +188,7 @@ function drawSuccessRateGraph(datasets_) {
     })
 
 }
+
+function setPropByElement(element, property, value) {
+    element[property] = value;
+}

@@ -25,17 +25,21 @@ public partial class StepsComponent : ComponentBase
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     private IEnumerable<Step> FilteredSteps => Steps?
-                 .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
-                 .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
-                 .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
-                 .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-                 .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) ?? Enumerable.Empty<Step>();
+        .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
+        .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
+        .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
+        .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
+        .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType))
+        ?? Enumerable.Empty<Step>();
 
     private IEnumerable<Tag> Tags => Steps?
-    .SelectMany(step => step.Tags)
-    .Select(tag => tag with { Steps = null! })
-    .Distinct()
-    .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
+        .SelectMany(step => step.Tags)
+        .Select(tag => tag with { Steps = null! })
+        .Distinct()
+        .OrderBy(t => t.TagName)
+        ?? Enumerable.Empty<Tag>();
+
+    private HashSet<Step> SelectedSteps { get; set; } = new();
 
     private JobParametersModal JobParametersModal { get; set; } = null!;
 
@@ -94,6 +98,41 @@ public partial class StepsComponent : ComponentBase
             await StepEditModals[(StepType)stepType].ShowAsync();
     }
 
+    private void ToggleAllStepsSelected(bool value)
+    {
+        if (value)
+        {
+            var stepsToAdd = FilteredSteps.Where(s => !SelectedSteps.Contains(s));
+            foreach (var s in stepsToAdd) SelectedSteps.Add(s);
+        }
+        else
+        {
+            SelectedSteps.Clear();
+        }
+    }
+
+    private async Task DeleteSelectedSteps()
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            foreach (var step in SelectedSteps)
+            {
+                context.Steps.Remove(step);
+            }
+            await context.SaveChangesAsync();
+            foreach (var step in SelectedSteps)
+            {
+                Steps?.Remove(step);
+            }
+            SelectedSteps.Clear();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting step", ex.Message);
+        }
+    }
+
     private async Task ToggleEnabled(ChangeEventArgs args, Step step)
     {
         bool value = (bool)args.Value!;
@@ -118,6 +157,7 @@ public partial class StepsComponent : ComponentBase
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
             Steps?.Remove(step);
+            SelectedSteps.Remove(step);
         }
         catch (Exception ex)
         {

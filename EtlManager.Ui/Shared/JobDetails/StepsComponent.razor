@@ -160,12 +160,33 @@
                     _ => string.Empty
                 };
                 var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
+                var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
                 <li class="list-group-item" style="background-color: #fafafa">
-                    <div class="row fw-bold text-secondary small">
-                        <div class="col">
-                            @countText
+                    <div class="row align-items-center" style="min-height: 31px;">
+                        <AuthorizeView Roles="Admin, Editor">
+                            <div class="col text-secondary">
+                                <TriStateCheckbox Checked="@(SelectedSteps.Count == Steps?.Count)"
+                                                  Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != Steps?.Count)"
+                                                  CheckedChanged="ToggleAllStepsSelected"/>
+                                @selectedText
+                            </div>
+                            <div class="col btn-shadow-none">
+                                @if (SelectedSteps.Any())
+                                {
+                                    <HxDropdown>
+                                        <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small">@MarkupHelper.FromFile("icons/feather/trash-2.svg")</HxDropdownToggleButton>
+                                        <HxDropdownMenu>
+                                            <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
+                                            <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdown>
+                                }
+                            </div>
+                        </AuthorizeView>
+                        <div class="col text-secondary text-center">
+                             @countText
                         </div>
-                        <div class="col text-end">
+                        <div class="col text-secondary text-end">
                             @disabledCountText
                         </div>
                     </div>
@@ -176,6 +197,13 @@
                         <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                                 <AuthorizeView Roles="Admin, Editor">
+                                    <div class="form-check me-2">
+                                        <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
+                                               checked=@(SelectedSteps.Contains(item))
+                                               @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
+                                        <label class="form-check-label" for="select_step_@item.StepId"></label>
+                                    </div>
+
                                     <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         &nbsp;
