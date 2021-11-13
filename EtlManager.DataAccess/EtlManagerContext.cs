@@ -191,6 +191,13 @@ public class EtlManagerContext : DbContext
             .UsingEntity<Dictionary<string, object>>("StepTag",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
+            
+            e.HasMany(t => t.Schedules)
+            .WithMany(s => s.Tags)
+            .UsingEntity<Dictionary<string, object>>("ScheduleTag",
+            x => x.HasOne<Schedule>().WithMany().HasForeignKey("ScheduleId"),
+            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
+
             e.Property(p => p.Color).HasConversion(tagColorConverter);
         });
 

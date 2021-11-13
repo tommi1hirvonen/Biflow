@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace EtlManager.Scheduler;
 
 [DisallowConcurrentExecution]
-class ExecutionJob : IJob
+public class ExecutionJob : IJob
 {
     private readonly ILogger<ExecutionJob> _logger;
     private readonly IConfiguration _configuration;
@@ -50,15 +50,50 @@ class ExecutionJob : IJob
                 return;
             }
 
+            // Create a list of step ids based on the schedule's tag filters.
+            // The list will be null if no tag filters were applied.
+            List<Guid>? stepIds = null;
+            try
+            {
+                using var dbContext = _dbContextFactory.CreateDbContext();
+                var scheduleTags = await dbContext.Schedules
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(s => s.Tags)
+                    .Where(s => s.ScheduleId == scheduleId)
+                    .SelectMany(s => s.Tags.Select(t => t.TagId))
+                    .ToListAsync();
+                if (scheduleTags.Any())
+                {
+                    stepIds = await dbContext.Steps
+                        .AsNoTrackingWithIdentityResolution()
+                        .Include(s => s.Tags)
+                        .Where(s => s.JobId == jobId)
+                        .Where(s => s.Tags.Any(t => scheduleTags.Contains(t.TagId)))
+                        .Select(s => s.StepId)
+                        .ToListAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting step ids based on schedule's tag filters");
+                return;
+            }
+
             using var sqlConnection = new SqlConnection(etlManagerConnectionString);
             await sqlConnection.OpenAsync();
 
             Guid executionId;
             try
             {
-                executionId = await sqlConnection.ExecuteScalarAsync<Guid>(
-                    "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_",
-                    new { JobId_ = jobId, ScheduleId_ = scheduleId });
+                executionId = stepIds switch
+                {
+                    not null and { Count: > 0 } => await sqlConnection.ExecuteScalarAsync<Guid>(
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @ScheduleId = @ScheduleId_",
+                        new { JobId_ = jobId, StepIds_ = string.Join(',', stepIds), ScheduleId_ = scheduleId }),
+                    _ => await sqlConnection.ExecuteScalarAsync<Guid>(
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_",
+                        new { JobId_ = jobId, ScheduleId_ = scheduleId })
+                };
             }
             catch (Exception ex)
             {

@@ -51,17 +51,20 @@
                     Next execution
                 </th>
                 <th>
+                    Tag filters
+                </th>
+                <th>
                 </th>
             </tr>
         </thead>
         <tbody>
             @if (Schedules_ is null)
             {
-                <tr><td colspan="11">Loading...</td></tr>
+                <tr><td colspan="6">Loading...</td></tr>
             }
             else if (Schedules_.Count == 0)
             {
-                <tr><td colspan="11">No schedules</td></tr>
+                <tr><td colspan="6">No schedules</td></tr>
             }
             else
             {
@@ -108,6 +111,12 @@
                                     @MarkupHelper.FromFile("icons/feather/info.svg")
                                 </HxTooltip>
                             </div>
+                        </td>
+                        <td>
+                            @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                            {
+                                <TagComponent Tag="tag" CssClass="m-1" />
+                            }
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
@@ -159,6 +168,11 @@
                                     <InputText class="form-control" @bind-Value="NewSchedule.CronExpression"></InputText>
                                 </div>
                             </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Tag filters</label>
+                                <HxInputTags @bind-Value="Tags" DataProvider="GetTagSuggestions" AllowCustomTags="false" SuggestMinimumLength="0" SuggestDelay="0" />
+                                <div class="form-text">Use tag filters to only include steps with specific tags in a scheduled execution.</div>
+                            </div>
                         </div>
                     </div>
                 </EditForm>
@@ -177,25 +191,27 @@
 
     private List<Schedule>? Schedules_ { get; set; }
 
-    private Schedule NewSchedule { get; set; } = new();
+    private Schedule NewSchedule { get; set; } = new() { Tags = new List<Tag>() };
+
+    private List<string> Tags { get; set; } = new();
 
     private HxModal CreateModal { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadData();
-    }
+    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
 
-    private async Task LoadData()
+    protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
         Schedules_ = await context.Schedules
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
+            .Include(schedule => schedule.Tags)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.CronExpression)
             .ToListAsync();
+
+        AllTags = await context.Tags.ToListAsync();
 
         if (Jobs.Count == 0)
         {
@@ -205,9 +221,20 @@
         NewSchedule = new()
         {
             JobId = Jobs.Select(job => job.JobId).First(),
-            IsEnabled = true
+            IsEnabled = true,
+            Tags = new List<Tag>()
         };
     }
+
+    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request) =>
+         await Task.FromResult<InputTagsDataProviderResult>(new InputTagsDataProviderResult
+         {
+             Data = AllTags
+             .Select(t => t.TagName)
+             .Where(t => t.ContainsIgnoreCase(request.UserInput))
+             .Where(t => !Tags.Any(tag => t == tag))
+             .OrderBy(t => t)
+         });
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -237,6 +264,14 @@
         {
             // Save the new schedule to the database.
             using var context = DbFactory.CreateDbContext();
+
+            var tags = await context.Tags.ToListAsync();
+            foreach (var tagName in Tags)
+            {
+                var tag = tags.FirstOrDefault(t => t.TagName == tagName);
+                if (tag is not null) NewSchedule.Tags.Add(tag);
+            }
+
             using var transaction = context.Database.BeginTransaction();
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
@@ -261,6 +296,7 @@
             NewSchedule = new()
             {
                 JobId = Jobs.Select(job => job.JobId).First(),
+                Tags = new List<Tag>(),
                 IsEnabled = true
             };
         }
@@ -268,6 +304,7 @@
         {
             Messenger.AddError("Error adding schedule", ex.Message);
         }
+        Tags.Clear();
     }
 
     private async Task DeleteSchedule(Schedule schedule)

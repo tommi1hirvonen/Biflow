@@ -129,11 +129,11 @@ public static partial class Utility
         }
     }
 
-    public static DateTime GetNextFireTime(this Schedule schedule) => schedule.NextFireTimesSequence().FirstOrDefault();
+    public static DateTime? GetNextFireTime(this Schedule schedule) => schedule.NextFireTimesSequence().FirstOrDefault();
 
-    public static IEnumerable<DateTime> GetNextFireTimes(this Schedule schedule, int count) => schedule.NextFireTimesSequence().Take(count);
+    public static IEnumerable<DateTime?> GetNextFireTimes(this Schedule schedule, int count) => schedule.NextFireTimesSequence().Take(count);
 
-    private static IEnumerable<DateTime> NextFireTimesSequence(this Schedule schedule)
+    private static IEnumerable<DateTime?> NextFireTimesSequence(this Schedule schedule)
     {
         if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
         {

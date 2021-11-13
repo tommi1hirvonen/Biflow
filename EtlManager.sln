@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.DataAccess", "Et
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.Test", "EtlManager.Executor.Test\EtlManager.Executor.Test.csproj", "{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManager.Scheduler.Test", "EtlManager.Scheduler.Test\EtlManager.Scheduler.Test.csproj", "{F76E6365-1E1A-456B-9AAE-35325BA1FE33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

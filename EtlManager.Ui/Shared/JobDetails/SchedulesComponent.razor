@@ -29,6 +29,9 @@
                     Next execution
                 </th>
                 <th>
+                    Tag filters
+                </th>
+                <th>
                 </th>
             </tr>
         </thead>
@@ -82,6 +85,12 @@
                                 </HxTooltip>
                             </div>
                         </td>
+                        <td class="align-middle">
+                            @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                            {
+                                <TagComponent Tag="tag" CssClass="m-1" />
+                            }
+                        </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
@@ -119,6 +128,11 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <label class="form-label">Tag filters</label>
+                        <HxInputTags @bind-Value="Tags" DataProvider="GetTagSuggestions" AllowCustomTags="false" SuggestMinimumLength="0" SuggestDelay="0" />
+                        <div class="form-text">Use tag filters to only include steps with specific tags in a scheduled execution.</div>
+                    </div>
                 </EditForm>
             </BodyTemplate>
             <FooterTemplate>
@@ -139,8 +153,11 @@
     private List<Schedule>? Schedules { get; set; }
 
     private Schedule? NewSchedule { get; set; }
+    private List<string> Tags { get; set; } = new();
 
     private HxModal CreateModal { get; set; } = null!;
+
+    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
 
     protected override async Task OnParametersSetAsync()
     {
@@ -150,12 +167,24 @@
             using var context = DbFactory.CreateDbContext();
             Schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
+                .Include(schedule => schedule.Tags)
                 .Where(schedule => schedule.JobId == Job.JobId)
                 .OrderBy(schedule => schedule.CronExpression)
                 .ToListAsync();
-            NewSchedule = new() { JobId = Job.JobId, IsEnabled = true };
+            NewSchedule = new() { JobId = Job.JobId, IsEnabled = true, Tags = new List<Tag>() };
+            AllTags = await context.Tags.ToListAsync();
         }
     }
+
+    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request) =>
+         await Task.FromResult<InputTagsDataProviderResult>(new InputTagsDataProviderResult
+         {
+             Data = AllTags
+             .Select(t => t.TagName)
+             .Where(t => t.ContainsIgnoreCase(request.UserInput))
+             .Where(t => !Tags.Any(tag => t == tag))
+             .OrderBy(t => t)
+         });
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -186,6 +215,14 @@
             if (NewSchedule is null) throw new InvalidOperationException("NewSchedule was null");
             // Save the new schedule to the database.
             using var context = DbFactory.CreateDbContext();
+
+            var tags = await context.Tags.ToListAsync();
+            foreach (var tagName in Tags)
+            {
+                var tag = tags.FirstOrDefault(t => t.TagName == tagName);
+                if (tag is not null) NewSchedule.Tags.Add(tag);
+            }
+
             using var transaction = context.Database.BeginTransaction();
             context.Schedules.Add(NewSchedule);
             await context.SaveChangesAsync();
@@ -207,6 +244,7 @@
             NewSchedule = new()
             {
                 JobId = Job?.JobId ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
+                Tags = new List<Tag>(),
                 IsEnabled = true
             };
         }
@@ -214,6 +252,7 @@
         {
             Messenger.AddError("Error adding schedule", ex.Message);
         }
+        Tags.Clear();
     }
 
     private async Task DeleteSchedule(Schedule schedule)

@@ -29,4 +29,5 @@ public class Schedule
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }
 
+    public IList<Tag> Tags { get; set; } = null!;
 }

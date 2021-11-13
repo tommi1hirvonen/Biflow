@@ -93,5 +93,6 @@
     <Build Include="etlmanager\Tables\JobParameter.sql" />
     <Build Include="etlmanager\Tables\ExecutionStepParameter.sql" />
     <Build Include="etlmanager\Tables\ExecutionDependency.sql" />
+    <Build Include="etlmanager\Tables\ScheduleTag.sql" />
   </ItemGroup>
 </Project>

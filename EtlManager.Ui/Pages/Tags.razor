@@ -36,19 +36,20 @@
                             <th></th>
                             <th></th>
                             <th></th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Tags_ is null)
                         {
                             <tr>
-                                <td colspan="4" class="px-3">Loading...</td>
+                                <td colspan="5" class="px-3">Loading...</td>
                             </tr>
                         }
                         else if (!Tags_.Any())
                         {
                             <tr>
-                                <td colspan="4" class="px-3">No tags</td>
+                                <td colspan="5" class="px-3">No tags</td>
                             </tr>
                         }
                         else
@@ -57,6 +58,7 @@
                             {
                                 var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
                                 var steps = tag.Steps.Count();
+                                var schedules = tag.Schedules.Count;
                                 <tr>
                                     <td class="align-middle">
                                         <TagComponent Tag="tag" />
@@ -110,6 +112,12 @@
                                     <td class="align-middle">
                                         <a class="text-dark" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
                                             @(steps > 0 ? $"{steps} step(s)" : null)
+                                        </a>
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <a class="text-dark" href="javascript:void(0)" @onclick="async () => await ShowSchedulesModalAsync(tag)">
+                                            @(schedules > 0 ? $"{schedules} schedule(s)" : null)
                                         </a>
                                     </td>
                                 </tr>
@@ -189,6 +197,50 @@
     </FooterTemplate>
 </HxModal>
 
+<HxModal @ref="SchedulesModal" Size="ModalSize.Large" Title="@($"Schedules using {SchedulesModalTag?.TagName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Cron expression</th>
+                            <th>Next execution</th>
+                            <th>Enabled</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var schedule in SchedulesModalTag?.Schedules
+                           .OrderBy(s => s.Job.JobName) ?? Enumerable.Empty<Schedule>())
+                        {
+                            <tr>
+                                <td>
+                                    @schedule.Job.JobName
+                                </td>
+                                <td>
+                                    @schedule.CronExpression
+                                </td>
+                                <td>
+                                    @schedule.GetNextFireTime()
+                                </td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" class="form-check-input" disabled checked=@schedule.IsEnabled>
+                                        <label class="form-check-label" for="@schedule.ScheduleId"></label>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="SchedulesModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
 
 @code {
     private IList<Tag>? Tags_ { get; set; }
@@ -201,7 +253,11 @@
 
     private HxModal EditModal { get; set; } = null!;
 
+    private HxModal SchedulesModal { get; set; } = null!;
+
     private Tag? EditTag { get; set; }
+
+    private Tag? SchedulesModalTag { get; set; }
 
     private Tag TemplateTag { get; set; } = new(string.Empty);
 
@@ -212,6 +268,8 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Steps)
             .ThenInclude(t => t.Job)
+            .Include(t => t.Schedules)
+            .ThenInclude(s => s.Job)
             .OrderBy(t => t.TagName)
             .ToListAsync();
     }
@@ -303,5 +361,11 @@
     {
         EditTag = tag;
         await EditModal.ShowAsync();
+    }
+
+    private async Task ShowSchedulesModalAsync(Tag tag)
+    {
+        SchedulesModalTag = tag;
+        await SchedulesModal.ShowAsync();
     }
 }

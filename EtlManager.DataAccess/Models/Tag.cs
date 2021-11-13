@@ -21,6 +21,8 @@ public record Tag
     public TagColor Color { get; set; }
 
     public IList<Step> Steps { get; set; } = null!;
+
+    public IList<Schedule> Schedules { get; set; } = null!;
 }
 
 public enum TagColor
