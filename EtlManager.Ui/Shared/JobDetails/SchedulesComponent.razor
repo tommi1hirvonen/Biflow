@@ -10,7 +10,7 @@
 </style>
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <HxButton Color="ThemeColor.Success" @onclick="async () => await CreateModal.ShowAsync()">
+    <HxButton Color="ThemeColor.Success" @onclick="async () => { EditScheduleId = Guid.Empty; await EditModal.ShowAsync(); }">
         Add schedule
     </HxButton>
 </AuthorizeView>
@@ -86,6 +86,14 @@
                             </div>
                         </td>
                         <td class="align-middle">
+                            <AuthorizeView Roles="Admin, Editor, Operator">
+                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row"
+                                              @onclick="async () => { EditScheduleId = item.ScheduleId; await EditModal.ShowAsync(); }">
+                                        @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                    </HxButton>
+                                </HxButtonGroup>
+                            </AuthorizeView>
                             @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                             {
                                 <TagComponent Tag="tag" CssClass="m-1" />
@@ -107,42 +115,9 @@
     </table>
 </div>
 
-@if (NewSchedule is not null)
-{
-    <AuthorizeView Roles="Admin, Editor, Operator">
-        <HxModal @ref="CreateModal" Size="ModalSize.Regular" Title="New schedule">
-            <BodyTemplate>
-                <EditForm Model="NewSchedule" id="new_schedule_form" OnValidSubmit="AddSchedule" Context="_context">
-                    <div class="row">
-                        <div class="col">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
-                            <div>
-                                <label class="form-label">Cron expression</label>
-                                <div class="input-group">
-                                    <div class="input-group-text">
-                                        @MarkupHelper.FromFile("icons/feather/calendar.svg")
-                                    </div>
-                                    <InputText class="form-control" @bind-Value="NewSchedule.CronExpression"></InputText>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <label class="form-label">Tag filters</label>
-                        <HxInputTags @bind-Value="Tags" DataProvider="GetTagSuggestions" AllowCustomTags="false" SuggestMinimumLength="0" SuggestDelay="0" />
-                        <div class="form-text">Use tag filters to only include steps with specific tags in a scheduled execution.</div>
-                    </div>
-                </EditForm>
-            </BodyTemplate>
-            <FooterTemplate>
-                <HxSubmit FormId="new_schedule_form" Color="ThemeColor.Success">Create</HxSubmit>
-                <HxButton Color="ThemeColor.Secondary" @onclick="async () => await CreateModal.HideAsync()">Cancel</HxButton>
-            </FooterTemplate>
-        </HxModal>
-    </AuthorizeView>
-}
-
+<AuthorizeView Roles="Admin, Editor, Operator">
+    <ScheduleEditModal @ref="EditModal" Job="Job" ScheduleId="EditScheduleId" OnSubmit="OnScheduleSubmit" />
+</AuthorizeView>
 
 @code {
     [Parameter]
@@ -152,12 +127,8 @@
 
     private List<Schedule>? Schedules { get; set; }
 
-    private Schedule? NewSchedule { get; set; }
-    private List<string> Tags { get; set; } = new();
-
-    private HxModal CreateModal { get; set; } = null!;
-
-    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+    private ScheduleEditModal EditModal { get; set; } = null!;
+    private Guid EditScheduleId { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -171,20 +142,8 @@
                 .Where(schedule => schedule.JobId == Job.JobId)
                 .OrderBy(schedule => schedule.CronExpression)
                 .ToListAsync();
-            NewSchedule = new() { JobId = Job.JobId, IsEnabled = true, Tags = new List<Tag>() };
-            AllTags = await context.Tags.ToListAsync();
         }
     }
-
-    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request) =>
-         await Task.FromResult<InputTagsDataProviderResult>(new InputTagsDataProviderResult
-         {
-             Data = AllTags
-             .Select(t => t.TagName)
-             .Where(t => t.ContainsIgnoreCase(request.UserInput))
-             .Where(t => !Tags.Any(tag => t == tag))
-             .OrderBy(t => t)
-         });
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -207,52 +166,10 @@
         }
     }
 
-    private async Task AddSchedule()
+    private void OnScheduleSubmit(Schedule schedule)
     {
-        await CreateModal.HideAsync();
-        try
-        {
-            if (NewSchedule is null) throw new InvalidOperationException("NewSchedule was null");
-            // Save the new schedule to the database.
-            using var context = DbFactory.CreateDbContext();
-
-            var tags = await context.Tags.ToListAsync();
-            foreach (var tagName in Tags)
-            {
-                var tag = tags.FirstOrDefault(t => t.TagName == tagName);
-                if (tag is not null) NewSchedule.Tags.Add(tag);
-            }
-
-            using var transaction = context.Database.BeginTransaction();
-            context.Schedules.Add(NewSchedule);
-            await context.SaveChangesAsync();
-            // Send the schedule to the scheduler service.
-            bool success = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Add, NewSchedule);
-            // Commit the database transaction if the scheduler received the schedule. Otherwise rollback the transaction.
-            if (success)
-            {
-                transaction.Commit();
-            }
-            else
-            {
-                transaction.Rollback();
-                throw new Exception("Error sending the new schedule to the scheduler service");
-            }
-
-            Schedules?.Add(NewSchedule);
-            Schedules = Schedules?.OrderBy(sched => sched.CronExpression).ToList();
-            NewSchedule = new()
-            {
-                JobId = Job?.JobId ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
-                Tags = new List<Tag>(),
-                IsEnabled = true
-            };
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error adding schedule", ex.Message);
-        }
-        Tags.Clear();
+        Schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
+        Schedules?.Add(schedule);
     }
 
     private async Task DeleteSchedule(Schedule schedule)
