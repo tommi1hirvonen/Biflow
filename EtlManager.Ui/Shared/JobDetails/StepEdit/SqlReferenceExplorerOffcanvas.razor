@@ -29,34 +29,51 @@
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-auto">
-                <label class="form-label">Referencing object</label>
-            </div>
             <div class="col">
+                <label class="form-label">Referencing object</label>
                 <div class="input-group input-group-sm">
-                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
+                    <span class="input-group-text">Schema</span>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencingSchemaOperator" style="max-width: 5rem;">
+                        <option value="=">=</option>
+                        <option value="like">like</option>
+                    </InputSelect>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off"
                            @bind-value="ReferencingSchemaFilter" @bind-value:event="oninput" />
-                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                    <span class="input-group-text">Name</span>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencingNameOperator" style="max-width: 5rem;">
+                        <option value="=">=</option>
+                        <option value="like">like</option>
+                    </InputSelect>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off"
                            @bind-value="ReferencingNameFilter" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-auto">
-                <label class="form-label">Referenced object</label>
-            </div>
             <div class="col">
+                <label class="form-label">Referenced object</label>
                 <div class="input-group input-group-sm">
-                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
+                    <span class="input-group-text">Schema</span>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencedSchemaOperator" style="max-width: 5rem;">
+                        <option value="=">=</option>
+                        <option value="like">like</option>
+                    </InputSelect>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off"
                            @bind-value="ReferencedSchemaFilter" @bind-value:event="oninput" />
-                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                    <span class="input-group-text">Name</span>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencedNameOperator" style="max-width: 5rem;">
+                        <option value="=">=</option>
+                        <option value="like">like</option>
+                    </InputSelect>
+                    <input type="text" class="form-control form-control-sm" autocomplete="off"
                            @bind-value="ReferencedNameFilter" @bind-value:event="oninput" />
                 </div>
+                <div class="form-text">Hover over an object's name to view its type.</div>
             </div>
         </div>
         <div class="row mt-2">
             <div class="col">
-                <table class="table table-hover table-sm">
+                <table class="table table-striped table-sm">
                     <thead>
                         <tr>
                             <th>
@@ -102,9 +119,17 @@
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
     private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    private string ReferencingSchemaOperator { get; set; } = "like";
     private string ReferencingSchemaFilter { get; set; } = string.Empty;
+
+    private string ReferencingNameOperator { get; set; } = "like";
     private string ReferencingNameFilter { get; set; } = string.Empty;
+
+    private string ReferencedSchemaOperator { get; set; } = "like";
     private string ReferencedSchemaFilter { get; set; } = string.Empty;
+
+    private string ReferencedNameOperator { get; set; } = "like";
     private string ReferencedNameFilter { get; set; } = string.Empty;
     private IEnumerable<SqlReference> QueryResults { get; set; } = Enumerable.Empty<SqlReference>();
 
@@ -115,9 +140,13 @@
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             QueryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
                 connectionId,
+                ReferencingSchemaOperator,
                 ReferencingSchemaFilter,
+                ReferencingNameOperator,
                 ReferencingNameFilter,
+                ReferencedSchemaOperator,
                 ReferencedSchemaFilter,
+                ReferencedNameOperator,
                 ReferencedNameFilter);
         }
         catch (Exception ex)

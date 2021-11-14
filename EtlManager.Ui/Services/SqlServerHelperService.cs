@@ -89,11 +89,24 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
         Guid connectionId,
+        string referencingSchemaOperator,
         string referencingSchemaFilter,
+        string referencingNameOperator,
         string referencingNameFilter,
+        string referencedSchemaOperator,
         string referencedSchemaFilter,
+        string referencedNameOperator,
         string referencedNameFilter)
     {
+        if (referencingSchemaOperator != "=" && referencingSchemaOperator != "like")
+            throw new ArgumentException($"Invalid operator {referencingSchemaOperator}", nameof(referencingSchemaOperator));
+        if (referencingNameOperator != "=" && referencingNameOperator != "like")
+            throw new ArgumentException($"Invalid operator {referencingNameOperator}", nameof(referencingNameOperator));
+        if (referencedSchemaOperator != "=" && referencedSchemaOperator != "like")
+            throw new ArgumentException($"Invalid operator {referencedSchemaOperator}", nameof(referencedSchemaOperator));
+        if (referencedNameOperator != "=" && referencedNameOperator != "like")
+            throw new ArgumentException($"Invalid operator {referencedNameOperator}", nameof(referencedNameOperator));
+
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
         {
@@ -105,14 +118,14 @@ public class SqlServerHelperService
         }
 
         static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-        var encodedReferencingSchemaFilter = $"%{encodeForLike(referencingSchemaFilter)}%";
-        var encodedReferencingNameFilter = $"%{encodeForLike(referencingNameFilter)}%";
-        var encodedReferencedSchemaFilter = $"%{encodeForLike(referencedSchemaFilter)}%";
-        var encodedReferencedNameFilter = $"%{encodeForLike(referencedNameFilter)}%";
+        var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{encodeForLike(referencingSchemaFilter)}%";
+        var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{encodeForLike(referencingNameFilter)}%";
+        var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{encodeForLike(referencedSchemaFilter)}%";
+        var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{encodeForLike(referencedNameFilter)}%";
 
         using var sqlConnection = new SqlConnection(connectionString);
         var rows = await sqlConnection.QueryAsync<SqlReference>(
-            @"select
+            $@"select distinct
 	            ReferencingSchema = c.name,
 	            ReferencingName = b.name,
 	            ReferencingType = b.type_desc,
@@ -124,8 +137,11 @@ public class SqlServerHelperService
 	            join sys.schemas as c on b.schema_id = c.schema_id
 	            join sys.objects as d on a.referenced_id = d.object_id
 	            join sys.schemas as e on d.schema_id = e.schema_id
-            where c.name like @ReferencingSchemaFilter and b.name like @ReferencingNameFilter
-                and e.name like @ReferencedSchemaFilter and d.name like @ReferencedNameFilter
+            where
+                c.name {referencingSchemaOperator} @ReferencingSchemaFilter and
+                b.name {referencingNameOperator} @ReferencingNameFilter and
+                e.name {referencedSchemaOperator} @ReferencedSchemaFilter and
+                d.name {referencedNameOperator} @ReferencedNameFilter
             order by
 	            ReferencingSchema,
 	            ReferencingName,
