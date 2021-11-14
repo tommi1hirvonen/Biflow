@@ -3,6 +3,7 @@ using EtlManager.Utilities;
 using Quartz;
 using System.IO.Pipes;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace EtlManager.Ui;
 
@@ -33,6 +34,47 @@ public static partial class Utility
         var cancelCommand = new CancelCommand(null, username);
         var json = JsonSerializer.Serialize(cancelCommand);
         streamWriter.WriteLine(json);
+    }
+
+    public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
+    {
+        var regex1 = new Regex(@"(\[.*\]).(\[.*\])"); // Can handle white space inside object names
+        var match1 = regex1.Match(sqlStatement);
+        if (match1.Success)
+        {
+            var schema = match1.Groups[1].Value[1..^1]; // skip first and last character
+            var proc = match1.Groups[2].Value[1..^1];
+            return (schema, proc);
+        }
+
+        var regex2 = new Regex(@"(\S*)\.(\S*)"); // No square brackets => no whitespace in object names
+        var match2 = regex2.Match(sqlStatement);
+        if (match2.Success)
+        {
+            var schema = match2.Groups[1].Value;
+            var proc = match2.Groups[2].Value;
+            return (schema, proc);
+        }
+
+        var regex3 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)", RegexOptions.IgnoreCase);
+        var match3 = regex3.Match(sqlStatement);
+        if (match3.Success)
+        {
+            var proc = match3.Groups[1].Value;
+            proc = proc[0] == '[' ? proc[1..^1] : proc;
+            return (null, proc);
+        }
+
+        var regex4 = new Regex(@"(^\S*)");
+        var match4 = regex4.Match(sqlStatement);
+        if (match4.Success)
+        {
+            var proc = match4.Groups[1].Value;
+            proc = proc[0] == '[' ? proc[1..^1] : proc;
+            return (null, proc);
+        }
+
+        return null;
     }
 
     public static (int Offset, int Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt)

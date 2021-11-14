@@ -59,7 +59,7 @@
             </HxButton>
         </div>
         <div class="col d-flex">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-auto" @onclick="async () => await SqlReferenceOffcanvas.ShowAsync()">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-auto" @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(Step.SqlStatement)">
                 @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                 Reference explorer
             </HxButton>

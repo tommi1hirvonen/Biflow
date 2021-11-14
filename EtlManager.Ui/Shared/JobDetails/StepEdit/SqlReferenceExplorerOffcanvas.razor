@@ -156,8 +156,21 @@
 
     }
 
-    public async Task ShowAsync()
+    public async Task ShowAsync(string? sqlStatement = null)
     {
+        var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
+        var schema = proc?.Schema;
+        var name = proc?.ProcedureName;
+        if (schema is not null)
+        {
+            ReferencingSchemaFilter = schema;
+            ReferencingSchemaOperator = "=";
+        }
+        if (name is not null)
+        {
+            ReferencingNameFilter = name;
+            ReferencingNameOperator = "=";
+        }
         await Offcanvas.ShowAsync();
     }
 
