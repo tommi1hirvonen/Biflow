@@ -87,6 +87,52 @@ public class SqlServerHelperService
         return agentJobs;
     }
 
+    public async Task<IEnumerable<(string Schema, string Name, string Type)?>> GetSqlModulesAsync(Guid connectionId)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+
+        using var sqlConnection = new SqlConnection(connectionString);
+        var results = await sqlConnection.QueryAsync<(string, string, string)?>(
+            @"select
+                SchemaName = c.name,
+                ObjectName = b.name,
+                ObjectType = b.type_desc
+            from sys.sql_modules as a
+            join sys.objects as b on a.object_id = b.object_id
+                join sys.schemas as c on b.schema_id = c.schema_id
+            order by
+                SchemaName,
+                ObjectName");
+        return results;
+    }
+
+    public async Task<string> GetObjectDefinitionAsync(Guid connectionId, string objectName)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+
+        using var sqlConnection = new SqlConnection(connectionString);
+        var definition = await sqlConnection.ExecuteScalarAsync<string>(
+            "SELECT OBJECT_DEFINITION(OBJECT_ID(@ObjectName))",
+            new { ObjectName = objectName});
+        return definition;
+    }
+
     public async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
         Guid connectionId,
         string referencingSchemaOperator,

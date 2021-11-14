@@ -1,0 +1,173 @@
+﻿@inject MarkupHelperService MarkupHelper
+@inject SqlServerHelperService SqlServerHelper
+@inject IHxMessengerService Messenger
+@inject IJSRuntime JS
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Explore SQL definitions">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-3">
+                <label class="form-label">Connection</label>
+            </div>
+            <div class="col-9">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ConnectionId">
+                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                        {
+                            <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-3">
+                <label class="form-label">Object name</label>
+            </div>
+            <div class="col-9">
+                <HxAutosuggest TItem="(string, string, string)?"
+                               TValue="string"
+                               @bind-Value="@ObjectName"
+                               DataProvider="ProvideSuggestions"
+                               ValueSelector="ValueSelector"
+                               ItemFromValueResolver="ResolveAutosuggestItemFromValue"
+                               TextSelector="TextSelector"
+                               MinimumLength="0"
+                               InputSize="InputSize.Small">
+                    <ItemTemplate Context="item">@($"{item?.Item1}.{@item?.Item2}") <sup>@item?.Item3</sup></ItemTemplate>
+                    <EmptyTemplate>
+                        <span class="p-2">No matching modules</span>
+                    </EmptyTemplate>
+                </HxAutosuggest>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQuery" Enabled="@(!string.IsNullOrEmpty(ObjectName))">
+                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    Get definition
+                </HxButton>
+            </div>
+        </div>
+
+        <hr />
+        @if (ObjectDefinition is not null)
+        {
+            <div class="row">
+                <div class="col">
+                    <a class="text-secondary small" href="javascript:void(0)" @onclick="CopyToClipboard">Copy to clipboard</a>
+                </div>
+            </div>
+        }
+        <div class="row mt-3">
+            <div class="col">
+                <pre><code>@(ObjectDefinition is null ? ErrorMessage : ObjectDefinition)</code></pre>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    [Parameter] public Guid? ConnectionId { get; set; }
+    private Guid PrevConnectionId { get; set; }
+    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    private IEnumerable<(string, string, string)?>? SqlModules { get; set; }
+
+    private string ObjectName { get; set; } = string.Empty;
+
+    private string? ObjectDefinition { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    private async Task<AutosuggestDataProviderResult<(string, string, string)?>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    {
+        try
+        {
+            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+            if (connectionId != PrevConnectionId)
+            {
+                PrevConnectionId = connectionId;
+                SqlModules = null;
+            }
+            SqlModules ??= await SqlServerHelper.GetSqlModulesAsync(connectionId);
+
+            var filteredModules = SqlModules?
+                .Where(module => $"[{module?.Item1}].[{module?.Item2}]".ContainsIgnoreCase(request.UserInput));
+            return new AutosuggestDataProviderResult<(string, string, string)?>
+            {
+                Data = filteredModules
+            };
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error querying references", ex.Message);
+        }
+        return new AutosuggestDataProviderResult<(string, string, string)?>
+        {
+            Data = Enumerable.Empty<(string, string, string)?>()
+        };
+    }
+
+    private string ValueSelector((string, string, string)? module) => $"[{module?.Item1}].[{module?.Item2}]";
+
+    private string TextSelector((string, string, string)? module) => $"[{module?.Item1}].[{module?.Item2}] ({module?.Item3})";
+
+    private async Task<(string, string, string)?> ResolveAutosuggestItemFromValue(string value)
+    {
+        var module = await Task.FromResult(SqlModules?.FirstOrDefault(module => $"[{module?.Item1}].[{module?.Item2}]" == value));
+        return module;
+    }
+
+    private async Task RunQuery()
+    {
+        try
+        {
+            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+            ObjectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, ObjectName);
+            if (ObjectDefinition is null)
+            {
+                ErrorMessage = $"No object definition found for '{ObjectName}'";
+            }
+            else
+            {
+                ErrorMessage = null;
+            }
+        }
+        catch (SqlException ex)
+        {
+            ObjectDefinition = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error querying references", ex.Message);
+        }
+
+    }
+
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", ObjectDefinition);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error copying to clipboard", ex.Message);
+        }
+    }
+
+    public async Task ShowAsync() => await Offcanvas.ShowAsync();
+
+}

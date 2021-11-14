@@ -52,15 +52,22 @@
                 Browse stored procedures
             </HxButton>
         </div>
+        <div class="col d-flex justify-content-center">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync()">
+                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                Definition explorer
+            </HxButton>
+        </div>
         <div class="col d-flex">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-auto" @onclick="async () => await SqlReferenceOffcanvas.ShowAsync()">
-                Reference explorer
                 @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                Reference explorer
             </HxButton>
         </div>
     </div>
     <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
     <SqlReferenceExplorerOffcanvas @ref="SqlReferenceOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
+    <SqlDefinitionExplorerOffcanvas @ref="SqlDefinitionOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
 
     <div class="row">
         <div class="col">
@@ -121,6 +128,7 @@
 
     private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
     private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
+    private SqlDefinitionExplorerOffcanvas SqlDefinitionOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
