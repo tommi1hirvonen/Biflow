@@ -27,7 +27,12 @@
     --color-warning-super-light: #FFF2CC;
     --color-warning-extra-dark: #856200;
     /*Havit.Blazor large offcanvas width*/
-    --hx-offcanvas-horizontal-width-lg: 700px;
+    --hx-offcanvas-horizontal-width-lg: 800px;
+    --hx-offcanvas-horizontal-width-sm: 600px;
+}
+
+.offcanvas-end {
+    width: 600px;
 }
 
 a {

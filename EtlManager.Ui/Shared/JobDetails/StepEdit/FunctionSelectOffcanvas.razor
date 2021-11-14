@@ -9,7 +9,7 @@
 
     <BodyTemplate>
         <div class="row">
-            <div class="col">
+            <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/filter.svg")
@@ -19,7 +19,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row mt-3">
             <div class="col">
                 <table class="table table-hover table-sm">
                     <thead>
@@ -58,7 +58,7 @@
                                     class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light fw-bold" : null)">
                                     <td>
                                         <small>
-                                            @function.FunctionName
+                                            <HighlightableText Text="@function.FunctionName" PartToHighlight="@FilterText" />
                                         </small>
                                     </td>
                                     <td>
