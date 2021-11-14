@@ -67,7 +67,9 @@
                             foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light fw-bold" : null)">
-                                    <td>@pipeline</td>
+                                    <td>
+                                        <HighlightableText Text="@pipeline" PartToHighlight="@FilterText" />
+                                    </td>
                                 </tr>
                             }
                         }

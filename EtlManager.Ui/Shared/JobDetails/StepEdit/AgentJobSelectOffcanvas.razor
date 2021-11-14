@@ -51,7 +51,7 @@
                                     @onclick="() => SelectedAgentJob = job.AgentJobName"
                                     class="@(job.AgentJobName == SelectedAgentJob ? "bg-light fw-bold" : null)">
                                     <td>
-                                        @job.AgentJobName
+                                        <HighlightableText Text="@job.AgentJobName" PartToHighlight="@FilterTextName" />
                                     </td>
                                     <td>
                                         <div class="form-check form-switch">

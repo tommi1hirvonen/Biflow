@@ -2,7 +2,7 @@
 
 @if (!string.IsNullOrEmpty(PartToHighlight) && (Text?.ContainsIgnoreCase(PartToHighlight) ?? false))
 {
-    @((MarkupString)Regex.Replace(Text, PartToHighlight, m => $"<mark>{m.Groups[0].Value}</mark>", RegexOptions.IgnoreCase))
+    @((MarkupString)Regex.Replace(Text, Regex.Escape(PartToHighlight), m => $"<mark>{m.Groups[0].Value}</mark>", RegexOptions.IgnoreCase))
 }
 else
 {

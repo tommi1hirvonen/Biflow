@@ -38,10 +38,14 @@
                         }
                         else
                         {
-                            foreach (var procedure in ProcedureNames)
+                            foreach (var procedure in ProceduresFlattened)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedProcedure = procedure" class="@(procedure == SelectedProcedure ? "bg-light fw-bold" : null)">
-                                    <td>@procedure</td>
+                                <tr style="cursor: pointer;"
+                                    @onclick="() => SelectedProcedure = procedure"
+                                    class="@(procedure == SelectedProcedure ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        <HighlightableText Text="@procedure.Item1" PartToHighlight="@FilterTextSchema" />.<HighlightableText Text="@procedure.Item2" PartToHighlight="@FilterTextName" />
+                                    </td>
                                 </tr>
                             }
                         }
@@ -72,23 +76,23 @@
 
     private Dictionary<string, List<string>>? Procedures { get; set; }
 
-    private IEnumerable<string> ProcedureNames => Procedures?
-        .Where(pair => pair.Key.ContainsIgnoreCase(FilterTextSchema))
-        .SelectMany(pair =>
-            pair.Value
-                .Where(str => str.ContainsIgnoreCase(FilterTextName))
-                .Select(str => $"[{pair.Key}].[{str}]")).OrderBy(str => str) ?? Enumerable.Empty<string>();
+    private IEnumerable<(string, string)> ProceduresFlattened => Procedures?
+        .SelectMany(pair => pair.Value.Select(str => (Schema: $"[{pair.Key}]", Procedure: $"[{str}]")))
+        .Where(tuple => tuple.Schema.ContainsIgnoreCase(FilterTextSchema))
+        .Where(tuple => tuple.Procedure.ContainsIgnoreCase(FilterTextName))
+        .OrderBy(tuple => tuple.Schema)
+        .ThenBy(tuple => tuple.Procedure) ?? Enumerable.Empty<(string, string)>();
 
     private string FilterTextName { get; set; } = string.Empty;
     private string FilterTextSchema { get; set; } = string.Empty;
 
-    private string? SelectedProcedure { get; set; }
+    private (string, string)? SelectedProcedure { get; set; }
 
     private async Task SelectProcedure()
     {
         if (SelectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync(SelectedProcedure);
+            await OnProcedureSelected.InvokeAsync($"{SelectedProcedure.Value.Item1}.{SelectedProcedure.Value.Item2}");
             await Offcanvas.HideAsync();
         }
     }

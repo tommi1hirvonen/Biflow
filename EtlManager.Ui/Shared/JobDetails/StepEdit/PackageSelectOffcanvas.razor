@@ -105,7 +105,9 @@
                                 foreach (var package in packages.Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light fw-bold" : null)">
-                                        <td>@package</td>
+                                        <td>
+                                            <HighlightableText Text="@package" PartToHighlight="@FilterText" />
+                                        </td>
                                     </tr>
                                 }
                             }
