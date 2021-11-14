@@ -1,0 +1,135 @@
+﻿@inject MarkupHelperService MarkupHelper
+@inject SqlServerHelperService SqlServerHelper
+@inject IHxMessengerService Messenger
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Explore SQL references">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-auto">
+                <label class="form-label">Connection</label>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="ConnectionId">
+                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                        {
+                            <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="col-auto">
+                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQuery">
+                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    Run query
+                </HxButton>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-auto">
+                <label class="form-label">Referencing object</label>
+            </div>
+            <div class="col">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
+                           @bind-value="ReferencingSchemaFilter" @bind-value:event="oninput" />
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                           @bind-value="ReferencingNameFilter" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-auto">
+                <label class="form-label">Referenced object</label>
+            </div>
+            <div class="col">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
+                           @bind-value="ReferencedSchemaFilter" @bind-value:event="oninput" />
+                    <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
+                           @bind-value="ReferencedNameFilter" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Referencing object
+                            </th>
+                            <th>
+                                Referenced object
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var reference in QueryResults)
+                        {
+                            var referencing = $"[{reference.ReferencingSchema}].[{reference.ReferencingName}]";
+                            var referenced = $"[{reference.ReferencedSchema}].[{reference.ReferencedName}]";
+                            <tr>
+                                <td>
+                                    <HxTooltip Text="@reference.ReferencingType">
+                                        @referencing
+                                    </HxTooltip>
+                                </td>
+                                <td>
+                                    <HxTooltip Text="@reference.ReferencedType">
+                                        @referenced
+                                    </HxTooltip>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    [Parameter] public Guid? ConnectionId { get; set; }
+    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private string ReferencingSchemaFilter { get; set; } = string.Empty;
+    private string ReferencingNameFilter { get; set; } = string.Empty;
+    private string ReferencedSchemaFilter { get; set; } = string.Empty;
+    private string ReferencedNameFilter { get; set; } = string.Empty;
+    private IEnumerable<SqlReference> QueryResults { get; set; } = Enumerable.Empty<SqlReference>();
+
+    private async Task RunQuery()
+    {
+        try
+        {
+            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+            QueryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
+                connectionId,
+                ReferencingSchemaFilter,
+                ReferencingNameFilter,
+                ReferencedSchemaFilter,
+                ReferencedNameFilter);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error querying references", ex.Message);
+        }
+
+    }
+
+    public async Task ShowAsync()
+    {
+        await Offcanvas.ShowAsync();
+    }
+
+}

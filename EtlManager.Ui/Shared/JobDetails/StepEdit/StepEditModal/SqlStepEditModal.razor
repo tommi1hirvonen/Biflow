@@ -52,8 +52,15 @@
                 Browse stored procedures
             </HxButton>
         </div>
+        <div class="col d-flex">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-auto" @onclick="async () => await SqlReferenceOffcanvas.ShowAsync()">
+                Reference explorer
+                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+            </HxButton>
+        </div>
     </div>
     <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+    <SqlReferenceExplorerOffcanvas @ref="SqlReferenceOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
 
     <div class="row">
         <div class="col">
@@ -113,6 +120,7 @@
     private ParameterizedStepEditModal Modal { get; set; } = null!;
 
     private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
+    private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {

@@ -87,6 +87,59 @@ public class SqlServerHelperService
         return agentJobs;
     }
 
+    public async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
+        Guid connectionId,
+        string referencingSchemaFilter,
+        string referencingNameFilter,
+        string referencedSchemaFilter,
+        string referencedNameFilter)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+
+        static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
+        var encodedReferencingSchemaFilter = $"%{encodeForLike(referencingSchemaFilter)}%";
+        var encodedReferencingNameFilter = $"%{encodeForLike(referencingNameFilter)}%";
+        var encodedReferencedSchemaFilter = $"%{encodeForLike(referencedSchemaFilter)}%";
+        var encodedReferencedNameFilter = $"%{encodeForLike(referencedNameFilter)}%";
+
+        using var sqlConnection = new SqlConnection(connectionString);
+        var rows = await sqlConnection.QueryAsync<SqlReference>(
+            @"select
+	            ReferencingSchema = c.name,
+	            ReferencingName = b.name,
+	            ReferencingType = b.type_desc,
+	            ReferencedSchema = e.name,
+	            ReferencedName = d.name,
+	            ReferencedType = d.type_desc
+            from sys.sql_expression_dependencies as a
+	            join sys.objects as b on a.referencing_id = b.object_id
+	            join sys.schemas as c on b.schema_id = c.schema_id
+	            join sys.objects as d on a.referenced_id = d.object_id
+	            join sys.schemas as e on d.schema_id = e.schema_id
+            where c.name like @ReferencingSchemaFilter and b.name like @ReferencingNameFilter
+                and e.name like @ReferencedSchemaFilter and d.name like @ReferencedNameFilter
+            order by
+	            ReferencingSchema,
+	            ReferencingName,
+	            ReferencedSchema,
+	            ReferencedName", new
+            {
+                ReferencingSchemaFilter = encodedReferencingSchemaFilter,
+                ReferencingNameFilter = encodedReferencingNameFilter,
+                ReferencedSchemaFilter = encodedReferencedSchemaFilter,
+                ReferencedNameFilter = encodedReferencedNameFilter
+            });
+        return rows;
+    }
+
     public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         string connectionString;
@@ -135,3 +188,11 @@ public record AsModel(string ModelName, List<AsTable> Tables);
 public record AsTable(string TableName, AsModel Model, List<AsPartition> Partitions);
 
 public record AsPartition(string PartitionName, AsTable Table);
+
+public record SqlReference(
+    string ReferencingSchema,
+    string ReferencingName,
+    string ReferencingType,
+    string ReferencedSchema,
+    string ReferencedName,
+    string ReferencedType);
