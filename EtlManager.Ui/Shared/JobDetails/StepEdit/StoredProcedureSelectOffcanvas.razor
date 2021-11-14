@@ -38,15 +38,34 @@
                         }
                         else
                         {
-                            foreach (var procedure in ProceduresFlattened)
+                            foreach (var proc in ProceduresFiltered)
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => SelectedProcedure = procedure"
-                                    class="@(procedure == SelectedProcedure ? "bg-light fw-bold" : null)">
+                                    @onclick="() => SelectedProcedure = proc"
+                                    class="@(proc == SelectedProcedure ? "bg-light fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@procedure.Item1" PartToHighlight="@FilterTextSchema" />.<HighlightableText Text="@procedure.Item2" PartToHighlight="@FilterTextName" />
+                                        <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@FilterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@FilterTextName" />
                                     </td>
                                 </tr>
+                                @if (proc == SelectedProcedure && proc.Parameters.Any())
+                                {
+                                    <tr>
+                                        <td colspan="2" class="bg-light">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <h6 class="mx-2">Parameters</h6>
+                                                    <dl class="row mx-3 small">
+                                                        @foreach (var param in proc.Parameters)
+                                                        {
+                                                            <dt class="col-sm-6">@param.ParameterName</dt>
+                                                            <dd class="col-sm-6">@param.ParameterType</dd>
+                                                        }
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
                         }
                     </tbody>
@@ -74,25 +93,24 @@
     [Parameter]
     public EventCallback<string> OnProcedureSelected { get; set; }
 
-    private Dictionary<string, List<string>>? Procedures { get; set; }
+    private List<StoredProcedure>? Procedures { get; set; }
 
-    private IEnumerable<(string, string)> ProceduresFlattened => Procedures?
-        .SelectMany(pair => pair.Value.Select(str => (Schema: $"[{pair.Key}]", Procedure: $"[{str}]")))
-        .Where(tuple => tuple.Schema.ContainsIgnoreCase(FilterTextSchema))
-        .Where(tuple => tuple.Procedure.ContainsIgnoreCase(FilterTextName))
-        .OrderBy(tuple => tuple.Schema)
-        .ThenBy(tuple => tuple.Procedure) ?? Enumerable.Empty<(string, string)>();
+    private IEnumerable<StoredProcedure> ProceduresFiltered => Procedures?
+        .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(FilterTextSchema))
+        .Where(proc => $"[{proc.ProcedureName}]".ContainsIgnoreCase(FilterTextName))
+        .OrderBy(proc => proc.SchemaName)
+        .ThenBy(proc => proc.ProcedureName) ?? Enumerable.Empty<StoredProcedure>();
 
     private string FilterTextName { get; set; } = string.Empty;
     private string FilterTextSchema { get; set; } = string.Empty;
 
-    private (string, string)? SelectedProcedure { get; set; }
+    private StoredProcedure? SelectedProcedure { get; set; }
 
     private async Task SelectProcedure()
     {
         if (SelectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync($"{SelectedProcedure.Value.Item1}.{SelectedProcedure.Value.Item2}");
+            await OnProcedureSelected.InvokeAsync($"[{SelectedProcedure.SchemaName}].[{SelectedProcedure.ProcedureName}]");
             await Offcanvas.HideAsync();
         }
     }

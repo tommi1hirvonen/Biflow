@@ -48,7 +48,7 @@ public class SqlServerHelperService
         return catalog;
     }
 
-    public async Task<Dictionary<string, List<string>>> GetStoredProcedures(Guid connectionId)
+    public async Task<List<StoredProcedure>> GetStoredProcedures(Guid connectionId)
     {
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -60,14 +60,39 @@ public class SqlServerHelperService
                 .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
         }
         using var sqlConnection = new SqlConnection(connectionString);
-        var rows = await sqlConnection.QueryAsync<(string, string)>(
-            @"SELECT OBJECT_SCHEMA_NAME([object_id]) AS [schema], [name]
-                    FROM [sys].[procedures]
-                    ORDER BY [schema], [name]");
-        var procedures = rows
-            .GroupBy(key => key.Item1, element => element.Item2)
-            .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
-        return procedures;
+        var sql = @"
+            select
+	            ProcedureId = a.object_id,
+	            SchemaName = b.name,
+	            ProcedureName = a.name,
+	            ParameterId = c.parameter_id,
+	            ParameterName = c.name,
+	            ParameterType = TYPE_NAME(c.user_type_id)
+            from sys.procedures as a
+	            inner join sys.schemas as b on a.schema_id = b.schema_id
+	            left join sys.parameters as c on a.object_id = c.object_id
+            order by
+	            SchemaName,
+	            ProcedureName,
+	            ParameterId";
+        var procedures = new Dictionary<int, StoredProcedure>();
+        var data = await sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter, StoredProcedure>(
+            sql,
+            (proc, param) =>
+            {
+                if (!procedures.TryGetValue(proc.ProcedureId, out var storedProc))
+                {
+                    storedProc = proc;
+                    procedures[storedProc.ProcedureId] = storedProc;
+                }
+                if (param is not null)
+                {
+                    storedProc.Parameters.Add(param);
+                }
+                return storedProc;
+            },
+            splitOn: "ParameterId");
+        return procedures.Values.ToList();
     }
 
     public async Task<List<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
@@ -250,6 +275,33 @@ public record AsModel(string ModelName, List<AsTable> Tables);
 public record AsTable(string TableName, AsModel Model, List<AsPartition> Partitions);
 
 public record AsPartition(string PartitionName, AsTable Table);
+
+public class StoredProcedure
+{
+    public StoredProcedure(int procedureId, string schemaName, string procedureName)
+    {
+        ProcedureId = procedureId;
+        SchemaName = schemaName;
+        ProcedureName = procedureName;
+    }
+    public int ProcedureId { get; }
+    public string SchemaName { get; }
+    public string ProcedureName { get; }
+    public List<StoredProcedureParameter> Parameters { get; } = new();
+}
+
+public class StoredProcedureParameter
+{
+    public StoredProcedureParameter(int parameterId, string parameterName, string parameterType)
+    {
+        ParameterId = parameterId;
+        ParameterName = parameterName; 
+        ParameterType = parameterType;
+    }
+    public int ParameterId { get; }
+    public string ParameterName { get; }
+    public string ParameterType { get; }
+}
 
 public record SqlReference(
     string ReferencingSchema,
