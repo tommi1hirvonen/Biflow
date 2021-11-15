@@ -132,7 +132,7 @@
 
     private string ValueSelector((string, string, string)? module) => $"[{module?.Item1}].[{module?.Item2}]";
 
-    private string TextSelector((string, string, string)? module) => $"[{module?.Item1}].[{module?.Item2}] ({module?.Item3})";
+    private string TextSelector((string, string, string)? module) => $"{module?.Item1}.{module?.Item2} ({module?.Item3})";
 
     private async Task<(string, string, string)?> ResolveAutosuggestItemFromValue(string value)
     {
@@ -181,6 +181,22 @@
         await JS.InvokeVoidAsync("highlightCode");
     }
 
-    public async Task ShowAsync() => await Offcanvas.ShowAsync();
+    public async Task ShowAsync(string? sqlStatement = null)
+    {
+        var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
+        var schema = proc?.Schema;
+        var name = proc?.ProcedureName;
+        if (schema is not null && name is not null)
+        {
+            ObjectName = $"[{schema}].[{name}]";
+            await RunQuery();
+        }
+        else if (name is not null)
+        {
+            ObjectName = $"[{name}]";
+            await RunQuery();
+        }
+        await Offcanvas.ShowAsync();
+    }
 
 }

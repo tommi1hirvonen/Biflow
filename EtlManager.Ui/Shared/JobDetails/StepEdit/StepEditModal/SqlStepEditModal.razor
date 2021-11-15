@@ -53,7 +53,7 @@
             </HxButton>
         </div>
         <div class="col d-flex justify-content-center">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync()">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(Step.SqlStatement)">
                 @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                 Definition explorer
             </HxButton>
