@@ -38,7 +38,8 @@ public static partial class Utility
 
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {
-        var regex1 = new Regex(@"(\[.*\]).(\[.*\])"); // Can handle white space inside object names
+        // Can handle white space inside object names
+        var regex1 = new Regex(@"EXEC(?:UTE)?[\s*](\[.*\]).(\[.*\])", RegexOptions.IgnoreCase);
         var match1 = regex1.Match(sqlStatement);
         if (match1.Success)
         {
@@ -47,7 +48,8 @@ public static partial class Utility
             return (schema, proc);
         }
 
-        var regex2 = new Regex(@"(\S*)\.(\S*)"); // No square brackets => no whitespace in object names
+        // No square brackets => no whitespace in object names
+        var regex2 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)\.(\S*)", RegexOptions.IgnoreCase);
         var match2 = regex2.Match(sqlStatement);
         if (match2.Success)
         {
@@ -56,21 +58,21 @@ public static partial class Utility
             return (schema, proc);
         }
 
-        var regex3 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)", RegexOptions.IgnoreCase);
+        // Can handle white space inside object names
+        var regex3 = new Regex(@"EXEC(?:UTE)?[\s*](\[.*\])", RegexOptions.IgnoreCase);
         var match3 = regex3.Match(sqlStatement);
         if (match3.Success)
         {
-            var proc = match3.Groups[1].Value;
-            proc = proc[0] == '[' ? proc[1..^1] : proc;
+            var proc = match3.Groups[1].Value[1..^1]; // skip first and last character
             return (null, proc);
         }
 
-        var regex4 = new Regex(@"(^\S*)");
+        // No square brackets => no whitespace in object names
+        var regex4 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)", RegexOptions.IgnoreCase);
         var match4 = regex4.Match(sqlStatement);
         if (match4.Success)
         {
             var proc = match4.Groups[1].Value;
-            proc = proc[0] == '[' ? proc[1..^1] : proc;
             return (null, proc);
         }
 
