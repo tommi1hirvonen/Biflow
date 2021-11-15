@@ -163,20 +163,20 @@
                 };
                 var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
                 var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
-                <li class="list-group-item" style="background-color: #fafafa">
+                <li class="list-group-item" style="background-color: #f3f3f3">
                     <div class="row align-items-center" style="min-height: 31px;">
                         <AuthorizeView Roles="Admin, Editor">
-                            <div class="col text-secondary">
+                            <div class="col text-secondary d-flex align-items-center">
                                 <TriStateCheckbox Checked="@(SelectedSteps.Count == Steps?.Count)"
                                                   Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != Steps?.Count)"
                                                   CheckedChanged="ToggleAllStepsSelected"/>
-                                @selectedText
+                                <div class="fw-bold small">@selectedText</div>
                             </div>
                             <div class="col btn-shadow-none">
                                 @if (SelectedSteps.Any())
                                 {
                                     <HxDropdown>
-                                        <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small">@MarkupHelper.FromFile("icons/feather/trash-2.svg")</HxDropdownToggleButton>
+                                        <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">@MarkupHelper.FromFile("icons/feather/trash-2.svg")</HxDropdownToggleButton>
                                         <HxDropdownMenu>
                                             <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
                                             <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
@@ -185,10 +185,10 @@
                                 }
                             </div>
                         </AuthorizeView>
-                        <div class="col text-secondary text-center">
+                        <div class="col text-secondary text-center fw-bold small">
                              @countText
                         </div>
-                        <div class="col text-secondary text-end">
+                        <div class="col text-secondary text-end fw-bold small">
                             @disabledCountText
                         </div>
                     </div>

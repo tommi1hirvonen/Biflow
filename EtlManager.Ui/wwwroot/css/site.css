@@ -72,6 +72,15 @@ a:hover {
     background-color: var(--color-primary);
 }
 
+.btn-link {
+    color: #212529;
+    box-shadow: none;
+}
+
+.btn-link:hover {
+    color: var(--color-primary-super-dark);
+}
+
 /*
     Messenger customization
 */
