@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<table class="table table-sm table-striped mt-3">
+<table class="table table-sm table-hover mt-3">
     <thead>
         <tr>
             <th>Name</th>
@@ -60,13 +60,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var step in Steps?
-            .Where(step => step.StepId != Step.StepId) // Exclude current step => step cannot depend on itself.
-            .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
-            .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
-            .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
-            .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
-            .OrderBy(step => step.StepName) ?? Enumerable.Empty<Step>())
+        @foreach (var step in FilteredStepsOrdered)
         {
             <tr>
                 <td class="align-middle">
@@ -99,15 +93,32 @@
 
 @code {
     [Parameter]
+    public Job? Job { get; set; }
+
+    [Parameter]
     public Step Step { get; set; } = null!;
 
     [Parameter]
-    public IEnumerable<Step> Steps { get; set; } = null!;
+    public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
 
     private HashSet<Tag> TagFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private string DependenciesFilterText { get; set; } = string.Empty;
     private bool ShowOnlyActiveDependencies { get; set; } = false;
+
+    private IEnumerable<Step> FilteredSteps => Steps
+            .Where(step => step.StepId != Step.StepId) // Exclude current step => step cannot depend on itself.
+            .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
+            .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
+            .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
+            .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+            ?? Enumerable.Empty<Step>();
+
+    private IEnumerable<Step> FilteredStepsOrdered => Job?.UseDependencyMode switch
+    {
+        true => FilteredSteps.OrderBy(step => step, new TopologicalStepComparer(Steps)),
+        _ => FilteredSteps.OrderBy(step => step) // use default comparer
+    };
 
     private void ToggleDependency(Step step, object checkedValue)
     {
