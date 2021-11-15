@@ -160,23 +160,35 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
         Guid connectionId,
-        string referencingSchemaOperator,
-        string referencingSchemaFilter,
-        string referencingNameOperator,
-        string referencingNameFilter,
-        string referencedSchemaOperator,
-        string referencedSchemaFilter,
-        string referencedNameOperator,
-        string referencedNameFilter)
+        string referencingSchemaOperator = "like",
+        string referencingSchemaFilter = "",
+        string referencingNameOperator = "like",
+        string referencingNameFilter = "",
+        string referencedSchemaOperator = "like",
+        string referencedSchemaFilter = "",
+        string referencedNameOperator = "like",
+        string referencedNameFilter = "")
     {
-        if (referencingSchemaOperator != "=" && referencingSchemaOperator != "like")
+        var allowedOperators = new[] { "=", "like" };
+        if (!allowedOperators.Contains(referencingSchemaOperator))
             throw new ArgumentException($"Invalid operator {referencingSchemaOperator}", nameof(referencingSchemaOperator));
-        if (referencingNameOperator != "=" && referencingNameOperator != "like")
+        if (!allowedOperators.Contains(referencingNameOperator))
             throw new ArgumentException($"Invalid operator {referencingNameOperator}", nameof(referencingNameOperator));
-        if (referencedSchemaOperator != "=" && referencedSchemaOperator != "like")
+        if (!allowedOperators.Contains(referencedSchemaOperator))
             throw new ArgumentException($"Invalid operator {referencedSchemaOperator}", nameof(referencedSchemaOperator));
-        if (referencedNameOperator != "=" && referencedNameOperator != "like")
+        if (!allowedOperators.Contains(referencedNameOperator))
             throw new ArgumentException($"Invalid operator {referencedNameOperator}", nameof(referencedNameOperator));
+
+        if (!referencingSchemaFilter.Any()) referencingSchemaOperator = "like";
+        if (!referencingNameFilter.Any()) referencingNameOperator = "like";
+        if (!referencedSchemaFilter.Any()) referencedSchemaOperator = "like";
+        if (!referencedNameFilter.Any()) referencedNameOperator = "like";
+
+        static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
+        var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{encodeForLike(referencingSchemaFilter)}%";
+        var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{encodeForLike(referencingNameFilter)}%";
+        var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{encodeForLike(referencedSchemaFilter)}%";
+        var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{encodeForLike(referencedNameFilter)}%";
 
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -187,13 +199,6 @@ public class SqlServerHelperService
                 .Select(c => c.ConnectionString)
                 .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
         }
-
-        static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-        var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{encodeForLike(referencingSchemaFilter)}%";
-        var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{encodeForLike(referencingNameFilter)}%";
-        var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{encodeForLike(referencedSchemaFilter)}%";
-        var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{encodeForLike(referencedNameFilter)}%";
-
         using var sqlConnection = new SqlConnection(connectionString);
         var rows = await sqlConnection.QueryAsync<SqlReference>(
             $@"select distinct
