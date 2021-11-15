@@ -35,6 +35,10 @@
     width: 600px;
 }
 
+.offcanvas-backdrop {
+    z-index: 1050;
+}
+
 a {
     color: var(--color-primary);
 }
@@ -686,7 +690,7 @@ tr.disabled {
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 1050;
+    z-index: 1060;
 }
 
 #blazor-error-ui .dismiss {

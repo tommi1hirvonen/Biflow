@@ -17,6 +17,14 @@ for details on configuring this project to bundle and minify static web assets. 
     --hx-offcanvas-horizontal-width-lg: 700px;
 }
 
+.offcanvas-end {
+    width: 600px;
+}
+
+.offcanvas-backdrop {
+    z-index: 1050;
+}
+
 .btn-row .btn-light {
     background-color: transparent;
     border-color: transparent;
@@ -346,7 +354,7 @@ tr.disabled {
     padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
     width: 100%;
-    z-index: 1050;
+    z-index: 1060;
 }
 
     #blazor-error-ui .dismiss {
