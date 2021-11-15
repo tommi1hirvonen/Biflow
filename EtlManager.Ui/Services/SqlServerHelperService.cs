@@ -200,22 +200,24 @@ public class SqlServerHelperService
 	            ReferencingSchema = c.name,
 	            ReferencingName = b.name,
 	            ReferencingType = b.type_desc,
-	            ReferencedSchema = e.name,
-	            ReferencedName = d.name,
-	            ReferencedType = d.type_desc
+	            ReferencedDatabase = a.referenced_database_name,
+	            ReferencedSchema = isnull(e.name, a.referenced_schema_name),
+	            ReferencedName = isnull(d.name, a.referenced_entity_name),
+	            ReferencedType = isnull(d.type_desc, 'UNKNOWN')
             from sys.sql_expression_dependencies as a
-	            join sys.objects as b on a.referencing_id = b.object_id
-	            join sys.schemas as c on b.schema_id = c.schema_id
-	            join sys.objects as d on a.referenced_id = d.object_id
-	            join sys.schemas as e on d.schema_id = e.schema_id
+	            inner join sys.objects as b on a.referencing_id = b.object_id
+	            inner join sys.schemas as c on b.schema_id = c.schema_id
+	            left join sys.objects as d on a.referenced_id = d.object_id
+	            left join sys.schemas as e on d.schema_id = e.schema_id
             where
                 c.name {referencingSchemaOperator} @ReferencingSchemaFilter and
                 b.name {referencingNameOperator} @ReferencingNameFilter and
-                e.name {referencedSchemaOperator} @ReferencedSchemaFilter and
-                d.name {referencedNameOperator} @ReferencedNameFilter
+                isnull(e.name, a.referenced_schema_name) {referencedSchemaOperator} @ReferencedSchemaFilter and
+                isnull(d.name, a.referenced_entity_name) {referencedNameOperator} @ReferencedNameFilter
             order by
 	            ReferencingSchema,
 	            ReferencingName,
+	            ReferencedDatabase,
 	            ReferencedSchema,
 	            ReferencedName", new
             {
@@ -307,6 +309,7 @@ public record SqlReference(
     string ReferencingSchema,
     string ReferencingName,
     string ReferencingType,
+    string? ReferencedDatabase,
     string ReferencedSchema,
     string ReferencedName,
     string ReferencedType);

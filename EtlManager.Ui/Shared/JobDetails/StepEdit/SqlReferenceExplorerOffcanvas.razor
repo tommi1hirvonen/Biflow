@@ -26,8 +26,13 @@
                     @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                     Run query
                 </HxButton>
+                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" CssClass="ms-3" OnClick="ClearFilters">
+                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                    Clear filters
+                </HxButton>
             </div>
         </div>
+        <div class="row mt-1"><div class="col"><div class="form-text">Querying a large database without filters may be a heavy operation.</div></div></div>
         <div class="row mt-3">
             <div class="col">
                 <label class="form-label">Referencing object</label>
@@ -88,7 +93,8 @@
                         @foreach (var reference in QueryResults)
                         {
                             var referencing = $"[{reference.ReferencingSchema}].[{reference.ReferencingName}]";
-                            var referenced = $"[{reference.ReferencedSchema}].[{reference.ReferencedName}]";
+                            var referencedDb = reference.ReferencedDatabase is null ? null : $"[{reference.ReferencedDatabase}].";
+                            var referenced = $"{referencedDb}[{reference.ReferencedSchema}].[{reference.ReferencedName}]";
                             <tr>
                                 <td>
                                     <HxTooltip Text="@reference.ReferencingType">
@@ -154,6 +160,21 @@
             Messenger.AddError("Error querying references", ex.Message);
         }
 
+    }
+
+    private void ClearFilters()
+    {
+        ReferencingSchemaOperator = "like";
+        ReferencingSchemaFilter = string.Empty;
+
+        ReferencingNameOperator = "like";
+        ReferencingNameFilter = string.Empty;
+
+        ReferencedSchemaOperator = "like";
+        ReferencedSchemaFilter = string.Empty;
+
+        ReferencedNameOperator = "like";
+        ReferencedNameFilter = string.Empty;
     }
 
     public async Task ShowAsync(string? sqlStatement = null)
