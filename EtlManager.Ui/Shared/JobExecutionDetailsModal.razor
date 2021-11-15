@@ -424,7 +424,7 @@
                     Id = step.StepId,
                     Name = step.StepName,
                     ClassName = $"enabled {status}",
-                    Tooltip = $"{step.GetExecutionStatus()}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
+                    Tooltip = $"{step.StepType}, {step.GetExecutionStatus()}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
                 };
             });
         var dependencies = Execution?.StepExecutions
