@@ -1,15 +1,6 @@
-﻿@implements IDisposable
-@implements IStepEditModal
-@inject MarkupHelperService MarkupHelper
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@inherits ParameterizedStepEditModal<SqlStep>
 
-<ParameterizedStepEditModal @ref="Modal"
-                            Job="Job"
-                            Steps="Steps"
-                            Step="Step"
-                            Context="Context"
-                            OnStepSubmit="OnStepSubmit"
-                            FormId="sql_step_edit_modal">
+<StepEditModalTemplate Modal="this" TStep="SqlStep">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
@@ -41,7 +32,7 @@
             <div class="input-group-text">
                 @MarkupHelper.FromFile("icons/feather/code.svg")
             </div>
-            <InputTextArea class="form-control" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="Modal.ResetStepError"></InputTextArea>
+            <InputTextArea class="form-control" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
         </div>
     </div>
 
@@ -65,6 +56,7 @@
             </HxButton>
         </div>
     </div>
+
     <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
     <SqlReferenceExplorerOffcanvas @ref="SqlReferenceOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
     <SqlDefinitionExplorerOffcanvas @ref="SqlDefinitionOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
@@ -98,100 +90,5 @@
             <div class="form-text">No job parameters to store result value</div>
         }
     </div>
-</ParameterizedStepEditModal>
-
-
-@code {
-    [Parameter]
-    public Guid StepId { get; set; } // empty Guid => new step
-
-    [Parameter]
-    public Job? Job { get; set; }
-
-    [Parameter]
-    public IList<Step>? Steps { get; set; }
-
-    [Parameter]
-    public IList<SqlConnectionInfo>? Connections { get; set; }
-
-    [Parameter]
-    public EventCallback<Step> OnStepSubmit { get; set; }
-
-    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
-    private EtlManagerContext Context { get; set; } = null!;
-
-    private Guid PrevStepId { get; set; }
-
-    private SqlStep Step { get; set; } = null!;
-
-    private ParameterizedStepEditModal Modal { get; set; } = null!;
-
-    private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
-    private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
-    private SqlDefinitionExplorerOffcanvas SqlDefinitionOffcanvas { get; set; } = null!;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadData();
-    }
-
-    private void SetCaptureResultJobParameter(bool enabled)
-    {
-        if (enabled)
-        {
-            Step.ResultCaptureJobParameterId = Job?.JobParameters.FirstOrDefault()?.ParameterId;
-        }
-        else
-        {
-            Step.ResultCaptureJobParameterId = null;
-        }
-    }
-
-    private async Task ResetContext()
-    {
-        if (Context is not null)
-            await Context.DisposeAsync();
-
-        Context = DbFactory.CreateDbContext();
-    }
-
-    private async Task LoadData()
-    {
-        if (StepId != Guid.Empty && StepId != PrevStepId)
-        {
-            await ResetContext();
-            Step = await Context.SqlSteps
-                .Include(step => step.StepParameters)
-                .ThenInclude(p => p.JobParameter)
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == StepId);
-            PrevStepId = StepId;
-        }
-        else if (StepId == Guid.Empty && Job is not null)
-        {
-            await ResetContext();
-            Step = new()
-            {
-                JobId = Job.JobId,
-                RetryAttempts = 0,
-                RetryIntervalMinutes = 0,
-                IsEnabled = true,
-                ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-                Dependencies = new List<Dependency>(),
-                Tags = new List<Tag>(),
-                StepParameters = new List<StepParameterBase>()
-            };
-        }
-        StateHasChanged();
-    }
-
-    private async Task OpenStoredProcedureSelectModal() => await StoredProcedureSelectModal.ShowAsync();
-
-    private void OnStoredProcedureSelected(string procedure) => Step.SqlStatement = $"EXEC {procedure}";
-
-    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
-
-    public void Dispose() => Context?.Dispose();
-
-}
+    <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+</StepEditModalTemplate>

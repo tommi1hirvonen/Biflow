@@ -1,0 +1,110 @@
+﻿@typeparam TStep where TStep : Step 
+
+@inject MarkupHelperService MarkupHelper
+
+<HxModal @ref="Modal.Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="Modal.OnClosed" Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
+    <BodyTemplate>
+        @if (Modal.Step is not null)
+        {
+            <div class="row">
+                <div class="col mx-3">
+                    <EditForm id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="Modal.SubmitStep">
+
+                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="mb-3">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(!Modal.ShowDependencies ? "active" : null)"
+                                      @onclick="() => Modal.ShowDependencies = false">
+                                @MarkupHelper.FromFile("icons/feather/settings.svg")
+                                Settings
+                            </HxButton>
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(Modal.ShowDependencies ? "active" : null)"
+                                      @onclick="() => Modal.ShowDependencies = true">
+                                @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
+                                Dependencies
+                            </HxButton>
+                        </HxButtonGroup>
+
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        @if (Modal.ShowDependencies)
+                        {
+                            @if (Modal.Steps is not null)
+                            {
+                                <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" Job="Modal.Job" />
+                            }
+                        }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">Step name</label>
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                        </div>
+                                        <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Description</label>
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-text">
+                                        @MarkupHelper.FromFile("icons/feather/book-open.svg")
+                                    </div>
+                                    <InputTextArea class="form-control" @bind-Value="Modal.Step.StepDescription" rows="2"></InputTextArea>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Tags</label>
+                                <HxInputTags @bind-Value="Modal.Tags" DataProvider="Modal.GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">Execution phase</label>
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                        </div>
+                                        <InputNumber class="form-control" @bind-Value="Modal.Step.ExecutionPhase"></InputNumber>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Retry attempts</label>
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            @MarkupHelper.FromFile("icons/feather/repeat.svg")
+                                        </div>
+                                        <InputNumber class="form-control" @bind-Value="Modal.Step.RetryAttempts"></InputNumber>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label">Retry interval (min)</label>
+                                    <div class="input-group">
+                                        <div class="input-group-text">
+                                            @MarkupHelper.FromFile("icons/feather/clock.svg")
+                                        </div>
+                                        <InputNumber class="form-control" @bind-Value="Modal.Step.RetryIntervalMinutes"></InputNumber>
+                                    </div>
+                                </div>
+                            </div>
+                            @ChildContent
+                            <p class="text-danger">@Modal.StepError</p>
+                        }
+                    </EditForm>
+                </div>
+            </div>
+        }
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success">@(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public StepEditModalBase<TStep> Modal { get; set; } = null!;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

@@ -1,18 +1,6 @@
-﻿@implements IDisposable
-@implements IStepEditModal
-@inject MarkupHelperService MarkupHelper
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿@inherits ParameterizedStepEditModal<PackageStep>
 
-<StepEditModalBase @ref="Modal"
-                   Job="Job"
-                   Steps="Steps"
-                   Step="Step"
-                   Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   ResetDeletedEntities="ResetDeletedEntities"
-                   ResetAddedEntities="ResetAddedEntities"
-                   OnStepSubmit="OnStepSubmit"
-                   FormId="package_step_edit_modal">
+<StepEditModalTemplate Modal="this" TStep="PackageStep">
     <div class="row mt-3">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
@@ -45,7 +33,7 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/folder.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="Modal.ResetStepError"></InputText>
+                <InputText class="form-control" @bind-Value="Step.PackageFolderName" @onchange="ResetStepError"></InputText>
             </div>
         </div>
         <div class="col-lg">
@@ -54,7 +42,7 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/briefcase.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.PackageProjectName" @oninput="Modal.ResetStepError"></InputText>
+                <InputText class="form-control" @bind-Value="Step.PackageProjectName" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
@@ -65,7 +53,7 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/package.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.PackageName" @oninput="Modal.ResetStepError"></InputText>
+                <InputText class="form-control" @bind-Value="Step.PackageName" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
@@ -95,163 +83,9 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/user.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="Modal.ResetStepError"></InputText>
+                <InputText class="form-control" @bind-Value="Step.ExecuteAsLogin" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
     <PackageParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
-</StepEditModalBase>
-
-
-@code {
-
-    [Parameter]
-    public Guid StepId { get; set; } // empty Guid => new step
-
-    [Parameter]
-    public Job? Job { get; set; }
-
-    [Parameter]
-    public IList<Step>? Steps { get; set; }
-
-    [Parameter]
-    public IList<SqlConnectionInfo>? Connections { get; set; }
-
-    [Parameter]
-    public EventCallback<Step> OnStepSubmit { get; set; }
-
-    // Use the same context to read and write to enable change tracking for all step child properties (e.g. parameters and dependencies).
-    private EtlManagerContext Context { get; set; } = null!;
-
-    private Guid PrevStepId { get; set; }
-
-    private PackageStep Step { get; set; } = null!;
-
-    private StepEditModalBase Modal { get; set; } = null!;
-
-    private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadData();
-    }
-
-    private async Task ResetContext()
-    {
-        if (Context is not null)
-            await Context.DisposeAsync();
-
-        Context = DbFactory.CreateDbContext();
-    }
-
-    private async Task LoadData()
-    {
-        if (StepId != Guid.Empty && StepId != PrevStepId)
-        {
-            await ResetContext();
-            Step = await Context.PackageSteps
-                .Include(step => step.StepParameters)
-                .ThenInclude(p => p.JobParameter)
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == StepId);
-            PrevStepId = StepId;
-        }
-        else if (StepId == Guid.Empty && Job is not null)
-        {
-            await ResetContext();
-            Step = new()
-            {
-                JobId = Job.JobId,
-                RetryAttempts = 0,
-                RetryIntervalMinutes = 0,
-                IsEnabled = true,
-                ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-                StepParameters = new List<StepParameterBase>(),
-                Dependencies = new List<Dependency>(),
-                Tags = new List<Tag>()
-            };
-        }
-        StateHasChanged();
-    }
-
-    private void ResetDeletedEntities(EntityEntry entity)
-    {
-        if (entity.Entity is PackageStepParameter packageParam)
-        {
-            if (!Step.StepParameters.Contains(packageParam))
-                Step.StepParameters.Add(packageParam);
-        }
-    }
-
-    private void ResetAddedEntities(EntityEntry entity)
-    {
-        if (entity.Entity is PackageStepParameter packageParam)
-        {
-            if (Step.StepParameters.Contains(packageParam))
-                Step.StepParameters.Remove(packageParam);
-        }
-    }
-
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is PackageStep package)
-        {
-            (var paramResult, var paramMessage) = ParametersCheck();
-            if (!paramResult)
-            {
-                return (false, paramMessage);
-            }
-            else
-            {
-                foreach (var param in package.StepParameters)
-                {
-                    param.SetParameterValue();
-                }
-                return (true, null);
-            }
-        }
-        else
-        {
-            return (false, "Not PackageStep");
-        }
-    }
-
-    private (bool Result, string? Message) ParametersCheck()
-    {
-        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            var currentParam = (PackageStepParameter)parameters[i];
-            var nextParam = (PackageStepParameter)parameters[i + 1];
-            if (nextParam.ParameterName == currentParam.ParameterName
-                && nextParam.ParameterLevel == currentParam.ParameterLevel)
-            {
-                return (false, "Duplicate parameter names");
-            }
-        }
-
-        return (true, null);
-    }
-
-    private async Task OpenPackageSelectOffcanvas() => await PackageSelectOffcanvas.ShowAsync();
-
-    private void OnPackageSelected((string Folder, string Project, string Package) package)
-    {
-        Step.PackageFolderName = package.Folder;
-        Step.PackageProjectName = package.Project;
-        Step.PackageName = package.Package;
-    }
-
-    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
-
-    public void Dispose() => Context?.Dispose();
-
-}
+</StepEditModalTemplate>

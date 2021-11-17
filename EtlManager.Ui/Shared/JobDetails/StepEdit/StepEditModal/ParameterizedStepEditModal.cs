@@ -1,41 +1,12 @@
-﻿@implements IStepEditModal
-@inject MarkupHelperService MarkupHelper
-@inject IDbContextFactory<EtlManagerContext> DbFactory
+﻿using EtlManager.DataAccess.Models;
+using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-<StepEditModalBase @ref="Modal"
-                   Job="Job"
-                   Steps="Steps"
-                   Step="Step"
-                   Context="Context"
-                   StepValidityCheck="StepValidityCheck"
-                   ResetDeletedEntities="ResetDeletedEntities"
-                   ResetAddedEntities="ResetAddedEntities"
-                   OnStepSubmit="OnStepSubmit"
-                   FormId="@FormId">
-    @ChildContent
-    <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
-</StepEditModalBase>
+namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
-
-@code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-    [Parameter]
-    public string FormId { get; set; } = string.Empty;
-    [Parameter]
-    public Job? Job { get; set; }
-    [Parameter]
-    public IList<Step>? Steps { get; set; }
-    [Parameter]
-    public EventCallback<Step> OnStepSubmit { get; set; }
-    [Parameter]
-    public EtlManagerContext Context { get; set; } = null!;
-    [Parameter]
-    public ParameterizedStep Step { get; set; } = null!;
-
-    private StepEditModalBase Modal { get; set; } = null!;
-
-    private void ResetDeletedEntities(EntityEntry entity)
+public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TStep> where TStep : ParameterizedStep
+{
+    protected override void ResetDeletedEntities(EntityEntry entity)
     {
         if (entity.Entity is StepParameter param)
         {
@@ -44,7 +15,7 @@
         }
     }
 
-    private void ResetAddedEntities(EntityEntry entity)
+    protected override void ResetAddedEntities(EntityEntry entity)
     {
         if (entity.Entity is StepParameter param)
         {
@@ -53,7 +24,7 @@
         }
     }
 
-    private (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
+    protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
         if (step is ParameterizedStep step_)
         {
@@ -97,9 +68,5 @@
 
         return (true, null);
     }
-
-    public void ResetStepError() => Modal.ResetStepError();
-
-    public async Task ShowAsync(bool showDependencies) => await Modal.ShowAsync(showDependencies);
 
 }
