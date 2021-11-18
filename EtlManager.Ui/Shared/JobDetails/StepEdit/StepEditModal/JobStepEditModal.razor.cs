@@ -19,7 +19,7 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
-            JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != Job.JobId)?.JobId,
+            JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != job.JobId)?.JobId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };

@@ -55,14 +55,37 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         };
     }
 
+    /// <summary>
+    /// Called if the edits made by the user are canceled.
+    /// If there were entities added to the Step's navigation properties, for example, they should be removed.
+    /// </summary>
+    /// <param name="entityEntry"></param>
     protected virtual void ResetAddedEntities(EntityEntry entityEntry) { }
 
+    /// <summary>
+    /// Called if the edits made by the user are canceled.
+    /// If there were entities removed from the Step's navigation properties, for example, they should be added back.
+    /// </summary>
+    /// <param name="entityEntry"></param>
     protected virtual void ResetDeletedEntities(EntityEntry entityEntry) { }
 
     protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step) => (true, null);
 
+    /// <summary>
+    /// Called during OnParametersSetAsync() to load an existing Step from EtlManagerContext.
+    /// The Step loaded from the context should be tracked in order to track changes made to the object.
+    /// </summary>
+    /// <param name="context">Instance of EtlManagerContext</param>
+    /// <param name="stepId">Id of an existing Step that is to be edited</param>
+    /// <returns></returns>
     protected abstract Task<TStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId);
 
+    /// <summary>
+    /// Called during OnParametersSetAsync() if a new Step is being created.
+    /// The method should return an "empty" instance of Step with its navigation properties correctly initialized.
+    /// </summary>
+    /// <param name="job">The job in which the Step is created</param>
+    /// <returns></returns>
     protected abstract TStep CreateNewStep(Job job);
 
     protected override async Task OnParametersSetAsync()
@@ -167,16 +190,13 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         // Save changes.
         try
         {
-            // Existing step
-            if (Step.StepId != Guid.Empty)
-            {
-                Context.Attach(Step).State = EntityState.Modified;
-            }
             // New step
-            else
+            if (Step.StepId == Guid.Empty)
             {
                 Context.Steps.Add(Step);
             }
+            // If the Step was an existing Step, the context has been tracking its changes.
+            // => No need to attach it to the context separately.
             await Context.SaveChangesAsync();
 
             await OnStepSubmit.InvokeAsync(Step);
