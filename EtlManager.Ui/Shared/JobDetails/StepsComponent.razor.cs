@@ -170,7 +170,8 @@ public partial class StepsComponent : ComponentBase
         try
         {
             string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
-            Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user);
+            var suffix = Job?.JobId == job.JobId ? " - Copy" : string.Empty;
+            Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user, suffix);
             // If the steps was copied to this job, reload steps.
             if (Job?.JobId == job.JobId)
             {
@@ -188,6 +189,36 @@ public partial class StepsComponent : ComponentBase
         catch (Exception ex)
         {
             Messenger.AddError("Error copying step", ex.Message);
+        }
+    }
+
+    private async Task CopySelectedSteps(Job job)
+    {
+        try
+        {
+            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
+            var suffix = Job?.JobId == job.JobId ? " - Copy" : string.Empty;
+            foreach (var step in SelectedSteps)
+            {
+                Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user, suffix);
+                // If the steps was copied to this job, reload steps.
+                if (Job?.JobId == job.JobId)
+                {
+                    using var context = DbFactory.CreateDbContext();
+                    var createdStep = await context.Steps
+                        .AsNoTrackingWithIdentityResolution()
+                        .Include(step => step.Dependencies)
+                        .Include(step => step.Tags)
+                        .Include(step => (step as ParameterizedStep)!.StepParameters)
+                        .FirstAsync(step_ => step_.StepId == createdStepId);
+                    Steps?.Add(createdStep);
+                    SortSteps();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error copying steps", ex.Message);
         }
     }
 

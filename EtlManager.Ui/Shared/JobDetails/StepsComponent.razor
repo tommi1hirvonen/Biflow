@@ -174,16 +174,34 @@
                             </div>
                         </AuthorizeView>
                         <AuthorizeView Roles="Admin, Editor">
-                            <div class="col btn-shadow-none">
+                            <div class="col">
                                 @if (SelectedSteps.Any())
                                 {
-                                    <HxDropdown>
-                                        <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">@MarkupHelper.FromFile("icons/feather/trash-2.svg")</HxDropdownToggleButton>
-                                        <HxDropdownMenu>
-                                            <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
-                                            <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
-                                        </HxDropdownMenu>
-                                    </HxDropdown>
+                                    <div class="btn-group btn-row">
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
+                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu>
+                                                <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
+                                                @MarkupHelper.FromFile("icons/feather/copy.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                <HxDropdownHeader>Copy to</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
+                                                <HxDropdownDivider></HxDropdownDivider>
+                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                                {
+                                                    <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
+                                                }
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                    </div>
                                 }
                             </div>
                         </AuthorizeView>

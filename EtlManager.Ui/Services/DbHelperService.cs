@@ -76,12 +76,12 @@ public class DbHelperService
         return createdJobId;
     }
 
-    public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username)
+    public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username, string nameSuffix = "")
     {
         using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
         var createdStepId = await sqlConnection.ExecuteScalarAsync<Guid>(
-            "EXEC [etlmanager].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_",
-            new { StepId_ = stepId, TargetJobId_ = targetJobId, Username_ = username });
+            "EXEC [etlmanager].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_, @NameSuffix = @NameSuffix_",
+            new { StepId_ = stepId, TargetJobId_ = targetJobId, Username_ = username, NameSuffix_ = nameSuffix });
         return createdStepId;
     }
 

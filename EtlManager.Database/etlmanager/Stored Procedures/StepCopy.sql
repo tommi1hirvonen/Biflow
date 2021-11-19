@@ -1,7 +1,8 @@
 ﻿CREATE PROCEDURE etlmanager.StepCopy
 	@StepId UNIQUEIDENTIFIER,
 	@TargetJobId UNIQUEIDENTIFIER,
-	@Username NVARCHAR(250)
+	@Username NVARCHAR(250),
+	@NameSuffix NVARCHAR(50) = NULL
 AS
 
 SET XACT_ABORT ON
@@ -55,7 +56,7 @@ INSERT INTO etlmanager.Step (
 )
 SELECT @TargetJobId,
 	@StepIdNew,
-	StepName + ' - Copy',
+	CONCAT(StepName, @NameSuffix),
 	StepDescription,
 	ExecutionPhase,
 	StepType,
