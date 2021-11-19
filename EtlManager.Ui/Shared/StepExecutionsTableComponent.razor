@@ -76,7 +76,7 @@
                 </tr>
                 @if (SelectedStepExecution == item)
                 {
-                    <tr class="table-borderless">
+                    <tr class="table-borderless no-hover">
                         <td colspan="7" class="bg-light">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">

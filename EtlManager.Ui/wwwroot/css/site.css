@@ -330,6 +330,10 @@ tr.disabled {
             margin-left: -5px;
         }
 
+.table-hover > tbody > tr.no-hover:hover {
+    --bs-table-accent-bg: none;
+}
+
 /*
     Spinner
 */
