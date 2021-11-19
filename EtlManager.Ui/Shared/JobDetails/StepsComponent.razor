@@ -165,13 +165,15 @@
                 var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
                 <li class="list-group-item" style="background-color: #f3f3f3">
                     <div class="row align-items-center" style="min-height: 31px;">
-                        <AuthorizeView Roles="Admin, Editor">
+                        <AuthorizeView Roles="Admin, Editor, Operator">
                             <div class="col text-secondary d-flex align-items-center">
                                 <TriStateCheckbox Checked="@(SelectedSteps.Count == Steps?.Count)"
                                                   Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != Steps?.Count)"
-                                                  CheckedChanged="ToggleAllStepsSelected"/>
+                                                  CheckedChanged="ToggleAllStepsSelected" />
                                 <div class="fw-bold small">@selectedText</div>
                             </div>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="Admin, Editor">
                             <div class="col btn-shadow-none">
                                 @if (SelectedSteps.Any())
                                 {
@@ -198,14 +200,15 @@
                     <li class="list-group-item step-row py-2 @(item.IsEnabled ? null : "step-row-disabled")">
                         <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
-                                <AuthorizeView Roles="Admin, Editor">
+                                <AuthorizeView Roles="Admin, Editor, Operator">
                                     <div class="form-check me-2">
                                         <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
                                                checked=@(SelectedSteps.Contains(item))
                                                @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
                                         <label class="form-check-label" for="select_step_@item.StepId"></label>
                                     </div>
-
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Admin, Editor">
                                     <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         &nbsp;
