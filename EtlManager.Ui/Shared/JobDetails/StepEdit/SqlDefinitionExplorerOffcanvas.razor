@@ -114,7 +114,7 @@
             SqlModules ??= await SqlServerHelper.GetSqlModulesAsync(connectionId);
 
             var filteredModules = SqlModules?
-                .Where(module => $"[{module?.Item1}].[{module?.Item2}]".ContainsIgnoreCase(request.UserInput));
+                .Where(module => $"{module?.Item1}.{module?.Item2}".ContainsIgnoreCase(request.UserInput));
             return new AutosuggestDataProviderResult<(string, string, string)?>
             {
                 Data = filteredModules
