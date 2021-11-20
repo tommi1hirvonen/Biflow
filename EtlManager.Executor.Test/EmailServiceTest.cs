@@ -74,6 +74,6 @@ public class EmailServiceTest
 
         var emailService = services.GetService<INotificationService>();
         Assert.IsNotNull(emailService);
-        await emailService.SendCompletionNotification(execution);
+        await emailService.SendCompletionNotification(execution, true, null);
     }
 }
