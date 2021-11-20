@@ -38,19 +38,33 @@
                 <label class="form-label">Referencing object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencingSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="ReferencingSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
-                    </InputSelect>
+                    </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind-value="ReferencingSchemaFilter" @bind-value:event="oninput" />
+                           @bind="ReferencingSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencingNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="ReferencingNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
-                    </InputSelect>
+                    </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind-value="ReferencingNameFilter" @bind-value:event="oninput" />
+                           @bind="ReferencingNameFilter" @bind:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-sm-6">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Type</span>
+                    <select class="form-select form-select-sm" @bind="ReferencingTypeFilter">
+                        <option value="">ALL</option>
+                        @foreach (var type in QueryResults.Select(r => r.ReferencingType).Distinct().OrderBy(s => s))
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
                 </div>
             </div>
         </div>
@@ -59,22 +73,36 @@
                 <label class="form-label">Referenced object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencedSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="ReferencedSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
-                    </InputSelect>
+                    </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind-value="ReferencedSchemaFilter" @bind-value:event="oninput" />
+                           @bind="ReferencedSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ReferencedNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="ReferencedNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
-                    </InputSelect>
+                    </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind-value="ReferencedNameFilter" @bind-value:event="oninput" />
+                           @bind="ReferencedNameFilter" @bind:event="oninput" />
                 </div>
-                <div class="form-text">Hover over an object's name to view its type.</div>
             </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-sm-6">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">Type</span>
+                    <select class="form-select form-select-sm" @bind="ReferencedTypeFilter">
+                        <option value="">ALL</option>
+                        @foreach (var type in QueryResults.Select(r => r.ReferencedType).Distinct().OrderBy(s => s))
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="form-text">Hover over an object's name to view its type.</div>
         </div>
         <div class="row mt-2">
             <div class="col">
@@ -90,7 +118,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var reference in QueryResults)
+                        @foreach (var reference in FilteredQueryResults)
                         {
                             var referencing = $"[{reference.ReferencingSchema}].[{reference.ReferencingName}]";
                             var referencedDb = reference.ReferencedDatabase is null ? null : $"[{reference.ReferencedDatabase}].";
@@ -137,6 +165,14 @@
 
     private string ReferencedNameOperator { get; set; } = "like";
     private string ReferencedNameFilter { get; set; } = string.Empty;
+
+    private string ReferencingTypeFilter { get; set; } = string.Empty;
+    private string ReferencedTypeFilter { get; set; } = string.Empty;
+
+    private IEnumerable<SqlReference> FilteredQueryResults => QueryResults
+        .Where(r => !ReferencingTypeFilter.Any() || r.ReferencingType == ReferencingTypeFilter)
+        .Where(r => !ReferencedTypeFilter.Any() || r.ReferencedType == ReferencedTypeFilter);
+
     private IEnumerable<SqlReference> QueryResults { get; set; } = Enumerable.Empty<SqlReference>();
 
     private async Task RunQuery()
@@ -146,14 +182,14 @@
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             QueryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
                 connectionId,
-                ReferencingSchemaOperator,
-                ReferencingSchemaFilter,
-                ReferencingNameOperator,
-                ReferencingNameFilter,
-                ReferencedSchemaOperator,
-                ReferencedSchemaFilter,
-                ReferencedNameOperator,
-                ReferencedNameFilter);
+                referencingSchemaOperator: ReferencingSchemaOperator,
+                referencingSchemaFilter: ReferencingSchemaFilter,
+                referencingNameOperator: ReferencingNameOperator,
+                referencingNameFilter: ReferencingNameFilter,
+                referencedSchemaOperator: ReferencedSchemaOperator,
+                referencedSchemaFilter: ReferencedSchemaFilter,
+                referencedNameOperator: ReferencedNameOperator,
+                referencedNameFilter: ReferencedNameFilter);
         }
         catch (Exception ex)
         {
@@ -175,6 +211,9 @@
 
         ReferencedNameOperator = "like";
         ReferencedNameFilter = string.Empty;
+
+        ReferencingTypeFilter = string.Empty;
+        ReferencedTypeFilter = string.Empty;
     }
 
     public async Task ShowAsync(string? sqlStatement = null)
