@@ -10,7 +10,7 @@
                 <label class="form-label">Connection</label>
             </div>
             <div class="col-9">
-                <div class="input-group">
+                <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/database.svg")
                     </div>
@@ -31,27 +31,19 @@
             <div class="col-9">
                 <HxAutosuggest TItem="(string, string, string)?"
                                TValue="string"
-                               @bind-Value="@ObjectName"
                                DataProvider="ProvideSuggestions"
                                ValueSelector="ValueSelector"
                                ItemFromValueResolver="ResolveAutosuggestItemFromValue"
                                TextSelector="TextSelector"
                                MinimumLength="0"
-                               InputSize="InputSize.Small">
+                               InputSize="InputSize.Small"
+                               ValueChanged="RunQuery"
+                               ValueExpression="() => ObjectName">
                     <ItemTemplate Context="item">@($"{item?.Item1}.{@item?.Item2}") <sup>@item?.Item3</sup></ItemTemplate>
                     <EmptyTemplate>
                         <span class="p-2">No matching modules</span>
                     </EmptyTemplate>
                 </HxAutosuggest>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col">
-                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQuery" Enabled="@(!string.IsNullOrEmpty(ObjectName))">
-                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-                    Get definition
-                </HxButton>
             </div>
         </div>
 
@@ -140,10 +132,12 @@
         return module;
     }
 
-    private async Task RunQuery()
+    private async Task RunQuery(string objectName)
     {
+        ObjectName = objectName;
         ObjectDefinition = null;
         ErrorMessage = null;
+        if (string.IsNullOrEmpty(ObjectName)) return;
         try
         {
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
@@ -188,13 +182,11 @@
         var name = proc?.ProcedureName;
         if (schema is not null && name is not null)
         {
-            ObjectName = $"[{schema}].[{name}]";
-            await RunQuery();
+            await RunQuery($"[{schema}].[{name}]");
         }
         else if (name is not null)
         {
-            ObjectName = $"[{name}]";
-            await RunQuery();
+            await RunQuery($"[{name}]");
         }
         await Offcanvas.ShowAsync();
     }
