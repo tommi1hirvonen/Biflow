@@ -8,7 +8,7 @@ namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
 public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
 {
-    [Parameter] public IList<AnalysisServicesConnectionInfo>? Connections { get; set; }
+    [Parameter] public IList<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
 
     private AnalysisServicesObjectSelectOffcanvas Offcanvas { get; set; } = null!;
 

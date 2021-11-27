@@ -8,7 +8,6 @@ namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
 public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageStep>
 {
-    [Parameter] public IList<SqlConnectionInfo>? Connections { get; set; }
 
     private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
 

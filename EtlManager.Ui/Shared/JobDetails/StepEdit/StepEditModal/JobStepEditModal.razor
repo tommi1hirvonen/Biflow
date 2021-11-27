@@ -1,14 +1,14 @@
 ﻿@inherits StepEditModalBase<JobStep>
 
 <StepEditModalTemplate Modal="this" TStep="JobStep">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col-lg-6">
             <label class="form-label">Job</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/loader.svg")
                 </div>
-                <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId">
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.JobToExecuteId">
                     @foreach (var job in Jobs?.Where(job => job.JobId != Step.JobId) ?? Enumerable.Empty<Job>())
                     {
                         <option value="@job.JobId">@job.JobName</option>
@@ -17,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col">
             <div class="form-check form-check-inline">
                 <input type="checkbox" class="form-check-input" id="new_step_job_synchronized"

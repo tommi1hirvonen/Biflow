@@ -1,23 +1,23 @@
 ﻿@inherits ParameterizedStepEditModal<SqlStep>
 
 <StepEditModalTemplate Modal="this" TStep="SqlStep">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                 </div>
-                <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
         </div>
         <div class="col-lg-6">
             <label class="form-label">Connection</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/database.svg")
                 </div>
-                <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                     @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -26,13 +26,13 @@
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <label class="form-label">SQL statement</label>
-        <div class="input-group">
+        <div class="input-group input-group-sm">
             <div class="input-group-text">
                 @MarkupHelper.FromFile("icons/feather/code.svg")
             </div>
-            <InputTextArea class="form-control" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
+            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
         </div>
     </div>
 
@@ -43,23 +43,9 @@
                 Browse stored procedures
             </HxButton>
         </div>
-        <div class="col d-flex justify-content-center">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(Step.SqlStatement)">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Definition explorer
-            </HxButton>
-        </div>
-        <div class="col d-flex">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-auto" @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(Step.SqlStatement)">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Reference explorer
-            </HxButton>
-        </div>
     </div>
 
     <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
-    <SqlReferenceExplorerOffcanvas @ref="SqlReferenceOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
-    <SqlDefinitionExplorerOffcanvas @ref="SqlDefinitionOffcanvas" ConnectionId="Step.ConnectionId" Connections="Connections" />
 
     <div class="row">
         <div class="col">

@@ -3,7 +3,7 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Explore SQL definitions">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" ScrollingEnabled="true" Title="Explore SQL definitions">
     <BodyTemplate>
         <div class="row">
             <div class="col-3">
@@ -14,12 +14,12 @@
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/database.svg")
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ConnectionId">
+                    <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
-                    </InputSelect>
+                    </select>
                 </div>
             </div>
         </div>
@@ -80,7 +80,7 @@
 
 @code {
 
-    [Parameter] public Guid? ConnectionId { get; set; }
+    private Guid? ConnectionId { get; set; }
     private Guid PrevConnectionId { get; set; }
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
@@ -175,8 +175,9 @@
         await JS.InvokeVoidAsync("highlightCode");
     }
 
-    public async Task ShowAsync(string? sqlStatement = null)
+    public async Task ShowAsync(Guid? connectionId = null, string? sqlStatement = null)
     {
+        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
         var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;

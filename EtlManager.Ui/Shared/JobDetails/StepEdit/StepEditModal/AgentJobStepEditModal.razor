@@ -1,23 +1,23 @@
 ﻿@inherits StepEditModalBase<AgentJobStep>
 
 <StepEditModalTemplate Modal="this" TStep="AgentJobStep">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col-lg-6">
             <label class="form-label">Timeout (min) (0 = indefinite)</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                 </div>
-                <InputNumber class="form-control" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
         </div>
         <div class="col-lg-6">
             <label class="form-label">Connection</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/database.svg")
                 </div>
-                <InputSelect class="form-select" @bind-Value="Step.ConnectionId">
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                     @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                     {
                         <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -26,14 +26,14 @@
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col">
             <label class="form-label">Agent job name</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/server.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.AgentJobName" @oninput="ResetStepError" />
+                <InputText class="form-control form-control-sm" @bind-Value="Step.AgentJobName" @oninput="ResetStepError" />
             </div>
         </div>
     </div>

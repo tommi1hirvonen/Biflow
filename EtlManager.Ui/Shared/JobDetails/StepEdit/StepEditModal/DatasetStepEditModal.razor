@@ -1,14 +1,14 @@
 ﻿@inherits StepEditModalBase<DatasetStep>
 
 <StepEditModalTemplate Modal="this" TStep="DatasetStep">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col-lg-6">
             <label class="form-label">App registration</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/globe.svg")
                 </div>
-                <InputSelect class="form-select" @bind-Value="Step.AppRegistrationId">
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                     {
                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -17,25 +17,25 @@
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col-lg">
             <label class="form-label">Group id</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/folder.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col-lg">
             <label class="form-label">Dataset id</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/file.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>

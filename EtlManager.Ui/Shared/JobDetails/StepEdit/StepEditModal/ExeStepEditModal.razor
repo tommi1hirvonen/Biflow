@@ -1,47 +1,47 @@
 ﻿@inherits StepEditModalBase<ExeStep>
 
 <StepEditModalTemplate Modal="this" TStep="ExeStep">
-    <div class="row mt-3">
+    <div class="row">
         <div class="col">
             <label class="form-label">File path</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/file.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.ExeFileName" @oninput="ResetStepError"></InputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.ExeFileName" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col">
             <label class="form-label">Arguments</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/command.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.ExeArguments" @oninput="ResetStepError"></InputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.ExeArguments" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col">
             <label class="form-label">Working directory</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/folder.svg")
                 </div>
-                <InputText class="form-control" @bind-Value="Step.ExeWorkingDirectory" @oninput="ResetStepError"></InputText>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.ExeWorkingDirectory" @oninput="ResetStepError"></InputText>
             </div>
         </div>
     </div>
-    <div class="row mt-3">
+    <div class="row mt-2">
         <div class="col-lg-6">
             <label class="form-label">Success exit code (blank if not applicable)</label>
-            <div class="input-group">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/check-circle.svg")
                 </div>
-                <InputNumber class="form-control" @bind-Value="Step.ExeSuccessExitCode" @oninput="ResetStepError"></InputNumber>
+                <InputNumber class="form-control form-control-sm" @bind-Value="Step.ExeSuccessExitCode" @oninput="ResetStepError"></InputNumber>
             </div>
         </div>
     </div>

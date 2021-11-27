@@ -23,6 +23,8 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     [Parameter] public Guid StepId { get; set; }
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
+    
+    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
     internal abstract string FormId { get; }
 

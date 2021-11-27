@@ -7,7 +7,6 @@ namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
 public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
 {
-    [Parameter] public IList<SqlConnectionInfo>? Connections { get; set; }
 
     private AgentJobSelectOffcanvas AgentJobSelectOffcanvas { get; set; } = null!;
 

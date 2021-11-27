@@ -2,7 +2,7 @@
 @inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Explore SQL references">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" ScrollingEnabled="true" Title="Explore SQL references">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto">
@@ -13,12 +13,12 @@
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/database.svg")
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="ConnectionId">
+                    <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
-                    </InputSelect>
+                    </select>
                 </div>
             </div>
             <div class="col-auto">
@@ -149,7 +149,7 @@
 
 @code {
 
-    [Parameter] public Guid? ConnectionId { get; set; }
+    private Guid? ConnectionId { get; set; }
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
     private HxOffcanvas Offcanvas { get; set; } = null!;
@@ -216,8 +216,9 @@
         ReferencedTypeFilter = string.Empty;
     }
 
-    public async Task ShowAsync(string? sqlStatement = null)
+    public async Task ShowAsync(Guid? connectionId, string? sqlStatement = null)
     {
+        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
         var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;

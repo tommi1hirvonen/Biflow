@@ -7,16 +7,11 @@ namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
 public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 {
-    [Parameter] public IList<SqlConnectionInfo>? Connections { get; set; }
 
     internal override string FormId => "sql_step_edit_form";
 
     private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
     
-    private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
-    
-    private SqlDefinitionExplorerOffcanvas SqlDefinitionOffcanvas { get; set; } = null!;
-
     protected override async Task<SqlStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
     {
         return await context.SqlSteps

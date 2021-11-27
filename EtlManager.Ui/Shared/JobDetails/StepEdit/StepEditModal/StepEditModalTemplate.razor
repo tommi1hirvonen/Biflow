@@ -2,7 +2,12 @@
 
 @inject MarkupHelperService MarkupHelper
 
-<HxModal @ref="Modal.Modal" Size="ModalSize.Large" Scrollable="true" OnClosed="Modal.OnClosed" Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
+<HxModal @ref="Modal.Modal"
+         Size="ModalSize.Large"
+         Scrollable="true"
+         OnClosed="Modal.OnClosed"
+         Fullscreen="Fullscreen ? ModalFullscreen.Always : ModalFullscreen.Disabled"
+         Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
     <BodyTemplate>
         @if (Modal.Step is not null)
         {
@@ -10,96 +15,154 @@
                 <div class="col mx-3">
                     <EditForm id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="Modal.SubmitStep">
 
-                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="mb-3">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(!Modal.ShowDependencies ? "active" : null)"
-                                      @onclick="() => Modal.ShowDependencies = false">
-                                @MarkupHelper.FromFile("icons/feather/settings.svg")
-                                Settings
-                            </HxButton>
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(Modal.ShowDependencies ? "active" : null)"
-                                      @onclick="() => Modal.ShowDependencies = true">
-                                @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
-                                Dependencies
-                            </HxButton>
-                        </HxButtonGroup>
+                        <div class="row">
+                            <div class="col">
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(!Modal.ShowDependencies ? "active" : null)"
+                                              @onclick="() => Modal.ShowDependencies = false">
+                                        @MarkupHelper.FromFile("icons/feather/settings.svg")
+                                        Settings
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(Modal.ShowDependencies ? "active" : null)"
+                                              @onclick="() => Modal.ShowDependencies = true">
+                                        @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
+                                        Dependencies
+                                    </HxButton>
+                                </HxButtonGroup>
+                            </div>
+                            <div class="col-auto ms-auto">
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                              @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                        Definition explorer
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                              @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                        Reference explorer
+                                    </HxButton>
+                                </HxButtonGroup>
+                            </div>
+                        </div>
 
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
+                        <div class="row">
+                            <div class="col">
+                                <DataAnnotationsValidator />
+                                <ValidationSummary />
+                                @if (!string.IsNullOrEmpty(Modal.StepError))
+                                {
+                                    <p class="text-danger">@Modal.StepError</p>
+                                }
+                            </div>
+                        </div>
 
                         @if (Modal.ShowDependencies)
                         {
                             @if (Modal.Steps is not null)
                             {
-                                <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" Job="Modal.Job" />
+                                <div class="row mt-3">
+                                    <div class="@(Fullscreen ? "col-xl-6" : "col")">
+                                        <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" Job="Modal.Job" />
+                                    </div>
+                                </div>
                             }
                         }
                         else
                         {
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label">Step name</label>
-                                    <div class="input-group">
-                                        <div class="input-group-text">
-                                            @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                        </div>
-                                        <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
-                                    </div>
-                                </div>
-                            </div>
                             <div class="row mt-3">
-                                <label class="form-label">Description</label>
-                                <div class="input-group input-group-sm">
-                                    <div class="input-group-text">
-                                        @MarkupHelper.FromFile("icons/feather/book-open.svg")
+                                <div class="@(Fullscreen ? "col-xl-6" : "col-12")">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Step name</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                                </div>
+                                                <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <InputTextArea class="form-control" @bind-Value="Modal.Step.StepDescription" rows="2"></InputTextArea>
+                                    <div class="row mt-2">
+                                        <div class="col">
+                                            <label class="form-label">Description</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    @MarkupHelper.FromFile("icons/feather/book-open.svg")
+                                                </div>
+                                                <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col">
+                                            <label class="form-label">Tags</label>
+                                            <HxInputTags @bind-Value="Modal.Tags" DataProvider="Modal.GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Execution phase</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase"></InputNumber>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label">Retry attempts</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    @MarkupHelper.FromFile("icons/feather/repeat.svg")
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts"></InputNumber>
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label">Retry interval (min)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    @MarkupHelper.FromFile("icons/feather/clock.svg")
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes"></InputNumber>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="@(Fullscreen ? "col-xl-6 mt-2 mt-xl-0" : "col-12 mt-2")">
+                                    @ChildContent
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <label class="form-label">Tags</label>
-                                <HxInputTags @bind-Value="Modal.Tags" DataProvider="Modal.GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label">Execution phase</label>
-                                    <div class="input-group">
-                                        <div class="input-group-text">
-                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Modal.Step.ExecutionPhase"></InputNumber>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label">Retry attempts</label>
-                                    <div class="input-group">
-                                        <div class="input-group-text">
-                                            @MarkupHelper.FromFile("icons/feather/repeat.svg")
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Modal.Step.RetryAttempts"></InputNumber>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label">Retry interval (min)</label>
-                                    <div class="input-group">
-                                        <div class="input-group-text">
-                                            @MarkupHelper.FromFile("icons/feather/clock.svg")
-                                        </div>
-                                        <InputNumber class="form-control" @bind-Value="Modal.Step.RetryIntervalMinutes"></InputNumber>
-                                    </div>
-                                </div>
-                            </div>
-                            @ChildContent
-                            <p class="text-danger">@Modal.StepError</p>
                         }
                     </EditForm>
                 </div>
             </div>
+            <SqlReferenceExplorerOffcanvas @ref="SqlReferenceOffcanvas" Connections="Modal.Connections" />
+            <SqlDefinitionExplorerOffcanvas @ref="SqlDefinitionOffcanvas" Connections="Modal.Connections" />
         }
+
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success">@(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" @onclick="ToggleFullscreen" CssClass="me-auto">
+            @if (Fullscreen)
+            {
+                @MarkupHelper.FromFile("icons/feather/minimize-2.svg")
+            }
+            else
+            {
+                @MarkupHelper.FromFile("icons/feather/maximize-2.svg")
+            }
+        </HxButton>
+        
+        <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success">
+            @(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")
+        </HxSubmit>
+        
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.Modal.HideAsync()">
+            Cancel
+        </HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -107,4 +170,26 @@
     [Parameter] public StepEditModalBase<TStep> Modal { get; set; } = null!;
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
+
+    private SqlDefinitionExplorerOffcanvas SqlDefinitionOffcanvas { get; set; } = null!;
+
+    private bool Fullscreen { get; set; } = false;
+
+    private void ToggleFullscreen() => Fullscreen = !Fullscreen;
+
+    private string? SqlStatement => Modal.Step switch
+    {
+        SqlStep sql => sql.SqlStatement,
+        _ => null
+    };
+
+    private Guid? ConnectionId => Modal.Step switch
+    {
+        SqlStep sql => sql.ConnectionId,
+        AgentJobStep agent => agent.ConnectionId,
+        PackageStep package => package.ConnectionId,
+        _ => null
+    };
 }
