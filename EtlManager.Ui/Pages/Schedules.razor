@@ -123,6 +123,10 @@
                                     </HxButton>
                                 </HxButtonGroup>
                             </AuthorizeView>
+                            @if (!item.Tags.Any())
+                            {
+                                <span class="text-secondary ms-2">No tag filters</span>
+                            }
                             @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                             {
                                 <TagComponent Tag="tag" CssClass="m-1" />

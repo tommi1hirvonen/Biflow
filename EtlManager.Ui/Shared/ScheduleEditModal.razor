@@ -100,13 +100,9 @@
                 .Include(s => s.Tags)
                 .Include(s => s.Job)
                 .FirstAsync(s => s.ScheduleId == ScheduleId);
-            Tags = Schedule.Tags
-                .Select(t => t.TagName)
-                .OrderBy(t => t)
-                .ToList();
             PrevScheduleId = ScheduleId;
         }
-        else
+        else if (ScheduleId == Guid.Empty)
         {
             Schedule = new()
             {
@@ -115,6 +111,10 @@
                 Tags = new List<Tag>()
             };
         }
+        Tags = Schedule.Tags
+                .Select(t => t.TagName)
+                .OrderBy(t => t)
+                .ToList();
     }
 
     private async Task SubmitSchedule()
