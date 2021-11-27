@@ -1,4 +1,6 @@
-﻿@inject IConfiguration Configuration
+﻿@using Microsoft.Azure.Management.DataFactory.Models
+
+@inject IConfiguration Configuration
 @inject IHxMessengerService Messenger
 @inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
@@ -64,13 +66,34 @@
                     <tbody>
                         @if (Pipelines is not null && SelectedFolder is not null)
                         {
-                            foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.ContainsIgnoreCase(FilterText)).OrderBy(p => p))
+                            foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.Name.ContainsIgnoreCase(FilterText)).OrderBy(p => p.Name))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@pipeline" PartToHighlight="@FilterText" />
+                                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
                                     </td>
                                 </tr>
+                                @if (pipeline == SelectedPipeline && pipeline.Parameters.Any())
+                                {
+                                    <tr class="no-hover">
+                                        <td colspan="2" class="bg-light">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <h6 class="mx-2">Parameters</h6>
+                                                    <dl class="row mx-3 small">
+                                                        @foreach (var param in pipeline.Parameters)
+                                                        {
+                                                            var defaultValue = param.Value.DefaultValue;
+                                                            var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
+                                                            <dt class="col-sm-6">@param.Key</dt>
+                                                            <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
+                                                        }
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             }
                         }
                     </tbody>
@@ -98,12 +121,12 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private Dictionary<string, List<string>>? Pipelines { get; set; }
+    private Dictionary<string, List<PipelineResource>>? Pipelines { get; set; }
 
     private string FilterText { get; set; } = string.Empty;
 
     private string? SelectedFolder { get; set; }
-    private string? SelectedPipeline { get; set; }
+    private PipelineResource? SelectedPipeline { get; set; }
 
     private void OnFolderChanged(string folder)
     {
@@ -116,7 +139,7 @@
 
     private async Task SelectPipelineAsync()
     {
-        await OnPipelineSelected.InvokeAsync(SelectedPipeline);
+        await OnPipelineSelected.InvokeAsync(SelectedPipeline?.Name);
         await Offcanvas.HideAsync();
     }
 

@@ -69,7 +69,7 @@ public class DataFactory
         await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
     }
 
-    public async Task<Dictionary<string, List<string>>> GetPipelinesAsync(ITokenService tokenService)
+    public async Task<Dictionary<string, List<PipelineResource>>> GetPipelinesAsync(ITokenService tokenService)
     {
         var client = await GetClientAsync(tokenService);
         var allPipelines = new List<IPage<PipelineResource>>();
@@ -88,9 +88,9 @@ public class DataFactory
         // Key = Folder
         // Value = List of pipelines in that folder
         return allPipelines
-            .SelectMany(p => p.Select(p_ => (Folder: p_.Folder?.Name ?? "/", p_.Name))) // Replace null folder (root) with forward slash.
+            .SelectMany(p => p.Select(p_ => (Folder: p_.Folder?.Name ?? "/", Pipeline: p_))) // Replace null folder (root) with forward slash.
             .GroupBy(p => p.Folder)
-            .ToDictionary(p => p.Key, p => p.Select(p => p.Name).ToList());
+            .ToDictionary(p => p.Key, p => p.Select(p_ => p_.Pipeline).ToList());
     }
 
     public async Task TestConnection(AppRegistration appRegistration)
