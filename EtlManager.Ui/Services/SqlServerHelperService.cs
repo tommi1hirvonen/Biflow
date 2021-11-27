@@ -14,7 +14,7 @@ public class SqlServerHelperService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<Dictionary<string, Dictionary<string, List<string>>>> GetCatalogPackages(Guid connectionId)
+    public async Task<SSISCatalog> GetCatalogPackages(Guid connectionId)
     {
         string catalogConnectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -26,26 +26,62 @@ public class SqlServerHelperService
                 .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
         }
         using var sqlConnection = new SqlConnection(catalogConnectionString);
-        var rows = await sqlConnection.QueryAsync<(string, string?, string?)>(
+        var folders = new Dictionary<long, CatalogFolder>();
+        var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>(
             @"SELECT
-	                    [folders].[name] AS FolderName,
-	                    [projects].[name] AS ProjectName,
-	                    [packages].[name] AS PackageName
-                    FROM [SSISDB].[catalog].[folders]
-	                    LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-	                    LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-                    ORDER BY FolderName, ProjectName, PackageName");
-        var catalog = rows
-            .GroupBy(key => key.Item1, element => (element.Item2, element.Item3))
-            .ToDictionary(
-            grouping => grouping.Key,
-            grouping => grouping
-                            .Where(x => x.Item1 is not null)
-                            .GroupBy(key => key.Item1, element => element.Item2)
-                            .ToDictionary(
-                                grouping_ => grouping_.Key ?? "",
-                                grouping_ => grouping_.Where(x => x is not null).Select(x => x ?? "").ToList()));
-        return catalog;
+	            FolderId = [folders].[folder_id],
+	            FolderName = [folders].[name],
+	            ProjectId = [projects].[project_id],
+	            ProjectName = [projects].[name],
+	            PackageId = [packages].[package_id],
+	            PackageName = [packages].[name],
+	            ParameterId = [object_parameters].[parameter_id],
+	            ParameterName = [object_parameters].[parameter_name],
+	            ParameterType = [object_parameters].[data_type],
+	            DesignDefaultValue = [object_parameters].[design_default_value],
+	            DefaultValue = [object_parameters].[default_value]
+            FROM [SSISDB].[catalog].[folders]
+	            LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+	            LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+	            LEFT JOIN [SSISDB].[catalog].[object_parameters] ON
+		            [packages].[project_id] = [object_parameters].[project_id] AND
+		            [packages].[name] = [object_parameters].[object_name] AND
+		            [object_parameters].[object_type] = 30",
+            (folder, project, package, param) =>
+            {
+                if (!folders.TryGetValue(folder.FolderId, out var folderEntry))
+                {
+                    folderEntry = folder;
+                    folders[folderEntry.FolderId] = folderEntry;
+                }
+                if (project is not null)
+                {
+                    if (!folderEntry.Projects.TryGetValue(project.ProjectId, out var projectEntry))
+                    {
+                        projectEntry = project;
+                        folderEntry.Projects[projectEntry.ProjectId] = projectEntry;
+                    }
+                    if (package is not null)
+                    {
+                        if (!projectEntry.Packages.TryGetValue(package.PackageId, out var packageEntry))
+                        {
+                            packageEntry = package;
+                            projectEntry.Packages[packageEntry.PackageId] = packageEntry;
+                        }
+                        if (param is not null)
+                        {
+                            if (!packageEntry.Parameters.TryGetValue(param.ParameterId, out var paramEntry))
+                            {
+                                paramEntry = param;
+                                packageEntry.Parameters[paramEntry.ParameterId] = paramEntry;
+                            }
+                        }
+                    }
+                }
+                return folderEntry;
+            },
+            splitOn: "ProjectId,PackageId,ParameterId");
+        return new SSISCatalog(folders);
     }
 
     public async Task<List<StoredProcedure>> GetStoredProcedures(Guid connectionId)
@@ -76,7 +112,7 @@ public class SqlServerHelperService
 	            ProcedureName,
 	            ParameterId";
         var procedures = new Dictionary<int, StoredProcedure>();
-        var data = await sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter, StoredProcedure>(
+        var data = await sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter?, StoredProcedure>(
             sql,
             (proc, param) =>
             {
@@ -282,6 +318,68 @@ public record AsModel(string ModelName, List<AsTable> Tables);
 public record AsTable(string TableName, AsModel Model, List<AsPartition> Partitions);
 
 public record AsPartition(string PartitionName, AsTable Table);
+
+public class SSISCatalog
+{
+    public SSISCatalog(Dictionary<long, CatalogFolder> folders)
+    {
+        Folders = folders;
+    }
+    public Dictionary<long, CatalogFolder> Folders { get; }
+}
+
+public class CatalogFolder
+{
+    public CatalogFolder(long folderId, string folderName)
+    {
+        FolderId = folderId;
+        FolderName = folderName;
+    }
+    public long FolderId { get; }
+    public string FolderName { get; }
+    public Dictionary<long, CatalogProject> Projects { get; } = new();
+}
+
+public class CatalogProject
+{
+    public CatalogProject(long projectId, string projectName)
+    {
+        ProjectId = projectId;
+        ProjectName = projectName;
+    }
+    public long ProjectId { get; }
+    public string ProjectName { get; }
+    public Dictionary<long, CatalogPackage> Packages { get; } = new();
+}
+
+public class CatalogPackage
+{
+    public CatalogPackage(long packageId, string packageName)
+    {
+        PackageId = packageId;
+        PackageName = packageName;
+    }
+    public long PackageId { get; }
+    public string PackageName { get; }
+    public Dictionary<long, CatalogParameter> Parameters { get; } = new();
+}
+
+public class CatalogParameter
+{
+    public CatalogParameter(long parameterId, string parameterName, string parameterType, object? designDefaultValue, object? defaultValue)
+    {
+        ParameterId = parameterId;
+        ParameterName = parameterName;
+        ParameterType = parameterType;
+        DesignDefaultValue = designDefaultValue;
+        DefaultValue = defaultValue;
+    }
+    public long ParameterId { get; }
+    public string ParameterName { get; }
+    public string ParameterType { get; }
+    public object? DesignDefaultValue { get; }
+    public object? DefaultValue { get; }
+}
 
 public class StoredProcedure
 {
