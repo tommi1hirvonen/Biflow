@@ -23,7 +23,21 @@ builder.Services.AddHxMessageBoxHost();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<DbHelperService>();
-builder.Services.AddSingleton<SchedulerService>();
+
+var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("SchedulerType");
+if (schedulerType == "OnPrem")
+{
+    builder.Services.AddSingleton<ISchedulerService, OnPremSchedulerService>();
+}
+else if (schedulerType == "Azure")
+{
+    builder.Services.AddSingleton<ISchedulerService, AzureSchedulerService>();
+}
+else
+{
+    throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
+}
+
 builder.Services.AddSingleton<SqlServerHelperService>();
 builder.Services.AddSingleton<MarkupHelperService>();
 builder.Services.AddSingleton<SubscriptionsHelperService>();

@@ -2,22 +2,26 @@
 using EtlManager.DataAccess;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Quartz;
-using System.Diagnostics;
 
-namespace EtlManager.Scheduler;
+namespace EtlManager.Scheduler.Core;
 
 [DisallowConcurrentExecution]
-public class ExecutionJob : IJob
+public abstract class ExecutionJob : IJob
 {
-    private readonly ILogger<ExecutionJob> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly ILogger _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
-    public ExecutionJob(ILogger<ExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
+    protected abstract string EtlManagerConnectionString { get; }
+
+    protected abstract Task StartExecutorAsync(Guid executionId);
+
+    protected abstract Task WaitForExecutionToFinish(Guid executionId);
+
+    public ExecutionJob(ILogger logger, IDbContextFactory<EtlManagerContext> dbContextFactory)
     {
         _logger = logger;
-        _configuration = configuration;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -25,14 +29,8 @@ public class ExecutionJob : IJob
     {
         try
         {
-            var etlManagerConnectionString = _configuration.GetConnectionString("EtlManagerContext")
-                ?? throw new ArgumentNullException("etlManagerConnectionString", "Connection string cannot be null");
-            var executorFilePath = _configuration.GetValue<string>("EtlManagerExecutorPath")
-                ?? throw new ArgumentNullException("executorFilePath", "Executor file path cannot be null");
-
             var jobId = Guid.Parse(context.JobDetail.Key.Name);
             var scheduleId = Guid.Parse(context.Trigger.Key.Name);
-
             try
             {
                 using var dbContext = _dbContextFactory.CreateDbContext();
@@ -79,7 +77,7 @@ public class ExecutionJob : IJob
                 return;
             }
 
-            using var sqlConnection = new SqlConnection(etlManagerConnectionString);
+            using var sqlConnection = new SqlConnection(EtlManagerConnectionString);
             await sqlConnection.OpenAsync();
 
             Guid executionId;
@@ -101,36 +99,11 @@ public class ExecutionJob : IJob
                 return;
             }
 
-            var executionInfo = new ProcessStartInfo()
-            {
-                FileName = executorFilePath,
-                ArgumentList = {
-                        "execute",
-                        "--id",
-                        executionId.ToString(),
-                        "--notify"
-                    },
-                UseShellExecute = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-
-            var executorProcess = new Process() { StartInfo = executionInfo };
-            try
-            {
-                executorProcess.Start();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error starting executor process for execution {executionId}", executionId);
-                return;
-            }
+            await StartExecutorAsync(executionId);
 
             _logger.LogInformation($"Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}");
 
-            // Wait for the execution to finish and for the executor process to exit.
-            // This way Quartz does not start a parallel execution of the same job.
-            await executorProcess.WaitForExitAsync();
+            await WaitForExecutionToFinish(executionId);
         }
         catch (Exception ex)
         {

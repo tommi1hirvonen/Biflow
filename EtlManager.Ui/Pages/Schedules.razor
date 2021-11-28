@@ -2,7 +2,7 @@
 
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject IHxMessengerService Messenger
-@inject SchedulerService SchedulerService
+@inject ISchedulerService SchedulerService
 @inject MarkupHelperService MarkupHelper
 
 <style>
@@ -232,7 +232,7 @@
     {
         try
         {
-            var result = await SchedulerService.Synchronize();
+            var result = await SchedulerService.SynchronizeAsync();
             if (!result)
             {
                 Messenger.AddError("Error", "Error synchronizing schedules");

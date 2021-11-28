@@ -1,5 +1,6 @@
 using EtlManager.DataAccess;
 using EtlManager.Scheduler;
+using EtlManager.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 using Serilog;
@@ -20,6 +21,7 @@ builder.ConfigureServices((hostContext, services) =>
     services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
     var connectionString = hostContext.Configuration.GetConnectionString("EtlManagerContext");
     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
+    services.AddSingleton<SchedulesManager<ServiceExecutionJob>>();
     services.AddHostedService<Worker>();
 });
 

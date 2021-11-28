@@ -5,11 +5,10 @@
     <UserSecretsId>dotnet-EtlManagerScheduler-EBE07DBD-F3C1-4203-9DA9-0AFDF7385430</UserSecretsId>
 	<Nullable>enable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
-	<AssemblyName>$(MSBuildProjectName.Replace(".", ""))</AssemblyName>
+	<AssemblyName>EtlManagerScheduler</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
     <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.3.3" />
@@ -18,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EtlManager.DataAccess\EtlManager.DataAccess.csproj" />
+    <ProjectReference Include="..\EtlManager.Scheduler.Core\EtlManager.Scheduler.Core.csproj" />
     <ProjectReference Include="..\EtlManager.Utilities\EtlManager.Utilities.csproj" />
   </ItemGroup>
 

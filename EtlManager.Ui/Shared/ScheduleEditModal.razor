@@ -1,6 +1,6 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
-@inject SchedulerService SchedulerService
+@inject ISchedulerService SchedulerService
 @inject MarkupHelperService MarkupHelper
 
 <HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
