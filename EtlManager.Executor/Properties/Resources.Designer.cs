@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace EtlManager.Executor.Properties {
+namespace EtlManager.Executor.ConsoleApp.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace EtlManager.Executor.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("EtlManager.Executor.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("EtlManager.Executor.ConsoleApp.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace EtlManager.Executor.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 47e9de9bc3902d6a5dbffe257e63eb0f844386ee
+        ///   Looks up a localized string similar to b56044c27929e768f775f9e59ae05d8dccbf35a6
         ///.
         /// </summary>
         internal static string CurrentCommit {

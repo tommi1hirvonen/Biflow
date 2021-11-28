@@ -1,5 +1,6 @@
 using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
+using EtlManager.Executor.Core.Notification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,7 +1,13 @@
 ﻿using CommandLine;
 using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using EtlManager.Executor;
+using EtlManager.Executor.Core.Common;
+using EtlManager.Executor.Core.ConnectionTest;
+using EtlManager.Executor.Core.ExecutionStopper;
+using EtlManager.Executor.Core.JobExecutor;
+using EtlManager.Executor.Core.Notification;
+using EtlManager.Executor.Core.Orchestrator;
+using EtlManager.Executor.Core.StepExecutor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -101,7 +107,7 @@ static async Task<int> HandleParseError(IEnumerable<Error> errors)
 
 static async Task<int> PrintCommit()
 {
-    var commit = EtlManager.Executor.Properties.Resources.CurrentCommit;
+    var commit = EtlManager.Executor.ConsoleApp.Properties.Resources.CurrentCommit;
     Console.WriteLine(commit);
     return await Task.FromResult(0);
 }
