@@ -1,6 +1,7 @@
 ﻿@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IExecutorService ExecutorService
 
 <div class="row mx-1 my-2">
     <div class="col">
@@ -107,7 +108,7 @@
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await stepExecution.StopExecutionAsync(username);
+            await ExecutorService.StopExecutionAsync(stepExecution, username);
         }
         catch (TimeoutException)
         {

@@ -6,14 +6,21 @@ using EtlManager.Executor.Core.Notification;
 using EtlManager.Executor.Core.Orchestrator;
 using EtlManager.Executor.Core.StepExecutor;
 using EtlManager.Executor.WebApp;
-using Microsoft.AspNetCore.Mvc;
+using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
-
+using Microsoft.AspNetCore.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+});
 
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
 builder.Services.AddDbContextFactory<EtlManagerContext>(options =>

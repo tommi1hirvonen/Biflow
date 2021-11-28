@@ -13,10 +13,12 @@ public class AzureSchedulerService : ISchedulerService
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
 
-    private string Endpoint => _configuration
+    private string Url => _configuration
         .GetSection("Scheduler")
         .GetSection("Azure")
-        .GetValue<string>("Endpoint");
+        .GetValue<string>("Url");
+
+    private string Endpoint => $"{Url}/scheduler";
 
     public AzureSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {

@@ -1,6 +1,6 @@
 ﻿using EtlManager.DataAccess.Models;
 
-namespace EtlManager.Executor.WebApp;
+namespace EtlManager.Utilities;
 
 public class StartCommand
 {

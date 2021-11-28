@@ -1,6 +1,7 @@
 ﻿@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
+@inject IExecutorService ExecutorService
 
 <table class="table table-sm table-hover">
     <thead>
@@ -48,8 +49,8 @@
                     @if (ShowDetailed)
                     {
                         <td>
-                        @item.StepExecution.Execution.JobName
-                    </td>
+                            @item.StepExecution.Execution.JobName
+                        </td>
                     }
                     <td>
                         <StepTypeIconComponent StepType_="item.StepType" />
@@ -142,7 +143,7 @@
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
-            await stepExecution.StopExecutionAsync(username);
+            await ExecutorService.StopExecutionAsync(stepExecution, username);
         }
         catch (TimeoutException)
         {

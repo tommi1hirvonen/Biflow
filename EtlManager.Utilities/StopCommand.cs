@@ -1,4 +1,4 @@
-﻿namespace EtlManager.Executor.WebApp;
+﻿namespace EtlManager.Utilities;
 
 public class StopCommand
 {

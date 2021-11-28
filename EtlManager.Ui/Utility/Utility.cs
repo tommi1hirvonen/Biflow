@@ -10,32 +10,6 @@ namespace EtlManager.Ui;
 public static partial class Utility
 {
 
-    public static async Task StopExecutionAsync(this StepExecutionAttempt attempt, string username)
-    {
-        // Connect to the pipe server set up by the executor process.
-        using var pipeClient = new NamedPipeClientStream(".", attempt.ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
-        await pipeClient.ConnectAsync(10000); // wait for 10 seconds
-        using var streamWriter = new StreamWriter(pipeClient);
-        // Send cancel command.
-        var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-        var cancelCommand = new CancelCommand(attempt.StepId, username);
-        var json = JsonSerializer.Serialize(cancelCommand);
-        streamWriter.WriteLine(json);
-    }
-
-    public static async Task StopExecutionAsync(this Execution execution, string username)
-    {
-        // Connect to the pipe server set up by the executor process.
-        using var pipeClient = new NamedPipeClientStream(".", execution.ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
-        await pipeClient.ConnectAsync(10000); // wait for 10 seconds
-        using var streamWriter = new StreamWriter(pipeClient);
-        // Send cancel command.
-        var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-        var cancelCommand = new CancelCommand(null, username);
-        var json = JsonSerializer.Serialize(cancelCommand);
-        streamWriter.WriteLine(json);
-    }
-
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {
         // Can handle white space inside object names

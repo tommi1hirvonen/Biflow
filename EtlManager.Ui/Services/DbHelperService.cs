@@ -8,10 +8,12 @@ namespace EtlManager.Ui;
 public class DbHelperService
 {
     private readonly IConfiguration _configuration;
+    private readonly IExecutorService _executor;
 
-    public DbHelperService(IConfiguration configuration)
+    public DbHelperService(IConfiguration configuration, IExecutorService executor)
     {
         _configuration = configuration;
+        _executor = executor;
     }
 
     public async Task<Guid> StartExecutionAsync(
@@ -42,27 +44,7 @@ public class DbHelperService
             executionId = await sqlConnection.ExecuteScalarAsync<Guid>(command);
         }
 
-        string executorPath = _configuration.GetValue<string>("EtlManagerExecutorPath");
-
-        var executionInfo = new ProcessStartInfo()
-        {
-            // The installation folder should be included in the Path variable, so no path required here.
-            FileName = executorPath,
-            ArgumentList = {
-                    "execute",
-                    "--id",
-                    executionId.ToString(),
-                    notify ? "--notify" : "",
-                    notifyMe is not null ? $"--notify-me \"{notifyMe}\"" : "",
-                    notifyMeOvertime ? "--notify-me-overtime" : ""
-                },
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
-        };
-
-        var executorProcess = new Process() { StartInfo = executionInfo };
-        executorProcess.Start();
+        await _executor.StartExecutionAsync(executionId, notify, notifyMe, notifyMeOvertime);
 
         return executionId;
     }

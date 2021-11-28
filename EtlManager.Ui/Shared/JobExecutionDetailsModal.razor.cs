@@ -17,6 +17,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    [Inject] private IExecutorService ExecutorService { get; set; } = null!;
 
     [Parameter] public string? ExecutionId_ { get; set; }
 
@@ -171,12 +172,18 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
             return;
         }
 
+        if (Execution is null)
+        {
+            Messenger.AddError("Execution was null");
+            return;
+        }
+
         StoppingExecutions.Add(ExecutionId);
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await (Execution?.StopExecutionAsync(username) ?? Task.CompletedTask);
+            await ExecutorService.StopExecutionAsync(Execution, username);
         }
         catch (TimeoutException)
         {

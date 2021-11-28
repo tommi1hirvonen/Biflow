@@ -22,9 +22,22 @@ builder.Services.AddHxMessageBoxHost();
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ITokenService, TokenService>();
-builder.Services.AddSingleton<DbHelperService>();
 
-var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("SchedulerType");
+var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
+if (executorType == "OnPrem")
+{
+    builder.Services.AddSingleton<IExecutorService, OnPremExecutorService>();
+}
+else if (executorType == "Azure")
+{
+    builder.Services.AddSingleton<IExecutorService, AzureExecutorService>();
+}
+else
+{
+    throw new ArgumentException($"Error registering executor service. Incorrect executor type: {executorType}. Check appsettings.json.");
+}
+
+var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("Type");
 if (schedulerType == "OnPrem")
 {
     builder.Services.AddSingleton<ISchedulerService, OnPremSchedulerService>();
@@ -38,6 +51,7 @@ else
     throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
 }
 
+builder.Services.AddSingleton<DbHelperService>();
 builder.Services.AddSingleton<SqlServerHelperService>();
 builder.Services.AddSingleton<MarkupHelperService>();
 builder.Services.AddSingleton<SubscriptionsHelperService>();
