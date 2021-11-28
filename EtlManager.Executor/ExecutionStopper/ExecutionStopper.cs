@@ -2,9 +2,9 @@
 using System.IO.Pipes;
 using System.Text.Json;
 
-namespace EtlManager.Executor.Core.ExecutionStopper;
+namespace EtlManager.Executor.ConsoleApp.ExecutionStopper;
 
-public class ExecutionStopper : IExecutionStopper
+internal class ExecutionStopper : IExecutionStopper
 {
     public async Task<bool> RunAsync(string executionId, string? username, string? stepId)
     {

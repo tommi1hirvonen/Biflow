@@ -7,6 +7,4 @@ public interface IExecutionConfiguration
     public int MaxParallelSteps { get; }
 
     public int PollingIntervalMs { get; }
-
-    public bool Notify { get; set; }
 }

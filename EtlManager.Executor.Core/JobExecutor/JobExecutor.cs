@@ -15,24 +15,21 @@ public class JobExecutor : IJobExecutor
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
     private readonly IOrchestratorFactory _orchestratorFactory;
-    private readonly IExecutionConfiguration _executionConfiguration;
+
+    private OrchestratorBase? Orchestrator { get; set; }
 
     public JobExecutor(
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         INotificationService notificationService,
-        IOrchestratorFactory orchestratorFactory,
-        IExecutionConfiguration executionConfiguration)
+        IOrchestratorFactory orchestratorFactory)
     {
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
         _orchestratorFactory = orchestratorFactory;
-        _executionConfiguration = executionConfiguration;
     }
 
     public async Task RunAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
     {
-        _executionConfiguration.Notify = notify;
-
         Execution execution;
         Job job;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -123,14 +120,15 @@ public class JobExecutor : IJobExecutor
             return;
         }
 
-        var orchestrator = _orchestratorFactory.Create(execution);
+        Orchestrator = _orchestratorFactory.Create(execution);
+
         try
         {
             var notificationTask = execution.OvertimeNotificationLimitMinutes > 0
                 ? Task.Delay(TimeSpan.FromMinutes(execution.OvertimeNotificationLimitMinutes))
                 : Task.Delay(-1); // infinite timeout
 
-            var orchestrationTask = orchestrator.RunAsync();
+            var orchestrationTask = Orchestrator.RunAsync();
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
@@ -182,6 +180,10 @@ public class JobExecutor : IJobExecutor
 
         await _notificationService.SendCompletionNotification(execution, notify, notifyMe);
     }
+
+    public void Cancel(string username) => Orchestrator?.CancelExecution(username);
+
+    public void Cancel(string username, Guid stepId) => Orchestrator?.CancelExecution(username, stepId);
 
     /// <summary>
     /// Checks for circular dependencies between jobs.

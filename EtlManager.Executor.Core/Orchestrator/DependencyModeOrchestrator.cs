@@ -65,9 +65,6 @@ class DependencyModeOrchestrator : OrchestratorBase
             return;
         }
 
-        // Start listening for cancel commands.
-        RegisterCancelListeners();
-
         // Loop as long as there are steps that haven't yet been started.
         while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
         {

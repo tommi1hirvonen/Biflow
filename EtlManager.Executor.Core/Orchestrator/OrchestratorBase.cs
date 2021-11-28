@@ -1,11 +1,7 @@
 ﻿using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.StepExecutor;
-using EtlManager.Utilities;
 using Serilog;
-using System.IO.Pipes;
-using System.Text;
-using System.Text.Json;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
@@ -48,12 +44,23 @@ public abstract class OrchestratorBase
 
     public abstract Task RunAsync();
 
-    protected void RegisterCancelListeners()
+    public void CancelExecution(string username)
     {
-        // Start listening for cancel key press from the console.
-        _ = Task.Run(ReadCancelKey);
-        // Start listening for cancel command from the UI application.
-        _ = Task.Run(() => ReadCancelPipe(Execution.ExecutionId));
+        // Cancel all steps
+        foreach (var pair in CancellationTokenSources)
+        {
+            pair.Value.Cancel(username);
+        }
+    }
+
+    public void CancelExecution(string username, Guid stepId)
+    {
+        // Cancel just one step
+        var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == stepId);
+        if (step is not null && CancellationTokenSources.ContainsKey(step))
+        {
+            CancellationTokenSources[step].Cancel(username);
+        }
     }
 
     protected async Task StartNewStepWorkerAsync(StepExecution step)
@@ -80,91 +87,4 @@ public abstract class OrchestratorBase
         }
     }
 
-    private void ReadCancelKey()
-    {
-        Console.WriteLine("Enter 'c' to cancel all step executions or a step id to cancel that step's execution.");
-        while (true)
-        {
-            var input = Console.ReadLine();
-            try
-            {
-                ProcessCancelInput(input);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error canceling execution: {ex.Message}");
-            }
-        }
-    }
-
-    private void ProcessCancelInput(string? input)
-    {
-        if (input == "c")
-        {
-            Console.WriteLine("Canceling all step executions.");
-            foreach (var pair in CancellationTokenSources)
-            {
-                pair.Value.Cancel();
-            }
-        }
-        else if (input is not null)
-        {
-            var stepId = Guid.Parse(input);
-            var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == stepId);
-            if (step is not null && CancellationTokenSources.ContainsKey(step))
-            {
-                CancellationTokenSources[step].Cancel("console");
-                Console.WriteLine($"Canceled step {stepId}.");
-            }
-            else
-            {
-                Console.WriteLine("No step running with that step id.");
-            }
-        }
-    }
-
-
-    private void ReadCancelPipe(Guid executionId)
-    {
-        while (true)
-        {
-            using var pipeServer = new NamedPipeServerStream(executionId.ToString().ToLower(), PipeDirection.In);
-            pipeServer.WaitForConnection();
-            try
-            {
-                using var streamReader = new StreamReader(pipeServer);
-                var builder = new StringBuilder();
-                string? input;
-                while ((input = streamReader.ReadLine()) is not null)
-                {
-                    builder.Append(input);
-                }
-                var json = builder.ToString();
-                var cancelCommand = JsonSerializer.Deserialize<CancelCommand>(json)
-                    ?? throw new ArgumentNullException("cancelCommand", "Cancel command cannot be null");
-                if (cancelCommand.StepId is not null)
-                {
-                    // Cancel just one step
-                    var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == cancelCommand.StepId);
-                    if (step is not null && CancellationTokenSources.ContainsKey(step))
-                    {
-                        CancellationTokenSources[step].Cancel(cancelCommand.Username);
-                    }
-                }
-                else
-                {
-                    // Cancel all steps
-                    foreach (var pair in CancellationTokenSources)
-                    {
-                        pair.Value.Cancel(cancelCommand.Username);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Error canceling execution");
-            }
-        }
-
-    }
 }

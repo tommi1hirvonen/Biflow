@@ -27,9 +27,6 @@ class ExecutionPhaseOrchestrator : OrchestratorBase
             .GroupBy(key => key.ExecutionPhase, element => element)
             .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
 
-        // Start listening for cancel commands.
-        RegisterCancelListeners();
-
         // Start all steps in each execution phase in parallel.
         foreach (var stepGroup in groupedSteps.OrderBy(g => g.Key)) // Sort step groups based on execution phase
         {

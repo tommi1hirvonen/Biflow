@@ -1,18 +1,22 @@
 ﻿using CommandLine;
 using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
+using EtlManager.Executor.ConsoleApp.ExecutionStopper;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.ConnectionTest;
-using EtlManager.Executor.Core.ExecutionStopper;
 using EtlManager.Executor.Core.JobExecutor;
 using EtlManager.Executor.Core.Notification;
 using EtlManager.Executor.Core.Orchestrator;
 using EtlManager.Executor.Core.StepExecutor;
+using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using System.IO.Pipes;
+using System.Text;
+using System.Text.Json;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -64,10 +68,12 @@ return await Parser.Default
         errors => HandleParseError(errors)
     );
 
-static async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
+async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
 {
-    var service = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
-    await service.RunAsync(options.ExecutionId, options.Notify, options.NotifyMe, options.NotifyMeOvertime);
+    var executor = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
+    _ = Task.Run(() => ReadCancelKey(executor));
+    _ = Task.Run(() => ReadCancelPipe(executor, options.ExecutionId));
+    await executor.RunAsync(options.ExecutionId, options.Notify, options.NotifyMe, options.NotifyMeOvertime);
     return 0;
 }
 
@@ -110,6 +116,74 @@ static async Task<int> PrintCommit()
     var commit = EtlManager.Executor.ConsoleApp.Properties.Resources.CurrentCommit;
     Console.WriteLine(commit);
     return await Task.FromResult(0);
+}
+
+void ReadCancelKey(IJobExecutor jobExecutor)
+{
+    Console.WriteLine("Enter 'c' to cancel all step executions or a step id to cancel that step's execution.");
+    while (true)
+    {
+        var input = Console.ReadLine();
+        try
+        {
+            ProcessCancelInput(input, jobExecutor);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error canceling execution: {ex.Message}");
+        }
+    }
+}
+
+void ProcessCancelInput(string? input, IJobExecutor jobExecutor)
+{
+    if (input == "c")
+    {
+        Console.WriteLine("Canceling all step executions.");
+        jobExecutor.Cancel("console");
+    }
+    else if (input is not null)
+    {
+        var stepId = Guid.Parse(input);
+        jobExecutor.Cancel("console", stepId);
+    }
+}
+
+
+void ReadCancelPipe(IJobExecutor jobExecutor, Guid executionId)
+{
+    while (true)
+    {
+        using var pipeServer = new NamedPipeServerStream(executionId.ToString().ToLower(), PipeDirection.In);
+        pipeServer.WaitForConnection();
+        try
+        {
+            using var streamReader = new StreamReader(pipeServer);
+            var builder = new StringBuilder();
+            string? input;
+            while ((input = streamReader.ReadLine()) is not null)
+            {
+                builder.Append(input);
+            }
+            var json = builder.ToString();
+            var cancelCommand = JsonSerializer.Deserialize<CancelCommand>(json)
+                ?? throw new ArgumentNullException("cancelCommand", "Cancel command cannot be null");
+            if (cancelCommand.StepId is not null)
+            {
+                // Cancel just one step
+                jobExecutor.Cancel(cancelCommand.Username, (Guid)cancelCommand.StepId);
+            }
+            else
+            {
+                // Cancel all steps
+                jobExecutor.Cancel(cancelCommand.Username);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error canceling execution");
+        }
+    }
 }
 
 [Verb("execute", HelpText = "Start the execution of an initialized execution (execution placeholder created in database).")]

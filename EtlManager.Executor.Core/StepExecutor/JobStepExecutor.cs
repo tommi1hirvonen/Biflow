@@ -15,7 +15,9 @@ class JobStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
 
-    private JobStepExecution Step { get; init; }
+    private JobStepExecution Step { get; }
+
+    private bool Notify { get; }
 
     public JobStepExecutor(
         IDbContextFactory<EtlManagerContext> dbContextFactory,
@@ -59,7 +61,7 @@ class JobStepExecutor : StepExecutorBase
                         "execute",
                         "--id",
                         jobExecutionId.ToString(),
-                        _executionConfiguration.Notify ? "--notify" : ""
+                        Notify ? "--notify" : ""
                     },
                 UseShellExecute = false,
                 CreateNoWindow = true,

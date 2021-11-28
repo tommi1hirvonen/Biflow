@@ -1,4 +1,4 @@
-﻿namespace EtlManager.Executor.Core.ExecutionStopper;
+﻿namespace EtlManager.Executor.ConsoleApp.ExecutionStopper;
 
 public interface IExecutionStopper
 {
