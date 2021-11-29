@@ -7,7 +7,7 @@ using Quartz;
 
 namespace EtlManager.Scheduler.Core;
 
-public class SchedulesManager<TJob> where TJob : ExecutionJob
+public class SchedulesManager<TJob> where TJob : ExecutionJobBase
 {
     private readonly ILogger _logger;
     private readonly IScheduler _scheduler;

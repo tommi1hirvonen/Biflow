@@ -1,17 +1,16 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
 using System.Diagnostics;
 
 namespace EtlManager.Scheduler;
 
-public class ServiceExecutionJob : ExecutionJob
+public class ExecutionJob : ExecutionJobBase
 {
-    private readonly ILogger<ServiceExecutionJob> _logger;
+    private readonly ILogger<ExecutionJob> _logger;
     private readonly IConfiguration _configuration;
 
-    public ServiceExecutionJob(ILogger<ServiceExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
+    public ExecutionJob(ILogger<ExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
         : base(logger, dbContextFactory)
     {
         _logger = logger;

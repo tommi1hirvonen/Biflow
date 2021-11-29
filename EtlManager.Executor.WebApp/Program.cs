@@ -73,6 +73,19 @@ app.MapPost("/execution/stop", (StopCommand command, ExecutionManager executionM
 }).WithName("StopExecution");
 
 
+app.MapGet("/execution/status/{executionId}", (Guid executionId, HttpContext context, ExecutionManager executionManager) =>
+{
+    if (executionManager.IsExecutionRunning(executionId))
+    {
+        return "RUNNING";
+    }
+    else
+    {
+        return "NOT FOUND";
+    }
+}).WithName("ExecutionStatus");
+
+
 app.MapGet("/connection/test", async (IConnectionTest connectionTest) =>
 {
     try

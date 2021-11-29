@@ -13,17 +13,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
-builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
-var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
-builder.Services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddSingleton<SchedulesManager<WebAppExecutionJob>>();
-builder.Services.AddSingleton<StatusTracker>();
-
 builder.Services.Configure<JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
 });
+
+builder.Services.AddHttpClient();
+builder.Services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
+builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
+var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
+builder.Services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddSingleton<SchedulesManager<ExecutionJob>>();
+builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
 
@@ -40,7 +41,7 @@ app.UseHttpsRedirection();
 // Read all schedules into the schedules manager.
 using (var scope = app.Services.CreateScope())
 {
-    var schedulesManager = scope.ServiceProvider.GetRequiredService<SchedulesManager<WebAppExecutionJob>>();
+    var schedulesManager = scope.ServiceProvider.GetRequiredService<SchedulesManager<ExecutionJob>>();
     var statusTracker = scope.ServiceProvider.GetRequiredService<StatusTracker>();
     try
     {
@@ -52,7 +53,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("/scheduler", async (SchedulerCommand command, SchedulesManager<WebAppExecutionJob> schedulesManager, StatusTracker statusTracker) =>
+app.MapPost("/scheduler", async (SchedulerCommand command, SchedulesManager<ExecutionJob> schedulesManager, StatusTracker statusTracker) =>
 {
     switch (command.Type)
     {

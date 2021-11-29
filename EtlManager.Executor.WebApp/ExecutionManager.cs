@@ -62,4 +62,7 @@ public class ExecutionManager
         var executor = JobExecutors[executionId];
         executor.Cancel(username, stepId);
     }
+
+    public bool IsExecutionRunning(Guid executionId) => JobExecutors.ContainsKey(executionId);
+
 }

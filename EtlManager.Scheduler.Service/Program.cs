@@ -21,7 +21,7 @@ builder.ConfigureServices((hostContext, services) =>
     services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
     var connectionString = hostContext.Configuration.GetConnectionString("EtlManagerContext");
     services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
-    services.AddSingleton<SchedulesManager<ServiceExecutionJob>>();
+    services.AddSingleton<SchedulesManager<ExecutionJob>>();
     services.AddHostedService<Worker>();
 });
 

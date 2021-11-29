@@ -8,7 +8,7 @@ using Quartz;
 namespace EtlManager.Scheduler.Core;
 
 [DisallowConcurrentExecution]
-public abstract class ExecutionJob : IJob
+public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
@@ -19,7 +19,7 @@ public abstract class ExecutionJob : IJob
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
 
-    public ExecutionJob(ILogger logger, IDbContextFactory<EtlManagerContext> dbContextFactory)
+    public ExecutionJobBase(ILogger logger, IDbContextFactory<EtlManagerContext> dbContextFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
