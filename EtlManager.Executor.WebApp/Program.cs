@@ -33,12 +33,12 @@ builder.Services.AddSingleton<ExecutionManager>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
 builder.Services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-builder.Services.AddTransient<INotificationService, EmailService>();
-builder.Services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
-builder.Services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
+builder.Services.AddSingleton<INotificationService, EmailService>();
+builder.Services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
+builder.Services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
+builder.Services.AddSingleton<IEmailTest, EmailTest>();
+builder.Services.AddSingleton<IConnectionTest, ConnectionTest>();
 builder.Services.AddTransient<IJobExecutor, JobExecutor>();
-builder.Services.AddTransient<IEmailTest, EmailTest>();
-builder.Services.AddTransient<IConnectionTest, ConnectionTest>();
 
 var app = builder.Build();
 

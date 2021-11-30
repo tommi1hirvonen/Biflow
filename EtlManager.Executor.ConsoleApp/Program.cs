@@ -44,13 +44,13 @@ builder.ConfigureServices((context, services) =>
     services.AddSingleton<ITokenService, TokenService>();
     services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
     services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-    services.AddTransient<INotificationService, EmailService>();
-    services.AddTransient<IStepExecutorFactory, StepExecutorFactory>();
-    services.AddTransient<IOrchestratorFactory, OrchestratorFactory>();
+    services.AddSingleton<INotificationService, EmailService>();
+    services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
+    services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
+    services.AddSingleton<IExecutionStopper, ExecutionStopper>();
+    services.AddSingleton<IEmailTest, EmailTest>();
+    services.AddSingleton<IConnectionTest, ConnectionTest>();
     services.AddTransient<IJobExecutor, JobExecutor>();
-    services.AddTransient<IExecutionStopper, ExecutionStopper>();
-    services.AddTransient<IEmailTest, EmailTest>();
-    services.AddTransient<IConnectionTest, ConnectionTest>();
 });
 
 builder.UseSerilog();
