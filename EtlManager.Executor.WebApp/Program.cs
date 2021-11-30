@@ -77,11 +77,11 @@ app.MapGet("/execution/status/{executionId}", (Guid executionId, ExecutionManage
 {
     if (executionManager.IsExecutionRunning(executionId))
     {
-        return Results.Ok("RUNNING");
+        return "RUNNING";
     }
     else
     {
-        return Results.NotFound();
+        return "NOT RUNNING";
     }
 }).WithName("ExecutionStatus");
 

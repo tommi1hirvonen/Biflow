@@ -2,7 +2,6 @@
 using EtlManager.Scheduler.Core;
 using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -58,21 +57,15 @@ public class ExecutionJob : ExecutionJobBase
     {
         try
         {
-            while (true)
+            bool running;
+            do
             {
                 await Task.Delay(PollingIntervalMs);
                 var response = await _httpClient.GetAsync($"{Url}/execution/status/{executionId}");
-                if (response.StatusCode == HttpStatusCode.NotFound)
-                {
-                    break; // NotFound => execution is not being monitored by the executor
-                }
-                else
-                {
-                    // StatusCode OK => execution is running
-                    // Otherwise throws error and execution is assumed to be finished
-                    response.EnsureSuccessStatusCode(); 
-                }
-            }
+                response.EnsureSuccessStatusCode();
+                var content = await response.Content.ReadAsStringAsync();
+                running = content == "RUNNING";
+            } while (running);
         }
         catch (Exception ex)
         {
