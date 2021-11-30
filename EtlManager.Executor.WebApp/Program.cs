@@ -73,15 +73,15 @@ app.MapPost("/execution/stop", (StopCommand command, ExecutionManager executionM
 }).WithName("StopExecution");
 
 
-app.MapGet("/execution/status/{executionId}", (Guid executionId, HttpContext context, ExecutionManager executionManager) =>
+app.MapGet("/execution/status/{executionId}", (Guid executionId, ExecutionManager executionManager) =>
 {
     if (executionManager.IsExecutionRunning(executionId))
     {
-        return "RUNNING";
+        return Results.Ok("RUNNING");
     }
     else
     {
-        return "NOT FOUND";
+        return Results.NotFound();
     }
 }).WithName("ExecutionStatus");
 
