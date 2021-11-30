@@ -14,18 +14,21 @@ namespace EtlManager.Executor.Core.StepExecutor;
 class JobStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
+    private readonly IExecutorLauncher _executorLauncher;
 
     private JobStepExecution Step { get; }
 
     private bool Notify { get; }
 
     public JobStepExecutor(
+        IExecutorLauncher executorLauncher,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         IExecutionConfiguration executionConfiguration,
         JobStepExecution step)
         : base(dbContextFactory, step)
     {
         _executionConfiguration = executionConfiguration;
+        _executorLauncher = executorLauncher;
         Step = step;
     }
 
@@ -34,7 +37,6 @@ class JobStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        Process executorProcess;
         Guid jobExecutionId;
 
         using (var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString))
@@ -51,27 +53,10 @@ class JobStepExecutor : StepExecutorBase
                 Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
                 return Result.Failure("Error initializing job execution: " + ex.Message);
             }
-
-            var executorFilePath = Process.GetCurrentProcess().MainModule?.FileName
-                ?? throw new ArgumentNullException("FileName", "Executor file path cannot be null");
-            var executionInfo = new ProcessStartInfo()
-            {
-                FileName = executorFilePath,
-                ArgumentList = {
-                        "execute",
-                        "--id",
-                        jobExecutionId.ToString(),
-                        Notify ? "--notify" : ""
-                    },
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
-
-            executorProcess = new Process() { StartInfo = executionInfo };
+            
             try
             {
-                executorProcess.Start();
+                await _executorLauncher.StartExecutorAsync(jobExecutionId, Notify);
             }
             catch (Exception ex)
             {
@@ -85,11 +70,11 @@ class JobStepExecutor : StepExecutorBase
         {
             try
             {
-                await executorProcess.WaitForExitAsync(cancellationToken);
+                await _executorLauncher.WaitForExitAsync(jobExecutionId, cancellationToken);
             }
             catch (OperationCanceledException)
             {
-                await CancelAsync(jobExecutionId, cancellationTokenSource.Username);
+                await _executorLauncher.CancelAsync(jobExecutionId, cancellationTokenSource.Username);
                 throw;
             }
 
@@ -120,16 +105,4 @@ class JobStepExecutor : StepExecutorBase
         return Result.Success();
     }
 
-    private static async Task CancelAsync(Guid executionId, string username)
-    {
-        // Connect to the pipe server set up by the executor process.
-        using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
-        await pipeClient.ConnectAsync(10000); // wait for 10 seconds
-        using var streamWriter = new StreamWriter(pipeClient);
-        // Send cancel command.
-        var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-        var cancelCommand = new { StepId = (string?)null, Username = username_ };
-        var json = JsonSerializer.Serialize(cancelCommand);
-        streamWriter.WriteLine(json);
-    }
 }

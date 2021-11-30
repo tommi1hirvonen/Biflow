@@ -1,7 +1,9 @@
 ﻿using CommandLine;
 using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
+using EtlManager.Executor.ConsoleApp;
 using EtlManager.Executor.ConsoleApp.ExecutionStopper;
+using EtlManager.Executor.Core;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.ConnectionTest;
 using EtlManager.Executor.Core.JobExecutor;
@@ -50,6 +52,7 @@ builder.ConfigureServices((context, services) =>
     services.AddSingleton<IExecutionStopper, ExecutionStopper>();
     services.AddSingleton<IEmailTest, EmailTest>();
     services.AddSingleton<IConnectionTest, ConnectionTest>();
+    services.AddTransient<IExecutorLauncher, ExecutorLauncher>();
     services.AddTransient<IJobExecutor, JobExecutor>();
 });
 

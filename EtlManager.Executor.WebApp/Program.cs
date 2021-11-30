@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using EtlManager.Executor.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +37,7 @@ builder.Services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
 builder.Services.AddSingleton<INotificationService, EmailService>();
 builder.Services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
 builder.Services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
+builder.Services.AddSingleton<IExecutorLauncher, ExecutorLauncher>();
 builder.Services.AddSingleton<IEmailTest, EmailTest>();
 builder.Services.AddSingleton<IConnectionTest, ConnectionTest>();
 builder.Services.AddTransient<IJobExecutor, JobExecutor>();
