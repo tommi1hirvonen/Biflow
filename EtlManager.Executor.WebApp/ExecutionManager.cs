@@ -3,11 +3,13 @@ using EtlManager.Utilities;
 
 namespace EtlManager.Executor.WebApp;
 
-public class ExecutionManager
+internal class ExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
 
     private Dictionary<Guid, IJobExecutor> JobExecutors { get; } = new();
+
+    private Dictionary<Guid, Task> ExecutionTasks { get; } = new();
 
     public ExecutionManager(ILogger<ExecutionManager> logger)
     {
@@ -29,7 +31,9 @@ public class ExecutionManager
         try
         {
             JobExecutors[command.ExecutionId] = jobExecutor;
-            await jobExecutor.RunAsync(command.ExecutionId, command.Notify, command.NotifyMe, command.NotifyMeOvertime);
+            var task = jobExecutor.RunAsync(command.ExecutionId, command.Notify, command.NotifyMe, command.NotifyMeOvertime);
+            ExecutionTasks[command.ExecutionId] = task;
+            await task;
         }
         catch (Exception ex)
         {
@@ -38,6 +42,7 @@ public class ExecutionManager
         finally
         {
             JobExecutors.Remove(command.ExecutionId);
+            ExecutionTasks.Remove(command.ExecutionId);
         }
     }
 
@@ -64,5 +69,13 @@ public class ExecutionManager
     }
 
     public bool IsExecutionRunning(Guid executionId) => JobExecutors.ContainsKey(executionId);
+
+    internal async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
+    {
+        if (ExecutionTasks.TryGetValue(executionId, out var task))
+        {
+            await task.WaitAsync(cancellationToken);
+        }
+    }
 
 }
