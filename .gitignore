@@ -360,3 +360,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /EtlManager.Ui/CurrentCommit.txt
 /EtlManager.Executor/CurrentCommit.txt
+/EtlManager.Executor.ConsoleApp/CurrentCommit.txt
