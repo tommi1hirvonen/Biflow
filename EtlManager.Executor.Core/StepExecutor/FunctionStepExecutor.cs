@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class FunctionStepExecutor : StepExecutorBase
+internal class FunctionStepExecutor : StepExecutorBase
 {
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
     private readonly IExecutionConfiguration _executionConfiguration;

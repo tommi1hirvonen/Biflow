@@ -2,7 +2,7 @@
 
 namespace EtlManager.Executor.Core.Notification;
 
-public class EmailTest : IEmailTest
+internal class EmailTest : IEmailTest
 {
     private readonly IEmailConfiguration _emailConfiguration;
     public EmailTest(IEmailConfiguration emailConfiguration)

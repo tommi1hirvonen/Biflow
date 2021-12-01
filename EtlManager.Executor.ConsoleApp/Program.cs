@@ -1,15 +1,11 @@
 ﻿using CommandLine;
-using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
 using EtlManager.Executor.ConsoleApp;
 using EtlManager.Executor.ConsoleApp.ExecutionStopper;
 using EtlManager.Executor.Core;
-using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.ConnectionTest;
 using EtlManager.Executor.Core.JobExecutor;
 using EtlManager.Executor.Core.Notification;
-using EtlManager.Executor.Core.Orchestrator;
-using EtlManager.Executor.Core.StepExecutor;
 using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,24 +32,10 @@ builder.ConfigureHostConfiguration(configHost =>
 
 builder.ConfigureServices((context, services) =>
 {
-    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-    services.AddDbContextFactory<EtlManagerContext>(options =>
-        options.UseSqlServer(connectionString, o =>
-            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
 
-    services.AddHttpClient();
-    services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
-    services.AddSingleton<ITokenService, TokenService>();
-    services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
-    services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-    services.AddSingleton<INotificationService, EmailService>();
-    services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
-    services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
+    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+    services.AddExecutorServices<ExecutorLauncher>(connectionString);
     services.AddSingleton<IExecutionStopper, ExecutionStopper>();
-    services.AddSingleton<IEmailTest, EmailTest>();
-    services.AddSingleton<IConnectionTest, ConnectionTest>();
-    services.AddTransient<IExecutorLauncher, ExecutorLauncher>();
-    services.AddTransient<IJobExecutor, JobExecutor>();
 });
 
 builder.UseSerilog();
@@ -73,7 +55,7 @@ return await Parser.Default
 
 async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
 {
-    var executor = ActivatorUtilities.CreateInstance<JobExecutor>(host.Services);
+    var executor = host.Services.GetRequiredService<IJobExecutor>();
     _ = Task.Run(() => ReadCancelKey(executor));
     _ = Task.Run(() => ReadCancelPipe(executor, options.ExecutionId));
     await executor.RunAsync(options.ExecutionId, options.Notify, options.NotifyMe, options.NotifyMeOvertime);
@@ -82,7 +64,7 @@ async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
 
 static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
 {
-    var service = ActivatorUtilities.CreateInstance<ExecutionStopper>(host.Services);
+    var service = host.Services.GetRequiredService<IExecutionStopper>();
     try
     {
         var result = await service.RunAsync(options.ExecutionId, options.Username, options.StepId);
@@ -96,14 +78,14 @@ static async Task<int> CancelExecutionAsync(IHost host, CancelOptions options)
 
 static async Task<int> RunEmailTest(IHost host, EmailTestOptions options)
 {
-    var service = ActivatorUtilities.CreateInstance<EmailTest>(host.Services);
+    var service = host.Services.GetRequiredService<IEmailTest>();
     await service.RunAsync(options.ToAddress);
     return 0;
 }
 
 static async Task<int> RunConnectionTest(IHost host)
 {
-    var service = ActivatorUtilities.CreateInstance<ConnectionTest>(host.Services);
+    var service = host.Services.GetRequiredService<IConnectionTest>();
     await service.RunAsync();
     return 0;
 }

@@ -6,7 +6,7 @@ using Serilog;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class DatasetStepExecutor : StepExecutorBase
+internal class DatasetStepExecutor : StepExecutorBase
 {
     private readonly ITokenService _tokenService;
     private readonly IExecutionConfiguration _executionConfiguration;

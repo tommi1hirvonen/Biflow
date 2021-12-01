@@ -9,7 +9,7 @@ using System.Text;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class PackageStepExecutor : StepExecutorBase
+internal class PackageStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;

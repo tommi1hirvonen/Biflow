@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace EtlManager.Executor.Core.Common;
 
-public class ExecutionConfiguration : IExecutionConfiguration
+internal class ExecutionConfiguration : IExecutionConfiguration
 {
     private readonly IConfiguration _configuration;
 

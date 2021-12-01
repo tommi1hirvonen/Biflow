@@ -1,6 +1,5 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.Notification;
 using EtlManager.Executor.Core.Orchestrator;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +9,7 @@ using System.Text.Json;
 
 namespace EtlManager.Executor.Core.JobExecutor;
 
-public class JobExecutor : IJobExecutor
+internal class JobExecutor : IJobExecutor
 {
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
     private readonly INotificationService _notificationService;

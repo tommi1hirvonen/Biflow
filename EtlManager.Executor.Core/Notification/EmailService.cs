@@ -7,7 +7,7 @@ using System.Net.Mail;
 
 namespace EtlManager.Executor.Core.Notification;
 
-public class EmailService : INotificationService
+internal class EmailService : INotificationService
 {
     private readonly IEmailConfiguration _emailConfiguration;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;

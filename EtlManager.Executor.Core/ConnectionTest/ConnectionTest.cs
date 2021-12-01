@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 
 namespace EtlManager.Executor.Core.ConnectionTest;
 
-public class ConnectionTest : IConnectionTest
+internal class ConnectionTest : IConnectionTest
 {
     private readonly IExecutionConfiguration _executionConfiguration;
 

@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class AgentJobStepExecutor : StepExecutorBase
+internal class AgentJobStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
 

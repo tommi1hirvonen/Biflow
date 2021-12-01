@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
-class ExecutionPhaseOrchestrator : OrchestratorBase
+internal class ExecutionPhaseOrchestrator : OrchestratorBase
 {
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 

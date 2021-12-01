@@ -6,7 +6,7 @@ using Serilog;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-public abstract class StepExecutorBase
+internal abstract class StepExecutorBase
 {
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 

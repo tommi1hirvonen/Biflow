@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-public class StepExecutorFactory : IStepExecutorFactory
+internal class StepExecutorFactory : IStepExecutorFactory
 {
     private readonly IServiceProvider _serviceProvider;
 

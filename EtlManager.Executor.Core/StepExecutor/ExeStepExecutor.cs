@@ -8,7 +8,7 @@ using System.Text;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class ExeStepExecutor : StepExecutorBase
+internal class ExeStepExecutor : StepExecutorBase
 {
     private ExeStepExecution Step { get; init; }
 

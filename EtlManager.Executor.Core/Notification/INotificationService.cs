@@ -2,7 +2,7 @@
 
 namespace EtlManager.Executor.Core.Notification;
 
-public interface INotificationService
+internal interface INotificationService
 {
     public Task SendCompletionNotification(Execution execution, bool notify, SubscriptionType? notifyMe);
 

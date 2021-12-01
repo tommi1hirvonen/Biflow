@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
-class DependencyModeOrchestrator : OrchestratorBase
+internal class DependencyModeOrchestrator : OrchestratorBase
 {
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 

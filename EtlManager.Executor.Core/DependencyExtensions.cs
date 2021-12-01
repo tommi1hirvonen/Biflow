@@ -1,6 +1,6 @@
 ﻿namespace EtlManager.Executor.Core;
 
-public static class DependencyExtensions
+internal static class DependencyExtensions
 {
     enum VisitState
     {

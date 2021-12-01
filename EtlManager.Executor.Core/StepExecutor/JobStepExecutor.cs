@@ -5,13 +5,10 @@ using EtlManager.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using System.Diagnostics;
-using System.IO.Pipes;
-using System.Text.Json;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class JobStepExecutor : StepExecutorBase
+internal class JobStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IExecutorLauncher _executorLauncher;

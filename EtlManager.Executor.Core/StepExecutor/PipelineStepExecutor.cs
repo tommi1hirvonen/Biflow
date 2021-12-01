@@ -7,7 +7,7 @@ using Serilog;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-class PipelineStepExecutor : StepExecutorBase
+internal class PipelineStepExecutor : StepExecutorBase
 {
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly ITokenService _tokenService;

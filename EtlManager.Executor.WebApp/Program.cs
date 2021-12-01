@@ -1,17 +1,13 @@
-using EtlManager.DataAccess;
-using EtlManager.Executor.Core.Common;
+using EtlManager.Executor.Core;
 using EtlManager.Executor.Core.ConnectionTest;
 using EtlManager.Executor.Core.JobExecutor;
 using EtlManager.Executor.Core.Notification;
-using EtlManager.Executor.Core.Orchestrator;
-using EtlManager.Executor.Core.StepExecutor;
 using EtlManager.Executor.WebApp;
 using EtlManager.Utilities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using EtlManager.Executor.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,23 +20,8 @@ builder.Services.Configure<JsonOptions>(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
-builder.Services.AddDbContextFactory<EtlManagerContext>(options =>
-    options.UseSqlServer(connectionString, o =>
-        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-builder.Services.AddHttpClient();
-builder.Services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
+builder.Services.AddExecutorServices<ExecutorLauncher>(connectionString);
 builder.Services.AddSingleton<ExecutionManager>();
-builder.Services.AddSingleton<ITokenService, TokenService>();
-builder.Services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>();
-builder.Services.AddSingleton<IEmailConfiguration, EmailConfiguration>();
-builder.Services.AddSingleton<INotificationService, EmailService>();
-builder.Services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
-builder.Services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
-builder.Services.AddSingleton<IExecutorLauncher, ExecutorLauncher>();
-builder.Services.AddSingleton<IEmailTest, EmailTest>();
-builder.Services.AddSingleton<IConnectionTest, ConnectionTest>();
-builder.Services.AddTransient<IJobExecutor, JobExecutor>();
 
 var app = builder.Build();
 

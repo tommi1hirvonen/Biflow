@@ -2,7 +2,7 @@
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-public interface IStepExecutorFactory
+internal interface IStepExecutorFactory
 {
     StepExecutorBase Create(StepExecution stepExecution);
 }

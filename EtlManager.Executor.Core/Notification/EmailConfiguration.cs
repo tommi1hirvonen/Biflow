@@ -4,7 +4,7 @@ using System.Net.Mail;
 
 namespace EtlManager.Executor.Core.Notification;
 
-public class EmailConfiguration : IEmailConfiguration
+internal class EmailConfiguration : IEmailConfiguration
 {
     private readonly IConfiguration _configuration;
 

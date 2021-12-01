@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
-public class TabularStepExecutor : StepExecutorBase
+internal class TabularStepExecutor : StepExecutorBase
 {
     private TabularStepExecution Step { get; }
 

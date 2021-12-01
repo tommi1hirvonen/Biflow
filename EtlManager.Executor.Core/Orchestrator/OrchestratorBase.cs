@@ -5,7 +5,7 @@ using Serilog;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
-public abstract class OrchestratorBase
+internal abstract class OrchestratorBase
 {
     protected IExecutionConfiguration _executionConfig;
     private readonly IStepExecutorFactory _stepExecutorFactory;

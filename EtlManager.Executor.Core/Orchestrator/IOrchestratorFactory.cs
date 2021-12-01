@@ -2,7 +2,7 @@
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
-public interface IOrchestratorFactory
+internal interface IOrchestratorFactory
 {
     OrchestratorBase Create(Execution execution);
 }

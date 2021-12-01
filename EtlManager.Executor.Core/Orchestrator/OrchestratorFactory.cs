@@ -4,7 +4,7 @@ using Serilog;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
-public class OrchestratorFactory : IOrchestratorFactory
+internal class OrchestratorFactory : IOrchestratorFactory
 {
     private readonly IServiceProvider _serviceProvider;
 
