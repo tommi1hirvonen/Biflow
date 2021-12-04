@@ -1,10 +1,9 @@
 ﻿using EtlManager.Executor.Core;
 using EtlManager.Executor.Core.JobExecutor;
-using EtlManager.Utilities;
 
 namespace EtlManager.Executor.WebApp;
 
-internal class ExecutorLauncher : IExecutorLauncher
+public class ExecutorLauncher : IExecutorLauncher
 {
     private readonly ExecutionManager _executionManager;
     private readonly IJobExecutor _jobExecutor;
@@ -17,14 +16,7 @@ internal class ExecutorLauncher : IExecutorLauncher
 
     public Task StartExecutorAsync(Guid executionId, bool notify)
     {
-        var command = new StartCommand
-        {
-            ExecutionId = executionId,
-            NotifyMe = null,
-            Notify = notify,
-            NotifyMeOvertime = false
-        };
-        _executionManager.StartExecution(command, _jobExecutor);
+        _executionManager.StartExecution(executionId, notify, null, false);
         return Task.CompletedTask;
     }
 

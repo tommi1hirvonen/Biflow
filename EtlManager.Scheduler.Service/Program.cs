@@ -17,11 +17,8 @@ builder.ConfigureLogging((hostContext, loggingBuilder) =>
 
 builder.ConfigureServices((hostContext, services) =>
 {
-    services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
-    services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
     var connectionString = hostContext.Configuration.GetConnectionString("EtlManagerContext");
-    services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
-    services.AddSingleton<SchedulesManager<ExecutionJob>>();
+    services.AddSchedulerServices<ExecutionJob>(connectionString);
     services.AddHostedService<Worker>();
 });
 

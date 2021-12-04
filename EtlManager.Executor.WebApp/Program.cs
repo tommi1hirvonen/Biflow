@@ -35,9 +35,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapPost("/execution/start", (StartCommand command, ExecutionManager executionManager, IJobExecutor jobExecutor) =>
+app.MapPost("/execution/start", (StartCommand command, ExecutionManager executionManager) =>
 {
-    executionManager.StartExecution(command, jobExecutor);
+    executionManager.StartExecution(command.ExecutionId, command.Notify, command.NotifyMe, command.NotifyMeOvertime);
     return "Execution started successfully";
 }).WithName("StartExecution");
 

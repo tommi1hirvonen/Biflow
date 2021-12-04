@@ -6,16 +6,16 @@ using System.Text.Json;
 
 namespace EtlManager.Ui;
 
-public class OnPremExecutorService : IExecutorService
+public class ConsoleAppExecutorService : IExecutorService
 {
     private readonly IConfiguration _configuration;
 
     private string ExecutorPath => _configuration
         .GetSection("Executor")
-        .GetSection("OnPrem")
+        .GetSection("ConsoleApp")
         .GetValue<string>("EtlManagerExecutorPath");
 
-    public OnPremExecutorService(IConfiguration configuration)
+    public ConsoleAppExecutorService(IConfiguration configuration)
     {
         _configuration = configuration;
     }

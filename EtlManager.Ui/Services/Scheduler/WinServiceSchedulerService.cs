@@ -10,21 +10,21 @@ using System.Text.Json.Serialization;
 
 namespace EtlManager.Ui;
 
-public class OnPremSchedulerService : ISchedulerService
+public class WinServiceSchedulerService : ISchedulerService
 {
     private readonly IConfiguration _configuration;
 
     private string ServiceName => _configuration
         .GetSection("Scheduler")
-        .GetSection("OnPrem")
+        .GetSection("WinService")
         .GetValue<string>("ServiceName");
 
     private string PipeName => _configuration
         .GetSection("Scheduler")
-        .GetSection("OnPrem")
+        .GetSection("WinService")
         .GetValue<string>("PipeName");
 
-    public OnPremSchedulerService(IConfiguration configuration)
+    public WinServiceSchedulerService(IConfiguration configuration)
     {
         _configuration = configuration;
     }

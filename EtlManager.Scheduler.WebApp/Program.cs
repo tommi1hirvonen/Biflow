@@ -1,10 +1,8 @@
-using EtlManager.DataAccess;
 using EtlManager.Scheduler.Core;
 using EtlManager.Scheduler.WebApp;
 using EtlManager.Utilities;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,11 +17,8 @@ builder.Services.Configure<JsonOptions>(options =>
 });
 
 builder.Services.AddHttpClient();
-builder.Services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
-builder.Services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
-builder.Services.AddDbContextFactory<EtlManagerContext>(options => options.UseSqlServer(connectionString));
-builder.Services.AddSingleton<SchedulesManager<ExecutionJob>>();
+builder.Services.AddSchedulerServices<ExecutionJob>(connectionString);
 builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
@@ -41,7 +36,7 @@ app.UseHttpsRedirection();
 // Read all schedules into the schedules manager.
 using (var scope = app.Services.CreateScope())
 {
-    var schedulesManager = scope.ServiceProvider.GetRequiredService<SchedulesManager<ExecutionJob>>();
+    var schedulesManager = scope.ServiceProvider.GetRequiredService<ISchedulesManager>();
     var statusTracker = scope.ServiceProvider.GetRequiredService<StatusTracker>();
     try
     {
@@ -53,7 +48,7 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("/scheduler", async (SchedulerCommand command, SchedulesManager<ExecutionJob> schedulesManager, StatusTracker statusTracker) =>
+app.MapPost("/scheduler", async (SchedulerCommand command, ISchedulesManager schedulesManager, StatusTracker statusTracker) =>
 {
     switch (command.Type)
     {

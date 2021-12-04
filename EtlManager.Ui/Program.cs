@@ -1,5 +1,9 @@
 using EtlManager.DataAccess;
+using EtlManager.Executor.Core;
+using EtlManager.Executor.WebApp;
+using EtlManager.Scheduler.Core;
 using EtlManager.Ui;
+using EtlManager.Ui.Services;
 using Havit.Blazor.Components.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -24,13 +28,19 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
 var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
-if (executorType == "OnPrem")
+if (executorType == "ConsoleApp")
 {
-    builder.Services.AddSingleton<IExecutorService, OnPremExecutorService>();
+    builder.Services.AddSingleton<IExecutorService, ConsoleAppExecutorService>();
 }
-else if (executorType == "Azure")
+else if (executorType == "WebApp")
 {
-    builder.Services.AddSingleton<IExecutorService, AzureExecutorService>();
+    builder.Services.AddSingleton<IExecutorService, WebAppExecutorService>();
+}
+else if (executorType == "SelfHosted")
+{
+    builder.Services.AddExecutorServices<ExecutorLauncher>(connectionString, builder.Configuration.GetSection("Executor").GetSection("SelfHosted"));
+    builder.Services.AddSingleton<ExecutionManager>();
+    builder.Services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
 }
 else
 {
@@ -38,13 +48,18 @@ else
 }
 
 var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("Type");
-if (schedulerType == "OnPrem")
+if (schedulerType == "WinService")
 {
-    builder.Services.AddSingleton<ISchedulerService, OnPremSchedulerService>();
+    builder.Services.AddSingleton<ISchedulerService, WinServiceSchedulerService>();
 }
-else if (schedulerType == "Azure")
+else if (schedulerType == "WebApp")
 {
-    builder.Services.AddSingleton<ISchedulerService, AzureSchedulerService>();
+    builder.Services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
+}
+else if (schedulerType == "SelfHosted")
+{
+    builder.Services.AddSchedulerServices<ExecutionJob>(connectionString);
+    builder.Services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
 }
 else
 {

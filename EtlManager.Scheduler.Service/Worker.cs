@@ -11,7 +11,7 @@ public class Worker : BackgroundService
 {
     private readonly IConfiguration _config;
     private readonly ILogger<Worker> _logger;
-    private readonly SchedulesManager<ExecutionJob> _schedulesManager;
+    private readonly ISchedulesManager _schedulesManager;
 
     private bool DatabaseReadError { get; set; } = false;
 
@@ -20,7 +20,7 @@ public class Worker : BackgroundService
 
     private string PipeName => _config.GetValue<string>("PipeName");
 
-    public Worker(IConfiguration config, ILogger<Worker> logger, SchedulesManager<ExecutionJob> schedulesManager)
+    public Worker(IConfiguration config, ILogger<Worker> logger, ISchedulesManager schedulesManager)
     {
         _config = config;
         _logger = logger;

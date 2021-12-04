@@ -6,13 +6,15 @@ namespace EtlManager.Executor.Core.Common;
 internal class ExecutionConfiguration : IExecutionConfiguration
 {
     private readonly IConfiguration _configuration;
+    private readonly IConfigurationSection? _baseSection;
 
     public string ConnectionString => _configuration.GetConnectionString("EtlManagerContext");
-    public int MaxParallelSteps => _configuration.GetValue<int>("MaximumParallelSteps");
-    public int PollingIntervalMs => _configuration.GetValue<int>("PollingIntervalMs");
+    public int MaxParallelSteps => (_baseSection ?? _configuration).GetValue<int>("MaximumParallelSteps");
+    public int PollingIntervalMs => (_baseSection ?? _configuration).GetValue<int>("PollingIntervalMs");
 
-    public ExecutionConfiguration(IConfiguration configuration)
+    public ExecutionConfiguration(IConfiguration configuration, IConfigurationSection? baseSection = null)
     {
         _configuration = configuration;
+        _baseSection = baseSection;
     }
 }

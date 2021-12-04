@@ -7,13 +7,15 @@ namespace EtlManager.Executor.Core.Notification;
 internal class EmailConfiguration : IEmailConfiguration
 {
     private readonly IConfiguration _configuration;
+    private readonly IConfigurationSection? _baseSection;
 
-    public EmailConfiguration(IConfiguration configuration)
+    public EmailConfiguration(IConfiguration configuration, IConfigurationSection? baseSection)
     {
         _configuration = configuration;
+        _baseSection = baseSection;
     }
 
-    private IConfigurationSection MailSection => _configuration.GetSection("EmailSettings");
+    private IConfigurationSection MailSection => (_baseSection ?? _configuration).GetSection("EmailSettings");
     private string SmtpServer => MailSection.GetValue<string>("SmtpServer");
     private bool EnableSsl => MailSection.GetValue<bool>("EnableSsl");
     private int Port => MailSection.GetValue<int>("Port");

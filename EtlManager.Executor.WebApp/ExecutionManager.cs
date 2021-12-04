@@ -1,48 +1,52 @@
-﻿using EtlManager.Executor.Core.JobExecutor;
+﻿using EtlManager.DataAccess.Models;
+using EtlManager.Executor.Core.JobExecutor;
 using EtlManager.Utilities;
 
 namespace EtlManager.Executor.WebApp;
 
-internal class ExecutionManager
+public class ExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
+    private readonly IServiceProvider _serviceProvider;
 
     private Dictionary<Guid, IJobExecutor> JobExecutors { get; } = new();
 
     private Dictionary<Guid, Task> ExecutionTasks { get; } = new();
 
-    public ExecutionManager(ILogger<ExecutionManager> logger)
+    public ExecutionManager(ILogger<ExecutionManager> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
+        _serviceProvider = serviceProvider;
     }
 
-    public void StartExecution(StartCommand command, IJobExecutor jobExecutor)
+    public void StartExecution(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
     {
-        if (JobExecutors.ContainsKey(command.ExecutionId))
+        if (JobExecutors.ContainsKey(executionId))
         {
-            throw new InvalidOperationException($"Execution with id {command.ExecutionId} is already being managed.");
+            throw new InvalidOperationException($"Execution with id {executionId} is already being managed.");
         }
 
-        _ = RunExecution(command, jobExecutor);
+        var jobExecutor = _serviceProvider.GetRequiredService<IJobExecutor>();
+        _ = RunExecution(executionId, notify, notifyMe, notifyMeOvertime, jobExecutor);
     }
 
-    private async Task RunExecution(StartCommand command, IJobExecutor jobExecutor)
+    private async Task RunExecution(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime, IJobExecutor jobExecutor)
     {
         try
         {
-            JobExecutors[command.ExecutionId] = jobExecutor;
-            var task = jobExecutor.RunAsync(command.ExecutionId, command.Notify, command.NotifyMe, command.NotifyMeOvertime);
-            ExecutionTasks[command.ExecutionId] = task;
+            JobExecutors[executionId] = jobExecutor;
+            var task = jobExecutor.RunAsync(executionId, notify, notifyMe, notifyMeOvertime);
+            ExecutionTasks[executionId] = task;
             await task;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during execution with id {ExecutionId}", command.ExecutionId);
+            _logger.LogError(ex, "Error during execution with id {executionId}", executionId);
         }
         finally
         {
-            JobExecutors.Remove(command.ExecutionId);
-            ExecutionTasks.Remove(command.ExecutionId);
+            JobExecutors.Remove(executionId);
+            ExecutionTasks.Remove(executionId);
         }
     }
 
@@ -70,7 +74,7 @@ internal class ExecutionManager
 
     public bool IsExecutionRunning(Guid executionId) => JobExecutors.ContainsKey(executionId);
 
-    internal async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
+    public async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
     {
         if (ExecutionTasks.TryGetValue(executionId, out var task))
         {

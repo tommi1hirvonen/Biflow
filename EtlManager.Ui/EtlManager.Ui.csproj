@@ -11,13 +11,16 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="1.4.12" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.26.1.7" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.27.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EtlManager.DataAccess\EtlManager.DataAccess.csproj" />
+    <ProjectReference Include="..\EtlManager.Executor.Core\EtlManager.Executor.Core.csproj" />
+    <ProjectReference Include="..\EtlManager.Executor.WebApp\EtlManager.Executor.WebApp.csproj" />
+    <ProjectReference Include="..\EtlManager.Scheduler.Core\EtlManager.Scheduler.Core.csproj" />
     <ProjectReference Include="..\EtlManager.Utilities\EtlManager.Utilities.csproj" />
   </ItemGroup>
 

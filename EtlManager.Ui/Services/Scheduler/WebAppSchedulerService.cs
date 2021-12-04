@@ -8,19 +8,19 @@ using System.Text.Json.Serialization;
 
 namespace EtlManager.Ui;
 
-public class AzureSchedulerService : ISchedulerService
+public class WebAppSchedulerService : ISchedulerService
 {
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
 
     private string Url => _configuration
         .GetSection("Scheduler")
-        .GetSection("Azure")
+        .GetSection("WebApp")
         .GetValue<string>("Url");
 
     private string Endpoint => $"{Url}/scheduler";
 
-    public AzureSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();

@@ -6,17 +6,17 @@ using System.Text.Json.Serialization;
 
 namespace EtlManager.Ui;
 
-public class AzureExecutorService : IExecutorService
+public class WebAppExecutorService : IExecutorService
 {
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
 
     private string Url => _configuration
         .GetSection("Executor")
-        .GetSection("Azure")
+        .GetSection("WebApp")
         .GetValue<string>("Url");
 
-    public AzureExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
