@@ -1,16 +1,18 @@
-﻿using EtlManager.Utilities;
+﻿using EtlManager.DataAccess.Models;
 
 namespace EtlManager.Scheduler.Core;
 
 public interface ISchedulesManager
 {
-    public Task AddScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken);
+    public Task AddScheduleAsync(Schedule schedule, CancellationToken cancellationToken);
     
-    public Task PauseScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken);
+    public Task PauseScheduleAsync(Schedule schedule, CancellationToken cancellationToken);
     
     public Task ReadAllSchedules(CancellationToken cancellationToken);
+
+    public Task RemoveJobAsync(Job job, CancellationToken cancellationToken);
     
-    public Task RemoveScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken);
+    public Task RemoveScheduleAsync(Schedule schedule, CancellationToken cancellationToken);
     
-    public Task ResumeScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken);
+    public Task ResumeScheduleAsync(Schedule schedule, CancellationToken cancellationToken);
 }

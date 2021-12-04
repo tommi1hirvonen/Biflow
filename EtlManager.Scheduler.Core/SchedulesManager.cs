@@ -1,6 +1,5 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -39,119 +38,93 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            try
+            if (schedule.CronExpression is null)
+                throw new ArgumentNullException(nameof(schedule.CronExpression), "Cron expression cannot be null");
+
+            var jobKey = new JobKey(schedule.JobId.ToString());
+            var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
+            var jobDetail = JobBuilder.Create<TJob>()
+                .WithIdentity(jobKey)
+                .Build();
+            var trigger = TriggerBuilder.Create()
+                .WithIdentity(triggerKey)
+                .ForJob(jobDetail)
+                .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+                .Build();
+
+            if (!await _scheduler.CheckExists(jobKey, cancellationToken))
             {
-                if (schedule.CronExpression is null)
-                    throw new ArgumentNullException(nameof(schedule.CronExpression), "Cron expression cannot be null");
-
-                var jobKey = new JobKey(schedule.JobId.ToString());
-                var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
-                var jobDetail = JobBuilder.Create<TJob>()
-                    .WithIdentity(jobKey)
-                    .Build();
-                var trigger = TriggerBuilder.Create()
-                    .WithIdentity(triggerKey)
-                    .ForJob(jobDetail)
-                    .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
-                    .Build();
-
-                if (!await _scheduler.CheckExists(jobKey, cancellationToken))
-                {
-                    await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
-                }
-                else
-                {
-                    await _scheduler.ScheduleJob(trigger, cancellationToken);
-                }
-
-                if (!schedule.IsEnabled)
-                {
-                    await _scheduler.PauseTrigger(triggerKey, cancellationToken);
-                }
-
-                var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
-                _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
-
-                counter++;
+                await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, $"Error adding schedule object {schedule}");
+                await _scheduler.ScheduleJob(trigger, cancellationToken);
             }
+
+            if (!schedule.IsEnabled)
+            {
+                await _scheduler.PauseTrigger(triggerKey, cancellationToken);
+            }
+
+            var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
+            _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
+
+            counter++;
         }
 
         _logger.LogInformation($"{counter}/{schedules.Count} schedules loaded successfully");
     }
 
-    public async Task ResumeScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken)
+    public async Task ResumeScheduleAsync(Schedule schedule, CancellationToken cancellationToken)
     {
-        if (command.ScheduleId is null)
-            throw new ArgumentNullException(nameof(command.ScheduleId), "Schedule id was null");
 
-        var triggerKey = new TriggerKey(command.ScheduleId);
+        var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.ResumeTrigger(triggerKey, cancellationToken);
 
-        _logger.LogInformation($"Resumed schedule id {command.ScheduleId} for job id {command.JobId}");
+        _logger.LogInformation($"Resumed schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
     }
 
-    public async Task PauseScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken)
+    public async Task PauseScheduleAsync(Schedule schedule, CancellationToken cancellationToken)
     {
-        if (command.ScheduleId is null)
-            throw new ArgumentNullException(nameof(command.ScheduleId), "Schedule id was null");
-
-        var triggerKey = new TriggerKey(command.ScheduleId);
+        var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.PauseTrigger(triggerKey, cancellationToken);
 
-        _logger.LogInformation($"Paused schedule id {command.ScheduleId} for job id {command.JobId}");
+        _logger.LogInformation($"Paused schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
     }
 
-    public async Task RemoveScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken)
+    public async Task RemoveJobAsync(Job job, CancellationToken cancellationToken)
     {
-        // If no schedule was mentioned, delete all schedules for the given job.
-        if (command.ScheduleId is null)
-        {
-            if (command.JobId is null)
-                throw new ArgumentNullException(nameof(command.JobId), "Schedule id and job id were null when one of them should be given");
+        var jobKey = new JobKey(job.JobId.ToString());
+        await _scheduler.DeleteJob(jobKey, cancellationToken);
 
-            var jobKey = new JobKey(command.JobId);
-            await _scheduler.DeleteJob(jobKey, cancellationToken);
-
-            _logger.LogInformation($"Deleted all schedules for job id {command.JobId}");
-        }
-        // Otherwise delete only the given schedule.
-        else
-        {
-            var triggerKey = new TriggerKey(command.ScheduleId);
-            await _scheduler.UnscheduleJob(triggerKey, cancellationToken);
-
-            _logger.LogInformation($"Deleted schedule id {command.ScheduleId} for job id {command.JobId}");
-        }
+        _logger.LogInformation($"Deleted all schedules for job id {job.JobId}");
     }
 
-    public async Task AddScheduleAsync(SchedulerCommand command, CancellationToken cancellationToken)
+    public async Task RemoveScheduleAsync(Schedule schedule, CancellationToken cancellationToken)
     {
-        if (command.CronExpression is null)
-            throw new ArgumentNullException(nameof(command.CronExpression), "Cron expression was null");
+        var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
+        await _scheduler.UnscheduleJob(triggerKey, cancellationToken);
 
-        if (command.ScheduleId is null)
-            throw new ArgumentNullException(nameof(command.ScheduleId), "Schedule id was null");
+        _logger.LogInformation($"Deleted schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
+    }
 
-        if (command.JobId is null)
-            throw new ArgumentNullException(nameof(command.JobId), "Job id was null");
+    public async Task AddScheduleAsync(Schedule schedule, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
 
         // Check that the Cron expression is valid.
-        if (!CronExpression.IsValidExpression(command.CronExpression))
-            throw new ArgumentException($"Invalid Cron expression for schedule id {command.ScheduleId}: {command.CronExpression}");
+        if (!CronExpression.IsValidExpression(schedule.CronExpression))
+            throw new ArgumentException($"Invalid Cron expression for schedule id {schedule.ScheduleId}: {schedule.CronExpression}");
 
-        var jobKey = new JobKey(command.JobId);
+        var jobKey = new JobKey(schedule.JobId.ToString());
         var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken)
             ?? JobBuilder.Create<TJob>()
-            .WithIdentity(command.JobId)
+            .WithIdentity(schedule.JobId.ToString())
             .Build();
         var trigger = TriggerBuilder.Create()
-            .WithIdentity(command.ScheduleId)
+            .WithIdentity(schedule.ScheduleId.ToString())
             .ForJob(jobDetail)
-            .WithCronSchedule(command.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+            .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
             .Build();
 
         if (!await _scheduler.CheckExists(jobKey, cancellationToken))
@@ -163,7 +136,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             await _scheduler.ScheduleJob(trigger, cancellationToken);
         }
 
-        _logger.LogInformation($"Added schedule id {command.ScheduleId} for job id {command.JobId} with Cron expression {command.CronExpression}");
+        _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression}");
     }
 
 }

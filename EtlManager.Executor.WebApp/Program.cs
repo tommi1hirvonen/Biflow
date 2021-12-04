@@ -1,8 +1,7 @@
 using EtlManager.Executor.Core;
 using EtlManager.Executor.Core.ConnectionTest;
-using EtlManager.Executor.Core.JobExecutor;
 using EtlManager.Executor.Core.Notification;
-using EtlManager.Executor.WebApp;
+using EtlManager.Executor.Core.WebExtensions;
 using EtlManager.Utilities;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;

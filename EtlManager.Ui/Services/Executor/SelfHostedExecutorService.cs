@@ -1,5 +1,5 @@
 ﻿using EtlManager.DataAccess.Models;
-using EtlManager.Executor.WebApp;
+using EtlManager.Executor.Core.WebExtensions;
 
 namespace EtlManager.Ui.Services;
 

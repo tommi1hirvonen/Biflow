@@ -19,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\EtlManager.DataAccess\EtlManager.DataAccess.csproj" />
     <ProjectReference Include="..\EtlManager.Executor.Core\EtlManager.Executor.Core.csproj" />
-    <ProjectReference Include="..\EtlManager.Executor.WebApp\EtlManager.Executor.WebApp.csproj" />
     <ProjectReference Include="..\EtlManager.Scheduler.Core\EtlManager.Scheduler.Core.csproj" />
     <ProjectReference Include="..\EtlManager.Utilities\EtlManager.Utilities.csproj" />
   </ItemGroup>

@@ -1,9 +1,9 @@
+using EtlManager.DataAccess.Models;
 using EtlManager.Scheduler.Core;
 using EtlManager.Utilities;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EtlManager.Scheduler;
 
@@ -18,7 +18,7 @@ public class Worker : BackgroundService
     private byte[] FailureBytes { get; } = Encoding.UTF8.GetBytes("FAILURE");
     private byte[] SuccessBytes { get; } = Encoding.UTF8.GetBytes("SUCCESS");
 
-    private string PipeName => _config.GetValue<string>("PipeName");
+    private string PipePrefix => _config.GetValue<string>("PipeName");
 
     public Worker(IConfiguration config, ILogger<Worker> logger, ISchedulesManager schedulesManager)
     {
@@ -32,7 +32,6 @@ public class Worker : BackgroundService
         try
         {
             await _schedulesManager.ReadAllSchedules(stoppingToken);
-            DatabaseReadError = false;
         }
         catch (Exception ex)
         {
@@ -44,7 +43,17 @@ public class Worker : BackgroundService
         {
             try
             {
-                await ReadNamedPipeAsync(stoppingToken);
+                var tasks = new[]
+                {
+                    ReadNamedPipeAddSchedule(stoppingToken),
+                    ReadNamedPipeRemoveSchedule(stoppingToken),
+                    ReadNamedPipeRemoveJob(stoppingToken),
+                    ReadNamedPipePauseSchedule(stoppingToken),
+                    ReadNamedPipeResumeSchedule(stoppingToken),
+                    ReadNamedPipeSynchronize(stoppingToken),
+                    ReadNamedPipeStatus(stoppingToken)
+                };
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -54,80 +63,168 @@ public class Worker : BackgroundService
         }
     }
 
-    private async Task ReadNamedPipeAsync(CancellationToken cancellationToken)
+    private async Task ReadNamedPipeAddSchedule(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_SCHEDULES_ADD";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var messageBytes = CommonUtility.ReadMessage(pipeServer);
+                var json = Encoding.UTF8.GetString(messageBytes);
+                var schedule = JsonSerializer.Deserialize<Schedule>(json);
+                ArgumentNullException.ThrowIfNull(schedule);
+                await _schedulesManager.AddScheduleAsync(schedule, cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipeRemoveSchedule(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_SCHEDULES_REMOVE";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var messageBytes = CommonUtility.ReadMessage(pipeServer);
+                var json = Encoding.UTF8.GetString(messageBytes);
+                var schedule = JsonSerializer.Deserialize<Schedule>(json);
+                ArgumentNullException.ThrowIfNull(schedule);
+                await _schedulesManager.RemoveScheduleAsync(schedule, cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipeRemoveJob(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_JOBS_REMOVE";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var messageBytes = CommonUtility.ReadMessage(pipeServer);
+                var json = Encoding.UTF8.GetString(messageBytes);
+                var job = JsonSerializer.Deserialize<Job>(json);
+                ArgumentNullException.ThrowIfNull(job);
+                await _schedulesManager.RemoveJobAsync(job, cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipePauseSchedule(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_SCHEDULES_PAUSE";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var messageBytes = CommonUtility.ReadMessage(pipeServer);
+                var json = Encoding.UTF8.GetString(messageBytes);
+                var schedule = JsonSerializer.Deserialize<Schedule>(json);
+                ArgumentNullException.ThrowIfNull(schedule);
+                await _schedulesManager.PauseScheduleAsync(schedule, cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipeResumeSchedule(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_SCHEDULES_RESUME";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var messageBytes = CommonUtility.ReadMessage(pipeServer);
+                var json = Encoding.UTF8.GetString(messageBytes);
+                var schedule = JsonSerializer.Deserialize<Schedule>(json);
+                ArgumentNullException.ThrowIfNull(schedule);
+                await _schedulesManager.ResumeScheduleAsync(schedule, cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipeSynchronize(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_SCHEDULES_SYNCHRONIZE";
+        await ReadNamedPipe(pipeName, async pipeServer =>
+        {
+            try
+            {
+                var _ = CommonUtility.ReadMessage(pipeServer);
+                await _schedulesManager.ReadAllSchedules(cancellationToken);
+                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+                DatabaseReadError = false;
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+                DatabaseReadError = true;
+            }
+        }, cancellationToken);
+    }
+
+    private async Task ReadNamedPipeStatus(CancellationToken cancellationToken)
+    {
+        var pipeName = $"{PipePrefix}_STATUS";
+        await ReadNamedPipe(pipeName, pipeServer =>
+        {
+            try
+            {
+                var _ = CommonUtility.ReadMessage(pipeServer);
+                if (DatabaseReadError)
+                {
+                    pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+                }
+                else
+                {
+                    pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
+                }
+            }
+            catch (Exception)
+            {
+                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
+            }
+            return Task.CompletedTask;
+        }, cancellationToken);
+    }
+
+    private static async Task ReadNamedPipe(string pipeName, Func<NamedPipeServerStream, Task> whenConnected, CancellationToken cancellationToken)
     {
         while (true)
         {
-            _logger.LogInformation("Started waiting for named pipe connection for incoming commands");
-
             using var pipeServer = new NamedPipeServerStream(
-                PipeName,
+                pipeName,
                 PipeDirection.InOut,
                 NamedPipeServerStream.MaxAllowedServerInstances,
                 PipeTransmissionMode.Message); // Each byte array is transferred as a single message
 
             await pipeServer.WaitForConnectionAsync(cancellationToken);
-            try
-            {
-                var messageBytes = CommonUtility.ReadMessage(pipeServer);
-                var json = Encoding.UTF8.GetString(messageBytes);
-
-                _logger.LogInformation($"Processing scheduler command: {json}");
-
-                var options = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
-                var command = JsonSerializer.Deserialize<SchedulerCommand>(json, options) ?? throw new ArgumentNullException("command", "Scheduler command was null");
-
-                switch (command.Type)
-                {
-                    case SchedulerCommand.CommandType.Add:
-                        await _schedulesManager.AddScheduleAsync(command, cancellationToken);
-                        break;
-                    case SchedulerCommand.CommandType.Delete:
-                        await _schedulesManager.RemoveScheduleAsync(command, cancellationToken);
-                        break;
-                    case SchedulerCommand.CommandType.Pause:
-                        await _schedulesManager.PauseScheduleAsync(command, cancellationToken);
-                        break;
-                    case SchedulerCommand.CommandType.Resume:
-                        await _schedulesManager.ResumeScheduleAsync(command, cancellationToken);
-                        break;
-                    case SchedulerCommand.CommandType.Synchronize:
-                        await SynchronizeSchedulerAsync(cancellationToken);
-                        break;
-                    case SchedulerCommand.CommandType.Status:
-                        if (DatabaseReadError)
-                        {
-                            pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
-                            continue;
-                        }
-                        break;
-                    default:
-                        pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
-                        throw new ArgumentException($"Invalid command type {command.Type}");
-                }
-
-                pipeServer.Write(SuccessBytes, 0, SuccessBytes.Length);
-            }
-            catch (Exception ex)
-            {
-                pipeServer.Write(FailureBytes, 0, FailureBytes.Length);
-                _logger.LogError(ex, "Error reading or executing named pipe command");
-            }
-        }
-    }
-
-    private async Task SynchronizeSchedulerAsync(CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Synchronizing scheduler with schedules from database");
-        try
-        {
-            await _schedulesManager.ReadAllSchedules(cancellationToken);
-            DatabaseReadError = false;
-        }
-        catch (Exception)
-        {
-            DatabaseReadError = true;
-            throw;
+            await whenConnected(pipeServer);
         }
     }
 

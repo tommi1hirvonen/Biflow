@@ -179,14 +179,21 @@
         bool value = (bool)args.Value!;
         try
         {
-            var success = await SchedulerService.ToggleScheduleEnabledAsync(schedule, value);
-            if (success)
+            using var context = DbFactory.CreateDbContext();
+            using var transaction = context.Database.BeginTransaction();
+            context.Attach(schedule);
+            schedule.IsEnabled = !schedule.IsEnabled;
+            await context.SaveChangesAsync();
+            try
             {
-                schedule.IsEnabled = !schedule.IsEnabled;
+                await SchedulerService.ToggleScheduleEnabledAsync(schedule, value);
+                await transaction.CommitAsync();
             }
-            else
+            catch (Exception)
             {
-                throw new Exception("Error sending command to the scheduler service");
+                await transaction.RollbackAsync();
+                schedule.IsEnabled = !schedule.IsEnabled;
+                throw;
             }
         }
         catch (Exception ex)
@@ -209,15 +216,15 @@
             using var transaction = context.Database.BeginTransaction();
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync();
-            bool success = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Delete, schedule);
-            if (success)
+            try
             {
+                await SchedulerService.RemoveScheduleAsync(schedule);
                 transaction.Commit();
             }
-            else
+            catch (Exception)
             {
                 transaction.Rollback();
-                throw new Exception("Error removing the schedule from the scheduler service");
+                throw;
             }
 
             Schedules_?.Remove(schedule);
@@ -232,11 +239,7 @@
     {
         try
         {
-            var result = await SchedulerService.SynchronizeAsync();
-            if (!result)
-            {
-                Messenger.AddError("Error", "Error synchronizing schedules");
-            }
+            await SchedulerService.SynchronizeAsync();
         }
         catch (Exception ex)
         {

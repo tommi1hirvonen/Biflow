@@ -1,8 +1,9 @@
 ﻿using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.JobExecutor;
-using EtlManager.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
-namespace EtlManager.Executor.WebApp;
+namespace EtlManager.Executor.Core.WebExtensions;
 
 public class ExecutionManager
 {

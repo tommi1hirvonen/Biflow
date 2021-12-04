@@ -1,83 +1,51 @@
-﻿using Dapper;
-using EtlManager.DataAccess.Models;
+﻿using EtlManager.DataAccess.Models;
 using EtlManager.Scheduler.Core;
-using EtlManager.Utilities;
-using Microsoft.Data.SqlClient;
 
 namespace EtlManager.Ui.Services;
 
 public class SelfHostedSchedulerService : ISchedulerService
 {
     private readonly ISchedulesManager _schedulesManager;
-    private readonly IConfiguration _configuration;
 
     private bool DatabaseReadError { get; set; } = false;
 
-    public SelfHostedSchedulerService(ISchedulesManager schedulesManager, IConfiguration configuration)
+    public SelfHostedSchedulerService(ISchedulesManager schedulesManager)
     {
         _schedulesManager = schedulesManager;
-        _configuration = configuration;
     }
 
-    public async Task<bool> DeleteJobAsync(Job job)
-    {
-        var command = new SchedulerCommand(SchedulerCommand.CommandType.Delete, job.JobId.ToString(), null, null);
-        await _schedulesManager.RemoveScheduleAsync(command, CancellationToken.None);
-        return true;
-    }
+    public async Task AddScheduleAsync(Schedule schedule) => await _schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
 
-    public Task<(bool Running, bool Error, string Status)> GetStatusAsync()
-    {
-        return Task.FromResult((true, DatabaseReadError, "Running"));
-    }
+    public async Task RemoveScheduleAsync(Schedule schedule) => await _schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
 
-    public async Task<bool> SendCommandAsync(SchedulerCommand.CommandType commandType, Schedule? schedule)
+    public async Task DeleteJobAsync(Job job) => await _schedulesManager.RemoveJobAsync(job, CancellationToken.None);
+
+    public Task<(bool SchedulerDetected, bool SchedulerError)> GetStatusAsync() => Task.FromResult((true, DatabaseReadError));
+
+    public async Task SynchronizeAsync()
     {
-        var command = new SchedulerCommand(commandType, schedule?.JobId.ToString(), schedule?.ScheduleId.ToString(), schedule?.CronExpression);
-        switch (command.Type)
+        try
         {
-            case SchedulerCommand.CommandType.Add:
-                await _schedulesManager.AddScheduleAsync(command, CancellationToken.None);
-                break;
-            case SchedulerCommand.CommandType.Delete:
-                await _schedulesManager.RemoveScheduleAsync(command, CancellationToken.None);
-                break;
-            case SchedulerCommand.CommandType.Pause:
-                await _schedulesManager.PauseScheduleAsync(command, CancellationToken.None);
-                break;
-            case SchedulerCommand.CommandType.Resume:
-                await _schedulesManager.ResumeScheduleAsync(command, CancellationToken.None);
-                break;
+            await _schedulesManager.ReadAllSchedules(CancellationToken.None);
+            DatabaseReadError = false;
         }
-        return true;
-    }
-
-    public async Task<bool> SynchronizeAsync()
-    {
-        await _schedulesManager.ReadAllSchedules(CancellationToken.None);
-        return true;
-    }
-
-    public async Task<bool> ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
-    {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-        await sqlConnection.OpenAsync();
-        using var transaction = sqlConnection.BeginTransaction();
-        await sqlConnection.ExecuteAsync(
-            @"UPDATE [etlmanager].[Schedule]
-                SET [IsEnabled] = @Value
-                WHERE [ScheduleId] = @ScheduleId", new { schedule.ScheduleId, Value = enabled }, transaction);
-        var commandType = enabled ? SchedulerCommand.CommandType.Resume : SchedulerCommand.CommandType.Pause;
-        bool success = await SendCommandAsync(commandType, schedule);
-        if (success)
+        catch (Exception)
         {
-            transaction.Commit();
-            return true;
+            DatabaseReadError = true;
+            throw;
+        }
+    }
+
+    public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
+    {
+        if (enabled)
+        {
+            await _schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
         }
         else
         {
-            transaction.Rollback();
-            return false;
+            await _schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
         }
     }
+
 }

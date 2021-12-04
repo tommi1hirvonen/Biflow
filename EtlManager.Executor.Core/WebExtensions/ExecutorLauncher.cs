@@ -1,17 +1,12 @@
-﻿using EtlManager.Executor.Core;
-using EtlManager.Executor.Core.JobExecutor;
-
-namespace EtlManager.Executor.WebApp;
+﻿namespace EtlManager.Executor.Core.WebExtensions;
 
 public class ExecutorLauncher : IExecutorLauncher
 {
     private readonly ExecutionManager _executionManager;
-    private readonly IJobExecutor _jobExecutor;
 
-    public ExecutorLauncher(ExecutionManager executionManager, IJobExecutor jobExecutor)
+    public ExecutorLauncher(ExecutionManager executionManager)
     {
         _executionManager = executionManager;
-        _jobExecutor = jobExecutor;
     }
 
     public Task StartExecutorAsync(Guid executionId, bool notify)

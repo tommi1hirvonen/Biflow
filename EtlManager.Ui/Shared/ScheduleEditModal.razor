@@ -136,17 +136,15 @@
                 using var transaction = context.Database.BeginTransaction();
                 context.Schedules.Add(Schedule);
                 await context.SaveChangesAsync();
-                // Send the schedule to the scheduler service.
-                bool success = await SchedulerService.SendCommandAsync(SchedulerCommand.CommandType.Add, Schedule);
-                // Commit the database transaction if the scheduler received the schedule. Otherwise rollback the transaction.
-                if (success)
+                try
                 {
+                    await SchedulerService.AddScheduleAsync(Schedule);
                     transaction.Commit();
                 }
-                else
+                catch (Exception)
                 {
                     transaction.Rollback();
-                    throw new Exception("Error sending the new schedule to the scheduler service");
+                    throw;
                 }
 
                 Schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == Schedule.JobId)

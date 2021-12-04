@@ -1,7 +1,4 @@
-﻿using Dapper;
-using EtlManager.DataAccess.Models;
-using EtlManager.Utilities;
-using Microsoft.Data.SqlClient;
+﻿using EtlManager.DataAccess.Models;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -18,105 +15,93 @@ public class WebAppSchedulerService : ISchedulerService
         .GetSection("WebApp")
         .GetValue<string>("Url");
 
-    private string Endpoint => $"{Url}/scheduler";
-
     public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
     }
 
-    private static JsonSerializerOptions SchedulerCommandSerializerOptions() =>
-        new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
-
-    public async Task<bool> DeleteJobAsync(Job job)
+    private JsonSerializerOptions Options { get; } = new()
     {
-        // If the scheduler service is not running, return true.
-        // This way the changes can be committed to the database.
-        (var running, var _, var _) = await GetStatusAsync();
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
 
-        if (!running)
-            return true;
+    public async Task DeleteJobAsync(Job job)
+    {
+        (var running, var _) = await GetStatusAsync();
+        if (!running) return;
 
-        var command = new SchedulerCommand(SchedulerCommand.CommandType.Delete, job.JobId.ToString(), null, null);
-        var json = JsonSerializer.Serialize(command, SchedulerCommandSerializerOptions());
+        var endpoint = $"{Url}/jobs/remove";
+        var json = JsonSerializer.Serialize(job, Options);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(Endpoint, content);
+        var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
-        var responseContent = await response.Content.ReadAsStringAsync();
-        return responseContent == "SUCCESS";
     }
 
-    public async Task<(bool Running, bool Error, string Status)> GetStatusAsync()
+    public async Task AddScheduleAsync(Schedule schedule)
+    {
+        (var running, var _) = await GetStatusAsync();
+        if (!running) return;
+
+        var endpoint = $"{Url}/schedules/add";
+        var json = JsonSerializer.Serialize(schedule, Options);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(endpoint, content);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task RemoveScheduleAsync(Schedule schedule)
+    {
+        (var running, var _) = await GetStatusAsync();
+        if (!running) return;
+
+        var endpoint = $"{Url}/schedules/remove";
+        var json = JsonSerializer.Serialize(schedule, Options);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(endpoint, content);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<(bool SchedulerDetected, bool SchedulerError)> GetStatusAsync()
     {
         try
         {
-            var command = new SchedulerCommand(SchedulerCommand.CommandType.Status, null, null, null);
-            var json = JsonSerializer.Serialize(command, SchedulerCommandSerializerOptions());
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await _httpClient.PostAsync(Endpoint, content);
-            if (response.IsSuccessStatusCode)
+            var endpoint = $"{Url}/status";
+            var response = await _httpClient.GetAsync(endpoint);
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            if (content == "SUCCESS")
             {
-                return (true, false, "Running");
+                return (true, false);
             }
-
-            return (false, true, "Not running");
+            else
+            {
+                return (true, true);
+            }
         }
         catch (Exception)
         {
-            return (false, true, "Unknown");
+            return (false, true);
         }
     }
 
-    public async Task<bool> SendCommandAsync(SchedulerCommand.CommandType commandType, Schedule? schedule)
+    public async Task SynchronizeAsync()
     {
-        // If the scheduler service is not running, return true.
-        // This way the changes can be committed to the database.
-        (var running, var _, var _) = await GetStatusAsync();
-
-        if (!running)
-            return true;
-
-        var command = new SchedulerCommand(commandType, schedule?.JobId.ToString(), schedule?.ScheduleId.ToString(), schedule?.CronExpression);
-        var json = JsonSerializer.Serialize(command, SchedulerCommandSerializerOptions());
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(Endpoint, content);
+        var endpoint = $"{Url}/schedules/synchronize";
+        var response = await _httpClient.GetAsync(endpoint);
         response.EnsureSuccessStatusCode();
-        var responseContent = await response.Content.ReadAsStringAsync();
-        return responseContent == "SUCCESS";
     }
 
-    public async Task<bool> SynchronizeAsync()
+    public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
-        var command = new SchedulerCommand(SchedulerCommand.CommandType.Synchronize, null, null, null);
-        var json = JsonSerializer.Serialize(command, SchedulerCommandSerializerOptions());
+        (var running, var _) = await GetStatusAsync();
+        if (!running) return;
+
+        var json = JsonSerializer.Serialize(schedule, Options);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync(Endpoint, content);
+        var endpoint = enabled switch { true => $"{Url}/schedules/resume", false => $"{Url}/schedules/pause" };
+        var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
-        var responseContent = await response.Content.ReadAsStringAsync();
-        return responseContent == "SUCCESS";
     }
-
-    public async Task<bool> ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
-    {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("EtlManagerContext"));
-        await sqlConnection.OpenAsync();
-        using var transaction = sqlConnection.BeginTransaction();
-        await sqlConnection.ExecuteAsync(
-            @"UPDATE [etlmanager].[Schedule]
-                SET [IsEnabled] = @Value
-                WHERE [ScheduleId] = @ScheduleId", new { schedule.ScheduleId, Value = enabled }, transaction);
-        var commandType = enabled ? SchedulerCommand.CommandType.Resume : SchedulerCommand.CommandType.Pause;
-        bool success = await SendCommandAsync(commandType, schedule);
-        if (success)
-        {
-            transaction.Commit();
-            return true;
-        }
-        else
-        {
-            transaction.Rollback();
-            return false;
-        }
-    }
+    
 }

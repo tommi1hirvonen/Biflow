@@ -1,6 +1,6 @@
 using EtlManager.DataAccess;
 using EtlManager.Executor.Core;
-using EtlManager.Executor.WebApp;
+using EtlManager.Executor.Core.WebExtensions;
 using EtlManager.Scheduler.Core;
 using EtlManager.Ui;
 using EtlManager.Ui.Services;
@@ -91,5 +91,13 @@ app.UseEndpoints(endpoints =>
     endpoints.MapBlazorHub();
     endpoints.MapFallbackToPage("/_Host");
 });
+
+if (schedulerType == "SelfHosted")
+{
+    // Read all schedules into the schedules manager.
+    using var scope = app.Services.CreateScope();
+    var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
+    await scheduler.SynchronizeAsync();
+}
 
 app.Run();

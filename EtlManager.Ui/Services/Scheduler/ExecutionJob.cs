@@ -1,5 +1,5 @@
 ﻿using EtlManager.DataAccess;
-using EtlManager.Executor.WebApp;
+using EtlManager.Executor.Core.WebExtensions;
 using EtlManager.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 

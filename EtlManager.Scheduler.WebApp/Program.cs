@@ -1,20 +1,12 @@
+using EtlManager.DataAccess.Models;
 using EtlManager.Scheduler.Core;
 using EtlManager.Scheduler.WebApp;
-using EtlManager.Utilities;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.Configure<JsonOptions>(options =>
-{
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-});
 
 builder.Services.AddHttpClient();
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
@@ -48,48 +40,55 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("/scheduler", async (SchedulerCommand command, ISchedulesManager schedulesManager, StatusTracker statusTracker) =>
+app.MapPost("/schedules/add", async (Schedule schedule, ISchedulesManager schedulesManager) =>
 {
-    switch (command.Type)
+    await schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
+}).WithName("Add schedule");
+
+
+app.MapPost("/schedules/remove", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+{
+    await schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
+}).WithName("Remove schedule");
+
+
+app.MapPost("/jobs/remove", async (Job job, ISchedulesManager schedulesManager) =>
+{
+    await schedulesManager.RemoveJobAsync(job, CancellationToken.None);
+}).WithName("Remove job");
+
+
+app.MapPost("schedules/pause", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+{
+    await schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
+}).WithName("Pause schedule");
+
+
+app.MapPost("/schedules/resume", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+{
+    await schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
+}).WithName("Resume schedule");
+
+
+app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, StatusTracker statusTracker) =>
+{
+    try
     {
-        case SchedulerCommand.CommandType.Add:
-            await schedulesManager.AddScheduleAsync(command, CancellationToken.None);
-            break;
-        case SchedulerCommand.CommandType.Delete:
-            await schedulesManager.RemoveScheduleAsync(command, CancellationToken.None);
-            break;
-        case SchedulerCommand.CommandType.Pause:
-            await schedulesManager.PauseScheduleAsync(command, CancellationToken.None);
-            break;
-        case SchedulerCommand.CommandType.Resume:
-            await schedulesManager.ResumeScheduleAsync(command, CancellationToken.None);
-            break;
-        case SchedulerCommand.CommandType.Synchronize:
-            try
-            {
-                await schedulesManager.ReadAllSchedules(CancellationToken.None);
-                statusTracker.DatabaseReadError = false;
-            }
-            catch (Exception)
-            {
-                statusTracker.DatabaseReadError = true;
-                return "FAILURE";
-            }
-            break;
-        case SchedulerCommand.CommandType.Status:
-            if (statusTracker.DatabaseReadError)
-            {
-                return "FAILURE";
-            }
-            else
-            {
-                return "SUCCESS";
-            }
-        default:
-            throw new ArgumentException($"Invalid command type {command.Type}");
+        await schedulesManager.ReadAllSchedules(CancellationToken.None);
+        statusTracker.DatabaseReadError = false;
     }
-    return "SUCCESS";
-})
-.WithName("Scheduler");
+    catch (Exception)
+    {
+        statusTracker.DatabaseReadError = true;
+        throw;
+    }
+}).WithName("Synchronize");
+
+
+app.MapGet("/status", (StatusTracker StatusTracker) =>
+{
+    return StatusTracker.DatabaseReadError ? "FAILURE" : "SUCCESS";
+}).WithName("Status");
+
 
 app.Run();
