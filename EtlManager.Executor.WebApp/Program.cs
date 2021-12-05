@@ -2,21 +2,12 @@ using EtlManager.Executor.Core;
 using EtlManager.Executor.Core.ConnectionTest;
 using EtlManager.Executor.Core.Notification;
 using EtlManager.Executor.Core.WebExtensions;
-using EtlManager.Utilities;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.Configure<JsonOptions>(options =>
-{
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-});
 
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
 builder.Services.AddExecutorServices<ExecutorLauncher>(connectionString);
@@ -34,25 +25,25 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapPost("/execution/start", (StartCommand command, ExecutionManager executionManager) =>
+app.MapGet("/execution/start/{executionId}", (Guid executionId, ExecutionManager executionManager) =>
 {
-    executionManager.StartExecution(command.ExecutionId, command.Notify, command.NotifyMe, command.NotifyMeOvertime);
+    executionManager.StartExecution(executionId);
     return "Execution started successfully";
 }).WithName("StartExecution");
 
 
-app.MapPost("/execution/stop", (StopCommand command, ExecutionManager executionManager) =>
+app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, ExecutionManager executionManager) =>
 {
-    if (command.StepId is not null)
-    {
-        executionManager.CancelExecution(command.ExecutionId, command.Username, (Guid)command.StepId);
-    }
-    else
-    {
-        executionManager.CancelExecution(command.ExecutionId, command.Username);
-    }
+    executionManager.CancelExecution(executionId, username);
     return "Cancellation started successfully";
 }).WithName("StopExecution");
+
+
+app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, ExecutionManager executionManager) =>
+{
+    executionManager.CancelExecution(executionId, username, stepId);
+    return "Cancellation started successfully";
+}).WithName("StopExecutionStep");
 
 
 app.MapGet("/execution/status/{executionId}", (Guid executionId, ExecutionManager executionManager) =>

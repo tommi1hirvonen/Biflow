@@ -49,11 +49,15 @@ public class EtlManagerContext : DbContext
         modelBuilder.HasDefaultSchema("etlmanager");
 
         var executionStatusConverter = new EnumToStringConverter<ExecutionStatus>();
+        var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
 
-        modelBuilder.Entity<Execution>()
-            .ToTable("Execution")
+        modelBuilder.Entity<Execution>(e =>
+        {
+            e.ToTable("Execution")
             .Property(e => e.ExecutionStatus)
             .HasConversion(executionStatusConverter);
+            e.Property(p => p.NotifyCaller).HasConversion(subscriptionTypeConverter);
+        });
 
         var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
 
@@ -256,7 +260,6 @@ public class EtlManagerContext : DbContext
             e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
         });
 
-        var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
 
         modelBuilder.Entity<Subscription>(e =>
         {

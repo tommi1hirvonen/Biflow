@@ -58,7 +58,7 @@ async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
     var executor = host.Services.GetRequiredService<IJobExecutor>();
     _ = Task.Run(() => ReadCancelKey(executor));
     _ = Task.Run(() => ReadCancelPipe(executor, options.ExecutionId));
-    await executor.RunAsync(options.ExecutionId, options.Notify, options.NotifyMe, options.NotifyMeOvertime);
+    await executor.RunAsync(options.ExecutionId);
     return 0;
 }
 
@@ -176,18 +176,6 @@ class JobExecutorOptions
 {
     [Option('i', "id", HelpText = "Execution id", Required = true)]
     public Guid ExecutionId { get; set; }
-
-    [Option('n', "notify", Default = false, HelpText = "Notify subscribers with an email based on their subscription.", Required = false)]
-    public bool Notify { get; set; }
-
-    [Option("notify-me",
-        Default = null,
-        HelpText = "Notify me with an email after the execution has finished. Possible values are null (omitted), OnCompletion, OnFailure, OnSuccess",
-        Required = false)]
-    public SubscriptionType? NotifyMe { get; set; }
-
-    [Option("notify-me-overtime", Default = false, HelpText = "Notify me with an email if the execution exceeds the overtime limit set for the job.", Required = false)]
-    public bool NotifyMeOvertime { get; set; }
 }
 
 [Verb("test-email", HelpText = "Send a test email using email configuration from appsettings.json.")]

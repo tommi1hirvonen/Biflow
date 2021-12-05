@@ -12,7 +12,7 @@ internal class ExecutorLauncher : IExecutorLauncher
 
     private Process? ExecutorProcess { get; set; }
 
-    public Task StartExecutorAsync(Guid executionId, bool notify)
+    public Task StartExecutorAsync(Guid executionId)
     {
         var executionInfo = new ProcessStartInfo()
         {
@@ -20,8 +20,7 @@ internal class ExecutorLauncher : IExecutorLauncher
             ArgumentList = {
                         "execute",
                         "--id",
-                        executionId.ToString(),
-                        notify ? "--notify" : ""
+                        executionId.ToString()
                     },
             UseShellExecute = false,
             CreateNoWindow = true,

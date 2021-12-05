@@ -9,9 +9,9 @@ public class ExecutorLauncher : IExecutorLauncher
         _executionManager = executionManager;
     }
 
-    public Task StartExecutorAsync(Guid executionId, bool notify)
+    public Task StartExecutorAsync(Guid executionId)
     {
-        _executionManager.StartExecution(executionId, notify, null, false);
+        _executionManager.StartExecution(executionId);
         return Task.CompletedTask;
     }
 

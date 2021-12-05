@@ -58,6 +58,15 @@ public class Execution
     [Display(Name = "Executor PID")]
     public int? ExecutorProcessId { get; set; }
 
+    [Display(Name = "Notify")]
+    public bool Notify { get; set; }
+
+    [Display(Name = "Notify caller")]
+    public SubscriptionType? NotifyCaller { get; set; }
+
+    [Display(Name = "Notify caller overtime")]
+    public bool NotifyCallerOvertime { get; set; }
+
     public ICollection<StepExecution> StepExecutions { get; set; } = null!;
 
     public ICollection<ExecutionParameter> ExecutionParameters { get; set; } = null!;

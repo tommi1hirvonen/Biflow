@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using EtlManager.DataAccess.Models;
 using Microsoft.Data.SqlClient;
-using System.Diagnostics;
 
 namespace EtlManager.Ui;
 
@@ -29,22 +28,33 @@ public class DbHelperService
         {
             CommandDefinition command;
             var parameters = new DynamicParameters();
-            parameters.AddDynamicParams(new { JobId_ = job.JobId, Username_ = username });
+            parameters.AddDynamicParams(new
+            {
+                JobId_ = job.JobId,
+                Username_ = username,
+                Notify_ = notify,
+                NotifyCaller_ = notifyMe,
+                NotifyCallerOvertime_ = notifyMeOvertime
+            });
             if (stepIds is not null && stepIds.Count > 0)
             {
                 parameters.Add("StepIds_", string.Join(',', stepIds));
-                command = new CommandDefinition("EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_",
+                command = new CommandDefinition(
+                    @"EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_,
+                    @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
                     parameters);
             }
             else
             {
-                command = new CommandDefinition("EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_",
+                command = new CommandDefinition(
+                    @"EXEC [etlmanager].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_,
+                    @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
                     parameters);
             }
             executionId = await sqlConnection.ExecuteScalarAsync<Guid>(command);
         }
 
-        await _executor.StartExecutionAsync(executionId, notify, notifyMe, notifyMeOvertime);
+        await _executor.StartExecutionAsync(executionId);
 
         return executionId;
     }

@@ -13,6 +13,9 @@
     [CreatedBy]                         NVARCHAR(250)       NULL,
     [ScheduleId]                        UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]                 INT                 NULL,
+    [Notify]                            BIT                 NOT NULL CONSTRAINT [DF_Execution_Notify] DEFAULT (0),
+    [NotifyCaller]                      VARCHAR(20)         NULL,
+    [NotifyCallerOvertime]              BIT                 NOT NULL CONSTRAINT [DF_Execution_NotifyCallerOvertime] DEFAULT (0),
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC),
     CONSTRAINT [CK_Execution_ExecutionStatus] CHECK (
         [ExecutionStatus] = 'NotStarted'
@@ -21,6 +24,10 @@
         OR [ExecutionStatus] = 'Failed'
         OR [ExecutionStatus] = 'Warning'
         OR [ExecutionStatus] = 'Stopped'
-        OR [ExecutionStatus] = 'Suspended')
+        OR [ExecutionStatus] = 'Suspended'),
+    CONSTRAINT [CK_Execution_NotifyCaller] CHECK (
+        [NotifyCaller] = 'OnFailure'
+        OR [NotifyCaller] = 'OnSuccess'
+        OR [NotifyCaller] = 'OnCompletion')
 );
 

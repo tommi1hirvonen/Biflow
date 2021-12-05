@@ -1,10 +1,6 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.Scheduler.Core;
-using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EtlManager.Scheduler.WebApp;
 
@@ -31,9 +27,6 @@ public class WebAppExecutionJob : ExecutionJobBase
     protected override string EtlManagerConnectionString => _configuration.GetConnectionString("EtlManagerContext")
                 ?? throw new ArgumentNullException("EtlManagerConnectionString", "Connection string cannot be null");
 
-    private static JsonSerializerOptions CommandSerializerOptions() =>
-        new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
-
     private string Url => _configuration
         .GetSection("Executor")
         .GetSection("WebApp")
@@ -41,16 +34,7 @@ public class WebAppExecutionJob : ExecutionJobBase
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {
-        var command = new StartCommand
-        {
-            ExecutionId = executionId,
-            NotifyMe = null,
-            Notify = true,
-            NotifyMeOvertime = false
-        };
-        var json = JsonSerializer.Serialize(command, CommandSerializerOptions());
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync($"{Url}/execution/start", content);
+        var response = await _httpClient.GetAsync($"{Url}/execution/start/{executionId}");
         response.EnsureSuccessStatusCode();
     }
 

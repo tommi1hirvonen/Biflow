@@ -1,8 +1,5 @@
 ﻿using EtlManager.DataAccess.Models;
-using EtlManager.Utilities;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Web;
 
 namespace EtlManager.Ui;
 
@@ -22,48 +19,25 @@ public class WebAppExecutorService : IExecutorService
         _httpClient = httpClientFactory.CreateClient();
     }
 
-    private static JsonSerializerOptions CommandSerializerOptions() =>
-        new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) } };
-
-    public async Task StartExecutionAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
+    public async Task StartExecutionAsync(Guid executionId)
     {
-        var command = new StartCommand
-        {
-            ExecutionId = executionId,
-            NotifyMe = notifyMe,
-            Notify = notify,
-            NotifyMeOvertime = notifyMeOvertime
-        };
-        var json = JsonSerializer.Serialize(command, CommandSerializerOptions());
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync($"{Url}/execution/start", content);
+        var response = await _httpClient.GetAsync($"{Url}/execution/start/{executionId}");
         response.EnsureSuccessStatusCode();
     }
 
     public async Task StopExecutionAsync(StepExecutionAttempt attempt, string username)
     {
-        var command = new StopCommand
-        {
-            ExecutionId = attempt.ExecutionId,
-            Username = username,
-            StepId = attempt.StepId,
-        };
-        var json = JsonSerializer.Serialize(command, CommandSerializerOptions());
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync($"{Url}/execution/stop", content);
+        var encodedUsername = HttpUtility.UrlEncode(username);
+        var url = $"{Url}/execution/stop/{attempt.ExecutionId}/{attempt.StepId}?username={encodedUsername}";
+        var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
     }
 
     public async Task StopExecutionAsync(Execution execution, string username)
     {
-        var command = new StopCommand
-        {
-            ExecutionId = execution.ExecutionId,
-            Username = username
-        };
-        var json = JsonSerializer.Serialize(command, CommandSerializerOptions());
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _httpClient.PostAsync($"{Url}/execution/stop", content);
+        var encodedUsername = HttpUtility.UrlEncode(username);
+        var url = $"{Url}/execution/stop/{execution.ExecutionId}?username={encodedUsername}";
+        var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
     }
 }

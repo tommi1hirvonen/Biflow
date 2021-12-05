@@ -12,9 +12,9 @@ public class SelfHostedExecutorService : IExecutorService
         _executionManager = executionManager;
     }
 
-    public Task StartExecutionAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
+    public Task StartExecutionAsync(Guid executionId)
     {
-        _executionManager.StartExecution(executionId, notify, notifyMe, notifyMeOvertime);
+        _executionManager.StartExecution(executionId);
         return Task.CompletedTask;
     }
 

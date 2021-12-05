@@ -23,7 +23,7 @@ public class ExecutionJob : ExecutionJobBase
 
     protected override Task StartExecutorAsync(Guid executionId)
     {
-        _executionManager.StartExecution(executionId, true, null, false);
+        _executionManager.StartExecution(executionId);
         return Task.CompletedTask;
     }
 

@@ -2,7 +2,10 @@
 	@JobId UNIQUEIDENTIFIER,
     @Username NVARCHAR(250) = NULL,
 	@StepIds VARCHAR(MAX) = NULL, -- null if all steps should be executed
-	@ScheduleId UNIQUEIDENTIFIER = NULL
+	@ScheduleId UNIQUEIDENTIFIER = NULL,
+	@Notify BIT = 0,
+	@NotifyCaller VARCHAR(20) = NULL,
+	@NotifyCallerOvertime BIT = 0
 AS
 BEGIN
 
@@ -97,7 +100,10 @@ INSERT INTO etlmanager.Execution (
 	MaxParallelSteps,
 	OvertimeNotificationLimitMinutes,
 	CreatedBy,
-	ScheduleId
+	ScheduleId,
+	Notify,
+	NotifyCaller,
+	NotifyCallerOvertime
 )
 SELECT
 	ExecutionId = @EtlManagerExecutionId,
@@ -112,7 +118,10 @@ SELECT
 	MaxParallelSteps = a.MaxParallelSteps,
 	OvertimeNotificationLimitMinutes = a.OvertimeNotificationLimitMinutes,
 	CreatedBy = @Username,
-	ScheduleId = @ScheduleId
+	ScheduleId = @ScheduleId,
+	Notify = @Notify,
+	NotifyCaller = @NotifyCaller,
+	NotifyCallerOvertime = @NotifyCallerOvertime
 FROM etlmanager.Job AS a
 WHERE a.JobId = @JobId
 

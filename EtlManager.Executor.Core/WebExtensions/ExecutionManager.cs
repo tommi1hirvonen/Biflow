@@ -1,5 +1,4 @@
-﻿using EtlManager.DataAccess.Models;
-using EtlManager.Executor.Core.JobExecutor;
+﻿using EtlManager.Executor.Core.JobExecutor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +19,7 @@ public class ExecutionManager
         _serviceProvider = serviceProvider;
     }
 
-    public void StartExecution(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
+    public void StartExecution(Guid executionId)
     {
         if (JobExecutors.ContainsKey(executionId))
         {
@@ -28,15 +27,15 @@ public class ExecutionManager
         }
 
         var jobExecutor = _serviceProvider.GetRequiredService<IJobExecutor>();
-        _ = RunExecution(executionId, notify, notifyMe, notifyMeOvertime, jobExecutor);
+        _ = RunExecution(executionId, jobExecutor);
     }
 
-    private async Task RunExecution(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime, IJobExecutor jobExecutor)
+    private async Task RunExecution(Guid executionId, IJobExecutor jobExecutor)
     {
         try
         {
             JobExecutors[executionId] = jobExecutor;
-            var task = jobExecutor.RunAsync(executionId, notify, notifyMe, notifyMeOvertime);
+            var task = jobExecutor.RunAsync(executionId);
             ExecutionTasks[executionId] = task;
             await task;
         }

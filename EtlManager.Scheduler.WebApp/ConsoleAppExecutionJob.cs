@@ -32,8 +32,7 @@ public class ConsoleAppExecutionJob : ExecutionJobBase
             ArgumentList = {
                         "execute",
                         "--id",
-                        executionId.ToString(),
-                        "--notify"
+                        executionId.ToString()
                     },
             UseShellExecute = true,
             CreateNoWindow = true,

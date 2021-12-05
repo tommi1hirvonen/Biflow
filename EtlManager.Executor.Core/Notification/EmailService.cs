@@ -19,9 +19,9 @@ internal class EmailService : INotificationService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task SendCompletionNotification(Execution execution, bool notify, SubscriptionType? notifyMe)
+    public async Task SendCompletionNotification(Execution execution)
     {
-        if (!notify && notifyMe is null) return;
+        if (!execution.Notify && execution.NotifyCaller is null) return;
 
         var subscriptionTypeFilter = execution.ExecutionStatus switch
         {
@@ -37,7 +37,7 @@ internal class EmailService : INotificationService
 
         List<string> recipients = new();
 
-        if (notify)
+        if (execution.Notify)
         {
             try
             {
@@ -58,7 +58,7 @@ internal class EmailService : INotificationService
             }
         }
         
-        if (notifyMe is not null && subscriptionTypeFilter.Any(f => f == notifyMe))
+        if (execution.NotifyCaller is not null && subscriptionTypeFilter.Any(f => f == execution.NotifyCaller))
         {
             try
             {
@@ -218,13 +218,13 @@ internal class EmailService : INotificationService
         }
     }
 
-    public async Task SendLongRunningExecutionNotification(Execution execution, bool notify, bool notifyMeOvertime)
+    public async Task SendLongRunningExecutionNotification(Execution execution)
     {
-        if (!notify && !notifyMeOvertime) return;
+        if (!execution.Notify && !execution.NotifyCallerOvertime) return;
         
         List<string> recipients = new();
         using var context = _dbContextFactory.CreateDbContext();
-        if (notify)
+        if (execution.Notify)
         {
             try
             {
@@ -245,7 +245,7 @@ internal class EmailService : INotificationService
             }
         }
         
-        if (notifyMeOvertime)
+        if (execution.NotifyCallerOvertime)
         {
             try
             {

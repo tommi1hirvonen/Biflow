@@ -86,11 +86,11 @@ public abstract class ExecutionJobBase : IJob
                 executionId = stepIds switch
                 {
                     not null and { Count: > 0 } => await sqlConnection.ExecuteScalarAsync<Guid>(
-                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @ScheduleId = @ScheduleId_",
-                        new { JobId_ = jobId, StepIds_ = string.Join(',', stepIds), ScheduleId_ = scheduleId }),
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @ScheduleId = @ScheduleId_, @Notify = @Notify_",
+                        new { JobId_ = jobId, StepIds_ = string.Join(',', stepIds), ScheduleId_ = scheduleId, Notify_ = true }),
                     _ => await sqlConnection.ExecuteScalarAsync<Guid>(
-                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_",
-                        new { JobId_ = jobId, ScheduleId_ = scheduleId })
+                        "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_, @Notify = @Notify_",
+                        new { JobId_ = jobId, ScheduleId_ = scheduleId, Notify_ = true })
                 };
             }
             catch (Exception ex)

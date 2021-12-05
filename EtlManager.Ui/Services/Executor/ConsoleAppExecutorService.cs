@@ -20,7 +20,7 @@ public class ConsoleAppExecutorService : IExecutorService
         _configuration = configuration;
     }
 
-    public Task StartExecutionAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
+    public Task StartExecutionAsync(Guid executionId)
     {
         var executionInfo = new ProcessStartInfo()
         {
@@ -29,10 +29,7 @@ public class ConsoleAppExecutorService : IExecutorService
             ArgumentList = {
                     "execute",
                     "--id",
-                    executionId.ToString(),
-                    notify ? "--notify" : "",
-                    notifyMe is not null ? $"--notify-me \"{notifyMe}\"" : "",
-                    notifyMeOvertime ? "--notify-me-overtime" : ""
+                    executionId.ToString()
                 },
             UseShellExecute = false,
             CreateNoWindow = true,

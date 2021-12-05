@@ -2,7 +2,7 @@
 
 public interface IExecutorLauncher
 {
-    public Task StartExecutorAsync(Guid executionId, bool notify);
+    public Task StartExecutorAsync(Guid executionId);
 
     public Task WaitForExitAsync(Guid executionId, CancellationToken cancellationToken);
 

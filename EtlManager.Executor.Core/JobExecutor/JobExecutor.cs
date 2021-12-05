@@ -27,7 +27,7 @@ internal class JobExecutor : IJobExecutor
         _orchestratorFactory = orchestratorFactory;
     }
 
-    public async Task RunAsync(Guid executionId, bool notify, SubscriptionType? notifyMe, bool notifyMeOvertime)
+    public async Task RunAsync(Guid executionId)
     {
         Execution execution;
         Job job;
@@ -135,7 +135,7 @@ internal class JobExecutor : IJobExecutor
             // send a notification about a long running execution.
             if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotification(execution, notify, notifyMeOvertime);
+                await _notificationService.SendLongRunningExecutionNotification(execution);
             }
 
             await orchestrationTask; // Wait for orchestration to finish.
@@ -177,7 +177,7 @@ internal class JobExecutor : IJobExecutor
             Log.Error(ex, "Error updating execution status");
         }
 
-        await _notificationService.SendCompletionNotification(execution, notify, notifyMe);
+        await _notificationService.SendCompletionNotification(execution);
     }
 
     public void Cancel(string username) => Orchestrator?.CancelExecution(username);

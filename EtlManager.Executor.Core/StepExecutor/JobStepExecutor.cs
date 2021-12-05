@@ -15,8 +15,6 @@ internal class JobStepExecutor : StepExecutorBase
 
     private JobStepExecution Step { get; }
 
-    private bool Notify { get; }
-
     public JobStepExecutor(
         IExecutorLauncher executorLauncher,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
@@ -43,7 +41,14 @@ internal class JobStepExecutor : StepExecutorBase
             try
             {
                 jobExecutionId = await sqlConnection.ExecuteScalarAsync<Guid>(
-                    "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_", new { JobId_ = Step.JobToExecuteId });
+                    "EXEC etlmanager.ExecutionInitialize @JobId = @JobId_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
+                    new
+                    {
+                        JobId_ = Step.JobToExecuteId,
+                        Notify_ = Step.Execution.Notify,
+                        NotifyCaller_ = Step.Execution.NotifyCaller,
+                        NotifyCallerOvertime_ = Step.Execution.NotifyCallerOvertime
+                    });
             }
             catch (Exception ex)
             {
@@ -53,7 +58,7 @@ internal class JobStepExecutor : StepExecutorBase
             
             try
             {
-                await _executorLauncher.StartExecutorAsync(jobExecutionId, Notify);
+                await _executorLauncher.StartExecutorAsync(jobExecutionId);
             }
             catch (Exception ex)
             {
