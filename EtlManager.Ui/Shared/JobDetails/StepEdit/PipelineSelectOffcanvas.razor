@@ -73,7 +73,7 @@
                                         <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
                                     </td>
                                 </tr>
-                                @if (pipeline == SelectedPipeline && pipeline.Parameters.Any())
+                                @if (pipeline == SelectedPipeline && pipeline.Parameters?.Any() == true)
                                 {
                                     <tr class="no-hover">
                                         <td colspan="2" class="bg-light">
