@@ -7,8 +7,15 @@ using EtlManager.Ui.Services;
 using Havit.Blazor.Components.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (builder.Configuration.GetSection("Serilog").Exists())
+{
+    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    builder.Logging.AddSerilog(logger, dispose: true);
+}
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 builder.Services.AddRazorPages();
