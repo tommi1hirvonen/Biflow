@@ -4,8 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quartz;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace EtlManager.Scheduler.Service.Test;
+namespace EtlManager.Scheduler.WebApp.Test;
 
 [TestClass]
 public class ExecuteTest
@@ -31,17 +35,17 @@ public class ExecuteTest
             .AddDbContextFactory<EtlManagerContext>(options =>
                     options.UseSqlServer(connectionString, o =>
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)))
-            .AddSingleton<ExecutionJob>()
+            .AddSingleton<ConsoleAppExecutionJob>()
             .BuildServiceProvider();
 
-        var executionJob = services.GetService<ExecutionJob>();
-        
+        var executionJob = services.GetService<ConsoleAppExecutionJob>();
+
         var jobId = Guid.Parse("6DE8C387-A5DB-4CC0-E489-08D98A13D18F");
         var scheduleId = Guid.Parse("59B417EE-22E6-46D9-D055-08D9A6B72D90");
         var jobContext = new MockJobContext(jobId, scheduleId);
-        
+
         ArgumentNullException.ThrowIfNull(executionJob);
-        
+
         await executionJob.Execute(jobContext);
     }
 }

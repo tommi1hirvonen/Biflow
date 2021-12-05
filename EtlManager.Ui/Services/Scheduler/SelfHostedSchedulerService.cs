@@ -14,11 +14,25 @@ public class SelfHostedSchedulerService : ISchedulerService
         _schedulesManager = schedulesManager;
     }
 
-    public async Task AddScheduleAsync(Schedule schedule) => await _schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
+    public async Task AddScheduleAsync(Schedule schedule)
+    {
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
+    }
 
-    public async Task RemoveScheduleAsync(Schedule schedule) => await _schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
+    public async Task RemoveScheduleAsync(Schedule schedule)
+    {
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
+    }
 
-    public async Task DeleteJobAsync(Job job) => await _schedulesManager.RemoveJobAsync(job, CancellationToken.None);
+    public async Task DeleteJobAsync(Job job)
+    {
+        var schedulerJob = new SchedulerJob(job.JobId);
+        await _schedulesManager.RemoveJobAsync(schedulerJob, CancellationToken.None);
+    }
 
     public Task<(bool SchedulerDetected, bool SchedulerError)> GetStatusAsync() => Task.FromResult((true, DatabaseReadError));
 
@@ -38,13 +52,14 @@ public class SelfHostedSchedulerService : ISchedulerService
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression ?? string.Empty);
         if (enabled)
         {
-            await _schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
+            await _schedulesManager.ResumeScheduleAsync(schedulerSchedule, CancellationToken.None);
         }
         else
         {
-            await _schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
+            await _schedulesManager.PauseScheduleAsync(schedulerSchedule, CancellationToken.None);
         }
     }
 

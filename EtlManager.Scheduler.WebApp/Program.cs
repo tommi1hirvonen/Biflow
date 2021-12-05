@@ -1,21 +1,54 @@
-using EtlManager.DataAccess.Models;
 using EtlManager.Scheduler.Core;
 using EtlManager.Scheduler.WebApp;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.WindowsServices;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+var useWindowsService = WindowsServiceHelpers.IsWindowsService();
+
+WebApplicationBuilder builder;
+
+if (useWindowsService)
+{
+    var options = new WebApplicationOptions
+    {
+        Args = args,
+        ContentRootPath = AppContext.BaseDirectory
+    };
+    builder = WebApplication.CreateBuilder(options);
+    builder.Host.UseWindowsService();
+    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    builder.Logging.AddSerilog(logger, dispose: true);
+}
+else
+{
+    builder = WebApplication.CreateBuilder(args);
+}
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
+
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
-builder.Services.AddSchedulerServices<ExecutionJob>(connectionString);
+var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
+if (executorType == "ConsoleApp")
+{
+    builder.Services.AddSchedulerServices<ConsoleAppExecutionJob>(connectionString);
+}
+else if (executorType == "WebApp")
+{
+    builder.Services.AddSchedulerServices<WebAppExecutionJob>(connectionString);
+}
+else
+{
+    throw new ArgumentException($"Unrecognized executor type {executorType}");
+}
+
 builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -40,31 +73,31 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("/schedules/add", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+app.MapPost("/schedules/add", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
 {
     await schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
 }).WithName("Add schedule");
 
 
-app.MapPost("/schedules/remove", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+app.MapPost("/schedules/remove", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
 {
     await schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
 }).WithName("Remove schedule");
 
 
-app.MapPost("/jobs/remove", async (Job job, ISchedulesManager schedulesManager) =>
+app.MapPost("/jobs/remove", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
 {
     await schedulesManager.RemoveJobAsync(job, CancellationToken.None);
 }).WithName("Remove job");
 
 
-app.MapPost("schedules/pause", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+app.MapPost("schedules/pause", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
 {
     await schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
 }).WithName("Pause schedule");
 
 
-app.MapPost("/schedules/resume", async (Schedule schedule, ISchedulesManager schedulesManager) =>
+app.MapPost("/schedules/resume", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
 {
     await schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
 }).WithName("Resume schedule");

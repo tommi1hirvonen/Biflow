@@ -8,17 +8,17 @@ using System.Text.Json.Serialization;
 
 namespace EtlManager.Scheduler.WebApp;
 
-public class ExecutionJob : ExecutionJobBase
+public class WebAppExecutionJob : ExecutionJobBase
 {
     private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
-    private readonly ILogger<ExecutionJob> _logger;
+    private readonly ILogger<WebAppExecutionJob> _logger;
 
     private const int PollingIntervalMs = 5000;
 
-    public ExecutionJob(
+    public WebAppExecutionJob(
         IConfiguration configuration,
-        ILogger<ExecutionJob> logger,
+        ILogger<WebAppExecutionJob> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         IHttpClientFactory httpClientFactory)
         : base(logger, dbContextFactory)
@@ -36,6 +36,7 @@ public class ExecutionJob : ExecutionJobBase
 
     private string Url => _configuration
         .GetSection("Executor")
+        .GetSection("WebApp")
         .GetValue<string>("Url");
 
     protected override async Task StartExecutorAsync(Guid executionId)

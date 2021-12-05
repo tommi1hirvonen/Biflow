@@ -48,11 +48,7 @@ else
 }
 
 var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("Type");
-if (schedulerType == "WinService")
-{
-    builder.Services.AddSingleton<ISchedulerService, WinServiceSchedulerService>();
-}
-else if (schedulerType == "WebApp")
+if (schedulerType == "WebApp")
 {
     builder.Services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
 }

@@ -1,7 +1,7 @@
 ﻿using EtlManager.DataAccess.Models;
+using EtlManager.Scheduler.Core;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace EtlManager.Ui;
 
@@ -21,18 +21,14 @@ public class WebAppSchedulerService : ISchedulerService
         _httpClient = httpClientFactory.CreateClient();
     }
 
-    private JsonSerializerOptions Options { get; } = new()
-    {
-        ReferenceHandler = ReferenceHandler.IgnoreCycles
-    };
-
     public async Task DeleteJobAsync(Job job)
     {
         (var running, var _) = await GetStatusAsync();
         if (!running) return;
 
         var endpoint = $"{Url}/jobs/remove";
-        var json = JsonSerializer.Serialize(job, Options);
+        var schedulerJob = new SchedulerJob(job.JobId);
+        var json = JsonSerializer.Serialize(schedulerJob);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
@@ -44,7 +40,9 @@ public class WebAppSchedulerService : ISchedulerService
         if (!running) return;
 
         var endpoint = $"{Url}/schedules/add";
-        var json = JsonSerializer.Serialize(schedule, Options);
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
@@ -56,7 +54,9 @@ public class WebAppSchedulerService : ISchedulerService
         if (!running) return;
 
         var endpoint = $"{Url}/schedules/remove";
-        var json = JsonSerializer.Serialize(schedule, Options);
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
@@ -97,7 +97,9 @@ public class WebAppSchedulerService : ISchedulerService
         (var running, var _) = await GetStatusAsync();
         if (!running) return;
 
-        var json = JsonSerializer.Serialize(schedule, Options);
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var endpoint = enabled switch { true => $"{Url}/schedules/resume", false => $"{Url}/schedules/pause" };
         var response = await _httpClient.PostAsync(endpoint, content);

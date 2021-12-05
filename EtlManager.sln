@@ -11,13 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Ui", "EtlManager
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Utilities", "EtlManager.Utilities\EtlManager.Utilities.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Scheduler.Service", "EtlManager.Scheduler.Service\EtlManager.Scheduler.Service.csproj", "{B7372122-3775-4734-B32F-26552375F53F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.DataAccess", "EtlManager.DataAccess\EtlManager.DataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.ConsoleApp.Test", "EtlManager.Executor.ConsoleApp.Test\EtlManager.Executor.ConsoleApp.Test.csproj", "{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Scheduler.Service.Test", "EtlManager.Scheduler.Service.Test\EtlManager.Scheduler.Service.Test.csproj", "{F76E6365-1E1A-456B-9AAE-35325BA1FE33}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Scheduler.Core", "EtlManager.Scheduler.Core\EtlManager.Scheduler.Core.csproj", "{549C16EB-B840-4E05-B55C-0CCE596904D3}"
 EndProject
@@ -25,7 +21,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Scheduler.WebApp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.Core", "EtlManager.Executor.Core\EtlManager.Executor.Core.csproj", "{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManager.Executor.WebApp", "EtlManager.Executor.WebApp\EtlManager.Executor.WebApp.csproj", "{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.WebApp", "EtlManager.Executor.WebApp\EtlManager.Executor.WebApp.csproj", "{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManager.Scheduler.WebApp.Test", "EtlManager.Scheduler.WebApp.Test\EtlManager.Scheduler.WebApp.Test.csproj", "{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,10 +49,6 @@ Global
 		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B7372122-3775-4734-B32F-26552375F53F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7372122-3775-4734-B32F-26552375F53F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7372122-3775-4734-B32F-26552375F53F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7372122-3775-4734-B32F-26552375F53F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -63,10 +57,6 @@ Global
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F76E6365-1E1A-456B-9AAE-35325BA1FE33}.Release|Any CPU.Build.0 = Release|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -83,6 +73,10 @@ Global
 		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

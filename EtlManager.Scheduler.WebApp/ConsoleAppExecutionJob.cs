@@ -3,14 +3,14 @@ using EtlManager.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
-namespace EtlManager.Scheduler;
+namespace EtlManager.Scheduler.WebApp;
 
-public class ExecutionJob : ExecutionJobBase
+public class ConsoleAppExecutionJob : ExecutionJobBase
 {
-    private readonly ILogger<ExecutionJob> _logger;
+    private readonly ILogger<ConsoleAppExecutionJob> _logger;
     private readonly IConfiguration _configuration;
 
-    public ExecutionJob(ILogger<ExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
+    public ConsoleAppExecutionJob(ILogger<ConsoleAppExecutionJob> logger, IConfiguration configuration, IDbContextFactory<EtlManagerContext> dbContextFactory)
         : base(logger, dbContextFactory)
     {
         _logger = logger;
@@ -24,7 +24,7 @@ public class ExecutionJob : ExecutionJobBase
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {
-        var executorFilePath = _configuration.GetValue<string>("EtlManagerExecutorPath")
+        var executorFilePath = _configuration.GetSection("Executor").GetSection("ConsoleApp").GetValue<string>("EtlManagerExecutorPath")
                 ?? throw new ArgumentNullException("executorFilePath", "Executor file path cannot be null");
         var executionInfo = new ProcessStartInfo()
         {
