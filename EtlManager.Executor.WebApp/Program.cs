@@ -22,8 +22,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 
 app.MapGet("/execution/start/{executionId}", (Guid executionId, ExecutionManager executionManager) =>
 {

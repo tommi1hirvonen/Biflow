@@ -55,9 +55,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
-
 // Read all schedules into the schedules manager.
 using (var scope = app.Services.CreateScope())
 {
