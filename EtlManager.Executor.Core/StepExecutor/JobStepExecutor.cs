@@ -4,24 +4,27 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class JobStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<JobStepExecutor> _logger;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IExecutorLauncher _executorLauncher;
 
     private JobStepExecution Step { get; }
 
     public JobStepExecutor(
+        ILogger<JobStepExecutor> logger,
         IExecutorLauncher executorLauncher,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         IExecutionConfiguration executionConfiguration,
         JobStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _executionConfiguration = executionConfiguration;
         _executorLauncher = executorLauncher;
         Step = step;
@@ -52,7 +55,7 @@ internal class JobStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
                 return Result.Failure("Error initializing job execution: " + ex.Message);
             }
             
@@ -62,7 +65,7 @@ internal class JobStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
                 return Result.Failure("Error starting executor process: " + ex.Message);
             }
 
@@ -99,7 +102,7 @@ internal class JobStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
                 return Result.Failure("Error getting sub-execution status");
             }
         }

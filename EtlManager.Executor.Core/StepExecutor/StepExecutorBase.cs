@@ -2,19 +2,21 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal abstract class StepExecutorBase
 {
+    private readonly ILogger<StepExecutorBase> _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
     protected int RetryAttemptCounter { get; set; }
     private StepExecution StepExecution { get; init; }
 
-    protected StepExecutorBase(IDbContextFactory<EtlManagerContext> dbContextFactory, StepExecution stepExecution)
+    protected StepExecutorBase(ILogger<StepExecutorBase> logger, IDbContextFactory<EtlManagerContext> dbContextFactory, StepExecution stepExecution)
     {
+        _logger = logger;
         _dbContextFactory = dbContextFactory;
         StepExecution = stepExecution;
     }
@@ -41,13 +43,13 @@ internal abstract class StepExecutorBase
             if (duplicateExecution)
             {
                 await MarkAsDuplicateAsync(context);
-                Log.Warning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
+                _logger.LogWarning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error marking step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error marking step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
             return false;
         }
 
@@ -87,7 +89,7 @@ internal abstract class StepExecutorBase
 
             if (result is Failure failure)
             {
-                Log.Warning("{ExecutionId} {Step} Error executing step: " + failure.ErrorMessage, StepExecution.ExecutionId, StepExecution);
+                _logger.LogWarning("{ExecutionId} {Step} Error executing step: " + failure.ErrorMessage, StepExecution.ExecutionId, StepExecution);
                 await UpdateExecutionFailedAsync(failure);
 
                 // There are attempts left => increase counter and wait for the retry interval.
@@ -111,7 +113,7 @@ internal abstract class StepExecutorBase
             }
             else
             {
-                Log.Information("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
+                _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
                 // The step execution was successful. Update the execution accordingly.
                 await UpdateExecutionSucceededAsync(result);
                 return true; // Break the loop to end this execution.
@@ -130,7 +132,7 @@ internal abstract class StepExecutorBase
         catch (OperationCanceledException)
         {
             // If the step was canceled during waiting for a retry, copy a new execution row with STOPPED status.
-            Log.Warning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
+            _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
@@ -149,7 +151,7 @@ internal abstract class StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", StepExecution.ExecutionId, StepExecution);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", StepExecution.ExecutionId, StepExecution);
             }
             throw;
         }
@@ -183,7 +185,7 @@ internal abstract class StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error updating step status to {status}", StepExecution.ExecutionId, StepExecution, status);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating step status to {status}", StepExecution.ExecutionId, StepExecution, status);
         }
     }
 
@@ -201,7 +203,7 @@ internal abstract class StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", StepExecution.ExecutionId, StepExecution);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", StepExecution.ExecutionId, StepExecution);
         }
     }
 

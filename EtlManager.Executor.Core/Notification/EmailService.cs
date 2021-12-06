@@ -2,19 +2,21 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Utilities;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Net.Mail;
 
 namespace EtlManager.Executor.Core.Notification;
 
 internal class EmailService : INotificationService
 {
+    private readonly ILogger<EmailService> _logger;
     private readonly IEmailConfiguration _emailConfiguration;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
 
-    public EmailService(IEmailConfiguration emailConfiguration, IDbContextFactory<EtlManagerContext> dbContextFactory)
+    public EmailService(ILogger<EmailService> logger, IEmailConfiguration emailConfiguration, IDbContextFactory<EtlManagerContext> dbContextFactory)
     {
+        _logger = logger;
         _emailConfiguration = emailConfiguration;
         _dbContextFactory = dbContextFactory;
     }
@@ -53,7 +55,7 @@ internal class EmailService : INotificationService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
+                _logger.LogError(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
                 return;
             }
         }
@@ -70,7 +72,7 @@ internal class EmailService : INotificationService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting launcher user name for notification", execution.ExecutionId);
+                _logger.LogError(ex, "{ExecutionId} Error getting launcher user name for notification", execution.ExecutionId);
             }
         }
 
@@ -172,7 +174,7 @@ internal class EmailService : INotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error building notification message body", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error building notification message body", execution.ExecutionId);
             // Do not return. The notification can be sent even without a body.
         }
         
@@ -184,7 +186,7 @@ internal class EmailService : INotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error building notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error building notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
             return;
         }
 
@@ -201,7 +203,7 @@ internal class EmailService : INotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
             return;
         }
 
@@ -210,11 +212,11 @@ internal class EmailService : INotificationService
         try
         {
             await client.SendMailAsync(mailMessage);
-            Log.Information("{ExecutionId} Notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
+            _logger.LogInformation("{ExecutionId} Notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
         }
     }
 
@@ -240,7 +242,7 @@ internal class EmailService : INotificationService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
+                _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
                 return;
             }
         }
@@ -257,7 +259,7 @@ internal class EmailService : INotificationService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} Error getting launcher user name for long running execution notification", execution.ExecutionId);
+                _logger.LogError(ex, "{ExecutionId} Error getting launcher user name for long running execution notification", execution.ExecutionId);
             }
         }
 
@@ -271,7 +273,7 @@ internal class EmailService : INotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error building long running execution notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error building long running execution notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
             return;
         }
 
@@ -289,7 +291,7 @@ internal class EmailService : INotificationService
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
             return;
         }
 
@@ -298,11 +300,11 @@ internal class EmailService : INotificationService
         try
         {
             await client.SendMailAsync(mailMessage);
-            Log.Information("{ExecutionId} Long running execution notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
+            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
         }
     }
 

@@ -3,7 +3,7 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Notification;
 using EtlManager.Executor.Core.Orchestrator;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
 
@@ -11,6 +11,7 @@ namespace EtlManager.Executor.Core.JobExecutor;
 
 internal class JobExecutor : IJobExecutor
 {
+    private readonly ILogger<JobExecutor> _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
     private readonly IOrchestratorFactory _orchestratorFactory;
@@ -18,10 +19,12 @@ internal class JobExecutor : IJobExecutor
     private OrchestratorBase? Orchestrator { get; set; }
 
     public JobExecutor(
+        ILogger<JobExecutor> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         INotificationService notificationService,
         IOrchestratorFactory orchestratorFactory)
     {
+        _logger = logger;
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
         _orchestratorFactory = orchestratorFactory;
@@ -78,7 +81,7 @@ internal class JobExecutor : IJobExecutor
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error getting job details for execution");
+                _logger.LogError(ex, "Error getting job details for execution");
                 return;
             }
         }
@@ -91,7 +94,7 @@ internal class JobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{executionId} Error checking for possible circular job executions", executionId);
+            _logger.LogError(ex, "{executionId} Error checking for possible circular job executions", executionId);
             return;
         }
 
@@ -115,7 +118,7 @@ internal class JobExecutor : IJobExecutor
 
             await context.SaveChangesAsync();
 
-            Log.Error("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
+            _logger.LogError("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
             return;
         }
 
@@ -142,7 +145,7 @@ internal class JobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error during job execution");
+            _logger.LogError(ex, "Error during job execution");
         }
 
         // Get job execution status based on step execution statuses.
@@ -174,7 +177,7 @@ internal class JobExecutor : IJobExecutor
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error updating execution status");
+            _logger.LogError(ex, "Error updating execution status");
         }
 
         await _notificationService.SendCompletionNotification(execution);

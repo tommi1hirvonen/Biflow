@@ -3,24 +3,27 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.StepExecutor;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
 internal class DependencyModeOrchestrator : OrchestratorBase
 {
+    private readonly ILogger<DependencyModeOrchestrator> _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
     private List<Task> StepWorkers { get; } = new();
 
     public DependencyModeOrchestrator(
+        ILogger<DependencyModeOrchestrator> logger,
         IExecutionConfiguration executionConfiguration,
         IStepExecutorFactory stepExecutorFactory,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         Execution execution)
-        : base(executionConfiguration, stepExecutorFactory, execution)
+        : base(logger, executionConfiguration, stepExecutorFactory, execution)
     {
+        _logger = logger;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -55,13 +58,13 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                 }
                 await context.SaveChangesAsync();
 
-                Log.Error("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, Execution.ExecutionId);
+                _logger.LogError("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, Execution.ExecutionId);
                 return;
             }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} Error checking for possible circular step dependencies", Execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error checking for possible circular step dependencies", Execution.ExecutionId);
             return;
         }
 
@@ -105,11 +108,11 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                     try
                     {
                         await UpdateStepAsSkipped(step, "Step was skipped because one or more strict dependencies failed.");
-                        Log.Warning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
+                        _logger.LogWarning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "{ExecutionId} {step} Error marking step as SKIPPED", Execution.ExecutionId, step);
+                        _logger.LogError(ex, "{ExecutionId} {step} Error marking step as SKIPPED", Execution.ExecutionId, step);
                     }
                     break;
 

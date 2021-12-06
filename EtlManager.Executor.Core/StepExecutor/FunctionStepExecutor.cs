@@ -2,13 +2,14 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class FunctionStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<FunctionStepExecutor> _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -20,12 +21,14 @@ internal class FunctionStepExecutor : StepExecutorBase
     private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public FunctionStepExecutor(
+        ILogger<FunctionStepExecutor> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         IExecutionConfiguration executionConfiguration,
         IHttpClientFactory httpClientFactory,
         FunctionStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _dbContextFactory = dbContextFactory;
         _executionConfiguration = executionConfiguration;
         _httpClientFactory = httpClientFactory;
@@ -48,7 +51,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
         }
 
         var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);
@@ -161,7 +164,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
         }
 
         StatusResponse status;
@@ -185,7 +188,7 @@ internal class FunctionStepExecutor : StepExecutorBase
                 await CancelAsync(client, startResponse.TerminatePostUri, reason);
                 if (timeoutCts.IsCancellationRequested)
                 {
-                    Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                    _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
                     return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
@@ -216,7 +219,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
         }
     }
 
@@ -235,7 +238,7 @@ internal class FunctionStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step);
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step);
                 refreshRetries++;
                 await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
             }

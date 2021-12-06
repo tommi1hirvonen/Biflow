@@ -3,6 +3,7 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.AnalysisServices.Tabular;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
@@ -11,8 +12,9 @@ internal class TabularStepExecutor : StepExecutorBase
     private TabularStepExecution Step { get; }
 
     public TabularStepExecutor(
+        ILogger<TabularStepExecutor> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
-        TabularStepExecution step) : base(dbContextFactory, step)
+        TabularStepExecution step) : base(logger, dbContextFactory, step)
     {
         Step = step;
     }

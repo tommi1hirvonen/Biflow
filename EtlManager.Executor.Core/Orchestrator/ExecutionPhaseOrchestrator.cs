@@ -3,6 +3,7 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.StepExecutor;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
@@ -11,11 +12,12 @@ internal class ExecutionPhaseOrchestrator : OrchestratorBase
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
     public ExecutionPhaseOrchestrator(
+        ILogger<ExecutionPhaseOrchestrator> logger,
         IExecutionConfiguration executionConfiguration,
         IStepExecutorFactory stepExecutorFactory,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         Execution execution)
-        : base(executionConfiguration, stepExecutorFactory, execution)
+        : base(logger, executionConfiguration, stepExecutorFactory, execution)
     {
         _dbContextFactory = dbContextFactory;
     }

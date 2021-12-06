@@ -4,23 +4,26 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class SqlStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<SqlStepExecutor> _logger;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
     private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
     private SqlStepExecution Step { get; init; }
 
     public SqlStepExecutor(
+        ILogger<SqlStepExecutor> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         SqlStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _dbContextFactory = dbContextFactory;
         Step = step;
     }
@@ -32,7 +35,7 @@ internal class SqlStepExecutor : StepExecutorBase
 
         try
         {
-            Log.Information("{ExecutionId} {Step} Starting SQL execution", Step.ExecutionId, Step);
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", Step.ExecutionId, Step);
             using var connection = new SqlConnection(Step.Connection.ConnectionString);
             connection.InfoMessage += Connection_InfoMessage;
 
@@ -76,7 +79,7 @@ internal class SqlStepExecutor : StepExecutorBase
             // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
             cancellationToken.ThrowIfCancellationRequested();
 
-            Log.Warning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
             var errors = ex.Errors.Cast<SqlError>();
             var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
             return Result.Failure(errorMessage, GetInfoMessage());

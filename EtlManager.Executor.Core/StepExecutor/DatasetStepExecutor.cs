@@ -2,24 +2,27 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class DatasetStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<DatasetStepExecutor> _logger;
     private readonly ITokenService _tokenService;
     private readonly IExecutionConfiguration _executionConfiguration;
 
     private DatasetStepExecution Step { get; init; }
 
     public DatasetStepExecutor(
+        ILogger<DatasetStepExecutor> logger,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         ITokenService tokenService,
         IExecutionConfiguration executionConfiguration,
         DatasetStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _tokenService = tokenService;
         _executionConfiguration = executionConfiguration;
         Step = step;
@@ -42,7 +45,7 @@ internal class DatasetStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error starting dataset refresh");
+            _logger.LogError(ex, "Error starting dataset refresh");
             return Result.Failure(ex.Message);
         }
 

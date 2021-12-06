@@ -2,7 +2,7 @@
 using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
 
@@ -10,14 +10,17 @@ namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class ExeStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<ExeStepExecutor> _logger;
+
     private ExeStepExecution Step { get; init; }
 
     private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
     private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();
 
-    public ExeStepExecutor(IDbContextFactory<EtlManagerContext> dbContextFactory, ExeStepExecution step)
-        : base(dbContextFactory, step)
+    public ExeStepExecutor(ILogger<ExeStepExecutor> logger, IDbContextFactory<EtlManagerContext> dbContextFactory, ExeStepExecution step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         Step = step;
     }
 
@@ -54,7 +57,7 @@ internal class ExeStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
             return Result.Failure("Error starting process: " + ex.Message);
         }
 
@@ -94,14 +97,14 @@ internal class ExeStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error killing process after timeout", Step.ExecutionId, Step);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", Step.ExecutionId, Step);
             }
 
             throw;
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
             return Result.Failure("Error while executing exe: " + ex.Message);
         }
     }

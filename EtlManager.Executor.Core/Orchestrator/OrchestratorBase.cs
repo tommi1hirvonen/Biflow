@@ -1,12 +1,13 @@
 ﻿using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using EtlManager.Executor.Core.StepExecutor;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
 internal abstract class OrchestratorBase
 {
+    private readonly ILogger<OrchestratorBase> _logger;
     protected IExecutionConfiguration _executionConfig;
     private readonly IStepExecutorFactory _stepExecutorFactory;
 
@@ -26,8 +27,9 @@ internal abstract class OrchestratorBase
 
     protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; }
 
-    public OrchestratorBase(IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
+    public OrchestratorBase(ILogger<OrchestratorBase> logger, IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
     {
+        _logger = logger;
         _executionConfig = executionConfiguration;
         _stepExecutorFactory = stepExecutorFactory;
         Execution = execution;
@@ -70,7 +72,7 @@ internal abstract class OrchestratorBase
         // Create a new step worker and start it asynchronously.
         var executor = _stepExecutorFactory.Create(step);
         var task = executor.RunAsync(CancellationTokenSources[step]);
-        Log.Information("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
+        _logger.LogInformation("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
         bool result = false;
         try
         {
@@ -83,7 +85,7 @@ internal abstract class OrchestratorBase
             StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
             // Release the semaphore once to make room for new parallel executions.
             Semaphore.Release();
-            Log.Information("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
+            _logger.LogInformation("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
         }
     }
 

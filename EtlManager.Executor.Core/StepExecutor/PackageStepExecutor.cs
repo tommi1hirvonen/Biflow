@@ -4,13 +4,14 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class PackageStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<PackageStepExecutor> _logger;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
@@ -19,11 +20,13 @@ internal class PackageStepExecutor : StepExecutorBase
     private const int MaxRefreshRetries = 3;
 
     public PackageStepExecutor(
+        ILogger<PackageStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         PackageStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _executionConfiguration = executionConfiguration;
         _dbContextFactory = dbContextFactory;
         Step = step;
@@ -42,12 +45,12 @@ internal class PackageStepExecutor : StepExecutorBase
         long packageOperationId;
         try
         {
-            Log.Information("{ExecutionId} {Step} Starting package execution", Step.ExecutionId, Step);
+            _logger.LogInformation("{ExecutionId} {Step} Starting package execution", Step.ExecutionId, Step);
             packageOperationId = await StartExecutionAsync(Step.Connection.ConnectionString);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
             return Result.Failure("Error executing package: " + ex.Message);
         }
 
@@ -75,7 +78,7 @@ internal class PackageStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error updating target package operation id (" + packageOperationId + ")", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id (" + packageOperationId + ")", Step.ExecutionId, Step);
         }
 
         // Monitor the package's execution.
@@ -94,14 +97,14 @@ internal class PackageStepExecutor : StepExecutorBase
             await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
             if (timeoutCts.IsCancellationRequested)
             {
-                Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
                 return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
             }
             throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
             return Result.Failure("Error monitoring package execution status: " + ex.Message);
         }
 
@@ -115,7 +118,7 @@ internal class PackageStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
                 return Result.Failure("Error getting package error messages: " + ex.Message);
             }
         }
@@ -220,7 +223,7 @@ internal class PackageStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error refreshing package operation status for operation id {operationId}", packageOperationId);
+                _logger.LogError(ex, "Error refreshing package operation status for operation id {operationId}", packageOperationId);
                 refreshRetries++;
                 await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
             }
@@ -242,7 +245,7 @@ internal class PackageStepExecutor : StepExecutorBase
 
     private async Task CancelAsync(string connectionString, long packageOperationId)
     {
-        Log.Information("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Step.ExecutionId, Step, packageOperationId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Step.ExecutionId, Step, packageOperationId);
         try
         {
             using var sqlConnection = new SqlConnection(connectionString);
@@ -265,7 +268,7 @@ internal class PackageStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
         }
     }
 }

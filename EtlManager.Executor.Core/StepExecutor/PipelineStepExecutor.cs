@@ -3,12 +3,13 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.StepExecutor;
 
 internal class PipelineStepExecutor : StepExecutorBase
 {
+    private readonly ILogger<PipelineStepExecutor> _logger;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly ITokenService _tokenService;
     private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
@@ -19,12 +20,14 @@ internal class PipelineStepExecutor : StepExecutorBase
     private const int MaxRefreshRetries = 3;
 
     public PipelineStepExecutor(
+        ILogger<PipelineStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
         ITokenService tokenService,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
         PipelineStepExecution step)
-        : base(dbContextFactory, step)
+        : base(logger, dbContextFactory, step)
     {
+        _logger = logger;
         _executionConfiguration = executionConfiguration;
         _tokenService = tokenService;
         _dbContextFactory = dbContextFactory;
@@ -45,7 +48,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
             return Result.Failure("Error reading pipeline parameters: " + ex.Message);
         }
 
@@ -56,7 +59,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
                 Step.ExecutionId, Step, Step.DataFactoryId, Step.PipelineName);
             return Result.Failure($"Error starting pipeline run:\n{ex.Message}");
         }
@@ -84,7 +87,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Step.ExecutionId, Step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Step.ExecutionId, Step);
         }
 
         PipelineRun pipelineRun;
@@ -107,7 +110,7 @@ internal class PipelineStepExecutor : StepExecutorBase
                 await CancelAsync(runId);
                 if (timeoutCts.IsCancellationRequested)
                 {
-                    Log.Warning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                    _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
                     return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
@@ -135,7 +138,7 @@ internal class PipelineStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                Log.Warning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Step.ExecutionId, Step, runId);
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Step.ExecutionId, Step, runId);
                 refreshRetries++;
                 await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
             }
@@ -145,14 +148,14 @@ internal class PipelineStepExecutor : StepExecutorBase
 
     private async Task CancelAsync(string runId)
     {
-        Log.Information("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Step.ExecutionId, Step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Step.ExecutionId, Step, runId);
         try
         {
             await DataFactory!.CancelPipelineRunAsync(_tokenService, runId);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Step.ExecutionId, Step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Step.ExecutionId, Step, runId);
         }
     }
 }

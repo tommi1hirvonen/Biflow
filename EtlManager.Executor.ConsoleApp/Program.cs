@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using EtlManager.DataAccess.Models;
 using EtlManager.Executor.ConsoleApp;
 using EtlManager.Executor.ConsoleApp.ExecutionStopper;
 using EtlManager.Executor.Core;
@@ -11,36 +10,32 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using System.IO.Pipes;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
+var host = Host.CreateDefaultBuilder(args)
+    .UseContentRoot(assemblyPath) // Force console app to read appsettings from its own folder (instead of launching UI app's folder).
+    .ConfigureHostConfiguration(config => config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true))
+    .ConfigureLogging((context, config) =>
+    {
+        var logger = new LoggerConfiguration().ReadFrom.Configuration(context.Configuration).CreateLogger();
+        config.AddSerilog(logger, dispose: true);
+    })
+    .ConfigureServices((context, services) =>
+    {
+        var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
+        services.AddExecutorServices<ExecutorLauncher>(connectionString);
+        services.AddSingleton<IExecutionStopper, ExecutionStopper>();
+    })
     .Build();
 
-Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .Enrich.FromLogContext()
-            .CreateLogger();
-
-var builder = Host.CreateDefaultBuilder();
-
-builder.ConfigureHostConfiguration(configHost =>
-    configHost.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true));
-
-builder.ConfigureServices((context, services) =>
-{
-
-    var connectionString = context.Configuration.GetConnectionString("EtlManagerContext");
-    services.AddExecutorServices<ExecutorLauncher>(connectionString);
-    services.AddSingleton<IExecutionStopper, ExecutionStopper>();
-});
-
-builder.UseSerilog();
-
-var host = builder.Build();
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 return await Parser.Default
     .ParseArguments<CommitOptions, JobExecutorOptions, CancelOptions, EmailTestOptions, ConnectionTestOptions>(args)
@@ -50,7 +45,7 @@ return await Parser.Default
         (EmailTestOptions options) => RunEmailTest(host, options),
         (ConnectionTestOptions options) => RunConnectionTest(host),
         (CommitOptions options) => PrintCommit(),
-        errors => HandleParseError(errors)
+        errors => HandleParseError(logger, errors)
     );
 
 async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
@@ -90,9 +85,9 @@ static async Task<int> RunConnectionTest(IHost host)
     return 0;
 }
 
-static async Task<int> HandleParseError(IEnumerable<Error> errors)
+static async Task<int> HandleParseError(ILogger<Program> logger, IEnumerable<Error> errors)
 {
-    Log.Error("Error parsing command: " + string.Join("\n", errors.Select(error => error.ToString())));
+    logger.LogError("Error parsing command: {cmd}", string.Join("\n", errors.Select(error => error.ToString())));
     return await Task.FromResult(-1);
 }
 
@@ -166,7 +161,7 @@ void ReadCancelPipe(IJobExecutor jobExecutor, Guid executionId)
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error canceling execution");
+            logger.LogError(ex, "Error canceling execution");
         }
     }
 }

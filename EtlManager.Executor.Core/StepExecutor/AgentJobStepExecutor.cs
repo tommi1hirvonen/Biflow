@@ -4,6 +4,7 @@ using EtlManager.DataAccess.Models;
 using EtlManager.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -16,9 +17,10 @@ internal class AgentJobStepExecutor : StepExecutorBase
     private AgentJobStepExecution Step { get; }
 
     public AgentJobStepExecutor(
+        ILogger<AgentJobStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
         IDbContextFactory<EtlManagerContext> dbContextFactory,
-        AgentJobStepExecution step) : base(dbContextFactory, step)
+        AgentJobStepExecution step) : base(logger, dbContextFactory, step)
     {
         _executionConfiguration = executionConfiguration;
         Step = step;

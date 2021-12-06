@@ -1,15 +1,17 @@
 ﻿using EtlManager.DataAccess.Models;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace EtlManager.Executor.Core.Orchestrator;
 
 internal class OrchestratorFactory : IOrchestratorFactory
 {
+    private readonly ILogger<OrchestratorFactory> _logger;
     private readonly IServiceProvider _serviceProvider;
 
-    public OrchestratorFactory(IServiceProvider serviceProvider)
+    public OrchestratorFactory(ILogger<OrchestratorFactory> logger, IServiceProvider serviceProvider)
     {
+        _logger = logger;
         _serviceProvider = serviceProvider;
     }
 
@@ -18,12 +20,12 @@ internal class OrchestratorFactory : IOrchestratorFactory
         OrchestratorBase orchestrator;
         if (execution.DependencyMode)
         {
-            Log.Information("{ExecutionId} Created orchestrator in dependency mode", execution.ExecutionId);
+            _logger.LogInformation("{ExecutionId} Created orchestrator in dependency mode", execution.ExecutionId);
             orchestrator = ActivatorUtilities.CreateInstance<DependencyModeOrchestrator>(_serviceProvider, execution);
         }
         else
         {
-            Log.Information("{executionId} Created orchestrator in execution phase mode", execution.ExecutionId);
+            _logger.LogInformation("{executionId} Created orchestrator in execution phase mode", execution.ExecutionId);
             orchestrator = ActivatorUtilities.CreateInstance<ExecutionPhaseOrchestrator>(_serviceProvider, execution);
         }
         return orchestrator;
