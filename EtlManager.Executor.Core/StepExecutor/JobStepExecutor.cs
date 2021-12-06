@@ -13,6 +13,7 @@ internal class JobStepExecutor : StepExecutorBase
     private readonly ILogger<JobStepExecutor> _logger;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IExecutorLauncher _executorLauncher;
+    private readonly IDbContextFactory<EtlManagerContext> _dbContextFactory;
 
     private JobStepExecution Step { get; }
 
@@ -27,6 +28,7 @@ internal class JobStepExecutor : StepExecutorBase
         _logger = logger;
         _executionConfiguration = executionConfiguration;
         _executorLauncher = executorLauncher;
+        _dbContextFactory = dbContextFactory;
         Step = step;
     }
 
@@ -85,18 +87,19 @@ internal class JobStepExecutor : StepExecutorBase
 
             try
             {
-                using var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString);
-                var status = await sqlConnection.ExecuteScalarAsync<string>(
-                    "SELECT TOP 1 ExecutionStatus FROM etlmanager.Execution WHERE ExecutionId = @ExecutionId",
-                    new { ExecutionId = jobExecutionId });
+                using var context = _dbContextFactory.CreateDbContext();
+                var status = await context.Executions
+                    .Where(e => e.ExecutionId == jobExecutionId)
+                    .Select(e => e.ExecutionStatus)
+                    .FirstAsync();
                 return status switch
                 {
-                    "SUCCEEDED" or "WARNING" => Result.Success(),
-                    "FAILED" => Result.Failure("Sub-execution failed"),
-                    "STOPPED" => Result.Failure("Sub-execution was stopped"),
-                    "SUSPENDED" => Result.Failure("Sub-execution was suspended"),
-                    "NOT STARTED" => Result.Failure("Sub-execution failed to start"),
-                    "RUNNING" => Result.Failure("Sub-execution was finished but its status was reported as RUNNING after finishing"),
+                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => Result.Success(),
+                    ExecutionStatus.Failed => Result.Failure("Sub-execution failed"),
+                    ExecutionStatus.Stopped => Result.Failure("Sub-execution was stopped"),
+                    ExecutionStatus.Suspended => Result.Failure("Sub-execution was suspended"),
+                    ExecutionStatus.NotStarted => Result.Failure("Sub-execution failed to start"),
+                    ExecutionStatus.Running => Result.Failure($"Sub-execution was finished but its status was reported as {status} after finishing"),
                     _ => Result.Failure("Unhandled sub-execution status"),
                 };
             }
