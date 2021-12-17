@@ -9,8 +9,8 @@
             <div class="input-group-text">
                 @MarkupHelper.FromFile("icons/feather/filter.svg")
             </div>
-            <input type="text" class="form-control" @bind-value="UsernameFilter" @bind-value:event="oninput" placeholder="Filter by user" />
-            <input type="text" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by job" />
+            <input type="search" class="form-control" @bind-value="UsernameFilter" @bind-value:event="oninput" placeholder="Filter by user" />
+            <input type="search" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by job" />
         </div>
     </div>
 </div>

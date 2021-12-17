@@ -31,7 +31,7 @@
         <div class="input-group-text rounded-left">
             @MarkupHelper.FromFile("icons/feather/search.svg")
         </div>
-        <input type="text" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+        <input type="search" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>
     <div class="col-lg-auto mt-3 mt-lg-0">
         <FilterDropdown TItem="StepType"

@@ -96,9 +96,9 @@
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/filter.svg")
                 </div>
-                <input type="text" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
-                <input type="text" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
-                <input type="text" class="form-control" @bind-value="SqlStatementFilter" @bind-value:event="oninput" placeholder="Filter by SQL statement" />
+                <input type="search" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+                <input type="search" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
+                <input type="search" class="form-control" @bind-value="SqlStatementFilter" @bind-value:event="oninput" placeholder="Filter by SQL statement" />
             </div>
 
             <HxButtonGroup Size="ButtonGroupSize.Small">
