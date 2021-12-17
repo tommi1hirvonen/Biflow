@@ -221,7 +221,7 @@
                                 <AuthorizeView Roles="Admin, Editor, Operator">
                                     <div class="form-check me-2">
                                         <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
-                                               checked=@(SelectedSteps.Contains(item))
+                                               checked=@SelectedSteps.Contains(item)
                                                @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
                                         <label class="form-check-label" for="select_step_@item.StepId"></label>
                                     </div>
