@@ -96,7 +96,7 @@
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         AppRegistrations = await context.AppRegistrations
-            .AsNoTracking()
+            .AsNoTrackingWithIdentityResolution()
             .Include(app => app.Steps)
             .ThenInclude(step => step.Job)
             .OrderBy(df => df.AppRegistrationName)

@@ -35,6 +35,8 @@
                 <th>
                     Connection string
                 </th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -50,6 +52,18 @@
             {
                 @foreach (var connection in Connections)
                 {
+                    var steps = connection switch
+                    {
+                        SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count,
+                        AnalysisServicesConnectionInfo analysis => analysis.Steps.Count,
+                        _ => 0
+                    };
+                    var jobs = connection switch
+                    {
+                        SqlConnectionInfo sql => sql.SqlSteps.Select(s => s.Job).Union(sql.PackageSteps.Select(s => s.Job)).Count(),
+                        AnalysisServicesConnectionInfo analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
+                        _ => 0
+                    };
                     <tr>
                         <td class="align-middle">
                             @connection.ConnectionName
@@ -98,7 +112,12 @@
                                 <text>************************************************************</text>
                             }
                         </td>
-                        
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            @(steps > 0 ? $"{steps} step(s)" : null)
+                        </td>
                     </tr>
                 }
             }
@@ -127,7 +146,13 @@
     {
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         Connections = await context.Connections
-            .AsNoTracking()
+            .AsNoTrackingWithIdentityResolution()
+            .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
+            .ThenInclude(step => step.Job)
+            .Include(c => (c as SqlConnectionInfo)!.PackageSteps)
+            .ThenInclude(step => step.Job)
+            .Include(c => (c as AnalysisServicesConnectionInfo)!.Steps)
+            .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);

@@ -17,4 +17,8 @@ public class SqlConnectionInfo : ConnectionInfoBase
 
     private string? _executePackagesAsLogin;
 
+    public IList<SqlStep> SqlSteps { get; set; } = null!;
+
+    public IList<PackageStep> PackageSteps { get; set; } = null!;
+
 }
