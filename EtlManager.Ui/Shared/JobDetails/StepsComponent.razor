@@ -90,9 +90,8 @@
     </div>
 
     <div class="row mt-3">
-        <div class="col d-inline-flex align-items-center">
-
-            <div class="input-group input-group-sm me-3" style="max-width: 40rem;">
+        <div class="col">
+            <div class="input-group input-group-sm me-3">
                 <div class="input-group-text">
                     @MarkupHelper.FromFile("icons/feather/filter.svg")
                 </div>
@@ -100,7 +99,9 @@
                 <input type="search" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
                 <input type="search" class="form-control" @bind-value="SqlStatementFilter" @bind-value:event="oninput" placeholder="Filter by SQL statement" />
             </div>
-
+        </div>
+        
+        <div class="col-xl mt-3 mt-xl-0 d-inline-flex align-items-center">
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="StepType"
                                 FilterSet="StepTypeFilter"
@@ -111,7 +112,6 @@
                         Step type
                     </Title>
                 </FilterDropdown>
-
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
                     {
                         TagsFilterSet.Clear();
@@ -124,14 +124,12 @@
                     Clear
                 </HxButton>
             </HxButtonGroup>
-
             <div class="form-check ms-4">
                 <input type="checkbox" class="form-check-input" id="show_details"
                        checked=@ShowDetails
                        @onchange="args => ShowDetails = (bool)args.Value!">
                 <label class="form-check-label" for="show_details">Show details</label>
             </div>
-
         </div>
         
     </div>
