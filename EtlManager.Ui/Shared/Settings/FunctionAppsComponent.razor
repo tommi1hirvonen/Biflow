@@ -24,6 +24,8 @@
                 <th>
                     Resource
                 </th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -39,6 +41,8 @@
             {
                 @foreach (var app in FunctionApps)
                 {
+                    var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = app.Steps.Count();
                     <tr>
                         <td class="align-middle">
                             @app.FunctionAppName
@@ -65,6 +69,12 @@
                         <td class="align-middle">
                             @app.ResourceName
                         </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            @(steps > 0 ? $"{steps} step(s)" : null)
+                        </td>
                     </tr>
                 }
             }
@@ -86,6 +96,8 @@
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         FunctionApps = await context.FunctionApps
             .AsNoTracking()
+            .Include(f => f.Steps)
+            .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
         AppRegistrations = await context.AppRegistrations

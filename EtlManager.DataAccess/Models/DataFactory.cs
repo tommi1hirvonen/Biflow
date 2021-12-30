@@ -39,6 +39,8 @@ public class DataFactory
 
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    public IList<PipelineStep> Steps { get; set; } = null!;
+
     private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string ResourceUrl = "https://management.azure.com/";
 

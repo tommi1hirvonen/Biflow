@@ -43,6 +43,8 @@ public class FunctionApp
 
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    public IList<FunctionStep> Steps { get; set; } = null!;
+
     private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string ResourceUrl = "https://management.azure.com/";
 

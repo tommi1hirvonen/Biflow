@@ -24,6 +24,8 @@
                 <th>
                     Data Factory resource name
                 </th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -39,6 +41,8 @@
             {
                 @foreach (var df in DataFactories)
                 {
+                    var jobs = df.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = df.Steps.Count();
                     <tr>
                         <td class="align-middle">
                             @df.DataFactoryName
@@ -65,6 +69,12 @@
                         <td class="align-middle">
                             @df.ResourceName
                         </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            @(steps > 0 ? $"{steps} step(s)" : null)
+                        </td>
                     </tr>
                 }
             }
@@ -87,6 +97,8 @@
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         DataFactories = await context.DataFactories
             .AsNoTracking()
+            .Include(df => df.Steps)
+            .ThenInclude(step => step.Job)
             .OrderBy(df => df.DataFactoryName)
             .ToListAsync();
         AppRegistrations = await context.AppRegistrations
