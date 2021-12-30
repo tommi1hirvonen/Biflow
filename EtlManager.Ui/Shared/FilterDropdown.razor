@@ -34,14 +34,16 @@
                 }
                 @foreach (var item in FilteredItems)
                 {
+                    var id = IdSelector?.Invoke(item) ?? item.ToString();
+                    var text = TextSelector?.Invoke(item) ?? item.ToString();
                     <div class="row">
                         <div class="col">
                             <div class="form-check form-check-inline">
-                                <input type="checkbox" class="form-check-input" id="@($"{ComponentInstanceId}_{item}")"
+                                <input type="checkbox" class="form-check-input" id="@($"{ComponentInstanceId}_{id}")"
                                        checked=@FilterSet.Contains(item)
                                        @onchange="args => Toggle((bool)args.Value!, item)">
-                                <label class="form-check-label" for="@($"{ComponentInstanceId}_{item}")">
-                                    @item.ToString()
+                                <label class="form-check-label" for="@($"{ComponentInstanceId}_{id}")">
+                                    @text
                                 </label>
                             </div>
                         </div>
@@ -54,7 +56,8 @@
 
 @code {
     [Parameter]
-    public RenderFragment Title { get; set; } = @<p></p>;
+    public RenderFragment Title { get; set; } = @<p></p>
+    ;
 
     [Parameter]
     public ISet<TItem> FilterSet { get; set; } = new HashSet<TItem>();
@@ -63,13 +66,21 @@
     public IEnumerable<TItem> Items { get; set; } = new List<TItem>();
 
     private IEnumerable<TItem> FilteredItems => Items
-        .Where(i => string.IsNullOrEmpty(SearchText) || i?.ToString()?.ContainsIgnoreCase(SearchText) == true);
+        .Where(i => string.IsNullOrEmpty(SearchText)
+                    || TextSelector?.Invoke(i).ContainsIgnoreCase(SearchText) == true
+                    || i.ToString()?.ContainsIgnoreCase(SearchText) == true);
 
     [Parameter]
     public EventCallback OnChange { get; set; }
 
     [Parameter]
     public bool IsSearchable { get; set; } = false;
+
+    [Parameter]
+    public Func<TItem, string>? IdSelector { get; set; }
+
+    [Parameter]
+    public Func<TItem, string>? TextSelector { get; set; }
 
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
 

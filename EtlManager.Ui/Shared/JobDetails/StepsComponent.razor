@@ -112,10 +112,26 @@
                         Step type
                     </Title>
                 </FilterDropdown>
+                <FilterDropdown TItem="SqlConnectionInfo"
+                                FilterSet="ConnectionFilter"
+                                IdSelector="c => c.ConnectionId.ToString()"
+                                TextSelector="c => c.ConnectionName"
+                                Items="SqlConnections?
+                                        .Where(c => Steps?.Any(s => s is SqlStep sql && sql.ConnectionId == c.ConnectionId
+                                                                || s is PackageStep package && package.ConnectionId == c.ConnectionId) == true)
+                                        .OrderBy(c => c.ConnectionName)
+                                        ?? Enumerable.Empty<SqlConnectionInfo>()"
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        Connection
+                    </Title>
+                </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
                     {
                         TagsFilterSet.Clear();
                         StepTypeFilter.Clear();
+                        ConnectionFilter.Clear();
                         StepNameFilter = string.Empty;
                         StepDescriptionFilter = string.Empty;
                         SqlStatementFilter = string.Empty;
