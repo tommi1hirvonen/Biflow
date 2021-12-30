@@ -20,6 +20,8 @@
                 <th>
                     Tenant id
                 </th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +37,8 @@
             {
                 @foreach (var app in AppRegistrations)
                 {
+                    var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = app.Steps.Count();
                     <tr>
                         <td class="align-middle">
                             @app.AppRegistrationName
@@ -67,6 +71,12 @@
                         <td class="align-middle">
                             @app.TenantId
                         </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            @(steps > 0 ? $"{steps} step(s)" : null)
+                        </td>
                     </tr>
                 }
             }
@@ -87,6 +97,8 @@
         using var context = await Task.Run<EtlManagerContext>(DbFactory.CreateDbContext);
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
+            .Include(app => app.Steps)
+            .ThenInclude(step => step.Job)
             .OrderBy(df => df.AppRegistrationName)
             .ToListAsync();
     }

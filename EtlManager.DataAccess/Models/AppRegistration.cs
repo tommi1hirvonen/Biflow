@@ -33,6 +33,8 @@ public class AppRegistration
     [Display(Name = "Client secret")]
     public string? ClientSecret { get; set; }
 
+    public IList<DatasetStep> Steps { get; set; } = null!;
+
     private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api";
     private const string AzureResourceUrl = "https://management.azure.com/";
