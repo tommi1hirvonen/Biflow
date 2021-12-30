@@ -124,6 +124,8 @@
             using var context = DbFactory.CreateDbContext();
             FunctionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
+                .Include(f => f.Steps)
+                .ThenInclude(step => step.Job)
                 .Include(f => f.AppRegistration)
                 .FirstAsync(f => f.FunctionAppId == FunctionAppId);
         }

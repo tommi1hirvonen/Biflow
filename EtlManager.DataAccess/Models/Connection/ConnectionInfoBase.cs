@@ -2,7 +2,7 @@
 
 namespace EtlManager.DataAccess.Models;
 
-public abstract class ConnectionInfoBase
+public abstract class ConnectionInfoBase : IComparable
 {
     public ConnectionInfoBase(ConnectionType connectionType, string connectionName, string connectionString)
     {
@@ -27,5 +27,12 @@ public abstract class ConnectionInfoBase
     [Required]
     [Display(Name = "Connection string")]
     public string ConnectionString { get; set; }
+
+    public int CompareTo(object? obj) => obj switch
+    {
+        null => 1,
+        ConnectionInfoBase connection => -connection.ConnectionName.CompareTo(ConnectionName),
+        _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
+    };
 
 }

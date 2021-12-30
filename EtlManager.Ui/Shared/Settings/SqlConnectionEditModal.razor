@@ -94,7 +94,13 @@
         {
             using var context = DbFactory.CreateDbContext();
             Connection = await context.SqlConnections
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.SqlSteps)
+                .ThenInclude(step => step.Job)
+                .Include(c => c.PackageSteps)
+                .ThenInclude(step => step.Job)
+                .Include(c => c.AgentJobSteps)
+                .ThenInclude(step => step.Job)
                 .FirstAsync(c => c.ConnectionId == ConnectionId);
         }
         else

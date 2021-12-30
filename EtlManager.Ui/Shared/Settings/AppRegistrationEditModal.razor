@@ -95,7 +95,9 @@
         {
             using var context = DbFactory.CreateDbContext();
             AppRegistration = await context.AppRegistrations
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
+                .Include(app => app.Steps)
+                .ThenInclude(step => step.Job)
                 .FirstAsync(r => r.AppRegistrationId == AppRegistrationId);
         }
         else

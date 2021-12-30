@@ -103,7 +103,9 @@
         {
             using var context = DbFactory.CreateDbContext();
             DataFactory = await context.DataFactories
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
+                .Include(df => df.Steps)
+                .ThenInclude(step => step.Job)
                 .FirstAsync(df => df.DataFactoryId == DataFactoryId);
         }
         else

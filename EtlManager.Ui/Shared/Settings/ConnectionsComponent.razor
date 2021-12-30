@@ -185,6 +185,7 @@
         {
             Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             Connections?.Add(connection);
+            Connections?.Sort();
             context.Attach(connection).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
