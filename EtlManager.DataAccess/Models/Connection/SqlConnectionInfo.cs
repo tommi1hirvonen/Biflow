@@ -21,4 +21,6 @@ public class SqlConnectionInfo : ConnectionInfoBase
 
     public IList<PackageStep> PackageSteps { get; set; } = null!;
 
+    public IList<AgentJobStep> AgentJobSteps { get; set; } = null!;
+
 }

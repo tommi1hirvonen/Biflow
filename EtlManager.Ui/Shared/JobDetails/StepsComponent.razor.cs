@@ -32,7 +32,8 @@ public partial class StepsComponent : ComponentBase
         .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType))
         .Where(step => !ConnectionFilter.Any()
                         || step is SqlStep sql && ConnectionFilter.Any(f => f.ConnectionId == sql.ConnectionId)
-                        || step is PackageStep package && ConnectionFilter.Any(f => f.ConnectionId == package.ConnectionId))
+                        || step is PackageStep package && ConnectionFilter.Any(f => f.ConnectionId == package.ConnectionId)
+                        || step is AgentJobStep agent && ConnectionFilter.Any(f => f.ConnectionId == agent.ConnectionId))
         ?? Enumerable.Empty<Step>();
 
     private IEnumerable<Tag> Tags => Steps?

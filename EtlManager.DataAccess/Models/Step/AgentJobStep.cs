@@ -20,5 +20,5 @@ public class AgentJobStep : Step
     [Required]
     public Guid? ConnectionId { get; set; }
 
-    public SqlConnectionInfo? Connection { get; set; } = null!;
+    public SqlConnectionInfo Connection { get; set; } = null!;
 }

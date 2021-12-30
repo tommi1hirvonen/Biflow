@@ -54,13 +54,15 @@
                 {
                     var steps = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count,
+                        SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count + sql.AgentJobSteps.Count,
                         AnalysisServicesConnectionInfo analysis => analysis.Steps.Count,
                         _ => 0
                     };
                     var jobs = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Select(s => s.Job).Union(sql.PackageSteps.Select(s => s.Job)).Count(),
+                        SqlConnectionInfo sql => sql.SqlSteps.Select(s => s.Job)
+                                                        .Union(sql.PackageSteps.Select(s => s.Job))
+                                                        .Union(sql.AgentJobSteps.Select(s => s.Job)).Count(),
                         AnalysisServicesConnectionInfo analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
                         _ => 0
                     };
@@ -150,6 +152,8 @@
             .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
             .ThenInclude(step => step.Job)
             .Include(c => (c as SqlConnectionInfo)!.PackageSteps)
+            .ThenInclude(step => step.Job)
+            .Include(c => (c as SqlConnectionInfo)!.AgentJobSteps)
             .ThenInclude(step => step.Job)
             .Include(c => (c as AnalysisServicesConnectionInfo)!.Steps)
             .ThenInclude(step => step.Job)

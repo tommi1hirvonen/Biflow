@@ -39,5 +39,5 @@ public class PackageStep : ParameterizedStep
 
     private string? _executeAsLogin;
 
-    public SqlConnectionInfo? Connection { get; set; }
+    public SqlConnectionInfo Connection { get; set; } = null!;
 }
