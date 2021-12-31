@@ -3,6 +3,16 @@
 @inject MarkupHelperService MarkupHelper
 @inject ITokenService TokenService
 
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
 <PageTitle>App registrations | ETL Manager</PageTitle>
 
 <HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
@@ -75,7 +85,14 @@
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
                         </td>
                         <td class="align-middle">
-                            @(steps > 0 ? $"{steps} step(s)" : null)
+                            <a class="text-dark" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                StepsAppRegistration = app;
+                                await StepsModal.ShowAsync();
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
                         </td>
                     </tr>
                 }
@@ -86,11 +103,51 @@
 
 <AppRegistrationEditModal @ref="AppRegistrationEditModal" AppRegistrationId="EditAppRegistrationId" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
 
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in StepsAppRegistration?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private List<AppRegistration>? AppRegistrations { get; set; }
 
     private Guid EditAppRegistrationId { get; set; }
     private AppRegistrationEditModal AppRegistrationEditModal { get; set; } = null!;
+
+    private AppRegistration? StepsAppRegistration { get; set; }
+    private HxModal StepsModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {

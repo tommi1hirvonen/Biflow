@@ -2,6 +2,16 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject MarkupHelperService MarkupHelper
 
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
 <PageTitle>Connections | ETL Manager</PageTitle>
 
 <HxDropdown>
@@ -55,7 +65,7 @@
                     var steps = connection switch
                     {
                         SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count + sql.AgentJobSteps.Count,
-                        AnalysisServicesConnectionInfo analysis => analysis.Steps.Count,
+                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count,
                         _ => 0
                     };
                     var jobs = connection switch
@@ -118,7 +128,14 @@
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
                         </td>
                         <td class="align-middle">
-                            @(steps > 0 ? $"{steps} step(s)" : null)
+                            <a class="text-dark" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                StepsConnection = connection;
+                                await StepsModal.ShowAsync();
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
                         </td>
                     </tr>
                 }
@@ -135,14 +152,53 @@
                         ConnectionId="EditModalConnectionIds[ConnectionType.Sql]"
                         OnConnectionSubmit="OnConnectionSubmit" />
 
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsConnection?.ConnectionName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in StepsConnection?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private List<ConnectionInfoBase>? Connections { get; set; }
     private Dictionary<Guid, bool> ShowConnectionString { get; set; } = new();
 
-
     Dictionary<ConnectionType, IConnectionEditModal> ConnectionEditModals { get; } = new();
     private Dictionary<ConnectionType, Guid> EditModalConnectionIds { get; } =
         Enum.GetValues<ConnectionType>().ToDictionary(key => key, _ => new Guid());
+
+    private ConnectionInfoBase? StepsConnection { get; set; }
+    private HxModal StepsModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
@@ -155,7 +211,7 @@
             .ThenInclude(step => step.Job)
             .Include(c => (c as SqlConnectionInfo)!.AgentJobSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as AnalysisServicesConnectionInfo)!.Steps)
+            .Include(c => (c as AnalysisServicesConnectionInfo)!.TabularSteps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();

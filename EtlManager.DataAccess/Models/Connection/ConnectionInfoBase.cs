@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EtlManager.DataAccess.Models;
 
@@ -34,5 +35,8 @@ public abstract class ConnectionInfoBase : IComparable
         ConnectionInfoBase connection => -connection.ConnectionName.CompareTo(ConnectionName),
         _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
     };
+
+    [NotMapped]
+    public abstract IEnumerable<Step> Steps { get; }
 
 }

@@ -2,6 +2,16 @@
 @inject IDbContextFactory<EtlManagerContext> DbFactory
 @inject MarkupHelperService MarkupHelper
 
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
 <PageTitle>Data Factories | ETL Manager</PageTitle>
 
 <HxButton Color="ThemeColor.Success"
@@ -73,7 +83,14 @@
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
                         </td>
                         <td class="align-middle">
-                            @(steps > 0 ? $"{steps} step(s)" : null)
+                            <a class="text-dark" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                StepsDataFactory = df;
+                                await StepsModal.ShowAsync();
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
                         </td>
                     </tr>
                 }
@@ -82,8 +99,44 @@
     </table>
 </div>
 
-
 <DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
+
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsDataFactory?.DataFactoryName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in StepsDataFactory?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
 
 @code {
     private List<DataFactory>? DataFactories { get; set; }
@@ -91,6 +144,9 @@
 
     private Guid EditDataFactoryId { get; set; }
     private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
+
+    private DataFactory? StepsDataFactory { get; set; }
+    private HxModal StepsModal { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
