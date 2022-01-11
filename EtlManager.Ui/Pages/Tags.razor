@@ -154,7 +154,7 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="EditModal" Size="ModalSize.Large" Title="@($"Edit tag {EditTag?.TagName}")">
+<HxModal @ref="EditModal" Size="ModalSize.Large" Title="@($"Edit tag {EditTag?.TagName}")" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -172,15 +172,15 @@
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
                             <tr>
-                                <td>
+                                <td class="align-middle">
                                     @step.Job.JobName
                                 </td>
-                                <td>
+                                <td class="align-middle">
                                     <StepTypeIconComponent StepType_="step.StepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>
-                                <td>
+                                <td class="align-middle">
                                     <div class="btn-group btn-row">
                                         <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepTag(step)">
                                             @MarkupHelper.FromFile("icons/feather/delete.svg")
