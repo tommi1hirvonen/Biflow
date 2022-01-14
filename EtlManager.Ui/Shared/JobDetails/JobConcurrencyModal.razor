@@ -4,7 +4,7 @@
 @inject IDbContextFactory<EtlManagerContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job concurrency">
+<HxModal @ref="Modal" Size="ModalSize.Regular" OnClosed="OnClosed" Title="Edit job concurrency">
     <BodyTemplate>
         @if (Job is not null)
         {
