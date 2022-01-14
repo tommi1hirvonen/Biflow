@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.Core", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Executor.WebApp", "EtlManager.Executor.WebApp\EtlManager.Executor.WebApp.csproj", "{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlManager.Scheduler.WebApp.Test", "EtlManager.Scheduler.WebApp.Test\EtlManager.Scheduler.WebApp.Test.csproj", "{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EtlManager.Scheduler.WebApp.Test", "EtlManager.Scheduler.WebApp.Test\EtlManager.Scheduler.WebApp.Test.csproj", "{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -40,14 +40,16 @@ internal abstract class OrchestratorBase
             .ToDictionary(e => e, _ => ExecutionStatus.NotStarted);
 
         // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-        var maxParallelSteps = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
-        _mainSemaphore = new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
+        var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
+        _mainSemaphore = new SemaphoreSlim(maxParallelStepsMain, maxParallelStepsMain);
 
         // Create a Dictionary with max parallel steps for each step type.
         _stepTypeSemaphores = Enum.GetValues<StepType>()
-            .ToDictionary(type => type, _ =>
+            .ToDictionary(type => type, type =>
             {
-                // TODO Calculate max parallel steps for each step type before creating the semaphore.
+                // Default to the main value of max parallel steps if the setting was not defined for the step type.
+                var typeConcurrency = execution.ExecutionConcurrencies.FirstOrDefault(c => c.StepType == type)?.MaxParallelSteps;
+                var maxParallelSteps = typeConcurrency > 0 ? (int)typeConcurrency : maxParallelStepsMain;
                 return new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
             });
     }
@@ -75,7 +77,7 @@ internal abstract class OrchestratorBase
 
     protected async Task StartNewStepWorkerAsync(StepExecution step)
     {
-        // Wait until the semaphore can be entered and the step can be started.
+        // Wait until the semaphores can be entered and the step can be started.
         await _stepTypeSemaphores[step.StepType].WaitAsync();
         await _mainSemaphore.WaitAsync();
 

@@ -4,10 +4,8 @@ namespace EtlManager.DataAccess.Models;
 
 public class JobConcurrency
 {
-    [Key]
     public Guid JobId { get; set; }
 
-    [Key]
     public StepType StepType { get; set; }
 
     [Required]

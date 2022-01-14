@@ -4,10 +4,8 @@ namespace EtlManager.DataAccess.Models;
 
 public class ExecutionConcurrency
 {
-    [Key]
     public Guid ExecutionId { get; set; }
 
-    [Key]
     public StepType StepType { get; set; }
 
     [Required]

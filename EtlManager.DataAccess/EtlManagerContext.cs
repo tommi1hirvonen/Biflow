@@ -50,6 +50,7 @@ public class EtlManagerContext : DbContext
 
         var executionStatusConverter = new EnumToStringConverter<ExecutionStatus>();
         var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
+        var stepTypeConverter = new EnumToStringConverter<StepType>();
 
         modelBuilder.Entity<Execution>(e =>
         {
@@ -57,6 +58,15 @@ public class EtlManagerContext : DbContext
             .Property(e => e.ExecutionStatus)
             .HasConversion(executionStatusConverter);
             e.Property(p => p.NotifyCaller).HasConversion(subscriptionTypeConverter);
+        });
+
+        modelBuilder.Entity<ExecutionConcurrency>(e =>
+        {
+            e.ToTable("ExecutionConcurrency")
+            .HasOne(c => c.Execution)
+            .WithMany(ex => ex.ExecutionConcurrencies);
+            e.HasKey("ExecutionId", "StepType");
+            e.Property(p => p.StepType).HasConversion(stepTypeConverter);
         });
 
         var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
@@ -69,8 +79,6 @@ public class EtlManagerContext : DbContext
             .WithMany(e => e.ExecutionParameters);
             e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
         });
-
-        var stepTypeConverter = new EnumToStringConverter<StepType>();
 
         modelBuilder.Entity<StepExecution>(e =>
         {
@@ -150,6 +158,15 @@ public class EtlManagerContext : DbContext
             .IsRequired(false);
             e.HasMany(job => job.JobParameters)
             .WithOne(param => param.Job);
+        });
+
+        modelBuilder.Entity<JobConcurrency>(e =>
+        {
+            e.ToTable("JobConcurrency")
+            .HasOne(c => c.Job)
+            .WithMany(j => j.JobConcurrencies);
+            e.HasKey("JobId", "StepType");
+            e.Property(p => p.StepType).HasConversion(stepTypeConverter);
         });
 
         modelBuilder.Entity<JobParameter>()
