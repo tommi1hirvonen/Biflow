@@ -1,0 +1,164 @@
+﻿@implements IDisposable
+
+@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job concurrency">
+    <BodyTemplate>
+        @if (Job is not null)
+        {
+            <EditForm id="job_concurrency_form" Model="Job" OnValidSubmit="OnSubmit" class="">
+
+                <div class="mb-4">
+                    <label class="form-label">Max parallel steps (0 = use default)</label>
+                    <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="Job.MaxParallelSteps"></InputNumber>
+                </div>
+
+                <small class="text-secondary">Define the number of max parallel steps allowed for each step type to fine-tune the level of concurrency.</small>
+
+                <table id="concurrency_table" class="table table-sm mt-3">
+                    <thead>
+                        <tr>
+                            <th>Step type</th>
+                            <th>Max parallel steps</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var concur in Job?.JobConcurrencies.OrderBy(c => c.StepType) ?? Enumerable.Empty<JobConcurrency>())
+                        {
+                            <tr>
+                                <td class="align-middle">
+                                    <StepTypeIconComponent StepType_="concur.StepType" />
+                                    @concur.StepType
+                                </td>
+                                <td>
+                                    <input class="form-control form-control-sm" style="max-width: 10rem;" @bind="concur.MaxParallelSteps" />
+                                </td>
+                                <td>
+                                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Job?.JobConcurrencies.Remove(concur)">
+                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                        </HxButton>
+                                    </HxButtonGroup>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <HxDropdown>
+                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small">
+                        @MarkupHelper.FromFile("icons/feather/plus.svg")
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownHeader>
+                            Step type
+                        </HxDropdownHeader>
+                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !Job?.JobConcurrencies.Any(c => c.StepType == type) ?? false))
+                        {
+                            <HxDropdownItem @onclick="() => Job?.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                                <StepTypeIconComponent StepType_="stepType" />
+                                @stepType
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdown>
+                <p class="text-danger">@ErrorMessage</p>
+            </EditForm>
+        }
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxSubmit form="job_concurrency_form" Color="ThemeColor.Success">Save</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+
+    private HxModal Modal { get; set; } = null!;
+
+    [Parameter]
+    [EditorRequired]
+    public Job Job { get; set; } = null!;
+
+    private EtlManagerContext Context { get; set; } = null!;
+
+    private string? ErrorMessage { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Context = DbContextFactory.CreateDbContext();
+    }
+
+    private async Task OnSubmit()
+    {
+        var count = Job?.JobConcurrencies.Count();
+        var distinct = Job?.JobConcurrencies.Select(c => c.StepType).Distinct().Count();
+        if (count != distinct)
+        {
+            ErrorMessage = "Duplicate step types detected";
+            return;
+        }
+
+        try
+        {
+            await Context.SaveChangesAsync();
+            await Modal.HideAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving concurrency settings", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+
+    }
+
+    public void OnClosed()
+    {
+        // Reset added entities.
+        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
+        {
+            if (entity.Entity is JobConcurrency concur)
+            {
+                if (Job?.JobConcurrencies.Contains(concur) == true)
+                    Job?.JobConcurrencies.Remove(concur);
+            }
+
+            entity.State = EntityState.Detached;
+        }
+
+        // Reset deleted entities.
+        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
+        {
+            if (entity.Entity is JobConcurrency concur)
+            {
+                if (Job?.JobConcurrencies.Contains(concur) == false)
+                    Job?.JobConcurrencies.Add(concur);
+            }
+
+            entity.State = EntityState.Unchanged;
+        }
+
+        // Reset changed entities.
+        Context.ChangeTracker
+            .Entries()
+            .Where(e => e.Entity is not null)
+            .ToList()
+            .ForEach(e => e.State = EntityState.Unchanged);
+    }
+
+    public async Task Show()
+    {
+        await Modal.ShowAsync();
+        Context.Attach(Job);
+    }
+
+
+    public void Dispose() => Context?.Dispose();
+}

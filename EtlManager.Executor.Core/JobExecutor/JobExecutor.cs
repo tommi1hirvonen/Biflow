@@ -43,6 +43,7 @@ internal class JobExecutor : IJobExecutor
                     .AsNoTrackingWithIdentityResolution()
                     .Include(e => e.Job)
                     .Include(e => e.ExecutionParameters)
+                    .Include(e => e.ExecutionConcurrencies)
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => e.StepExecutionAttempts)
                     .Include(e => e.StepExecutions)

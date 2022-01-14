@@ -8,12 +8,12 @@ namespace EtlManager.Executor.Core.Orchestrator;
 internal abstract class OrchestratorBase
 {
     private readonly ILogger<OrchestratorBase> _logger;
-    protected IExecutionConfiguration _executionConfig;
+    private readonly IExecutionConfiguration _executionConfig;
     private readonly IStepExecutorFactory _stepExecutorFactory;
+    private readonly SemaphoreSlim _mainSemaphore;
+    private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
 
     protected Execution Execution { get; }
-
-    private SemaphoreSlim Semaphore { get; }
 
     protected Dictionary<StepExecution, ExtendedCancellationTokenSource> CancellationTokenSources { get; }
 
@@ -40,8 +40,18 @@ internal abstract class OrchestratorBase
             .ToDictionary(e => e, _ => ExecutionStatus.NotStarted);
 
         // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-        var maxParallelSteps = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
-        Semaphore = new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
+        var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
+        _mainSemaphore = new SemaphoreSlim(maxParallelStepsMain, maxParallelStepsMain);
+
+        // Create a Dictionary with max parallel steps for each step type.
+        _stepTypeSemaphores = Enum.GetValues<StepType>()
+            .ToDictionary(type => type, type =>
+            {
+                // Default to the main value of max parallel steps if the setting was not defined for the step type.
+                var typeConcurrency = execution.ExecutionConcurrencies.FirstOrDefault(c => c.StepType == type)?.MaxParallelSteps;
+                var maxParallelSteps = typeConcurrency > 0 ? (int)typeConcurrency : maxParallelStepsMain;
+                return new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
+            });
     }
 
     public abstract Task RunAsync();
@@ -67,11 +77,14 @@ internal abstract class OrchestratorBase
 
     protected async Task StartNewStepWorkerAsync(StepExecution step)
     {
-        // Wait until the semaphore can be entered and the step can be started.
-        await Semaphore.WaitAsync();
+        // Wait until the semaphores can be entered and the step can be started.
+        await _stepTypeSemaphores[step.StepType].WaitAsync();
+        await _mainSemaphore.WaitAsync();
+
         // Create a new step worker and start it asynchronously.
         var executor = _stepExecutorFactory.Create(step);
         var task = executor.RunAsync(CancellationTokenSources[step]);
+        
         _logger.LogInformation("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
         bool result = false;
         try
@@ -83,8 +96,11 @@ internal abstract class OrchestratorBase
         {
             // Update the status.
             StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+            
             // Release the semaphore once to make room for new parallel executions.
-            Semaphore.Release();
+            _mainSemaphore.Release();
+            _stepTypeSemaphores[step.StepType].Release();
+
             _logger.LogInformation("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
         }
     }

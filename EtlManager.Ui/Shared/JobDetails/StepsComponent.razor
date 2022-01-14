@@ -23,8 +23,9 @@
 
 @if (Job is not null)
 {
-    <JobParametersModal @ref="JobParametersModal"
-                        Job="Job" />
+    <JobParametersModal @ref="JobParametersModal" Job="Job" />
+
+    <JobConcurrencyModal @ref="JobConcurrencyModal" Job="Job" />
 }
 
 
@@ -53,6 +54,10 @@
             <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobParametersModal?.Show() ?? Task.CompletedTask)">
                 @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                 Parameters
+            </HxButton>
+            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobConcurrencyModal?.Show() ?? Task.CompletedTask)">
+                @MarkupHelper.FromFile("icons/feather/cpu.svg")
+                Concurrency
             </HxButton>
             <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync(SelectedSteps)">
                 @MarkupHelper.FromFile("icons/feather/play.svg")
