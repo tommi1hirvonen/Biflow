@@ -60,6 +60,7 @@ public class Job
     public ICollection<Execution> Executions { get; set; } = null!;
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
     public ICollection<JobParameter> JobParameters { get; set; } = null!;
+    public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }

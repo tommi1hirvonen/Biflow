@@ -71,6 +71,8 @@ public class Execution
 
     public ICollection<ExecutionParameter> ExecutionParameters { get; set; } = null!;
 
+    public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; set; } = null!;
+
     public Job? Job { get; set; }
 
     [NotMapped]

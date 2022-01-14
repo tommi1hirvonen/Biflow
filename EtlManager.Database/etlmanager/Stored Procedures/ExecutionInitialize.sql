@@ -141,7 +141,21 @@ SELECT
 	ParameterValueType,
 	ParameterValue
 FROM etlmanager.JobParameter
-where JobId = @JobId
+WHERE JobId = @JobId
+
+
+-- Insert job concurrency definitions for different step types.
+INSERT INTO etlmanager.ExecutionConcurrency (
+	ExecutionId,
+	StepType,
+	MaxParallelSteps
+)
+SELECT
+	@EtlManagerExecutionId,
+	StepType,
+	MaxParallelSteps
+FROM etlmanager.JobConcurrency
+WHERE JobId = @JobId
 
 
 -- Insert placeholders for steps.

@@ -65,6 +65,19 @@ FROM etlmanager.JobParameter AS A
 WHERE JobId = @JobId
 
 
+-- Copy step type concurrencies.
+INSERT INTO etlmanager.JobConcurrency (
+	JobId,
+	StepType,
+	MaxParallelSteps
+)
+SELECT
+	@JobIdNew,
+	StepType,
+	MaxParallelSteps
+FROM etlmanager.JobConcurrency
+where JobId = @JobId
+
 
 -- Copy steps
 
