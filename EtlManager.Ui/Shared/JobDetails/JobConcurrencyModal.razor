@@ -9,7 +9,10 @@
         @if (Job is not null)
         {
             <EditForm id="job_concurrency_form" Model="Job" OnValidSubmit="OnSubmit" class="">
-
+                
+                <ObjectGraphDataAnnotationsValidator />
+                <ValidationSummary />
+                
                 <div class="mb-4">
                     <label class="form-label">Max parallel steps (0 = use default)</label>
                     <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="Job.MaxParallelSteps"></InputNumber>

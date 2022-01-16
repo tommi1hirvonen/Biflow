@@ -55,11 +55,18 @@ public class Job
     public bool IsEnabled { get; set; }
 
     public ICollection<Step> Steps { get; set; } = null!;
+    
     public ICollection<JobStep> JobSteps { get; set; } = null!;
+    
     public ICollection<Schedule> Schedules { get; set; } = null!;
+    
     public ICollection<Execution> Executions { get; set; } = null!;
+    
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
+    
     public ICollection<JobParameter> JobParameters { get; set; } = null!;
+
+    [ValidateComplexType]
     public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
     [Display(Name = "Created by")]
