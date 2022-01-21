@@ -95,8 +95,7 @@
                                 @item.CronExpression
                                 &nbsp;&nbsp;
                                 <HxTooltip Placement="TooltipPlacement.Auto"
-                                           Text="@item.GetScheduleSummary()"
-                                           CssClass="white-space-pre">
+                                           Text="@item.GetScheduleDescription()">
                                     @MarkupHelper.FromFile("icons/feather/info.svg")
                                 </HxTooltip>
                             </div>
@@ -108,7 +107,7 @@
                                 @(!item.Job.IsEnabled ? "(Job disabled)" : null)
                                 &nbsp;&nbsp;
                                 <HxTooltip Placement="TooltipPlacement.Auto"
-                                           Text="@("Next executions:\n" + string.Join("\n", item.GetNextFireTimes(15)))"
+                                           Text="@("Next execution(s) (first 10):\n" + string.Join("\n", item.GetNextFireTimes(15)))"
                                            CssClass="white-space-pre">
                                     @MarkupHelper.FromFile("icons/feather/info.svg")
                                 </HxTooltip>

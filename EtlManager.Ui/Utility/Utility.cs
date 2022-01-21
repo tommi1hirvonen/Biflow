@@ -1,8 +1,6 @@
-﻿using EtlManager.DataAccess.Models;
-using EtlManager.Utilities;
+﻿using CronExpressionDescriptor;
+using EtlManager.DataAccess.Models;
 using Quartz;
-using System.IO.Pipes;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace EtlManager.Ui;
@@ -134,12 +132,16 @@ public static partial class Utility
         return allCount > 0 ? (int)Math.Round(completedCount / (double)allCount * 100) : 0;
     }
 
-    public static string GetScheduleSummary(this Schedule schedule)
+    public static string GetScheduleDescription(this Schedule schedule)
     {
         if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
         {
-            var cron = new CronExpression(schedule.CronExpression);
-            return cron.GetExpressionSummary();
+            return ExpressionDescriptor.GetDescription(schedule.CronExpression, new Options
+            {
+                ThrowExceptionOnParseError = false,
+                Use24HourTimeFormat = true,
+                Locale = "en"
+            }); ;
         }
         else
         {
