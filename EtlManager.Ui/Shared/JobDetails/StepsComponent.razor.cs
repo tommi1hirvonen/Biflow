@@ -130,6 +130,13 @@ public partial class StepsComponent : ComponentBase
             foreach (var step in SelectedSteps)
             {
                 Steps?.Remove(step);
+
+                // Remove the deleted step from dependencies.
+                foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+                {
+                    var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
+                    dependant.Dependencies.Remove(dependency);
+                }
             }
             SelectedSteps.Clear();
         }
@@ -164,6 +171,13 @@ public partial class StepsComponent : ComponentBase
             await context.SaveChangesAsync();
             Steps?.Remove(step);
             SelectedSteps.Remove(step);
+
+            // Remove the deleted step from dependencies.
+            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+            {
+                var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
+                dependant.Dependencies.Remove(dependency);
+            }
         }
         catch (Exception ex)
         {

@@ -78,7 +78,7 @@ public abstract class Step : IComparable
     [Timestamp]
     public byte[]? Timestamp { get; set; }
 
-    public ICollection<Dependency> Dependencies { get; set; } = null!;
+    public IList<Dependency> Dependencies { get; set; } = null!;
 
     public IList<Tag> Tags { get; set; } = null!;
 
