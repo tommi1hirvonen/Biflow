@@ -108,7 +108,7 @@
                                         &nbsp;
                                         <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                     </td>
-                                    <td class="text-right"
+                                    <td class="text-end"
                                         style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                         @step.ExecutionPhase
                                         &nbsp;
@@ -116,7 +116,7 @@
                                     </td>
                                     @if (Job?.UseDependencyMode == true)
                                     {
-                                        <td class="text-right">
+                                        <td class="text-end">
                                             @if (step.Dependencies?.Count > 0)
                                             {
                                                 <div class="hover-primary" title="Include dependencies" @onclick="() => SelectStepAndDependencies(step)">
@@ -159,7 +159,7 @@
                                         &nbsp;
                                         @step.StepName
                                     </td>
-                                    <td class="text-right"
+                                    <td class="text-end"
                                         style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                         @step.ExecutionPhase
                                         &nbsp;
