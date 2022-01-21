@@ -21,21 +21,27 @@
 }
 
 <div class="row mb-3">
-    <div class="col-auto">
-        <div class="form-group">
-            <div class="input-group">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/filter.svg")
-                </div>
-                <select class="form-select form-select-sm" @onchange="LimitGraph">
-                    <option selected=@string.IsNullOrEmpty(StepFilter) value="">All</option>
-                    @foreach (var step in Steps ?? Enumerable.Empty<Step>())
-                    {
-                        <option selected=@(StepFilter == step.StepName) value="@step.StepName">@step.StepName</option>
-                    }
-                </select>
-            </div>
-        </div>
+    <div class="col-xl-6 col-lg-8 col-md-10">
+        <HxAutosuggest  TItem="Step"
+                        TValue="Guid"
+                        DataProvider="ProvideSuggestions"
+                        ValueSelector="ValueSelector"
+                        ItemFromValueResolver="ResolveAutosuggestItemFromValue"
+                        TextSelector="TextSelector"
+                        MinimumLength="0"
+                        Delay="1"
+                        InputSize="InputSize.Small"
+                        ValueChanged="LimitGraph"
+                        ValueExpression="() => StepFilter"
+                        Placeholder="Filter step">
+            <ItemTemplate Context="item">
+                <StepTypeIconComponent StepType_="item.StepType" />
+                @item.StepName
+            </ItemTemplate>
+            <EmptyTemplate>
+                <span class="p-2">No matching steps</span>
+            </EmptyTemplate>
+        </HxAutosuggest>
     </div>
 </div>
 
@@ -90,7 +96,7 @@
 
     private bool GrapShouldRender { get; set; }
 
-    private string StepFilter { get; set; } = string.Empty;
+    private Guid StepFilter { get; set; }
 
     protected override void OnInitialized()
     {
@@ -106,7 +112,7 @@
         if (Job != PrevJob)
         {
             PrevJob = Job;
-            StepFilter = string.Empty;
+            StepFilter = Guid.Empty;
             StateHasChanged();
             GrapShouldRender = true;
         }
@@ -124,7 +130,7 @@
         string? stepsJson = null;
         string? dependenciesJson = null;
 
-        if (string.IsNullOrEmpty(StepFilter))
+        if (StepFilter == Guid.Empty)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
             var steps = Steps.Select(step => new
@@ -148,7 +154,7 @@
         }
         else
         {
-            var startStep = Steps.FirstOrDefault(s => s.StepName == StepFilter);
+            var startStep = Steps.FirstOrDefault(s => s.StepId == StepFilter);
             if (startStep is not null)
             {
                 var steps = RecurseDependenciesBackward(startStep, new());
@@ -222,9 +228,9 @@
         return processedSteps;
     }
 
-    private async Task LimitGraph(ChangeEventArgs args)
+    private async Task LimitGraph(Guid value)
     {
-        StepFilter = args.Value?.ToString() ?? string.Empty;
+        StepFilter = value;
         GrapShouldRender = true;
         await LoadGraph();
     }
@@ -272,6 +278,26 @@
         {
             Messenger.AddError("Error sorting steps", ex.Message);
         }
+    }
+
+    private async Task<AutosuggestDataProviderResult<Step>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(100);
+        var filteredModules = Steps.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        return new AutosuggestDataProviderResult<Step>
+        {
+            Data = filteredModules
+        };
+    }
+
+    private Guid ValueSelector(Step step) => step.StepId;
+
+    private string TextSelector(Step step) => step.StepName ?? "";
+
+    private Task<Step> ResolveAutosuggestItemFromValue(Guid value)
+    {
+        var step = Task.FromResult(Steps.First(step => step.StepId == value));
+        return step;
     }
 
     public void Dispose()
