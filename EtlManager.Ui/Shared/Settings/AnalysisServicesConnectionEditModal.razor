@@ -84,7 +84,7 @@
             using var context = DbFactory.CreateDbContext();
             Connection = await context.AnalysisServicesConnections
                 .AsNoTrackingWithIdentityResolution()
-                .Include(c => c.Steps)
+                .Include(c => c.TabularSteps)
                 .ThenInclude(step => step.Job)
                 .FirstAsync(c => c.ConnectionId == ConnectionId);
         }
