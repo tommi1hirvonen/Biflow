@@ -123,7 +123,8 @@
                                 {
                                     <tr>
                                         <td>@(i + 1)</td>
-                                        <td>
+                                        <td class="align-middle">
+                                            <StepTypeIconComponent StepType_="TopFailedSteps[i].StepType" />
                                             @TopFailedSteps[i].StepName
                                         </td>
                                         <td>
@@ -264,11 +265,12 @@
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
-            .GroupBy(group => new { group.StepId, group.StepName, group.Execution.JobId, group.Execution.JobName })
+            .GroupBy(group => new { group.StepId, group.StepName, group.StepType, group.Execution.JobId, group.Execution.JobName })
             .Select(select => new TopStep
             {
                 StepName = select.Key.StepName,
                 StepId = select.Key.StepId,
+                StepType = select.Key.StepType,
                 JobName = select.Key.JobName,
                 JobId = select.Key.JobId ?? Guid.Empty,
                 NoOfExecutions = select.Count(),
@@ -354,6 +356,7 @@
     {
         public decimal SuccessPercent { get; set; }
         public string StepName { get; set; } = string.Empty;
+        public StepType StepType { get; set; }
         public Guid StepId { get; set; }
         public string JobName { get; set; } = string.Empty;
         public Guid JobId { get; set; }
