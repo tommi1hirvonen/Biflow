@@ -144,7 +144,7 @@
                   Enabled="SelectedPackage is not null && SelectedProject is not null && SelectedFolder is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 

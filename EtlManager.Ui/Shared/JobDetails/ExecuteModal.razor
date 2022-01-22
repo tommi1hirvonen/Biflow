@@ -231,7 +231,7 @@
             @MarkupHelper.FromFile("icons/feather/play.svg")
             Execute
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 

@@ -59,7 +59,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit form="as_connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 

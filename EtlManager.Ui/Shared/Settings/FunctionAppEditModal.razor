@@ -94,7 +94,7 @@
     
     <FooterTemplate>
         <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(FunctionAppId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 

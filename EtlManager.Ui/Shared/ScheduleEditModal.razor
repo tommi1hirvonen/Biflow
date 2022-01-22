@@ -80,7 +80,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="schedule_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 

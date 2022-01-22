@@ -162,7 +162,7 @@
             @(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")
         </HxSubmit>
         
-        <HxButton Color="ThemeColor.Secondary" @onclick="async () => await Modal.Modal.HideAsync()">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.Modal.HideAsync()">
             Cancel
         </HxButton>
     </FooterTemplate>
