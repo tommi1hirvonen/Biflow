@@ -105,7 +105,12 @@
         }
         else
         {
-            Connection = new(string.Empty, string.Empty);
+            Connection = new(string.Empty, string.Empty)
+            {
+                SqlSteps = new List<SqlStep>(),
+                PackageSteps = new List<PackageStep>(),
+                AgentJobSteps = new List<AgentJobStep>()
+            };
         }
         ConnectionTestSuccess = null;
         TestingConnection = false;

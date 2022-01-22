@@ -194,7 +194,7 @@
 
 
 @code {
-    private IList<Job> jobs { get; set; } = null!;
+    private List<Job> jobs { get; set; } = null!;
     private Dictionary<Guid, Execution> LastExecutions { get; set; } = null!;
     private Job NewJob { get; set; } = new() { IsEnabled = true };
     private Job EditJob { get; set; } = new();
@@ -301,6 +301,7 @@
             NewJob.Steps = new List<Step>();
             NewJob.Schedules = new List<Schedule>();
             jobs.Add(NewJob);
+            jobs.Sort((job1, job2) => job1.JobName?.CompareTo(job2.JobName) ?? 0);
             NewJob = new() { IsEnabled = true };
         }
         catch (Exception ex)

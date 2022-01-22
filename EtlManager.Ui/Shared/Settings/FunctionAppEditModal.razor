@@ -134,7 +134,8 @@
             FunctionApp = new()
             {
                 AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
-                AppRegistration = AppRegistrations?.FirstOrDefault()!
+                AppRegistration = AppRegistrations?.FirstOrDefault()!,
+                Steps = new List<FunctionStep>()
             };
         }
     }

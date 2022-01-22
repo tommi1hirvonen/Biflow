@@ -112,7 +112,8 @@
         {
             DataFactory = new()
             {
-                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                Steps = new List<PipelineStep>()
             };
         }
         ConnectionTestSuccess = null;
