@@ -32,6 +32,10 @@ builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("DefaultCredentials")
+    // Passes Windows credentials in on-premise installations to the scheduler API.
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
+
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
 var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");

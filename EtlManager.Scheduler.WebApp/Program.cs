@@ -1,5 +1,7 @@
 using EtlManager.Scheduler.Core;
 using EtlManager.Scheduler.WebApp;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
@@ -8,6 +10,7 @@ var useWindowsService = WindowsServiceHelpers.IsWindowsService();
 
 WebApplicationBuilder builder;
 
+// If hosted as a Windows service, configure specific logging and service lifetimes.
 if (useWindowsService)
 {
     var options = new WebApplicationOptions
@@ -20,10 +23,34 @@ if (useWindowsService)
     var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
     builder.Logging.AddSerilog(logger, dispose: true);
 }
+// Otherwise use default WebApplicationBuiderl.
 else
 {
     builder = WebApplication.CreateBuilder(args);
 }
+
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+
+var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
+var useWindowsAuth = windowsAuth.Exists();
+
+builder.Services.AddAuthorization(options =>
+{
+    // If a list of Windows users were defined, require authentication for all endpoints.
+    if (useWindowsAuth)
+    {
+        var allowedUsers = windowsAuth.GetSection("AllowedUsers").Get<string[]>();
+        options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserNamesRequirement(allowedUsers)).Build();
+    }
+    // Otherwise allow anonymous access.
+    else
+    {
+        options.FallbackPolicy = options.DefaultPolicy;
+    }
+});
+
+if (useWindowsAuth)
+    builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -48,6 +75,9 @@ else
 builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -115,10 +145,36 @@ app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, 
 }).WithName("Synchronize");
 
 
-app.MapGet("/status", (StatusTracker StatusTracker) =>
+app.MapGet("/status", (StatusTracker statusTracker) =>
 {
-    return StatusTracker.DatabaseReadError ? "FAILURE" : "SUCCESS";
+    return statusTracker.DatabaseReadError ? "FAILURE" : "SUCCESS";
 }).WithName("Status");
 
 
 app.Run();
+
+
+class UserNamesHandler : AuthorizationHandler<UserNamesRequirement>
+{
+    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserNamesRequirement requirement)
+    {
+        var userName = context.User.Identity?.Name;
+
+        if (userName is not null && requirement.UserNames.Contains(userName))
+        {
+            context.Succeed(requirement);
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+class UserNamesRequirement : IAuthorizationRequirement
+{
+    public string[] UserNames { get; }
+
+    public UserNamesRequirement(params string[] userNames)
+    {
+        UserNames = userNames;
+    }
+}

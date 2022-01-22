@@ -18,7 +18,7 @@ public class WebAppSchedulerService : ISchedulerService
     public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
     }
 
     public async Task DeleteJobAsync(Job job)

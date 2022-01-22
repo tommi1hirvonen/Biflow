@@ -16,7 +16,7 @@ public class WebAppExecutorService : IExecutorService
     public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
-        _httpClient = httpClientFactory.CreateClient();
+        _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
     }
 
     public async Task StartExecutionAsync(Guid executionId)
