@@ -3,7 +3,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject DbHelperService DbHelperService
 
-<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Scrollable="true" Title="Execute steps"
+<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Fullscreen="ModalFullscreen.ExtraLargeDown" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
          OnClosed="() => { StepsToExecute.Clear(); ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
 
