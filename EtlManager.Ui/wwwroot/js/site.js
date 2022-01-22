@@ -88,25 +88,30 @@ function drawDurationGraph(datasets_) {
 
     var ctx1 = document.getElementById('myChart1')
 
-    var myChart1 = new Chart(ctx1, {
+    // Check if chart already exists from a previous report load and destroy if so.
+    var myChart1 = Chart.getChart('myChart1')
+    if (myChart1) {
+        myChart1.destroy();
+    }
+
+    myChart1 = new Chart(ctx1, {
         type: 'line',
         data: {
             datasets: datasets1
         },
         options: {
             scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    },
-                    scaleLabel: {
+                y: {
+                    position: 'left',
+                    title: {
                         display: true,
-                        labelString: 'min'
-                    }
-                }],
-                xAxes: [{
+                        text: 'min'
+                    },
+                    min: 0
+                },
+                x: {
                     type: 'time'
-                }]
+                }
             }
         }
     })
@@ -118,22 +123,28 @@ function drawNoOfExecutionsGraph(datasets_) {
 
     var ctx3 = document.getElementById('myChart3')
 
-    var myChart3 = new Chart(ctx3, {
+    // Check if chart already exists from a previous report load and destroy if so.
+    var myChart3 = Chart.getChart('myChart3')
+    if (myChart3) {
+        myChart3.destroy();
+    }
+
+    myChart3 = new Chart(ctx3, {
         type: 'line',
         data: {
             datasets: datasets3
         },
         options: {
             scales: {
-                yAxes: [{
+                y: {
+                    min: 0,
                     ticks: {
-                        beginAtZero: true,
                         stepSize: 1
                     }
-                }],
-                xAxes: [{
+                },
+                x: {
                     type: 'time'
-                }]
+                }
             }
         }
     })
@@ -157,32 +168,40 @@ function drawSuccessRateGraph(datasets_) {
 
     // Job success rates
     var ctx2 = document.getElementById('myChart2')
-    var myChart2 = new Chart(ctx2, {
-        type: 'horizontalBar',
+
+    // Check if chart already exists from a previous report load and destroy if so.
+    var myChart2 = Chart.getChart('myChart2')
+    if (myChart2) {
+        myChart2.destroy();
+    }
+
+    myChart2 = new Chart(ctx2, {
+        type: 'bar',
         data: {
             labels: labels1,
             datasets: [{
                 data: data1,
-                lineTension: 0,
                 backgroundColor: colors1
             }]
         },
         options: {
+            indexAxis: 'y',
             scales: {
-                xAxes: [{
+                x: {
+                    min: 0,
+                    max: 100,
                     ticks: {
-                        beginAtZero: true,
-                        max: 100,
-                        min: 0,
                         stepSize: 10,
                         callback: function (value, index, values) {
                             return value + '%';
                         }
                     }
-                }]
+                }
             },
-            legend: {
-                display: false
+            plugins: {
+                legend: {
+                    display: false
+                }
             }
         }
     })

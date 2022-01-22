@@ -287,7 +287,8 @@
             fill = false,
             backgroundColor = JobColors[e.Key],
             borderColor = JobColors[e.Key],
-            data = e.Value.Select(v => new { t = v.Date.ToString("yyyy-M-d")?.Replace('.', ':'), y = v.DurationInMinutes })
+            data = e.Value.Select(v => new { x = v.Date.ToString("o"), y = v.DurationInMinutes }),
+            tension = 0.3
         });
         var durationDatasetJson = JsonSerializer.Serialize(durationDataset);
 
@@ -298,7 +299,8 @@
             fill = false,
             backgroundColor = JobColors[e.Key],
             borderColor = JobColors[e.Key],
-            data = e.Value.Select(v => new { t = v.Date.ToString("yyyy-M-d")?.Replace('.', ':'), y = v.NumberOfExecutions })
+            data = e.Value.Select(v => new { x = v.Date.ToString("o"), y = v.NumberOfExecutions }),
+            tension = 0.3
         });
         var noOfExecutionsJson = JsonSerializer.Serialize(noOfExecutionsDataset);
 
@@ -308,8 +310,7 @@
             label = job.JobName,
             data = decimal.Round(job.SuccessPercent, 2),
             color = JobColors[job.JobName]
-        }
-        );
+        });
         var successRateDatasetJson = JsonSerializer.Serialize(successRateDataset);
 
         ReportLoaded = true;
