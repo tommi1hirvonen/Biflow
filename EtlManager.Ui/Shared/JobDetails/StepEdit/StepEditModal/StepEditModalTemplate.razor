@@ -396,17 +396,30 @@
         var name = proc?.ProcedureName;
         if (name is null) return;
 
+        var dbObjects = await Modal.GetDatabaseObjectsAsync();
+
         Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
         var sources = await SqlServerHelper.GetSourceObjectsAsync(connectionId, schema, name);
         foreach (var source in sources)
         {
-            var dbObject = new DatabaseObject
-            {
-                ServerName = source.ServerName,
-                DatabaseName = source.DatabaseName,
-                SchemaName = source.SchemaName,
-                ObjectName = source.ObjectName
-            };
+            var dbObject = dbObjects.FirstOrDefault(o =>
+                o.ServerName == source.ServerName &&
+                o.DatabaseName == source.DatabaseName &&
+                o.SchemaName == source.SchemaName &&
+                o.ObjectName == source.ObjectName) ??
+                Modal.Step.Targets.FirstOrDefault(o =>
+                o.ServerName == source.ServerName &&
+                o.DatabaseName == source.DatabaseName &&
+                o.SchemaName == source.SchemaName &&
+                o.ObjectName == source.ObjectName) ??
+                new DatabaseObject
+                {
+                    ServerName = source.ServerName,
+                    DatabaseName = source.DatabaseName,
+                    SchemaName = source.SchemaName,
+                    ObjectName = source.ObjectName
+                };
+
             if (!Modal.Step.Sources.Any(s =>
                 s.ServerName == dbObject.ServerName
                 && s.DatabaseName == dbObject.DatabaseName
@@ -425,17 +438,30 @@
         var name = proc?.ProcedureName;
         if (name is null) return;
 
+        var dbObjects = await Modal.GetDatabaseObjectsAsync();
+
         Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
         var targets = await SqlServerHelper.GetTargetObjectsAsync(connectionId, schema, name);
         foreach (var target in targets)
         {
-            var dbObject = new DatabaseObject
-            {
-                ServerName = target.ServerName,
-                DatabaseName = target.DatabaseName,
-                SchemaName = target.SchemaName,
-                ObjectName = target.ObjectName
-            };
+            var dbObject = dbObjects.FirstOrDefault(o =>
+                o.ServerName == target.ServerName &&
+                o.DatabaseName == target.DatabaseName &&
+                o.SchemaName == target.SchemaName &&
+                o.ObjectName == target.ObjectName) ??
+                Modal.Step.Sources.FirstOrDefault(o =>
+                o.ServerName == target.ServerName &&
+                o.DatabaseName == target.DatabaseName &&
+                o.SchemaName == target.SchemaName &&
+                o.ObjectName == target.ObjectName) ??
+                new DatabaseObject
+                {
+                    ServerName = target.ServerName,
+                    DatabaseName = target.DatabaseName,
+                    SchemaName = target.SchemaName,
+                    ObjectName = target.ObjectName
+                };
+
             if (!Modal.Step.Targets.Any(t =>
                 t.ServerName == dbObject.ServerName
                 && t.DatabaseName == dbObject.DatabaseName

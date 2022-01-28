@@ -42,6 +42,8 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     private IEnumerable<Tag>? AllTags { get; set; }
 
+    private IEnumerable<DatabaseObject>? DatabaseObjects { get; set; }
+
     private Guid PrevStepId { get; set; }
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
@@ -55,6 +57,12 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             .Where(t => !Tags.Any(tag => t == tag))
             .OrderBy(t => t) ?? Enumerable.Empty<string>()
         };
+    }
+
+    public async Task<IEnumerable<DatabaseObject>> GetDatabaseObjectsAsync()
+    {
+        DatabaseObjects ??= await Context.DatabaseObjects.ToListAsync();
+        return DatabaseObjects;
     }
 
     /// <summary>
@@ -124,45 +132,10 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     internal void OnClosed()
     {
-        // If the modal is being simply closed, reset any changes made to entities loaded from the database.
-        // If the user saves their changes, SubmitStep() is called first and changes are saved.
-
-        // Reset added entities.
-        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
-        {
-            if (entity.Entity is Dependency dependency)
-            {
-                if (Step?.Dependencies.Contains(dependency) == true)
-                    Step.Dependencies.Remove(dependency);
-            }
-
-            ResetAddedEntities(entity);
-
-            entity.State = EntityState.Detached;
-        }
-
-        // Reset deleted entities.
-        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
-        {
-            if (entity.Entity is Dependency dependency)
-            {
-                if (Step?.Dependencies.Contains(dependency) == false)
-                    Step.Dependencies.Add(dependency);
-            }
-
-            ResetDeletedEntities(entity);
-
-            entity.State = EntityState.Unchanged;
-        }
-
-        // Reset changed entities.
-        Context.ChangeTracker
-            .Entries()
-            .Where(e => e.Entity is not null)
-            .ToList()
-            .ForEach(e => e.State = EntityState.Unchanged);
-
-        ResetTags();
+        // Force the step to be reloaded and the context
+        // to be recreated when the modal is opened again.
+        StepId = Guid.Empty;
+        PrevStepId = Guid.Empty;
         AllTags = null;
     }
 
