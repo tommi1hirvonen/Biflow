@@ -1,6 +1,5 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -13,9 +12,8 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     internal override string FormId => "package_step_edit_form";
 
-    protected override PackageStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override PackageStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -26,17 +24,16 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<PackageStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.PackageSteps
-                .Include(step => step.StepParameters)
-                .ThenInclude(p => p.JobParameter)
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<PackageStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.PackageSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
     protected override void ResetDeletedEntities(EntityEntry entity)
     {
@@ -104,7 +101,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         return (true, null);
     }
 
-    private async Task OpenPackageSelectOffcanvas() => await PackageSelectOffcanvas.ShowAsync();
+    private Task OpenPackageSelectOffcanvas() => PackageSelectOffcanvas.ShowAsync();
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {

@@ -11,9 +11,8 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
 
     internal override string FormId => "job_step_edit_form";
 
-    protected override JobStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override JobStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -23,13 +22,12 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<JobStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.JobSteps
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<JobStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) => 
+        context.JobSteps
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 }

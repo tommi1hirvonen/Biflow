@@ -242,7 +242,7 @@
         var step = Steps.First(s => s.StepId == stepId);
         EditModalStepIds[step.StepType] = stepId;
         StateHasChanged();
-        StepEditModals[step.StepType].ShowAsync(showDependencies: true);
+        StepEditModals[step.StepType].ShowAsync(StepEditModalView.Dependencies);
     }
 
     private async Task OnStepSubmit(Step step)

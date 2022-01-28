@@ -13,9 +13,8 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
 
     private PipelineSelectOffcanvas PipelineSelectOffcanvas { get; set; } = null!;
 
-    protected override PipelineStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override PipelineStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -26,19 +25,18 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<PipelineStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.PipelineSteps
-                .Include(step => step.StepParameters)
-                .ThenInclude(p => p.JobParameter)
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<PipelineStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.PipelineSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
-    private async Task OpenPipelineSelectOffcanvas() => await PipelineSelectOffcanvas.ShowAsync();
+    private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.ShowAsync();
 
     private void OnPipelineSelected(string pipelineName) => Step.PipelineName = pipelineName;
 }

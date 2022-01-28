@@ -80,6 +80,10 @@ public abstract class Step : IComparable
 
     public IList<Dependency> Dependencies { get; set; } = null!;
 
+    public IList<DatabaseObject> Sources { get; set; } = null!;
+
+    public IList<DatabaseObject> Targets { get; set; } = null!;
+
     public IList<Tag> Tags { get; set; } = null!;
 
     public IList<StepExecution> StepExecutions { get; set; } = null!;

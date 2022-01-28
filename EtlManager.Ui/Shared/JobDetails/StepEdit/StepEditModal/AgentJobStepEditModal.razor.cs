@@ -1,6 +1,5 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
@@ -12,9 +11,8 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
 
     internal override string FormId => "agent_job_step_edit_form";
 
-    protected override AgentJobStep CreateNewStep(Job job)
-    {
-        return new(string.Empty)
+    protected override AgentJobStep CreateNewStep(Job job) =>
+        new(string.Empty)
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -24,17 +22,16 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<AgentJobStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.AgentJobSteps
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<AgentJobStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.AgentJobSteps
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
-    private async Task OpenAgentJobSelectOffcanvas() => await AgentJobSelectOffcanvas.ShowAsync();
+    private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.ShowAsync();
 
     private void OnAgentJobSelected(string agentJobName) => Step.AgentJobName = agentJobName;
 }

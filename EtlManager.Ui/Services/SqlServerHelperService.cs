@@ -270,6 +270,68 @@ public class SqlServerHelperService
         return rows;
     }
 
+    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+        using var sqlConnection = new SqlConnection(connectionString);
+
+        schema ??= "[dbo]";
+        var objectName = $"{schema}.[{name}]";
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string)>(
+            @"select distinct
+                referenced_server_name = isnull(a.referenced_server_name, @@servername),
+                referenced_database_name = isnull(a.referenced_database_name, db_name()),
+                referenced_schema_name = isnull(c.name, a.referenced_schema_name),
+                referenced_entity_name = a.referenced_entity_name
+            from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
+                left join sys.objects as b on a.referenced_id = b.object_id
+                left join sys.schemas as c on b.schema_id = c.schema_id
+            where is_updated = 0", new
+            {
+                ObjectName = objectName
+            });
+        return rows;
+    }
+
+    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+        using var sqlConnection = new SqlConnection(connectionString);
+
+        schema ??= "[dbo]";
+        var objectName = $"{schema}.[{name}]";
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string)>(
+            @"select distinct
+                referenced_server_name = isnull(a.referenced_server_name, @@servername),
+                referenced_database_name = isnull(a.referenced_database_name, db_name()),
+                referenced_schema_name = isnull(c.name, a.referenced_schema_name),
+                referenced_entity_name = a.referenced_entity_name
+            from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
+                left join sys.objects as b on a.referenced_id = b.object_id
+                left join sys.schemas as c on b.schema_id = c.schema_id
+            where is_selected = 0 and is_select_all = 0", new
+            {
+                ObjectName = objectName
+            });
+        return rows;
+    }
+
     public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         string connectionString;

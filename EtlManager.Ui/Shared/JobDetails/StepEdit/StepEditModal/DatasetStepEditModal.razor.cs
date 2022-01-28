@@ -17,21 +17,20 @@ public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
 
     private void OnDatasetSelected((string GroupId, string DatasetId) dataset)
     {
-        this.Step.DatasetGroupId = dataset.GroupId;
-        this.Step.DatasetId = dataset.DatasetId;
+        Step.DatasetGroupId = dataset.GroupId;
+        Step.DatasetId = dataset.DatasetId;
     }
 
-    protected override async Task<DatasetStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.DatasetSteps
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<DatasetStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.DatasetSteps
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
-    protected override DatasetStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override DatasetStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -41,5 +40,4 @@ public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 }

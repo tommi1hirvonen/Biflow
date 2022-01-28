@@ -96,5 +96,8 @@
     <Build Include="etlmanager\Tables\ScheduleTag.sql" />
     <Build Include="etlmanager\Tables\JobConcurrency.sql" />
     <Build Include="etlmanager\Tables\ExecutionConcurrency.sql" />
+    <Build Include="etlmanager\Tables\DatabaseObject.sql" />
+    <Build Include="etlmanager\Tables\StepSource.sql" />
+    <Build Include="etlmanager\Tables\StepTarget.sql" />
   </ItemGroup>
 </Project>

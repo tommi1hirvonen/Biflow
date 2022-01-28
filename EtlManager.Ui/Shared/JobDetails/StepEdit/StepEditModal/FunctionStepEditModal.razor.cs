@@ -20,19 +20,18 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
         Step.FunctionUrl = functionUrl;
     }
 
-    protected override async Task<FunctionStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.FunctionSteps
-                .Include(step => step.StepParameters)
-                .ThenInclude(p => p.JobParameter)
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<FunctionStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.FunctionSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
-    protected override FunctionStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override FunctionStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -43,5 +42,4 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
             Tags = new List<Tag>(),
             StepParameters = new List<StepParameterBase>()
         };
-    }
 }

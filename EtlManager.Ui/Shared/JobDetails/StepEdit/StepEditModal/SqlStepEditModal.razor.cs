@@ -1,6 +1,5 @@
 ﻿using EtlManager.DataAccess;
 using EtlManager.DataAccess.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
@@ -12,19 +11,18 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 
     private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
     
-    protected override async Task<SqlStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.SqlSteps
-            .Include(step => step.StepParameters)
-            .ThenInclude(p => p.JobParameter)
-            .Include(step => step.Tags)
-            .Include(step => step.Dependencies)
-            .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<SqlStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.SqlSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
-    protected override SqlStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override SqlStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -35,7 +33,6 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
             Tags = new List<Tag>(),
             StepParameters = new List<StepParameterBase>()
         };
-    }
 
     private void SetCaptureResultJobParameter(bool enabled)
     {
@@ -49,7 +46,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
         }
     }
 
-    private async Task OpenStoredProcedureSelectModal() => await StoredProcedureSelectModal.ShowAsync();
+    private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.ShowAsync();
 
     private void OnStoredProcedureSelected(string procedure) => Step.SqlStatement = $"EXEC {procedure}";
     

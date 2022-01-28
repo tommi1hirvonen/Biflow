@@ -14,9 +14,8 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
 
     internal override string FormId => "tabular_step_edit_form";
 
-    protected override TabularStep CreateNewStep(Job job)
-    {
-        return new(string.Empty)
+    protected override TabularStep CreateNewStep(Job job) =>
+        new(string.Empty)
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -26,15 +25,14 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<TabularStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.TabularSteps
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<TabularStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.TabularSteps
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 
     private void OnAnalysisServicesObjectSelected((string ModelName, string? TableName, string? PartitionName) obj)
     {

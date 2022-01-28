@@ -8,9 +8,8 @@ public partial class ExeStepEditModal : StepEditModalBase<ExeStep>
 {
     internal override string FormId => "exe_step_edit_form";
 
-    protected override ExeStep CreateNewStep(Job job)
-    {
-        return new()
+    protected override ExeStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
@@ -19,13 +18,12 @@ public partial class ExeStepEditModal : StepEditModalBase<ExeStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>()
         };
-    }
 
-    protected override async Task<ExeStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId)
-    {
-        return await context.ExeSteps
-                .Include(step => step.Tags)
-                .Include(step => step.Dependencies)
-                .FirstAsync(step => step.StepId == stepId);
-    }
+    protected override Task<ExeStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
+        context.ExeSteps
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
 }

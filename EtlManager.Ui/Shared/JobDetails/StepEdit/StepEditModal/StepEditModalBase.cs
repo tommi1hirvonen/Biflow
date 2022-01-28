@@ -36,7 +36,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     internal string StepError { get; private set; } = string.Empty;
 
-    internal bool ShowDependencies { get; set; } = false;
+    internal StepEditModalView CurrentView { get; set; } = StepEditModalView.Settings;
 
     private EtlManagerContext Context { get; set; } = null!;
 
@@ -215,9 +215,9 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         }
     }
 
-    public async Task ShowAsync(bool showDependencies = false)
+    public async Task ShowAsync(StepEditModalView startView = StepEditModalView.Settings)
     {
-        ShowDependencies = showDependencies;
+        CurrentView = startView;
         await Modal.ShowAsync();
     }
 
