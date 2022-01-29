@@ -143,10 +143,18 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     {
         StepError = string.Empty;
 
-        (var result, var message) = StepValidityCheck(Step);
+        var (result, message) = StepValidityCheck(Step);
         if (!result)
         {
             StepError = message ?? string.Empty;
+            return;
+        }
+
+        // Check source and target database objects.
+        var (result2, message2) = await CheckSourcesAndTargetsAsync();
+        if (!result2)
+        {
+            StepError = message ?? String.Empty;
             return;
         }
 
@@ -176,6 +184,10 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
             await OnStepSubmit.InvokeAsync(Step);
             await Modal.HideAsync();
+
+            StepId = Guid.Empty;
+            PrevStepId = Guid.Empty;
+            AllTags = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -185,6 +197,56 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         catch (Exception ex)
         {
             Messenger.AddError("Error adding/editing step", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+    }
+
+    private async Task<(bool Result, string? Message)> CheckSourcesAndTargetsAsync()
+    {
+        var sources = Step.Sources
+            .OrderBy(x => x.ServerName)
+            .ThenBy(x => x.DatabaseName)
+            .ThenBy(x => x.SchemaName)
+            .ThenBy(x => x.ObjectName)
+            .ToList();
+        if (!CheckDbObjectDuplicates(sources)) return (false, "Duplicate sources");
+        
+        var targets = Step.Targets
+            .OrderBy(x => x.ServerName)
+            .ThenBy(x => x.DatabaseName)
+            .ThenBy(x => x.SchemaName)
+            .ThenBy(x => x.ObjectName)
+            .ToList();
+        if (!CheckDbObjectDuplicates(targets)) return (false, "Duplicate targets");
+
+        await MapExistingDbObjectsAsync(Step.Sources);
+        await MapExistingDbObjectsAsync(Step.Targets);
+
+        return (true, null);
+    }
+
+    private static bool CheckDbObjectDuplicates(IEnumerable<DatabaseObject> databaseObjects)
+    {
+        for (int i = 0; i < databaseObjects.Count() - 1; i++)
+        {
+            var current = databaseObjects.ElementAt(i);
+            var next = databaseObjects.ElementAt(i + 1);
+            if (current.Equals(next))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private async Task MapExistingDbObjectsAsync(IList<DatabaseObject> databaseObjects)
+    {
+        var allDbObjects = await GetDatabaseObjectsAsync();
+        var existing = allDbObjects.Where(o => databaseObjects.Any(d => d.DatabaseObjectId == Guid.Empty && o.Equals(d)));
+        foreach (var dbObject in existing)
+        {
+            var remove = databaseObjects.First(d => d.Equals(dbObject));
+            databaseObjects.Remove(remove);
+            databaseObjects.Add(dbObject);
         }
     }
 

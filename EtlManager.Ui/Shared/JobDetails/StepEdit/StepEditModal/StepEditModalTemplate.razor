@@ -234,6 +234,9 @@
                                             }
                                         </tbody>
                                     </table>
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => Modal.Step.Sources.Add(new())">
+                                        @MarkupHelper.FromFile("icons/feather/plus.svg")
+                                    </HxButton>
                                 </div>
                             </div>
                             
@@ -324,6 +327,9 @@
                                             }
                                         </tbody>
                                     </table>
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => Modal.Step.Targets.Add(new())">
+                                        @MarkupHelper.FromFile("icons/feather/plus.svg")
+                                    </HxButton>
                                 </div>
                             </div>
                         }
@@ -402,16 +408,8 @@
         var sources = await SqlServerHelper.GetSourceObjectsAsync(connectionId, schema, name);
         foreach (var source in sources)
         {
-            var dbObject = dbObjects.FirstOrDefault(o =>
-                o.ServerName == source.ServerName &&
-                o.DatabaseName == source.DatabaseName &&
-                o.SchemaName == source.SchemaName &&
-                o.ObjectName == source.ObjectName) ??
-                Modal.Step.Targets.FirstOrDefault(o =>
-                o.ServerName == source.ServerName &&
-                o.DatabaseName == source.DatabaseName &&
-                o.SchemaName == source.SchemaName &&
-                o.ObjectName == source.ObjectName) ??
+            var dbObject = dbObjects.FirstOrDefault(o => o.Equals(source)) ??
+                Modal.Step.Targets.FirstOrDefault(o => o.Equals(source)) ??
                 new DatabaseObject
                 {
                     ServerName = source.ServerName,
@@ -420,11 +418,7 @@
                     ObjectName = source.ObjectName
                 };
 
-            if (!Modal.Step.Sources.Any(s =>
-                s.ServerName == dbObject.ServerName
-                && s.DatabaseName == dbObject.DatabaseName
-                && s.SchemaName == dbObject.SchemaName
-                && s.ObjectName == dbObject.ObjectName))
+            if (!Modal.Step.Sources.Any(s => s.Equals(dbObject)))
             {
                 Modal.Step.Sources.Add(dbObject);    
             }
@@ -444,16 +438,8 @@
         var targets = await SqlServerHelper.GetTargetObjectsAsync(connectionId, schema, name);
         foreach (var target in targets)
         {
-            var dbObject = dbObjects.FirstOrDefault(o =>
-                o.ServerName == target.ServerName &&
-                o.DatabaseName == target.DatabaseName &&
-                o.SchemaName == target.SchemaName &&
-                o.ObjectName == target.ObjectName) ??
-                Modal.Step.Sources.FirstOrDefault(o =>
-                o.ServerName == target.ServerName &&
-                o.DatabaseName == target.DatabaseName &&
-                o.SchemaName == target.SchemaName &&
-                o.ObjectName == target.ObjectName) ??
+            var dbObject = dbObjects.FirstOrDefault(o => o.Equals(target)) ??
+                Modal.Step.Sources.FirstOrDefault(o => o.Equals(target)) ??
                 new DatabaseObject
                 {
                     ServerName = target.ServerName,
@@ -462,11 +448,7 @@
                     ObjectName = target.ObjectName
                 };
 
-            if (!Modal.Step.Targets.Any(t =>
-                t.ServerName == dbObject.ServerName
-                && t.DatabaseName == dbObject.DatabaseName
-                && t.SchemaName == dbObject.SchemaName
-                && t.ObjectName == dbObject.ObjectName))
+            if (!Modal.Step.Targets.Any(t => t.Equals(dbObject)))
             {
                 Modal.Step.Targets.Add(dbObject);    
             }

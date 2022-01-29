@@ -22,4 +22,15 @@ public class DatabaseObject
     public ICollection<Step> Targets { get; set; } = null!;
 
     public ICollection<Step> Sources { get; set; } = null!;
+
+    public override bool Equals(object? obj)
+    {
+        var dbo = obj as DatabaseObject;
+        return ServerName.Equals(dbo?.ServerName)
+            && DatabaseName.Equals(dbo.DatabaseName)
+            && SchemaName.Equals(dbo.SchemaName)
+            && ObjectName.Equals(dbo.ObjectName);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(ServerName, DatabaseName, SchemaName, ObjectName);
 }
