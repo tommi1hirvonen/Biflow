@@ -39,6 +39,12 @@
                     Tags
                 </NavLink>
             </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="databaseobjects" @onclick="NavLinkClick">
+                    @MarkupHelper.FromFile("icons/feather/columns.svg")
+                    Database Objects
+                </NavLink>
+            </li>
         </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">

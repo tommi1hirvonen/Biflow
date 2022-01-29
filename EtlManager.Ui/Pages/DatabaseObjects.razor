@@ -1,0 +1,298 @@
+﻿@page "/databaseobjects"
+
+@implements IDisposable
+
+@inject IDbContextFactory<EtlManagerContext> DbContextFactory
+@inject MarkupHelperService MarkupHelper
+@inject IHxMessengerService Messenger
+
+<PageTitle>Database Objects | ETL Manager</PageTitle>
+
+<h4>Database Objects</h4>
+
+<div class="row mt-3">
+    <div class="col">
+        <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
+            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+            Delete unused
+        </button>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col col-xl-9">
+        <div class="input-group input-group-sm me-3">
+            <div class="input-group-text">
+                @MarkupHelper.FromFile("icons/feather/filter.svg")
+                &nbsp;
+                Filter by
+            </div>
+            <input type="search" class="form-control" @bind-value="ServerFilter" @bind-value:event="oninput" placeholder="Server" />
+            <input type="search" class="form-control" @bind-value="DatabaseFilter" @bind-value:event="oninput" placeholder="Database" />
+            <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
+            <input type="search" class="form-control" @bind-value="ObjectFilter" @bind-value:event="oninput" placeholder="Object" />
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                <EditForm Model="EditObject" OnValidSubmit="SubmitEditObjectAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <table class="table table-sm table-hover small">
+                        <thead>
+                            <tr>
+                                <th>Server</th>
+                                <th>Database</th>
+                                <th>Schema</th>
+                                <th>Object</th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (DatabaseObjects_ is null)
+                            {
+                                <tr>
+                                    <td colspan="7" class="px-3">Loading...</td>
+                                </tr>
+                            }
+                            else if (!DatabaseObjects_.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="px-3">No database objects</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var dbObject in FilteredObjects
+                                    .OrderBy(o => o.ServerName)
+                                    .ThenBy(o => o.DatabaseName)
+                                    .ThenBy(o => o.SchemaName)
+                                    .ThenBy(o => o.ObjectName))
+                                {
+                                    var sources = dbObject.Sources.Count;
+                                    var targets = dbObject.Targets.Count;
+                                    <tr>
+                                        @if (dbObject.DatabaseObjectId == EditObject?.DatabaseObjectId)
+                                        {
+                                            <td>
+                                                <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ServerName" />
+                                            </td>
+                                            <td>
+                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.DatabaseName" />
+                                            </td>
+                                            <td>
+                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.SchemaName" />
+                                            </td>
+                                            <td>
+                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ObjectName" />
+                                            </td>
+                                            <td colspan="3">
+                                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
+                                                        @MarkupHelper.FromFile("icons/feather/check.svg")
+                                                    </HxSubmit>
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
+                                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                    </HxButton>
+                                                </HxButtonGroup>
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle"><HighlightableText Text="@dbObject.ServerName" PartToHighlight="@ServerFilter" /></td>
+                                            <td class="align-middle"><HighlightableText Text="@dbObject.DatabaseName" PartToHighlight="@DatabaseFilter" /></td>
+                                            <td class="align-middle"><HighlightableText Text="@dbObject.SchemaName" PartToHighlight="@SchemaFilter" /></td>
+                                            <td class="align-middle"><HighlightableText Text="@dbObject.ObjectName" PartToHighlight="@ObjectFilter" /></td>
+                                            <td>
+                                                <div class="btn-group btn-row">
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" OnClick="async () => await SetEditContextAsync(dbObject)">
+                                                        @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                                    </HxButton>
+                                                    <HxDropdown>
+                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                        </HxDropdownToggleButton>
+                                                        <HxDropdownMenu>
+                                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                            <HxDropdownItem @onclick="async () => await DeleteDatabaseObject(dbObject)">Confirm</HxDropdownItem>
+                                                        </HxDropdownMenu>
+                                                    </HxDropdown>
+                                                </div>
+                                            </td>
+                                            <td class="align-middle">
+                                                @(sources > 0 ? $"{sources} source(s)" : null)
+                                            </td>
+                                            <td class="align-middle">
+                                                @(targets > 0 ? $"{targets} target(s)" : null)
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete database objects">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                Delete these unused database objects?
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Server</th>
+                            <th>Database</th>
+                            <th>Schema</th>
+                            <th>Object</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dbObject in UnusedDatabaseObjects)
+                        {
+                            <tr>
+                                <td>@dbObject.ServerName</td>
+                                <td>@dbObject.DatabaseName</td>
+                                <td>@dbObject.SchemaName</td>
+                                <td>@dbObject.ObjectName</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="ConfirmDeleteModal.HideAsync">Cancel</button>
+        <button class="btn btn-danger" @onclick="DeleteUnusedDatabaseObjectsAsync">Delete</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private IList<DatabaseObject>? DatabaseObjects_ { get; set; }
+
+    private IEnumerable<DatabaseObject> FilteredObjects =>
+        DatabaseObjects_?
+        .Where(o => !ServerFilter.Any() || o.ServerName.ContainsIgnoreCase(ServerFilter))
+        .Where(o => !DatabaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(DatabaseFilter))
+        .Where(o => !SchemaFilter.Any() || o.SchemaName.ContainsIgnoreCase(SchemaFilter))
+        .Where(o => !ObjectFilter.Any() || o.ObjectName.ContainsIgnoreCase(ObjectFilter))
+        ?? Enumerable.Empty<DatabaseObject>();
+
+    private IEnumerable<DatabaseObject> UnusedDatabaseObjects =>
+        DatabaseObjects_?
+        .Where(t => !t.Sources.Any() && !t.Targets.Any())
+        ?? Enumerable.Empty<DatabaseObject>();
+
+    private HxModal ConfirmDeleteModal { get; set; } = null!;
+
+    private DatabaseObject EditObject { get; set; } = new();
+
+    private EtlManagerContext? EditContext { get; set; }
+
+    private string ServerFilter { get; set; } = string.Empty;
+    private string DatabaseFilter { get; set; } = string.Empty;
+    private string SchemaFilter { get; set; } = string.Empty;
+    private string ObjectFilter { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await Task.Run<EtlManagerContext>(DbContextFactory.CreateDbContext);
+        DatabaseObjects_ = await context.DatabaseObjects
+            .Include(o => o.Sources)
+            .Include(o => o.Targets)
+            .ToListAsync();
+    }
+
+    private async Task OpenConfirmDeleteModalAsync()
+    {
+        if (!UnusedDatabaseObjects.Any())
+        {
+            Messenger.AddInformation("No unused database objects");
+            return;
+        }
+
+        await ConfirmDeleteModal.ShowAsync();
+    }
+
+    private async Task DeleteUnusedDatabaseObjectsAsync()
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        foreach (var dbObject in UnusedDatabaseObjects.ToList())
+        {
+            context.DatabaseObjects.Remove(dbObject);
+            DatabaseObjects_?.Remove(dbObject);
+        }
+        await context.SaveChangesAsync();
+        await ConfirmDeleteModal.HideAsync();
+    }
+
+    private async Task DeleteDatabaseObject(DatabaseObject dbObject)
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        context.DatabaseObjects.Remove(dbObject);
+        await context.SaveChangesAsync();
+        DatabaseObjects_?.Remove(dbObject);
+    }
+
+    private async Task SetEditContextAsync(DatabaseObject dbObject)
+    {
+        EditContext?.Dispose();
+        EditContext = DbContextFactory.CreateDbContext();
+        EditObject = await EditContext.DatabaseObjects
+            .Include(o => o.Sources)
+            .Include(o => o.Targets)
+            .FirstAsync(o => o.DatabaseObjectId == dbObject.DatabaseObjectId);
+        StateHasChanged();
+    }
+
+    private void EndEditContext()
+    {
+        EditContext?.Dispose();
+        EditObject = new();
+        StateHasChanged();
+    }
+
+    private async Task SubmitEditObjectAsync()
+    {
+        if (EditContext is null) return;
+        try
+        {
+            await EditContext.SaveChangesAsync();
+            EditContext.Dispose();
+
+            var toRemove = DatabaseObjects_?.First(o => o.DatabaseObjectId == EditObject.DatabaseObjectId);
+            if (toRemove is not null)
+            {
+                DatabaseObjects_?.Remove(toRemove);
+                DatabaseObjects_?.Add(EditObject);
+            }
+
+            EditObject = new();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The database object was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating database object", ex.Message);
+        }
+    }
+
+    public void Dispose() => EditContext?.Dispose();
+}

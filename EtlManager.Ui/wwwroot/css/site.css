@@ -564,7 +564,7 @@ tr.disabled {
     top: 0;
     bottom: 0;
     left: 0;
-    width: 180px;
+    width: 200px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
     background-color: #fff;
@@ -581,7 +581,7 @@ tr.disabled {
 @media (min-width: 992px) {
     .main {
         padding-right: 10px !important;
-        padding-left: 190px !important; /* (sidebar width) + (padding right) */
+        padding-left: 210px !important; /* (sidebar width) + (padding right) */
     }
 }
 
@@ -661,7 +661,7 @@ tr.disabled {
 
 @media (min-width: 992px) {
     .navbar-brand {
-        width: 180px;
+        width: 200px;
     }
 
     /* Never collapse the sidebar for wide screens */

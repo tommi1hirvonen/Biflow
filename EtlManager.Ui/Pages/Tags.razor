@@ -265,7 +265,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbContextFactory.CreateDbContext();
+        using var context = await Task.Run<EtlManagerContext>(DbContextFactory.CreateDbContext);
         Tags_ = await context.Tags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Steps)
