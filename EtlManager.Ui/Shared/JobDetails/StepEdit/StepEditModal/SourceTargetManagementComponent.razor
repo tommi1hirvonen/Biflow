@@ -1,5 +1,6 @@
 ﻿
 @inject MarkupHelperService MarkupHelper
+@inject IHxMessengerService Messenger
 
 
 @if (StepType == StepType.Sql)
@@ -114,7 +115,7 @@
                 </td>
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="() => { DatabaseObjects.Add(NewObject); NewObject = null; }">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="SubmitNewObject">
                             @MarkupHelper.FromFile("icons/feather/check.svg")
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewObject = null">
@@ -195,7 +196,7 @@
         }
     </tbody>
 </table>
-<HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="AddNewObject">
+<HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
     @MarkupHelper.FromFile("icons/feather/plus.svg")
 </HxButton>
 
@@ -232,10 +233,24 @@
         Server, Database, Schema, Object
     }
 
-    private async Task AddNewObject()
+    private async Task AddNewObjectAsync()
     {
         AllDatabaseObjects ??= await LoadAllDatabaseObjects();
         NewObject = new();
+    }
+
+    private void SubmitNewObject()
+    {
+        if (NewObject is null) return;
+
+        if (DatabaseObjects.Any(o => o.Equals(NewObject)))
+        {
+            Messenger.AddWarning($"Duplicate {ListName} object");
+            return;
+        }
+
+        DatabaseObjects.Add(NewObject);
+        NewObject = null;
     }
 
     private async Task GetDatabaseObjectsAsync()
