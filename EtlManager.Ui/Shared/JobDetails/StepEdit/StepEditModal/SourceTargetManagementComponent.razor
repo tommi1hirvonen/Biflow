@@ -129,11 +129,11 @@
                     .Select(o => o.ServerName)
                     .Distinct()
                     .OrderBy(o => o)
-                    .Take(5) ?? Enumerable.Empty<string>();
+                    .Take(10) ?? Enumerable.Empty<string>();
                 @foreach (var server in servers)
                 {
                     <tr style="cursor: pointer;" @onclick="() => NewObject.ServerName = server">
-                        <td colspan="5">@server</td>
+                        <td colspan="5"><HighlightableText Text="@server" PartToHighlight="@NewObject.ServerName" /></td>
                     </tr>
                 }
             }
@@ -142,14 +142,15 @@
                 var databases = AllDatabaseObjects?
                     .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
                     .Where(o => o.DatabaseName.ContainsIgnoreCase(NewObject.DatabaseName))
-                    .Select(o => o.DatabaseName)
+                    .Select(o => (o.ServerName, o.DatabaseName))
                     .Distinct()
-                    .OrderBy(o => o)
-                    .Take(5) ?? Enumerable.Empty<string>();
+                    .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName)
+                    .Take(10) ?? Enumerable.Empty<(string, string)>();
                 @foreach (var database in databases)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => NewObject.DatabaseName = database">
-                        <td colspan="5">@database</td>
+                    <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = database.ServerName; NewObject.DatabaseName = database.DatabaseName; }">
+                        <td colspan="1">@database.ServerName</td>
+                        <td colspan="4"><HighlightableText Text="@database.DatabaseName" PartToHighlight="@NewObject.DatabaseName" /></td>
                     </tr>
                 }
             }
@@ -159,14 +160,16 @@
                     .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
                     .Where(o => string.IsNullOrEmpty(NewObject.DatabaseName) || o.DatabaseName == NewObject.DatabaseName)
                     .Where(o => o.SchemaName.ContainsIgnoreCase(NewObject.SchemaName))
-                    .Select(o => o.SchemaName)
+                    .Select(o => (o.ServerName, o.DatabaseName, o.SchemaName))
                     .Distinct()
-                    .OrderBy(o => o)
-                    .Take(5) ?? Enumerable.Empty<string>();
+                    .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName)
+                    .Take(10) ?? Enumerable.Empty<(string, string, string)>();
                 @foreach (var schema in schemas)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => NewObject.SchemaName = schema">
-                        <td colspan="5">@schema</td>
+                    <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = schema.ServerName; NewObject.DatabaseName = schema.DatabaseName; NewObject.SchemaName = schema.SchemaName; }">
+                        <td colspan="1">@schema.ServerName</td>
+                        <td colspan="1">@schema.DatabaseName</td>
+                        <td colspan="3"><HighlightableText Text="@schema.SchemaName" PartToHighlight="@NewObject.SchemaName" /></td>
                     </tr>
                 }
             }
@@ -178,14 +181,14 @@
                     .Where(o => string.IsNullOrEmpty(NewObject.SchemaName) || o.SchemaName == NewObject.SchemaName)
                     .Where(o => o.ObjectName.ContainsIgnoreCase(NewObject.ObjectName))
                     .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName).ThenBy(o => o.ObjectName)
-                    .Take(5) ?? Enumerable.Empty<DatabaseObject>();
+                    .Take(10) ?? Enumerable.Empty<DatabaseObject>();
                 @foreach (var dbObject in objects)
                 {
                     <tr style="cursor: pointer;" @onclick="() => NewObject = dbObject">
                         <td>@dbObject.ServerName</td>
                         <td>@dbObject.DatabaseName</td>
                         <td>@dbObject.SchemaName</td>
-                        <td colspan="2">@dbObject.ObjectName</td>
+                        <td colspan="2"><HighlightableText Text="@dbObject.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
                     </tr>
                 }
             }
