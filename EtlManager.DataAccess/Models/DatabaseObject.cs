@@ -31,9 +31,9 @@ public class DatabaseObject
     [NotMapped] public DatabaseObjectMappingResult SourceMappingResult { get; set; } = new();
     [NotMapped] public DatabaseObjectMappingResult TargetMappingResult { get; set; } = new();
 
-    public ICollection<Step> Targets { get; set; } = null!;
+    public IList<Step> Targets { get; set; } = null!;
 
-    public ICollection<Step> Sources { get; set; } = null!;
+    public IList<Step> Sources { get; set; } = null!;
 
     public override bool Equals(object? obj)
     {

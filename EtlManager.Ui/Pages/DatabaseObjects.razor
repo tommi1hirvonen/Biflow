@@ -126,10 +126,28 @@
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                @(sources > 0 ? $"{sources} source(s)" : null)
+                                                @{ var sourcesTitle = $"{dbObject.ObjectName} source steps"; }
+                                                <a class="text-dark" href="javascript:void(0)"
+                                                    @onclick="async () =>
+                                                    {
+                                                        SourcesTargetsModalSteps = dbObject.Sources;
+                                                        SourcesTargetsModalTitle = sourcesTitle;
+                                                        await SourcesTargetsModal.ShowAsync();
+                                                    }">
+                                                    @(sources > 0 ? $"{sources} source(s)" : null)
+                                                </a>
                                             </td>
                                             <td class="align-middle">
-                                                @(targets > 0 ? $"{targets} target(s)" : null)
+                                                @{ var targetsTitle = $"{dbObject.ObjectName} target steps"; }
+                                                <a class="text-dark" href="javascript:void(0)"
+                                                    @onclick="async () =>
+                                                    {
+                                                        SourcesTargetsModalSteps = dbObject.Targets;
+                                                        SourcesTargetsModalTitle = targetsTitle;
+                                                        await SourcesTargetsModal.ShowAsync();
+                                                    }">
+                                                    @(targets > 0 ? $"{targets} target(s)" : null)
+                                                </a>
                                             </td>
                                         }
                                     </tr>
@@ -182,6 +200,43 @@
     </FooterTemplate>
 </HxModal>
 
+<HxModal @ref="SourcesTargetsModal" Size="ModalSize.Large" Title="@SourcesTargetsModalTitle" Scrollable="true">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in SourcesTargetsModalSteps?
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td class="align-middle">
+                                    @step.Job.JobName
+                                </td>
+                                <td class="align-middle">
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="SourcesTargetsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private IList<DatabaseObject>? DatabaseObjects_ { get; set; }
 
@@ -204,6 +259,10 @@
 
     private EtlManagerContext? EditContext { get; set; }
 
+    private HxModal SourcesTargetsModal { get; set; } = null!;
+    private string SourcesTargetsModalTitle { get; set; } = string.Empty;
+    private IList<Step>? SourcesTargetsModalSteps { get; set; }
+
     private string ServerFilter { get; set; } = string.Empty;
     private string DatabaseFilter { get; set; } = string.Empty;
     private string SchemaFilter { get; set; } = string.Empty;
@@ -214,7 +273,9 @@
         using var context = await Task.Run<EtlManagerContext>(DbContextFactory.CreateDbContext);
         DatabaseObjects_ = await context.DatabaseObjects
             .Include(o => o.Sources)
+            .ThenInclude(s => s.Job)
             .Include(o => o.Targets)
+            .ThenInclude(s => s.Job)
             .ToListAsync();
     }
 
@@ -255,7 +316,9 @@
         EditContext = DbContextFactory.CreateDbContext();
         EditObject = await EditContext.DatabaseObjects
             .Include(o => o.Sources)
+            .ThenInclude(s => s.Job)
             .Include(o => o.Targets)
+            .ThenInclude(s => s.Job)
             .FirstAsync(o => o.DatabaseObjectId == dbObject.DatabaseObjectId);
         StateHasChanged();
     }
