@@ -154,7 +154,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         var (result2, message2) = await CheckSourcesAndTargetsAsync();
         if (!result2)
         {
-            StepError = message ?? String.Empty;
+            StepError = message2 ?? string.Empty;
             return;
         }
 
@@ -210,6 +210,12 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             .ToList();
         if (!CheckDbObjectDuplicates(sources)) return (false, "Duplicate sources");
         
+        if (sources.Any(x => !x.ServerName.Any()
+        || !x.DatabaseName.Any()
+        || !x.SchemaName.Any()
+        || !x.ObjectName.Any()))
+            return (false, "Empty source object names are not valid");
+        
         var targets = Step.Targets
             .OrderBy(x => x.ServerName)
             .ThenBy(x => x.DatabaseName)
@@ -217,6 +223,12 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             .ThenBy(x => x.ObjectName)
             .ToList();
         if (!CheckDbObjectDuplicates(targets)) return (false, "Duplicate targets");
+
+        if (targets.Any(x => !x.ServerName.Any()
+        || !x.DatabaseName.Any()
+        || !x.SchemaName.Any()
+        || !x.ObjectName.Any()))
+            return (false, "Empty target object names are not valid");
 
         await MapExistingDbObjectsAsync(Step.Sources);
         await MapExistingDbObjectsAsync(Step.Targets);

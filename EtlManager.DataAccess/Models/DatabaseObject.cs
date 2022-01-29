@@ -7,15 +7,23 @@ public class DatabaseObject
     [Key]
     public Guid DatabaseObjectId { get; set; }
 
+    [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string ServerName { get; set; } = string.Empty;
 
+    [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string DatabaseName { get; set; } = string.Empty;
 
+    [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string SchemaName { get; set; } = string.Empty;
 
+    [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string ObjectName { get; set; } = string.Empty;
 

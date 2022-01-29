@@ -181,14 +181,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <table class="table table-sm table-hover">
+                                    <table class="table table-sm table-hover small">
                                         <thead>
                                             <tr>
-                                                @if (ShowSourceTargetServer)
+                                                @if (ShowSourceTargetServer || NewSource is not null)
                                                 {
                                                     <th>Server</th>
                                                 }
-                                                @if (ShowSourceTargetDatabase)
+                                                @if (ShowSourceTargetDatabase || NewSource is not null)
                                                 {
                                                     <th>Database</th>
                                                 }
@@ -205,23 +205,23 @@
                                             .ThenBy(x => x.ObjectName))
                                             {
                                                 <tr>
-                                                    @if (ShowSourceTargetServer)
+                                                    @if (ShowSourceTargetServer || NewSource is not null)
                                                     {
                                                         <td class="align-middle">
-                                                            <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="source.ServerName" />
+                                                            @source.ServerName
                                                         </td>
                                                     }
-                                                    @if (ShowSourceTargetDatabase)
+                                                    @if (ShowSourceTargetDatabase || NewSource is not null)
                                                     {
                                                         <td class="align-middle">
-                                                            <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="source.DatabaseName" />
+                                                            @source.DatabaseName
                                                         </td>
                                                     }
                                                     <td class="align-middle">
-                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="source.SchemaName" />
+                                                        @source.SchemaName
                                                     </td>
                                                     <td class="align-middle">
-                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="source.ObjectName" />
+                                                        @source.ObjectName
                                                     </td>
                                                     <td>
                                                         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
@@ -232,9 +232,36 @@
                                                     </td>
                                                 </tr>
                                             }
+                                            @if (NewSource is not null)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewSource.ServerName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewSource.DatabaseName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewSource.SchemaName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewSource.ObjectName" />
+                                                    </td>
+                                                    <td>
+                                                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="() => { Modal.Step.Sources.Add(NewSource); NewSource = null; }">
+                                                                @MarkupHelper.FromFile("icons/feather/check.svg")
+                                                            </HxButton>
+                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewSource = null">
+                                                                @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                            </HxButton>
+                                                        </HxButtonGroup>
+                                                    </td>
+                                                </tr>
+                                            }
                                         </tbody>
                                     </table>
-                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => Modal.Step.Sources.Add(new())">
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => NewSource ??= new()">
                                         @MarkupHelper.FromFile("icons/feather/plus.svg")
                                     </HxButton>
                                 </div>
@@ -274,14 +301,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <table class="table table-sm table-hover">
+                                    <table class="table table-sm table-hover small">
                                         <thead>
                                             <tr>
-                                                @if (ShowSourceTargetServer)
+                                                @if (ShowSourceTargetServer || NewTarget is not null)
                                                 {
                                                     <th>Server</th>
                                                 }
-                                                @if (ShowSourceTargetDatabase)
+                                                @if (ShowSourceTargetDatabase || NewTarget is not null)
                                                 {
                                                     <th>Database</th>
                                                 }
@@ -298,23 +325,23 @@
                                             .ThenBy(x => x.ObjectName))
                                             {
                                                 <tr>
-                                                    @if (ShowSourceTargetServer)
+                                                    @if (ShowSourceTargetServer || NewTarget is not null)
                                                     {
                                                         <td class="align-middle">
-                                                            <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="target.ServerName" />
+                                                            @target.ServerName
                                                         </td>
                                                     }
-                                                    @if (ShowSourceTargetDatabase)
+                                                    @if (ShowSourceTargetDatabase || NewTarget is not null)
                                                     {
                                                         <td class="align-middle">
-                                                            <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="target.DatabaseName" />
+                                                            @target.DatabaseName
                                                         </td>
                                                     }
                                                     <td class="align-middle">
-                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="target.SchemaName" />
+                                                        @target.SchemaName
                                                     </td>
                                                     <td class="align-middle">
-                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="target.ObjectName" />
+                                                        @target.ObjectName
                                                     </td>
                                                     <td>
                                                         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
@@ -325,9 +352,36 @@
                                                     </td>
                                                 </tr>
                                             }
+                                            @if (NewTarget is not null)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewTarget.ServerName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewTarget.DatabaseName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewTarget.SchemaName" />
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control form-control-sm" type="text" autocomplete="off" @bind="NewTarget.ObjectName" />
+                                                    </td>
+                                                    <td>
+                                                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="() => { Modal.Step.Targets.Add(NewTarget); NewTarget = null; }">
+                                                                @MarkupHelper.FromFile("icons/feather/check.svg")
+                                                            </HxButton>
+                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewTarget = null">
+                                                                @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                            </HxButton>
+                                                        </HxButtonGroup>
+                                                    </td>
+                                                </tr>
+                                            }
                                         </tbody>
                                     </table>
-                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => Modal.Step.Targets.Add(new())">
+                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => NewTarget ??= new()">
                                         @MarkupHelper.FromFile("icons/feather/plus.svg")
                                     </HxButton>
                                 </div>
@@ -394,6 +448,10 @@
         PackageStep package => package.ConnectionId,
         _ => null
     };
+
+    private DatabaseObject? NewSource { get; set; }
+
+    private DatabaseObject? NewTarget { get; set; }
 
     private async Task GetSqlSourcesAsync()
     {
