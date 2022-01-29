@@ -58,8 +58,9 @@
         .ThenBy(x => x.SchemaName)
         .ThenBy(x => x.ObjectName))
         {
-            var className = dbObject.IsCandidateForRemoval ? "text-warning" : dbObject.IsNewAddition ? "text-primary" : null;
-            var title = dbObject.IsCandidateForRemoval ? "Object not found in latest mapping result" : dbObject.IsNewAddition ? "New object" : null;
+            var mappingResult = GetMappingResult(dbObject);
+            var className = mappingResult.IsCandidateForRemoval ? "text-danger" : mappingResult.IsUnreliableMapping ? "text-warning" : mappingResult.IsNewAddition ? "text-primary" : null;
+            var title = mappingResult.IsCandidateForRemoval ? "Object not found in latest mapping result" : mappingResult.IsUnreliableMapping ? "Unreliable mapping" : mappingResult.IsNewAddition ? "New object" : null;
             <tr class="@className" title="@title">
                 @if (ShowServer || NewObject is not null)
                 {
@@ -216,9 +217,11 @@
 
     [Parameter] public string? SqlStatement { get; set; }
 
-    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>>> LoadDatabaseObjectDependencies { get; set; } = null!;
+    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>>> LoadDatabaseObjectDependencies { get; set; } = null!;
 
     [Parameter] public Func<Task<IEnumerable<DatabaseObject>>> LoadAllDatabaseObjects { get; set; } = null!;
+
+    [Parameter] public Func<DatabaseObject, DatabaseObjectMappingResult> GetMappingResult { get; set; } = null!;
 
     private IEnumerable<DatabaseObject>? AllDatabaseObjects { get; set; }
 
@@ -251,7 +254,7 @@
             return;
         }
 
-        NewObject.IsNewAddition = true;
+        GetMappingResult(NewObject).IsNewAddition = true;
         DatabaseObjects.Add(NewObject);
         NewObject = null;
     }
@@ -283,19 +286,20 @@
 
             if (!DatabaseObjects.Any(s => s.Equals(dbObject)))
             {
-                dbObject.IsNewAddition = true;
+                GetMappingResult(dbObject).IsNewAddition = true;
+                GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
                 DatabaseObjects.Add(dbObject);    
             }
         }
 
-        foreach (var dbObject in DatabaseObjects) dbObject.IsCandidateForRemoval = false;
+        foreach (var dbObject in DatabaseObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
 
         // Check if there are objects in the list that are not mentioned in the dependencies.
         // Flag them as candidates for removal.
         var candidatesForRemoval = DatabaseObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
         foreach (var candidate in candidatesForRemoval)
         {
-            candidate.IsCandidateForRemoval = true;
+            GetMappingResult(candidate).IsCandidateForRemoval = true;
         }
     }
 }

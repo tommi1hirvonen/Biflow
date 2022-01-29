@@ -270,7 +270,7 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
+    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
     {
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -285,12 +285,13 @@ public class SqlServerHelperService
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await sqlConnection.QueryAsync<(string, string, string, string)>(
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>(
             @"select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
                 referenced_schema_name = isnull(c.name, a.referenced_schema_name),
-                referenced_entity_name = a.referenced_entity_name
+                referenced_entity_name = a.referenced_entity_name,
+                is_unreliable = case when a.is_select_all = 0 and a.is_selected = 0 then 1 else 0 end
             from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
                 left join sys.objects as b on a.referenced_id = b.object_id
                 left join sys.schemas as c on b.schema_id = c.schema_id
@@ -301,7 +302,7 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
+    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
     {
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -316,12 +317,13 @@ public class SqlServerHelperService
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await sqlConnection.QueryAsync<(string, string, string, string)>(
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>(
             @"select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
                 referenced_schema_name = isnull(c.name, a.referenced_schema_name),
-                referenced_entity_name = a.referenced_entity_name
+                referenced_entity_name = a.referenced_entity_name,
+                is_unreliable = case when a.is_updated = 0 then 1 else 0 end
             from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
                 left join sys.objects as b on a.referenced_id = b.object_id
                 left join sys.schemas as c on b.schema_id = c.schema_id

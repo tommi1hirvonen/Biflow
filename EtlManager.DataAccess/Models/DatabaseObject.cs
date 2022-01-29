@@ -28,11 +28,8 @@ public class DatabaseObject
     [MaxLength(128)]
     public string ObjectName { get; set; } = string.Empty;
 
-    [NotMapped]
-    public bool IsCandidateForRemoval { get; set; } = false;
-
-    [NotMapped]
-    public bool IsNewAddition { get; set; } = false;
+    [NotMapped] public DatabaseObjectMappingResult SourceMappingResult { get; set; } = new();
+    [NotMapped] public DatabaseObjectMappingResult TargetMappingResult { get; set; } = new();
 
     public ICollection<Step> Targets { get; set; } = null!;
 
@@ -61,9 +58,32 @@ public class DatabaseObject
                 && SchemaName.Equals(tuple.Item3)
                 && ObjectName.Equals(tuple.Item4);
         }
+        else if (obj is ValueTuple<string, string, string, string, bool> vt2)
+        {
+            return ServerName.Equals(vt2.Item1)
+                && DatabaseName.Equals(vt2.Item2)
+                && SchemaName.Equals(vt2.Item3)
+                && ObjectName.Equals(vt2.Item4);
+        }
+        else if (obj is Tuple<string, string, string, string, bool> tuple2)
+        {
+            return ServerName.Equals(tuple2.Item1)
+                && DatabaseName.Equals(tuple2.Item2)
+                && SchemaName.Equals(tuple2.Item3)
+                && ObjectName.Equals(tuple2.Item4);
+        }
 
         return false;
     }
 
     public override int GetHashCode() => HashCode.Combine(ServerName, DatabaseName, SchemaName, ObjectName);
+}
+
+public class DatabaseObjectMappingResult
+{
+    public bool IsNewAddition { get; set; } = false;
+
+    public bool IsUnreliableMapping { get; set; } = false;
+
+    public bool IsCandidateForRemoval { get; set; } = false;
 }
