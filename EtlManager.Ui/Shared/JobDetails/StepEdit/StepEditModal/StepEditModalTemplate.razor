@@ -159,7 +159,7 @@
                                     ComparisonObjects="Modal.Step.Targets"
                                     ConnectionId="ConnectionId"
                                     SqlStatement="@SqlStatement"
-                                    LoadDatabaseObjects="SqlServerHelper.GetSourceObjectsAsync"
+                                    LoadDatabaseObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
                                     LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
                                 </div>
                             </div>
@@ -176,7 +176,7 @@
                                     ComparisonObjects="Modal.Step.Sources"
                                     ConnectionId="ConnectionId"
                                     SqlStatement="@SqlStatement"
-                                    LoadDatabaseObjects="SqlServerHelper.GetTargetObjectsAsync"
+                                    LoadDatabaseObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
                                     LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
                                 </div>
                             </div>

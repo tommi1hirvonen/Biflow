@@ -52,34 +52,36 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var source in DatabaseObjects
+        @foreach (var dbObject in DatabaseObjects
         .OrderBy(x => x.ServerName)
         .ThenBy(x => x.DatabaseName)
         .ThenBy(x => x.SchemaName)
         .ThenBy(x => x.ObjectName))
         {
-            <tr>
+            var className = dbObject.IsCandidateForRemoval ? "text-warning" : dbObject.IsNewAddition ? "text-primary" : null;
+            var title = dbObject.IsCandidateForRemoval ? "Object not found in latest mapping result" : dbObject.IsNewAddition ? "New object" : null;
+            <tr class="@className" title="@title">
                 @if (ShowServer || NewObject is not null)
                 {
                     <td class="align-middle">
-                        @source.ServerName
+                        @dbObject.ServerName
                     </td>
                 }
                 @if (ShowDatabase || NewObject is not null)
                 {
                     <td class="align-middle">
-                        @source.DatabaseName
+                        @dbObject.DatabaseName
                     </td>
                 }
                 <td class="align-middle">
-                    @source.SchemaName
+                    @dbObject.SchemaName
                 </td>
                 <td class="align-middle">
-                    @source.ObjectName
+                    @dbObject.ObjectName
                 </td>
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => DatabaseObjects.Remove(source)">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => DatabaseObjects.Remove(dbObject)">
                             @MarkupHelper.FromFile("icons/feather/delete.svg")
                         </HxButton>
                     </HxButtonGroup>
@@ -214,7 +216,7 @@
 
     [Parameter] public string? SqlStatement { get; set; }
 
-    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>>> LoadDatabaseObjects { get; set; } = null!;
+    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName)>>> LoadDatabaseObjectDependencies { get; set; } = null!;
 
     [Parameter] public Func<Task<IEnumerable<DatabaseObject>>> LoadAllDatabaseObjects { get; set; } = null!;
 
@@ -249,6 +251,7 @@
             return;
         }
 
+        NewObject.IsNewAddition = true;
         DatabaseObjects.Add(NewObject);
         NewObject = null;
     }
@@ -263,23 +266,36 @@
         AllDatabaseObjects ??= await LoadAllDatabaseObjects();
 
         Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-        var sources = await LoadDatabaseObjects(connectionId, schema, name);
-        foreach (var source in sources)
+        var dependencies = await LoadDatabaseObjectDependencies(connectionId, schema, name);
+
+        // Add new database objects for the step if they are not present.
+        foreach (var dependency in dependencies)
         {
-            var dbObject = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(source)) ??
-                ComparisonObjects.FirstOrDefault(o => o.Equals(source)) ??
+            var dbObject = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
+                ComparisonObjects.FirstOrDefault(o => o.Equals(dependency)) ??
                 new DatabaseObject
                 {
-                    ServerName = source.ServerName,
-                    DatabaseName = source.DatabaseName,
-                    SchemaName = source.SchemaName,
-                    ObjectName = source.ObjectName
+                    ServerName = dependency.ServerName,
+                    DatabaseName = dependency.DatabaseName,
+                    SchemaName = dependency.SchemaName,
+                    ObjectName = dependency.ObjectName
                 };
 
             if (!DatabaseObjects.Any(s => s.Equals(dbObject)))
             {
+                dbObject.IsNewAddition = true;
                 DatabaseObjects.Add(dbObject);    
             }
+        }
+
+        foreach (var dbObject in DatabaseObjects) dbObject.IsCandidateForRemoval = false;
+
+        // Check if there are objects in the list that are not mentioned in the dependencies.
+        // Flag them as candidates for removal.
+        var candidatesForRemoval = DatabaseObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
+        foreach (var candidate in candidatesForRemoval)
+        {
+            candidate.IsCandidateForRemoval = true;
         }
     }
 }
