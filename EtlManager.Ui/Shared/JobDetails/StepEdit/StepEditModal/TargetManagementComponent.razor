@@ -1,0 +1,255 @@
+﻿
+@inject MarkupHelperService MarkupHelper
+@inject SqlServerHelperService SqlServerHelper
+
+@if (Step.StepType == StepType.Sql)
+{
+    <div class="row">
+        <div class="col">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="GetSqlTargetsAsync">
+                Attempt to infer from stored procedure
+            </HxButton>
+            <HxPopover Trigger="PopoverTrigger.Focus" Content="Read target objects from the database based on stored procedure definition. Target mapping can be unreliable especially when temporary tables are used. Manually remove extra targets after mapping.">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link">@MarkupHelper.FromFile("icons/feather/info.svg")</HxButton>
+            </HxPopover>
+        </div>
+    </div>
+}
+<div class="row mt-3">
+    <div class="col-auto">
+        <div class="form-check form-check-inline">
+            <input type="checkbox" class="form-check-input" id="only_schedule"
+                    @bind-value="ShowServer"
+                    checked=@ShowServer>
+            <label class="form-check-label" for="only_schedule">Show server name</label>
+        </div>
+        <div class="form-check form-check-inline ms-3">
+            <input type="checkbox" class="form-check-input" id="include_deleted"
+                    @bind-value="ShowDatabase"
+                    checked=@ShowDatabase>
+            <label class="form-check-label" for="include_deleted">Show database name</label>
+        </div>
+    </div>
+</div>
+<table class="table table-sm table-hover small">
+    <thead>
+        <tr>
+            @if (ShowServer || NewTarget is not null)
+            {
+                <th>Server</th>
+            }
+            @if (ShowDatabase || NewTarget is not null)
+            {
+                <th>Database</th>
+            }
+            <th>Schema</th>
+            <th>Name</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var target in Step.Targets
+        .OrderBy(x => x.ServerName)
+        .ThenBy(x => x.DatabaseName)
+        .ThenBy(x => x.SchemaName)
+        .ThenBy(x => x.ObjectName))
+        {
+            <tr>
+                @if (ShowServer || NewTarget is not null)
+                {
+                    <td class="align-middle">
+                        @target.ServerName
+                    </td>
+                }
+                @if (ShowDatabase || NewTarget is not null)
+                {
+                    <td class="align-middle">
+                        @target.DatabaseName
+                    </td>
+                }
+                <td class="align-middle">
+                    @target.SchemaName
+                </td>
+                <td class="align-middle">
+                    @target.ObjectName
+                </td>
+                <td>
+                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => Step.Targets.Remove(target)">
+                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                        </HxButton>
+                    </HxButtonGroup>
+                </td>
+            </tr>
+        }
+        @if (NewTarget is not null)
+        {
+            <tr>
+                <td>
+                    <input class="form-control form-control-sm" type="text" autocomplete="off"
+                            @bind="NewTarget.ServerName"
+                            @bind:event="oninput"
+                            @onfocusin="() => SuggestType = DatabaseObjectType.Server" />
+                </td>
+                <td>
+                    <input class="form-control form-control-sm" type="text" autocomplete="off"
+                            @bind="NewTarget.DatabaseName"
+                            @bind:event="oninput"
+                            @onfocusin="() => SuggestType = DatabaseObjectType.Database" />
+                </td>
+                <td>
+                    <input class="form-control form-control-sm" type="text" autocomplete="off"
+                            @bind="NewTarget.SchemaName"
+                            @bind:event="oninput"
+                            @onfocusin="() => SuggestType = DatabaseObjectType.Schema" />
+                </td>
+                <td>
+                    <input class="form-control form-control-sm" type="text" autocomplete="off"
+                            @bind="NewTarget.ObjectName"
+                            @bind:event="oninput"
+                            @onfocusin="() => SuggestType = DatabaseObjectType.Object" />
+                </td>
+                <td>
+                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="() => { Step.Targets.Add(NewTarget); NewTarget = null; }">
+                            @MarkupHelper.FromFile("icons/feather/check.svg")
+                        </HxButton>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewTarget = null">
+                            @MarkupHelper.FromFile("icons/feather/x.svg")
+                        </HxButton>
+                    </HxButtonGroup>
+                </td>
+            </tr>
+            @if (SuggestType == DatabaseObjectType.Server)
+            {
+                var servers = DatabaseObjects?
+                    .Select(o => o.ServerName)
+                    .Distinct()
+                    .OrderBy(o => o)
+                    .Take(5) ?? Enumerable.Empty<string>();
+                @foreach (var server in servers)
+                {
+                    <tr style="cursor: pointer;" @onclick="() => NewTarget.ServerName = server">
+                        <td colspan="5">@server</td>
+                    </tr>
+                }
+            }
+            else if (SuggestType == DatabaseObjectType.Database)
+            {
+                var databases = DatabaseObjects?
+                    .Where(o => string.IsNullOrEmpty(NewTarget.ServerName) || o.ServerName == NewTarget.ServerName)
+                    .Where(o => o.DatabaseName.ContainsIgnoreCase(NewTarget.DatabaseName))
+                    .Select(o => o.DatabaseName)
+                    .Distinct()
+                    .OrderBy(o => o)
+                    .Take(5) ?? Enumerable.Empty<string>();
+                @foreach (var database in databases)
+                {
+                    <tr style="cursor: pointer;" @onclick="() => NewTarget.DatabaseName = database">
+                        <td colspan="5">@database</td>
+                    </tr>
+                }
+            }
+            else if (SuggestType == DatabaseObjectType.Schema)
+            {
+                var schemas = DatabaseObjects?
+                    .Where(o => string.IsNullOrEmpty(NewTarget.ServerName) || o.ServerName == NewTarget.ServerName)
+                    .Where(o => string.IsNullOrEmpty(NewTarget.DatabaseName) || o.DatabaseName == NewTarget.DatabaseName)
+                    .Where(o => o.SchemaName.ContainsIgnoreCase(NewTarget.SchemaName))
+                    .Select(o => o.SchemaName)
+                    .Distinct()
+                    .OrderBy(o => o)
+                    .Take(5) ?? Enumerable.Empty<string>();
+                @foreach (var schema in schemas)
+                {
+                    <tr style="cursor: pointer;" @onclick="() => NewTarget.SchemaName = schema">
+                        <td colspan="5">@schema</td>
+                    </tr>
+                }
+            }
+            else if (SuggestType == DatabaseObjectType.Object)
+            {
+                var objects = DatabaseObjects?
+                    .Where(o => string.IsNullOrEmpty(NewTarget.ServerName) || o.ServerName == NewTarget.ServerName)
+                    .Where(o => string.IsNullOrEmpty(NewTarget.DatabaseName) || o.DatabaseName == NewTarget.DatabaseName)
+                    .Where(o => string.IsNullOrEmpty(NewTarget.SchemaName) || o.SchemaName == NewTarget.SchemaName)
+                    .Where(o => o.ObjectName.ContainsIgnoreCase(NewTarget.ObjectName))
+                    .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName).ThenBy(o => o.ObjectName)
+                    .Take(5) ?? Enumerable.Empty<DatabaseObject>();
+                @foreach (var dbObject in objects)
+                {
+                    <tr style="cursor: pointer;" @onclick="() => NewTarget = dbObject">
+                        <td>@dbObject.ServerName</td>
+                        <td>@dbObject.DatabaseName</td>
+                        <td>@dbObject.SchemaName</td>
+                        <td colspan="2">@dbObject.ObjectName</td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+<HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="AddNewTarget">
+    @MarkupHelper.FromFile("icons/feather/plus.svg")
+</HxButton>
+
+@code {
+    [Parameter] public Step Step { get; set; } = null!;
+
+    [Parameter] public Guid? ConnectionId { get; set; }
+
+    [Parameter] public string? SqlStatement { get; set; }
+
+    [Parameter] public Func<Task<IEnumerable<DatabaseObject>>> LoadDatabaseObjects { get; set; } = null!;
+
+    private IEnumerable<DatabaseObject>? DatabaseObjects { get; set; }
+
+    private bool ShowServer { get; set; } = false;
+
+    private bool ShowDatabase { get; set; } = false;
+
+    private DatabaseObject? NewTarget { get; set; }
+
+    private DatabaseObjectType? SuggestType { get; set; }
+
+    private enum DatabaseObjectType
+    {
+        Server, Database, Schema, Object
+    }
+
+    private async Task AddNewTarget()
+    {
+        DatabaseObjects ??= await LoadDatabaseObjects();
+        NewTarget = new();
+    }
+
+    private async Task GetSqlTargetsAsync()
+    {
+        var proc = SqlStatement?.ParseStoredProcedureFromSqlStatement();
+        var schema = proc?.Schema;
+        var name = proc?.ProcedureName;
+        if (name is null) return;
+
+        DatabaseObjects ??= await LoadDatabaseObjects();
+
+        Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+        var targets = await SqlServerHelper.GetTargetObjectsAsync(connectionId, schema, name);
+        foreach (var target in targets)
+        {
+            var dbObject = DatabaseObjects?.FirstOrDefault(o => o.Equals(target)) ??
+                Step.Sources.FirstOrDefault(o => o.Equals(target)) ??
+                new DatabaseObject
+                {
+                    ServerName = target.ServerName,
+                    DatabaseName = target.DatabaseName,
+                    SchemaName = target.SchemaName,
+                    ObjectName = target.ObjectName
+                };
+
+            if (!Step.Targets.Any(t => t.Equals(dbObject)))
+            {
+                Step.Targets.Add(dbObject);    
+            }
+        }
+    }
+}
