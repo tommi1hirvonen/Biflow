@@ -1,6 +1,7 @@
 ﻿@typeparam TStep where TStep : Step 
 
 @inject MarkupHelperService MarkupHelper
+@inject SqlServerHelperService SqlServerHelper
 
 @*Set pt-0 for modal body (BodyCssClass). The DependenciesEditComponent has a sticky-top element that should be placed at the top without any padding*@
 <HxModal @ref="Modal.Modal"
@@ -151,10 +152,15 @@
                         {
                             <div class="row mt-3">
                                 <div class="col">
-                                    <SourceManagementComponent Step="Modal.Step"
-                                                                ConnectionId="ConnectionId"
-                                                                SqlStatement="SqlStatement"
-                                                                LoadDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
+                                    <SourceTargetManagementComponent
+                                    ListName="source"
+                                    StepType="Modal.Step.StepType"
+                                    DatabaseObjects="Modal.Step.Sources"
+                                    ComparisonObjects="Modal.Step.Targets"
+                                    ConnectionId="ConnectionId"
+                                    SqlStatement="@SqlStatement"
+                                    LoadDatabaseObjects="SqlServerHelper.GetSourceObjectsAsync"
+                                    LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
                                 </div>
                             </div>
                             
@@ -163,10 +169,15 @@
                         {
                             <div class="row mt-3">
                                 <div class="col">
-                                    <TargetManagementComponent Step="Modal.Step"
-                                                                ConnectionId="ConnectionId"
-                                                                SqlStatement="SqlStatement"
-                                                                LoadDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
+                                    <SourceTargetManagementComponent
+                                    ListName="target"
+                                    StepType="Modal.Step.StepType"
+                                    DatabaseObjects="Modal.Step.Targets"
+                                    ComparisonObjects="Modal.Step.Sources"
+                                    ConnectionId="ConnectionId"
+                                    SqlStatement="@SqlStatement"
+                                    LoadDatabaseObjects="SqlServerHelper.GetTargetObjectsAsync"
+                                    LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
                                 </div>
                             </div>
                         }
