@@ -130,7 +130,9 @@
                                                 <a class="text-dark" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
-                                                        SourcesTargetsModalSteps = dbObject.Sources;
+                                                        SourcesTargetsModalDbObject = dbObject;
+                                                        SourcesTargetsModalGetSteps = dbObject => dbObject.Sources;
+                                                        SourcesTargetsModalGetStepsExpression = dbObject => dbObject.Sources;
                                                         SourcesTargetsModalTitle = sourcesTitle;
                                                         await SourcesTargetsModal.ShowAsync();
                                                     }">
@@ -142,7 +144,9 @@
                                                 <a class="text-dark" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
-                                                        SourcesTargetsModalSteps = dbObject.Targets;
+                                                        SourcesTargetsModalDbObject = dbObject;
+                                                        SourcesTargetsModalGetSteps = dbObject => dbObject.Targets;
+                                                        SourcesTargetsModalGetStepsExpression = dbObject => dbObject.Targets;
                                                         SourcesTargetsModalTitle = targetsTitle;
                                                         await SourcesTargetsModal.ShowAsync();
                                                     }">
@@ -209,23 +213,34 @@
                         <tr>
                             <th>Job</th>
                             <th>Step</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in SourcesTargetsModalSteps?
-                            .OrderBy(s => s.Job.JobName)
-                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        @if (SourcesTargetsModalDbObject is not null)
                         {
-                            <tr>
-                                <td class="align-middle">
-                                    @step.Job.JobName
-                                </td>
-                                <td class="align-middle">
-                                    <StepTypeIconComponent StepType_="step.StepType" />
-                                    &nbsp;
-                                    @step.StepName
-                                </td>
-                            </tr>
+                            @foreach (var step in SourcesTargetsModalGetSteps?.Invoke(SourcesTargetsModalDbObject)
+                                .OrderBy(s => s.Job.JobName)
+                                .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        @step.Job.JobName
+                                    </td>
+                                    <td class="align-middle">
+                                        <StepTypeIconComponent StepType_="step.StepType" />
+                                        &nbsp;
+                                        @step.StepName
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-row">
+                                            <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepDatabaseObjectLinkAsync(step)">
+                                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>
@@ -261,7 +276,9 @@
 
     private HxModal SourcesTargetsModal { get; set; } = null!;
     private string SourcesTargetsModalTitle { get; set; } = string.Empty;
-    private IList<Step>? SourcesTargetsModalSteps { get; set; }
+    private DatabaseObject? SourcesTargetsModalDbObject { get; set; }
+    private Func<DatabaseObject, IList<Step>>? SourcesTargetsModalGetSteps { get; set; }
+    System.Linq.Expressions.Expression<Func<DatabaseObject, IList<Step>>>? SourcesTargetsModalGetStepsExpression { get; set; }
 
     private string ServerFilter { get; set; } = string.Empty;
     private string DatabaseFilter { get; set; } = string.Empty;
@@ -308,6 +325,30 @@
         context.DatabaseObjects.Remove(dbObject);
         await context.SaveChangesAsync();
         DatabaseObjects_?.Remove(dbObject);
+    }
+
+    private async Task DeleteStepDatabaseObjectLinkAsync(Step step)
+    {
+        if (SourcesTargetsModalDbObject is null
+            || SourcesTargetsModalGetSteps is null
+            || SourcesTargetsModalGetStepsExpression is null) return;
+
+        using var context = DbContextFactory.CreateDbContext();
+        var dbObject = await context.DatabaseObjects
+            .Include(SourcesTargetsModalGetStepsExpression)
+            .FirstOrDefaultAsync(o => o.DatabaseObjectId == SourcesTargetsModalDbObject.DatabaseObjectId);
+
+        if (dbObject is null) return;
+
+        var steps = SourcesTargetsModalGetSteps(dbObject);
+        var stepToRemove = steps.FirstOrDefault(s => s.StepId == step.StepId);
+        if (stepToRemove is not null)
+        {
+            steps.Remove(stepToRemove);
+            await context.SaveChangesAsync();
+        }
+
+        SourcesTargetsModalGetSteps(SourcesTargetsModalDbObject).Remove(step);
     }
 
     private async Task SetEditContextAsync(DatabaseObject dbObject)
