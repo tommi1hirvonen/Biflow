@@ -199,6 +199,8 @@ public partial class StepsComponent : ComponentBase
                 var createdStep = await context.Steps
                     .AsNoTrackingWithIdentityResolution()
                     .Include(step => step.Dependencies)
+                    .Include(step => step.Sources)
+                    .Include(step => step.Targets)
                     .Include(step => step.Tags)
                     .Include(step => (step as ParameterizedStep)!.StepParameters)
                     .FirstAsync(step_ => step_.StepId == createdStepId);
@@ -228,6 +230,8 @@ public partial class StepsComponent : ComponentBase
                     var createdStep = await context.Steps
                         .AsNoTrackingWithIdentityResolution()
                         .Include(step => step.Dependencies)
+                        .Include(step => step.Sources)
+                        .Include(step => step.Targets)
                         .Include(step => step.Tags)
                         .Include(step => (step as ParameterizedStep)!.StepParameters)
                         .FirstAsync(step_ => step_.StepId == createdStepId);

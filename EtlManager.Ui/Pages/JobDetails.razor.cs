@@ -89,6 +89,8 @@ public partial class JobDetails : ComponentBase
         Steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Include(step => step.Dependencies)
+            .Include(step => step.Sources)
+            .Include(step => step.Targets)
             .Include(step => step.Tags)
             .Include(step => (step as ParameterizedStep)!.StepParameters)
             .Where(step => step.JobId == CurrentJob.JobId)

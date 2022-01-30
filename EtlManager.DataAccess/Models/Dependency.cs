@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EtlManager.DataAccess.Models;
 
@@ -23,4 +24,10 @@ public class Dependency
 
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }
+
+    [NotMapped]
+    public bool IsCandidateForRemoval { get; set; } = false;
+
+    [NotMapped]
+    public bool IsNewAddition { get; set; } = false;
 }

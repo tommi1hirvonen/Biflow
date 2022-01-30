@@ -2,6 +2,14 @@
 
 <div class="row">
     <div class="col">
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="InferDependenciesFromDatabaseObjects">
+            Infer dependencies from sources and targets
+        </HxButton>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col">
         @MarkupHelper.FromFile("icons/feather/tag.svg")
         <span class="me-3">Tags</span>
         @{
@@ -63,7 +71,10 @@
     <tbody>
         @foreach (var step in FilteredStepsOrdered)
         {
-            <tr>
+            var dependency = Step.Dependencies.FirstOrDefault(d => d.DependantOnStepId == step.StepId);
+            var className = dependency?.IsCandidateForRemoval ?? false ? "text-danger" : dependency?.IsNewAddition ?? false ? "text-primary" : null;
+            var title = dependency?.IsCandidateForRemoval ?? false ? "Dependency not found in source/target mapping" : dependency?.IsNewAddition ?? false ? "New dependency" : null;
+            <tr class="@className" title="@title">
                 <td class="align-middle">
                     <StepTypeIconComponent StepType_="step.StepType" />
                     <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
@@ -71,18 +82,18 @@
                 <td class="align-middle">
                     <div class="form-check form-check-inline">
                         <input type="checkbox" class="form-check-input" id="dependency_@step.StepId"
-                               checked=@(Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
+                               checked=@(dependency is not null)
                                @onchange="eventArgs => ToggleDependency(step, eventArgs.Value!)">
                         <label class="form-check-label" for="dependency_@step.StepId"></label>
                     </div>
                 </td>
                 <td class="align-middle">
-                    @if (Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
+                    @if (dependency is not null)
                     {
                         <div class="form-check form-check-inline">
                             <input type="checkbox" class="form-check-input" id="strict_@step.StepId"
-                                   checked=@(Step.Dependencies.Where(dep => dep.DependantOnStepId == step.StepId).Any(dep => dep.StrictDependency))
-                                   @onchange="eventArgs => ToggleStrictDependency(step, eventArgs.Value!)">
+                                   checked=@dependency.StrictDependency
+                                   @onchange="eventArgs => dependency.StrictDependency = (bool)eventArgs.Value!">
                             <label class="form-check-label" for="strict_@step.StepId"></label>
                         </div>
                     }
@@ -121,6 +132,11 @@
         _ => FilteredSteps.OrderBy(step => step) // use default comparer
     };
 
+    protected override void OnParametersSet()
+    {
+        ShowOnlyActiveDependencies = Step?.Dependencies.Any() ?? false;
+    }
+
     private void ToggleDependency(Step step, object checkedValue)
     {
         var dependent = (bool)checkedValue;
@@ -131,18 +147,36 @@
         }
         else if (dependent && dependency is null)
         {
-            Step.Dependencies.Add(new() { StepId = Step.StepId, DependantOnStepId = step.StepId });
+            var newDep = new Dependency
+            {
+                StepId = Step.StepId,
+                DependantOnStepId = step.StepId,
+                IsNewAddition = true
+            };
+            Step.Dependencies.Add(newDep);
         }
     }
 
-    private void ToggleStrictDependency(Step step, object checkedValue)
+    private void InferDependenciesFromDatabaseObjects()
     {
-        var strict = (bool)checkedValue;
-        var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
-        if (dependency is not null)
+        var dependsOnSteps = Steps.Where(step => step.Targets.Any(target => Step.Sources.Any(source => target.Equals(source))));
+        var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
+        foreach (var step in missingDependencies)
         {
-            dependency.StrictDependency = strict;
+            var dependency = new Dependency
+            {
+                StepId = Step.StepId,
+                DependantOnStepId = step.StepId,
+                IsNewAddition = true
+            };
+            Step.Dependencies.Add(dependency);
         }
+        var candidatesForRemoval = Step.Dependencies.Where(d => !dependsOnSteps.Any(s => s.StepId == d.DependantOnStepId));
+        foreach (var candidate in candidatesForRemoval)
+        {
+            candidate.IsCandidateForRemoval = true;
+        }
+        ShowOnlyActiveDependencies = Step.Dependencies.Any();
     }
 
 }
