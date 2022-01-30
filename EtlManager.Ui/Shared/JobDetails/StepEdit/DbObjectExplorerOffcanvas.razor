@@ -2,11 +2,11 @@
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" ScrollingEnabled="true" Title="Explore database objects">
     <BodyTemplate>
         <div class="row">
-            <div class="col-auto">
+            <div class="col-sm-2">
                 <label class="form-label">Connection</label>
             </div>
-            <div class="col-auto">
-                <div class="input-group">
+            <div class="col-sm-6">
+                <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/database.svg")
                     </div>
@@ -18,11 +18,25 @@
                     </select>
                 </div>
             </div>
-            <div class="col-auto">
+            <div class="col-sm-4 mt-3 mt-sm-0">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync">
                     @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                     Get objects
                 </HxButton>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-sm-2">
+                <label class="form-label">Filter by</label>
+            </div>
+            <div class="col-sm-8">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                    </div>
+                    <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
+                    <input type="search" class="form-control" @bind-value="ObjectFilter" @bind-value:event="oninput" placeholder="Object" />
+                </div>
             </div>
         </div>
         <div class="row mt-2">
@@ -36,12 +50,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var dbObject in DatabaseObjects)
+                        @foreach (var dbObject in FilteredDatabaseObjects)
                         {
                             var className = SelectedObject?.Equals(dbObject) ?? false ? "fw-bold" : null;
                             <tr class="@className" style="cursor: pointer;" @onclick="() => SelectedObject = dbObject">
-                                <td>@dbObject.Schema</td>
-                                <td>@dbObject.Object</td>
+                                <td><HighlightableText Text="@dbObject.Schema" PartToHighlight="@SchemaFilter" /></td>
+                                <td><HighlightableText Text="@dbObject.Object" PartToHighlight="@ObjectFilter" /></td>
                                 <td>@dbObject.Type</td>
                             </tr>
                         }

@@ -21,10 +21,18 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
 
     private HxOffcanvas Offcanvas { get; set; } = null!;
 
-    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> DatabaseObjects { get; set; }
-        = Enumerable.Empty<(string, string, string, string, string)>();
+    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> DatabaseObjects { get; set; } =
+        Enumerable.Empty<(string, string, string, string, string)>();
+
+    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> FilteredDatabaseObjects =>
+        DatabaseObjects
+        .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
+        .Where(o => o.Object.ContainsIgnoreCase(ObjectFilter));
 
     private (string, string, string, string, string)? SelectedObject { get; set; }
+
+    private string SchemaFilter { get; set; } = string.Empty;
+    private string ObjectFilter { get; set; } = string.Empty;
 
     private async Task RunQueryAsync()
     {
