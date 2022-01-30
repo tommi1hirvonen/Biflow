@@ -156,7 +156,7 @@
                 AverageSuccessRate = 0;
             }
 
-            AverageDurationInSeconds = (int)(Executions.Average(e => e.ExecutionInSeconds) ?? 0);
+            AverageDurationInSeconds = (int)(Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
         }
     }
 
