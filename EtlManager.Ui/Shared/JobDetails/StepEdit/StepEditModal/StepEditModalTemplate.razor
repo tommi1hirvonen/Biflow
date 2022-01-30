@@ -28,16 +28,16 @@
                                         Settings
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
-                                              @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
-                                        @MarkupHelper.FromFile("icons/feather/share.svg")
-                                        Sources
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Targets">
                                         @MarkupHelper.FromFile("icons/feather/download.svg")
                                         Targets
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                              CssClass="@(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
+                                              @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
+                                        @MarkupHelper.FromFile("icons/feather/share.svg")
+                                        Sources
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Dependencies ? "active" : null)"

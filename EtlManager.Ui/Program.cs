@@ -24,8 +24,11 @@ builder.Services.AddHttpContextAccessor();
 
 var connectionString = builder.Configuration.GetConnectionString("EtlManagerContext");
 builder.Services.AddDbContextFactory<EtlManagerContext>(options =>
-    options.UseSqlServer(connectionString, o =>
-        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+{
+    options.UseSqlServer(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    //options.EnableSensitiveDataLogging();
+});
+    
 
 builder.Services.AddHxServices();
 builder.Services.AddHxMessenger();

@@ -263,8 +263,18 @@
             return;
         }
 
-        GetMappingResult(NewObject).IsNewAddition = true;
-        DatabaseObjects.Add(NewObject);
+        var existing = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(NewObject))
+            ?? ComparisonObjects.FirstOrDefault(o => o.Equals(NewObject));
+        if (existing is not null)
+        {
+            GetMappingResult(existing).IsNewAddition = true;
+            DatabaseObjects.Add(existing);
+        }
+        else
+        {
+            GetMappingResult(NewObject).IsNewAddition = true;
+            DatabaseObjects.Add(NewObject);
+        }
         NewObject = null;
     }
 
@@ -283,8 +293,14 @@
         // Add new database objects for the step if they are not present.
         foreach (var dependency in dependencies)
         {
+            // Check if the same object exists in the comparison list. Skip this object if it does.
+            // This way we do not accidentally add objects that might be a target as sources,
+            // thus creating a self reference.
+            var comparison = ComparisonObjects.FirstOrDefault(o => o.Equals(dependency));
+            if (comparison is not null)
+                continue;
+
             var dbObject = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
-                ComparisonObjects.FirstOrDefault(o => o.Equals(dependency)) ??
                 new DatabaseObject
                 {
                     ServerName = dependency.ServerName,
