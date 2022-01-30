@@ -1,0 +1,56 @@
+﻿using EtlManager.DataAccess.Models;
+using Havit.Blazor.Components.Web;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
+
+namespace EtlManager.Ui.Shared.JobDetails.StepEdit;
+
+public partial class DbObjectExplorerOffcanvas : ComponentBase
+{
+    [Inject] public IHxMessengerService Messenger { get; set; } = null!;
+
+    [Inject] public MarkupHelperService MarkupHelper { get; set; } = null!;
+
+    [Inject] public SqlServerHelperService SqlServerHelper { get; set; } = null!;
+
+    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+
+    [Parameter] public Action<(string, string, string, string)> OnDbObjectSelected { get; set; } = null!;
+
+    private Guid? ConnectionId { get; set; }
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> DatabaseObjects { get; set; }
+        = Enumerable.Empty<(string, string, string, string, string)>();
+
+    private (string, string, string, string, string)? SelectedObject { get; set; }
+
+    private async Task RunQueryAsync()
+    {
+        try
+        {
+            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+            DatabaseObjects = await SqlServerHelper.GetDatabaseObjectsAsync(connectionId);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error querying database objects", ex.Message);
+        }
+    }
+
+    private async Task OnDbObjectSelectedAsync()
+    {
+        if (SelectedObject is null) return;
+        await Offcanvas.HideAsync();
+        var dbObject = (SelectedObject.Value.Item1, SelectedObject.Value.Item2, SelectedObject.Value.Item3, SelectedObject.Value.Item4);
+        OnDbObjectSelected(dbObject);
+    }
+
+    public async Task ShowAsync(Guid? connectionId)
+    {
+        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
+        await Offcanvas.ShowAsync();
+        await RunQueryAsync();
+    }
+}

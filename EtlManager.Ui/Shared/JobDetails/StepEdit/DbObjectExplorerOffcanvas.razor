@@ -1,0 +1,57 @@
+﻿
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" ScrollingEnabled="true" Title="Explore database objects">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-auto">
+                <label class="form-label">Connection</label>
+            </div>
+            <div class="col-auto">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                    </div>
+                    <select class="form-select form-select-sm" @bind="ConnectionId">
+                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                        {
+                            <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="col-auto">
+                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync">
+                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    Get objects
+                </HxButton>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <table class="table table-sm table-hover small">
+                    <thead>
+                        <tr>
+                            <th>Schema</th>
+                            <th>Object</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dbObject in DatabaseObjects)
+                        {
+                            var className = SelectedObject?.Equals(dbObject) ?? false ? "fw-bold" : null;
+                            <tr class="@className" style="cursor: pointer;" @onclick="() => SelectedObject = dbObject">
+                                <td>@dbObject.Schema</td>
+                                <td>@dbObject.Object</td>
+                                <td>@dbObject.Type</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" Spinner="false" OnClick="OnDbObjectSelectedAsync" Enabled="SelectedObject is not null">Select</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="Offcanvas.HideAsync" CssClass="ms-3">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>

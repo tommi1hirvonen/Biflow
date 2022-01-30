@@ -124,6 +124,10 @@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewObject = null">
                             @MarkupHelper.FromFile("icons/feather/x.svg")
                         </HxButton>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
+                                OnClick="async () => await DbObjectExplorerOffcanvas.ShowAsync(ConnectionId)">
+                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                        </HxButton>
                     </HxButtonGroup>
                 </td>
             </tr>
@@ -203,6 +207,7 @@
     @MarkupHelper.FromFile("icons/feather/plus.svg")
 </HxButton>
 
+<DbObjectExplorerOffcanvas @ref="DbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 
 @code {
     [Parameter] public string ListName { get; set; } = string.Empty;
@@ -214,6 +219,8 @@
     [Parameter] public IList<DatabaseObject> ComparisonObjects { get; set; } = null!;
 
     [Parameter] public Guid? ConnectionId { get; set; }
+
+    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = null!;
 
     [Parameter] public string? SqlStatement { get; set; }
 
@@ -232,6 +239,8 @@
     private DatabaseObject? NewObject { get; set; }
 
     private DatabaseObjectType? SuggestType { get; set; }
+
+    private DbObjectExplorerOffcanvas DbObjectExplorerOffcanvas { get; set; } = null!;
 
     private enum DatabaseObjectType
     {
@@ -301,5 +310,15 @@
         {
             GetMappingResult(candidate).IsCandidateForRemoval = true;
         }
+    }
+
+    private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple)
+    {
+        if (NewObject is null) return;
+        NewObject.ServerName = tuple.Server;
+        NewObject.DatabaseName = tuple.Database;
+        NewObject.SchemaName = tuple.Schema;
+        NewObject.ObjectName = tuple.Object;
+        StateHasChanged();
     }
 }

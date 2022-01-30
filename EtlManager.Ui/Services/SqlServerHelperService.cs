@@ -343,6 +343,32 @@ public class SqlServerHelperService
         return rows;
     }
 
+    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(Guid connectionId)
+    {
+        string connectionString;
+        using (var context = _dbContextFactory.CreateDbContext())
+        {
+            connectionString = await context.SqlConnections
+                .AsNoTracking()
+                .Where(c => c.ConnectionId == connectionId)
+                .Select(c => c.ConnectionString)
+                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+        }
+        using var sqlConnection = new SqlConnection(connectionString);
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(
+            @"select
+                [server_name] = @@servername,
+                [database_name] = db_name(),
+                [schema_name] = b.name,
+                [object_name] = a.name,
+                [object_type] = a.type_desc
+            from sys.objects as a
+                join sys.schemas as b on a.schema_id = b.schema_id
+            where a.[type] in ('U', 'V')
+            order by b.name, a.name");
+        return rows;
+    }
+
     public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         string connectionString;
