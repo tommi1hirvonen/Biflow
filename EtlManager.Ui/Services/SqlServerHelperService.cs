@@ -289,13 +289,17 @@ public class SqlServerHelperService
             @"select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
-                referenced_schema_name = isnull(c.name, a.referenced_schema_name),
+                referenced_schema_name = isnull(a.referenced_schema_name, c.name),
                 referenced_entity_name = a.referenced_entity_name,
                 is_unreliable = case when a.is_select_all = 0 and a.is_selected = 0 then 1 else 0 end
             from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
-                left join sys.objects as b on a.referenced_id = b.object_id
+                left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
                 left join sys.schemas as c on b.schema_id = c.schema_id
-            where is_updated = 0", new
+            where is_updated = 0
+                and isnull(a.referenced_server_name, @@servername) is not null
+                and isnull(a.referenced_database_name, db_name()) is not null
+                and isnull(a.referenced_schema_name, c.name) is not null
+                and a.referenced_entity_name is not null", new
             {
                 ObjectName = objectName
             });
@@ -321,13 +325,18 @@ public class SqlServerHelperService
             @"select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
-                referenced_schema_name = isnull(c.name, a.referenced_schema_name),
+                referenced_schema_name = isnull(a.referenced_schema_name, c.name),
                 referenced_entity_name = a.referenced_entity_name,
                 is_unreliable = case when a.is_updated = 0 then 1 else 0 end
             from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
-                left join sys.objects as b on a.referenced_id = b.object_id
+                left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
                 left join sys.schemas as c on b.schema_id = c.schema_id
-            where is_selected = 0 and is_select_all = 0", new
+            where is_selected = 0
+                and is_select_all = 0
+                and isnull(a.referenced_server_name, @@servername) is not null
+                and isnull(a.referenced_database_name, db_name()) is not null
+                and isnull(a.referenced_schema_name, c.name) is not null
+                and a.referenced_entity_name is not null", new
             {
                 ObjectName = objectName
             });
