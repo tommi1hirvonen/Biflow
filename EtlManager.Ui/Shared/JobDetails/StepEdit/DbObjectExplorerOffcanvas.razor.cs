@@ -34,17 +34,32 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
     private string SchemaFilter { get; set; } = string.Empty;
     private string ObjectFilter { get; set; } = string.Empty;
 
+    private CancellationTokenSource Cts { get; set; } = new();
+    private Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>>? QueryTask { get; set; }
+
     private async Task RunQueryAsync()
     {
         try
         {
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            DatabaseObjects = await SqlServerHelper.GetDatabaseObjectsAsync(connectionId);
+            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, Cts.Token);
+            DatabaseObjects = await QueryTask;
+        }
+        catch (OperationCanceledException)
+        {
+            Cts.Dispose();
+            Cts = new();
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error querying database objects", ex.Message);
         }
+    }
+
+    private void CancelQuery()
+    {
+        if (!Cts.IsCancellationRequested)
+            Cts.Cancel();
     }
 
     private async Task OnDbObjectSelectedAsync()

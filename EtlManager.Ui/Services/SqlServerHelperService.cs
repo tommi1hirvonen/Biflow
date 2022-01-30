@@ -343,7 +343,7 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(Guid connectionId)
+    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         string connectionString;
         using (var context = _dbContextFactory.CreateDbContext())
@@ -352,10 +352,10 @@ public class SqlServerHelperService
                 .AsNoTracking()
                 .Where(c => c.ConnectionId == connectionId)
                 .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
+                .FirstOrDefaultAsync(cancellationToken) ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
         }
         using var sqlConnection = new SqlConnection(connectionString);
-        var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(
+        var command = new CommandDefinition(
             @"select
                 [server_name] = @@servername,
                 [database_name] = db_name(),
@@ -365,7 +365,8 @@ public class SqlServerHelperService
             from sys.objects as a
                 join sys.schemas as b on a.schema_id = b.schema_id
             where a.[type] in ('U', 'V')
-            order by b.name, a.name");
+            order by b.name, a.name", cancellationToken: cancellationToken);
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
         return rows;
     }
 
