@@ -178,6 +178,28 @@ FROM etlmanager.Step AS A
 	LEFT JOIN #ParameterIdMapping AS C ON A.ResultCaptureJobParameterId = C.ParameterId
 WHERE A.JobId = @JobId
 
+-- Copy sources and targets
+INSERT INTO etlmanager.StepSource (
+	StepId,
+	ObjectId
+)
+SELECT
+	b.StepIdNew,
+	a.ObjectId
+FROM etlmanager.StepSource AS a
+	INNER JOIN #StepIdMapping AS b ON a.StepId = b.StepId
+
+INSERT INTO etlmanager.StepTarget (
+	StepId,
+	ObjectId
+)
+SELECT
+	b.StepIdNew,
+	a.ObjectId
+FROM etlmanager.StepTarget AS a
+	INNER JOIN #StepIdMapping AS b ON a.StepId = b.StepId
+
+
 -- Copy dependencies
 INSERT INTO etlmanager.Dependency (
 	StepId,

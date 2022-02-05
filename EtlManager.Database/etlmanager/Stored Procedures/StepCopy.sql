@@ -118,6 +118,27 @@ SELECT NEWID(),
 FROM etlmanager.StepParameter
 WHERE StepId = @StepId
 
+-- Copy sources and targets
+INSERT INTO etlmanager.StepSource (
+	StepId,
+	ObjectId
+)
+SELECT
+	@StepIdNew,
+	ObjectId
+FROM etlmanager.StepSource
+WHERE StepId = @StepId
+
+INSERT INTO etlmanager.StepTarget (
+	StepId,
+	ObjectId
+)
+SELECT
+	@StepIdNew,
+	ObjectId
+FROM etlmanager.StepTarget
+WHERE StepId = @StepId
+
 
 -- If the source and target job are the same, copy dependencies
 IF (SELECT JobId FROM etlmanager.Step WHERE StepId = @StepId) = @TargetJobId
