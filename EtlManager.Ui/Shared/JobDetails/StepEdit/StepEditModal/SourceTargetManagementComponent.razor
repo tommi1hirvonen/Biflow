@@ -52,37 +52,37 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var dbObject in DatabaseObjects
+        @foreach (var obj in SourceTargetObjects
         .OrderBy(x => x.ServerName)
         .ThenBy(x => x.DatabaseName)
         .ThenBy(x => x.SchemaName)
         .ThenBy(x => x.ObjectName))
         {
-            var mappingResult = GetMappingResult(dbObject);
+            var mappingResult = GetMappingResult(obj);
             var className = mappingResult.IsCandidateForRemoval ? "text-danger" : mappingResult.IsUnreliableMapping ? "text-warning" : mappingResult.IsNewAddition ? "text-primary" : null;
             var title = mappingResult.IsCandidateForRemoval ? "Object not found in latest mapping result" : mappingResult.IsUnreliableMapping ? "Unreliable mapping" : mappingResult.IsNewAddition ? "New object" : null;
             <tr class="@className" title="@title">
                 @if (ShowServer || NewObject is not null)
                 {
                     <td class="align-middle">
-                        @dbObject.ServerName
+                        @obj.ServerName
                     </td>
                 }
                 @if (ShowDatabase || NewObject is not null)
                 {
                     <td class="align-middle">
-                        @dbObject.DatabaseName
+                        @obj.DatabaseName
                     </td>
                 }
                 <td class="align-middle">
-                    @dbObject.SchemaName
+                    @obj.SchemaName
                 </td>
                 <td class="align-middle">
-                    @dbObject.ObjectName
+                    @obj.ObjectName
                 </td>
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => DatabaseObjects.Remove(dbObject)">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => SourceTargetObjects.Remove(obj)">
                             @MarkupHelper.FromFile("icons/feather/delete.svg")
                         </HxButton>
                     </HxButtonGroup>
@@ -133,7 +133,7 @@
             </tr>
             @if (SuggestType == DatabaseObjectType.Server)
             {
-                var servers = AllDatabaseObjects?
+                var servers = AllObjects?
                     .Select(o => o.ServerName)
                     .Distinct()
                     .OrderBy(o => o)
@@ -147,7 +147,7 @@
             }
             else if (SuggestType == DatabaseObjectType.Database)
             {
-                var databases = AllDatabaseObjects?
+                var databases = AllObjects?
                     .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
                     .Where(o => o.DatabaseName.ContainsIgnoreCase(NewObject.DatabaseName))
                     .Select(o => (o.ServerName, o.DatabaseName))
@@ -164,7 +164,7 @@
             }
             else if (SuggestType == DatabaseObjectType.Schema)
             {
-                var schemas = AllDatabaseObjects?
+                var schemas = AllObjects?
                     .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
                     .Where(o => string.IsNullOrEmpty(NewObject.DatabaseName) || o.DatabaseName == NewObject.DatabaseName)
                     .Where(o => o.SchemaName.ContainsIgnoreCase(NewObject.SchemaName))
@@ -183,20 +183,20 @@
             }
             else if (SuggestType == DatabaseObjectType.Object)
             {
-                var objects = AllDatabaseObjects?
+                var objects = AllObjects?
                     .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
                     .Where(o => string.IsNullOrEmpty(NewObject.DatabaseName) || o.DatabaseName == NewObject.DatabaseName)
                     .Where(o => string.IsNullOrEmpty(NewObject.SchemaName) || o.SchemaName == NewObject.SchemaName)
                     .Where(o => o.ObjectName.ContainsIgnoreCase(NewObject.ObjectName))
                     .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName).ThenBy(o => o.ObjectName)
-                    .Take(10) ?? Enumerable.Empty<DatabaseObject>();
-                @foreach (var dbObject in objects)
+                    .Take(10) ?? Enumerable.Empty<SourceTargetObject>();
+                @foreach (var obj in objects)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => NewObject = dbObject">
-                        <td>@dbObject.ServerName</td>
-                        <td>@dbObject.DatabaseName</td>
-                        <td>@dbObject.SchemaName</td>
-                        <td colspan="2"><HighlightableText Text="@dbObject.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
+                    <tr style="cursor: pointer;" @onclick="() => NewObject = obj">
+                        <td>@obj.ServerName</td>
+                        <td>@obj.DatabaseName</td>
+                        <td>@obj.SchemaName</td>
+                        <td colspan="2"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
                     </tr>
                 }
             }
@@ -214,9 +214,9 @@
 
     [Parameter] public StepType StepType { get; set; }
 
-    [Parameter] public IList<DatabaseObject> DatabaseObjects { get; set; } = null!;
+    [Parameter] public IList<SourceTargetObject> SourceTargetObjects { get; set; } = null!;
 
-    [Parameter] public IList<DatabaseObject> ComparisonObjects { get; set; } = null!;
+    [Parameter] public IList<SourceTargetObject> ComparisonObjects { get; set; } = null!;
 
     [Parameter] public Guid? ConnectionId { get; set; }
 
@@ -226,17 +226,17 @@
 
     [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>>> LoadDatabaseObjectDependencies { get; set; } = null!;
 
-    [Parameter] public Func<Task<IEnumerable<DatabaseObject>>> LoadAllDatabaseObjects { get; set; } = null!;
+    [Parameter] public Func<Task<IEnumerable<SourceTargetObject>>> LoadAllDatabaseObjects { get; set; } = null!;
 
-    [Parameter] public Func<DatabaseObject, DatabaseObjectMappingResult> GetMappingResult { get; set; } = null!;
+    [Parameter] public Func<SourceTargetObject, SourceTargetMappingResult> GetMappingResult { get; set; } = null!;
 
-    private IEnumerable<DatabaseObject>? AllDatabaseObjects { get; set; }
+    private IEnumerable<SourceTargetObject>? AllObjects { get; set; }
 
     private bool ShowServer { get; set; } = false;
 
     private bool ShowDatabase { get; set; } = true;
 
-    private DatabaseObject? NewObject { get; set; }
+    private SourceTargetObject? NewObject { get; set; }
 
     private DatabaseObjectType? SuggestType { get; set; }
 
@@ -249,7 +249,7 @@
 
     private async Task AddNewObjectAsync()
     {
-        AllDatabaseObjects ??= await LoadAllDatabaseObjects();
+        AllObjects ??= await LoadAllDatabaseObjects();
         NewObject = new();
     }
 
@@ -257,23 +257,23 @@
     {
         if (NewObject is null) return;
 
-        if (DatabaseObjects.Any(o => o.Equals(NewObject)))
+        if (SourceTargetObjects.Any(o => o.Equals(NewObject)))
         {
             Messenger.AddWarning($"Duplicate {ListName} object");
             return;
         }
 
-        var existing = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(NewObject))
+        var existing = AllObjects?.FirstOrDefault(o => o.Equals(NewObject))
             ?? ComparisonObjects.FirstOrDefault(o => o.Equals(NewObject));
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
-            DatabaseObjects.Add(existing);
+            SourceTargetObjects.Add(existing);
         }
         else
         {
             GetMappingResult(NewObject).IsNewAddition = true;
-            DatabaseObjects.Add(NewObject);
+            SourceTargetObjects.Add(NewObject);
         }
         NewObject = null;
     }
@@ -285,7 +285,7 @@
         var name = proc?.ProcedureName;
         if (name is null) return;
 
-        AllDatabaseObjects ??= await LoadAllDatabaseObjects();
+        AllObjects ??= await LoadAllDatabaseObjects();
 
         Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
         var dependencies = await LoadDatabaseObjectDependencies(connectionId, schema, name);
@@ -300,8 +300,8 @@
             if (comparison is not null)
                 continue;
 
-            var dbObject = AllDatabaseObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
-                new DatabaseObject
+            var dbObject = AllObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
+                new SourceTargetObject
                 {
                     ServerName = dependency.ServerName,
                     DatabaseName = dependency.DatabaseName,
@@ -309,19 +309,19 @@
                     ObjectName = dependency.ObjectName
                 };
 
-            if (!DatabaseObjects.Any(s => s.Equals(dbObject)))
+            if (!SourceTargetObjects.Any(s => s.Equals(dbObject)))
             {
                 GetMappingResult(dbObject).IsNewAddition = true;
                 GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
-                DatabaseObjects.Add(dbObject);    
+                SourceTargetObjects.Add(dbObject);    
             }
         }
 
-        foreach (var dbObject in DatabaseObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
+        foreach (var dbObject in SourceTargetObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
 
         // Check if there are objects in the list that are not mentioned in the dependencies.
         // Flag them as candidates for removal.
-        var candidatesForRemoval = DatabaseObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
+        var candidatesForRemoval = SourceTargetObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
         foreach (var candidate in candidatesForRemoval)
         {
             GetMappingResult(candidate).IsCandidateForRemoval = true;

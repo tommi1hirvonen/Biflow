@@ -42,7 +42,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     private IEnumerable<Tag>? AllTags { get; set; }
 
-    private IEnumerable<DatabaseObject>? DatabaseObjects { get; set; }
+    private IEnumerable<SourceTargetObject>? SourceTargetObjects { get; set; }
 
     private Guid PrevStepId { get; set; }
 
@@ -59,10 +59,10 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         };
     }
 
-    public async Task<IEnumerable<DatabaseObject>> GetDatabaseObjectsAsync()
+    public async Task<IEnumerable<SourceTargetObject>> GetSourceTargetObjectsAsync()
     {
-        DatabaseObjects ??= await Context.DatabaseObjects.ToListAsync();
-        return DatabaseObjects;
+        SourceTargetObjects ??= await Context.SourceTargetObjects.ToListAsync();
+        return SourceTargetObjects;
     }
 
     /// <summary>
@@ -208,7 +208,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             .ThenBy(x => x.SchemaName)
             .ThenBy(x => x.ObjectName)
             .ToList();
-        if (!CheckDbObjectDuplicates(sources)) return (false, "Duplicate sources");
+        if (!CheckSourceTargetDuplicates(sources)) return (false, "Duplicate sources");
         
         if (sources.Any(x => !x.ServerName.Any()
         || !x.DatabaseName.Any()
@@ -222,7 +222,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             .ThenBy(x => x.SchemaName)
             .ThenBy(x => x.ObjectName)
             .ToList();
-        if (!CheckDbObjectDuplicates(targets)) return (false, "Duplicate targets");
+        if (!CheckSourceTargetDuplicates(targets)) return (false, "Duplicate targets");
 
         if (targets.Any(x => !x.ServerName.Any()
         || !x.DatabaseName.Any()
@@ -230,18 +230,18 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         || !x.ObjectName.Any()))
             return (false, "Empty target object names are not valid");
 
-        await MapExistingDbObjectsAsync(Step.Sources);
-        await MapExistingDbObjectsAsync(Step.Targets);
+        await MapExistingObjectsAsync(Step.Sources);
+        await MapExistingObjectsAsync(Step.Targets);
 
         return (true, null);
     }
 
-    private static bool CheckDbObjectDuplicates(IEnumerable<DatabaseObject> databaseObjects)
+    private static bool CheckSourceTargetDuplicates(IEnumerable<SourceTargetObject> objects)
     {
-        for (int i = 0; i < databaseObjects.Count() - 1; i++)
+        for (int i = 0; i < objects.Count() - 1; i++)
         {
-            var current = databaseObjects.ElementAt(i);
-            var next = databaseObjects.ElementAt(i + 1);
+            var current = objects.ElementAt(i);
+            var next = objects.ElementAt(i + 1);
             if (current.Equals(next))
             {
                 return false;
@@ -250,15 +250,15 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         return true;
     }
 
-    private async Task MapExistingDbObjectsAsync(IList<DatabaseObject> databaseObjects)
+    private async Task MapExistingObjectsAsync(IList<SourceTargetObject> objects)
     {
-        var allDbObjects = await GetDatabaseObjectsAsync();
-        var existing = allDbObjects.Where(o => databaseObjects.Any(d => d.DatabaseObjectId == Guid.Empty && o.Equals(d)));
+        var allObjects = await GetSourceTargetObjectsAsync();
+        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.Equals(d)));
         foreach (var dbObject in existing)
         {
-            var remove = databaseObjects.First(d => d.Equals(dbObject));
-            databaseObjects.Remove(remove);
-            databaseObjects.Add(dbObject);
+            var remove = objects.First(d => d.Equals(dbObject));
+            objects.Remove(remove);
+            objects.Add(dbObject);
         }
     }
 

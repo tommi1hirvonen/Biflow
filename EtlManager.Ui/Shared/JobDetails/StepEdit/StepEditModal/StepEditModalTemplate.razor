@@ -155,14 +155,14 @@
                                     <SourceTargetManagementComponent
                                     ListName="source"
                                     StepType="Modal.Step.StepType"
-                                    DatabaseObjects="Modal.Step.Sources"
+                                    SourceTargetObjects="Modal.Step.Sources"
                                     ComparisonObjects="Modal.Step.Targets"
                                     ConnectionId="ConnectionId"
                                     Connections="Modal.Connections"
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.SourceMappingResult"
                                     LoadDatabaseObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
-                                    LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
+                                    LoadAllDatabaseObjects="Modal.GetSourceTargetObjectsAsync" />
                                 </div>
                             </div>
                             
@@ -174,14 +174,14 @@
                                     <SourceTargetManagementComponent
                                     ListName="target"
                                     StepType="Modal.Step.StepType"
-                                    DatabaseObjects="Modal.Step.Targets"
+                                    SourceTargetObjects="Modal.Step.Targets"
                                     ComparisonObjects="Modal.Step.Sources"
                                     ConnectionId="ConnectionId"
                                     Connections="Modal.Connections"
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.TargetMappingResult"
                                     LoadDatabaseObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
-                                    LoadAllDatabaseObjects="Modal.GetDatabaseObjectsAsync" />
+                                    LoadAllDatabaseObjects="Modal.GetSourceTargetObjectsAsync" />
                                 </div>
                             </div>
                         }

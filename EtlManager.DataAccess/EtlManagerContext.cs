@@ -26,7 +26,7 @@ public class EtlManagerContext : DbContext
     public DbSet<FunctionStep> FunctionSteps => Set<FunctionStep>();
     public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
-    public DbSet<DatabaseObject> DatabaseObjects => Set<DatabaseObject>();
+    public DbSet<SourceTargetObject> SourceTargetObjects => Set<SourceTargetObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
     public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
@@ -223,20 +223,20 @@ public class EtlManagerContext : DbContext
             e.Property(p => p.Color).HasConversion(tagColorConverter);
         });
 
-        modelBuilder.Entity<DatabaseObject>(e =>
+        modelBuilder.Entity<SourceTargetObject>(e =>
         {
-            e.ToTable("DatabaseObject");
+            e.ToTable("SourceTargetObject");
             e.HasMany(o => o.Sources)
             .WithMany(s => s.Sources)
             .UsingEntity<Dictionary<string, object>>("StepSource",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<DatabaseObject>().WithMany().HasForeignKey("DatabaseObjectId"));
+            x => x.HasOne<SourceTargetObject>().WithMany().HasForeignKey("ObjectId"));
 
             e.HasMany(o => o.Targets)
             .WithMany(t => t.Targets)
             .UsingEntity<Dictionary<string, object>>("StepTarget",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<DatabaseObject>().WithMany().HasForeignKey("DatabaseObjectId"));
+            x => x.HasOne<SourceTargetObject>().WithMany().HasForeignKey("ObjectId"));
         });
 
 

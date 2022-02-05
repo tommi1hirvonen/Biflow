@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EtlManager.DataAccess.Models;
 
-public class DatabaseObject
+public class SourceTargetObject
 {
     [Key]
-    public Guid DatabaseObjectId { get; set; }
+    public Guid ObjectId { get; set; }
 
     [Required]
     [MinLength(1)]
@@ -32,8 +32,8 @@ public class DatabaseObject
     [Range(0, 100)]
     public int MaxConcurrentWrites { get; set; } = 1;
 
-    [NotMapped] public DatabaseObjectMappingResult SourceMappingResult { get; set; } = new();
-    [NotMapped] public DatabaseObjectMappingResult TargetMappingResult { get; set; } = new();
+    [NotMapped] public SourceTargetMappingResult SourceMappingResult { get; set; } = new();
+    [NotMapped] public SourceTargetMappingResult TargetMappingResult { get; set; } = new();
 
     public IList<Step> Targets { get; set; } = null!;
 
@@ -41,7 +41,7 @@ public class DatabaseObject
 
     public override bool Equals(object? obj)
     {
-        if (obj is DatabaseObject dbo)
+        if (obj is SourceTargetObject dbo)
         {
             return ServerName.Equals(dbo.ServerName)
                 && DatabaseName.Equals(dbo.DatabaseName)
@@ -83,7 +83,7 @@ public class DatabaseObject
     public override int GetHashCode() => HashCode.Combine(ServerName, DatabaseName, SchemaName, ObjectName);
 }
 
-public class DatabaseObjectMappingResult
+public class SourceTargetMappingResult
 {
     public bool IsNewAddition { get; set; } = false;
 
