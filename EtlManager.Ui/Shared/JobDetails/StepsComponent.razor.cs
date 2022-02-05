@@ -129,6 +129,9 @@ public partial class StepsComponent : ComponentBase
             await context.SaveChangesAsync();
             foreach (var step in SelectedSteps)
             {
+                if (EditModalStepIds[step.StepType] == step.StepId)
+                    EditModalStepIds[step.StepType] = Guid.Empty;
+
                 Steps?.Remove(step);
 
                 // Remove the deleted step from dependencies.
@@ -169,6 +172,8 @@ public partial class StepsComponent : ComponentBase
             using var context = DbFactory.CreateDbContext();
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
+            if (EditModalStepIds[step.StepType] == step.StepId)
+                EditModalStepIds[step.StepType] = Guid.Empty;
             Steps?.Remove(step);
             SelectedSteps.Remove(step);
 
