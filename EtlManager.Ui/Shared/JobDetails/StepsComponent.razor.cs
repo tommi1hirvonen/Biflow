@@ -47,6 +47,7 @@ public partial class StepsComponent : ComponentBase
 
     private JobParametersModal JobParametersModal { get; set; } = null!;
     private JobConcurrencyModal JobConcurrencyModal { get; set; } = null!;
+    private SynchronizeDependenciesModal SynchronizeDependenciesModal { get; set; } = null!;
 
     private Dictionary<StepType, IStepEditModal> StepEditModals { get; } = new();
     // Separate edit modal step ids so that changes to one do not trigger OnParametersSet() for all edit modal components.
