@@ -28,6 +28,10 @@ public class DatabaseObject
     [MaxLength(128)]
     public string ObjectName { get; set; } = string.Empty;
 
+    [Required]
+    [Range(0, 100)]
+    public int MaxConcurrentWrites { get; set; } = 1;
+
     [NotMapped] public DatabaseObjectMappingResult SourceMappingResult { get; set; } = new();
     [NotMapped] public DatabaseObjectMappingResult TargetMappingResult { get; set; } = new();
 
