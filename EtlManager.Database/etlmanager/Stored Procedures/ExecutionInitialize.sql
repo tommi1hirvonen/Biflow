@@ -299,6 +299,63 @@ FROM etlmanager.Dependency AS a
 	INNER JOIN #Steps AS c ON a.DependantOnStepId = c.StepId
 
 
+-- Store and historize sources and targets
+INSERT INTO etlmanager.ExecutionSourceTargetObject (
+	ExecutionId,
+	ObjectId,
+	ServerName,
+	DatabaseName,
+	SchemaName,
+	ObjectName,
+	MaxConcurrentWrites
+)
+SELECT
+	@EtlManagerExecutionId,
+	ObjectId,
+	ServerName,
+	DatabaseName,
+	SchemaName,
+	ObjectName,
+	MaxConcurrentWrites
+FROM etlmanager.SourceTargetObject AS a
+WHERE EXISTS (
+	SELECT *
+	FROM #Steps AS x
+		INNER JOIN etlmanager.StepSource AS y ON x.StepId = y.StepId
+	WHERE a.ObjectId = y.ObjectId
+) OR EXISTS (
+	SELECT *
+	FROM #Steps AS x
+		INNER JOIN etlmanager.StepTarget AS y ON x.StepId = y.StepId
+	WHERE a.ObjectId = y.ObjectId
+)
+
+INSERT INTO etlmanager.ExecutionStepSource (
+	ExecutionId,
+	StepId,
+	ObjectId
+)
+SELECT
+	@EtlManagerExecutionId,
+	a.StepId,
+	b.ObjectId
+FROM #Steps AS a
+	INNER JOIN etlmanager.StepSource AS b ON a.StepId = b.StepId
+
+INSERT INTO etlmanager.ExecutionStepTarget (
+	ExecutionId,
+	StepId,
+	ObjectId
+)
+SELECT
+	@EtlManagerExecutionId,
+	a.StepId,
+	b.ObjectId
+FROM #Steps AS a
+	INNER JOIN etlmanager.StepTarget AS b ON a.StepId = b.StepId
+
+
+
 -- Finally return the id of the initialized execution.
 SELECT @EtlManagerExecutionId
 

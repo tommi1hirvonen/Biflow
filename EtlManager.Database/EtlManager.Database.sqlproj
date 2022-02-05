@@ -99,5 +99,8 @@
     <Build Include="etlmanager\Tables\SourceTargetObject.sql" />
     <Build Include="etlmanager\Tables\StepSource.sql" />
     <Build Include="etlmanager\Tables\StepTarget.sql" />
+    <Build Include="etlmanager\Tables\ExecutionSourceTargetObject.sql" />
+    <Build Include="etlmanager\Tables\ExecutionStepSource.sql" />
+    <Build Include="etlmanager\Tables\ExecutionStepTarget.sql" />
   </ItemGroup>
 </Project>

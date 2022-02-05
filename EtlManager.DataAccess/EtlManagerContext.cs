@@ -239,6 +239,23 @@ public class EtlManagerContext : DbContext
             x => x.HasOne<SourceTargetObject>().WithMany().HasForeignKey("ObjectId"));
         });
 
+        modelBuilder.Entity<ExecutionSourceTargetObject>(e =>
+        {
+            e.ToTable("ExecutionSourceTargetObject")
+            .HasKey(o => new { o.ExecutionId, o.ObjectId });
+            e.HasMany(o => o.Sources)
+            .WithMany(s => s.Sources)
+            .UsingEntity<Dictionary<string, object>>("ExecutionStepSource",
+            x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
+            x => x.HasOne<ExecutionSourceTargetObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
+
+            e.HasMany(o => o.Targets)
+            .WithMany(t => t.Targets)
+            .UsingEntity<Dictionary<string, object>>("ExecutionStepTarget",
+            x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
+            x => x.HasOne<ExecutionSourceTargetObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
+        });
+
 
         modelBuilder.Entity<Schedule>()
             .ToTable("Schedule")

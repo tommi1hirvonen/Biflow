@@ -38,6 +38,10 @@ public abstract class StepExecution
 
     public ICollection<ExecutionDependency> DependantExecutions { get; set; } = null!;
 
+    public IList<ExecutionSourceTargetObject> Sources { get; set; } = null!;
+
+    public IList<ExecutionSourceTargetObject> Targets { get; set; } = null!;
+
     public StepExecutionStatus GetExecutionStatus()
     {
         var lastExecution = StepExecutionAttempts

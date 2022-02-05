@@ -12,6 +12,7 @@ internal abstract class OrchestratorBase
     private readonly IStepExecutorFactory _stepExecutorFactory;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
+    private readonly Dictionary<ExecutionSourceTargetObject, SemaphoreSlim> _targetSemaphores;
 
     protected Execution Execution { get; }
 
@@ -27,7 +28,11 @@ internal abstract class OrchestratorBase
 
     protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; }
 
-    public OrchestratorBase(ILogger<OrchestratorBase> logger, IExecutionConfiguration executionConfiguration, IStepExecutorFactory stepExecutorFactory, Execution execution)
+    public OrchestratorBase(
+        ILogger<OrchestratorBase> logger,
+        IExecutionConfiguration executionConfiguration,
+        IStepExecutorFactory stepExecutorFactory,
+        Execution execution)
     {
         _logger = logger;
         _executionConfig = executionConfiguration;
@@ -52,6 +57,14 @@ internal abstract class OrchestratorBase
                 var maxParallelSteps = typeConcurrency > 0 ? (int)typeConcurrency : maxParallelStepsMain;
                 return new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
             });
+
+        // Create a Dictionary with max concurrent steps for each target.
+        // This allows only a predefined number of steps to write to the same target concurrently.
+        var targets = Execution.StepExecutions
+            .SelectMany(e => e.Targets)
+            .Where(t => t.MaxConcurrentWrites > 0)
+            .Distinct();
+        _targetSemaphores = targets.ToDictionary(t => t, t => new SemaphoreSlim(t.MaxConcurrentWrites, t.MaxConcurrentWrites));
     }
 
     public abstract Task RunAsync();
@@ -78,6 +91,15 @@ internal abstract class OrchestratorBase
     protected async Task StartNewStepWorkerAsync(StepExecution step)
     {
         // Wait until the semaphores can be entered and the step can be started.
+        // Start from the most detailed semaphores and move towards the main semaphore.
+        foreach (var target in step.Targets)
+        {
+            // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
+            if (_targetSemaphores.TryGetValue(target, out var semaphore))
+            {
+                await semaphore.WaitAsync();
+            }
+        }
         await _stepTypeSemaphores[step.StepType].WaitAsync();
         await _mainSemaphore.WaitAsync();
 
@@ -97,9 +119,16 @@ internal abstract class OrchestratorBase
             // Update the status.
             StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
             
-            // Release the semaphore once to make room for new parallel executions.
+            // Release the semaphores once to make room for new parallel executions.
             _mainSemaphore.Release();
             _stepTypeSemaphores[step.StepType].Release();
+            foreach (var target in step.Targets)
+            {
+                if (_targetSemaphores.TryGetValue(target, out var semaphore))
+                {
+                    semaphore.Release();
+                }
+            }
 
             _logger.LogInformation("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
         }
