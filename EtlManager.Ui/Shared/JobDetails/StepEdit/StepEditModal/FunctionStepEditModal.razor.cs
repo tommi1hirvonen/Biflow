@@ -40,6 +40,8 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
             FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            StepParameters = new List<StepParameterBase>()
+            StepParameters = new List<StepParameterBase>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 }

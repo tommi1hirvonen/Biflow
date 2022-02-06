@@ -31,7 +31,9 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            StepParameters = new List<StepParameterBase>()
+            StepParameters = new List<StepParameterBase>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 
     private void SetCaptureResultJobParameter(bool enabled)

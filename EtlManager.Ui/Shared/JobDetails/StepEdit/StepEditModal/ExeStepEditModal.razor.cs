@@ -16,7 +16,9 @@ public partial class ExeStepEditModal : StepEditModalBase<ExeStep>
             RetryIntervalMinutes = 0,
             IsEnabled = true,
             Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>()
+            Tags = new List<Tag>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 
     protected override Task<ExeStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>

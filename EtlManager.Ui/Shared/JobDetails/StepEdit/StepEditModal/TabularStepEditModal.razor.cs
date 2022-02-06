@@ -2,7 +2,6 @@
 using EtlManager.DataAccess.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace EtlManager.Ui.Shared.JobDetails.StepEdit.StepEditModal;
 
@@ -23,7 +22,9 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
             IsEnabled = true,
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>()
+            Tags = new List<Tag>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 
     protected override Task<TabularStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>

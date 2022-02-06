@@ -20,7 +20,9 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
             IsEnabled = true,
             JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != Job?.JobId)?.JobId,
             Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>()
+            Tags = new List<Tag>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 
     protected override Task<JobStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) => 

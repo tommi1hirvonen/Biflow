@@ -22,7 +22,9 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             StepParameters = new List<StepParameterBase>(),
             Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>()
+            Tags = new List<Tag>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
         };
 
     protected override Task<PackageStep> GetExistingStepAsync(EtlManagerContext context, Guid stepId) =>
