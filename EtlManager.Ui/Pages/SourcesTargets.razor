@@ -305,7 +305,7 @@
     {
         if (!UnusedObjects.Any())
         {
-            Messenger.AddInformation("No unused database objects");
+            Messenger.AddInformation("No unused source or target objects");
             return;
         }
 
@@ -395,7 +395,7 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error", "The database object was modified outside of this session. Reload the page to view the most recent values.");
+            Messenger.AddError("Concurrency error", "The source/target object was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
