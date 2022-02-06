@@ -188,6 +188,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             StepId = Guid.Empty;
             PrevStepId = Guid.Empty;
             AllTags = null;
+            SourceTargetObjects = null;
         }
         catch (DbUpdateConcurrencyException)
         {
