@@ -426,7 +426,7 @@
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" Connections="SqlConnections" DataFactories="DataFactories" StepId="EditModalStepIds[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />   
 </AuthorizeView>
 
-<SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" Job="Job" Steps="Steps" />
+<SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" Job="Job" Steps="Steps"  OnModalClosed="OnSynchronizeDependenciesModalClosed" />
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
 

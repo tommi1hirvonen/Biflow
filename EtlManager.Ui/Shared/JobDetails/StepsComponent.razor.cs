@@ -284,6 +284,12 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
+    private void OnSynchronizeDependenciesModalClosed()
+    {
+        SortSteps();
+        StateHasChanged();
+    }
+
     private async Task ShowStepDetailsModal(Step step)
     {
         DetailsModalStep = step;

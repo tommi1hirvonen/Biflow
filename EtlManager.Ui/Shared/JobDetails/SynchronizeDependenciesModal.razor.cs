@@ -15,6 +15,8 @@ public partial class SynchronizeDependenciesModal : ComponentBase
 
     [Parameter] public IEnumerable<Step>? Steps { get; set; }
 
+    [Parameter] public Action? OnModalClosed { get; set; }
+
     private HxModal Modal { get; set; } = null!;
 
     private List<Dependency>? DependenciesToAdd { get; set; }
@@ -130,6 +132,7 @@ public partial class SynchronizeDependenciesModal : ComponentBase
     {
         DependenciesToAdd = null;
         DependenciesToRemove = null;
+        OnModalClosed?.Invoke();
     }
 
     public Task ShowAsync() => Modal.ShowAsync();
