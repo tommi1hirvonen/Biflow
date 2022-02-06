@@ -263,6 +263,14 @@ public partial class StepsComponent : ComponentBase
         SortSteps();
     }
 
+    private void OnStepEditModalClosed()
+    {
+        foreach (var key in EditModalStepIds.Keys)
+        {
+            EditModalStepIds[key] = Guid.Empty;
+        }
+    }
+
     private void SortSteps()
     {
         if (Job is null || Steps is null) return;

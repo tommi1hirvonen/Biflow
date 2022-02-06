@@ -415,15 +415,73 @@
 
 
 <AuthorizeView Roles="Admin, Editor">
-    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]" Job="Job" Steps="Steps" Connections="SqlConnections" AsConnections="AsConnections" StepId="EditModalStepIds[StepType.Tabular]" OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.AgentJob]" OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]" Job="Job" Steps="Steps" Connections="SqlConnections" AppRegistrations="AppRegistrations" StepId="EditModalStepIds[StepType.Dataset]" OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Exe]" OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="StepEditModals[StepType.Job]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Job]" Jobs="Jobs" OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Function]" FunctionApps="FunctionApps" OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="StepEditModals[StepType.Package]" Job="Job" Steps="Steps" Connections="SqlConnections" StepId="EditModalStepIds[StepType.Package]" OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]" Job="Job" Steps="Steps" Connections="SqlConnections" DataFactories="DataFactories" StepId="EditModalStepIds[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />   
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Sql]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        AsConnections="AsConnections"
+        StepId="EditModalStepIds[StepType.Tabular]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.AgentJob]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        AppRegistrations="AppRegistrations"
+        StepId="EditModalStepIds[StepType.Dataset]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Exe]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <JobStepEditModal @ref="StepEditModals[StepType.Job]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Job]"
+        Jobs="Jobs"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
+        Job="Job" Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Function]"
+        FunctionApps="FunctionApps"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Package]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        DataFactories="DataFactories"
+        StepId="EditModalStepIds[StepType.Pipeline]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />   
 </AuthorizeView>
 
 <SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" Job="Job" Steps="Steps"  OnModalClosed="OnSynchronizeDependenciesModalClosed" />

@@ -22,6 +22,8 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     [Parameter] public Guid StepId { get; set; }
 
+    [Parameter] public Action? OnModalClosed { get; set; }
+
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
     
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
@@ -107,11 +109,12 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             ResetTags();
             PrevStepId = StepId;
         }
-        else if (StepId == Guid.Empty && Job is not null)
+        else if (StepId == Guid.Empty && StepId != PrevStepId && Job is not null)
         {
             await ResetContext();
             Step = CreateNewStep(Job);
             ResetTags();
+            PrevStepId = StepId;
         }
     }
 
@@ -135,8 +138,8 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         // Force the step to be reloaded and the context
         // to be recreated when the modal is opened again.
         StepId = Guid.Empty;
-        PrevStepId = Guid.Empty;
         AllTags = null;
+        OnModalClosed?.Invoke();
     }
 
     internal async Task SubmitStep()
@@ -186,7 +189,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             await Modal.HideAsync();
 
             StepId = Guid.Empty;
-            PrevStepId = Guid.Empty;
             AllTags = null;
             SourceTargetObjects = null;
         }
