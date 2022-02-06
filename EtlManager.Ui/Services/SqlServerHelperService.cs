@@ -299,7 +299,8 @@ public class SqlServerHelperService
                 and isnull(a.referenced_server_name, @@servername) is not null
                 and isnull(a.referenced_database_name, db_name()) is not null
                 and isnull(a.referenced_schema_name, c.name) is not null
-                and a.referenced_entity_name is not null", new
+                and a.referenced_entity_name is not null
+                and isnull(b.[type], 'U') in ('U','V')", new
             {
                 ObjectName = objectName
             });
@@ -336,7 +337,8 @@ public class SqlServerHelperService
                 and isnull(a.referenced_server_name, @@servername) is not null
                 and isnull(a.referenced_database_name, db_name()) is not null
                 and isnull(a.referenced_schema_name, c.name) is not null
-                and a.referenced_entity_name is not null", new
+                and a.referenced_entity_name is not null
+                and isnull(b.[type], 'U') in ('U','V')", new
             {
                 ObjectName = objectName
             });
