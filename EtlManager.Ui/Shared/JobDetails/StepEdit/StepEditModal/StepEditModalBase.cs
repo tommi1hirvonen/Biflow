@@ -46,7 +46,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     private IEnumerable<SourceTargetObject>? SourceTargetObjects { get; set; }
 
-    private Guid PrevStepId { get; set; }
+    private Guid? PrevStepId { get; set; }
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
@@ -138,6 +138,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         // Force the step to be reloaded and the context
         // to be recreated when the modal is opened again.
         StepId = Guid.Empty;
+        PrevStepId = null;
         AllTags = null;
         OnModalClosed?.Invoke();
     }
@@ -189,6 +190,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             await Modal.HideAsync();
 
             StepId = Guid.Empty;
+            PrevStepId = null;
             AllTags = null;
             SourceTargetObjects = null;
         }
