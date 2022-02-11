@@ -11,8 +11,8 @@
     <OutputType>Database</OutputType>
     <RootPath>
     </RootPath>
-    <RootNamespace>EtlManager.Database</RootNamespace>
-    <AssemblyName>EtlManager.Database</AssemblyName>
+    <RootNamespace>Biflow.Database</RootNamespace>
+    <AssemblyName>Biflow.Database</AssemblyName>
     <ModelCollation>1035,CI</ModelCollation>
     <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
     <DeployToDatabase>True</DeployToDatabase>
