@@ -1,0 +1,118 @@
+﻿@inject IConfiguration Configuration
+@inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
+@inject ITokenService TokenService
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select key">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                Type
+                            </th>
+                            <th>
+                                Value
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Keys is null)
+                        {
+                            <tr>
+                                <td>Loading...</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else if (Keys.Count == 0)
+                        {
+                            <tr>
+                                <td>No keys</td>
+                                <td></td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var key in Keys)
+                            {
+                                <tr style="cursor: pointer;"
+                                    @onclick="() => SelectedKey = key.Key"
+                                    class="@(key.Key == SelectedKey ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        <small>
+                                            @key.Type
+                                        </small>
+                                    </td>
+                                    <td style="font-family: monospace;">
+                                        <small>
+                                            @key.Key
+                                        </small>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectKey"
+                  Enabled="SelectedKey is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    [Parameter]
+    public FunctionApp? FunctionApp { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnKeySelected { get; set; }
+
+    private List<(string Type, string Key)>? Keys { get; set; }
+
+    private string? SelectedKey { get; set; }
+
+    private async Task SelectKey()
+    {
+        if (SelectedKey is not null)
+        {
+            await OnKeySelected.InvokeAsync(SelectedKey);
+            await Offcanvas.HideAsync();
+        }
+    }
+
+    public void OnClosed()
+    {
+        Keys = null;
+        SelectedKey = null;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Offcanvas.ShowAsync();
+        if (FunctionApp is null) return;
+        try
+        {
+            Keys = await FunctionApp.GetHostKeysAsync(HttpClientFactory.CreateClient(), TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading keys", ex.Message);
+        }
+    }
+
+}

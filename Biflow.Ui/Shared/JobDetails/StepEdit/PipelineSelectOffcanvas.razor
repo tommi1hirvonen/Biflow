@@ -1,0 +1,174 @@
+﻿@using Microsoft.Azure.Management.DataFactory.Models
+
+@inject IConfiguration Configuration
+@inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject ITokenService TokenService
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select pipeline">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                @MarkupHelper.FromFile("icons/feather/folder.svg")
+                                Folders
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Pipelines is null)
+                        {
+                            <tr><td>Loading...</td></tr>
+                        }
+                        else if (Pipelines.Count == 0)
+                        {
+                            <tr><td>No pipelines</td></tr>
+                        }
+                        else
+                        {
+                            foreach (var folder in Pipelines.Keys.OrderBy(folder => folder))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light fw-bold" : null)">
+                                    <td>@folder</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                    </div>
+                    <input type="search" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
+                           placeholder="Filter by name" autocomplete="off" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>
+                                @MarkupHelper.FromFile("icons/feather/pipeline.svg")
+                                Pipelines
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Pipelines is not null && SelectedFolder is not null)
+                        {
+                            foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.Name.ContainsIgnoreCase(FilterText)).OrderBy(p => p.Name))
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light fw-bold" : null)">
+                                    <td>
+                                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
+                                    </td>
+                                </tr>
+                                @if (pipeline == SelectedPipeline && pipeline.Parameters?.Any() == true)
+                                {
+                                    <tr class="no-hover">
+                                        <td colspan="2" class="bg-light">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <h6 class="mx-2">Parameters</h6>
+                                                    <dl class="row mx-3 small">
+                                                        @foreach (var param in pipeline.Parameters)
+                                                        {
+                                                            var defaultValue = param.Value.DefaultValue;
+                                                            var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
+                                                            <dt class="col-sm-6">@param.Key</dt>
+                                                            <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
+                                                        }
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPipelineAsync"
+                  Enabled="SelectedPipeline is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    [Parameter]
+    public Guid? DataFactoryId { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnPipelineSelected { get; set; }
+
+    private Dictionary<string, List<PipelineResource>>? Pipelines { get; set; }
+
+    private string FilterText { get; set; } = string.Empty;
+
+    private string? SelectedFolder { get; set; }
+    private PipelineResource? SelectedPipeline { get; set; }
+
+    private void OnFolderChanged(string folder)
+    {
+        if (folder != SelectedFolder)
+        {
+            SelectedPipeline = null;
+        }
+        SelectedFolder = folder;
+    }
+
+    private async Task SelectPipelineAsync()
+    {
+        await OnPipelineSelected.InvokeAsync(SelectedPipeline?.Name);
+        await Offcanvas.HideAsync();
+    }
+
+    private void OnClosed()
+    {
+        Pipelines = null;
+        SelectedFolder = null;
+        SelectedPipeline = null;
+        FilterText = string.Empty;
+    }
+
+    public async Task ShowAsync()
+    {
+        await Offcanvas.ShowAsync();
+        if (DataFactoryId is null || DataFactoryId == Guid.Empty) return;
+        try
+        {
+            Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
+            using var context = DbContextFactory.CreateDbContext();
+            var dataFactory = await context.DataFactories
+                .AsNoTrackingWithIdentityResolution()
+                .Include(df => df.AppRegistration)
+                .FirstAsync(df => df.DataFactoryId == dataFactoryId);
+            Pipelines = await dataFactory.GetPipelinesAsync(TokenService);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading pipelines", ex.Message);
+        }
+    }
+}

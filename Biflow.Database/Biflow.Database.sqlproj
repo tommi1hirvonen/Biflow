@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>Biflow.Database</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{bbeef2ab-d4a8-4601-b1fb-34f1fdf2b526}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>EtlManager.Database</RootNamespace>
+    <AssemblyName>EtlManager.Database</AssemblyName>
+    <ModelCollation>1035,CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+    <DefaultCollation>Finnish_Swedish_CI_AS</DefaultCollation>
+    <DefaultFilegroup>PRIMARY</DefaultFilegroup>
+    <GenerateCreateScript>True</GenerateCreateScript>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="biflow" />
+    <Folder Include="biflow\Tables" />
+    <Folder Include="biflow\Stored Procedures" />
+    <Folder Include="Security\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="biflow\Tables\Execution.sql" />
+    <Build Include="biflow\Tables\Dependency.sql" />
+    <Build Include="biflow\Tables\Job.sql" />
+    <Build Include="biflow\Tables\Step.sql" />
+    <Build Include="biflow\Tables\User.sql" />
+    <Build Include="biflow\Tables\Schedule.sql" />
+    <Build Include="biflow\Stored Procedures\UserAdd.sql" />
+    <Build Include="biflow\Stored Procedures\UserAuthenticate.sql" />
+    <Build Include="biflow\Stored Procedures\UserUpdatePassword.sql" />
+    <Build Include="biflow\Stored Procedures\ExecutionInitialize.sql" />
+    <Build Include="Security\biflow.sql" />
+    <Build Include="biflow\Stored Procedures\JobCopy.sql" />
+    <Build Include="biflow\Tables\Subscription.sql" />
+    <Build Include="biflow\Stored Procedures\StepCopy.sql" />
+    <Build Include="biflow\Tables\DataFactory.sql" />
+    <Build Include="biflow\Tables\Connection.sql" />
+    <Build Include="biflow\Tables\ExecutionParameter.sql" />
+    <Build Include="biflow\Tables\Tag.sql" />
+    <Build Include="biflow\Tables\StepTag.sql" />
+    <Build Include="biflow\Tables\StepParameter.sql" />
+    <Build Include="biflow\Tables\ExecutionStep.sql" />
+    <Build Include="biflow\Tables\ExecutionStepAttempt.sql" />
+    <Build Include="biflow\Tables\FunctionApp.sql" />
+    <Build Include="biflow\Tables\AppRegistration.sql" />
+    <Build Include="biflow\Tables\AccessToken.sql" />
+    <Build Include="biflow\Tables\JobParameter.sql" />
+    <Build Include="biflow\Tables\ExecutionStepParameter.sql" />
+    <Build Include="biflow\Tables\ExecutionDependency.sql" />
+    <Build Include="biflow\Tables\ScheduleTag.sql" />
+    <Build Include="biflow\Tables\JobConcurrency.sql" />
+    <Build Include="biflow\Tables\ExecutionConcurrency.sql" />
+    <Build Include="biflow\Tables\SourceTargetObject.sql" />
+    <Build Include="biflow\Tables\StepSource.sql" />
+    <Build Include="biflow\Tables\StepTarget.sql" />
+    <Build Include="biflow\Tables\ExecutionSourceTargetObject.sql" />
+    <Build Include="biflow\Tables\ExecutionStepSource.sql" />
+    <Build Include="biflow\Tables\ExecutionStepTarget.sql" />
+  </ItemGroup>
+</Project>

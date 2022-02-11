@@ -1,0 +1,197 @@
+﻿@inject IConfiguration configuration
+@inject IDbContextFactory<BiflowContext> DbFactory
+@inject MarkupHelperService MarkupHelper
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
+<PageTitle>Data Factories | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success"
+          @onclick="() => ShowEditModal(null)"
+          Enabled="DataFactories is not null && AppRegistrations is not null && AppRegistrations.Any()">
+    Add Data Factory
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Resource group name
+                </th>
+                <th>
+                    Data Factory resource name
+                </th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (DataFactories is null)
+            {
+                <tr><td colspan="4">Loading...</td></tr>
+            }
+            else if (DataFactories.Count == 0)
+            {
+                <tr><td colspan="4">No Data Factories</td></tr>
+            }
+            else
+            {
+                @foreach (var df in DataFactories)
+                {
+                    var jobs = df.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = df.Steps.Count();
+                    <tr>
+                        <td class="align-middle">
+                            @df.DataFactoryName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                </HxButton>
+                                <HxDropdown>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteDataFactory(df)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @df.ResourceGroupName
+                        </td>
+                        <td class="align-middle">
+                            @df.ResourceName
+                        </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            <a class="text-dark" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                StepsDataFactory = df;
+                                await StepsModal.ShowAsync();
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
+
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsDataFactory?.DataFactoryName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in StepsDataFactory?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<DataFactory>? DataFactories { get; set; }
+    private List<AppRegistration>? AppRegistrations { get; set; }
+
+    private Guid EditDataFactoryId { get; set; }
+    private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
+
+    private DataFactory? StepsDataFactory { get; set; }
+    private HxModal StepsModal { get; set; } = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
+        DataFactories = await context.DataFactories
+            .AsNoTrackingWithIdentityResolution()
+            .Include(df => df.Steps)
+            .ThenInclude(step => step.Job)
+            .OrderBy(df => df.DataFactoryName)
+            .ToListAsync();
+        AppRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(ar => ar.AppRegistrationName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteDataFactory(DataFactory df)
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Remove(df);
+        await context.SaveChangesAsync();
+        DataFactories?.Remove(df);
+    }
+
+    private async void OnDataFactorySubmit(DataFactory dataFactory)
+    {
+        using var context = DbFactory.CreateDbContext();
+        if (dataFactory.DataFactoryId == Guid.Empty)
+        {
+            context.Add(dataFactory);
+            DataFactories?.Add(dataFactory);
+        }
+        else
+        {
+            DataFactories?.RemoveAll(df => df.DataFactoryId == dataFactory.DataFactoryId);
+            DataFactories?.Add(dataFactory);
+            context.Attach(dataFactory).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
+        StateHasChanged();
+    }
+
+    private async Task ShowEditModal(DataFactory? dataFactory)
+    {
+        EditDataFactoryId = dataFactory?.DataFactoryId ?? Guid.Empty;
+        await DataFactoryEditModal.ShowAsync();
+    }
+}

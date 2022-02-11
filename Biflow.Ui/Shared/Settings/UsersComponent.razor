@@ -1,0 +1,217 @@
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject MarkupHelperService MarkupHelper
+@inject DbHelperService DbHelperService
+@inject IHxMessengerService Messenger
+
+<PageTitle>Users | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="Users is not null">
+    Add user
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Username
+                </th>
+                <th>
+                </th>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Role
+                </th>
+                <th>
+                    Created
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Users is null)
+            {
+                <tr><td colspan="5">Loading...</td></tr>
+            }
+            else if (Users.Count == 0)
+            {
+                <tr><td colspan="5">No users</td></tr>
+            }
+            else
+            {
+                @foreach (var user in Users)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @user.Username
+                        </td>
+                        <td>
+                            <HxButtonGroup CssClass="btn-row">
+                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
+                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                </HxButton>
+
+                                <HxDropdown>
+                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
+                                        @MarkupHelper.FromFile("icons/feather/key.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownContent CssClass="p-4">
+                                        <div style="min-width: 25rem;">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
+                                                        <InputGroupStartTemplate>
+                                                            <div class="input-group-text">
+                                                                @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                                            </div>
+                                                        </InputGroupStartTemplate>
+                                                    </HxInputText>
+                                                </div>
+                                            </div>
+                                            <div class="row mt-3">
+                                                <div class="col">
+                                                    <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
+                                                        <InputGroupStartTemplate>
+                                                            <div class="input-group-text">
+                                                                @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                            </div>
+                                                        </InputGroupStartTemplate>
+                                                    </HxInputText>
+                                                </div>
+                                            </div>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
+                                        </div>
+                                        
+                                    </HxDropdownContent>
+                                </HxDropdown>
+
+                                <HxDropdown>
+                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdown>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @user.Email
+                        </td>
+                        <td class="align-middle">
+                            @user.Role
+                        </td>
+                        <td class="align-middle">
+                            @user.CreatedDateTime.LocalDateTime
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<UserEditModal @ref="UserEditModal" Username="@EditModalUsername" OnUserSubmit="OnUserSubmit" />
+
+
+@code {
+    private List<User> Users { get; set; } = null!;
+
+    private UserEditModal UserEditModal { get; set; } = null!;
+    private string? EditModalUsername { get; set; }
+
+    private string? Password { get; set; }
+    private string? ConfirmPassword { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
+        Users = await context.Users
+            .AsNoTracking()
+            .OrderBy(user => user.Username)
+            .ToListAsync();
+    }
+
+    private async Task DeleteUser(User user)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Users.Remove(user);
+            await context.SaveChangesAsync();
+            Users.Remove(user);
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error deleting user");
+        }
+    }
+
+    private void OnUserSubmit(User user)
+    {
+        var existingUser = Users.FirstOrDefault(u => u.Username == user.Username);
+        if (existingUser is not null)
+        {
+            Users.Remove(existingUser);
+        }
+        Users.Add(user);
+        Users.Sort((u1, u2) => u1.Username?.CompareTo(u2.Username) ?? 0);
+    }
+
+    private async Task ShowEditModalAsync(User? user)
+    {
+        EditModalUsername = user?.Username;
+        await UserEditModal.ShowAsync();
+    }
+
+    private async Task UpdatePassword(User user)
+    {
+        if (!PasswordCheck())
+        {
+            return;
+        }
+
+        var result = await DbHelperService.UpdatePasswordAsync(user.Username ?? throw new ArgumentNullException(nameof(user.Username), "Username was null"),
+            Password!); // PasswordCheck() makes sure Password is not null
+        if (result)
+        {
+            ResetPassword();
+            Messenger.AddInformation("Password updated successfully");
+        }
+        else
+        {
+            Messenger.AddError("Error updating password");
+        }
+    }
+
+    private void ResetPassword()
+    {
+        Password = null;
+        ConfirmPassword = null;
+    }
+
+    private bool PasswordCheck()
+    {
+        Password = Password ?? string.Empty;
+        ConfirmPassword = ConfirmPassword ?? string.Empty;
+
+        if (Password.Length < 1 || Password.Length > 250)
+        {
+            Messenger.AddInformation("The password must be between 1 and 250 characters in length");
+            return false;
+        }
+
+        if (!Password.Equals(ConfirmPassword))
+        {
+            Messenger.AddInformation("The two passwords do not match");
+            return false;
+        }
+
+        else
+        {
+            return true;
+        }
+    }
+}

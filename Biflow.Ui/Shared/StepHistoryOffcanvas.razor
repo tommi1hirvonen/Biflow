@@ -1,0 +1,107 @@
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
+
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
+    <BodyTemplate>
+        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
+        <table class="table table-sm table-hover">
+            <thead>
+                <tr>
+                    <th>Started</th>
+                    <th>Ended</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th>@AverageDurationInSeconds.SecondsToReadableFormat()</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Executions is null)
+                {
+                    <tr><td colspan="4">Loading...</td></tr>
+                }
+                else if (Executions.Count == 0)
+                {
+                    <tr><td colspan="4">No executions</td></tr>
+                }
+                else
+                {
+                    @foreach (var execution in Executions)
+                    {
+                        <tr class="@(SelectedStepExecution == execution ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                            <td>@execution.StartDateTime?.LocalDateTime</td>
+                            <td>@execution.EndDateTime?.LocalDateTime</td>
+                            <td>@execution.GetDurationInReadableFormat()</td>
+                            <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+                        </tr>
+                        @if (SelectedStepExecution == execution)
+                        {
+                            <tr class="table-borderless no-hover">
+                                <td colspan="4" class="bg-light">
+                                    <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
+                                </td>
+                            </tr>
+                        }
+                    }
+                }
+            </tbody>
+        </table>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+
+    [Parameter]
+    public string? StepId_ { get; set; }
+
+    private string StepName => Executions?.FirstOrDefault()?.StepExecution?.StepName ?? "";
+
+    private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    private List<StepExecutionAttempt>? Executions { get; set; }
+
+    public const int MaxExecutions = 50;
+
+    private StepExecutionAttempt? SelectedStepExecution { get; set; }
+
+    private double AverageDurationInSeconds => (int)(Executions?.Where(e => e.ExecutionStatus == StepExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (StepId_ is not null)
+        {
+            Executions = null; // Set to null to reset the modal layout.
+
+            var context = DbFactory.CreateDbContext();
+            Executions = await context.StepExecutionAttempts
+                .AsNoTrackingWithIdentityResolution()
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(step => (step as ParameterizedStepExecution)!.StepExecutionParameters)
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(step => step.Execution)
+                .ThenInclude(e => e.ExecutionParameters)
+                .Where(e => e.StepId == StepId)
+                .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
+                .ThenByDescending(Execution => Execution.StartDateTime)
+                .Take(MaxExecutions)
+                .ToListAsync();
+        }
+    }
+
+    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    {
+        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        StateHasChanged();
+    }
+
+    public async Task ShowAsync() => await Offcanvas.ShowAsync();
+
+}

@@ -1,0 +1,51 @@
+﻿CREATE TABLE [biflow].[ExecutionStep] (
+    [ExecutionId]                       UNIQUEIDENTIFIER    NOT NULL CONSTRAINT [FK_ExecutionStep_Execution] FOREIGN KEY REFERENCES [biflow].[Execution] ([ExecutionId]),
+    [StepId]                            UNIQUEIDENTIFIER    NOT NULL,
+    [StepName]                          NVARCHAR(250)       NOT NULL,
+    [RetryAttempts]                     INT                 NOT NULL,
+    [RetryIntervalMinutes]              INT                 NOT NULL,
+    [TimeoutMinutes]                    INT                 NOT NULL CONSTRAINT [DF_ExecutionStep_TimeoutMinutes] DEFAULT (0),
+    [ExecutionPhase]                    INT                 NOT NULL,
+    [StepType]                          VARCHAR (20)        NOT NULL,
+    [SqlStatement]                      NVARCHAR (MAX)      NULL,
+    [ResultCaptureJobParameterId]       UNIQUEIDENTIFIER    NULL,
+    [ResultCaptureJobParameterValue]    SQL_VARIANT         NULL,
+    [ConnectionId]                      UNIQUEIDENTIFIER    NULL,
+    [PackageFolderName]                 NVARCHAR(128)       NULL,
+    [PackageProjectName]                NVARCHAR(128)       NULL,
+    [PackageName]                       NVARCHAR(260)       NULL,
+    [ExecuteIn32BitMode]                BIT                 NOT NULL,
+    [ExecuteAsLogin]                    NVARCHAR(128)       NULL,
+    [DataFactoryId]                     UNIQUEIDENTIFIER    NULL,
+    [PipelineName]                      NVARCHAR(250)       NULL,
+    [JobToExecuteId]                    UNIQUEIDENTIFIER    NULL,
+    [JobExecuteSynchronized]            BIT                 NULL,
+    [ExeFileName]                       NVARCHAR(1000)      NULL,
+    [ExeArguments]                      NVARCHAR(MAX)       NULL,
+    [ExeWorkingDirectory]               NVARCHAR(1000)      NULL,
+    [ExeSuccessExitCode]                INT                 NULL,
+    [AppRegistrationId]                 UNIQUEIDENTIFIER    NULL,
+    [DatasetGroupId]                    NVARCHAR(36)        NULL,
+    [DatasetId]                         NVARCHAR(36)        NULL,
+    [FunctionAppId]                     UNIQUEIDENTIFIER    NULL,
+    [FunctionUrl]                       VARCHAR(1000)       NULL,
+    [FunctionInput]                     NVARCHAR(MAX)       NULL,
+    [FunctionIsDurable]                 BIT                 NULL,
+    [AgentJobName]                      NVARCHAR(128)       NULL,
+    [TabularModelName]                  NVARCHAR(128)       NULL,
+    [TabularTableName]                  NVARCHAR(128)       NULL,
+    [TabularPartitionName]              NVARCHAR(128)       NULL,
+    CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
+    CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
+    CONSTRAINT [CK_ExecutionStep_StepType] CHECK (
+        [StepType]='Package'
+        OR [StepType]='Sql'
+        OR [StepType]='Job'
+        OR [StepType]='Pipeline'
+        OR [StepType]='Exe'
+        OR [StepType]='Dataset'
+        OR [StepType]='Function'
+        OR [StepType]='AgentJob'
+        OR [StepType]='Tabular')
+);
+

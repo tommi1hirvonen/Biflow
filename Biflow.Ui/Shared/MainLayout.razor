@@ -1,0 +1,109 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
+@inject ISchedulerService SchedulerService
+@using System.Security.Claims
+@using System.Security.Principal
+
+<style> @*Toast container for HxMessenger service*@
+    .hx-toast-container {
+        margin-top: 1.5rem!important;
+        z-index: 2000;
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+        <HxMessenger Position="ToastContainerPosition.TopCenter" />
+        <HxMessageBoxHost />
+        <header>
+            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : null)">
+                <text class="navbar-brand navbar-brand-bg me-0 px-3">Biflow</text>
+                <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                @if (SchedulerServiceErrorMessage is not null)
+                {
+                    <ul class="navbar-nav">
+                        <li>
+                            <strong class="navbar-text px-3">@SchedulerServiceErrorMessage</strong>
+                        </li>
+                    </ul>
+                }
+                <ul class="navbar-nav ms-auto">
+                    <li>
+                        <strong class="navbar-text px-3">
+                            @(Configuration.GetValue<string>("EnvironmentName"))
+                        </strong>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <div class="container-fluid">
+            <div role="row">
+                <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
+                <main class="main px-md-4 pt-4 flex-grow-1">
+                    @Body
+                </main>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter]
+    protected Task<AuthenticationState>? AuthStat { get; set; }
+
+    private bool collapseSidebar = true;
+    private string? SidebarClass => collapseSidebar ? "collapse" : null;
+    private string? SchedulerServiceErrorMessage { get; set; } = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState authenticationState = await (AuthStat ?? throw new InvalidOperationException("Failed to get authentication state"));
+        ClaimsPrincipal user = authenticationState.User;
+        IIdentity identity = user.Identity ?? throw new InvalidOperationException("Usere identity was null");
+        if (!identity.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+            return;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Get the scheduler service status and notify the user of a possible error.
+            try
+            {
+                (var running, var error) = await SchedulerService.GetStatusAsync();
+                if (!running)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed and running correctly.";
+                }
+                else if (error)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";
+                }
+            }
+            catch (Exception ex)
+            {
+                SchedulerServiceErrorMessage = $"Error getting scheduler service status: {ex.Message}";
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleSidebar()
+    {
+        collapseSidebar = !collapseSidebar;
+    }
+
+    private async Task CollapseSidebar()
+    {
+        // Do not instantly close the sidebar, as this might look "funky" to the user.
+        await Task.Delay(100);
+        collapseSidebar = true;
+    }
+}

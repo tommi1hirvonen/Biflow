@@ -1,0 +1,155 @@
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IConfiguration configuration
+@inject IHxMessengerService Messenger
+
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.DataFactoryName)">
+    <BodyTemplate>
+        @if (DataFactory is not null)
+        {
+            <EditForm Model="DataFactory" id="df_edit_form" OnValidSubmit="SubmitDataFactory">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">Data Factory name</label>
+                                <InputText class="form-control" @bind-Value="DataFactory.DataFactoryName"></InputText>
+                            </div>
+                        </div>
+
+                        <div class=" row mt-3">
+                            <div class="col-lg-6">
+                                <label class="form-label">App registration</label>
+                                <InputSelect class="form-select" @bind-Value="DataFactory.AppRegistrationId">
+                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                        {
+                                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                        }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Subscription id</label>
+                                <InputText class="form-control" @bind-Value="DataFactory.SubscriptionId"></InputText>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Resource group name</label>
+                                <InputText class="form-control" @bind-Value="DataFactory.ResourceGroupName"></InputText>
+                            </div>
+                            <div class="col-lg">
+                                <label class="form-label">Resource name</label>
+                                <InputText class="form-control" @bind-Value="DataFactory.ResourceName"></InputText>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                @if (ConnectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (ConnectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(DataFactoryId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
+
+    [Parameter]
+    public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
+
+    [Parameter]
+    public List<AppRegistration>? AppRegistrations { get; set; }
+
+    private DataFactory? DataFactory { get; set; }
+
+    private HxModal Modal { get; set; } = null!;
+
+    private bool? ConnectionTestSuccess { get; set; } = null;
+    private bool TestingConnection { get; set; } = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (DataFactoryId != Guid.Empty)
+        {
+            using var context = DbFactory.CreateDbContext();
+            DataFactory = await context.DataFactories
+                .AsNoTrackingWithIdentityResolution()
+                .Include(df => df.Steps)
+                .ThenInclude(step => step.Job)
+                .FirstAsync(df => df.DataFactoryId == DataFactoryId);
+        }
+        else
+        {
+            DataFactory = new()
+            {
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                Steps = new List<PipelineStep>()
+            };
+        }
+        ConnectionTestSuccess = null;
+        TestingConnection = false;
+    }
+
+    private async Task SubmitDataFactory()
+    {
+        await OnDataFactorySubmit.InvokeAsync(DataFactory);
+        await Modal.HideAsync();
+    }
+
+    private async Task TestConnection()
+    {
+        ConnectionTestSuccess = null;
+        TestingConnection = true;
+        try
+        {
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == DataFactory?.AppRegistrationId)
+                ?? throw new ArgumentNullException("App registration cannot be null");
+            await (DataFactory?.TestConnection(appRegistration) ?? Task.CompletedTask);
+            ConnectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            ConnectionTestSuccess = false;
+            Messenger.AddError("Connection test failed", ex.Message);
+        }
+        TestingConnection = false;
+    }
+
+    private void OnOpenChanged(bool isOpen)
+    {
+        if (!isOpen)
+            ConnectionTestSuccess = null;
+    }
+
+    public async Task ShowAsync() => await Modal.ShowAsync();
+}

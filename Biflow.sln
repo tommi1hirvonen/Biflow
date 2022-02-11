@@ -1,0 +1,87 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.ConsoleApp", "Biflow.Executor.ConsoleApp\Biflow.Executor.ConsoleApp.csproj", "{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Biflow.Database", "Biflow.Database\Biflow.Database.sqlproj", "{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui", "Biflow.Ui\Biflow.Ui.csproj", "{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Utilities", "Biflow.Utilities\Biflow.Utilities.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess", "Biflow.DataAccess\Biflow.DataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.ConsoleApp.Test", "Biflow.Executor.ConsoleApp.Test\Biflow.Executor.ConsoleApp.Test.csproj", "{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Scheduler.Core", "Biflow.Scheduler.Core\Biflow.Scheduler.Core.csproj", "{549C16EB-B840-4E05-B55C-0CCE596904D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Scheduler.WebApp", "Biflow.Scheduler.WebApp\Biflow.Scheduler.WebApp.csproj", "{E48ADBA2-2F7D-4458-94D7-2A7B1F24253B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.Core", "Biflow.Executor.Core\Biflow.Executor.Core.csproj", "{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.WebApp", "Biflow.Executor.WebApp\Biflow.Executor.WebApp.csproj", "{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Scheduler.WebApp.Test", "Biflow.Scheduler.WebApp.Test\Biflow.Scheduler.WebApp.Test.csproj", "{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13141E3A-9808-4021-94CC-BFEA654F40CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E48ADBA2-2F7D-4458-94D7-2A7B1F24253B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E48ADBA2-2F7D-4458-94D7-2A7B1F24253B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E48ADBA2-2F7D-4458-94D7-2A7B1F24253B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E48ADBA2-2F7D-4458-94D7-2A7B1F24253B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EFBFBF8C-A49A-43CE-A2D5-16445EF58815}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C8F07DB-EFE6-4FE5-B99B-73F0842AA130}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E64F23BC-F8E0-47CE-9F5F-89F8D91A5516}
+	EndGlobalSection
+EndGlobal

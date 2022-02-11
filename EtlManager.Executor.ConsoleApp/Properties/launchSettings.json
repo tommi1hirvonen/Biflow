@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "EtlManagerExecutor": {
-      "commandName": "Project",
-      "commandLineArgs": "test-connection",
-      "workingDirectory": "C:\\EtlManager\\EtlManagerUi"
-    }
-  }
-}

@@ -1,0 +1,36 @@
+﻿@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] | Biflow</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="bg-light">
+    <header>
+        <nav class="navbar navbar-custom sticky-top flex-md-nowrap p-0 shadow">
+            <text class="navbar-brand mr-0 px-3">Biflow</text>
+            <ul class="navbar-nav ms-auto">
+                    <li>
+                        <strong class="navbar-text px-3">
+                            @(Configuration.GetValue<string>("EnvironmentName"))
+                        </strong>
+                    </li>
+                </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,49 @@
+﻿@page "/subscriptions/{Page?}"
+
+@inject MarkupHelperService MarkupHelper
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IHxMessengerService Messenger
+
+<PageTitle>Subscriptions | Biflow</PageTitle>
+
+<h4>Subscriptions</h4>
+
+<AuthorizeView Roles="Admin">
+    <ul class="nav nav-pills mt-3 mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.All">
+                My subscriptions
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="subscriptions/all">
+                All subscriptions
+            </NavLink>
+        </li>
+    </ul>
+</AuthorizeView>
+
+@if (Page is null)
+{
+    <MySubscriptionsComponent />
+}
+else if (Page == "all")
+{
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <AllSubscriptionsComponent />
+        </Authorized>
+        <NotAuthorized>
+            <p class="mt-4">Not authorized</p>
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else
+{
+    <p>Sorry, nothing at this address.</p>
+}
+
+@code {
+    [Parameter] public string? Page { get; set; }
+}

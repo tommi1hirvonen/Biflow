@@ -1,0 +1,497 @@
+﻿<style>
+    .step-row:hover,
+    .step-row:focus,
+    .step-row.step-row-disabled:hover,
+    .step-row.step-row-disabled:focus {
+        background-color: #ececec;
+    }
+
+    .step-row-disabled {
+        background-color: #f3f3f3;
+    }
+
+    .step-row a {
+        text-decoration: none;
+    }
+
+        .step-row:hover a {
+            text-decoration: underline;
+        }
+</style>
+
+<PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
+
+@if (Job is not null)
+{
+    <JobParametersModal @ref="JobParametersModal" Job="Job" />
+
+    <JobConcurrencyModal @ref="JobConcurrencyModal" Job="Job" />
+}
+
+
+<div class="sticky-top pt-2 pb-3" style="background-color: rgba(248, 249, 250, 0.9);">
+    @*Same as bg-light but with slight transparency*@
+    <div class="btn-toolbar">
+        <AuthorizeView Roles="Admin, Editor">
+            <HxDropdown CssClass="me-3">
+                <HxDropdownToggleButton Color="ThemeColor.Success">
+                    Add step
+                </HxDropdownToggleButton>
+                <HxDropdownMenu>
+                    <HxDropdownHeader>Step type</HxDropdownHeader>
+                    @foreach (var stepType in Enum.GetValues<StepType>())
+                    {
+                        <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
+                                        Enabled="!IsStepTypeDisabled(stepType)">
+                            <StepTypeIconComponent StepType_="stepType" />
+                            @stepType
+                        </HxDropdownItem>
+                    }
+                </HxDropdownMenu>
+            </HxDropdown>
+        </AuthorizeView>
+        <AuthorizeView Roles="Admin, Editor, Operator">
+            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobParametersModal?.Show() ?? Task.CompletedTask)">
+                @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                Parameters
+            </HxButton>
+            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobConcurrencyModal?.Show() ?? Task.CompletedTask)">
+                @MarkupHelper.FromFile("icons/feather/cpu.svg")
+                Concurrency
+            </HxButton>
+            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (SynchronizeDependenciesModal?.ShowAsync() ?? Task.CompletedTask)">
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                Sync dependencies
+            </HxButton>
+            <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync(SelectedSteps)">
+                @MarkupHelper.FromFile("icons/feather/play.svg")
+                Execute
+            </HxButton>
+        </AuthorizeView>
+    </div>
+
+    @if (ShowExecutionAlert)
+    {
+        <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
+            @MarkupHelper.FromFile("icons/feather/check-circle.svg")
+            Execution started successfully – <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
+            <button type="button" class="btn-close" @onclick="() => ShowExecutionAlert = false"></button>
+        </div>
+    }
+
+    <div class="row mt-3">
+        <div class="col">
+            @MarkupHelper.FromFile("icons/feather/tag.svg")
+            <span class="me-3">Tags</span>
+            @if (!Tags.Any())
+            {
+                <small class="text-secondary me-2">No tags</small>
+            }
+            @foreach (var tag in Tags)
+            {
+                <TagComponent Tag="tag"
+                              Selected="TagsFilterSet.Contains(tag)"
+                              CssClass="mx-1"
+                              Style="cursor: pointer;"
+                              OnClick="() => { if (TagsFilterSet.Contains(tag)) TagsFilterSet.Remove(tag); else TagsFilterSet.Add(tag); }" />
+            }
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <div class="input-group input-group-sm me-3">
+                <div class="input-group-text">
+                    @MarkupHelper.FromFile("icons/feather/filter.svg")
+                </div>
+                <input type="search" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+                <input type="search" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
+                <input type="search" class="form-control" @bind-value="SqlStatementFilter" @bind-value:event="oninput" placeholder="Filter by SQL statement" />
+            </div>
+        </div>
+        
+        <div class="col-xl mt-3 mt-xl-0 d-inline-flex align-items-center">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <FilterDropdown TItem="StepType"
+                                FilterSet="StepTypeFilter"
+                                Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @MarkupHelper.FromFile("icons/feather/tool.svg")
+                        Step type
+                    </Title>
+                </FilterDropdown>
+                <FilterDropdown TItem="SqlConnectionInfo"
+                                FilterSet="ConnectionFilter"
+                                IdSelector="c => c.ConnectionId.ToString()"
+                                TextSelector="c => c.ConnectionName"
+                                Items="SqlConnections?
+                                        .Where(c => Steps?.Any(s => s is SqlStep sql && sql.ConnectionId == c.ConnectionId
+                                                                || s is PackageStep package && package.ConnectionId == c.ConnectionId) == true)
+                                        .OrderBy(c => c.ConnectionName)
+                                        ?? Enumerable.Empty<SqlConnectionInfo>()"
+                                OnChange="StateHasChanged">
+                    <Title>
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        Connection
+                    </Title>
+                </FilterDropdown>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+                    {
+                        TagsFilterSet.Clear();
+                        StepTypeFilter.Clear();
+                        ConnectionFilter.Clear();
+                        StepNameFilter = string.Empty;
+                        StepDescriptionFilter = string.Empty;
+                        SqlStatementFilter = string.Empty;
+                    }">
+                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                    Clear
+                </HxButton>
+            </HxButtonGroup>
+            <div class="form-check ms-4">
+                <input type="checkbox" class="form-check-input" id="show_details"
+                       checked=@ShowDetails
+                       @onchange="args => ShowDetails = (bool)args.Value!">
+                <label class="form-check-label" for="show_details">Show details</label>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col">
+        <ol class="list-group shadow-sm">
+            @if (Steps is null || Jobs is null || Job is null)
+            {
+                <li class="list-group-item" style="background-color: #fafafa">
+                    <div class="row">
+                        <div class="col text-secondary fw-bold small">
+                            Loading...
+                        </div>
+                    </div>
+                </li>
+            }
+            else
+            {
+                var count = FilteredSteps.Count();
+                var disabledCount = FilteredSteps.Where(s => !s.IsEnabled).Count();
+                var countText = Steps.Count switch
+                {
+                    0 => "No steps",
+                    1 => count == Steps.Count ? $"Showing {count} step" : $"Showing {count} of {Steps.Count} step",
+                    > 1 => count == Steps.Count ? $"Showing all {Steps.Count} steps" : $"Showing {count} of {Steps.Count} steps",
+                    _ => string.Empty
+                };
+                var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
+                var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
+                <li class="list-group-item" style="background-color: #f3f3f3">
+                    <div class="row align-items-center" style="min-height: 31px;">
+                        <AuthorizeView Roles="Admin, Editor, Operator">
+                            <div class="col text-secondary d-flex align-items-center">
+                                <TriStateCheckbox Checked="@(SelectedSteps.Count == count && Steps.Any() && count > 0)"
+                                                  Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
+                                                  CheckedChanged="ToggleAllStepsSelected" />
+                                <div class="fw-bold small">@selectedText</div>
+                            </div>
+                        </AuthorizeView>
+                        <AuthorizeView Roles="Admin, Editor">
+                            <div class="col">
+                                @if (SelectedSteps.Any())
+                                {
+                                    <div class="btn-group btn-row">
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
+                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu>
+                                                <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
+                                                @MarkupHelper.FromFile("icons/feather/copy.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                <HxDropdownHeader>Copy to</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
+                                                <HxDropdownDivider></HxDropdownDivider>
+                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                                {
+                                                    <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
+                                                }
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                    </div>
+                                }
+                            </div>
+                        </AuthorizeView>
+                        <div class="col text-secondary text-center fw-bold small">
+                             @countText
+                        </div>
+                        <div class="col text-secondary text-end fw-bold small">
+                            @disabledCountText
+                        </div>
+                    </div>
+                </li>
+                @foreach (var item in FilteredSteps)
+                {
+                    <li class="list-group-item step-row py-2 @(item.IsEnabled ? null : "step-row-disabled")">
+                        <div class="row">
+                            <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
+                                <AuthorizeView Roles="Admin, Editor, Operator">
+                                    <div class="form-check me-2">
+                                        <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
+                                               checked=@SelectedSteps.Contains(item)
+                                               @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
+                                        <label class="form-check-label" for="select_step_@item.StepId"></label>
+                                    </div>
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
+                                        <StepTypeIconComponent StepType_="@item.StepType" />
+                                        &nbsp;
+                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
+                                    </a>
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Operator, Viewer">
+                                    <span>
+                                        <StepTypeIconComponent StepType_="@item.StepType" />
+                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
+                                    </span>
+                                </AuthorizeView>
+                            </div>
+                            <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-between">
+                                @if (item is ParameterizedStep parameterizedStep && parameterizedStep.StepParameters.Any(p => p.JobParameterId is not null)
+                                || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                                {
+                                    <div title="Step uses job parameters">
+                                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div></div>
+                                }
+                                <div class="justify-content-end" style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">
+                                    @item.ExecutionPhase
+                                    &nbsp;
+                                    @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-4 d-inline-flex align-items-center justify-content-end">
+                                <AuthorizeView Roles="Admin, Editor">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" class="form-check-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                        <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                    </div>
+                                </AuthorizeView>
+                                <AuthorizeView Roles="Operator, Viewer">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" class="form-check-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
+                                        <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                    </div>
+                                </AuthorizeView>
+                                <div class="btn-group btn-row ms-2">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepHistoryOffcanvas(item)">
+                                        @MarkupHelper.FromFile("icons/feather/activity.svg")
+                                    </HxButton>
+
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepDetailsModal(item)">
+                                        @MarkupHelper.FromFile("icons/feather/info.svg")
+                                    </HxButton>
+
+                                    <AuthorizeView Roles="Admin, Editor">
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                @MarkupHelper.FromFile("icons/feather/copy.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                <HxDropdownHeader>Copy to</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => CopyStep(item, Job)">here</HxDropdownItem>
+                                                <HxDropdownDivider></HxDropdownDivider>
+                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                                {
+                                                    <HxDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</HxDropdownItem>
+                                                }
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+
+                                        <HxDropdown>
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => DeleteStep(item)">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                    </AuthorizeView>
+                                </div>
+                            </div>
+
+                            <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
+                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                {
+                                    <TagComponent Tag="tag" CssClass="m-1" />
+                                }
+                            </div>
+                        </div>
+                        @if (ShowDetails || !string.IsNullOrEmpty(StepDescriptionFilter))
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter"/></em></small>
+                                </div>
+                            </div>
+                        }
+                        @if ((ShowDetails || !string.IsNullOrEmpty(SqlStatementFilter)) && item is SqlStep sqlStep)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter"/></small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is PackageStep package)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary">@package.PackageFolderName\@package.PackageProjectName\@package.PackageName</small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is PipelineStep pipeline)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary">@pipeline.PipelineName</small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is AgentJobStep agentJob)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary">@agentJob.AgentJobName</small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is ExeStep exe)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary">@exe.ExeFileName</small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is FunctionStep function)
+                        {
+                            <div class="row">
+                                <div class="col text-truncate">
+                                    <small class="text-secondary">@function.FunctionUrl</small>
+                                </div>
+                            </div>
+                        }
+                        @if (ShowDetails && item is TabularStep tabular)
+                        {
+                            var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $"\\{tabular.TabularTableName}";
+                            var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $"\\{tabular.TabularPartitionName}";
+                            <div class="row">
+                                <div class="col text-truncate">
+                                     
+                                    <small class="text-secondary">@tabular.TabularModelName@tableText@partitionText</small>
+                                </div>
+                            </div>
+                        }
+                    </li>
+                }
+            }
+        </ol>
+    </div>
+</div>
+
+
+<AuthorizeView Roles="Admin, Editor">
+    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Sql]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        AsConnections="AsConnections"
+        StepId="EditModalStepIds[StepType.Tabular]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.AgentJob]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        AppRegistrations="AppRegistrations"
+        StepId="EditModalStepIds[StepType.Dataset]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Exe]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <JobStepEditModal @ref="StepEditModals[StepType.Job]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Job]"
+        Jobs="Jobs"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
+        Job="Job" Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Function]"
+        FunctionApps="FunctionApps"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <PackageStepEditModal @ref="StepEditModals[StepType.Package]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Package]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
+    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        DataFactories="DataFactories"
+        StepId="EditModalStepIds[StepType.Pipeline]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />   
+</AuthorizeView>
+
+<SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" Job="Job" Steps="Steps"  OnModalClosed="OnSynchronizeDependenciesModalClosed" />
+
+<StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
+
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStep?.StepId.ToString()" />
+
+<AuthorizeView Roles="Admin, Editor, Operator">
+    <ExecuteModal @ref="ExecuteModal" Steps="Steps" Job="Job" OnExecutionStarted="OnExecutionStarted" />
+</AuthorizeView>
+
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />

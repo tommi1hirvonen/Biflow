@@ -1,0 +1,169 @@
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>@Job?.JobName | History | Biflow</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_all"
+                    checked=@(StartTypeFilter == StartType.All)
+                    @onchange="() => StartTypeFilter = StartType.All">
+            <label class="form-check-label" for="radio_all">All</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_scheduled"
+                    checked=@(StartTypeFilter == StartType.Scheduled)
+                    @onchange="() => StartTypeFilter = StartType.Scheduled">
+            <label class="form-check-label" for="radio_scheduled">Scheduled</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_manual"
+                    checked=@(StartTypeFilter == StartType.Manual)
+                    @onchange="() => StartTypeFilter = StartType.Manual">
+            <label class="form-check-label" for="radio_manual">Manual</label>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm pt-2 mb-4 mt-3">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Created
+                </th>
+                <th>
+                    Started
+                </th>
+                <th>
+                    Ended
+                </th>
+                <th>
+                    Duration
+                </th>
+                <th>
+                    Number of steps
+                </th>
+                <th>
+                    Success percent
+                </th>
+                <th>
+                    Status
+                </th>
+            </tr>
+            <tr>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
+                <th></th>
+                <th style="text-align: right;">@AverageSuccessRate.FormatPercentage(2)</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Executions is null)
+            {
+                <tr><td colspan="7">Loading...</td></tr>
+            }
+            else if (Executions.Count == 0)
+            {
+                <tr><td colspan="7">No executions</td></tr>
+            }
+            else
+            {
+                @foreach (var item in Executions
+                   .Where(e => StartTypeFilter == StartType.All ||
+                                StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                                StartTypeFilter == StartType.Manual && e.ScheduleId is null))
+                {
+                    <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                        <td>
+                            @item.CreatedDateTime.LocalDateTime
+                        </td>
+                        <td>
+                            @item.StartDateTime?.LocalDateTime
+                        </td>
+                        <td>
+                            @item.EndDateTime?.LocalDateTime
+                        </td>
+                        <td>
+                            <text>@item.GetDurationInReadableFormat()</text>
+                        </td>
+                        <td style="text-align: right;">
+                            @item.StepExecutions.Count
+                        </td>
+                        <td style="text-align: right;">
+                            @item.GetSuccessPercent().FormatPercentage(2)
+                        </td>
+                        <td>
+                            <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+    <div class="px-3">
+        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
+    </div>
+</div>
+
+<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Parameter]
+    public Job? Job { get; set; }
+
+    private Guid PrevId { get; set; }
+
+    public IList<Execution>? Executions { get; set; }
+
+    public int MaxExecutions { get; set; } = 50;
+
+    public decimal AverageSuccessRate { get; set; }
+    public double AverageDurationInSeconds { get; set; }
+
+    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
+    private Guid SelectedJobExecutionId { get; set; }
+    private StartType StartTypeFilter { get; set; } = StartType.All;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id != PrevId)
+        {
+            PrevId = Id;
+            using var context = DbFactory.CreateDbContext();
+            Executions = await context.Executions
+                .AsNoTrackingWithIdentityResolution()
+                .Include(execution => execution.StepExecutions)
+                .ThenInclude(execution => execution.StepExecutionAttempts)
+                .Where(execution => execution.JobId == Id)
+                .OrderByDescending(execution => execution.CreatedDateTime)
+                .Take(MaxExecutions)
+                .ToListAsync();
+
+            if (Executions.Count > 0)
+            {
+                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Count() / Executions.Count() * 100;
+            }
+            else
+            {
+                AverageSuccessRate = 0;
+            }
+
+            AverageDurationInSeconds = (int)(Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
+        }
+    }
+
+    private async Task OpenJobExecutionModal(Guid executionId)
+    {
+        SelectedJobExecutionId = executionId;
+        await JobExecutionModal.ShowAsync();
+    }
+
+}

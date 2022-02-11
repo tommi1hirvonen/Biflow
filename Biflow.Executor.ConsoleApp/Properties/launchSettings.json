@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "BiflowExecutor": {
+      "commandName": "Project",
+      "commandLineArgs": "test-connection",
+      "workingDirectory": "C:\\Biflow\\BiflowExecutor"
+    }
+  }
+}

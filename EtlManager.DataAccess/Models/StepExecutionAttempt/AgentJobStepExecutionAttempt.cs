@@ -1,9 +1,0 @@
-﻿namespace EtlManager.DataAccess.Models;
-
-public record AgentJobStepExecutionAttempt : StepExecutionAttempt
-{
-    public AgentJobStepExecutionAttempt(StepExecutionStatus executionStatus)
-        : base(executionStatus, StepType.AgentJob)
-    {
-    }
-}
