@@ -8,5 +8,5 @@
 	[ObjectName] VARCHAR(128) NOT NULL,
 	[MaxConcurrentWrites] INT NOT NULL,
 	CONSTRAINT [PK_ExecutionSourceTargetObject] PRIMARY KEY CLUSTERED ([ExecutionId], [ObjectId]),
-	CONSTRAINT [FK_ExecutionSourceTargetObject_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [biflow].[Execution] ([ExecutionId])
+	CONSTRAINT [FK_ExecutionSourceTargetObject_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [biflow].[Execution] ([ExecutionId]) ON DELETE CASCADE
 )

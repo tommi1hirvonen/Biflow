@@ -19,3 +19,37 @@
         [ParameterValueType] = 'String'
         )
 )
+
+GO
+
+CREATE TRIGGER [biflow].[Trigger_ExecutionParameter]
+    ON [biflow].[ExecutionParameter]
+    INSTEAD OF DELETE
+    AS
+    BEGIN
+        SET NOCOUNT ON
+
+        UPDATE biflow.ExecutionStep
+        SET ResultCaptureJobParameterId = NULL
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStep.ExecutionId = deleted.ExecutionId AND ExecutionStep.ResultCaptureJobParameterId = deleted.ParameterId
+        )
+
+        UPDATE biflow.ExecutionStepParameter
+        SET ExecutionParameterId = NULL
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStepParameter.ExecutionId = deleted.ExecutionId AND ExecutionStepParameter.ExecutionParameterId = deleted.ParameterId
+        )
+
+        DELETE FROM biflow.ExecutionParameter
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionParameter.ExecutionId = deleted.ExecutionId AND ExecutionParameter.ParameterId = deleted.ParameterId
+        )
+
+    END

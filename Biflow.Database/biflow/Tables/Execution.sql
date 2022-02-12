@@ -31,3 +31,22 @@
         OR [NotifyCaller] = 'OnCompletion')
 );
 
+GO
+
+CREATE TRIGGER [biflow].[Trigger_Execution]
+    ON [biflow].[Execution]
+    INSTEAD OF DELETE
+    AS
+    BEGIN
+        SET NOCOUNT ON
+
+        DELETE FROM biflow.ExecutionStep
+        WHERE ExecutionId IN (SELECT ExecutionId FROM deleted)
+
+        DELETE FROM biflow.ExecutionParameter
+        WHERE ExecutionId IN (SELECT ExecutionId FROM deleted)
+
+        DELETE FROM biflow.Execution
+        WHERE ExecutionId IN (SELECT ExecutionId FROM deleted)
+
+    END

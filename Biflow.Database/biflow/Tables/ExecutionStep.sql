@@ -49,3 +49,47 @@
         OR [StepType]='Tabular')
 );
 
+GO
+
+CREATE TRIGGER [biflow].[Trigger_ExecutionStep]
+    ON [biflow].[ExecutionStep]
+    INSTEAD OF DELETE
+    AS
+    BEGIN
+        SET NOCOUNT ON
+        -- Use instead of trigger to delete linking dependencies because of SQL Server limitation with multiple cascading paths.
+        -- https://support.microsoft.com/en-us/help/321843/error-message-1785-occurs-when-you-create-a-foreign-key-constraint-tha
+        
+        DELETE FROM biflow.ExecutionDependency
+            WHERE EXISTS (
+                SELECT *
+                FROM deleted
+                WHERE ExecutionDependency.ExecutionId = deleted.ExecutionId AND ExecutionDependency.StepId = deleted.StepId
+            ) OR EXISTS (
+                SELECT *
+                FROM deleted
+                WHERE ExecutionDependency.ExecutionId = deleted.ExecutionId AND ExecutionDependency.DependantOnStepId = deleted.StepId
+            )
+
+        DELETE FROM biflow.ExecutionStepSource
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStepSource.ExecutionId = deleted.ExecutionId AND ExecutionStepSource.StepId = deleted.StepId
+        )
+
+        DELETE FROM biflow.ExecutionStepTarget
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStepTarget.ExecutionId = deleted.ExecutionId AND ExecutionStepTarget.StepId = deleted.StepId
+        )
+        
+        DELETE FROM biflow.ExecutionStep
+            WHERE EXISTS (
+                SELECT *
+                FROM deleted
+                WHERE ExecutionStep.ExecutionId = deleted.ExecutionId AND ExecutionStep.StepId = deleted.StepId
+            )
+            
+    END
