@@ -1,7 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Scheduler.Core;
 
-namespace Biflow.Ui.Services;
+namespace Biflow.Ui.Core;
 
 public class SelfHostedSchedulerService : ISchedulerService
 {

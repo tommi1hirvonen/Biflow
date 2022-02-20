@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Hosting;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class MarkupHelperService
 {

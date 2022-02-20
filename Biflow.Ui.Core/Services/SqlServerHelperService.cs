@@ -3,7 +3,7 @@ using Biflow.DataAccess;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class SqlServerHelperService
 {

@@ -1,9 +1,10 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Scheduler.Core;
+using Microsoft.Extensions.Configuration;
 using System.Text;
 using System.Text.Json;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class WebAppSchedulerService : ISchedulerService
 {

@@ -1,10 +1,11 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Utilities;
+using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text.Json;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class ConsoleAppExecutorService : IExecutorService
 {

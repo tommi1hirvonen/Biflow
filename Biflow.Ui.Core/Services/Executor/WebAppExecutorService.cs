@@ -1,7 +1,8 @@
 ﻿using Biflow.DataAccess.Models;
+using Microsoft.Extensions.Configuration;
 using System.Web;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class WebAppExecutorService : IExecutorService
 {

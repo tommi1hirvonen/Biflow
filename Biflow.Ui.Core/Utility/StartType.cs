@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public enum StartType
 {

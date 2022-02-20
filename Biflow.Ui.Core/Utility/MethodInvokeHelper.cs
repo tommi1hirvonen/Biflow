@@ -1,6 +1,6 @@
 ﻿using Microsoft.JSInterop;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class MethodInvokeHelper
 {

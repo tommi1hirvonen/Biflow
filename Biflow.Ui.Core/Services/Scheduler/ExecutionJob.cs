@@ -2,8 +2,10 @@
 using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace Biflow.Ui.Services;
+namespace Biflow.Ui.Core;
 
 public class ExecutionJob : ExecutionJobBase
 {

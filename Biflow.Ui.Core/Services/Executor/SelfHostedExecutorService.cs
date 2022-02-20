@@ -1,7 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.WebExtensions;
 
-namespace Biflow.Ui.Services;
+namespace Biflow.Ui.Core;
 
 public class SelfHostedExecutorService : IExecutorService
 {

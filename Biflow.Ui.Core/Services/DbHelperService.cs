@@ -1,8 +1,9 @@
 ﻿using Dapper;
 using Biflow.DataAccess.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class DbHelperService
 {

@@ -1,6 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public class TopologicalStepComparer : IComparer<Step>
 {

@@ -2,7 +2,7 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Ui
+namespace Biflow.Ui.Core
 {
     public class SubscriptionsHelperService
     {

@@ -2,11 +2,85 @@
 using Biflow.DataAccess.Models;
 using Quartz;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using Biflow.DataAccess;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Biflow.Executor.Core;
+using Biflow.Executor.Core.WebExtensions;
+using Biflow.Scheduler.Core;
+using Microsoft.AspNetCore.Builder;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Core;
 
 public static partial class Utility
 {
+    public static async Task ReadAllSchedulesAsync(this WebApplication app)
+    {
+        // Read all schedules into the schedules manager.
+        using var scope = app.Services.CreateScope();
+        var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
+        await scheduler.SynchronizeAsync();
+    }
+
+    public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("BiflowContext");
+        services.AddDbContextFactory<BiflowContext>(options =>
+        {
+            options.UseSqlServer(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+            //options.EnableSensitiveDataLogging();
+        });
+
+        services.AddHttpClient();
+        services.AddHttpClient("DefaultCredentials")
+            // Passes Windows credentials in on-premise installations to the scheduler API.
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
+
+        services.AddSingleton<ITokenService, TokenService>();
+
+        var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
+        if (executorType == "ConsoleApp")
+        {
+            services.AddSingleton<IExecutorService, ConsoleAppExecutorService>();
+        }
+        else if (executorType == "WebApp")
+        {
+            services.AddSingleton<IExecutorService, WebAppExecutorService>();
+        }
+        else if (executorType == "SelfHosted")
+        {
+            services.AddExecutorServices<ExecutorLauncher>(connectionString, configuration.GetSection("Executor").GetSection("SelfHosted"));
+            services.AddSingleton<ExecutionManager>();
+            services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
+        }
+        else
+        {
+            throw new ArgumentException($"Error registering executor service. Incorrect executor type: {executorType}. Check appsettings.json.");
+        }
+
+        var schedulerType = configuration.GetSection("Scheduler").GetValue<string>("Type");
+        if (schedulerType == "WebApp")
+        {
+            services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
+        }
+        else if (schedulerType == "SelfHosted")
+        {
+            services.AddSchedulerServices<ExecutionJob>(connectionString);
+            services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
+        }
+        else
+        {
+            throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
+        }
+
+        services.AddSingleton<DbHelperService>();
+        services.AddSingleton<SqlServerHelperService>();
+        services.AddSingleton<MarkupHelperService>();
+        services.AddSingleton<SubscriptionsHelperService>();
+
+        return services;
+    }
 
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {
