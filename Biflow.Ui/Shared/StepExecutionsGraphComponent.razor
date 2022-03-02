@@ -22,57 +22,60 @@
                 }
             </div>
         </div>
-        @foreach (var item in Executions.Where(e => e.StartDateTime is not null))
+        @if (Executions is not null)
         {
-            (var offset, var width) = item.GetGanttGraphDimensions(Executions);
-            <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
-                <div class="col-xl-3 col-lg-4 col-5 text-end py-1" >
-                    <HxTooltip Text="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
-                        <small>
-                            @item.StepExecution.StepName
-                            &nbsp;
-                            <StepTypeIconComponent StepType_="item.StepType" />
-                        </small>
-                    </HxTooltip>
-                </div>
-                <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
-                    @for (int i = 0; i <= 100; i += 10)
-                    {
-                        <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");"></div>
-                    }
-                    <div class="progress" style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
-                        <div class="progress-bar @item.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-            if (SelectedStepExecution == item)
+            @foreach (var item in Executions.Where(e => e.StartDateTime is not null))
             {
-                <div class="row bg-light">
-                    <div class="col">
-                        <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
-                                @MarkupHelper.FromFile("icons/feather/activity.svg")
-                                History
-                            </HxButton>
-                            <AuthorizeView Roles="Admin, Editor, Operator">
-                                @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                         && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
-                                {
-                                    <HxDropdown CssClass="ms-3">
-                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
-                                            @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
-                                            Stop
-                                        </HxDropdownToggleButton>
-                                        <HxDropdownMenu>
-                                            <HxDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
-                                        </HxDropdownMenu>
-                                    </HxDropdown>
-                                }
-                            </AuthorizeView>
-                        </HxButtonToolbar>
-                        <StepExecutionDetailsComponent StepExecutionAttempt="item" ShowExtraDetails />
+                (var offset, var width) = item.GetGanttGraphDimensions(Executions);
+                <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                    <div class="col-xl-3 col-lg-4 col-5 text-end py-1" >
+                        <HxTooltip Text="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
+                            <small>
+                                @item.StepExecution.StepName
+                                &nbsp;
+                                <StepTypeIconComponent StepType_="item.StepType" />
+                            </small>
+                        </HxTooltip>
+                    </div>
+                    <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
+                        @for (int i = 0; i <= 100; i += 10)
+                        {
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");"></div>
+                        }
+                        <div class="progress" style="position: absolute; width: @($"{width}%"); left: @($"{offset}%");">
+                            <div class="progress-bar @item.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
+                        </div>
                     </div>
                 </div>
+                if (SelectedStepExecution == item)
+                {
+                    <div class="row bg-light">
+                        <div class="col">
+                            <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
+                                    @MarkupHelper.FromFile("icons/feather/activity.svg")
+                                    History
+                                </HxButton>
+                                <AuthorizeView Roles="Admin, Editor, Operator">
+                                    @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
+                             && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                    {
+                                        <HxDropdown CssClass="ms-3">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
+                                                @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                                                Stop
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu>
+                                                <HxDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
+                                    }
+                                </AuthorizeView>
+                            </HxButtonToolbar>
+                            <StepExecutionDetailsComponent StepExecutionAttempt="item" ShowExtraDetails />
+                        </div>
+                    </div>
+                }
             }
         }
     </div>
@@ -83,7 +86,7 @@
 @code {
 
     [Parameter]
-    public IEnumerable<StepExecutionAttempt> Executions { get; set; } = Enumerable.Empty<StepExecutionAttempt>();
+    public IEnumerable<StepExecutionAttempt>? Executions { get; set; }
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
@@ -120,8 +123,8 @@
         }
     }
 
-    private DateTime MinTime => Executions.Any() ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
-    private DateTime MaxTime => Executions.Any() ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
+    private DateTime MinTime => Executions?.Any() ?? false ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private DateTime MaxTime => Executions?.Any() ?? false ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 
