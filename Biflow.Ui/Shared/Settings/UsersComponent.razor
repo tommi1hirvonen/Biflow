@@ -129,7 +129,7 @@
     {
         using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
         Users = await context.Users
-            .AsNoTracking()
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(user => user.Username)
             .ToListAsync();
     }

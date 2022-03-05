@@ -102,5 +102,6 @@
     <Build Include="biflow\Tables\ExecutionSourceTargetObject.sql" />
     <Build Include="biflow\Tables\ExecutionStepSource.sql" />
     <Build Include="biflow\Tables\ExecutionStepTarget.sql" />
+    <Build Include="biflow\Tables\JobAuthorization.sql" />
   </ItemGroup>
 </Project>

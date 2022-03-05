@@ -69,6 +69,8 @@ public class Job
     [ValidateComplexType]
     public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
+    public ICollection<User> Users { get; set; } = null!;
+
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }
 

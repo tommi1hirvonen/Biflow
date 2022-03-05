@@ -16,6 +16,8 @@ public class User
     [Required]
     public string? Role { get; set; }
 
+    public bool AuthorizeAllJobs { get; set; }
+
     [Required]
     public DateTimeOffset CreatedDateTime { get; set; }
 
@@ -23,4 +25,6 @@ public class User
     public DateTimeOffset LastModifiedDateTime { get; set; }
 
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
+
+    public ICollection<Job> Jobs { get; set; } = null!;
 }

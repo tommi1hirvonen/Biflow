@@ -1,9 +1,11 @@
-﻿@inject IDbContextFactory<BiflowContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbFactory
 @inject MarkupHelperService MarkupHelper
 @inject IJSRuntime JS
 @inject DbHelperService DbHelperService
 
-<HxModal @ref="Modal" Title="@(Username is null ? "New user" : "Edit " + Username)">
+<HxModal @ref="Modal" Title="@(Username is null ? "New user" : "Edit " + Username)" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     
     <BodyTemplate>
         @if (User is not null)
@@ -66,6 +68,63 @@
                                 </div>
                             </div>
                         }
+                        @if (User.Role != "Admin" && User.Role != "Editor")
+                        {
+                            <div class="mt-3">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="authorize_all_jobs"
+                                           checked=@User.AuthorizeAllJobs
+                                           @bind-value="User.AuthorizeAllJobs">
+                                    <label class="form-check-label" for="authorize_all_jobs">Authorize all jobs</label>
+                                </div>
+                            </div>
+                            @if (!User.AuthorizeAllJobs)
+                            {
+                                <div class="mt-3">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Job</th>
+                                                <th>Authorize</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (Jobs is null)
+                                            {
+                                                <tr>
+                                                    <td colspan="2">Loading...</td>
+                                                </tr>
+                                            }
+                                            else if (!Jobs.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="2">No jobs</td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var job in Jobs)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            @job.JobName
+                                                        </td>
+                                                        <td>
+                                                            <div class="form-check form-check-inline">
+                                                                <input type="checkbox" class="form-check-input" id="authorize_@job.JobId"
+                                                                       checked=@User.Jobs.Any(j => j.JobId == job.JobId)
+                                                                       @onchange="args => ToggleJobAuthorization(args, job)">
+                                                                <label class="form-check-label" for="authorize_@job.JobId"></label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        }
                     </div>
                 </div>
             </EditForm>
@@ -85,6 +144,10 @@
     [Parameter]
     public EventCallback<User> OnUserSubmit { get; set; }
 
+    public List<Job>? Jobs { get; set; }
+
+    private string? PrevUsername { get; set; }
+
     private HxModal Modal { get; set; } = null!;
 
     private User User { get; set; } = null!;
@@ -92,19 +155,56 @@
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
 
+    private BiflowContext Context { get; set; } = null!;
+
     protected override async Task OnParametersSetAsync()
     {
-        if (Username is null)
+        if (Username is null && Username != PrevUsername)
         {
-            User = new() { Role = "Viewer" };
+            await ResetContext();
+            User = new()
+            {
+                Role = "Viewer",
+                Jobs = new List<Job>()
+            };
+            PrevUsername = Username;
+        }
+        else if (Username != PrevUsername)
+        {
+            await ResetContext();
+            User = await Context.Users
+                .Include(u => u.Jobs)
+                .FirstAsync(user => user.Username == Username);
+            Jobs = await Context.Jobs.OrderBy(j => j.JobName).ToListAsync();
+            PrevUsername = Username;
+        }
+    }
+
+    private async Task ResetContext()
+    {
+        if (Context is not null)
+            await Context.DisposeAsync();
+
+        Context = await DbFactory.CreateDbContextAsync();
+    }
+
+    private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
+    {
+        var enabled = (bool)args.Value!;
+        if (enabled)
+        {
+            User.Jobs.Add(job);
         }
         else
         {
-            using var context = DbFactory.CreateDbContext();
-            User = await context.Users
-                .AsNoTracking()
-                .FirstAsync(user => user.Username == Username);
+            User.Jobs.Remove(job);
         }
+    }
+
+    private void OnClosed()
+    {
+        Username = null;
+        PrevUsername = null;
     }
 
     private async Task SubmitUser()
@@ -132,8 +232,26 @@
                 var result = await DbHelperService.AddUserAsync(User ?? throw new ArgumentNullException(nameof(User), "User was null"), Password);
                 if (result)
                 {
+                    // Add possible job authorizations.
+                    var context = DbFactory.CreateDbContext();
+                    var user = await context.Users
+                        .Include(u => u.Jobs)
+                        .FirstAsync(u => u.Username == User.Username);
+                    var jobs = await context.Jobs.ToListAsync();
+                    user.AuthorizeAllJobs = User.AuthorizeAllJobs;
+                    foreach (var jobToAdd in User.Jobs)
+                    {
+                        var job = jobs.FirstOrDefault(j => j.JobId == jobToAdd.JobId);
+                        if (job is not null)
+                            user.Jobs.Add(job);
+                    }
+
+                    await context.SaveChangesAsync();
+
                     Password = null;
                     ConfirmPassword = null;
+                    Username = null;
+                    PrevUsername = null;
                     await OnUserSubmit.InvokeAsync(User);
                     await Modal.HideAsync();
                 }
@@ -152,9 +270,9 @@
         {
             try
             {
-                var context = DbFactory.CreateDbContext();
-                context.Attach(User).State = EntityState.Modified;
-                await context.SaveChangesAsync();
+                await Context.SaveChangesAsync();
+                Username = null;
+                PrevUsername = null;
                 await OnUserSubmit.InvokeAsync(User);
                 await Modal.HideAsync();
             }
@@ -166,5 +284,7 @@
     }
 
     public async Task ShowAsync() => await Modal.ShowAsync();
+
+    public void Dispose() => Context?.Dispose();
 
 }

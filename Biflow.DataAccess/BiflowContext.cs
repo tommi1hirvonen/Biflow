@@ -59,6 +59,17 @@ public class BiflowContext : DbContext
             .Property(e => e.ExecutionStatus)
             .HasConversion(executionStatusConverter);
             e.Property(p => p.NotifyCaller).HasConversion(subscriptionTypeConverter);
+
+            e.HasQueryFilter(exec =>
+                // There is no HttpContext (context is being created by the executor or scheduler service).
+                HttpContext == null ||
+                // The user is either admin or editor or is granted authorization to the job.
+                HttpContext != null && HttpContext.User != null && HttpContext.User.Identity != null &&
+                    (HttpContext.User.IsInRole("Admin") ||
+                    HttpContext.User.IsInRole("Editor") ||
+                    Users.Any(u => u.Username == HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
+                    exec.Job!.Users.Any(u => u.Username == HttpContext.User.Identity.Name))
+                );
         });
 
         modelBuilder.Entity<ExecutionConcurrency>(e =>
@@ -159,6 +170,23 @@ public class BiflowContext : DbContext
             .IsRequired(false);
             e.HasMany(job => job.JobParameters)
             .WithOne(param => param.Job);
+
+            e.HasMany(t => t.Users)
+            .WithMany(s => s.Jobs)
+            .UsingEntity<Dictionary<string, object>>("JobAuthorization",
+            x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
+            x => x.HasOne<Job>().WithMany().HasForeignKey("JobId"));
+
+            e.HasQueryFilter(j =>
+                // There is no HttpContext (context is being created by the executor or scheduler service).
+                HttpContext == null ||
+                // The user is either admin or editor or is granted authorization to the job.
+                HttpContext != null && HttpContext.User != null && HttpContext.User.Identity != null &&
+                    (HttpContext.User.IsInRole("Admin") ||
+                    HttpContext.User.IsInRole("Editor") ||
+                    Users.Any(u => u.Username == HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
+                    j.Users.Any(u => u.Username == HttpContext.User.Identity.Name))
+                );
         });
 
         modelBuilder.Entity<JobConcurrency>(e =>
