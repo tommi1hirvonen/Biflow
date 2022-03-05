@@ -204,7 +204,7 @@
     private void OnClosed()
     {
         Username = null;
-        PrevUsername = null;
+        PrevUsername = "";
     }
 
     private async Task SubmitUser()
@@ -251,7 +251,7 @@
                     Password = null;
                     ConfirmPassword = null;
                     Username = null;
-                    PrevUsername = null;
+                    PrevUsername = "";
                     await OnUserSubmit.InvokeAsync(User);
                     await Modal.HideAsync();
                 }
@@ -272,7 +272,7 @@
             {
                 await Context.SaveChangesAsync();
                 Username = null;
-                PrevUsername = null;
+                PrevUsername = "";
                 await OnUserSubmit.InvokeAsync(User);
                 await Modal.HideAsync();
             }
