@@ -1,5 +1,7 @@
 ﻿@page "/tags"
 
+@attribute [Authorize(Roles = "Admin, Editor")]
+
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger

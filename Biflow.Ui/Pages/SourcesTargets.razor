@@ -1,5 +1,7 @@
 ﻿@page "/sourcestargets"
 
+@attribute [Authorize(Roles = "Admin, Editor")]
+
 @implements IDisposable
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
