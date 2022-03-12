@@ -208,11 +208,19 @@ tr.disabled {
         fill: #888;
     }
 
-    .dependency-graph .edgePath.non-strict path {
-        stroke-dasharray: 5,5;
+    .dependency-graph .edgePath.onsucceeded path {
+        stroke: var(--color-success);
+        fill: var(--color-success);
     }
 
-    .dependency-graph .edgePath.strict path {
+    .dependency-graph .edgePath.oncompleted path {
+        stroke: var(--color-primary);
+        fill: var(--color-success);
+    }
+
+    .dependency-graph .edgePath.onfailed path {
+        stroke: var(--color-danger);
+        fill: var(--color-success);
     }
 
 

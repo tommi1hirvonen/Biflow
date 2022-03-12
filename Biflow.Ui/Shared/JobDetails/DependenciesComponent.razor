@@ -146,7 +146,7 @@
                 {
                     StepId = dep.StepId,
                     DependantOnStepId = dep.DependantOnStepId,
-                    ClassName = dep.StrictDependency ? "strict" : "non-strict"
+                    ClassName = dep.DependencyType.ToString().ToLower()
                 });
 
             stepsJson = JsonSerializer.Serialize(steps);
@@ -168,7 +168,7 @@
                     {
                         StepId = dep.StepId,
                         DependantOnStepId = dep.DependantOnStepId,
-                        ClassName = dep.StrictDependency ? "strict" : "non-strict"
+                        ClassName = dep.DependencyType.ToString().ToLower()
                     });
 
                 stepsJson = JsonSerializer.Serialize(steps.Select(step => new

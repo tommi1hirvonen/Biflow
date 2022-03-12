@@ -12,8 +12,8 @@ public class ExecutionDependency
     [Required]
     public Guid DependantOnStepId { get; set; }
 
-    [Display(Name = "Strict dependency")]
-    public bool StrictDependency { get; set; }
+    [Display(Name = "Type")]
+    public DependencyType DependencyType { get; set; }
 
     public StepExecution StepExecution { get; set; } = null!;
 

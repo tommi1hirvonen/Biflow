@@ -141,7 +141,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
             {
                 dep.StepId,
                 dep.DependantOnStepId,
-                ClassName = dep.StrictDependency ? "strict" : "non-strict"
+                ClassName = dep.DependencyType.ToString().ToLower()
             });
 
         var stepsJson = JsonSerializer.Serialize(steps);

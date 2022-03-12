@@ -147,13 +147,13 @@ BEGIN
 	INSERT INTO biflow.Dependency (
 		StepId,
 		DependantOnStepId,
-		StrictDependency,
+		DependencyType,
 		CreatedBy,
 		CreatedDateTime
 	)
 	SELECT @StepIdNew,
 		DependantOnStepId,
-		StrictDependency,
+		DependencyType,
 		@Username,
 		GETUTCDATE()
 	FROM biflow.Dependency

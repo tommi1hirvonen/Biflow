@@ -58,7 +58,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                 }
                 await context.SaveChangesAsync();
 
-                _logger.LogError("{ExecutionId} Execution was cancelled because of circular step dependencies: " + json, Execution.ExecutionId);
+                _logger.LogError("{ExecutionId} Execution was cancelled because of circular step dependencies: {json}", Execution.ExecutionId, json);
                 return;
             }
         }
@@ -107,7 +107,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                     StepStatuses[step] = ExecutionStatus.Failed;
                     try
                     {
-                        await UpdateStepAsSkipped(step, "Step was skipped because one or more strict dependencies failed.");
+                        await UpdateStepAsSkipped(step);
                         _logger.LogWarning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
                     }
                     catch (Exception ex)
@@ -130,20 +130,28 @@ internal class DependencyModeOrchestrator : OrchestratorBase
             return StepAction.Execute;
         }
 
-        var dependencies = step.ExecutionDependencies
-            .Select(d => d.DependantOnStepExecution);
-        var strictDependencies = step.ExecutionDependencies
-            .Where(d => d.StrictDependency)
+        var allDependencies = step.ExecutionDependencies
             .Select(d => d.DependantOnStepExecution);
 
-        // If there are any strict dependencies, which have been marked as failed, skip this step.
-        if (strictDependencies.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == d)))
+        var onSucceeded = step.ExecutionDependencies
+            .Where(d => d.DependencyType == DependencyType.OnSucceeded)
+            .Select(d => d.DependantOnStepExecution);
+
+        var onFailed = step.ExecutionDependencies
+            .Where(d => d.DependencyType == DependencyType.OnFailed)
+            .Select(d => d.DependantOnStepExecution);
+
+        // If there are any on-success dependencies, which have been marked as failed
+        // OR
+        // if there are any on-failed dependencies, which have been marked as succeeded, skip this step.
+        if (onSucceeded.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == d)) ||
+            onFailed.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Succeeded && status.Key == d)))
         {
             return StepAction.Skip;
         }
-
-        // If the steps dependencies have been completed (success or failure), the step can be executed.
-        else if (dependencies.All(dep => StepStatuses[dep] == ExecutionStatus.Success || StepStatuses[dep] == ExecutionStatus.Failed))
+        // No reason to skip this step.
+        // If all the step's dependencies have been completed (success or failure), the step can be executed.
+        else if (allDependencies.All(dep => StepStatuses[dep] == ExecutionStatus.Succeeded || StepStatuses[dep] == ExecutionStatus.Failed))
         {
             return StepAction.Execute;
         }
@@ -152,7 +160,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         return StepAction.Wait;
     }
 
-    private async Task UpdateStepAsSkipped(StepExecution step, string errorMessage)
+    private async Task UpdateStepAsSkipped(StepExecution step)
     {
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
@@ -160,7 +168,6 @@ internal class DependencyModeOrchestrator : OrchestratorBase
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
-            attempt.ErrorMessage = errorMessage;
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

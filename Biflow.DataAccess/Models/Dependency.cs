@@ -15,8 +15,8 @@ public class Dependency
 
     public Step DependantOnStep { get; set; } = null!;
 
-    [Display(Name = "Strict dependency")]
-    public bool StrictDependency { get; set; }
+    [Display(Name = "Type")]
+    public DependencyType DependencyType { get; set; }
 
     [Required]
     [Display(Name = "Created")]

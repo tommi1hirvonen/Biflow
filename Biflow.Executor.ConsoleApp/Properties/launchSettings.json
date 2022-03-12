@@ -2,8 +2,8 @@
   "profiles": {
     "BiflowExecutor": {
       "commandName": "Project",
-      "commandLineArgs": "test-connection",
-      "workingDirectory": "C:\\Biflow\\BiflowExecutor"
+      "commandLineArgs": "execute -i 2e4f70f0-5681-4e53-a5e4-01b78515aa46",
+      "workingDirectory": "C:\\Program Files\\Biflow\\BiflowExecutor"
     }
   }
 }

@@ -21,7 +21,7 @@
                         <tr>
                             <th>Step</th>
                             <th>Depends on</th>
-                            <th>Strict</th>
+                            <th>Type</th>
                             <th>Action</th>
                             <th></th>
                         </tr>
@@ -54,12 +54,12 @@
                                         @dep.DependantOnStep.StepName
                                     </td>
                                     <td class="align-middle">
-                                        <div class="form-check form-check-inline">
-                                            <input type="checkbox" class="form-check-input" id="@addCheckId"
-                                                   checked=@dep.StrictDependency
-                                                   @onchange="eventArgs => dep.StrictDependency = (bool)eventArgs.Value!">
-                                            <label class="form-check-label" for="@addCheckId"></label>
-                                        </div>
+                                        <select class="form-select form-select-sm" @bind="dep.DependencyType">
+                                            @foreach (var type in Enum.GetValues<DependencyType>())
+                                            {
+                                                <option selected=@(dep.DependencyType == type)>@type</option>
+                                            }
+                                        </select>
                                     </td>
                                     <td class="align-middle">
                                         Add
@@ -93,12 +93,7 @@
                                         @dep.DependantOnStep.StepName
                                     </td>
                                     <td class="align-middle">
-                                        <div class="form-check form-check-inline">
-                                            <input type="checkbox" class="form-check-input" id="@removeCheckId"
-                                                   checked=@dep.StrictDependency
-                                                    disabled>
-                                            <label class="form-check-label" for="@removeCheckId"></label>
-                                        </div>
+                                        @dep.DependencyType
                                     </td>
                                     <td class="align-middle">
                                         Remove

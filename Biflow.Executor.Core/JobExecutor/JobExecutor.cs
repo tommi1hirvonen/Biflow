@@ -123,7 +123,7 @@ internal class JobExecutor : IJobExecutor
 
             await context.SaveChangesAsync();
 
-            _logger.LogError("{executionId} Execution was cancelled because of circular job executions: " + circularExecutions, executionId);
+            _logger.LogError("{executionId} Execution was cancelled because of circular job executions: {circularExecutions}", executionId, circularExecutions);
             return;
         }
 
@@ -156,18 +156,30 @@ internal class JobExecutor : IJobExecutor
         // Get job execution status based on step execution statuses.
         var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
         ExecutionStatus status;
-        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded))
+        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded || step.ExecutionStatus == StepExecutionStatus.Skipped))
+        {
             status = ExecutionStatus.Succeeded;
+        }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Failed))
+        {
             status = ExecutionStatus.Failed;
+        }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.AwaitRetry || step.ExecutionStatus == StepExecutionStatus.Duplicate))
+        {
             status = ExecutionStatus.Warning;
+        }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Stopped))
+        {
             status = ExecutionStatus.Stopped;
+        }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted))
+        {
             status = ExecutionStatus.Suspended;
+        }
         else
+        {
             status = ExecutionStatus.Failed;
+        }
 
         // Update job execution status.
         try

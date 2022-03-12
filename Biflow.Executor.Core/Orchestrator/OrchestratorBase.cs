@@ -18,11 +18,15 @@ internal abstract class OrchestratorBase
 
     protected Dictionary<StepExecution, ExtendedCancellationTokenSource> CancellationTokenSources { get; }
 
+    /// <summary>
+    /// Internal enum used by the orchestrator to group step execution statuses on a less detailed level.
+    /// The level of the internal enum is sufficient to keep track of when and if to execute steps.
+    /// </summary>
     protected enum ExecutionStatus
     {
         NotStarted,
         Running,
-        Success,
+        Succeeded,
         Failed
     };
 
@@ -117,7 +121,7 @@ internal abstract class OrchestratorBase
         finally
         {
             // Update the status.
-            StepStatuses[step] = result ? ExecutionStatus.Success : ExecutionStatus.Failed;
+            StepStatuses[step] = result ? ExecutionStatus.Succeeded : ExecutionStatus.Failed;
             
             // Release the semaphores once to make room for new parallel executions.
             _mainSemaphore.Release();

@@ -288,12 +288,12 @@ INSERT INTO biflow.ExecutionDependency (
 	ExecutionId,
 	StepId,
 	DependantOnStepId,
-	StrictDependency
+	DependencyType
 )
 SELECT @BiflowExecutionId,
 	a.StepId,
 	a.DependantOnStepId,
-	a.StrictDependency
+	a.DependencyType
 FROM biflow.Dependency AS a
 	INNER JOIN #Steps AS b ON a.StepId = b.StepId
 	INNER JOIN #Steps AS c ON a.DependantOnStepId = c.StepId

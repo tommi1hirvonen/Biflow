@@ -65,7 +65,7 @@
         <tr>
             <th>Name</th>
             <th>Dependent on</th>
-            <th>Strict dependency</th>
+            <th>Dependency type</th>
         </tr>
     </thead>
     <tbody>
@@ -90,12 +90,12 @@
                 <td class="align-middle">
                     @if (dependency is not null)
                     {
-                        <div class="form-check form-check-inline">
-                            <input type="checkbox" class="form-check-input" id="strict_@step.StepId"
-                                   checked=@dependency.StrictDependency
-                                   @onchange="eventArgs => dependency.StrictDependency = (bool)eventArgs.Value!">
-                            <label class="form-check-label" for="strict_@step.StepId"></label>
-                        </div>
+                        <InputSelect class="form-select form-select-sm" @bind-Value="dependency.DependencyType">
+                            @foreach (var type in Enum.GetValues<DependencyType>())
+                            {
+                                <option>@type</option>
+                            }
+                        </InputSelect>
                     }
                 </td>
             </tr>
