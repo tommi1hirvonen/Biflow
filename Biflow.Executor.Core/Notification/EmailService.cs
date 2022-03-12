@@ -207,7 +207,7 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(recipient => mailMessage.To.Add(recipient));
+        recipients.ForEach(recipient => mailMessage.Bcc.Add(recipient));
 
         try
         {
@@ -295,7 +295,7 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(recipient => mailMessage.To.Add(recipient));
+        recipients.ForEach(recipient => mailMessage.Bcc.Add(recipient));
 
         try
         {
