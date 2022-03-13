@@ -35,6 +35,9 @@
     [TabularModelName]                  NVARCHAR(128)       NULL,
     [TabularTableName]                  NVARCHAR(128)       NULL,
     [TabularPartitionName]              NVARCHAR(128)       NULL,
+    [EmailRecipients]                   NVARCHAR(MAX)       NULL,
+    [EmailSubject]                      NVARCHAR(MAX)       NULL,
+    [EmailBody]                         NVARCHAR(MAX)       NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
     CONSTRAINT [CK_ExecutionStep_StepType] CHECK (
@@ -46,7 +49,8 @@
         OR [StepType]='Dataset'
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
-        OR [StepType]='Tabular')
+        OR [StepType]='Tabular'
+        OR [StepType]='Email')
 );
 
 GO

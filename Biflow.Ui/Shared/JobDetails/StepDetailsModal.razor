@@ -225,6 +225,27 @@
                         @tabular.TabularPartitionName
                     </dd>
                 }
+                else if (Step is EmailStep email)
+                {
+                    <dt class="col-sm-3">
+                        Recipients
+                    </dt>
+                    <dd class="col-sm-9">
+                        @email.Recipients
+                    </dd>
+                    <dt class="col-sm-3">
+                        Subject
+                    </dt>
+                    <dd class="col-sm-9">
+                        @email.Subject
+                    </dd>
+                    <dt class="col-sm-3">
+                        Body
+                    </dt>
+                    <dd class="col-sm-9">
+                        @email.Body
+                    </dd>
+                }
             </dl>
             @if (Step is PackageStep package_)
             {

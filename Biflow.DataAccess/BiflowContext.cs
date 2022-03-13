@@ -26,6 +26,7 @@ public class BiflowContext : DbContext
     public DbSet<FunctionStep> FunctionSteps => Set<FunctionStep>();
     public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
+    public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
     public DbSet<SourceTargetObject> SourceTargetObjects => Set<SourceTargetObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
@@ -111,7 +112,8 @@ public class BiflowContext : DbContext
             .HasValue<SqlStepExecution>(StepType.Sql)
             .HasValue<FunctionStepExecution>(StepType.Function)
             .HasValue<AgentJobStepExecution>(StepType.AgentJob)
-            .HasValue<TabularStepExecution>(StepType.Tabular);
+            .HasValue<TabularStepExecution>(StepType.Tabular)
+            .HasValue<EmailStepExecution>(StepType.Email);
         });
 
         var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
@@ -135,7 +137,8 @@ public class BiflowContext : DbContext
             .HasValue<SqlStepExecutionAttempt>(StepType.Sql)
             .HasValue<FunctionStepExecutionAttempt>(StepType.Function)
             .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob)
-            .HasValue<TabularStepExecutionAttempt>(StepType.Tabular);
+            .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
+            .HasValue<EmailStepExecutionAttempt>(StepType.Email);
         });
 
         var dependencyTypeConverter = new EnumToStringConverter<DependencyType>();
@@ -229,7 +232,8 @@ public class BiflowContext : DbContext
             .HasValue<SqlStep>(StepType.Sql)
             .HasValue<FunctionStep>(StepType.Function)
             .HasValue<AgentJobStep>(StepType.AgentJob)
-            .HasValue<TabularStep>(StepType.Tabular);
+            .HasValue<TabularStep>(StepType.Tabular)
+            .HasValue<EmailStep>(StepType.Email);
             e.HasMany(s => s.StepExecutions)
             .WithOne(e => e.Step!)
             .IsRequired(false);

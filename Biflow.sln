@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.WebApp", "B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Scheduler.WebApp.Test", "Biflow.Scheduler.WebApp.Test\Biflow.Scheduler.WebApp.Test.csproj", "{C69F49E1-3F65-4F2F-A4A1-694B27AA08A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biflow.Ui.Core", "Biflow.Ui.Core\Biflow.Ui.Core.csproj", "{44C8A845-672D-4E1D-8C43-C98495CA1003}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.Core", "Biflow.Ui.Core\Biflow.Ui.Core.csproj", "{44C8A845-672D-4E1D-8C43-C98495CA1003}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

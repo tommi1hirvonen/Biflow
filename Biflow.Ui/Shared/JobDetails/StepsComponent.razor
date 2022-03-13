@@ -430,6 +430,13 @@
         StepId="EditModalStepIds[StepType.Tabular]"
         OnStepSubmit="OnStepSubmit"
         OnModalClosed="OnStepEditModalClosed" />
+    <EmailStepEditModal @ref="StepEditModals[StepType.Email]"
+        Job="Job"
+        Steps="Steps"
+        Connections="SqlConnections"
+        StepId="EditModalStepIds[StepType.Email]"
+        OnStepSubmit="OnStepSubmit"
+        OnModalClosed="OnStepEditModalClosed" />
     <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
         Job="Job"
         Steps="Steps"

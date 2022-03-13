@@ -1,0 +1,34 @@
+﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+
+public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
+{
+    internal override string FormId => "email_step_edit_form";
+
+    protected override Task<EmailStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+        context.EmailSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
+        .Include(step => step.Tags)
+        .Include(step => step.Dependencies)
+        .Include(step => step.Sources)
+        .Include(step => step.Targets)
+        .FirstAsync(step => step.StepId == stepId);
+
+    protected override EmailStep CreateNewStep(Job job) =>
+        new()
+        {
+            JobId = job.JobId,
+            RetryAttempts = 0,
+            RetryIntervalMinutes = 0,
+            IsEnabled = true,
+            Dependencies = new List<Dependency>(),
+            Tags = new List<Tag>(),
+            StepParameters = new List<StepParameterBase>(),
+            Sources = new List<SourceTargetObject>(),
+            Targets = new List<SourceTargetObject>()
+        };
+}

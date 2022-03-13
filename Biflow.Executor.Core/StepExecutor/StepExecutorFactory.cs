@@ -25,6 +25,7 @@ internal class StepExecutorFactory : IStepExecutorFactory
             FunctionStepExecution function => ActivatorUtilities.CreateInstance<FunctionStepExecutor>(_serviceProvider, function),
             AgentJobStepExecution agent => ActivatorUtilities.CreateInstance<AgentJobStepExecutor>(_serviceProvider, agent),
             TabularStepExecution tabular => ActivatorUtilities.CreateInstance<TabularStepExecutor>(_serviceProvider, tabular),
+            EmailStepExecution email => ActivatorUtilities.CreateInstance<EmailStepExecutor>(_serviceProvider, email),
             _ => throw new InvalidOperationException($"{stepExecution.StepType} is not a recognized step type")
         };
         return stepExecutor;

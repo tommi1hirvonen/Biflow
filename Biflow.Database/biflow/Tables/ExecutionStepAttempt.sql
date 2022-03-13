@@ -23,7 +23,8 @@
         OR [StepType]='Dataset'
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
-        OR [StepType]='Tabular'),
+        OR [StepType]='Tabular'
+        OR [StepType]='Email'),
     CONSTRAINT [CK_ExecutionStepAttempt_ExecutionStatus] CHECK (
         [ExecutionStatus] = 'NotStarted'
         OR [ExecutionStatus] = 'Running'

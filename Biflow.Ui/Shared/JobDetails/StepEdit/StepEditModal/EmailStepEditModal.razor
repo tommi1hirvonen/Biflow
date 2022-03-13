@@ -1,0 +1,35 @@
+﻿@inherits ParameterizedStepEditModal<EmailStep>
+
+<StepEditModalTemplate Modal="this" TStep="EmailStep">
+    <div class="row">
+        <div class="col">
+            <label class="form-label">Recipients</label>
+            <div class="input-group input-group-sm">
+                <div class="input-group-text">
+                    @MarkupHelper.FromFile("icons/feather/users.svg")
+                </div>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.Recipients" @oninput="ResetStepError" />
+            </div>
+            <div class="form-text">Comma separated list of recipient email addresses</div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Subject</label>
+            <div class="input-group input-group-sm">
+                <div class="input-group-text">
+                    @MarkupHelper.FromFile("icons/feather/type.svg")
+                </div>
+                <InputText class="form-control form-control-sm" @bind-Value="Step.Subject" @oninput="ResetStepError" />
+            </div>
+            <div class="form-text">Parameters apply to the subject and body</div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <label class="form-label">Body</label>
+            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.Body" rows="3" @oninput="ResetStepError"></InputTextArea>
+        </div>
+    </div>
+    <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+</StepEditModalTemplate>

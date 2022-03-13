@@ -10,5 +10,6 @@ public enum StepType
     Dataset,
     AgentJob,
     Exe,
-    Job
+    Job,
+    Email
 }

@@ -14,5 +14,6 @@
         OR [StepType]='Dataset'
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
-        OR [StepType]='Tabular')
+        OR [StepType]='Tabular'
+        OR [StepType]='Email')
 )

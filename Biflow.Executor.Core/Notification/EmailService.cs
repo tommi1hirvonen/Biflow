@@ -308,4 +308,19 @@ internal class EmailService : INotificationService
         }
     }
 
+    public async Task SendNotification(IEnumerable<string> recipients, string subject, string body, CancellationToken cancellationToken)
+    {
+        var client = _emailConfiguration.Client;
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(_emailConfiguration.FromAddress),
+            Subject = subject,
+            Body = body
+        };
+        foreach (var recipient in recipients)
+        {
+            mailMessage.Bcc.Add(recipient);
+        }
+        await client.SendMailAsync(mailMessage, cancellationToken);
+    }
 }

@@ -33,6 +33,9 @@
     [TabularModelName]              NVARCHAR(128)    NULL,
     [TabularTableName]              NVARCHAR(128)    NULL,
     [TabularPartitionName]          NVARCHAR(128)    NULL,
+    [EmailRecipients]               NVARCHAR(MAX)    NULL,
+    [EmailSubject]                  NVARCHAR(MAX)    NULL,
+    [EmailBody]                     NVARCHAR(MAX)    NULL,
     [IsEnabled]                     BIT              CONSTRAINT [DF_Step_IsEnabled] DEFAULT (1) NOT NULL,
     [RetryAttempts]                 INT              CONSTRAINT [DF_Step_RetryAttempts] DEFAULT (0) NOT NULL,
     [RetryIntervalMinutes]          INT              CONSTRAINT [DF_Step_RetryIntervalMinutes] DEFAULT (0) NOT NULL,
@@ -52,7 +55,8 @@
         OR [StepType]='Dataset' AND [AppRegistrationId] IS NOT NULL AND [DatasetGroupId] IS NOT NULL AND [DatasetId] IS NOT NULL
         OR [StepType]='Function' AND [FunctionAppId] IS NOT NULL AND [FunctionUrl] IS NOT NULL
         OR [StepType]='AgentJob' AND [AgentJobName] IS NOT NULL AND [ConnectionId] IS NOT NULL
-        OR [StepType]='Tabular' AND [TabularModelName] IS NOT NULL AND NOT ([TabularTableName] IS NULL AND [TabularPartitionName] IS NOT NULL)),
+        OR [StepType]='Tabular' AND [TabularModelName] IS NOT NULL AND NOT ([TabularTableName] IS NULL AND [TabularPartitionName] IS NOT NULL)
+        OR [StepType]='Email' AND [EmailRecipients] IS NOT NULL AND [EmailSubject] IS NOT NULL AND [EmailBody] IS NOT NULL),
     CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)
 );
 

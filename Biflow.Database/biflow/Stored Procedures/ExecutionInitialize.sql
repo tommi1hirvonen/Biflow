@@ -71,7 +71,10 @@ SELECT
 	a.AgentJobName,
 	a.TabularModelName,
 	a.TabularTableName,
-	a.TabularPartitionName
+	a.TabularPartitionName,
+	a.EmailRecipients,
+	a.EmailSubject,
+	a.EmailBody
 INTO #Steps
 FROM biflow.Step AS a
 WHERE a.JobId = @JobId 
@@ -194,7 +197,10 @@ INSERT INTO biflow.ExecutionStep (
 	AgentJobName,
 	TabularModelName,
 	TabularTableName,
-	TabularPartitionName
+	TabularPartitionName,
+	EmailRecipients,
+	EmailSubject,
+	EmailBody
 )
 SELECT
 	ExecutionId = @BiflowExecutionId,
@@ -231,7 +237,10 @@ SELECT
 	a.AgentJobName,
 	a.TabularModelName,
 	a.TabularTableName,
-	a.TabularPartitionName
+	a.TabularPartitionName,
+	a.EmailRecipients,
+	a.EmailSubject,
+	a.EmailBody
 FROM #Steps AS a
 
 
