@@ -10,6 +10,11 @@ public class Schedule
     [Required]
     public Guid JobId { get; set; }
 
+    [Required]
+    [MaxLength(250)]
+    [MinLength(1)]
+    public string ScheduleName { get; set; } = string.Empty;
+
     public Job Job { get; set; } = null!;
 
     [Required]

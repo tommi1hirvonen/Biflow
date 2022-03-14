@@ -201,7 +201,7 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="SchedulesModal" Size="ModalSize.Large" Title="@($"Schedules using {SchedulesModalTag?.TagName}")">
+<HxModal @ref="SchedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {SchedulesModalTag?.TagName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -209,6 +209,7 @@
                     <thead>
                         <tr>
                             <th>Job</th>
+                            <th>Schedule name</th>
                             <th>Cron expression</th>
                             <th>Next execution</th>
                             <th>Enabled</th>
@@ -221,6 +222,9 @@
                             <tr>
                                 <td>
                                     @schedule.Job.JobName
+                                </td>
+                                <td>
+                                    @schedule.ScheduleName
                                 </td>
                                 <td>
                                     @schedule.CronExpression

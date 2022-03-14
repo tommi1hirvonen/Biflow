@@ -44,6 +44,9 @@
                     Job
                 </th>
                 <th>
+                    Schedule name
+                </th>
+                <th>
                     Enabled
                 </th>
                 <th>
@@ -77,6 +80,9 @@
                             <a class="text-dark" href="@("jobs/schedules/" + item.JobId)">
                                 @item.Job.JobName
                             </a>
+                        </td>
+                        <td class="align-middle">
+                            @item.ScheduleName
                         </td>
                         <td class="align-middle">
                             <div class="form-check form-switch">
@@ -169,7 +175,7 @@
             .Include(schedule => schedule.Job)
             .Include(schedule => schedule.Tags)
             .OrderBy(schedule => schedule.Job.JobName)
-            .ThenBy(schedule => schedule.CronExpression)
+            .ThenBy(schedule => schedule.ScheduleName)
             .ToListAsync();
     }
 

@@ -22,6 +22,9 @@
         <thead>
             <tr>
                 <th>
+                    Schedule name
+                </th>
+                <th>
                     Enabled
                 </th>
                 <th>
@@ -51,6 +54,9 @@
                 @foreach (var item in Schedules)
                 {
                     <tr class="@(item.IsEnabled ? null : "disabled")">
+                        <td class="align-middle">
+                            @item.ScheduleName
+                        </td>
                         <td class="align-middle">
                             <div class="form-check form-switch">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
@@ -145,7 +151,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(schedule => schedule.Tags)
                 .Where(schedule => schedule.JobId == Job.JobId)
-                .OrderBy(schedule => schedule.CronExpression)
+                .OrderBy(schedule => schedule.ScheduleName)
                 .ToListAsync();
         }
     }
