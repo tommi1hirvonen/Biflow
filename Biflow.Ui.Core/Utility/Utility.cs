@@ -214,7 +214,8 @@ public static partial class Utility
             {
                 ThrowExceptionOnParseError = false,
                 Use24HourTimeFormat = true,
-                Locale = "en"
+                Locale = "en",
+                DayOfWeekStartIndexZero = false
             }); ;
         }
         else
