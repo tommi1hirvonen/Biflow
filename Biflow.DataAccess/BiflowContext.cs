@@ -7,12 +7,12 @@ namespace Biflow.DataAccess;
 
 public class BiflowContext : DbContext
 {
-    private readonly HttpContext? HttpContext;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public BiflowContext(DbContextOptions<BiflowContext> options, IHttpContextAccessor? httpContextAccessor = null)
         : base(options)
     {
-        HttpContext = httpContextAccessor?.HttpContext;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public DbSet<Job> Jobs => Set<Job>();
@@ -60,17 +60,17 @@ public class BiflowContext : DbContext
             .Property(e => e.ExecutionStatus)
             .HasConversion(executionStatusConverter);
             e.Property(p => p.NotifyCaller).HasConversion(subscriptionTypeConverter);
-            
-            // Only add the query filter in case HttpContext is provided (the context is created by the UI application).
-            if (HttpContext is not null)
+
+            if (_httpContextAccessor is not null)
             {
                 e.HasQueryFilter(exec =>
+                _httpContextAccessor.HttpContext == null ||
                 // The user is either admin or editor or is granted authorization to the job.
-                HttpContext.User != null && HttpContext.User.Identity != null &&
-                    (HttpContext.User.IsInRole("Admin") ||
-                    HttpContext.User.IsInRole("Editor") ||
-                    Users.Any(u => u.Username == HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
-                    exec.Job!.Users.Any(u => u.Username == HttpContext.User.Identity.Name))
+                _httpContextAccessor.HttpContext.User.Identity != null &&
+                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
+                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
+                    exec.Job!.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
                 );
             }
         });
@@ -186,16 +186,16 @@ public class BiflowContext : DbContext
             x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
             x => x.HasOne<Job>().WithMany().HasForeignKey("JobId"));
 
-            // Only add the query filter in case HttpContext is provided (the context is created by the UI application).
-            if (HttpContext is not null)
+            if (_httpContextAccessor is not null)
             {
                 e.HasQueryFilter(j =>
+                _httpContextAccessor.HttpContext == null ||
                 // The user is either admin or editor or is granted authorization to the job.
-                HttpContext.User != null && HttpContext.User.Identity != null &&
-                    (HttpContext.User.IsInRole("Admin") ||
-                    HttpContext.User.IsInRole("Editor") ||
-                    Users.Any(u => u.Username == HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
-                    j.Users.Any(u => u.Username == HttpContext.User.Identity.Name))
+                _httpContextAccessor.HttpContext.User.Identity != null &&
+                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
+                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
+                    j.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
                 );
             }
         });
@@ -403,7 +403,7 @@ public class BiflowContext : DbContext
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        var user = HttpContext?.User?.Identity?.Name;
+        var user = _httpContextAccessor?.HttpContext?.User.Identity?.Name;
 
         // If there are Jobs or Steps that have been edited, set the audit fields.
         var editedJobsAndSteps = ChangeTracker.Entries()
