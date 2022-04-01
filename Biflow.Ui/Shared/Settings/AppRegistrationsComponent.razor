@@ -32,16 +32,18 @@
                 </th>
                 <th></th>
                 <th></th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
             @if (AppRegistrations is null)
             {
-                <tr><td colspan="4">Loading...</td></tr>
+                <tr><td colspan="7">Loading...</td></tr>
             }
             else if (AppRegistrations.Count == 0)
             {
-                <tr><td colspan="4">No App registrations</td></tr>
+                <tr><td colspan="7">No App registrations</td></tr>
             }
             else
             {
@@ -49,6 +51,8 @@
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
+                    var dataFactories = app.DataFactories.Count();
+                    var functionApps = app.FunctionApps.Count();
                     <tr>
                         <td class="align-middle">
                             @app.AppRegistrationName
@@ -92,6 +96,24 @@
                                 await StepsModal.ShowAsync();
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                        <td>
+                            <a class="text-dark" href="javascript:void(0)" @onclick="async () =>
+                            {
+                                DataFactoriesAppRegistration = app;
+                                await DataFactoriesModal.ShowAsync();
+                            }">
+                                @(dataFactories > 0 ? $"{dataFactories} Data Factories" : null)
+                            </a>
+                        </td>
+                        <td>
+                            <a class="text-dark" href="javascript:void(0)" @onclick="async () =>
+                            {
+                                FunctionAppsAppRegistration = app;
+                                await FunctionAppsModal.ShowAsync();
+                            }">
+                                @(functionApps > 0 ? $"{functionApps} Function Apps" : null)
                             </a>
                         </td>
                     </tr>
@@ -140,6 +162,82 @@
     </FooterTemplate>
 </HxModal>
 
+<HxModal @ref="DataFactoriesModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Data Factories using {StepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data Factory name</th>
+                            <th>Resource group name</th>
+                            <th>Resource name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dataFactory in DataFactoriesAppRegistration?.DataFactories
+                            .OrderBy(adf => adf.DataFactoryName) ?? Enumerable.Empty<DataFactory>())
+                        {
+                            <tr>
+                                <td>
+                                    @dataFactory.DataFactoryName
+                                </td>
+                                <td>
+                                    @dataFactory.ResourceGroupName
+                                </td>
+                                <td>
+                                    @dataFactory.ResourceName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="DataFactoriesModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+<HxModal @ref="FunctionAppsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Function Apps using {StepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Function App name</th>
+                            <th>Resource group name</th>
+                            <th>Resource name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var functionApp in FunctionAppsAppRegistration?.FunctionApps
+                            .OrderBy(fa => fa.FunctionAppName) ?? Enumerable.Empty<FunctionApp>())
+                        {
+                            <tr>
+                                <td>
+                                    @functionApp.FunctionAppName
+                                </td>
+                                <td>
+                                    @functionApp.ResourceGroupName
+                                </td>
+                                <td>
+                                    @functionApp.ResourceName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="FunctionAppsModal.HideAsync">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private List<AppRegistration>? AppRegistrations { get; set; }
 
@@ -149,6 +247,12 @@
     private AppRegistration? StepsAppRegistration { get; set; }
     private HxModal StepsModal { get; set; } = null!;
 
+    private AppRegistration? DataFactoriesAppRegistration { get; set; }
+    private HxModal DataFactoriesModal { get; set; } = null!;
+
+    private AppRegistration? FunctionAppsAppRegistration { get; set; }
+    private HxModal FunctionAppsModal { get; set; } = null!;
+
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
@@ -156,6 +260,8 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(app => app.Steps)
             .ThenInclude(step => step.Job)
+            .Include(app => app.DataFactories)
+            .Include(app => app.FunctionApps)
             .OrderBy(df => df.AppRegistrationName)
             .ToListAsync();
     }

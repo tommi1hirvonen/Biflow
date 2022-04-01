@@ -98,11 +98,18 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(app => app.Steps)
                 .ThenInclude(step => step.Job)
+                .Include(app => app.DataFactories)
+                .Include(app => app.FunctionApps)
                 .FirstAsync(r => r.AppRegistrationId == AppRegistrationId);
         }
         else
         {
-            AppRegistration = new() { Steps = new List<DatasetStep>() };
+            AppRegistration = new()
+            {
+                Steps = new List<DatasetStep>(),
+                DataFactories = new List<DataFactory>(),
+                FunctionApps = new List<FunctionApp>()
+            };
         }
     }
 

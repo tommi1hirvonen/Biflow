@@ -35,6 +35,10 @@ public class AppRegistration
 
     public IList<DatasetStep> Steps { get; set; } = null!;
 
+    public IList<DataFactory> DataFactories { get; set; } = null!;
+
+    public IList<FunctionApp> FunctionApps { get; set; } = null!;
+
     private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api";
     private const string AzureResourceUrl = "https://management.azure.com/";
