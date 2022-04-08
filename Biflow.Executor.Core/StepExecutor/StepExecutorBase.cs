@@ -89,7 +89,7 @@ internal abstract class StepExecutorBase
 
             if (result is Failure failure)
             {
-                _logger.LogWarning("{ExecutionId} {Step} Error executing step: " + failure.ErrorMessage, StepExecution.ExecutionId, StepExecution);
+                _logger.LogWarning("{ExecutionId} {Step} Error executing step: {ErrorMessage}", StepExecution.ExecutionId, StepExecution, failure.ErrorMessage);
                 await UpdateExecutionFailedAsync(failure);
 
                 // There are attempts left => increase counter and wait for the retry interval.
