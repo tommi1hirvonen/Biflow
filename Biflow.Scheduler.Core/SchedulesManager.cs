@@ -67,12 +67,13 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             }
 
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
-            _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression} and status {status}");
+            _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",
+                schedule.ScheduleId, schedule.JobId, schedule.CronExpression, status);
 
             counter++;
         }
 
-        _logger.LogInformation($"{counter}/{schedules.Count} schedules loaded successfully");
+        _logger.LogInformation("{counter}/{Count} schedules loaded successfully", counter, schedules.Count);
     }
 
     public async Task ResumeScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
@@ -81,7 +82,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.ResumeTrigger(triggerKey, cancellationToken);
 
-        _logger.LogInformation($"Resumed schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
+        _logger.LogInformation("Resumed schedule id {ScheduleId} for job id {JobId}", schedule.ScheduleId, schedule.JobId);
     }
 
     public async Task PauseScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
@@ -89,7 +90,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.PauseTrigger(triggerKey, cancellationToken);
 
-        _logger.LogInformation($"Paused schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
+        _logger.LogInformation("Paused schedule id {ScheduleId} for job id {JobId}", schedule.ScheduleId, schedule.JobId);
     }
 
     public async Task RemoveJobAsync(SchedulerJob job, CancellationToken cancellationToken)
@@ -97,7 +98,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var jobKey = new JobKey(job.JobId.ToString());
         await _scheduler.DeleteJob(jobKey, cancellationToken);
 
-        _logger.LogInformation($"Deleted all schedules for job id {job.JobId}");
+        _logger.LogInformation("Deleted all schedules for job id {JobId}", job.JobId);
     }
 
     public async Task RemoveScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
@@ -105,7 +106,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.UnscheduleJob(triggerKey, cancellationToken);
 
-        _logger.LogInformation($"Deleted schedule id {schedule.ScheduleId} for job id {schedule.JobId}");
+        _logger.LogInformation("Deleted schedule id {ScheduleId} for job id {JobId}", schedule.ScheduleId, schedule.JobId);
     }
 
     public async Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
@@ -136,7 +137,8 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             await _scheduler.ScheduleJob(trigger, cancellationToken);
         }
 
-        _logger.LogInformation($"Added schedule id {schedule.ScheduleId} for job id {schedule.JobId} with Cron expression {schedule.CronExpression}");
+        _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
+            schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
     }
 
 }

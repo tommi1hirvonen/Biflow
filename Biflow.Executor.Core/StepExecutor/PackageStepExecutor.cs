@@ -78,7 +78,7 @@ internal class PackageStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id (" + packageOperationId + ")", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", Step.ExecutionId, Step, packageOperationId);
         }
 
         // Monitor the package's execution.
