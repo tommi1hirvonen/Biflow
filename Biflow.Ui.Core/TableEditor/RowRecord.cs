@@ -5,21 +5,22 @@ namespace Biflow.Ui.Core;
 
 public class RowRecord
 {
-    private Dictionary<string, string> _columnDbDatatypes;
-    private HashSet<string> _primaryKeyColumns;
+    private readonly Dictionary<string, string> _columnDbDatatypes;
+    private readonly HashSet<string> _primaryKeyColumns;
 
     public Dictionary<string, object?>? OriginalValues { get; }
 
     public Dictionary<string, object?> UnsupportedValues { get; } = new();
 
+    public Dictionary<string, byte?> ByteValues { get; } = new();
+    public Dictionary<string, short?> ShortValues { get; } = new();
     public Dictionary<string, int?> IntValues { get; } = new();
-
-    public Dictionary<string, string?> StringValues { get; } = new();
-
-    public Dictionary<string, bool?> BooleanValues { get; } = new();
-
+    public Dictionary<string, long?> LongValues { get; } = new();
     public Dictionary<string, decimal?> DecimalValues { get; } = new();
-
+    public Dictionary<string, double?> DoubleValues { get; } = new();
+    public Dictionary<string, float?> FloatValues { get; } = new();
+    public Dictionary<string, string?> StringValues { get; } = new();
+    public Dictionary<string, bool?> BooleanValues { get; } = new();
     public Dictionary<string, DateTime?> DateTimeValues { get; } = new();
 
     public bool ToBeDeleted { get; set; }
@@ -31,122 +32,109 @@ public class RowRecord
         OriginalValues = originalValues;
         if (OriginalValues is not null)
         {
-            foreach (var value in OriginalValues)
+            foreach (var record in OriginalValues)
             {
-                var datatype = GetColumnDatatype(value.Key);
-                switch (datatype)
+                var column = record.Key;
+                var value = record.Value;
+                var dbDatatype = _columnDbDatatypes[column];
+                if (DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
-                    case Datatype.Int:
-                        IntValues[value.Key] = value.Value as int?;
-                        break;
-                    case Datatype.String:
-                        StringValues[value.Key] = value.Value as string;
-                        break;
-                    case Datatype.Bool:
-                        BooleanValues[value.Key] = value.Value as bool?;
-                        break;
-                    case Datatype.Decimal:
-                        DecimalValues[value.Key] = value.Value as decimal?;
-                        break;
-                    case Datatype.DateTime:
-                        DateTimeValues[value.Key] = value.Value as DateTime?;
-                        break;
-                    case Datatype.Unsupported:
-                    default:
-                        UnsupportedValues[value.Key] = value.Value;
-                        break;
+                    if (datatype == typeof(byte))
+                        ByteValues[column] = value as byte?;
+                    else if (datatype == typeof(short))
+                        ShortValues[column] = value as short?;
+                    else if (datatype == typeof(int))
+                        IntValues[column] = value as int?;
+                    else if (datatype == typeof(long))
+                        LongValues[column] = value as long?;
+                    else if (datatype == typeof(decimal))
+                        DecimalValues[column] = value as decimal?;
+                    else if (datatype == typeof(double))
+                        DoubleValues[column] = value as double?;
+                    else if (datatype == typeof(float))
+                        FloatValues[column] = value as float?;
+                    else if (datatype == typeof(string))
+                        StringValues[column] = value as string;
+                    else if (datatype == typeof(bool))
+                        BooleanValues[column] = value as bool?;
+                    else if (datatype == typeof(DateTime))
+                        DateTimeValues[column] = value as DateTime?;
+                    else
+                        UnsupportedValues[column] = value;
+                }
+                else
+                {
+                    UnsupportedValues[column] = value;
                 }
             }
         }
         else
         {
-            foreach (var column in _columnDbDatatypes.Keys)
+            foreach (var columnInfo in _columnDbDatatypes)
             {
-                var datatype = GetColumnDatatype(column);
-                switch (datatype)
+                var column = columnInfo.Key;
+                var dbDatatype = columnInfo.Value;
+                if (DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
-                    case Datatype.Int:
+                    if (datatype == typeof(byte))
+                        ByteValues[column] = 0;
+                    else if (datatype == typeof(short))
+                        ShortValues[column] = 0;
+                    else if (datatype == typeof(int))
                         IntValues[column] = 0;
-                        break;
-                    case Datatype.String:
-                        StringValues[column] = "";
-                        break;
-                    case Datatype.Bool:
+                    else if (datatype == typeof(long))
+                        LongValues[column] = 0;
+                    else if (datatype == typeof(decimal))
+                        DecimalValues[column] = 0;
+                    else if (datatype == typeof(double))
+                        DoubleValues[column] = 0;
+                    else if (datatype == typeof(float))
+                        FloatValues[column] = 0;
+                    else if (datatype == typeof(string))
+                        StringValues[column] = string.Empty;
+                    else if (datatype == typeof(bool))
                         BooleanValues[column] = false;
-                        break;
-                    case Datatype.Decimal:
-                        DecimalValues[column] = 0.0m;
-                        break;
-                    case Datatype.DateTime:
+                    else if (datatype == typeof(DateTime))
                         DateTimeValues[column] = DateTime.Now;
-                        break;
-                    case Datatype.Unsupported:
-                    default:
+                    else
                         UnsupportedValues[column] = default;
-                        break;
+                }
+                else
+                {
+                    UnsupportedValues[column] = default;
                 }
             }
         }
     }
 
-    private Dictionary<string, object?> GetConsolidatedValues()
-    {
-        var dict = new Dictionary<string, object?>();
-        foreach (var value in UnsupportedValues)
+    public IEnumerable<(string ColumnName, Type? Datatype)> Columns =>
+        _columnDbDatatypes.Select(c =>
         {
-            dict.Add(value.Key, value.Value);
-        }
-        foreach (var value in IntValues)
-        {
-            dict.Add(value.Key, value.Value);
-        }
-        foreach (var value in StringValues)
-        {
-            dict.Add(value.Key, value.Value);
-        }
-        foreach (var value in BooleanValues)
-        {
-            dict.Add(value.Key, value.Value);
-        }
-        foreach (var value in DecimalValues)
-        {
-            dict.Add(value.Key, value.Value);
-        }
-        foreach (var value in DateTimeValues)
-        {
-            dict.Add(value.Key, value.Value);
-        }
-        return dict;
-    }
+            var columnName = c.Key;
+            var dbDatatype = c.Value;
+            if (DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
+            {
+                return (columnName, typeMapping);
+            }
+            else
+            {
+                return (columnName, null as Type);
+            }
+        });
 
-    public Datatype GetColumnDatatype(string column)
-    {
-        var dbDatatype = _columnDbDatatypes[column];
-        if (dbDatatype.Contains("char"))
-        {
-            return Datatype.String;
-        }
-        else if (dbDatatype.Contains("int"))
-        {
-            return Datatype.Int;
-        }
-        else if (dbDatatype == "bit")
-        {
-            return Datatype.Bool;
-        }
-        else if (new string[] { "decimal", "float", "money", "numeric", "real", "smallmoney" }.Contains(dbDatatype))
-        {
-            return Datatype.Decimal;
-        }
-        else if (dbDatatype.Contains("date"))
-        {
-            return Datatype.DateTime;
-        }
-        else
-        {
-            return Datatype.Unsupported;
-        }
-    }
+    private Dictionary<string, object?> ConsolidatedValues =>
+        UnsupportedValues
+            .Concat(ByteValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(ShortValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(IntValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(LongValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(DecimalValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(DoubleValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(FloatValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(StringValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(BooleanValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .Concat(DateTimeValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
+            .ToDictionary(key => key.Key, value => value.Value);
 
     /// <summary>
     /// 
@@ -156,7 +144,7 @@ public class RowRecord
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand(string schema, string table)
     {
-        var working = GetConsolidatedValues();
+        var working = ConsolidatedValues;
 
         // Existing entity
         if (OriginalValues is not null && !ToBeDeleted)
@@ -249,4 +237,27 @@ public class RowRecord
 
         return null;
     }
+
+    public static readonly Dictionary<string, Type> DataTypeMapping = new()
+    {
+        { "char", typeof(string) },
+        { "varchar", typeof(string) },
+        { "nchar", typeof(string) },
+        { "nvarchar", typeof(string) },
+        { "tinyint", typeof(byte) },
+        { "smallint", typeof(short) },
+        { "int", typeof(int) },
+        { "bigint", typeof(long) },
+        { "smallmoney", typeof(decimal) },
+        { "money", typeof(decimal) },
+        { "numeric", typeof(decimal) },
+        { "decimal", typeof(decimal) },
+        { "real", typeof(float) },
+        { "float", typeof(double) },
+        { "smalldatetime", typeof(DateTime) },
+        { "datetime", typeof(DateTime) },
+        { "datetime2", typeof(DateTime) },
+        { "date", typeof(DateTime) },
+        { "bit", typeof(bool) }
+    };
 }

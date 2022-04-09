@@ -42,10 +42,21 @@
     Reset/reload
 </HxButton>
 
+<div class="row mt-3">
+    <div class="col-xxl-1 col-xl-2 col-lg-3 col-md-3 col-4">
+        <label>Limit rows</label>
+        <input class="form-control form-control-sm" type="number" @bind-value="TopRows" />
+    </div>
+</div>
+
 <div class="row my-4">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
+                @if (Editor?.RowRecords.Any() ?? false)
+                {
+                    <small class="text-secondary px-3">@Editor.RowRecords.Count() record(s)</small>
+                }
                 @if (Editor?.IsInitialized ?? false)
                 {
                     <table class="table">
@@ -63,36 +74,59 @@
                             @foreach (var row in Editor.RowRecords)
                             {
                                 <tr>
-                                    @foreach (var column in Editor.Columns)
+                                    @foreach (var columns in row.Columns)
                                     {
-                                        var datatype = row.GetColumnDatatype(column.ColumnName);
+                                        var column = columns.ColumnName;
+                                        var datatype = columns.Datatype;
                                         <td>
-                                            @switch (datatype)
+                                            @if (datatype == typeof(byte))
                                             {
-                                                case Datatype.Int:
-                                                    <input class="form-control form-control-sm" type="number" @bind-value="row.IntValues[column.ColumnName]" />
-                                                    break;
-                                                case Datatype.String:
-                                                    <input class="form-control form-control-sm" type="text" @bind-value="row.StringValues[column.ColumnName]" />
-                                                    break;
-                                                case Datatype.Bool:
-                                                    var id = Guid.NewGuid();
-                                                    <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" id="@id"
-                                                               checked=@row.BooleanValues[column.ColumnName] @bind-value="row.BooleanValues[column.ColumnName]">
-                                                        <label class="form-check-label" for="@id"></label>
-                                                    </div>
-                                                    break;
-                                                case Datatype.Decimal:
-                                                    <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalValues[column.ColumnName]" />
-                                                    break;
-                                                case Datatype.DateTime:
-                                                    <input class="form-control form-control-sm" type="datetime-local" @bind-value="row.DateTimeValues[column.ColumnName]" />
-                                                    break;
-                                                case Datatype.Unsupported:
-                                                default:
-                                                    <span>@row.UnsupportedValues[column.ColumnName]</span>
-                                                    break;
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ByteValues[column]" />
+                                            }
+                                            else if (datatype == typeof(short))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ShortValues[column]" />
+                                            }
+                                            else if (datatype == typeof(int))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.IntValues[column]" />
+                                            }
+                                            else if (datatype == typeof(long))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.LongValues[column]" />
+                                            }
+                                            else if (datatype == typeof(decimal))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalValues[column]" />
+                                            }
+                                            else if (datatype == typeof(double))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DoubleValues[column]" />
+                                            }
+                                            else if (datatype == typeof(float))
+                                            {
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.FloatValues[column]" />
+                                            }
+                                            else if (datatype == typeof(string))
+                                            {
+                                                <input class="form-control form-control-sm" type="text" @bind-value="row.StringValues[column]" />
+                                            }
+                                            else if (datatype == typeof(bool))
+                                            {
+                                                var id = Guid.NewGuid();
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="@id"
+                                                            checked=@row.BooleanValues[column] @bind-value="row.BooleanValues[column]">
+                                                    <label class="form-check-label" for="@id"></label>
+                                                </div>
+                                            }
+                                            else if (datatype == typeof(DateTime))
+                                            {
+                                                <input class="form-control form-control-sm" type="datetime-local" @bind-value="row.DateTimeValues[column]" />
+                                            }
+                                            else
+                                            {
+                                                <text>@row.UnsupportedValues[column]</text>
                                             }
                                         </td>
                                     }
@@ -134,6 +168,14 @@
 
     private TableEditorHelper? Editor { get; set; }
 
+    private int TopRows
+    {
+        get => _topRows;
+        set => _topRows = value > 0 ? value : _topRows;
+    }
+
+    private int _topRows = 100;
+
     private async Task ReloadDataAsync(DataTable? table = null)
     {
         if (table is not null)
@@ -146,7 +188,7 @@
             Messenger.AddError("Error saving changes", $"Table editor helper object was null.");
             return;
         }
-        await Editor.LoadDataAsync();
+        await Editor.LoadDataAsync(TopRows);
     }
 
     private async Task SaveChangesAsync()

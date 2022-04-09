@@ -13,7 +13,7 @@ public class TableEditorHelper
 
     private Dictionary<string, string>? ColumnDbDatatypes { get; set; }
 
-    private List<RowRecord>? WorkingData { get; set; }
+    private LinkedList<RowRecord>? WorkingData { get; set; }
 
     public TableEditorHelper(string connectionString, string schema, string table)
     {
@@ -31,7 +31,7 @@ public class TableEditorHelper
     public IEnumerable<RowRecord> RowRecords =>
         WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
 
-    public async Task LoadDataAsync()
+    public async Task LoadDataAsync(int top = 1000)
     {
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
@@ -63,7 +63,7 @@ public class TableEditorHelper
         PrimaryKeyColumns = primaryKeyColumns.ToHashSet();
         ColumnDbDatatypes = columnDatatypes.ToDictionary(key => key.Item1, value => value.Item2);
 
-        var rows = await connection.QueryAsync($"SELECT * FROM [{_schema}].[{_table}]");
+        var rows = await connection.QueryAsync($"SELECT TOP {top} * FROM [{_schema}].[{_table}]");
         var originalData = new List<Dictionary<string, object?>>();
         foreach (var row in rows)
         {
@@ -75,9 +75,8 @@ public class TableEditorHelper
             originalData.Add(dict);
         }
 
-        WorkingData = originalData
-            .Select(d => new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, d))
-            .ToList();
+        var records = originalData.Select(d => new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, d));
+        WorkingData = new LinkedList<RowRecord>(records);
     }
 
     public async Task<(int Inserted, int Updated, int Deleted)> SaveChangesAsync()
@@ -127,6 +126,6 @@ public class TableEditorHelper
         }
 
         var record = new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns);
-        WorkingData.Add(record);
+        WorkingData.AddFirst(record);
     }
 }
