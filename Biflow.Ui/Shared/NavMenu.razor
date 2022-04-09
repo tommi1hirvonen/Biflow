@@ -47,6 +47,12 @@
             </li>
         </AuthorizeView>
         <li class="nav-item">
+            <NavLink class="nav-link" href="datatables" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
+                @MarkupHelper.FromFile("icons/feather/table.svg")
+                Data Tables
+            </NavLink>
+        </li>
+        <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                 @MarkupHelper.FromFile("icons/feather/user.svg")
                 Account

@@ -45,6 +45,7 @@ public class BiflowContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
     public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
+    public DbSet<DataTable> DataTables => Set<DataTable>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -398,6 +399,9 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<FunctionApp>()
             .ToTable("FunctionApp");
+
+        modelBuilder.Entity<DataTable>()
+            .ToTable("DataTable");
     }
 
 

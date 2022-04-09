@@ -1,0 +1,187 @@
+﻿@using System.Text
+@inject IHxMessengerService Messenger
+
+<HxDropdown>
+    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
+        @if (SelectedTable is not null)
+        {
+            @SelectedTable.DataTableName
+        }
+        else if (Tables is null)
+        {
+            <text>Loading</text>
+        }
+        else if (Tables.Any())
+        {
+            <text>Select table</text>
+        }
+        else
+        {
+            <text>No tables</text>
+        }
+    </HxDropdownToggleButton>
+    <HxDropdownMenu>
+        @foreach (var table in Tables ?? Enumerable.Empty<DataTable>())
+        {
+            <HxDropdownItem OnClick="async () => await ReloadDataAsync(table)">
+                @table.DataTableName
+            </HxDropdownItem>
+        }
+    </HxDropdownMenu>
+</HxDropdown>
+
+<HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small" Enabled="Editor is not null" OnClick="SaveChangesAsync">
+    Save changes
+</HxButton>
+
+<HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small" Enabled="Editor is not null" OnClick="() => Editor?.AddRecord()">
+    Add record
+</HxButton>
+
+<HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="Editor is not null" OnClick="async () => await ReloadDataAsync()">
+    Reset/reload
+</HxButton>
+
+<div class="row my-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                @if (Editor?.IsInitialized ?? false)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                @foreach (var column in Editor.Columns)
+                                {
+                                    var name = column.IsPrimaryKey ? $"{column.ColumnName} (PK)" : column.ColumnName;
+                                    <th>@name</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Editor.RowRecords)
+                            {
+                                <tr>
+                                    @foreach (var column in Editor.Columns)
+                                    {
+                                        var datatype = row.GetColumnDatatype(column.ColumnName);
+                                        <td>
+                                            @switch (datatype)
+                                            {
+                                                case Datatype.Int:
+                                                    <input class="form-control form-control-sm" type="number" @bind-value="row.IntValues[column.ColumnName]" />
+                                                    break;
+                                                case Datatype.String:
+                                                    <input class="form-control form-control-sm" type="text" @bind-value="row.StringValues[column.ColumnName]" />
+                                                    break;
+                                                case Datatype.Bool:
+                                                    var id = Guid.NewGuid();
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="@id"
+                                                               checked=@row.BooleanValues[column.ColumnName] @bind-value="row.BooleanValues[column.ColumnName]">
+                                                        <label class="form-check-label" for="@id"></label>
+                                                    </div>
+                                                    break;
+                                                case Datatype.Decimal:
+                                                    <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalValues[column.ColumnName]" />
+                                                    break;
+                                                case Datatype.DateTime:
+                                                    <input class="form-control form-control-sm" type="datetime-local" @bind-value="row.DateTimeValues[column.ColumnName]" />
+                                                    break;
+                                                case Datatype.Unsupported:
+                                                default:
+                                                    <span>@row.UnsupportedValues[column.ColumnName]</span>
+                                                    break;
+                                            }
+                                        </td>
+                                    }
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => row.ToBeDeleted = true">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else if (Editor is not null)
+                {
+                    <p class="px-3">Loading data...</p>
+                }
+                else if (Tables is null)
+                {
+                    <p class="px-3">Loading tables...</p>
+                }
+                else if (Tables.Any())
+                {
+                    <p class="px-3">Select a table to edit data</p>
+                }
+                else
+                {
+                    <p class="px-3">No tables</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<DataTable>? Tables { get; set; }
+
+    private DataTable? SelectedTable { get; set; }
+
+    private TableEditorHelper? Editor { get; set; }
+
+    private async Task ReloadDataAsync(DataTable? table = null)
+    {
+        if (table is not null)
+        {
+            SelectedTable = table;
+            Editor = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
+        }
+        if (Editor is null)
+        {
+            Messenger.AddError("Error saving changes", $"Table editor helper object was null.");
+            return;
+        }
+        await Editor.LoadDataAsync();
+    }
+
+    private async Task SaveChangesAsync()
+    {
+        if (Editor is null)
+        {
+            Messenger.AddError("Error saving changes", $"Table editor helper object was null.");
+            return;
+        }
+
+        try
+        {
+            var (inserted, updated, deleted) = await Editor.SaveChangesAsync();
+            var message = new StringBuilder();
+            if (inserted == 0 && updated == 0 && deleted == 0)
+            {
+                message.Append("No changes detected");
+            }
+            if (inserted > 0)
+            {
+                message.Append("Inserted ").Append(inserted).Append(" records").AppendLine();
+            }
+            if (updated > 0)
+            {
+                message.Append("Updated ").Append(updated).Append(" records").AppendLine();
+            }
+            if (deleted > 0)
+            {
+                message.Append("Deleted ").Append(deleted).Append(" records").AppendLine();
+            }
+            Messenger.AddInformation("Changes saved", message.ToString());
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
+        }
+    }
+}

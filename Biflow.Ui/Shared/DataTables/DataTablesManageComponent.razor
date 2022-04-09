@@ -1,0 +1,227 @@
+﻿ @implements IDisposable
+ 
+ @inject MarkupHelperService MarkupHelper
+ @inject IDbContextFactory<BiflowContext> DbContextFactory
+ @inject IHxMessengerService Messenger
+
+ <HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await SetEditContextAsync()">
+     Add table
+ </HxButton>
+
+<div class="row my-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                <EditForm Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Data table name</th>
+                                <th>Connection</th>
+                                <th>Target schema</th>
+                                <th>Target table</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Tables is null)
+                            {
+                                <tr>
+                                    <td colspan="5">Loading...</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @if (EditTable.DataTableId == Guid.Empty && EditTable.ConnectionId != Guid.Empty)
+                                {
+                                    <tr>
+                                        <td>
+                                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                        </td>
+                                        <td>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
+                                                @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                                {
+                                                    <option value="@connection.ConnectionId">
+                                                        @connection.ConnectionName
+                                                    </option>
+                                                }
+                                            </InputSelect>
+                                        </td>
+                                        <td>
+                                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                        </td>
+                                        <td>
+                                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                        </td>
+                                        <td>
+                                            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                                <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
+                                                    @MarkupHelper.FromFile("icons/feather/check.svg")
+                                                </HxSubmit>
+                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
+                                                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                </HxButton>
+                                            </HxButtonGroup>
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var table in Tables)
+                                {
+                                    <tr>
+                                        @if (EditTable?.DataTableId == table.DataTableId)
+                                        {
+                                            <td>
+                                                <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                            </td>
+                                            <td>
+                                                <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
+                                                    @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                                    {
+                                                        <option value="@connection.ConnectionId">
+                                                            @connection.ConnectionName
+                                                        </option>
+                                                    }
+                                                </InputSelect>
+                                            </td>
+                                            <td>
+                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                            </td>
+                                            <td>
+                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                            </td>
+                                            <td>
+                                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
+                                                        @MarkupHelper.FromFile("icons/feather/check.svg")
+                                                    </HxSubmit>
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
+                                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                    </HxButton>
+                                                </HxButtonGroup>
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle">
+                                                @table.DataTableName
+                                            </td>
+                                            <td class="align-middle">
+                                                @table.Connection.ConnectionName
+                                            </td>
+                                            <td class="align-middle">
+                                                @table.TargetSchemaName
+                                            </td>
+                                            <td class="align-middle">
+                                                @table.TargetTableName
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-row">
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" OnClick="async () => await SetEditContextAsync(table)">
+                                                        @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                                    </HxButton>
+                                                    <HxDropdown>
+                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                        </HxDropdownToggleButton>
+                                                        <HxDropdownMenu>
+                                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                            <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
+                                                        </HxDropdownMenu>
+                                                    </HxDropdown>
+                                                </div>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<DataTable>? Tables { get; set; }
+
+    [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
+
+    private DataTable EditTable { get; set; } = new();
+
+    private BiflowContext? EditContext { get; set; }
+
+    private async Task DeleteTableAsync(DataTable table)
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        context.DataTables.Remove(table);
+        await context.SaveChangesAsync();
+        Tables?.Remove(table);
+    }
+
+    private async Task SetEditContextAsync(DataTable? table = null)
+    {
+        EditContext?.Dispose();
+        EditContext = DbContextFactory.CreateDbContext();
+        Connections = await EditContext.SqlConnections.OrderBy(c => c.ConnectionName).ToListAsync();
+        if (table is null)
+        {
+            // New table
+            EditTable.ConnectionId = Connections!.First().ConnectionId;
+        }
+        else
+        {
+            EditTable = await EditContext.DataTables
+                .Include(t => t.Connection)
+                .FirstAsync(t => t.DataTableId == table.DataTableId);
+        }
+        StateHasChanged();
+    }
+
+    private void EndEditContext()
+    {
+        EditContext?.Dispose();
+        EditTable = new();
+        StateHasChanged();
+    }
+
+    private async Task SubmitEditTableAsync()
+    {
+        if (EditContext is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (EditTable.DataTableId == Guid.Empty)
+            {
+                EditContext.DataTables.Add(EditTable);
+            }
+            await EditContext.SaveChangesAsync();
+            EditContext.Dispose();
+
+            var toRemove = Tables?.FirstOrDefault(t => t.DataTableId == EditTable.DataTableId);
+            if (toRemove is not null)
+            {
+                Tables?.Remove(toRemove);
+            }
+            Tables?.Add(EditTable);
+
+            EditTable = new();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating data table", ex.Message);
+        }
+    }
+
+    public void Dispose() => EditContext?.Dispose();
+}

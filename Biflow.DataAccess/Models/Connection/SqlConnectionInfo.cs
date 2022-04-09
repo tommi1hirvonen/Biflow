@@ -23,6 +23,8 @@ public class SqlConnectionInfo : ConnectionInfoBase
 
     public IList<AgentJobStep> AgentJobSteps { get; set; } = null!;
 
+    public IList<DataTable> DataTables { get; set; } = null!;
+
     public override IEnumerable<Step> Steps =>
         (SqlSteps?.Cast<Step>() ?? Enumerable.Empty<Step>())
         .Concat(PackageSteps?.Cast<Step>() ?? Enumerable.Empty<Step>())
