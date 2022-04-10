@@ -78,6 +78,14 @@
                                     <label class="form-check-label" for="authorize_all_jobs">Authorize all jobs</label>
                                 </div>
                             </div>
+                            <div class="mt-3">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="authorize_all_datatables"
+                                           checked=@User.AuthorizeAllDataTables
+                                           @bind-value="User.AuthorizeAllDataTables">
+                                    <label class="form-check-label" for="authorize_all_datatables">Authorize all data tables</label>
+                                </div>
+                            </div>
                             @if (!User.AuthorizeAllJobs)
                             {
                                 <div class="mt-3">
@@ -124,6 +132,52 @@
                                     </table>
                                 </div>
                             }
+                            @if (!User.AuthorizeAllDataTables)
+                            {
+                                <div class="mt-3">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Data table</th>
+                                                <th>Authorize</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (DataTables is null)
+                                            {
+                                                <tr>
+                                                    <td colspan="2">Loading...</td>
+                                                </tr>
+                                            }
+                                            else if (!DataTables.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="2">No data tables</td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var table in DataTables)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            @table.DataTableName
+                                                        </td>
+                                                        <td>
+                                                            <div class="form-check form-check-inline">
+                                                                <input type="checkbox" class="form-check-input" id="authorize_@table.DataTableId"
+                                                                       checked=@User.DataTables.Any(t => t.DataTableId == table.DataTableId)
+                                                                       @onchange="args => ToggleDataTableAuthorization(args, table)">
+                                                                <label class="form-check-label" for="authorize_@table.DataTableId"></label>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -144,7 +198,8 @@
     [Parameter]
     public EventCallback<User> OnUserSubmit { get; set; }
 
-    public List<Job>? Jobs { get; set; }
+    private List<Job>? Jobs { get; set; }
+    private List<DataTable>? DataTables { get; set; } 
 
     private string? PrevUsername { get; set; }
 
@@ -165,7 +220,8 @@
             User = new()
             {
                 Role = "Viewer",
-                Jobs = new List<Job>()
+                Jobs = new List<Job>(),
+                DataTables = new List<DataTable>()
             };
             PrevUsername = Username;
         }
@@ -174,8 +230,10 @@
             await ResetContext();
             User = await Context.Users
                 .Include(u => u.Jobs)
+                .Include(u => u.DataTables)
                 .FirstAsync(user => user.Username == Username);
             Jobs = await Context.Jobs.OrderBy(j => j.JobName).ToListAsync();
+            DataTables = await Context.DataTables.OrderBy(t => t.DataTableName).ToListAsync();
             PrevUsername = Username;
         }
     }
@@ -198,6 +256,19 @@
         else
         {
             User.Jobs.Remove(job);
+        }
+    }
+
+    private void ToggleDataTableAuthorization(ChangeEventArgs args, DataTable table)
+    {
+        var enabled = (bool)args.Value!;
+        if (enabled)
+        {
+            User.DataTables.Add(table);
+        }
+        else
+        {
+            User.DataTables.Remove(table);
         }
     }
 
@@ -236,14 +307,23 @@
                     var context = DbFactory.CreateDbContext();
                     var user = await context.Users
                         .Include(u => u.Jobs)
+                        .Include(u => u.DataTables)
                         .FirstAsync(u => u.Username == User.Username);
                     var jobs = await context.Jobs.ToListAsync();
+                    var dataTables = await context.DataTables.ToListAsync();
                     user.AuthorizeAllJobs = User.AuthorizeAllJobs;
+                    user.AuthorizeAllDataTables = User.AuthorizeAllDataTables;
                     foreach (var jobToAdd in User.Jobs)
                     {
                         var job = jobs.FirstOrDefault(j => j.JobId == jobToAdd.JobId);
                         if (job is not null)
                             user.Jobs.Add(job);
+                    }
+                    foreach (var tableToAdd in User.DataTables)
+                    {
+                        var table = dataTables.FirstOrDefault(t => t.DataTableId == tableToAdd.DataTableId);
+                        if (table is not null)
+                            user.DataTables.Add(table);
                     }
 
                     await context.SaveChangesAsync();

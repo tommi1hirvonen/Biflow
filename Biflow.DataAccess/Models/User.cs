@@ -18,6 +18,8 @@ public class User
 
     public bool AuthorizeAllJobs { get; set; }
 
+    public bool AuthorizeAllDataTables { get; set; }
+
     [Required]
     public DateTimeOffset CreatedDateTime { get; set; }
 
@@ -27,4 +29,6 @@ public class User
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
 
     public ICollection<Job> Jobs { get; set; } = null!;
+
+    public ICollection<DataTable> DataTables { get; set; } = null!;
 }

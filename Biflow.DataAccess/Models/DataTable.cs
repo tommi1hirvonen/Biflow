@@ -26,4 +26,6 @@ public class DataTable
     public Guid ConnectionId { get; set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    public ICollection<User> Users { get; set; } = null!;
 }

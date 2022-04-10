@@ -400,8 +400,28 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<FunctionApp>()
             .ToTable("FunctionApp");
 
-        modelBuilder.Entity<DataTable>()
-            .ToTable("DataTable");
+        modelBuilder.Entity<DataTable>(e =>
+        {
+            e.ToTable("DataTable");
+            e.HasMany(t => t.Users)
+            .WithMany(u => u.DataTables)
+            .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
+            x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
+            x => x.HasOne<DataTable>().WithMany().HasForeignKey("DataTableId"));
+
+            if (_httpContextAccessor is not null)
+            {
+                e.HasQueryFilter(t =>
+                _httpContextAccessor.HttpContext == null ||
+                // The user is either admin or editor or is granted authorization to the data table.
+                _httpContextAccessor.HttpContext.User.Identity != null &&
+                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
+                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllDataTables) ||
+                    t.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
+                );
+            }
+        });
     }
 
 
