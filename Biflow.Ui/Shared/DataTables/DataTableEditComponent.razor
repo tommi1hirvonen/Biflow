@@ -53,11 +53,14 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                @if (Editor?.RowRecords.Any() ?? false)
-                {
-                    <small class="text-secondary px-3">@Editor.RowRecords.Count() record(s)</small>
+                @{
+                    var records = GetOrderedRowRecords();
                 }
-                @if (Editor?.IsInitialized ?? false)
+                @if (records?.Any() ?? false)
+                {
+                    <small class="text-secondary px-3">@records.Count() record(s)</small>
+                }
+                @if ((Editor?.IsInitialized ?? false) && records is not null)
                 {
                     <table class="table">
                         <thead>
@@ -65,13 +68,20 @@
                                 @foreach (var column in Editor.Columns)
                                 {
                                     var name = column.IsPrimaryKey ? $"{column.ColumnName} (PK)" : column.ColumnName;
-                                    <th>@name</th>
+                                    var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
+                                    if (orderBy.Column is not null)
+                                    {
+                                        name += orderBy.Descending ? " desc" : " asc";
+                                    }
+                                    <th style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.ColumnName)">
+                                        @name
+                                    </th>
                                 }
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var row in Editor.RowRecords)
+                            @foreach (var row in records)
                             {
                                 <tr>
                                     @foreach (var columns in row.Columns)
@@ -176,13 +186,53 @@
 
     private int _topRows = 100;
 
+    private List<(string Column, bool Descending)> OrderBy { get; } = new();
+
+    private IEnumerable<RowRecord>? GetOrderedRowRecords()
+    {
+        var records = Editor?.RowRecords;
+        foreach (var orderBy in OrderBy)
+        {
+            if (orderBy.Descending)
+            {
+                records = records?.OrderByDescending(r => r.GetColumnValue(orderBy.Column));
+            }
+            else
+            {
+                records = records?.OrderBy(r => r.GetColumnValue(orderBy.Column));
+            }
+        }
+        return records;
+    }
+
+    private void ToggleOrderBy(string column)
+    {
+        // ascending (false) => descending (true) => removed
+        var index = OrderBy.FindIndex(o => o.Column == column);
+        if (index >= 0)
+        {
+            var orderBy = OrderBy[index];
+            OrderBy.Remove(orderBy);
+            if (!orderBy.Descending)
+            {
+                OrderBy.Insert(index, (column, true));   
+            }
+        }
+        else
+        {
+            OrderBy.Insert(0, (column, false));
+        }
+    }
+
     private async Task ReloadDataAsync(DataTable? table = null)
     {
         if (table is not null)
         {
+            OrderBy.Clear();
             SelectedTable = table;
             Editor = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
         }
+
         if (Editor is null)
         {
             Messenger.AddError("Error loading data", $"Table editor helper object was null.");

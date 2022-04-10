@@ -113,6 +113,16 @@ public class RowRecord
         }
     }
 
+    public object? GetColumnValue(string column)
+    {
+        var consolidated = ConsolidatedValues.ToDictionary(x => x.Key, x => x.Value);
+        if (consolidated.ContainsKey(column))
+        {
+            return consolidated[column];
+        }
+        return null;
+    }
+
     public IEnumerable<(string ColumnName, Type? Datatype)> Columns =>
         _columnDbDatatypes.Select(c =>
         {
