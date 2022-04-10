@@ -98,18 +98,19 @@ public class SqlServerHelperService
         using var sqlConnection = new SqlConnection(connectionString);
         var sql = @"
             select
-                ProcedureId = OBJECT_ID(CONCAT(a.ROUTINE_SCHEMA, '.', a.ROUTINE_NAME)),
-                SchemaName = a.ROUTINE_SCHEMA,
-                ProcedureName = a.ROUTINE_NAME,
-                ParameterId = b.ORDINAL_POSITION,
-                ParameterName = b.PARAMETER_NAME,
-                ParameterType = b.DATA_TYPE
-            from INFORMATION_SCHEMA.ROUTINES as a
-                left join INFORMATION_SCHEMA.PARAMETERS as b on
-                    a.ROUTINE_CATALOG = b.SPECIFIC_CATALOG and
-                    a.ROUTINE_SCHEMA = b.SPECIFIC_SCHEMA and
-                    a.ROUTINE_NAME = b.SPECIFIC_NAME
-            order by ROUTINE_SCHEMA, ROUTINE_NAME, ORDINAL_POSITION";
+	            ProcedureId = a.object_id,
+	            SchemaName = b.name,
+	            ProcedureName = a.name,
+	            ParameterId = c.parameter_id,
+	            ParameterName = c.name,
+	            ParameterType = TYPE_NAME(c.user_type_id)
+            from sys.procedures as a
+	            inner join sys.schemas as b on a.schema_id = b.schema_id
+	            left join sys.parameters as c on a.object_id = c.object_id
+            order by
+	            SchemaName,
+	            ProcedureName,
+	            ParameterId";
         var procedures = new Dictionary<int, StoredProcedure>();
         var data = await sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter?, StoredProcedure>(
             sql,
@@ -162,11 +163,15 @@ public class SqlServerHelperService
         using var sqlConnection = new SqlConnection(connectionString);
         var results = await sqlConnection.QueryAsync<(string, string, string)?>(
             @"select
-                ROUTINE_SCHEMA,
-                ROUTINE_NAME,
-                ROUTINE_TYPE
-            from INFORMATION_SCHEMA.ROUTINES
-            order by ROUTINE_SCHEMA, ROUTINE_NAME");
+                SchemaName = c.name,
+                ObjectName = b.name,
+                ObjectType = b.type_desc
+            from sys.sql_modules as a
+            join sys.objects as b on a.object_id = b.object_id
+                join sys.schemas as c on b.schema_id = c.schema_id
+            order by
+                SchemaName,
+                ObjectName");
         return results;
     }
 
@@ -356,19 +361,13 @@ public class SqlServerHelperService
             @"select
                 [server_name] = @@servername,
                 [database_name] = db_name(),
-                [schema_name] = a.TABLE_SCHEMA,
-                [object_name] = a.TABLE_NAME,
-                [object_type] = 'TABLE'
-            from INFORMATION_SCHEMA.TABLES as a 
-            union all
-            select
-                [server_name] = @@servername,
-                [database_name] = db_name(),
-                [schema_name] = a.TABLE_SCHEMA,
-                [object_name] = a.TABLE_NAME,
-                [object_type] = 'VIEW'
-            from INFORMATION_SCHEMA.VIEWS as a
-            order by [schema_name], [object_name]", cancellationToken: cancellationToken);
+                [schema_name] = b.name,
+                [object_name] = a.name,
+                [object_type] = a.type_desc
+            from sys.objects as a
+                join sys.schemas as b on a.schema_id = b.schema_id
+            where a.[type] in ('U', 'V')
+            order by b.name, a.name", cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
         return rows;
     }
