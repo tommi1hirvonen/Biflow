@@ -128,7 +128,7 @@ public class RowRecord
             }
         });
 
-    private Dictionary<string, object?> ConsolidatedValues =>
+    private IEnumerable<KeyValuePair<string, object?>> ConsolidatedValues =>
         UnsupportedValues
             .Concat(ByteValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
             .Concat(ShortValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
@@ -139,8 +139,7 @@ public class RowRecord
             .Concat(FloatValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
             .Concat(StringValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
             .Concat(BooleanValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(DateTimeValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .ToDictionary(key => key.Key, value => value.Value);
+            .Concat(DateTimeValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)));
 
     /// <summary>
     /// 
@@ -150,13 +149,12 @@ public class RowRecord
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand(string schema, string table)
     {
-        var working = ConsolidatedValues;
-        var nonIdentity = working.Where(w => w.Key != _identityColumn).ToList();
+        var nonIdentity = ConsolidatedValues.Where(w => w.Key != _identityColumn).ToList();
 
         // Existing entity
         if (OriginalValues is not null && !ToBeDeleted)
         {
-            var changes = working.Where(w => w.Value?.ToString() != OriginalValues[w.Key]?.ToString()).ToList();
+            var changes = nonIdentity.Where(w => w.Value?.ToString() != OriginalValues[w.Key]?.ToString()).ToList();
             // No changes => skip this record
             if (!changes.Any())
             {
