@@ -156,8 +156,9 @@ public class RowRecord
         // Existing entity
         if (OriginalValues is not null && !ToBeDeleted)
         {
+            var changes = working.Where(w => w.Value?.ToString() != OriginalValues[w.Key]?.ToString()).ToList();
             // No changes => skip this record
-            if (working.Keys.All(k => working[k]?.ToString() == OriginalValues[k]?.ToString()))
+            if (!changes.Any())
             {
                 return null;
             }
@@ -167,11 +168,11 @@ public class RowRecord
 
             builder.Append("UPDATE [").Append(schema).Append("].[").Append(table).Append("] SET ");
             var j = 1;
-            foreach (var value in nonIdentity) // do not update possible identity column
+            foreach (var value in changes)
             {
                 builder.Append('[').Append(value.Key).Append(']').Append(" = @Working_").Append(j);
                 parameters.Add($"Working_{j}", value.Value);
-                if (j < nonIdentity.Count)
+                if (j < changes.Count)
                 {
                     builder.Append(',');
                 }
