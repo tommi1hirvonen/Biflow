@@ -11,6 +11,8 @@ public class TableEditorHelper
 
     private HashSet<string>? PrimaryKeyColumns { get; set; }
 
+    private string? IdentityColumn { get; set; }
+
     private Dictionary<string, string>? ColumnDbDatatypes { get; set; }
 
     private LinkedList<RowRecord>? WorkingData { get; set; }
@@ -48,6 +50,15 @@ public class TableEditorHelper
             new { TableName = _table, SchemaName = _schema }
         );
 
+        IdentityColumn = await connection.ExecuteScalarAsync<string?>(
+            @"select top 1 a.[name]
+            from sys.columns as a
+                inner join sys.tables as b on a.object_id = b.object_id
+                inner join sys.schemas as c on b.schema_id = c.schema_id
+            where a.is_identity = 1 and c.[name] = @SchemaName and b.[name] = @TableName",
+            new { TableName = _table, SchemaName = _schema }
+        );
+
         var columnDatatypes = await connection.QueryAsync<(string, string)>(
             @"select
                 ColumnName = b.[name],
@@ -75,7 +86,7 @@ public class TableEditorHelper
             originalData.Add(dict);
         }
 
-        var records = originalData.Select(d => new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, d));
+        var records = originalData.Select(d => new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, IdentityColumn, d));
         WorkingData = new LinkedList<RowRecord>(records);
     }
 
@@ -125,7 +136,7 @@ public class TableEditorHelper
             return;
         }
 
-        var record = new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns);
+        var record = new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, IdentityColumn);
         WorkingData.AddFirst(record);
     }
 }

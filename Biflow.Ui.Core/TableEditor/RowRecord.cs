@@ -7,6 +7,7 @@ public class RowRecord
 {
     private readonly Dictionary<string, string> _columnDbDatatypes;
     private readonly HashSet<string> _primaryKeyColumns;
+    private readonly string? _identityColumn;
 
     public Dictionary<string, object?>? OriginalValues { get; }
 
@@ -25,10 +26,15 @@ public class RowRecord
 
     public bool ToBeDeleted { get; set; }
 
-    public RowRecord(Dictionary<string, string> columnDbDatatypes, HashSet<string> primaryKeyColumns, Dictionary<string, object?>? originalValues = null)
+    public RowRecord(
+        Dictionary<string, string> columnDbDatatypes,
+        HashSet<string> primaryKeyColumns,
+        string? identityColumn,
+        Dictionary<string, object?>? originalValues = null)
     {
         _columnDbDatatypes = columnDbDatatypes;
         _primaryKeyColumns = primaryKeyColumns;
+        _identityColumn = identityColumn;
         OriginalValues = originalValues;
         if (OriginalValues is not null)
         {
@@ -37,7 +43,7 @@ public class RowRecord
                 var column = record.Key;
                 var value = record.Value;
                 var dbDatatype = _columnDbDatatypes[column];
-                if (DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
+                if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
                     if (datatype == typeof(byte))
                         ByteValues[column] = value as byte?;
@@ -74,7 +80,7 @@ public class RowRecord
             {
                 var column = columnInfo.Key;
                 var dbDatatype = columnInfo.Value;
-                if (DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
+                if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
                     if (datatype == typeof(byte))
                         ByteValues[column] = 0;
@@ -112,7 +118,7 @@ public class RowRecord
         {
             var columnName = c.Key;
             var dbDatatype = c.Value;
-            if (DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
+            if (columnName != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
             {
                 return (columnName, typeMapping);
             }
@@ -145,6 +151,7 @@ public class RowRecord
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand(string schema, string table)
     {
         var working = ConsolidatedValues;
+        var nonIdentity = working.Where(w => w.Key != _identityColumn).ToList();
 
         // Existing entity
         if (OriginalValues is not null && !ToBeDeleted)
@@ -160,11 +167,11 @@ public class RowRecord
 
             builder.Append("UPDATE [").Append(schema).Append("].[").Append(table).Append("] SET ");
             var j = 1;
-            foreach (var value in working)
+            foreach (var value in nonIdentity) // do not update possible identity column
             {
                 builder.Append('[').Append(value.Key).Append(']').Append(" = @Working_").Append(j);
                 parameters.Add($"Working_{j}", value.Value);
-                if (j < working.Count)
+                if (j < nonIdentity.Count)
                 {
                     builder.Append(',');
                 }
@@ -218,14 +225,14 @@ public class RowRecord
                 .Append("].[")
                 .Append(table)
                 .Append("] (")
-                .AppendJoin(',', working.Keys.Select(k => $"[{k}]"))
+                .AppendJoin(',', nonIdentity.Select(k => $"[{k.Key}]"))
                 .Append(") VALUES (");
             var j = 1;
-            foreach (var value in working)
+            foreach (var value in nonIdentity) // do not include possible identity column in insert statement
             {
                 builder.Append("@Working_").Append(j);
                 parameters.Add($"Working_{j}", value.Value);
-                if (j < working.Count)
+                if (j < nonIdentity.Count)
                 {
                     builder.Append(',');
                 }

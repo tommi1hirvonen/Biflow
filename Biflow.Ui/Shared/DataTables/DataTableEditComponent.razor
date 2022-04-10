@@ -209,15 +209,15 @@
             }
             if (inserted > 0)
             {
-                message.Append("Inserted ").Append(inserted).Append(" records").AppendLine();
+                message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
             }
             if (updated > 0)
             {
-                message.Append("Updated ").Append(updated).Append(" records").AppendLine();
+                message.Append("Updated ").Append(updated).Append(" record(s)").AppendLine();
             }
             if (deleted > 0)
             {
-                message.Append("Deleted ").Append(deleted).Append(" records").AppendLine();
+                message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             Messenger.AddInformation("Changes saved", message.ToString());
         }
