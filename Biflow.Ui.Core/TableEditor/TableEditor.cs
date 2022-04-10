@@ -17,6 +17,8 @@ public class TableEditorHelper
 
     private LinkedList<RowRecord>? WorkingData { get; set; }
 
+    private int TopRows { get; set; } = 1000;
+
     public TableEditorHelper(string connectionString, string schema, string table)
     {
         _connectionString = connectionString;
@@ -33,8 +35,10 @@ public class TableEditorHelper
     public IEnumerable<RowRecord> RowRecords =>
         WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
 
-    public async Task LoadDataAsync(int top = 1000)
+    public async Task LoadDataAsync(int? top = null)
     {
+        TopRows = top ?? TopRows;
+
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
 
@@ -74,7 +78,7 @@ public class TableEditorHelper
         PrimaryKeyColumns = primaryKeyColumns.ToHashSet();
         ColumnDbDatatypes = columnDatatypes.ToDictionary(key => key.Item1, value => value.Item2);
 
-        var rows = await connection.QueryAsync($"SELECT TOP {top} * FROM [{_schema}].[{_table}]");
+        var rows = await connection.QueryAsync($"SELECT TOP {TopRows} * FROM [{_schema}].[{_table}]");
         var originalData = new List<Dictionary<string, object?>>();
         foreach (var row in rows)
         {

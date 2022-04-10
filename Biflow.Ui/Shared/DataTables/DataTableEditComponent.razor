@@ -1,5 +1,6 @@
 ﻿@using System.Text
 @inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
 
 <HxDropdown>
     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
@@ -67,14 +68,28 @@
                             <tr>
                                 @foreach (var column in Editor.Columns)
                                 {
-                                    var name = column.IsPrimaryKey ? $"{column.ColumnName} (PK)" : column.ColumnName;
                                     var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
-                                    if (orderBy.Column is not null)
-                                    {
-                                        name += orderBy.Descending ? " desc" : " asc";
-                                    }
-                                    <th style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.ColumnName)">
-                                        @name
+                                    <th @onclick="() => ToggleOrderBy(column.ColumnName)">
+                                        @column.ColumnName
+                                        @if (column.IsPrimaryKey)
+                                        {
+                                            <span class="ms-2">
+                                                @MarkupHelper.FromFile("icons/feather/key.svg")
+                                            </span>
+                                        }
+                                        @if (orderBy.Column is not null)
+                                        {
+                                            <span class="ms-2"> 
+                                                @if (orderBy.Descending)
+                                                {
+                                                    @MarkupHelper.FromFile("icons/feather/arrow-up.svg")
+                                                }
+                                                else
+                                                {
+                                                    @MarkupHelper.FromFile("icons/feather/arrow-down.svg")
+                                                }
+                                            </span>
+                                        }
                                     </th>
                                 }
                                 <th></th>
