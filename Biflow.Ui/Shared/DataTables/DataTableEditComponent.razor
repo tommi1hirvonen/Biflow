@@ -185,10 +185,18 @@
         }
         if (Editor is null)
         {
-            Messenger.AddError("Error saving changes", $"Table editor helper object was null.");
+            Messenger.AddError("Error loading data", $"Table editor helper object was null.");
             return;
         }
-        await Editor.LoadDataAsync(TopRows);
+
+        try
+        {
+            await Editor.LoadDataAsync(TopRows);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error loading data", ex.Message);
+        }
     }
 
     private async Task SaveChangesAsync()
