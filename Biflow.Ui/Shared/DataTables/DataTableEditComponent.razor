@@ -59,7 +59,7 @@
                 }
                 @if (records?.Any() ?? false)
                 {
-                    <small class="text-secondary px-3">@records.Count() record(s)</small>
+                    <small class="text-secondary px-3">@records.Count record(s)</small>
                 }
                 @if ((Editor?.IsInitialized ?? false) && records is not null)
                 {
@@ -203,7 +203,7 @@
 
     private List<(string Column, bool Descending)> OrderBy { get; } = new();
 
-    private IEnumerable<RowRecord>? GetOrderedRowRecords()
+    private List<RowRecord>? GetOrderedRowRecords()
     {
         var records = Editor?.RowRecords;
         foreach (var orderBy in OrderBy)
@@ -217,7 +217,7 @@
                 records = records?.OrderBy(r => r.GetColumnValue(orderBy.Column));
             }
         }
-        return records;
+        return records?.ToList();
     }
 
     private void ToggleOrderBy(string column)
