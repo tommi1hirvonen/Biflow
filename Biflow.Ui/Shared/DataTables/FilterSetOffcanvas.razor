@@ -1,0 +1,198 @@
+﻿@inject MarkupHelperService MarkupHelper
+
+<HxOffcanvas @ref="Offcanvas" BackdropEnabled="false" ScrollingEnabled="true" Title="Filters">
+    <BodyTemplate>
+        @if (Filters is not null)
+        {
+            @foreach (var (column, datatype) in Filters.Columns)
+            {
+                RenderFragment? value1Input = null;
+                RenderFragment? operator1Input = null;
+                if (datatype == typeof(byte))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.ByteIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.ByteIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.ByteIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ByteIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(short))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.ShortIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.ShortIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.ShortIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ShortIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(int))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.IntIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.IntIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.IntIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.IntIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(long))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.LongIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.LongIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.LongIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.LongIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(decimal))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DecimalIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DecimalIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.DecimalIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DecimalIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(double))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DoubleIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DoubleIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.DoubleIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DoubleIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(float))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.FloatIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.FloatIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.FloatIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.FloatIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(string))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.StringIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.StringIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.StringIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="text" @bind-value="Filters.StringIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                else if (datatype == typeof(bool))
+                {
+                    var id = Guid.NewGuid();
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.BooleanIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.BooleanIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.BooleanIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="@id"
+                                checked=@Filters.BooleanIndexer[column].TypedFilterValue1 @bind-value="Filters.BooleanIndexer[column].TypedFilterValue1">
+                        <label class="form-check-label" for="@id">@Filters.BooleanIndexer[column].TypedFilterValue1</label>
+                    </div>
+                    ;
+                }
+                else if (datatype == typeof(DateTime))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DateTimeIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DateTimeIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.DateTimeIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="datetime-local" @bind-value="Filters.DateTimeIndexer[column].TypedFilterValue1" />
+                    ;
+                }
+                <div class="row mt-3">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col-auto">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" id="value_1_enabled_@column"
+                                        checked=@Filters.Filters[column].Enabled1 @bind-value="Filters.Filters[column].Enabled1">
+                                    <label class="form-check-label" for="value_1_enabled_@column"></label>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <h6>@column</h6>
+                            </div>
+                        </div>
+                        @if (Filters.Filters[column].Enabled1)
+                        {
+                            <div class="row">
+                                <div class="col-5">
+                                    @operator1Input
+                                </div>
+                                <div class="col-7">
+                                    @value1Input
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>Data model for filters not yet initialized</p>
+        }
+    </BodyTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public FilterSet? Filters { get; set; }
+
+    private HxOffcanvas Offcanvas { get; set; } = null!;
+
+    public Task ShowAsync() => Offcanvas.ShowAsync();
+}

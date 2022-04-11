@@ -43,6 +43,10 @@
     Reset/reload
 </HxButton>
 
+<HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="FilterSet is not null" OnClick="async () => await FilterSetOffcanvas.ShowAsync()">
+    Filters
+</HxButton>
+
 <div class="row mt-3">
     <div class="col-xxl-1 col-xl-2 col-lg-3 col-md-3 col-4">
         <label>Limit rows</label>
@@ -99,59 +103,57 @@
                             @foreach (var row in records)
                             {
                                 <tr>
-                                    @foreach (var columns in row.Columns)
+                                    @foreach (var (column, datatype) in row.Columns)
                                     {
-                                        var column = columns.ColumnName;
-                                        var datatype = columns.Datatype;
                                         <td>
                                             @if (datatype == typeof(byte))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ByteValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ByteIndexer[column]" />
                                             }
                                             else if (datatype == typeof(short))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ShortValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.ShortIndexer[column]" />
                                             }
                                             else if (datatype == typeof(int))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.IntValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.IntIndexer[column]" />
                                             }
                                             else if (datatype == typeof(long))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.LongValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.LongIndexer[column]" />
                                             }
                                             else if (datatype == typeof(decimal))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalIndexer[column]" />
                                             }
                                             else if (datatype == typeof(double))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DoubleValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.DoubleIndexer[column]" />
                                             }
                                             else if (datatype == typeof(float))
                                             {
-                                                <input class="form-control form-control-sm" type="number" @bind-value="row.FloatValues[column]" />
+                                                <input class="form-control form-control-sm" type="number" @bind-value="row.FloatIndexer[column]" />
                                             }
                                             else if (datatype == typeof(string))
                                             {
-                                                <input class="form-control form-control-sm" type="text" @bind-value="row.StringValues[column]" />
+                                                <input class="form-control form-control-sm" type="text" @bind-value="row.StringIndexer[column]" />
                                             }
                                             else if (datatype == typeof(bool))
                                             {
                                                 var id = Guid.NewGuid();
                                                 <div class="form-check">
                                                     <input type="checkbox" class="form-check-input" id="@id"
-                                                            checked=@row.BooleanValues[column] @bind-value="row.BooleanValues[column]">
+                                                            checked=@row.BooleanIndexer[column] @bind-value="row.BooleanIndexer[column]">
                                                     <label class="form-check-label" for="@id"></label>
                                                 </div>
                                             }
                                             else if (datatype == typeof(DateTime))
                                             {
-                                                <input class="form-control form-control-sm" type="datetime-local" @bind-value="row.DateTimeValues[column]" />
+                                                <input class="form-control form-control-sm" type="datetime-local" @bind-value="row.DateTimeIndexer[column]" />
                                             }
                                             else
                                             {
-                                                <text>@row.UnsupportedValues[column]</text>
+                                                <text>@row.WorkingValues[column]</text>
                                             }
                                         </td>
                                     }
@@ -186,6 +188,8 @@
     </div>
 </div>
 
+<FilterSetOffcanvas @ref="FilterSetOffcanvas" Filters="FilterSet" />
+
 @code {
     [Parameter] public List<DataTable>? Tables { get; set; }
 
@@ -203,6 +207,10 @@
 
     private List<(string Column, bool Descending)> OrderBy { get; } = new();
 
+    private FilterSet? FilterSet { get; set; }
+
+    private FilterSetOffcanvas FilterSetOffcanvas { get; set; } = null!;
+
     private List<RowRecord>? GetOrderedRowRecords()
     {
         var records = Editor?.RowRecords;
@@ -210,11 +218,11 @@
         {
             if (orderBy.Descending)
             {
-                records = records?.OrderByDescending(r => r.GetColumnValue(orderBy.Column));
+                records = records?.OrderByDescending(r => r.WorkingValues[orderBy.Column]);
             }
             else
             {
-                records = records?.OrderBy(r => r.GetColumnValue(orderBy.Column));
+                records = records?.OrderBy(r => r.WorkingValues[orderBy.Column]);
             }
         }
         return records?.ToList();
@@ -244,6 +252,7 @@
         if (table is not null)
         {
             OrderBy.Clear();
+            FilterSet = null;
             SelectedTable = table;
             Editor = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
         }
@@ -257,6 +266,7 @@
         try
         {
             await Editor.LoadDataAsync(TopRows);
+            FilterSet ??= Editor.EmptyFilterSet;
         }
         catch (Exception ex)
         {

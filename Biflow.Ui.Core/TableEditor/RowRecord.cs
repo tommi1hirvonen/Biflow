@@ -9,20 +9,20 @@ public class RowRecord
     private readonly HashSet<string> _primaryKeyColumns;
     private readonly string? _identityColumn;
 
-    public Dictionary<string, object?>? OriginalValues { get; }
+    private Dictionary<string, object?>? OriginalValues { get; }
 
-    public Dictionary<string, object?> UnsupportedValues { get; } = new();
+    public Dictionary<string, object?> WorkingValues { get; }
 
-    public Dictionary<string, byte?> ByteValues { get; } = new();
-    public Dictionary<string, short?> ShortValues { get; } = new();
-    public Dictionary<string, int?> IntValues { get; } = new();
-    public Dictionary<string, long?> LongValues { get; } = new();
-    public Dictionary<string, decimal?> DecimalValues { get; } = new();
-    public Dictionary<string, double?> DoubleValues { get; } = new();
-    public Dictionary<string, float?> FloatValues { get; } = new();
-    public Dictionary<string, string?> StringValues { get; } = new();
-    public Dictionary<string, bool?> BooleanValues { get; } = new();
-    public Dictionary<string, DateTime?> DateTimeValues { get; } = new();
+    public ColumnValueIndexer<byte?> ByteIndexer { get; }
+    public ColumnValueIndexer<short?> ShortIndexer { get; }
+    public ColumnValueIndexer<int?> IntIndexer { get; }
+    public ColumnValueIndexer<long?> LongIndexer { get; }
+    public ColumnValueIndexer<decimal?> DecimalIndexer { get; }
+    public ColumnValueIndexer<double?> DoubleIndexer { get; }
+    public ColumnValueIndexer<float?> FloatIndexer { get; }
+    public ColumnValueIndexer<string?> StringIndexer { get; }
+    public ColumnValueIndexer<bool?> BooleanIndexer { get; }
+    public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; }
 
     public bool ToBeDeleted { get; set; }
 
@@ -36,45 +36,20 @@ public class RowRecord
         _primaryKeyColumns = primaryKeyColumns;
         _identityColumn = identityColumn;
         OriginalValues = originalValues;
-        if (OriginalValues is not null)
-        {
-            foreach (var record in OriginalValues)
-            {
-                var column = record.Key;
-                var value = record.Value;
-                var dbDatatype = _columnDbDatatypes[column];
-                if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
-                {
-                    if (datatype == typeof(byte))
-                        ByteValues[column] = value as byte?;
-                    else if (datatype == typeof(short))
-                        ShortValues[column] = value as short?;
-                    else if (datatype == typeof(int))
-                        IntValues[column] = value as int?;
-                    else if (datatype == typeof(long))
-                        LongValues[column] = value as long?;
-                    else if (datatype == typeof(decimal))
-                        DecimalValues[column] = value as decimal?;
-                    else if (datatype == typeof(double))
-                        DoubleValues[column] = value as double?;
-                    else if (datatype == typeof(float))
-                        FloatValues[column] = value as float?;
-                    else if (datatype == typeof(string))
-                        StringValues[column] = value as string;
-                    else if (datatype == typeof(bool))
-                        BooleanValues[column] = value as bool?;
-                    else if (datatype == typeof(DateTime))
-                        DateTimeValues[column] = value as DateTime?;
-                    else
-                        UnsupportedValues[column] = value;
-                }
-                else
-                {
-                    UnsupportedValues[column] = value;
-                }
-            }
-        }
-        else
+        WorkingValues = OriginalValues is not null ? new(OriginalValues) : new();
+        
+        ByteIndexer = new(WorkingValues);
+        ShortIndexer = new(WorkingValues);
+        IntIndexer = new(WorkingValues);
+        LongIndexer = new(WorkingValues);
+        DecimalIndexer = new(WorkingValues);
+        DoubleIndexer = new(WorkingValues);
+        FloatIndexer = new(WorkingValues);
+        StringIndexer = new(WorkingValues);
+        BooleanIndexer = new(WorkingValues);
+        DateTimeIndexer = new(WorkingValues);
+
+        if (OriginalValues is null)
         {
             foreach (var columnInfo in _columnDbDatatypes)
             {
@@ -83,44 +58,34 @@ public class RowRecord
                 if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
                     if (datatype == typeof(byte))
-                        ByteValues[column] = 0;
+                        ByteIndexer[column] = 0;
                     else if (datatype == typeof(short))
-                        ShortValues[column] = 0;
+                        ShortIndexer[column] = 0;
                     else if (datatype == typeof(int))
-                        IntValues[column] = 0;
+                        IntIndexer[column] = 0;
                     else if (datatype == typeof(long))
-                        LongValues[column] = 0;
+                        LongIndexer[column] = 0;
                     else if (datatype == typeof(decimal))
-                        DecimalValues[column] = 0;
+                        DecimalIndexer[column] = 0;
                     else if (datatype == typeof(double))
-                        DoubleValues[column] = 0;
+                        DoubleIndexer[column] = 0;
                     else if (datatype == typeof(float))
-                        FloatValues[column] = 0;
+                        FloatIndexer[column] = 0;
                     else if (datatype == typeof(string))
-                        StringValues[column] = string.Empty;
+                        StringIndexer[column] = string.Empty;
                     else if (datatype == typeof(bool))
-                        BooleanValues[column] = false;
+                        BooleanIndexer[column] = false;
                     else if (datatype == typeof(DateTime))
-                        DateTimeValues[column] = DateTime.Now;
+                        DateTimeIndexer[column] = DateTime.Now;
                     else
-                        UnsupportedValues[column] = default;
+                        WorkingValues[column] = default;
                 }
                 else
                 {
-                    UnsupportedValues[column] = default;
+                    WorkingValues[column] = default;
                 }
             }
         }
-    }
-
-    public object? GetColumnValue(string column)
-    {
-        var consolidated = ConsolidatedValues.ToDictionary(x => x.Key, x => x.Value);
-        if (consolidated.ContainsKey(column))
-        {
-            return consolidated[column];
-        }
-        return null;
     }
 
     public IEnumerable<(string ColumnName, Type? Datatype)> Columns =>
@@ -138,19 +103,6 @@ public class RowRecord
             }
         });
 
-    private IEnumerable<KeyValuePair<string, object?>> ConsolidatedValues =>
-        UnsupportedValues
-            .Concat(ByteValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(ShortValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(IntValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(LongValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(DecimalValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(DoubleValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(FloatValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(StringValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(BooleanValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)))
-            .Concat(DateTimeValues.Select(x => new KeyValuePair<string, object?>(x.Key, x.Value)));
-
     /// <summary>
     /// 
     /// </summary>
@@ -159,7 +111,7 @@ public class RowRecord
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand(string schema, string table)
     {
-        var nonIdentity = ConsolidatedValues.Where(w => w.Key != _identityColumn).ToList();
+        var nonIdentity = WorkingValues.Where(w => w.Key != _identityColumn).ToList();
 
         // Existing entity
         if (OriginalValues is not null && !ToBeDeleted)

@@ -35,6 +35,8 @@ public class TableEditorHelper
     public IEnumerable<RowRecord> RowRecords =>
         WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
 
+    public FilterSet EmptyFilterSet => new(ColumnDbDatatypes ?? new());
+
     public async Task LoadDataAsync(int? top = null)
     {
         TopRows = top ?? TopRows;
