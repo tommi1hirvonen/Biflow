@@ -8,6 +8,8 @@
             {
                 RenderFragment? value1Input = null;
                 RenderFragment? operator1Input = null;
+                RenderFragment? value2Input = null;
+                RenderFragment? operator2Input = null;
                 if (datatype == typeof(byte))
                 {
                     operator1Input = 
@@ -20,6 +22,17 @@
                     ;
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ByteIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.ByteIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.ByteIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.ByteIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ByteIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
                 else if (datatype == typeof(short))
@@ -35,6 +48,17 @@
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ShortIndexer[column].TypedFilterValue1" />
                     ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.ShortIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.ShortIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.ShortIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.ShortIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
                 }
                 else if (datatype == typeof(int))
                 {
@@ -48,6 +72,17 @@
                     ;
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.IntIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.IntIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.IntIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.IntIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.IntIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
                 else if (datatype == typeof(long))
@@ -63,6 +98,17 @@
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.LongIndexer[column].TypedFilterValue1" />
                     ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.LongIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.LongIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.LongIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.LongIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
                 }
                 else if (datatype == typeof(decimal))
                 {
@@ -76,6 +122,17 @@
                     ;
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DecimalIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DecimalIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DecimalIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.DecimalIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DecimalIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
                 else if (datatype == typeof(double))
@@ -91,6 +148,17 @@
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DoubleIndexer[column].TypedFilterValue1" />
                     ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DoubleIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DoubleIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.DoubleIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.DoubleIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
                 }
                 else if (datatype == typeof(float))
                 {
@@ -104,6 +172,17 @@
                     ;
                     value1Input =
                     @<input class="form-control form-control-sm" type="number" @bind-value="Filters.FloatIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.FloatIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.FloatIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.FloatIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="number" @bind-value="Filters.FloatIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
                 else if (datatype == typeof(string))
@@ -119,10 +198,21 @@
                     value1Input =
                     @<input class="form-control form-control-sm" type="text" @bind-value="Filters.StringIndexer[column].TypedFilterValue1" />
                     ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.StringIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.StringIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.StringIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="text" @bind-value="Filters.StringIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
                 }
                 else if (datatype == typeof(bool))
                 {
-                    var id = Guid.NewGuid();
+                    var id1 = Guid.NewGuid();
                     operator1Input = 
                     @<select class="form-select form-select-sm" @bind="Filters.BooleanIndexer[column].TypedOperator1">
                         @foreach (var filterOperator in Enum.GetValues(Filters.BooleanIndexer[column].TypedOperator1.GetType()))
@@ -133,9 +223,25 @@
                     ;
                     value1Input =
                     @<div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="@id"
+                        <input type="checkbox" class="form-check-input" id="@id1"
                                 checked=@Filters.BooleanIndexer[column].TypedFilterValue1 @bind-value="Filters.BooleanIndexer[column].TypedFilterValue1">
-                        <label class="form-check-label" for="@id">@Filters.BooleanIndexer[column].TypedFilterValue1</label>
+                        <label class="form-check-label" for="@id1">@Filters.BooleanIndexer[column].TypedFilterValue1</label>
+                    </div>
+                    ;
+                    var id2 = Guid.NewGuid();
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.BooleanIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.BooleanIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.BooleanIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="@id2"
+                                checked=@Filters.BooleanIndexer[column].TypedFilterValue2 @bind-value="Filters.BooleanIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        <label class="form-check-label" for="@id2">@Filters.BooleanIndexer[column].TypedFilterValue2</label>
                     </div>
                     ;
                 }
@@ -151,6 +257,17 @@
                     ;
                     value1Input =
                     @<input class="form-control form-control-sm" type="datetime-local" @bind-value="Filters.DateTimeIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DateTimeIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DateTimeIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.DateTimeIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="datetime-local" @bind-value="Filters.DateTimeIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
                 <div class="row mt-3">
@@ -169,7 +286,7 @@
                         </div>
                         @if (Filters.Filters[column].Enabled1)
                         {
-                            <div class="row">
+                            <div class="row mt-1">
                                 <div class="col-5">
                                     @operator1Input
                                 </div>
@@ -177,7 +294,37 @@
                                     @value1Input
                                 </div>
                             </div>
-                        }
+                            <div class="row mt-2">
+                                <div class="col">
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="logical_disable_@column"
+                                               checked="@(!Filters.Filters[column].Enabled2)"
+                                               @onchange="() => Filters.Filters[column].Enabled2 = false">
+                                        <label class="form-check-label" for="logical_disable_@column">Disabled</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="logical_and_@column"
+                                               checked="@(Filters.Filters[column].Enabled2 && Filters.Filters[column].AndOr)"
+                                               @onchange="() => { Filters.Filters[column].Enabled2 = true; Filters.Filters[column].AndOr = true; }">
+                                        <label class="form-check-label" for="logical_and_@column">And</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="logical_or_@column"
+                                               checked="@(Filters.Filters[column].Enabled2 && !Filters.Filters[column].AndOr)"
+                                               @onchange="() => { Filters.Filters[column].Enabled2 = true; Filters.Filters[column].AndOr = false; }">
+                                        <label class="form-check-label" for="logical_or_@column">Or</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-5">
+                                    @operator2Input
+                                </div>
+                                <div class="col-7">
+                                    @value2Input
+                                </div>
+                            </div>
+                        } 
                     </div>
                 </div>
             }
