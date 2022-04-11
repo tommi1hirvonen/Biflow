@@ -7,5 +7,7 @@ public enum NumberFilterOperator
     GreaterThan,
     GreaterThanOrEqual,
     LessThan,
-    LessThanOrEqual
+    LessThanOrEqual,
+    IsBlank,
+    IsNotBlank
 }

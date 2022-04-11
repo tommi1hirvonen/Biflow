@@ -40,7 +40,7 @@
 </HxButton>
 
 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="Editor is not null" OnClick="async () => await ReloadDataAsync()">
-    Reset/reload
+    Reload
 </HxButton>
 
 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="FilterSet is not null" OnClick="async () => await FilterSetOffcanvas.ShowAsync()">
@@ -265,7 +265,7 @@
 
         try
         {
-            await Editor.LoadDataAsync(TopRows);
+            await Editor.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= Editor.EmptyFilterSet;
         }
         catch (Exception ex)

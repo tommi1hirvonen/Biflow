@@ -10,6 +10,10 @@ public enum TextFilterOperator
     DoesNotStartWith,
     EndsWith,
     DoesNotEndWith,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
     IsBlank,
     IsNotBlank
 }

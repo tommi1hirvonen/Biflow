@@ -4,7 +4,7 @@ public interface IFilter
 {
     public bool Enabled1 { get; set; }
 
-    public object? FilterValue1 { get; }
+    public object FilterValue1 { get; }
 
     public Enum Operator1 { get; }
 
@@ -15,7 +15,7 @@ public interface IFilter
     /// </summary>
     public bool AndOr { get; set; }
 
-    public object? FilterValue2 { get; }
+    public object FilterValue2 { get; }
 
     public Enum Operator2 { get; }
 }

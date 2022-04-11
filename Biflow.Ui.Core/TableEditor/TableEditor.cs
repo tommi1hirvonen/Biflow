@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using System.Text;
 
 namespace Biflow.Ui.Core;
 
@@ -37,7 +38,7 @@ public class TableEditorHelper
 
     public FilterSet EmptyFilterSet => new(ColumnDbDatatypes ?? new());
 
-    public async Task LoadDataAsync(int? top = null)
+    public async Task LoadDataAsync(int? top = null, FilterSet? filters = null)
     {
         TopRows = top ?? TopRows;
 
@@ -80,7 +81,112 @@ public class TableEditorHelper
         PrimaryKeyColumns = primaryKeyColumns.ToHashSet();
         ColumnDbDatatypes = columnDatatypes.ToDictionary(key => key.Item1, value => value.Item2);
 
-        var rows = await connection.QueryAsync($"SELECT TOP {TopRows} * FROM [{_schema}].[{_table}]");
+        var cmdBuilder = new StringBuilder();
+        var parameters = new DynamicParameters();
+
+        cmdBuilder.Append("SELECT TOP ").Append(TopRows).Append(" * FROM [").Append(_schema).Append("].[").Append(_table).Append(']');
+
+        if (filters?.Filters.Any(f => f.Value.Enabled1) ?? false)
+        {
+            cmdBuilder.Append(" WHERE");
+            var index = 1;
+            foreach (var (column, filter) in filters.Filters.Where(f => f.Value.Enabled1))
+            {
+                if (index > 1)
+                {
+                    cmdBuilder.Append(" AND ");
+                }
+                cmdBuilder.Append(" [").Append(column).Append("] ");
+                if (filter.Operator1 is NumberFilterOperator nfo)
+                {
+                    var operatorText = nfo switch
+                    {
+                        NumberFilterOperator.Equals => " = ",
+                        NumberFilterOperator.DoesNotEqual => " <> ",
+                        NumberFilterOperator.GreaterThan => " > ",
+                        NumberFilterOperator.GreaterThanOrEqual => " >= ",
+                        NumberFilterOperator.LessThan => " < ",
+                        NumberFilterOperator.LessThanOrEqual => " <= ",
+                        NumberFilterOperator.IsBlank => " IS NULL",
+                        NumberFilterOperator.IsNotBlank => " IS NOT NULL",
+                        _ => throw new ArgumentException($"Unsupported NumberFilterOperator value {nfo}")
+                    };
+                    if (nfo == NumberFilterOperator.IsBlank || nfo == NumberFilterOperator.IsNotBlank)
+                    {
+                        cmdBuilder.Append(operatorText);
+                    }
+                    else
+                    {
+                        cmdBuilder.Append(operatorText).Append("@Parameter_").Append(index);
+                        parameters.Add($"Parameter_{index}", filter.FilterValue1);
+                    }
+                }
+                else if (filter.Operator1 is TextFilterOperator tfo)
+                {
+                    var operatorText = tfo switch
+                    {
+                        TextFilterOperator.Equals => " = ",
+                        TextFilterOperator.DoesNotEqual => " <> ",
+                        TextFilterOperator.Contains => " LIKE ",
+                        TextFilterOperator.DoesNotContain => " NOT LIKE ",
+                        TextFilterOperator.StartsWith => " LIKE ",
+                        TextFilterOperator.DoesNotStartWith => " NOT LIKE ",
+                        TextFilterOperator.EndsWith => " LIKE ",
+                        TextFilterOperator.DoesNotEndWith => " NOT LIKE ",
+                        TextFilterOperator.GreaterThan => " > ",
+                        TextFilterOperator.GreaterThanOrEqual => " >= ",
+                        TextFilterOperator.LessThan => " < ",
+                        TextFilterOperator.LessThanOrEqual => " <= ",
+                        TextFilterOperator.IsBlank => " IS NULL",
+                        TextFilterOperator.IsNotBlank => " IS NOT NULL",
+                        _ => throw new ArgumentException($"Unsupported TextFilterOperator value {tfo}")
+                    };
+                    static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
+                    var value = filter.FilterValue1;
+                    if (tfo == TextFilterOperator.IsBlank || tfo == TextFilterOperator.IsNotBlank)
+                    {
+                        cmdBuilder.Append(operatorText);
+                    }
+                    
+                    if (tfo == TextFilterOperator.Contains || tfo == TextFilterOperator.DoesNotContain)
+                    {
+                        value = $"%{encodeForLike(value.ToString() ?? "")}%";
+                    }
+                    else if (tfo == TextFilterOperator.StartsWith || tfo == TextFilterOperator.DoesNotStartWith)
+                    {
+                        value = $"{encodeForLike(value.ToString() ?? "")}%";
+                    }
+                    else if (tfo == TextFilterOperator.EndsWith || tfo == TextFilterOperator.DoesNotEndWith)
+                    {
+                        value = $"%{encodeForLike(value.ToString() ?? "")}";
+                    }
+
+                    if (tfo != TextFilterOperator.IsBlank && tfo != TextFilterOperator.IsNotBlank)
+                    {
+                        cmdBuilder.Append(operatorText).Append("@Parameter_").Append(index);
+                        parameters.Add($"Parameter_{index}", value);
+                    }
+                }
+                else if (filter.Operator1 is BooleanFilterOperator bfo)
+                {
+                    var operatorText = bfo switch
+                    {
+                        BooleanFilterOperator.Equals => " = ",
+                        _ => throw new ArgumentException($"Unsupported BooleanFilterOperator value {bfo}")
+                    };
+                    cmdBuilder.Append(operatorText).Append("@Parameter_").Append(index);
+                    parameters.Add($"Parameter_{index}", filter.FilterValue1);
+                }
+                else
+                {
+                    throw new ArgumentException($"Unsupported filter operator type {filter.Operator1.GetType()}");
+                }
+                index++;
+            }
+        }
+
+        var cmd = cmdBuilder.ToString();
+        var rows = await connection.QueryAsync(cmd, parameters);
         var originalData = new List<Dictionary<string, object?>>();
         foreach (var row in rows)
         {
