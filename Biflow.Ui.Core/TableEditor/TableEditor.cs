@@ -29,6 +29,8 @@ public class TableEditorHelper
 
     public bool IsInitialized => WorkingData is not null;
 
+    public bool IsEditable => PrimaryKeyColumns?.Any() ?? false;
+
     public IEnumerable<(string ColumnName, bool IsPrimaryKey)> Columns =>
         ColumnDbDatatypes?.Keys.Select(col => (col, PrimaryKeyColumns?.Contains(col) ?? false))
         ?? Enumerable.Empty<(string, bool)>();
