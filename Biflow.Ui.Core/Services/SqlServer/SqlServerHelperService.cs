@@ -16,15 +16,8 @@ public class SqlServerHelperService
 
     public async Task<SSISCatalog> GetCatalogPackages(Guid connectionId)
     {
-        string catalogConnectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            catalogConnectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(catalogConnectionString), "Connection string was null");
-        }
+        var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
         var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>(
@@ -86,15 +79,8 @@ public class SqlServerHelperService
 
     public async Task<List<StoredProcedure>> GetStoredProcedures(Guid connectionId)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var sql = @"
             select
@@ -133,15 +119,8 @@ public class SqlServerHelperService
 
     public async Task<List<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var rows = await sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job");
         var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToList();
@@ -150,15 +129,8 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<(string Schema, string Name, string Type)?>> GetSqlModulesAsync(Guid connectionId)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
 
         using var sqlConnection = new SqlConnection(connectionString);
         var results = await sqlConnection.QueryAsync<(string, string, string)?>(
@@ -177,16 +149,8 @@ public class SqlServerHelperService
 
     public async Task<string> GetObjectDefinitionAsync(Guid connectionId, string objectName)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
-
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var definition = await sqlConnection.ExecuteScalarAsync<string>(
             "SELECT OBJECT_DEFINITION(OBJECT_ID(@ObjectName))",
@@ -226,15 +190,8 @@ public class SqlServerHelperService
         var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{encodeForLike(referencedSchemaFilter)}%";
         var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{encodeForLike(referencedNameFilter)}%";
 
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var rows = await sqlConnection.QueryAsync<SqlReference>(
             $@"select distinct
@@ -272,15 +229,8 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
 
         schema ??= "[dbo]";
@@ -309,15 +259,8 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
 
         schema ??= "[dbo]";
@@ -347,15 +290,8 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.SqlConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync(cancellationToken) ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
+        ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var command = new CommandDefinition(
             @"select
@@ -372,17 +308,29 @@ public class SqlServerHelperService
         return rows;
     }
 
+    public async Task<IEnumerable<(string Schema, string Table, bool HasPrimaryKey)>> GetDatabaseTablesAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    {
+        var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
+        ArgumentNullException.ThrowIfNull(connectionString);
+        using var sqlConnection = new SqlConnection(connectionString);
+        var command = new CommandDefinition(
+            @"select
+                [schema_name] = b.[name],
+                [table_name] = a.[name],
+                [has_pk] = convert(bit, case when c.[index_id] is not null then 1 else 0 end)
+            from [sys].[tables] as a
+                inner join [sys].[schemas] as b on a.[schema_id] = b.[schema_id]
+                left join [sys].[indexes] as c on a.[object_id] = c.[object_id] and c.[is_primary_key] = 1
+            order by [schema_name], [table_name]",
+            cancellationToken: cancellationToken);
+        var rows = await sqlConnection.QueryAsync<(string, string, bool)>(command);
+        return rows;
+    }
+
     public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
-        string connectionString;
-        using (var context = _dbContextFactory.CreateDbContext())
-        {
-            connectionString = await context.AnalysisServicesConnections
-                .AsNoTracking()
-                .Where(c => c.ConnectionId == connectionId)
-                .Select(c => c.ConnectionString)
-                .FirstOrDefaultAsync() ?? throw new ArgumentNullException(nameof(connectionString), "Connection string was null");
-        }
+        var connectionString = await GetAsConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
 
         var models = new List<AsModel>();
         await Task.Run(() =>
@@ -413,108 +361,26 @@ public class SqlServerHelperService
         return models;
     }
 
-}
-
-public record AsModel(string ModelName, List<AsTable> Tables);
-
-public record AsTable(string TableName, AsModel Model, List<AsPartition> Partitions);
-
-public record AsPartition(string PartitionName, AsTable Table);
-
-public class SSISCatalog
-{
-    public SSISCatalog(Dictionary<long, CatalogFolder> folders)
+    private async Task<string?> GetSqlConnectionStringAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
-        Folders = folders;
+        using var context = _dbContextFactory.CreateDbContext();
+        var connectionString = await context.SqlConnections
+            .AsNoTracking()
+            .Where(c => c.ConnectionId == connectionId)
+            .Select(c => c.ConnectionString)
+            .FirstOrDefaultAsync(cancellationToken);
+        return connectionString;
     }
-    public Dictionary<long, CatalogFolder> Folders { get; }
-}
 
-public class CatalogFolder
-{
-    public CatalogFolder(long folderId, string folderName)
+    private async Task<string?> GetAsConnectionStringAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
-        FolderId = folderId;
-        FolderName = folderName;
+        using var context = _dbContextFactory.CreateDbContext();
+        var connectionString = await context.AnalysisServicesConnections
+            .AsNoTracking()
+            .Where(c => c.ConnectionId == connectionId)
+            .Select(c => c.ConnectionString)
+            .FirstOrDefaultAsync(cancellationToken);
+        return connectionString;
     }
-    public long FolderId { get; }
-    public string FolderName { get; }
-    public Dictionary<long, CatalogProject> Projects { get; } = new();
-}
 
-public class CatalogProject
-{
-    public CatalogProject(long projectId, string projectName)
-    {
-        ProjectId = projectId;
-        ProjectName = projectName;
-    }
-    public long ProjectId { get; }
-    public string ProjectName { get; }
-    public Dictionary<long, CatalogPackage> Packages { get; } = new();
 }
-
-public class CatalogPackage
-{
-    public CatalogPackage(long packageId, string packageName)
-    {
-        PackageId = packageId;
-        PackageName = packageName;
-    }
-    public long PackageId { get; }
-    public string PackageName { get; }
-    public Dictionary<long, CatalogParameter> Parameters { get; } = new();
-}
-
-public class CatalogParameter
-{
-    public CatalogParameter(long parameterId, string parameterName, string parameterType, object? designDefaultValue, object? defaultValue)
-    {
-        ParameterId = parameterId;
-        ParameterName = parameterName;
-        ParameterType = parameterType;
-        DesignDefaultValue = designDefaultValue;
-        DefaultValue = defaultValue;
-    }
-    public long ParameterId { get; }
-    public string ParameterName { get; }
-    public string ParameterType { get; }
-    public object? DesignDefaultValue { get; }
-    public object? DefaultValue { get; }
-}
-
-public class StoredProcedure
-{
-    public StoredProcedure(int procedureId, string schemaName, string procedureName)
-    {
-        ProcedureId = procedureId;
-        SchemaName = schemaName;
-        ProcedureName = procedureName;
-    }
-    public int ProcedureId { get; }
-    public string SchemaName { get; }
-    public string ProcedureName { get; }
-    public List<StoredProcedureParameter> Parameters { get; } = new();
-}
-
-public class StoredProcedureParameter
-{
-    public StoredProcedureParameter(int parameterId, string parameterName, string parameterType)
-    {
-        ParameterId = parameterId;
-        ParameterName = parameterName; 
-        ParameterType = parameterType;
-    }
-    public int ParameterId { get; }
-    public string ParameterName { get; }
-    public string ParameterType { get; }
-}
-
-public record SqlReference(
-    string ReferencingSchema,
-    string ReferencingName,
-    string ReferencingType,
-    string? ReferencedDatabase,
-    string ReferencedSchema,
-    string ReferencedName,
-    string ReferencedType);
