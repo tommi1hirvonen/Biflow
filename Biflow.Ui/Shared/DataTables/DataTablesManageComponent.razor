@@ -64,6 +64,10 @@
                                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
                                                     @MarkupHelper.FromFile("icons/feather/x.svg")
                                                 </HxButton>
+                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
+                                                        OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                                </HxButton>
                                             </HxButtonGroup>
                                         </td>
                                     </tr>
@@ -99,6 +103,10 @@
                                                     </HxSubmit>
                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
                                                         @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                    </HxButton>
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
+                                                            OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                                     </HxButton>
                                                 </HxButtonGroup>
                                             </td>
@@ -145,6 +153,8 @@
     </div>
 </div>
 
+<DatabaseTableSelectOffcanvas @ref="Offcanvas" OnTableSelected="OnTableSelected" />
+
 @code {
     [Parameter] public List<DataTable>? Tables { get; set; }
 
@@ -153,6 +163,8 @@
     private DataTable EditTable { get; set; } = new();
 
     private BiflowContext? EditContext { get; set; }
+
+    private DatabaseTableSelectOffcanvas Offcanvas { get; set; } = null!;
 
     private async Task DeleteTableAsync(DataTable table)
     {
@@ -186,6 +198,12 @@
         EditContext?.Dispose();
         EditTable = new();
         StateHasChanged();
+    }
+
+    private void OnTableSelected((string Schema, string Table) table)
+    {
+        EditTable.TargetSchemaName = table.Schema;
+        EditTable.TargetTableName = table.Table;
     }
 
     private async Task SubmitEditTableAsync()
