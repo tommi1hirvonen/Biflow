@@ -15,7 +15,7 @@
                 <EditForm Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    <table class="table table-hover">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>Data table name</th>
@@ -37,38 +37,70 @@
                                 @if (EditTable.DataTableId == Guid.Empty && EditTable.ConnectionId != Guid.Empty)
                                 {
                                     <tr>
-                                        <td>
-                                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
-                                        </td>
-                                        <td>
-                                            <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
-                                                @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                                {
-                                                    <option value="@connection.ConnectionId">
-                                                        @connection.ConnectionName
-                                                    </option>
-                                                }
-                                            </InputSelect>
-                                        </td>
-                                        <td>
-                                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
-                                        </td>
-                                        <td>
-                                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
-                                        </td>
-                                        <td>
-                                            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                                <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
-                                                    @MarkupHelper.FromFile("icons/feather/check.svg")
-                                                </HxSubmit>
-                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
-                                                    @MarkupHelper.FromFile("icons/feather/x.svg")
-                                                </HxButton>
-                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
-                                                        OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
-                                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                                </HxButton>
-                                            </HxButtonGroup>
+                                        <td colspan="5">
+                                            <div class="row my-3">
+                                                <div class="col">
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <HxButtonToolbar>
+                                                                <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">
+                                                                    @MarkupHelper.FromFile("icons/feather/save.svg")
+                                                                    Save
+                                                                </HxSubmit>
+                                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
+                                                                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                                    Cancel
+                                                                </HxButton>
+                                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
+                                                                        OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                                                    Browse tables
+                                                                </HxButton>
+                                                            </HxButtonToolbar>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col">
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    <label class="form-label">Data table name</label>
+                                                                    <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mt-3">
+                                                                <div class="col">
+                                                                    <label class="form-label">Connection</label>
+                                                                    <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
+                                                                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                                                        {
+                                                                            <option value="@connection.ConnectionId">
+                                                                                @connection.ConnectionName
+                                                                            </option>
+                                                                        }
+                                                                    </InputSelect>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mt-3">
+                                                                <div class="col">
+                                                                    <label class="form-label">Target schema and table</label>
+                                                                    <div class="input-group input-group-sm">
+                                                                        <InputText class="form-control form-control-sm" placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                                                        <InputText class="form-control form-control-sm" placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md">
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    <label class="form-label">Description</label>
+                                                                    <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 }
@@ -77,38 +109,70 @@
                                     <tr>
                                         @if (EditTable?.DataTableId == table.DataTableId)
                                         {
-                                            <td>
-                                                <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
-                                            </td>
-                                            <td>
-                                                <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
-                                                    @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                                    {
-                                                        <option value="@connection.ConnectionId">
-                                                            @connection.ConnectionName
-                                                        </option>
-                                                    }
-                                                </InputSelect>
-                                            </td>
-                                            <td>
-                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
-                                            </td>
-                                            <td>
-                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
-                                            </td>
-                                            <td>
-                                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
-                                                        @MarkupHelper.FromFile("icons/feather/check.svg")
-                                                    </HxSubmit>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
-                                                        @MarkupHelper.FromFile("icons/feather/x.svg")
-                                                    </HxButton>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
-                                                            OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
-                                                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                                    </HxButton>
-                                                </HxButtonGroup>
+                                            <td colspan="5">
+                                                <div class="row my-3">
+                                                    <div class="col">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                <HxButtonToolbar>
+                                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">
+                                                                        @MarkupHelper.FromFile("icons/feather/save.svg")
+                                                                        Save
+                                                                    </HxSubmit>
+                                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
+                                                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                                                        Cancel
+                                                                    </HxButton>
+                                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
+                                                                            OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                                                        Browse tables
+                                                                    </HxButton>
+                                                                </HxButtonToolbar>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <div class="col">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        <label class="form-label">Data table name</label>
+                                                                        <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row mt-3">
+                                                                    <div class="col">
+                                                                        <label class="form-label">Connection</label>
+                                                                        <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
+                                                                            @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                                                            {
+                                                                                <option value="@connection.ConnectionId">
+                                                                                    @connection.ConnectionName
+                                                                                </option>
+                                                                            }
+                                                                        </InputSelect>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row mt-3">
+                                                                    <div class="col">
+                                                                        <label class="form-label">Target schema and table</label>
+                                                                        <div class="input-group input-group-sm">
+                                                                            <InputText class="form-control form-control-sm" placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                                                            <InputText class="form-control form-control-sm" placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        <label class="form-label">Description</label>
+                                                                        <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                         }
                                         else

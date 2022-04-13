@@ -12,6 +12,8 @@ public class DataTable
     [MaxLength(250)]
     public string DataTableName { get; set; } = string.Empty;
 
+    public string? DataTableDescription { get; set; }
+
     [Required]
     [MinLength(1)]
     [MaxLength(128)]

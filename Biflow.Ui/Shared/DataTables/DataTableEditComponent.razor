@@ -53,6 +53,12 @@
                 @MarkupHelper.FromFile("icons/feather/filter.svg")
                 Filters
             </HxButton>
+
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)" OnClick="TableInfoOffcanvas.ShowAsync">
+                @MarkupHelper.FromFile("icons/feather/info.svg")
+                Table info
+            </HxButton>
+            
         </HxButtonToolbar>
     </div>
 </div>
@@ -230,6 +236,14 @@
     </div>
 </div>
 
+<HxOffcanvas @ref="TableInfoOffcanvas" Title="@SelectedTable?.DataTableName" Size="OffcanvasSize.Small" BackdropEnabled="false" ScrollingEnabled="true">
+    <BodyTemplate>
+        <p>
+            @SelectedTable?.DataTableDescription
+        </p>
+    </BodyTemplate>
+</HxOffcanvas>
+
 <FilterSetOffcanvas @ref="FilterSetOffcanvas" Filters="FilterSet" />
 
 @code {
@@ -252,6 +266,8 @@
     private FilterSet? FilterSet { get; set; }
 
     private FilterSetOffcanvas FilterSetOffcanvas { get; set; } = null!;
+
+    private HxOffcanvas TableInfoOffcanvas { get; set; } = null!;
 
     private bool EditModeEnabled { get; set; } = true;
 
