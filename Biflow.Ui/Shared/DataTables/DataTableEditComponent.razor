@@ -54,6 +54,11 @@
                 Filters
             </HxButton>
 
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="ColumnSelections is not null" OnClick="SelectColumnsOffcanvas.ShowAsync">
+                @MarkupHelper.FromFile("icons/feather/columns.svg")
+                Columns
+            </HxButton>
+
             <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)" OnClick="TableInfoOffcanvas.ShowAsync">
                 @MarkupHelper.FromFile("icons/feather/info.svg")
                 Table info
@@ -105,7 +110,7 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                @foreach (var column in Editor.Columns)
+                                @foreach (var column in Editor.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                 {
                                     var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
                                     <th @onclick="() => ToggleOrderBy(column.ColumnName)">
@@ -141,7 +146,7 @@
                             @foreach (var row in records)
                             {
                                 <tr>
-                                    @foreach (var (column, datatype) in row.Columns)
+                                    @foreach (var (column, datatype) in row.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                     {
                                         <td>
                                             @if (Editor.IsEditable && EditModeEnabled)
@@ -246,6 +251,8 @@
 
 <FilterSetOffcanvas @ref="FilterSetOffcanvas" Filters="FilterSet" />
 
+<SelectColumnsOffcanvas @ref="SelectColumnsOffcanvas" ColumnSelections="ColumnSelections" OnSelectionsChanged="StateHasChanged" />
+
 @code {
     [Parameter] public List<DataTable>? Tables { get; set; }
 
@@ -265,9 +272,15 @@
 
     private FilterSet? FilterSet { get; set; }
 
+    private Dictionary<string, bool>? ColumnSelections { get; set; }
+
+    private bool IsColumnSelected(string column) => (ColumnSelections?.ContainsKey(column) ?? false) && ColumnSelections[column];
+
     private FilterSetOffcanvas FilterSetOffcanvas { get; set; } = null!;
 
     private HxOffcanvas TableInfoOffcanvas { get; set; } = null!;
+
+    private SelectColumnsOffcanvas SelectColumnsOffcanvas { get; set; } = null!;
 
     private bool EditModeEnabled { get; set; } = true;
 
@@ -313,6 +326,7 @@
         {
             OrderBy.Clear();
             FilterSet = null;
+            ColumnSelections = null;
             SelectedTable = table;
             Editor = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
         }
@@ -327,6 +341,7 @@
         {
             await Editor.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= Editor.EmptyFilterSet;
+            ColumnSelections ??= Editor.Columns.ToDictionary(x => x.ColumnName, x => true);
         }
         catch (Exception ex)
         {
