@@ -31,9 +31,9 @@ public class TableEditorHelper
 
     public bool IsEditable => PrimaryKeyColumns?.Any() ?? false;
 
-    public IEnumerable<(string ColumnName, bool IsPrimaryKey)> Columns =>
-        ColumnDbDatatypes?.Keys.Select(col => (col, PrimaryKeyColumns?.Contains(col) ?? false))
-        ?? Enumerable.Empty<(string, bool)>();
+    public IEnumerable<(string ColumnName, string Datatype, bool IsPrimaryKey)> Columns =>
+        ColumnDbDatatypes?.Keys.Select(col => (col, ColumnDbDatatypes[col], PrimaryKeyColumns?.Contains(col) ?? false))
+        ?? Enumerable.Empty<(string, string, bool)>();
 
     public IEnumerable<RowRecord> RowRecords =>
         WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
