@@ -2,7 +2,7 @@
 
 public class FilterSet
 {
-    private readonly Dictionary<string, string> _columnDbDatatypes;
+    private readonly Dictionary<string, DbDataType> _columnDbDatatypes;
 
     public Dictionary<string, IFilter> Filters { get; } = new();
 
@@ -19,10 +19,10 @@ public class FilterSet
 
     public IEnumerable<(string ColumnName, Type Datatype)> Columns =>
         _columnDbDatatypes
-        .Where(c => RowRecord.DataTypeMapping.ContainsKey(c.Value))
-        .Select(c => (c.Key, RowRecord.DataTypeMapping[c.Value]));
+        .Where(c => RowRecord.DataTypeMapping.ContainsKey(c.Value.BaseDataType))
+        .Select(c => (c.Key, RowRecord.DataTypeMapping[c.Value.BaseDataType]));
 
-    public FilterSet(Dictionary<string, string> columnDbDatatypes)
+    public FilterSet(Dictionary<string, DbDataType> columnDbDatatypes)
     {
         ByteIndexer = new(Filters);
         ShortIndexer = new(Filters);
@@ -39,7 +39,7 @@ public class FilterSet
         foreach (var columnInfo in _columnDbDatatypes)
         {
             var column = columnInfo.Key;
-            var dbDatatype = columnInfo.Value;
+            var dbDatatype = columnInfo.Value.BaseDataType;
             if (RowRecord.DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
             {
                 if (datatype == typeof(byte))

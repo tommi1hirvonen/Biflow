@@ -14,7 +14,7 @@ public class TableEditorHelper
 
     private string? IdentityColumn { get; set; }
 
-    private Dictionary<string, string>? ColumnDbDatatypes { get; set; }
+    private Dictionary<string, DbDataType>? ColumnDbDataTypes { get; set; }
 
     private LinkedList<RowRecord>? WorkingData { get; set; }
 
@@ -31,14 +31,14 @@ public class TableEditorHelper
 
     public bool IsEditable => PrimaryKeyColumns?.Any() ?? false;
 
-    public IEnumerable<(string ColumnName, string Datatype, bool IsPrimaryKey)> Columns =>
-        ColumnDbDatatypes?.Keys.Select(col => (col, ColumnDbDatatypes[col], PrimaryKeyColumns?.Contains(col) ?? false))
-        ?? Enumerable.Empty<(string, string, bool)>();
+    public IEnumerable<(string ColumnName, DbDataType DataType, bool IsPrimaryKey)> Columns =>
+        ColumnDbDataTypes?.Keys.Select(col => (col, ColumnDbDataTypes[col], PrimaryKeyColumns?.Contains(col) ?? false))
+        ?? Enumerable.Empty<(string, DbDataType, bool)>();
 
     public IEnumerable<RowRecord> RowRecords =>
         WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
 
-    public FilterSet EmptyFilterSet => new(ColumnDbDatatypes ?? new());
+    public FilterSet EmptyFilterSet => new(ColumnDbDataTypes ?? new());
 
     public async Task LoadDataAsync(int? top = null, FilterSet? filters = null)
     {
@@ -68,10 +68,29 @@ public class TableEditorHelper
             new { TableName = _table, SchemaName = _schema }
         );
 
-        var columnDatatypes = await connection.QueryAsync<(string, string)>(
+        var columnDatatypes = await connection.QueryAsync<(string, string, string)>(
             @"select
                 ColumnName = b.[name],
-                DataType = c.[name]
+                DataType = c.[name],
+                DataTypeDescription = concat(
+                        type_name(b.user_type_id),
+                        case
+                            --types with precision and scale specification
+                            when type_name(b.user_type_id) in (N'decimal', N'numeric')
+                                then concat(N'(', b.precision, N',', b.scale, N')')
+                            --types with scale specification only
+                            when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
+                                then concat(N'(', b.scale, N')')
+                            --float default precision is 53 - add precision when column has a different precision value
+                            when type_name(b.user_type_id) in (N'float')
+                                then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
+                            --types with length specifiecation
+                            when type_name(b.user_type_id) like N'%char'
+                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
+                        end,
+                        case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
+                        case when b.is_nullable = 1 then N' null' else N' not null' end
+                    )
             from sys.tables as a
                 inner join sys.columns as b on a.object_id = b.object_id
                 inner join sys.types as c on b.user_type_id = c.user_type_id
@@ -81,7 +100,7 @@ public class TableEditorHelper
         );
 
         PrimaryKeyColumns = primaryKeyColumns.ToHashSet();
-        ColumnDbDatatypes = columnDatatypes.ToDictionary(key => key.Item1, value => value.Item2);
+        ColumnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3));
 
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
@@ -129,7 +148,7 @@ public class TableEditorHelper
             originalData.Add(dict);
         }
 
-        var records = originalData.Select(d => new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, IdentityColumn, d));
+        var records = originalData.Select(d => new RowRecord(ColumnDbDataTypes, PrimaryKeyColumns, IdentityColumn, d));
         WorkingData = new LinkedList<RowRecord>(records);
     }
 
@@ -266,12 +285,12 @@ public class TableEditorHelper
 
     public void AddRecord()
     {
-        if (WorkingData is null || ColumnDbDatatypes is null || PrimaryKeyColumns is null)
+        if (WorkingData is null || ColumnDbDataTypes is null || PrimaryKeyColumns is null)
         {
             return;
         }
 
-        var record = new RowRecord(ColumnDbDatatypes, PrimaryKeyColumns, IdentityColumn);
+        var record = new RowRecord(ColumnDbDataTypes, PrimaryKeyColumns, IdentityColumn);
         WorkingData.AddFirst(record);
     }
 }

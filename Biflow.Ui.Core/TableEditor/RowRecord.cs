@@ -5,7 +5,7 @@ namespace Biflow.Ui.Core;
 
 public class RowRecord
 {
-    private readonly Dictionary<string, string> _columnDbDatatypes;
+    private readonly Dictionary<string, DbDataType> _columnDbDatatypes;
     private readonly HashSet<string> _primaryKeyColumns;
     private readonly string? _identityColumn;
 
@@ -27,7 +27,7 @@ public class RowRecord
     public bool ToBeDeleted { get; set; }
 
     public RowRecord(
-        Dictionary<string, string> columnDbDatatypes,
+        Dictionary<string, DbDataType> columnDbDatatypes,
         HashSet<string> primaryKeyColumns,
         string? identityColumn,
         Dictionary<string, object?>? originalValues = null)
@@ -54,7 +54,7 @@ public class RowRecord
             foreach (var columnInfo in _columnDbDatatypes)
             {
                 var column = columnInfo.Key;
-                var dbDatatype = columnInfo.Value;
+                var dbDatatype = columnInfo.Value.BaseDataType;
                 if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
                     if (datatype == typeof(byte))
@@ -92,7 +92,7 @@ public class RowRecord
         _columnDbDatatypes.Select(c =>
         {
             var columnName = c.Key;
-            var dbDatatype = c.Value;
+            var dbDatatype = c.Value.BaseDataType;
             if (columnName != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
             {
                 return (columnName, typeMapping);

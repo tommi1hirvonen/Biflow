@@ -113,7 +113,7 @@
                                 @foreach (var column in Editor.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                 {
                                     var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
-                                    <th @onclick="() => ToggleOrderBy(column.ColumnName)" title="@column.Datatype">
+                                    <th @onclick="() => ToggleOrderBy(column.ColumnName)" title="@column.DataType.DisplayDataType">
                                         @column.ColumnName
                                         @if (column.IsPrimaryKey)
                                         {
