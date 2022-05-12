@@ -42,6 +42,9 @@ public abstract class StepExecution
 
     public IList<ExecutionSourceTargetObject> Targets { get; set; } = null!;
 
+    public override string ToString() =>
+        $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";
+
     public StepExecutionStatus GetExecutionStatus()
     {
         var lastExecution = StepExecutionAttempts
