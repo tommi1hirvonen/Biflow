@@ -115,23 +115,20 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error sending POST request to start function: {ex.Message}");
+            return Result.Failure($"Error sending POST request to invoke function:\n{ex.Message}");
         }
 
-        if (response.IsSuccessStatusCode)
+        try
         {
+            response.EnsureSuccessStatusCode();
             var executionResult = Step.FunctionIsDurable
                 ? await HandleDurableFunctionPolling(client, content, cancellationToken)
                 : Result.Success(content);
             return executionResult;
         }
-        else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+        catch (Exception ex)
         {
-            return Result.Failure("Error executing function (500 Internal Server Error)");
-        }
-        else
-        {
-            return Result.Failure($"Error sending POST request to start function: {content}");
+            return Result.Failure(ex.Message, content);
         }
     }
 
@@ -201,11 +198,11 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return Result.Failure($"Function was terminated: {status.Output}");
+            return Result.Failure("Function was terminated", status.Output.ToString());
         }
         else
         {
-            return Result.Failure($"Function failed: {status.Output}");
+            return Result.Failure("Function failed", status.Output.ToString());
         }
     }
 
