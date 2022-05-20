@@ -19,46 +19,50 @@
             {
                 <tr><td colspan="5">No parameters</td></tr>
             }
+            @{
+                var count = 0;
+            }
             @foreach (var param in Step.StepParameters)
             {
-            <tr>
-                <td>
-                    <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
-                </td>
-                <td class="align-middle">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="inherit_@(param.ParameterId)"
-                               checked=@(param.JobParameterId is not null)
-                               disabled=@(!JobParameters.Any())
-                               @onchange="args => SetJobParameter((bool)args.Value!, param)">
-                        <label class="form-check-label" for="inherit_@(param.ParameterId)"></label>
-                    </div>
-                </td>
-                @if (param.JobParameterId is not null)
-                {
-                    <td colspan="2">
-                        <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
-                            @foreach (var jobParam in JobParameters)
-                                        {
-                                <option value="@jobParam.ParameterId">
-                                    @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
-                                </option>
-                                        }
-                        </InputSelect>
+                <tr>
+                    <td>
+                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                     </td>
-                }
-                else
-                {
-                    <ParameterTypeValueEditComponent Parameter="param" />
-                }
-                <td>
-                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
-                            @MarkupHelper.FromFile("icons/feather/delete.svg")
-                        </HxButton>
-                    </HxButtonGroup>
-                </td>
-            </tr>
+                    <td class="align-middle">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="inherit_param_@count"
+                                   checked=@(param.JobParameterId is not null)
+                                   disabled=@(!JobParameters.Any())
+                                   @onchange="args => SetJobParameter((bool)args.Value!, param)">
+                            <label class="form-check-label" for="inherit_param_@count"></label>
+                        </div>
+                    </td>
+                    @if (param.JobParameterId is not null)
+                    {
+                        <td colspan="2">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
+                                @foreach (var jobParam in JobParameters)
+                                            {
+                                    <option value="@jobParam.ParameterId">
+                                        @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                                    </option>
+                                            }
+                            </InputSelect>
+                        </td>
+                    }
+                    else
+                    {
+                        <ParameterTypeValueEditComponent Parameter="param" />
+                    }
+                    <td>
+                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
+                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                            </HxButton>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+                count++;
             }
         </tbody>
     </table>
