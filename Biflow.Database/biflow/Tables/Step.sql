@@ -46,6 +46,7 @@
     [LastModifiedBy]                NVARCHAR(250)    NULL,
     [Timestamp]                     ROWVERSION       NOT NULL, 
     CONSTRAINT [PK_Step] PRIMARY KEY CLUSTERED ([StepId] ASC),
+    INDEX [NCI_Step_Job] NONCLUSTERED ([JobId]),
     CONSTRAINT [CK_Step_StepType] CHECK (
            [StepType]='Package' AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='Sql' AND [SqlStatement] IS NOT NULL AND [ConnectionId] IS NOT NULL

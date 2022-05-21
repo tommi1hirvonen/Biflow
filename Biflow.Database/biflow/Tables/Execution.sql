@@ -17,6 +17,12 @@
     [NotifyCaller]                      VARCHAR(20)         NULL,
     [NotifyCallerOvertime]              BIT                 NOT NULL CONSTRAINT [DF_Execution_NotifyCallerOvertime] DEFAULT (0),
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC),
+     -- Index used by Jobs page to show the last execution for each job
+    INDEX [NCI_Execution_JobId_CreatedDateTime] NONCLUSTERED ([JobId], [CreatedDateTime] DESC),
+    -- Index used by Executions page to filter executions based on their execution time
+    INDEX [NCI_Execution_CreatedDateTime_EndDateTime] NONCLUSTERED ([CreatedDateTime], [EndDateTime]),
+    -- Index used by Executions page to add running executions to the list of reported executions.
+    INDEX [NCI_Execution_ExecutionStatus] NONCLUSTERED ([ExecutionStatus]),
     CONSTRAINT [CK_Execution_ExecutionStatus] CHECK (
         [ExecutionStatus] = 'NotStarted'
         OR [ExecutionStatus] = 'Running'

@@ -70,8 +70,7 @@ public class BiflowContext : DbContext
                 _httpContextAccessor.HttpContext.User.Identity != null &&
                     (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
                     _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
-                    Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
-                    exec.Job!.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
+                    Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))))
                 );
             }
         });
