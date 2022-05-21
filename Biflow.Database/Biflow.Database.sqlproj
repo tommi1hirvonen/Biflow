@@ -25,6 +25,12 @@
     <DefaultCollation>Finnish_Swedish_CI_AS</DefaultCollation>
     <DefaultFilegroup>PRIMARY</DefaultFilegroup>
     <GenerateCreateScript>True</GenerateCreateScript>
+    <PageVerify>CHECKSUM</PageVerify>
+    <IsChangeTrackingAutoCleanupOn>False</IsChangeTrackingAutoCleanupOn>
+    <QueryStoreCaptureMode>Auto</QueryStoreCaptureMode>
+    <TargetRecoveryTimePeriod>60</TargetRecoveryTimePeriod>
+    <QueryStoreMaxStorageSize>1000</QueryStoreMaxStorageSize>
+    <QueryStoreStaleQueryThreshold>30</QueryStoreStaleQueryThreshold>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release\</OutputPath>
