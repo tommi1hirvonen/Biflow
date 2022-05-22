@@ -16,17 +16,38 @@
                             <th>Name</th>
                             <th>Type</th>
                             <th>Value</th>
+                            <th>Steps</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
+                            var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.JobParameterId == param.ParameterId) ?? false);
                             <tr>
                                 <td>
                                     <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                 </td>
                                 <ParameterTypeValueEditComponent Parameter="param" />
+                                <td>
+                                    @if (count > 0)
+                                    {
+                                        <HxPopover Title="@($"Steps using {param.ParameterName}")"
+                                                Content="@string.Join(", ", Steps.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.JobParameterId == param.ParameterId)).Select(s => s.StepName))"
+                                                Trigger="PopoverTrigger.Focus">
+                                            <ChildContent>
+                                                <a href="javascript:void(0)">
+                                                    @count
+                                                    step(s)
+                                                </a>
+                                            </ChildContent>
+                                        </HxPopover>
+                                    }
+                                    else
+                                    {
+                                        <span>0 steps</span>   
+                                    }
+                                </td>
                                 <td>
                                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                                         <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
@@ -60,6 +81,8 @@
     [Parameter]
     [EditorRequired]
     public Job Job { get; set; } = null!;
+
+    [Parameter, EditorRequired] public IEnumerable<Step> Steps { get; set; } = null!;
 
     private BiflowContext Context { get; set; } = null!;
 
