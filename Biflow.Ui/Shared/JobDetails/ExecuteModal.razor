@@ -3,7 +3,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject DbHelperService DbHelperService
 
-<HxModal @ref="Modal" Size="ModalSize.ExtraLarge" Fullscreen="ModalFullscreen.ExtraLargeDown" Scrollable="true" Title="Execute steps"
+<HxModal @ref="Modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
          OnClosed="() => { StepsToExecute.Clear(); ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
 
@@ -14,7 +14,7 @@
                 <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
             </div>
 
-            <div class="row py-3 sticky-top" style="background-color: rgba(255, 255, 255, 0.9);">
+            <div class="row py-3">
                 <div class="row">
                     <div class="col">
                         @MarkupHelper.FromFile("icons/feather/tag.svg")
@@ -63,7 +63,7 @@
                             </div>
                          </div>
                     </div>
-                    <div class="col-lg mt-3 mt-lg-0">
+                    <div class="col">
                         <HxButtonGroup>
                         @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
@@ -86,89 +86,79 @@
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row mt-1">
                 <div class="col">
-                    <table class="table table-hover table-sm mt-2">
-                        <thead>
-                            <tr>
-                                <th>Available steps</th>
-                                <th></th>
-                                @if (Job?.UseDependencyMode == true)
+                    <h6>Available steps</h6>
+                    <div style="overflow-y: scroll; height: calc(100vh - 322px);">
+                        <table class="table table-hover table-sm">
+                            <tbody>
+                                @foreach (var step in StepsAvailableToExecute)
                                 {
-                                    <th></th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var step in StepsAvailableToExecute)
-                            {
-                                <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
-                                    <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
-                                        <StepTypeIconComponent StepType_="@step.StepType" />
-                                        &nbsp;
-                                        <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
-                                    </td>
-                                    <td class="text-end"
-                                        style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
-                                        @step.ExecutionPhase
-                                        &nbsp;
-                                        @MarkupHelper.FromFile("icons/feather/layers.svg")
-                                    </td>
-                                    @if (Job?.UseDependencyMode == true)
-                                    {
-                                        <td class="text-end">
-                                            @if (step.Dependencies?.Count > 0)
-                                            {
-                                                <div class="hover-primary" title="Include dependencies (only enabled steps)" @onclick="() => SelectStepAndDependencies(step)">
-                                                    @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
-                                                </div>
-                                            }
+                                    <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
+                                        <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                            <StepTypeIconComponent StepType_="@step.StepType" />
+                                            &nbsp;
+                                            <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                         </td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        <td class="text-end"
+                                            style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                            @step.ExecutionPhase
+                                            &nbsp;
+                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                        </td>
+                                        @if (Job?.UseDependencyMode == true)
+                                        {
+                                            <td class="text-end">
+                                                @if (step.Dependencies?.Count > 0)
+                                                {
+                                                    <div class="hover-primary" title="Include dependencies (only enabled steps)" @onclick="() => SelectStepAndDependencies(step)">
+                                                        @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
+                                                    </div>
+                                                }
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <div class="col-lg">
-                    <table class="table table-hover table-sm mt-2">
-                        <thead>
-                            <tr>
-                                <th>Selected steps</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                if (Job?.UseDependencyMode == true)
-                                {
-                                    var comparer = new TopologicalStepComparer(StepsToExecute);
-                                    StepsToExecute.Sort(comparer);
+                <div class="col">
+                    <h6>Selected steps</h6>
+                    <div style="overflow-y: scroll; height: calc(100vh - 322px);">
+                        <table class="table table-hover table-sm">
+                            <tbody>
+                                @{
+                                    if (Job?.UseDependencyMode == true)
+                                    {
+                                        var comparer = new TopologicalStepComparer(StepsToExecute);
+                                        StepsToExecute.Sort(comparer);
+                                    }
+                                    else
+                                    {
+                                        StepsToExecute.Sort();
+                                    }
                                 }
-                                else
+                                @foreach (var step in StepsToExecute)
                                 {
-                                    StepsToExecute.Sort();
+                                    <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
+                                        <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                            <StepTypeIconComponent StepType_="@step.StepType" />
+                                            &nbsp;
+                                            @step.StepName
+                                        </td>
+                                        <td class="text-end"
+                                            style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                            @step.ExecutionPhase
+                                            &nbsp;
+                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                        </td>
+                                    </tr>
                                 }
-                            }
-                            @foreach (var step in StepsToExecute)
-                            {
-                                <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
-                                    <td class="@(step.IsEnabled ? null : "text-secondary")">
-                                        <StepTypeIconComponent StepType_="@step.StepType" />
-                                        &nbsp;
-                                        @step.StepName
-                                    </td>
-                                    <td class="text-end"
-                                        style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
-                                        @step.ExecutionPhase
-                                        &nbsp;
-                                        @MarkupHelper.FromFile("icons/feather/layers.svg")
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
