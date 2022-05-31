@@ -28,6 +28,9 @@ public abstract class StepExecution
 
     public int RetryIntervalMinutes { get; set; }
 
+    [Display(Name = "Execution condition")]
+    public string? ExecutionConditionExpression { get; set; }
+
     public Execution Execution { get; set; } = null!;
 
     public Step? Step { get; set; }
@@ -37,6 +40,8 @@ public abstract class StepExecution
     public ICollection<ExecutionDependency> ExecutionDependencies { get; set; } = null!;
 
     public ICollection<ExecutionDependency> DependantExecutions { get; set; } = null!;
+
+    public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public IList<ExecutionSourceTargetObject> Sources { get; set; } = null!;
 

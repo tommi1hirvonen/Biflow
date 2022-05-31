@@ -19,6 +19,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     protected override SqlStep CreateNewStep(Job job) =>
@@ -33,7 +34,8 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
             Tags = new List<Tag>(),
             StepParameters = new List<StepParameterBase>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
     private void SetCaptureResultJobParameter(bool enabled)

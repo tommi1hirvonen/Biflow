@@ -111,5 +111,7 @@
     <Build Include="biflow\Tables\JobAuthorization.sql" />
     <Build Include="biflow\Tables\DataTable.sql" />
     <Build Include="biflow\Tables\DataTableAuthorization.sql" />
+    <Build Include="biflow\Tables\StepConditionParameter.sql" />
+    <Build Include="biflow\Tables\ExecutionStepConditionParameter.sql" />
   </ItemGroup>
 </Project>

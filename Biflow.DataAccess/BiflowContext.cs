@@ -54,6 +54,13 @@ public class BiflowContext : DbContext
         var executionStatusConverter = new EnumToStringConverter<ExecutionStatus>();
         var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
         var stepTypeConverter = new EnumToStringConverter<StepType>();
+        var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
+        var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
+        var dependencyTypeConverter = new EnumToStringConverter<DependencyType>();
+        var tagColorConverter = new EnumToStringConverter<TagColor>();
+        var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
+        var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
+        var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
 
         modelBuilder.Entity<Execution>(e =>
         {
@@ -83,8 +90,6 @@ public class BiflowContext : DbContext
             e.HasKey("ExecutionId", "StepType");
             e.Property(p => p.StepType).HasConversion(stepTypeConverter);
         });
-
-        var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
 
         modelBuilder.Entity<ExecutionParameter>(e =>
         {
@@ -116,8 +121,6 @@ public class BiflowContext : DbContext
             .HasValue<EmailStepExecution>(StepType.Email);
         });
 
-        var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
-
         modelBuilder.Entity<StepExecutionAttempt>(e =>
         {
             e.ToTable("ExecutionStepAttempt")
@@ -140,8 +143,6 @@ public class BiflowContext : DbContext
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
             .HasValue<EmailStepExecutionAttempt>(StepType.Email);
         });
-
-        var dependencyTypeConverter = new EnumToStringConverter<DependencyType>();
 
         modelBuilder.Entity<Dependency>(e =>
         {
@@ -244,7 +245,6 @@ public class BiflowContext : DbContext
             .WithMany(job => job.JobSteps)
             .HasForeignKey(step => step.JobToExecuteId);
 
-        var tagColorConverter = new EnumToStringConverter<TagColor>();
         modelBuilder.Entity<Tag>(e =>
         {
             e.ToTable("Tag")
@@ -296,7 +296,6 @@ public class BiflowContext : DbContext
             x => x.HasOne<ExecutionSourceTargetObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
         });
 
-
         modelBuilder.Entity<Schedule>()
             .ToTable("Schedule")
             .HasOne(schedule => schedule.Job)
@@ -304,14 +303,10 @@ public class BiflowContext : DbContext
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
-
         modelBuilder.Entity<PackageStepParameter>(e =>
         {
             e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
         });
-
-        var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
 
         modelBuilder.Entity<StepParameterBase>(e =>
         {
@@ -327,17 +322,26 @@ public class BiflowContext : DbContext
             e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
         });
 
+        modelBuilder.Entity<ExecutionConditionParameter>(e =>
+        {
+            e.ToTable("StepConditionParameter")
+            .HasOne(p => p.Step)
+            .WithMany(s => s.ExecutionConditionParameters);
+            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
+        });
 
         modelBuilder.Entity<PackageStepExecutionParameter>(e =>
         {
             e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
         });
+
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
         {
             e.ToTable("ExecutionStepParameter")
-            .HasKey(param => new { param.ExecutionId, param.StepId, param.ParameterId });
+            .HasKey(param => new { param.ExecutionId, param.ParameterId });
             e.HasOne(param => param.StepExecution)
             .WithMany(e => e.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(p => p.ExecutionParameter)
@@ -351,6 +355,18 @@ public class BiflowContext : DbContext
             e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
         });
 
+        modelBuilder.Entity<StepExecutionConditionParameter>(e =>
+        {
+            e.ToTable("ExecutionStepConditionParameter")
+            .HasKey(p => new { p.ExecutionId, p.ParameterId });
+            e.HasOne(p => p.StepExecution)
+            .WithMany(e => e.ExecutionConditionParameters)
+            .HasForeignKey("ExecutionId", "StepId");
+            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
+            e.HasOne(p => p.ExecutionParameter)
+            .WithMany(e => e.ExecutionConditionParameters)
+            .HasForeignKey("ExecutionId", "ExecutionParameterId");
+        });
 
         modelBuilder.Entity<Subscription>(e =>
         {
@@ -383,8 +399,6 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<DataFactory>()
             .ToTable("DataFactory");
-
-        var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
 
         modelBuilder.Entity<ConnectionInfoBase>(e =>
         {

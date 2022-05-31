@@ -46,6 +46,11 @@
                                         Dependencies
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                              CssClass="@(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
+                                              @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
+                                        Condition
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
                                         @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                         Definition explorer
@@ -182,6 +187,14 @@
                                     GetMappingResult="dbObject => dbObject.TargetMappingResult"
                                     LoadDatabaseObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
                                     LoadAllDatabaseObjects="Modal.GetSourceTargetObjectsAsync" />
+                                </div>
+                            </div>
+                        }
+                        else if (Modal.CurrentView == StepEditModalView.Condition)
+                        {
+                            <div class="row mt-3">
+                                <div class="col">
+                                    <ExecutionConditionParameterEditComponent Step="Modal.Step" JobParameters="Modal.Job?.JobParameters" />
                                 </div>
                             </div>
                         }

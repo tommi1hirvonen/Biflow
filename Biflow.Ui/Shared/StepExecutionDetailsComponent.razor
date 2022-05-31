@@ -76,6 +76,13 @@
             </dd>
         }
 
+        <dt class="col-sm-3">
+                Execution condition
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecutionAttempt.StepExecution.ExecutionConditionExpression
+            </dd>
+
         @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
         {
             <dt class="col-sm-3">
@@ -83,15 +90,6 @@
             </dt>
             <dd class="col-sm-9">
                 <pre><code>@sql.SqlStatement</code></pre>
-            </dd>
-            <dt class="col-sm-3">
-                Info message
-            </dt>
-            <dd class="col-sm-9">
-                @if (StepExecutionAttempt is SqlStepExecutionAttempt sql_)
-                {
-                    <pre><code>@sql_.InfoMessage</code></pre>
-                }
             </dd>
             <dt class="col-sm-3">
                 Scalar result capture job parameter
@@ -188,15 +186,6 @@
             <dd class="col-sm-9">
                 @exe.ExeSuccessExitCode
             </dd>
-            <dt class="col-sm-3">
-                Output
-            </dt>
-            <dd class="col-sm-9">
-                @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
-                {
-                    <pre><code>@exe_.InfoMessage</code></pre>
-                }
-            </dd>
         }
         else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
         {
@@ -253,12 +242,6 @@
                 <dd class="col-sm-9">
                     @function_.FunctionInstanceId
                 </dd>
-                <dt class="col-sm-3">
-                    Output
-                </dt>
-                <dd class="col-sm-9">
-                    <code style="white-space: pre-wrap;">@function_.InfoMessage</code>
-                </dd>
             }
         }
         else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
@@ -268,15 +251,6 @@
             </dt>
             <dd class="col-sm-9">
                 @agent.AgentJobName
-            </dd>
-            <dt class="col-sm-3">
-                Message
-            </dt>
-            <dd class="col-sm-9">
-                @if (StepExecutionAttempt is AgentJobStepExecutionAttempt agent_)
-                {
-                    <pre><code>@agent_.InfoMessage</code></pre>
-                }
             </dd>
         }
         else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
@@ -322,11 +296,31 @@
             </dd>
         }
         <dt class="col-sm-3">
+            Info message / output
+        </dt>
+        <dd class="col-sm-9">
+            <pre><code>@StepExecutionAttempt.InfoMessage</code></pre>
+        </dd>
+        <dt class="col-sm-3">
             Error message
         </dt>
         <dd class="col-sm-9">
             <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
         </dd>
+    </dl>
+    <h6>Execution condition parameters</h6>
+    <dl class="row">
+        @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters ?? Enumerable.Empty<StepExecutionConditionParameter>())
+        {
+            // Append parameter level for package step executions to separate package and project level parameters.
+            <dt class="col-sm-3">
+                @param.ParameterName
+            </dt>
+            <dd class="col-sm-9">
+                @($"{param.ParameterValue} ({param.ParameterValueType})")
+                @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.ExecutionParameter?.ParameterName})" : null)
+            </dd>
+        }
     </dl>
     @if (StepExecutionAttempt.StepExecution is ParameterizedStepExecution parameterized)
     {

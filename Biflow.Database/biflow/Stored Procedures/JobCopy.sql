@@ -131,6 +131,8 @@ INSERT INTO biflow.Step (
 	EmailBody,
 	RetryAttempts,
 	RetryIntervalMinutes,
+	TimeoutMinutes,
+	ExecutionConditionExpression,
 	CreatedDateTime,
 	LastModifiedDateTime,
 	IsEnabled,
@@ -175,6 +177,8 @@ SELECT @JobIdNew,
 	A.EmailBody,
 	A.RetryAttempts,
 	A.RetryIntervalMinutes,
+	A.TimeoutMinutes,
+	A.ExecutionConditionExpression,
 	GETUTCDATE(),
 	GETUTCDATE(),
 	A.IsEnabled,
@@ -244,6 +248,26 @@ SELECT NEWID(),
 	A.ParameterValue,
 	C.ParameterIdNew
 FROM biflow.StepParameter AS A
+	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
+
+
+-- Copy condition parameters
+INSERT INTO biflow.StepConditionParameter (
+	ParameterId,
+	StepId,
+	ParameterName,
+	ParameterValueType,
+	ParameterValue,
+	JobParameterId
+)
+SELECT NEWID(),
+	B.StepIdNew,
+	A.ParameterName,
+	A.ParameterValueType,
+	A.ParameterValue,
+	C.ParameterIdNew
+FROM biflow.StepConditionParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
 

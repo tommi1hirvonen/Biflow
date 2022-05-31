@@ -27,6 +27,7 @@ public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     protected override DatasetStep CreateNewStep(Job job) =>
@@ -40,6 +41,7 @@ public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 }

@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using IronPython.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -30,7 +31,68 @@ internal abstract class StepExecutorBase
         // If the step was canceled already before it was even started, update the status to STOPPED.
         if (cancellationToken.IsCancellationRequested)
         {
-            await MarkAsStoppedAsync(cancellationTokenSource.Username);
+            await UpdateExecutionStoppedAsync(cancellationTokenSource.Username);
+            return false;
+        }
+
+        // If the step execution is parameterized and it's using job parameters,
+        // update the job parameter's current value for this execution.
+        if (StepExecution is ParameterizedStepExecution parameterized)
+        {
+            try
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                foreach (var param in parameterized.StepExecutionParameters.Where(p => p.ExecutionParameter is not null))
+                {
+                    context.Attach(param);
+                    param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
+                StepExecution.ExecutionId, StepExecution);
+                var failure = Result.Failure("Error updating execution parameter values to inheriting step parameters");
+                await UpdateExecutionFailedAsync(failure, true);
+                return false;
+            }
+        }
+
+        // Update current values of job parameters to execution condition parameters.
+        try
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            foreach (var param in StepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
+            {
+                context.Attach(param);
+                param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step execution condition parameters",
+                StepExecution.ExecutionId, StepExecution);
+            var failure = Result.Failure("Error updating execution parameter values to inheriting execution condition parameters");
+            await UpdateExecutionFailedAsync(failure, true);
+            return false;
+        }
+
+        // Inspect execution condition expression here
+        try
+        {
+            var result = EvaluateExecutionCondition();
+            if (!result)
+            {
+                await UpdateExecutionSkipped("Execution condition evaluated as false");
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            var failure = Result.Failure($"Error evaluating execution condition:\n{ex.Message}");
+            await UpdateExecutionFailedAsync(failure, true);
             return false;
         }
 
@@ -42,7 +104,7 @@ internal abstract class StepExecutorBase
             // This step execution should be marked as duplicate.
             if (duplicateExecution)
             {
-                await MarkAsDuplicateAsync(context);
+                await UpdateExecutionDuplicateAsync(context);
                 _logger.LogWarning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
                 return false;
             }
@@ -51,19 +113,6 @@ internal abstract class StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error marking step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
             return false;
-        }
-
-        // If the step execution is parameterized and it's using job parameters,
-        // update the job parameter's current value for this execution.
-        if (StepExecution is ParameterizedStepExecution parameterized)
-        {
-            using var context = _dbContextFactory.CreateDbContext();
-            foreach (var param in parameterized.StepExecutionParameters.Where(p => p.ExecutionParameter is not null))
-            {
-                context.Attach(param);
-                param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
-            }
-            await context.SaveChangesAsync();
         }
 
         // Loop until there are not retry attempts left.
@@ -168,10 +217,12 @@ internal abstract class StepExecutorBase
         await context.SaveChangesAsync();
     }
 
-    private async Task UpdateExecutionFailedAsync(Failure failure)
+    private async Task UpdateExecutionFailedAsync(Failure failure, bool disregardRetryAttemps = false)
     {
         // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-        var status = RetryAttemptCounter >= StepExecution.RetryAttempts ? StepExecutionStatus.Failed : StepExecutionStatus.AwaitRetry;
+        var status = RetryAttemptCounter >= StepExecution.RetryAttempts || disregardRetryAttemps
+            ? StepExecutionStatus.Failed
+            : StepExecutionStatus.AwaitRetry;
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
@@ -207,7 +258,7 @@ internal abstract class StepExecutorBase
         }
     }
 
-    private async Task MarkAsStoppedAsync(string username)
+    private async Task UpdateExecutionStoppedAsync(string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in StepExecution.StepExecutionAttempts)
@@ -248,6 +299,35 @@ internal abstract class StepExecutorBase
         await context.SaveChangesAsync();
     }
 
+    private bool EvaluateExecutionCondition()
+    {
+        if (!string.IsNullOrWhiteSpace(StepExecution.ExecutionConditionExpression))
+        {
+            var engine = Python.CreateEngine();
+            var scope = engine.CreateScope();
+            foreach (var param in StepExecution.ExecutionConditionParameters)
+            {
+                scope.SetVariable(param.ParameterName, param.ParameterValue);
+            }
+            return engine.Execute<bool>(StepExecution.ExecutionConditionExpression, scope);
+        }
+        return true;
+    }
+
+    private async Task UpdateExecutionSkipped(string infoMessage)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        foreach (var attempt in StepExecution.StepExecutionAttempts)
+        {
+            attempt.ExecutionStatus = StepExecutionStatus.Skipped;
+            attempt.StartDateTime = DateTimeOffset.Now;
+            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.InfoMessage = infoMessage;
+            context.Attach(attempt).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
+    }
+
     private async Task<bool> IsDuplicateExecutionAsync(BiflowContext context)
     {
         var duplicate = await context.StepExecutionAttempts
@@ -256,7 +336,7 @@ internal abstract class StepExecutorBase
         return duplicate;
     }
 
-    private async Task MarkAsDuplicateAsync(BiflowContext context)
+    private async Task UpdateExecutionDuplicateAsync(BiflowContext context)
     {
         foreach (var attempt in StepExecution.StepExecutionAttempts)
         {

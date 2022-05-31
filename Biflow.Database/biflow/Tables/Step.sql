@@ -40,6 +40,7 @@
     [RetryAttempts]                 INT              CONSTRAINT [DF_Step_RetryAttempts] DEFAULT (0) NOT NULL,
     [RetryIntervalMinutes]          INT              CONSTRAINT [DF_Step_RetryIntervalMinutes] DEFAULT (0) NOT NULL,
     [TimeoutMinutes]                INT              CONSTRAINT [DF_Step_TimeoutMinutes] DEFAULT (0) NOT NULL,
+    [ExecutionConditionExpression]  NVARCHAR(MAX)    NULL,
     [CreatedDateTime]               DATETIMEOFFSET   NOT NULL,
     [CreatedBy]                     NVARCHAR(250)    NULL,
     [LastModifiedDateTime]          DATETIMEOFFSET   NOT NULL,

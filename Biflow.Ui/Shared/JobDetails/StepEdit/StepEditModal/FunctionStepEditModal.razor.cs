@@ -28,6 +28,7 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     protected override FunctionStep CreateNewStep(Job job) =>
@@ -42,6 +43,7 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
             Tags = new List<Tag>(),
             StepParameters = new List<StepParameterBase>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 }

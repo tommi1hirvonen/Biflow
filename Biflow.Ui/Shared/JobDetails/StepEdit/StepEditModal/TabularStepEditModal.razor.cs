@@ -24,7 +24,8 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
     protected override Task<TabularStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
@@ -33,6 +34,7 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     private void OnAnalysisServicesObjectSelected((string ModelName, string? TableName, string? PartitionName) obj)

@@ -8,6 +8,7 @@ public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TSte
 {
     protected override void ResetDeletedEntities(EntityEntry entity)
     {
+        base.ResetDeletedEntities(entity);
         if (entity.Entity is StepParameter param)
         {
             if (!Step.StepParameters.Contains(param))
@@ -17,6 +18,7 @@ public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TSte
 
     protected override void ResetAddedEntities(EntityEntry entity)
     {
+        base.ResetAddedEntities(entity);
         if (entity.Entity is StepParameter param)
         {
             if (Step.StepParameters.Contains(param))
@@ -26,6 +28,11 @@ public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TSte
 
     protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
+        (var paramResultBase, var paramMessageBase) = base.StepValidityCheck(step);
+        if (!paramResultBase)
+        {
+            return (false, paramMessageBase);
+        }
         if (step is ParameterizedStep step_)
         {
             (var paramResult, var paramMessage) = ParametersCheck();

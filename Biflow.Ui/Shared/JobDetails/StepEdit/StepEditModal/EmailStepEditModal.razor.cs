@@ -16,6 +16,7 @@ public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     protected override EmailStep CreateNewStep(Job job) =>
@@ -29,6 +30,7 @@ public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
             Tags = new List<Tag>(),
             StepParameters = new List<StepParameterBase>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 }

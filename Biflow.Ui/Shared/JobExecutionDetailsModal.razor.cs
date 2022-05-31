@@ -102,6 +102,9 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
                 .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
                 .ThenInclude(p => p.ExecutionParameter)
                 .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.ExecutionConditionParameters)
+                .ThenInclude(p => p.ExecutionParameter)
+                .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.Step)
                 .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);

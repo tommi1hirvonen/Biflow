@@ -22,7 +22,8 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
     protected override Task<AgentJobStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
@@ -31,6 +32,7 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.ShowAsync();

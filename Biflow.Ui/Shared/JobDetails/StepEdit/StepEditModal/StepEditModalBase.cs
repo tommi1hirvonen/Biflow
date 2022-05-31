@@ -73,16 +73,45 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     /// If there were entities added to the Step's navigation properties, for example, they should be removed.
     /// </summary>
     /// <param name="entityEntry"></param>
-    protected virtual void ResetAddedEntities(EntityEntry entityEntry) { }
+    protected virtual void ResetAddedEntities(EntityEntry entityEntry)
+    {
+        if (entityEntry.Entity is ExecutionConditionParameter param)
+        {
+            if (Step.ExecutionConditionParameters.Contains(param))
+                Step.ExecutionConditionParameters.Remove(param);
+        }
+    }
 
     /// <summary>
     /// Called if the edits made by the user are canceled.
     /// If there were entities removed from the Step's navigation properties, for example, they should be added back.
     /// </summary>
     /// <param name="entityEntry"></param>
-    protected virtual void ResetDeletedEntities(EntityEntry entityEntry) { }
+    protected virtual void ResetDeletedEntities(EntityEntry entityEntry)
+    {
+        if (entityEntry.Entity is ExecutionConditionParameter param)
+        {
+            if (!Step.ExecutionConditionParameters.Contains(param))
+                Step.ExecutionConditionParameters.Add(param);
+        }
+    }
 
-    protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step) => (true, null);
+    protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
+    {
+        (var paramResult, var paramMessage) = ExecutionConditionParametersCheck();
+        if (!paramResult)
+        {
+            return (false, paramMessage);
+        }
+        else
+        {
+            foreach (var param in Step.ExecutionConditionParameters)
+            {
+                param.SetParameterValue();
+            }
+            return (true, null);
+        }
+    }
 
     /// <summary>
     /// Called during OnParametersSetAsync() to load an existing Step from BiflowContext.
@@ -266,6 +295,27 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             objects.Remove(remove);
             objects.Add(dbObject);
         }
+    }
+
+    private (bool Result, string? Message) ExecutionConditionParametersCheck()
+    {
+        var parameters = Step.ExecutionConditionParameters.OrderBy(param => param.ParameterName).ToList();
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName))
+            {
+                return (false, "Execution condition parameter name cannot be empty");
+            }
+        }
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                return (false, "Duplicate execution condition parameter names");
+            }
+        }
+
+        return (true, null);
     }
 
     public async Task ShowAsync(StepEditModalView startView = StepEditModalView.Settings)

@@ -24,7 +24,8 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>()
+            Targets = new List<SourceTargetObject>(),
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
     protected override Task<PackageStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
@@ -35,10 +36,12 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
+        .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
     protected override void ResetDeletedEntities(EntityEntry entity)
     {
+        base.ResetDeletedEntities(entity);
         if (entity.Entity is PackageStepParameter packageParam)
         {
             if (!Step.StepParameters.Contains(packageParam))
@@ -48,6 +51,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     protected override void ResetAddedEntities(EntityEntry entity)
     {
+        base.ResetAddedEntities(entity);
         if (entity.Entity is PackageStepParameter packageParam)
         {
             if (Step.StepParameters.Contains(packageParam))
@@ -57,6 +61,11 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
+        (var paramResultBase, var paramMessageBase) = base.StepValidityCheck(step);
+        if (!paramResultBase)
+        {
+            return (false, paramMessageBase);
+        }
         if (step is PackageStep package)
         {
             (var paramResult, var paramMessage) = ParametersCheck();
@@ -64,14 +73,11 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
             {
                 return (false, paramMessage);
             }
-            else
+            foreach (var param in package.StepParameters)
             {
-                foreach (var param in package.StepParameters)
-                {
-                    param.SetParameterValue();
-                }
-                return (true, null);
+                param.SetParameterValue();
             }
+            return (true, null);
         }
         else
         {

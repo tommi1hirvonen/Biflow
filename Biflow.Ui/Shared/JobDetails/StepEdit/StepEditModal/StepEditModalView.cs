@@ -5,5 +5,6 @@ public enum StepEditModalView
     Settings,
     Sources,
     Targets,
-    Dependencies
+    Dependencies,
+    Condition
 }

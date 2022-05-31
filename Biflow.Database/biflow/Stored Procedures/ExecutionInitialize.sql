@@ -43,6 +43,7 @@ SELECT
 	a.RetryAttempts,
 	a.RetryIntervalMinutes,
 	a.TimeoutMinutes,
+	a.ExecutionConditionExpression,
 	a.ExecutionPhase,
 	a.StepType,
 	a.SqlStatement,
@@ -169,6 +170,7 @@ INSERT INTO biflow.ExecutionStep (
 	RetryAttempts,
 	RetryIntervalMinutes,
 	TimeoutMinutes,
+	ExecutionConditionExpression,
 	ExecutionPhase,
 	StepType,
 	SqlStatement,
@@ -209,6 +211,7 @@ SELECT
 	a.RetryAttempts,
 	a.RetryIntervalMinutes,
 	a.TimeoutMinutes,
+	a.ExecutionConditionExpression,
 	a.ExecutionPhase,
 	a.StepType,
 	a.SqlStatement,
@@ -289,6 +292,28 @@ SELECT
 	b.JobParameterId
 FROM biflow.ExecutionStep AS a
 	JOIN biflow.StepParameter AS b ON b.StepId = a.StepId
+WHERE a.ExecutionId = @BiflowExecutionId
+
+-- Store and historize execution condition parameters
+INSERT INTO biflow.ExecutionStepConditionParameter (
+	ExecutionId,
+	ParameterId,
+	StepId,
+	ParameterName,
+	ParameterValue,
+	ParameterValueType,
+	ExecutionParameterId
+)
+SELECT
+	a.ExecutionId,
+	b.ParameterId,
+	b.StepId,
+	b.ParameterName,
+	b.ParameterValue,
+	b.ParameterValueType,
+	b.JobParameterId
+FROM biflow.ExecutionStep AS a
+	JOIN biflow.StepConditionParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @BiflowExecutionId
 
 

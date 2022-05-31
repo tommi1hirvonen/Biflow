@@ -25,4 +25,6 @@ public class ExecutionParameter
     public Execution Execution { get; set; } = null!;
 
     public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
+
+    public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 }

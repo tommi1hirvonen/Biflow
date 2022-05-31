@@ -5,6 +5,7 @@
     [RetryAttempts]                     INT                 NOT NULL,
     [RetryIntervalMinutes]              INT                 NOT NULL,
     [TimeoutMinutes]                    INT                 NOT NULL CONSTRAINT [DF_ExecutionStep_TimeoutMinutes] DEFAULT (0),
+    [ExecutionConditionExpression]      NVARCHAR(MAX)       NULL,
     [ExecutionPhase]                    INT                 NOT NULL,
     [StepType]                          VARCHAR (20)        NOT NULL,
     [SqlStatement]                      NVARCHAR (MAX)      NULL,

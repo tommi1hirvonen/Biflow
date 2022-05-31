@@ -69,6 +69,9 @@ public abstract class Step : IComparable
     [Range(0, 2880)] // 48 hours
     public int TimeoutMinutes { get; set; }
 
+    [Display(Name = "Execution condition")]
+    public string? ExecutionConditionExpression { get; set; }
+
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }
 
@@ -83,6 +86,8 @@ public abstract class Step : IComparable
     public IList<SourceTargetObject> Sources { get; set; } = null!;
 
     public IList<SourceTargetObject> Targets { get; set; } = null!;
+
+    public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public IList<Tag> Tags { get; set; } = null!;
 
