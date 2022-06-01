@@ -82,7 +82,7 @@ internal abstract class StepExecutorBase
         // Inspect execution condition expression here
         try
         {
-            var result = EvaluateExecutionCondition();
+            var result = await EvaluateExecutionConditionAsync();
             if (!result)
             {
                 await UpdateExecutionSkipped("Execution condition evaluated as false");
@@ -299,7 +299,7 @@ internal abstract class StepExecutorBase
         await context.SaveChangesAsync();
     }
 
-    private bool EvaluateExecutionCondition()
+    private async Task<bool> EvaluateExecutionConditionAsync()
     {
         if (!string.IsNullOrWhiteSpace(StepExecution.ExecutionConditionExpression))
         {
@@ -309,7 +309,8 @@ internal abstract class StepExecutorBase
             {
                 scope.SetVariable(param.ParameterName, param.ParameterValue);
             }
-            return engine.Execute<bool>(StepExecution.ExecutionConditionExpression, scope);
+            // Evaluate the expression with a separate Task to allow the executor process to continue.
+            return await Task.Run(() => engine.Execute<bool>(StepExecution.ExecutionConditionExpression, scope));
         }
         return true;
     }
