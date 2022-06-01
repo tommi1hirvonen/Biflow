@@ -45,7 +45,7 @@
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="condition_inherit_param_@count"
                                     checked=@(param.JobParameterId is not null)
-                                    disabled=@((JobParameters?.Any() ?? true))
+                                    disabled=@((!JobParameters?.Any() ?? true))
                                     @onchange="args => SetJobParameter((bool)args.Value!, param)">
                             <label class="form-check-label" for="condition_inherit_param_@count"></label>
                         </div>

@@ -94,6 +94,7 @@ public partial class JobDetails : ComponentBase
             .Include(step => step.Targets)
             .Include(step => step.Tags)
             .Include(step => (step as ParameterizedStep)!.StepParameters)
+            .Include(step => step.ExecutionConditionParameters)
             .Where(step => step.JobId == CurrentJob.JobId)
             .ToListAsync();
         SortSteps();

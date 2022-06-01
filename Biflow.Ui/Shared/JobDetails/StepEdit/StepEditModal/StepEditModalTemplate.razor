@@ -50,17 +50,21 @@
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
                                         Condition
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
-                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                        Definition explorer
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
-                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                        Reference explorer
-                                    </HxButton>
                                 </HxButtonGroup>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                            @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                    Definition explorer
+                                </HxButton>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                            @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                    Reference explorer
+                                </HxButton>
                             </div>
                         </div>
 
