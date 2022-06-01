@@ -209,6 +209,7 @@ public partial class StepsComponent : ComponentBase
                     .Include(step => step.Sources)
                     .Include(step => step.Targets)
                     .Include(step => step.Tags)
+                    .Include(step => step.ExecutionConditionParameters)
                     .Include(step => (step as ParameterizedStep)!.StepParameters)
                     .FirstAsync(step_ => step_.StepId == createdStepId);
                 Steps?.Add(createdStep);
@@ -240,6 +241,7 @@ public partial class StepsComponent : ComponentBase
                         .Include(step => step.Sources)
                         .Include(step => step.Targets)
                         .Include(step => step.Tags)
+                        .Include(step => step.ExecutionConditionParameters)
                         .Include(step => (step as ParameterizedStep)!.StepParameters)
                         .FirstAsync(step_ => step_.StepId == createdStepId);
                     Steps?.Add(createdStep);
