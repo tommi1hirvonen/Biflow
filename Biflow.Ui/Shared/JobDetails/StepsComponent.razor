@@ -276,6 +276,16 @@
                                 {
                                     <div></div>
                                 }
+                                @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression))
+                                {
+                                    <div title="Execution condition enabled">
+                                        @MarkupHelper.FromFile("icons/feather/check-square.svg")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div></div>
+                                }
                                 <div class="justify-content-end" style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">
                                     @item.ExecutionPhase
                                     &nbsp;

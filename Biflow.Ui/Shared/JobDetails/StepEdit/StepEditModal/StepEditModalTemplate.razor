@@ -48,6 +48,7 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
+                                        @MarkupHelper.FromFile("icons/feather/check-square.svg")
                                         Condition
                                     </HxButton>
                                 </HxButtonGroup>
