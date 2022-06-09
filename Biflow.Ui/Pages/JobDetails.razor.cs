@@ -48,6 +48,10 @@ public partial class JobDetails : ComponentBase
             .Include(job => job.JobConcurrencies)
             .OrderBy(job => job.JobName)
             .ToListAsync();
+        foreach (var job in Jobs)
+        {
+            job.JobParameters = job.JobParameters.OrderBy(p => p.ParameterName).ToList();
+        }
         SqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)

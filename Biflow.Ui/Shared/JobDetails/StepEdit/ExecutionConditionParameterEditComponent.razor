@@ -62,7 +62,7 @@
                     {
                         <td colspan="2">
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
-                                @foreach (var jobParam in JobParameters ?? Enumerable.Empty<JobParameter>())
+                                @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                                             {
                                     <option value="@jobParam.ParameterId">
                                         @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)

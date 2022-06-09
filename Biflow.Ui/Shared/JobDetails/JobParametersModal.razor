@@ -111,6 +111,10 @@
         {
             await Context.SaveChangesAsync();
             await Modal.HideAsync();
+            if (Job is not null)
+            {
+                Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();    
+            }
         }
         catch (DbUpdateConcurrencyException)
         {

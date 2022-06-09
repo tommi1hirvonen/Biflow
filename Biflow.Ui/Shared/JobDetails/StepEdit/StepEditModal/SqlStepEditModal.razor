@@ -62,7 +62,7 @@
             {
                 <label class="form-label mb-0 me-3">To:</label>
                 <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
-                    @foreach (var jobParam in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                    @foreach (var jobParam in Job?.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                         {
                         <option value="@jobParam.ParameterId">
                             @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
