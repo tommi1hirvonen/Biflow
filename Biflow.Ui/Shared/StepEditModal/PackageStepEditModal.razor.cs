@@ -42,6 +42,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     protected override void ResetDeletedEntities(EntityEntry entity)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         base.ResetDeletedEntities(entity);
         if (entity.Entity is PackageStepParameter packageParam)
         {
@@ -52,6 +53,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     protected override void ResetAddedEntities(EntityEntry entity)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         base.ResetAddedEntities(entity);
         if (entity.Entity is PackageStepParameter packageParam)
         {
@@ -88,6 +90,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     private (bool Result, string? Message) ParametersCheck()
     {
+        ArgumentNullException.ThrowIfNull(Step);
         var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
         foreach (var param in parameters)
         {
@@ -114,6 +117,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         Step.PackageFolderName = package.Folder;
         Step.PackageProjectName = package.Project;
         Step.PackageName = package.Package;

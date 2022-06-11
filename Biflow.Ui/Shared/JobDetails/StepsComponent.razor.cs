@@ -52,8 +52,6 @@ public partial class StepsComponent : ComponentBase
     private SynchronizeDependenciesModal SynchronizeDependenciesModal { get; set; } = null!;
 
     private Dictionary<StepType, IStepEditModal> StepEditModals { get; } = new();
-    // Separate edit modal step ids so that changes to one do not trigger OnParametersSet() for all edit modal components.
-    private Dictionary<StepType, Guid> EditModalStepIds { get; set; } = Enum.GetValues<StepType>().ToDictionary(key => key, _ => new Guid());
 
     private StepDetailsModal StepDetailsModal { get; set; } = null!;
     private Step? DetailsModalStep { get; set; }
@@ -89,22 +87,14 @@ public partial class StepsComponent : ComponentBase
         _ => false,
     };
 
-    private async Task ShowEditModal(Step step)
-    {
-        EditModalStepIds[step.StepType] = step.StepId;
-        await OpenStepEditModal(step.StepType);
-    }
+    private async Task ShowEditModal(Step step) => await OpenStepEditModal(step.StepId, step.StepType);
 
-    private async Task ShowNewStepModal(StepType stepType)
-    {
-        EditModalStepIds[stepType] = Guid.Empty;
-        await OpenStepEditModal(stepType);
-    }
+    private async Task ShowNewStepModal(StepType stepType) => await OpenStepEditModal(Guid.Empty, stepType);
 
-    private async Task OpenStepEditModal(StepType? stepType)
+    private async Task OpenStepEditModal(Guid stepId, StepType? stepType)
     {
         if (stepType is not null)
-            await StepEditModals[(StepType)stepType].ShowAsync();
+            await StepEditModals[(StepType)stepType].ShowAsync(stepId);
     }
 
     private void ToggleAllStepsSelected(bool value)
@@ -132,9 +122,6 @@ public partial class StepsComponent : ComponentBase
             await context.SaveChangesAsync();
             foreach (var step in SelectedSteps)
             {
-                if (EditModalStepIds[step.StepType] == step.StepId)
-                    EditModalStepIds[step.StepType] = Guid.Empty;
-
                 Steps?.Remove(step);
 
                 // Remove the deleted step from dependencies.
@@ -175,8 +162,6 @@ public partial class StepsComponent : ComponentBase
             using var context = DbFactory.CreateDbContext();
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
-            if (EditModalStepIds[step.StepType] == step.StepId)
-                EditModalStepIds[step.StepType] = Guid.Empty;
             Steps?.Remove(step);
             SelectedSteps.Remove(step);
 
@@ -265,14 +250,6 @@ public partial class StepsComponent : ComponentBase
         }
         Steps?.Add(step);
         SortSteps();
-    }
-
-    private void OnStepEditModalClosed()
-    {
-        foreach (var key in EditModalStepIds.Keys)
-        {
-            EditModalStepIds[key] = Guid.Empty;
-        }
     }
 
     private void SortSteps()

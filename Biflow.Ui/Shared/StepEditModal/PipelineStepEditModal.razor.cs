@@ -43,5 +43,9 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
 
     private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.ShowAsync();
 
-    private void OnPipelineSelected(string pipelineName) => Step.PipelineName = pipelineName;
+    private void OnPipelineSelected(string pipelineName)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.PipelineName = pipelineName;
+    }
 }

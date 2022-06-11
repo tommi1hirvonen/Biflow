@@ -38,5 +38,9 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
 
     private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.ShowAsync();
 
-    private void OnAgentJobSelected(string agentJobName) => Step.AgentJobName = agentJobName;
+    private void OnAgentJobSelected(string agentJobName)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.AgentJobName = agentJobName;
+    }
 }

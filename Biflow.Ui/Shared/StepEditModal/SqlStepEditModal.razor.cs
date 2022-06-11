@@ -41,6 +41,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 
     private void SetCaptureResultJobParameter(bool enabled)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         if (enabled)
         {
             Step.ResultCaptureJobParameterId = Job?.JobParameters.FirstOrDefault()?.ParameterId;
@@ -53,6 +54,10 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 
     private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.ShowAsync();
 
-    private void OnStoredProcedureSelected(string procedure) => Step.SqlStatement = $"EXEC {procedure}";
+    private void OnStoredProcedureSelected(string procedure)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.SqlStatement = $"EXEC {procedure}";
+    }
     
 }

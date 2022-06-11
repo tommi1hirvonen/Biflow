@@ -1,51 +1,54 @@
 ﻿@inherits StepEditModalBase<DatasetStep>
 
 <StepEditModalTemplate Modal="this" TStep="DatasetStep">
-    <div class="row">
-        <div class="col-lg-6">
-            <label class="form-label">App registration</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/globe.svg")
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <label class="form-label">App registration</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/globe.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
+                        @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                        {
+                            <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                        }
+                    </InputSelect>
                 </div>
-                <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
-                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
-                    {
-                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
-                    }
-                </InputSelect>
             </div>
         </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-lg">
-            <label class="form-label">Group id</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/folder.svg")
+        <div class="row mt-2">
+            <div class="col-lg">
+                <label class="form-label">Group id</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/folder.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
                 </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
             </div>
         </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col-lg">
-            <label class="form-label">Dataset id</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/file.svg")
+        <div class="row mt-2">
+            <div class="col-lg">
+                <label class="form-label">Dataset id</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/file.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
                 </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
             </div>
         </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectOffcanvas">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Browse datasets
-            </HxButton>
+        <div class="row mt-3">
+            <div class="col">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectOffcanvas">
+                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    Browse datasets
+                </HxButton>
+            </div>
         </div>
-    </div>
-    <DatasetSelectOffcanvas @ref="DatasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
+        <DatasetSelectOffcanvas @ref="DatasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
+    }
 </StepEditModalTemplate>

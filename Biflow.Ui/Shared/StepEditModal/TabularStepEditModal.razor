@@ -1,74 +1,77 @@
 ﻿@inherits StepEditModalBase<TabularStep>
 
 <StepEditModalTemplate Modal="this" TStep="TabularStep">
-    <div class="row">
-        <div class="col-lg-6">
-            <label class="form-label">Timeout (min) (0 = indefinite)</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
-                <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+            </div>
+            <div class="col-lg-6">
+                <label class="form-label">Connection</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
+                        @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
+                        {
+                            <option value="@connection.ConnectionId">@connection.ConnectionName</option>
+                        }
+                    </InputSelect>
+                </div>
             </div>
         </div>
-        <div class="col-lg-6">
-            <label class="form-label">Connection</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/database.svg")
+        <div class="row mt-2">
+            <div class="col">
+                <label class="form-label">Model name</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/box.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" @oninput="ResetStepError" />
                 </div>
-                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                    @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
-                    {
-                        <option value="@connection.ConnectionId">@connection.ConnectionName</option>
-                    }
-                </InputSelect>
+                <div class="form-text">Required</div>
             </div>
         </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col">
-            <label class="form-label">Model name</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/box.svg")
+        <div class="row mt-2">
+            <div class="col">
+                <label class="form-label">Table name</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/columns.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" @oninput="ResetStepError" />
                 </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" @oninput="ResetStepError" />
+                <div class="form-text">Blank if not applicable. Required if partition name is defined.</div>
             </div>
-            <div class="form-text">Required</div>
         </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col">
-            <label class="form-label">Table name</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/columns.svg")
+        <div class="row mt-2">
+            <div class="col">
+                <label class="form-label">Partition name</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" @oninput="ResetStepError" />
                 </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" @oninput="ResetStepError" />
+                <div class="form-text">Blank if not applicable</div>
             </div>
-            <div class="form-text">Blank if not applicable. Required if partition name is defined.</div>
         </div>
-    </div>
-    <div class="row mt-2">
-        <div class="col">
-            <label class="form-label">Partition name</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
-                </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" @oninput="ResetStepError" />
+        <div class="row mt-3">
+            <div class="col">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.ShowAsync()">
+                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    Browse objects
+                </HxButton>
             </div>
-            <div class="form-text">Blank if not applicable</div>
         </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.ShowAsync()">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Browse objects
-            </HxButton>
-        </div>
-    </div>
-    <AnalysisServicesObjectSelectOffcanvas @ref="Offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+        <AnalysisServicesObjectSelectOffcanvas @ref="Offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+    }
 </StepEditModalTemplate>

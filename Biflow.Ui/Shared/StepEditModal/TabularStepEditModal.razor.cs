@@ -40,6 +40,7 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
 
     private void OnAnalysisServicesObjectSelected((string ModelName, string? TableName, string? PartitionName) obj)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         Step.TabularModelName = obj.ModelName;
         Step.TabularTableName = obj.TableName;
         Step.TabularPartitionName = obj.PartitionName;

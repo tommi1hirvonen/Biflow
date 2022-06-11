@@ -18,6 +18,7 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
 
     private void OnFunctionSelected(string functionUrl)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         Step.FunctionUrl = functionUrl;
     }
 

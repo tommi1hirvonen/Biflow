@@ -1,51 +1,54 @@
 ﻿@inherits ParameterizedStepEditModal<PipelineStep>
 
 <StepEditModalTemplate Modal="this" TStep="PipelineStep">
-    <div class="row">
-        <div class="col-lg-6">
-            <label class="form-label">Timeout (min) (0 = indefinite)</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
-                <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
-        </div>
 
-    </div>
-    <div class="row mt-2">
-        <div class="col">
-            <label class="form-label">Data Factory</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/factory.svg")
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <label class="form-label">Data Factory</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/factory.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DataFactoryId">
+                        @foreach (var dataFactory in DataFactories ?? Enumerable.Empty<DataFactory>())
+                        {
+                            <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
+                        }
+                    </InputSelect>
                 </div>
-                <InputSelect class="form-select form-select-sm" @bind-Value="Step.DataFactoryId">
-                    @foreach (var dataFactory in DataFactories ?? Enumerable.Empty<DataFactory>())
-                    {
-                        <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
-                    }
-                </InputSelect>
+            </div>
+            <div class="col-lg">
+                <label class="form-label">Pipeline name</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/pipeline.svg")
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName" @oninput="ResetStepError"></InputText>
+                </div>
             </div>
         </div>
-        <div class="col-lg">
-            <label class="form-label">Pipeline name</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/pipeline.svg")
-                </div>
-                <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName" @oninput="ResetStepError"></InputText>
+        <div class="row my-3">
+            <div class="col">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
+                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    Browse pipelines
+                </HxButton>
             </div>
         </div>
-    </div>
-    <div class="row my-3">
-        <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Browse pipelines
-            </HxButton>
-        </div>
-    </div>
-    <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
-    <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+    }
 </StepEditModalTemplate>

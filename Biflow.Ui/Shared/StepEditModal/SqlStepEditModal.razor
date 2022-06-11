@@ -1,80 +1,83 @@
 ﻿@inherits ParameterizedStepEditModal<SqlStep>
 
 <StepEditModalTemplate Modal="this" TStep="SqlStep">
-    <div class="row">
-        <div class="col-lg-6">
-            <label class="form-label">Timeout (min) (0 = indefinite)</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-lg-6">
+                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
-                <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
             </div>
-        </div>
-        <div class="col-lg-6">
-            <label class="form-label">Connection</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/database.svg")
-                </div>
-                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                    @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                    {
-                        <option value="@connection.ConnectionId">@connection.ConnectionName</option>
-                    }
-                </InputSelect>
-            </div>
-        </div>
-    </div>
-    <div class="row mt-2">
-        <label class="form-label">SQL statement</label>
-        <div class="input-group input-group-sm">
-            <div class="input-group-text">
-                @MarkupHelper.FromFile("icons/feather/code.svg")
-            </div>
-            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
-        </div>
-    </div>
-
-    <div class="row my-3">
-        <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenStoredProcedureSelectModal">
-                @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                Browse stored procedures
-            </HxButton>
-        </div>
-    </div>
-
-    <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
-
-    <div class="row">
-        <div class="col">
-            <div class="form-check form-check-inline">
-                <input type="checkbox" class="form-check-input" id="capture_result"
-                       checked=@(Step.ResultCaptureJobParameterId is not null)
-                       disabled=@(Job?.JobParameters.Any() == false)
-                       @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
-                <label class="form-check-label" for="capture_result">Capture scalar result</label>
-            </div>
-        </div>
-        <div class="col d-flex align-items-center">
-            @if (Step.ResultCaptureJobParameterId is not null)
-            {
-                <label class="form-label mb-0 me-3">To:</label>
-                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
-                    @foreach (var jobParam in Job?.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+            <div class="col-lg-6">
+                <label class="form-label">Connection</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
+                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
-                        <option value="@jobParam.ParameterId">
-                            @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
-                        </option>
+                            <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
-                </InputSelect>
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <label class="form-label">SQL statement</label>
+            <div class="input-group input-group-sm">
+                <div class="input-group-text">
+                    @MarkupHelper.FromFile("icons/feather/code.svg")
+                </div>
+                <InputTextArea class="form-control form-control-sm" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
+            </div>
+        </div>
+
+        <div class="row my-3">
+            <div class="col">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenStoredProcedureSelectModal">
+                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    Browse stored procedures
+                </HxButton>
+            </div>
+        </div>
+
+        <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+
+        <div class="row">
+            <div class="col">
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="capture_result"
+                           checked=@(Step.ResultCaptureJobParameterId is not null)
+                           disabled=@(Job?.JobParameters.Any() == false)
+                           @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
+                    <label class="form-check-label" for="capture_result">Capture scalar result</label>
+                </div>
+            </div>
+            <div class="col d-flex align-items-center">
+                @if (Step.ResultCaptureJobParameterId is not null)
+                {
+                    <label class="form-label mb-0 me-3">To:</label>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
+                        @foreach (var jobParam in Job?.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                            {
+                            <option value="@jobParam.ParameterId">
+                                @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                            </option>
+                            }
+                    </InputSelect>
+                }
+            </div>
+            @if (!Job?.JobParameters.Any() ?? false)
+            {
+                <div class="form-text">No job parameters to store result value</div>
             }
         </div>
-        @if (!Job?.JobParameters.Any() ?? false)
-        {
-            <div class="form-text">No job parameters to store result value</div>
-        }
-    </div>
-    <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+    }
 </StepEditModalTemplate>

@@ -21,8 +21,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     [Parameter] public IEnumerable<Step>? Steps { get; set; }
 
-    [Parameter] public Guid StepId { get; set; }
-
     [Parameter] public Action? OnModalClosed { get; set; }
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
@@ -31,7 +29,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     internal abstract string FormId { get; }
 
-    internal TStep Step { get; private set; } = null!;
+    internal TStep? Step { get; private set; }
 
     internal List<string> Tags { get; set; } = new();
 
@@ -46,8 +44,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     private IEnumerable<Tag>? AllTags { get; set; }
 
     private IEnumerable<SourceTargetObject>? SourceTargetObjects { get; set; }
-
-    private Guid? PrevStepId { get; set; }
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
@@ -75,6 +71,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     /// <param name="entityEntry"></param>
     protected virtual void ResetAddedEntities(EntityEntry entityEntry)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         if (entityEntry.Entity is ExecutionConditionParameter param)
         {
             if (Step.ExecutionConditionParameters.Contains(param))
@@ -89,6 +86,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     /// <param name="entityEntry"></param>
     protected virtual void ResetDeletedEntities(EntityEntry entityEntry)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         if (entityEntry.Entity is ExecutionConditionParameter param)
         {
             if (!Step.ExecutionConditionParameters.Contains(param))
@@ -98,6 +96,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         (var paramResult, var paramMessage) = ExecutionConditionParametersCheck();
         if (!paramResult)
         {
@@ -130,24 +129,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     /// <returns></returns>
     protected abstract TStep CreateNewStep(Job job);
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (StepId != Guid.Empty && StepId != PrevStepId)
-        {
-            await ResetContext();
-            Step = await GetExistingStepAsync(Context, StepId);
-            ResetTags();
-            PrevStepId = StepId;
-        }
-        else if (StepId == Guid.Empty && StepId != PrevStepId && Job is not null)
-        {
-            await ResetContext();
-            Step = CreateNewStep(Job);
-            ResetTags();
-            PrevStepId = StepId;
-        }
-    }
-
     private async Task ResetContext()
     {
         if (Context is not null)
@@ -165,16 +146,19 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     internal void OnClosed()
     {
-        // Force the step to be reloaded and the context
-        // to be recreated when the modal is opened again.
-        StepId = Guid.Empty;
-        PrevStepId = null;
+        Step = null;
         AllTags = null;
-        OnModalClosed?.Invoke();
+        SourceTargetObjects = null;
     }
 
     internal async Task SubmitStep()
     {
+        if (Step is null)
+        {
+            Messenger.AddError("Error submitting step", "Step was null");
+            return;
+        }
+
         StepError = string.Empty;
 
         var (result, message) = StepValidityCheck(Step);
@@ -218,11 +202,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
             await OnStepSubmit.InvokeAsync(Step);
             await Modal.HideAsync();
-
-            StepId = Guid.Empty;
-            PrevStepId = null;
-            AllTags = null;
-            SourceTargetObjects = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -237,6 +216,11 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     private async Task<(bool Result, string? Message)> CheckSourcesAndTargetsAsync()
     {
+        if (Step is null)
+        {
+            return (false, "Step was null");
+        }
+
         var sources = Step.Sources
             .OrderBy(x => x.ServerName)
             .ThenBy(x => x.DatabaseName)
@@ -299,6 +283,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     private (bool Result, string? Message) ExecutionConditionParametersCheck()
     {
+        ArgumentNullException.ThrowIfNull(Step);
         var parameters = Step.ExecutionConditionParameters.OrderBy(param => param.ParameterName).ToList();
         foreach (var param in parameters)
         {
@@ -318,10 +303,21 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         return (true, null);
     }
 
-    public async Task ShowAsync(StepEditModalView startView = StepEditModalView.Settings)
+    public async Task ShowAsync(Guid stepId, StepEditModalView startView = StepEditModalView.Settings)
     {
         CurrentView = startView;
         await Modal.ShowAsync();
+        await ResetContext();
+        if (stepId != Guid.Empty)
+        {
+            Step = await GetExistingStepAsync(Context, stepId);
+        }
+        else if (stepId == Guid.Empty && Job is not null)
+        {
+            Step = CreateNewStep(Job);
+        }
+        ResetTags();
+        StateHasChanged();
     }
 
     public void Dispose() => Context?.Dispose();
