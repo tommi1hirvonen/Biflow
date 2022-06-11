@@ -5,7 +5,7 @@
 @inject ISchedulerService SchedulerService
 @inject MarkupHelperService MarkupHelper
 
-<HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <EditForm id="schedule_form" Model="Schedule" OnValidSubmit="SubmitSchedule" Context="_context">
             <div class="row">
@@ -94,10 +94,6 @@
 </HxModal>
 
 @code {
-
-    [Parameter] public Guid ScheduleId { get; set; } // empty guid => new schedule
-    private Guid PrevScheduleId { get; set; }
-
     // Optional - new schedules will be locked to this job if provided
     [Parameter] public Job? Job { get; set; }
 
@@ -105,7 +101,7 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule Schedule { get; set; } = new();
+    private Schedule Schedule { get; set; } = new() { Tags = new List<Tag>() };
 
     private HxModal Modal { get; set; } = null!;
 
@@ -126,33 +122,6 @@
     {
         using var context = DbContextFactory.CreateDbContext();
         AllTags = await context.Tags.ToListAsync();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (ScheduleId != Guid.Empty && ScheduleId != PrevScheduleId)
-        {
-            using var context = DbContextFactory.CreateDbContext();
-            Schedule = await context.Schedules
-                .AsNoTracking()
-                .Include(s => s.Tags)
-                .Include(s => s.Job)
-                .FirstAsync(s => s.ScheduleId == ScheduleId);
-            PrevScheduleId = ScheduleId;
-        }
-        else if (ScheduleId == Guid.Empty)
-        {
-            Schedule = new()
-            {
-                JobId = Job is not null ? Job.JobId : Jobs?.Select(job => job.JobId).FirstOrDefault() ?? Guid.Empty,
-                IsEnabled = true,
-                Tags = new List<Tag>()
-            };
-        }
-        Tags = Schedule.Tags
-                .Select(t => t.TagName)
-                .OrderBy(t => t)
-                .ToList();
     }
 
     private async Task SubmitSchedule()
@@ -231,5 +200,33 @@
         }
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(Guid scheduleId)
+    {
+        if (scheduleId != Guid.Empty)
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            Schedule = await context.Schedules
+                .AsNoTracking()
+                .Include(s => s.Tags)
+                .Include(s => s.Job)
+                .FirstAsync(s => s.ScheduleId == scheduleId);
+        }
+        else if (scheduleId == Guid.Empty)
+        {
+            Schedule = new()
+            {
+                JobId = Job is not null ? Job.JobId : Jobs?.Select(job => job.JobId).FirstOrDefault() ?? Guid.Empty,
+                IsEnabled = true,
+                Tags = new List<Tag>()
+            };
+        }
+
+        Tags = Schedule.Tags
+                .Select(t => t.TagName)
+                .OrderBy(t => t)
+                .ToList();
+
+        await Modal.ShowAsync();
+    }
+
 }
