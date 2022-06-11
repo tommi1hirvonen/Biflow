@@ -3,7 +3,7 @@ using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit;
+namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 {

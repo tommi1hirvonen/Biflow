@@ -1,9 +1,10 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Shared.StepEdit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageStep>
 {

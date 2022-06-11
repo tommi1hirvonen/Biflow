@@ -1,24 +1,24 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
+public partial class JobStepEditModal : StepEditModalBase<JobStep>
 {
+    [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
 
-    private AgentJobSelectOffcanvas AgentJobSelectOffcanvas { get; set; } = null!;
+    internal override string FormId => "job_step_edit_form";
 
-    internal override string FormId => "agent_job_step_edit_form";
-
-    protected override AgentJobStep CreateNewStep(Job job) =>
-        new(string.Empty)
+    protected override JobStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != Job?.JobId)?.JobId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
@@ -26,16 +26,12 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    protected override Task<AgentJobStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
-        context.AgentJobSteps
+    protected override Task<JobStep> GetExistingStepAsync(BiflowContext context, Guid stepId) => 
+        context.JobSteps
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
         .Include(step => step.Targets)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
-
-    private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.ShowAsync();
-
-    private void OnAgentJobSelected(string agentJobName) => Step.AgentJobName = agentJobName;
 }

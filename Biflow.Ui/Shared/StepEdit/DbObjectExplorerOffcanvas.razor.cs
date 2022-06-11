@@ -4,7 +4,7 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit;
+namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class DbObjectExplorerOffcanvas : ComponentBase
 {

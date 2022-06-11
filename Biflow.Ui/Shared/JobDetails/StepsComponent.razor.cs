@@ -1,7 +1,8 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
-using Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+using Biflow.Ui.Shared.Executions;
+using Biflow.Ui.Shared.StepEditModal;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;

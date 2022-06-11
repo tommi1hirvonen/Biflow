@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+﻿namespace Biflow.Ui.Shared.StepEditModal;
 
 public enum StepEditModalView
 {

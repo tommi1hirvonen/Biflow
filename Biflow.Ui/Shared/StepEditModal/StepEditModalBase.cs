@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
 {

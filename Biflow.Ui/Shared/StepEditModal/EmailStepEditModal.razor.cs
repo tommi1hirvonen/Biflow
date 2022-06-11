@@ -2,7 +2,7 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
 {

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using System.Text.Json;
 
-namespace Biflow.Ui.Shared;
+namespace Biflow.Ui.Shared.Executions;
 
 public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
 {

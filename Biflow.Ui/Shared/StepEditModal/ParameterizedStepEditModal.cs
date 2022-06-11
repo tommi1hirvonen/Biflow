@@ -1,8 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace Biflow.Ui.Shared.JobDetails.StepEdit.StepEditModal;
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TStep> where TStep : ParameterizedStep
 {
