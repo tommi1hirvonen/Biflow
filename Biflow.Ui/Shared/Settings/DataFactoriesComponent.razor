@@ -99,7 +99,7 @@
     </table>
 </div>
 
-<DataFactoryEditModal @ref="DataFactoryEditModal" DataFactoryId="EditDataFactoryId" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
+<DataFactoryEditModal @ref="DataFactoryEditModal" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
 
 <HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsDataFactory?.DataFactoryName}")">
     <BodyTemplate>
@@ -142,7 +142,6 @@
     private List<DataFactory>? DataFactories { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private Guid EditDataFactoryId { get; set; }
     private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
 
     private DataFactory? StepsDataFactory { get; set; }
@@ -191,7 +190,6 @@
 
     private async Task ShowEditModal(DataFactory? dataFactory)
     {
-        EditDataFactoryId = dataFactory?.DataFactoryId ?? Guid.Empty;
-        await DataFactoryEditModal.ShowAsync();
+        await DataFactoryEditModal.ShowAsync(dataFactory?.DataFactoryId ?? Guid.Empty);
     }
 }

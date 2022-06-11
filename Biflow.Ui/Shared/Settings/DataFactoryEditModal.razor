@@ -2,7 +2,7 @@
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.DataFactoryName)">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactory?.DataFactoryId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.DataFactoryName)">
     <BodyTemplate>
         @if (DataFactory is not null)
         {
@@ -75,15 +75,12 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(DataFactoryId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(DataFactory?.DataFactoryId == Guid.Empty ? "Create" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    [Parameter]
-    public Guid DataFactoryId { get; set; } // empty Guid => new Data Factory
-
     [Parameter]
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
@@ -96,29 +93,6 @@
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (DataFactoryId != Guid.Empty)
-        {
-            using var context = DbFactory.CreateDbContext();
-            DataFactory = await context.DataFactories
-                .AsNoTrackingWithIdentityResolution()
-                .Include(df => df.Steps)
-                .ThenInclude(step => step.Job)
-                .FirstAsync(df => df.DataFactoryId == DataFactoryId);
-        }
-        else
-        {
-            DataFactory = new()
-            {
-                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
-                Steps = new List<PipelineStep>()
-            };
-        }
-        ConnectionTestSuccess = null;
-        TestingConnection = false;
-    }
 
     private async Task SubmitDataFactory()
     {
@@ -151,5 +125,29 @@
             ConnectionTestSuccess = null;
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(Guid dataFactoryId)
+    {
+        DataFactory = null;
+        await Modal.ShowAsync();
+        if (dataFactoryId != Guid.Empty)
+        {
+            using var context = DbFactory.CreateDbContext();
+            DataFactory = await context.DataFactories
+                .AsNoTrackingWithIdentityResolution()
+                .Include(df => df.Steps)
+                .ThenInclude(step => step.Job)
+                .FirstAsync(df => df.DataFactoryId == dataFactoryId);
+        }
+        else
+        {
+            DataFactory = new()
+            {
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                Steps = new List<PipelineStep>()
+            };
+        }
+        ConnectionTestSuccess = null;
+        TestingConnection = false;
+    }
+
 }

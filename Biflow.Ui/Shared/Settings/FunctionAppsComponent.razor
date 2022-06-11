@@ -99,7 +99,7 @@
     </table>
 </div>
 
-<FunctionAppEditModal @ref="FunctionAppEditModal" FunctionAppId="EditFunctionAppId" AppRegistrations="AppRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
+<FunctionAppEditModal @ref="FunctionAppEditModal" AppRegistrations="AppRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
 
 <HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsFunctionApp?.FunctionAppName}")">
     <BodyTemplate>
@@ -142,7 +142,6 @@
     private List<FunctionApp>? FunctionApps { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private Guid EditFunctionAppId { get; set; }
     private FunctionAppEditModal FunctionAppEditModal { get; set; } = null!;
 
     private FunctionApp? StepsFunctionApp { get; set; }
@@ -189,9 +188,6 @@
         StateHasChanged();
     }
 
-    private async Task ShowEditModal(FunctionApp? functionApp)
-    {
-        EditFunctionAppId = functionApp?.FunctionAppId ?? Guid.Empty;
-        await FunctionAppEditModal.ShowAsync();
-    }
+    private async Task ShowEditModal(FunctionApp? functionApp) =>
+        await FunctionAppEditModal.ShowAsync(functionApp?.FunctionAppId ?? Guid.Empty);
 }

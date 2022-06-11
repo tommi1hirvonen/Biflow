@@ -113,14 +113,13 @@
     </table>
 </div>
 
-<UserEditModal @ref="UserEditModal" Username="@EditModalUsername" OnUserSubmit="OnUserSubmit" />
+<UserEditModal @ref="UserEditModal" OnUserSubmit="OnUserSubmit" />
 
 
 @code {
     private List<User> Users { get; set; } = null!;
 
     private UserEditModal UserEditModal { get; set; } = null!;
-    private string? EditModalUsername { get; set; }
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
@@ -162,8 +161,7 @@
 
     private async Task ShowEditModalAsync(User? user)
     {
-        EditModalUsername = user?.Username;
-        await UserEditModal.ShowAsync();
+        await UserEditModal.ShowAsync(user?.Username);
     }
 
     private async Task UpdatePassword(User user)

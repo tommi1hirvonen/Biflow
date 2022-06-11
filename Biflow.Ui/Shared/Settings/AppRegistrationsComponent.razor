@@ -123,7 +123,7 @@
     </table>
 </div>
 
-<AppRegistrationEditModal @ref="AppRegistrationEditModal" AppRegistrationId="EditAppRegistrationId" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
+<AppRegistrationEditModal @ref="AppRegistrationEditModal" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
 
 <HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsAppRegistration?.AppRegistrationName}")">
     <BodyTemplate>
@@ -241,7 +241,6 @@
 @code {
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private Guid EditAppRegistrationId { get; set; }
     private AppRegistrationEditModal AppRegistrationEditModal { get; set; } = null!;
 
     private AppRegistration? StepsAppRegistration { get; set; }
@@ -303,7 +302,6 @@
 
     private async Task ShowEditModalAsync(AppRegistration? appRegistration)
     {
-        EditAppRegistrationId = appRegistration?.AppRegistrationId ?? Guid.Empty;
-        await AppRegistrationEditModal.ShowAsync();
+        await AppRegistrationEditModal.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty);
     }
 }

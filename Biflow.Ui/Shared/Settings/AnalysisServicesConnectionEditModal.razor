@@ -5,7 +5,7 @@
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(ConnectionId == Guid.Empty ? "New Analysis Services connection" : "Edit " + Connection?.ConnectionName)">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(Connection?.ConnectionId == Guid.Empty ? "New Analysis Services connection" : "Edit " + Connection?.ConnectionName)">
     <BodyTemplate>
         @if (Connection is not null)
         {
@@ -58,15 +58,12 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="as_connection_edit_form" Color="ThemeColor.Success">@(ConnectionId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxSubmit form="as_connection_edit_form" Color="ThemeColor.Success">@(Connection?.ConnectionId == Guid.Empty ? "Add" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    [Parameter]
-    public Guid ConnectionId { get; set; } // empty Guid => new connection
-
     [Parameter]
     public EventCallback<ConnectionInfoBase> OnConnectionSubmit { get; set; }
 
@@ -76,28 +73,6 @@
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (ConnectionId != Guid.Empty)
-        {
-            using var context = DbFactory.CreateDbContext();
-            Connection = await context.AnalysisServicesConnections
-                .AsNoTrackingWithIdentityResolution()
-                .Include(c => c.TabularSteps)
-                .ThenInclude(step => step.Job)
-                .FirstAsync(c => c.ConnectionId == ConnectionId);
-        }
-        else
-        {
-            Connection = new(string.Empty, string.Empty)
-            {
-                TabularSteps = new List<TabularStep>()
-            };
-        }
-        ConnectionTestSuccess = null;
-        TestingConnection = false;
-    }
 
     private async Task SubmitConnection()
     {
@@ -126,5 +101,28 @@
         TestingConnection = false;
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(Guid connectionId)
+    {
+        Connection = null;
+        await Modal.ShowAsync();
+        if (connectionId != Guid.Empty)
+        {
+            using var context = DbFactory.CreateDbContext();
+            Connection = await context.AnalysisServicesConnections
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.TabularSteps)
+                .ThenInclude(step => step.Job)
+                .FirstAsync(c => c.ConnectionId == connectionId);
+        }
+        else
+        {
+            Connection = new(string.Empty, string.Empty)
+            {
+                TabularSteps = new List<TabularStep>()
+            };
+        }
+        ConnectionTestSuccess = null;
+        TestingConnection = false;
+    }
+
 }

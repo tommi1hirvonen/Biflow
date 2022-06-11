@@ -22,7 +22,7 @@
         <HxDropdownHeader>Connection type</HxDropdownHeader>
         @foreach (var connectionType in Enum.GetValues<ConnectionType>())
         {
-            <HxDropdownItem @onclick="() => ShowNewConnectionModal(connectionType)">
+            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(connectionType)">
                 @connectionType.ToString()
             </HxDropdownItem>
         }
@@ -85,7 +85,7 @@
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(connection)">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(connection)">
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
                                 <HxDropdown>
@@ -145,11 +145,9 @@
 </div>
 
 <AnalysisServicesConnectionEditModal @ref="ConnectionEditModals[ConnectionType.AnalysisServices]"
-                                     ConnectionId="EditModalConnectionIds[ConnectionType.AnalysisServices]"
                                      OnConnectionSubmit="OnConnectionSubmit" />
 
 <SqlConnectionEditModal @ref="ConnectionEditModals[ConnectionType.Sql]"
-                        ConnectionId="EditModalConnectionIds[ConnectionType.Sql]"
                         OnConnectionSubmit="OnConnectionSubmit" />
 
 <HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsConnection?.ConnectionName}")">
@@ -194,8 +192,6 @@
     private Dictionary<Guid, bool> ShowConnectionString { get; set; } = new();
 
     Dictionary<ConnectionType, IConnectionEditModal> ConnectionEditModals { get; } = new();
-    private Dictionary<ConnectionType, Guid> EditModalConnectionIds { get; } =
-        Enum.GetValues<ConnectionType>().ToDictionary(key => key, _ => new Guid());
 
     private ConnectionInfoBase? StepsConnection { get; set; }
     private HxModal StepsModal { get; set; } = null!;
@@ -248,20 +244,19 @@
         StateHasChanged();
     }
 
-    private async Task ShowEditModal(ConnectionInfoBase connection)
+    private async Task ShowEditModalAsync(ConnectionInfoBase connection)
     {
-        EditModalConnectionIds[connection.ConnectionType] = connection.ConnectionId;
-        await OpenConnectionEditModal(connection.ConnectionType);
+        await OpenConnectionEditModalAsync(connection.ConnectionType, connection.ConnectionId);
     }
 
-    private async Task ShowNewConnectionModal(ConnectionType connectionType)
+    private async Task ShowNewConnectionModalAsync(ConnectionType connectionType)
     {
-        EditModalConnectionIds[connectionType] = Guid.Empty;
-        await OpenConnectionEditModal(connectionType);
+        await OpenConnectionEditModalAsync(connectionType, Guid.Empty);
     }
 
-    private async Task OpenConnectionEditModal(ConnectionType connectionType)
+    private async Task OpenConnectionEditModalAsync(ConnectionType connectionType, Guid connectionId)
     {
-        await ConnectionEditModals[connectionType].ShowAsync();
+        await ConnectionEditModals[connectionType].ShowAsync(connectionId);
     }
+
 }

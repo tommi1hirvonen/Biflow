@@ -5,8 +5,7 @@
 @inject IJSRuntime JS
 @inject DbHelperService DbHelperService
 
-<HxModal @ref="Modal" Title="@(Username is null ? "New user" : "Edit " + Username)" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
-    
+<HxModal @ref="Modal" Title="@(IsNewUser ? "New user" : $"Edit {PreviousUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     <BodyTemplate>
         @if (User is not null)
         {
@@ -21,7 +20,7 @@
                                 <div class="input-group-text">
                                     @MarkupHelper.FromFile("icons/feather/user.svg")
                                 </div>
-                                <InputText class="form-control" disabled=@(Username is not null) @bind-Value="User.Username"></InputText>
+                                <InputText class="form-control" disabled=@(!IsNewUser) @bind-Value="User.Username"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
@@ -47,7 +46,7 @@
                                 <InputText class="form-control" type="email" @bind-Value="User.Email"></InputText>
                             </div>
                         </div>
-                        @if (Username is null)
+                        @if (IsNewUser)
                         {
                             <div class="mt-3">
                                 <label class="form-label">Password</label>
@@ -186,57 +185,29 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxSubmit form="user_edit_form" Color="ThemeColor.Success">@(Username is null ? "Create" : "Save")</HxSubmit>
+        <HxSubmit form="user_edit_form" Color="ThemeColor.Success">@(IsNewUser ? "Add" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
     [Parameter]
-    public string? Username { get; set; }
-
-    [Parameter]
     public EventCallback<User> OnUserSubmit { get; set; }
 
     private List<Job>? Jobs { get; set; }
     private List<DataTable>? DataTables { get; set; } 
 
-    private string? PrevUsername { get; set; }
-
     private HxModal Modal { get; set; } = null!;
 
-    private User User { get; set; } = null!;
+    private User? User { get; set; }
+
+    private bool IsNewUser => PreviousUsername is null;
+    private string? PreviousUsername { get; set; }
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
 
     private BiflowContext Context { get; set; } = null!;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Username is null && Username != PrevUsername)
-        {
-            await ResetContext();
-            User = new()
-            {
-                Role = "Viewer",
-                Jobs = new List<Job>(),
-                DataTables = new List<DataTable>()
-            };
-            PrevUsername = Username;
-        }
-        else if (Username != PrevUsername)
-        {
-            await ResetContext();
-            User = await Context.Users
-                .Include(u => u.Jobs)
-                .Include(u => u.DataTables)
-                .FirstAsync(user => user.Username == Username);
-            Jobs = await Context.Jobs.OrderBy(j => j.JobName).ToListAsync();
-            DataTables = await Context.DataTables.OrderBy(t => t.DataTableName).ToListAsync();
-            PrevUsername = Username;
-        }
-    }
 
     private async Task ResetContext()
     {
@@ -251,11 +222,11 @@
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            User.Jobs.Add(job);
+            User?.Jobs.Add(job);
         }
         else
         {
-            User.Jobs.Remove(job);
+            User?.Jobs.Remove(job);
         }
     }
 
@@ -264,24 +235,23 @@
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            User.DataTables.Add(table);
+            User?.DataTables.Add(table);
         }
         else
         {
-            User.DataTables.Remove(table);
+            User?.DataTables.Remove(table);
         }
     }
 
     private void OnClosed()
     {
-        Username = null;
-        PrevUsername = "";
+        User = null;
     }
 
     private async Task SubmitUser()
     {
         // New user
-        if (Username is null)
+        if (IsNewUser)
         {
             Password = Password ?? string.Empty;
             ConfirmPassword = ConfirmPassword ?? string.Empty;
@@ -330,8 +300,6 @@
 
                     Password = null;
                     ConfirmPassword = null;
-                    Username = null;
-                    PrevUsername = "";
                     await OnUserSubmit.InvokeAsync(User);
                     await Modal.HideAsync();
                 }
@@ -351,8 +319,6 @@
             try
             {
                 await Context.SaveChangesAsync();
-                Username = null;
-                PrevUsername = "";
                 await OnUserSubmit.InvokeAsync(User);
                 await Modal.HideAsync();
             }
@@ -363,7 +329,32 @@
         }
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(string? username)
+    {
+        await Modal.ShowAsync();
+        PreviousUsername = username;
+        if (username is null)
+        {
+            await ResetContext();
+            User = new()
+            {
+                Role = "Viewer",
+                Jobs = new List<Job>(),
+                DataTables = new List<DataTable>()
+            };
+        }
+        else
+        {
+            await ResetContext();
+            User = await Context.Users
+                .Include(u => u.Jobs)
+                .Include(u => u.DataTables)
+                .FirstAsync(user => user.Username == username);            
+        }
+        Jobs = await Context.Jobs.OrderBy(j => j.JobName).ToListAsync();
+        DataTables = await Context.DataTables.OrderBy(t => t.DataTableName).ToListAsync();
+    }
+
 
     public void Dispose() => Context?.Dispose();
 

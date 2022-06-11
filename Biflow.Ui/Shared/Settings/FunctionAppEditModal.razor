@@ -5,7 +5,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + FunctionApp?.FunctionAppName)">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(FunctionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + FunctionApp?.FunctionAppName)">
     
     <BodyTemplate>
         @if (FunctionApp is not null)
@@ -93,15 +93,12 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(FunctionAppId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(FunctionApp?.FunctionAppId == Guid.Empty ? "Add" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    [Parameter]
-    public Guid FunctionAppId { get; set; } // empty Guid => new Function App
-
     [Parameter]
     public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
@@ -116,29 +113,6 @@
     private bool TestingConnection { get; set; } = false;
 
     private FunctionAppKeySelectOffcanvas KeySelectOffcanvas { get; set; } = null!;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (FunctionAppId != Guid.Empty)
-        {
-            using var context = DbFactory.CreateDbContext();
-            FunctionApp = await context.FunctionApps
-                .AsNoTrackingWithIdentityResolution()
-                .Include(f => f.Steps)
-                .ThenInclude(step => step.Job)
-                .Include(f => f.AppRegistration)
-                .FirstAsync(f => f.FunctionAppId == FunctionAppId);
-        }
-        else
-        {
-            FunctionApp = new()
-            {
-                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
-                AppRegistration = AppRegistrations?.FirstOrDefault()!,
-                Steps = new List<FunctionStep>()
-            };
-        }
-    }
 
     private void AppRegistrationChanged(object? value)
     {
@@ -189,5 +163,30 @@
         TestingConnection = false;
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync(Guid functionAppId)
+    {
+        FunctionApp = null;
+        ConnectionTestSuccess = null;
+        await Modal.ShowAsync();
+        if (functionAppId != Guid.Empty)
+        {
+            using var context = DbFactory.CreateDbContext();
+            FunctionApp = await context.FunctionApps
+                .AsNoTrackingWithIdentityResolution()
+                .Include(f => f.Steps)
+                .ThenInclude(step => step.Job)
+                .Include(f => f.AppRegistration)
+                .FirstAsync(f => f.FunctionAppId == functionAppId);
+        }
+        else
+        {
+            FunctionApp = new()
+            {
+                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                AppRegistration = AppRegistrations?.FirstOrDefault()!,
+                Steps = new List<FunctionStep>()
+            };
+        }
+    }
+
 }

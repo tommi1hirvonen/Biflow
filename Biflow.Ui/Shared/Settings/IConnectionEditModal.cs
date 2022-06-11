@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿namespace Biflow.Ui.Shared.Settings;
 
-namespace Biflow.Ui.Shared.Settings
+interface IConnectionEditModal
 {
-    interface IConnectionEditModal
-    {
-        public Task ShowAsync();
-    }
+    public Task ShowAsync(Guid connectionId);
 }
