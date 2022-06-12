@@ -17,7 +17,7 @@
     [PackageName]                       NVARCHAR(260)       NULL,
     [ExecuteIn32BitMode]                BIT                 NOT NULL,
     [ExecuteAsLogin]                    NVARCHAR(128)       NULL,
-    [DataFactoryId]                     UNIQUEIDENTIFIER    NULL,
+    [PipelineClientId]                  UNIQUEIDENTIFIER    NULL,
     [PipelineName]                      NVARCHAR(250)       NULL,
     [JobToExecuteId]                    UNIQUEIDENTIFIER    NULL,
     [JobExecuteSynchronized]            BIT                 NULL,

@@ -13,7 +13,7 @@
     [PackageName]                   NVARCHAR(260)    NULL,
     [ExecuteIn32BitMode]            BIT              CONSTRAINT [DF_Step_ExecuteIn32BitMode] DEFAULT (0) NOT NULL,
     [ExecuteAsLogin]                NVARCHAR(128)    NULL,
-    [DataFactoryId]                 UNIQUEIDENTIFIER CONSTRAINT [FK_Step_DataFactory] FOREIGN KEY REFERENCES biflow.DataFactory ([DataFactoryId]) NULL,
+    [PipelineClientId]              UNIQUEIDENTIFIER CONSTRAINT [FK_Step_PipelineClient] FOREIGN KEY REFERENCES biflow.PipelineClient ([PipelineClientId]) NULL,
     [PipelineName]                  NVARCHAR(250)    NULL,
     [JobToExecuteId]                UNIQUEIDENTIFIER NULL CONSTRAINT [FK_Step_JobToExecute] FOREIGN KEY REFERENCES [biflow].[Job] ([JobId]),
     [JobExecuteSynchronized]        BIT              CONSTRAINT [DF_Step_JobExecuteSynchronized] DEFAULT(0) NOT NULL,
@@ -52,7 +52,7 @@
            [StepType]='Package' AND [PackageFolderName] IS NOT NULL AND [PackageProjectName] IS NOT NULL AND [PackageName] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='Sql' AND [SqlStatement] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='Job' AND [JobToExecuteId] IS NOT NULL AND [JobExecuteSynchronized] IS NOT NULL
-        OR [StepType]='Pipeline' AND [DataFactoryId] IS NOT NULL AND [PipelineName] IS NOT NULL
+        OR [StepType]='Pipeline' AND [PipelineClientId] IS NOT NULL AND [PipelineName] IS NOT NULL
         OR [StepType]='Exe' AND [ExeFileName] IS NOT NULL
         OR [StepType]='Dataset' AND [AppRegistrationId] IS NOT NULL AND [DatasetGroupId] IS NOT NULL AND [DatasetId] IS NOT NULL
         OR [StepType]='Function' AND [FunctionAppId] IS NOT NULL AND [FunctionUrl] IS NOT NULL

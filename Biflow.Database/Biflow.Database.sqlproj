@@ -85,7 +85,7 @@
     <Build Include="biflow\Stored Procedures\JobCopy.sql" />
     <Build Include="biflow\Tables\Subscription.sql" />
     <Build Include="biflow\Stored Procedures\StepCopy.sql" />
-    <Build Include="biflow\Tables\DataFactory.sql" />
+    <Build Include="biflow\Tables\PipelineClient.sql" />
     <Build Include="biflow\Tables\Connection.sql" />
     <Build Include="biflow\Tables\ExecutionParameter.sql" />
     <Build Include="biflow\Tables\Tag.sql" />

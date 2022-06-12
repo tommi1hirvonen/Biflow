@@ -22,7 +22,7 @@ public partial class StepsComponent : ComponentBase
     [Parameter] public List<Step>? Steps { get; set; }
     [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
     [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
-    [Parameter] public List<DataFactory>? DataFactories { get; set; }
+    [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
     [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
@@ -78,7 +78,7 @@ public partial class StepsComponent : ComponentBase
     private bool IsStepTypeDisabled(StepType type) => type switch
     {
         StepType.Sql or StepType.Package => SqlConnections?.Any() == false,
-        StepType.Pipeline => DataFactories?.Any() == false,
+        StepType.Pipeline => PipelineClients?.Any() == false,
         StepType.Function => FunctionApps?.Any() == false,
         StepType.Dataset => AppRegistrations?.Any() == false,
         StepType.Job => Jobs is null || Jobs.Count == 1,

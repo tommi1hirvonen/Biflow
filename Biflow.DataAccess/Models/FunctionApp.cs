@@ -50,7 +50,7 @@ public class FunctionApp
 
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
     {
-        var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
         var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");
@@ -83,7 +83,7 @@ public class FunctionApp
 
     public async Task<List<(string Type, string Key)>> GetHostKeysAsync(HttpClient client, ITokenService tokenService)
     {
-        var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var hostKeysUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/host/default/listkeys?api-version=2019-08-01";
         var message = new HttpRequestMessage(HttpMethod.Post, hostKeysUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");

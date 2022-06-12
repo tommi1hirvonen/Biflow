@@ -13,10 +13,10 @@ public class PipelineStepExecution : ParameterizedStepExecution
     [Display(Name = "Pipeline name")]
     public string PipelineName { get; set; }
 
-    [Display(Name = "Data Factory id")]
-    public Guid DataFactoryId { get; set; }
+    [Display(Name = "Pipeline client id")]
+    public Guid PipelineClientId { get; set; }
 
-    public DataFactory DataFactory { get; set; } = null!;
+    public PipelineClient PipelineClient { get; set; } = null!;
 
     [Column("TimeoutMinutes")]
     public int TimeoutMinutes { get; set; }

@@ -64,7 +64,7 @@ internal class JobExecutor : IJobExecutor
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as FunctionStepExecution)!.FunctionApp)
                     .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as PipelineStepExecution)!.DataFactory)
+                    .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
                     .ThenInclude(df => df.AppRegistration)
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as SqlStepExecution)!.Connection)

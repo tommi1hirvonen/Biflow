@@ -8,7 +8,7 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PipelineStepEditModal : ParameterizedStepEditModal<PipelineStep>
 {
-    [Parameter] public IList<DataFactory>? DataFactories { get; set; }
+    [Parameter] public IList<PipelineClient>? PipelineClients { get; set; }
 
     internal override string FormId => "pipeline_step_edit_form";
 
@@ -21,7 +21,7 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
-            DataFactoryId = DataFactories?.FirstOrDefault()?.DataFactoryId,
+            PipelineClientId = PipelineClients?.FirstOrDefault()?.PipelineClientId,
             StepParameters = new List<StepParameterBase>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

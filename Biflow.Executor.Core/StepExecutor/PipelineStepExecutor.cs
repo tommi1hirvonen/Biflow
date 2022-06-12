@@ -1,7 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -15,7 +14,7 @@ internal class PipelineStepExecutor : StepExecutorBase
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
     private PipelineStepExecution Step { get; init; }
-    private DataFactory DataFactory => Step.DataFactory;
+    private PipelineClient PipelineClient => Step.PipelineClient;
 
     private const int MaxRefreshRetries = 3;
 
@@ -55,12 +54,12 @@ internal class PipelineStepExecutor : StepExecutorBase
         string runId;
         try
         {
-            runId = await DataFactory.StartPipelineRunAsync(_tokenService, Step.PipelineName, parameters, cancellationToken);
+            runId = await PipelineClient.StartPipelineRunAsync(_tokenService, Step.PipelineName, parameters, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Data Factory id {DataFactoryId} and pipeline {PipelineName}",
-                Step.ExecutionId, Step, Step.DataFactoryId, Step.PipelineName);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
+                Step.ExecutionId, Step, Step.PipelineClientId, Step.PipelineName);
             return Result.Failure($"Error starting pipeline run:\n{ex.Message}");
         }
 
@@ -90,13 +89,14 @@ internal class PipelineStepExecutor : StepExecutorBase
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Step.ExecutionId, Step);
         }
 
-        PipelineRun pipelineRun;
+        string status;
+        string message;
         while (true)
         {
             try
             {
-                pipelineRun = await TryGetPipelineRunAsync(runId, linkedCts.Token);
-                if (pipelineRun.Status == "InProgress" || pipelineRun.Status == "Queued")
+                (status, message) = await TryGetPipelineRunAsync(runId, linkedCts.Token);
+                if (status == "InProgress" || status == "Queued")
                 {
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
                 }
@@ -117,24 +117,24 @@ internal class PipelineStepExecutor : StepExecutorBase
             }
         }
 
-        if (pipelineRun.Status == "Succeeded")
+        if (status == "Succeeded")
         {
             return Result.Success();
         }
         else
         {
-            return Result.Failure(pipelineRun.Message);
+            return Result.Failure(message);
         }
     }
 
-    private async Task<PipelineRun> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)
+    private async Task<(string Status, string Message)> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)
     {
         int refreshRetries = 0;
         while (refreshRetries < MaxRefreshRetries)
         {
             try
             {
-                return await DataFactory!.GetPipelineRunAsync(_tokenService, runId, CancellationToken.None);
+                return await PipelineClient!.GetPipelineRunAsync(_tokenService, runId, CancellationToken.None);
             }
             catch (Exception ex)
             {
@@ -151,7 +151,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Step.ExecutionId, Step, runId);
         try
         {
-            await DataFactory!.CancelPipelineRunAsync(_tokenService, runId);
+            await PipelineClient!.CancelPipelineRunAsync(_tokenService, runId);
         }
         catch (Exception ex)
         {

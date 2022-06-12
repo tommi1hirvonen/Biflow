@@ -18,7 +18,7 @@ public class TokenService : ITokenService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<string> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
+    public async Task<(string Token, DateTimeOffset ExpiresOne)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
     {
         await _semaphore.WaitAsync();
         try
@@ -27,7 +27,7 @@ public class TokenService : ITokenService
             if (AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
                 && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
             {
-                return token.Token;
+                return (token.Token, token.ExpiresOn);
             }
             else
             {
@@ -64,7 +64,7 @@ public class TokenService : ITokenService
                     AccessTokens[appRegistration.AppRegistrationId] = new();
                 }
                 AccessTokens[appRegistration.AppRegistrationId][resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
-                return resultToken.Token;
+                return (resultToken.Token, resultToken.ExpiresOn);
             }
         }
         finally

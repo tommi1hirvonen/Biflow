@@ -27,9 +27,9 @@
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/datafactories">
-            @MarkupHelper.FromFile("icons/feather/factory.svg")
-            Data Factories
+        <NavLink class="nav-link" href="settings/pipelineclients">
+            @MarkupHelper.FromFile("icons/feather/pipeline.svg")
+            Pipeline clients
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
@@ -52,11 +52,10 @@ else if (Page == "appregistrations")
 {
     <AppRegistrationsComponent />
 }
-else if (Page == "datafactories")
+else if (Page == "pipelineclients")
 {
-    <DataFactoriesComponent />
+    <PipelineClientsComponent />
 }
-
 else if (Page == "functionapps")
 {
     <FunctionAppsComponent />

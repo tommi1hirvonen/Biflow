@@ -146,7 +146,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(app => app.Steps)
                 .ThenInclude(step => step.Job)
-                .Include(app => app.DataFactories)
+                .Include(app => app.PipelineClients)
                 .Include(app => app.FunctionApps)
                 .FirstAsync(r => r.AppRegistrationId == appRegistrationId);
         }
@@ -155,7 +155,7 @@
             AppRegistration = new()
             {
                 Steps = new List<DatasetStep>(),
-                DataFactories = new List<DataFactory>(),
+                PipelineClients = new List<PipelineClient>(),
                 FunctionApps = new List<FunctionApp>()
             };
         }

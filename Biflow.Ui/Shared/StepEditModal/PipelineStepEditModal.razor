@@ -17,15 +17,15 @@
         </div>
         <div class="row mt-2">
             <div class="col">
-                <label class="form-label">Data Factory</label>
+                <label class="form-label">Pipeline client</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         @MarkupHelper.FromFile("icons/feather/factory.svg")
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DataFactoryId">
-                        @foreach (var dataFactory in DataFactories ?? Enumerable.Empty<DataFactory>())
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
+                        @foreach (var client in PipelineClients ?? Enumerable.Empty<PipelineClient>())
                         {
-                            <option value="@dataFactory.DataFactoryId">@dataFactory.DataFactoryName</option>
+                            <option value="@client.PipelineClientId">@client.PipelineClientName</option>
                         }
                     </InputSelect>
                 </div>
@@ -48,7 +48,7 @@
                 </HxButton>
             </div>
         </div>
-        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" DataFactoryId="Step.DataFactoryId" OnPipelineSelected="OnPipelineSelected" />
+        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" PipelineClientId="Step.PipelineClientId" OnPipelineSelected="OnPipelineSelected" />
         <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
     }
 </StepEditModalTemplate>

@@ -12,13 +12,23 @@
         }
 </style>
 
-<PageTitle>Data Factories | Biflow</PageTitle>
+<PageTitle>Pipeline clients | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-          @onclick="() => ShowEditModal(null)"
-          Enabled="DataFactories is not null && AppRegistrations is not null && AppRegistrations.Any()">
-    Add Data Factory
-</HxButton>
+<HxDropdown>
+    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="PipelineClients is not null">
+        Add client
+    </HxDropdownToggleButton>
+    <HxDropdownMenu>
+        <HxDropdownHeader>Client type</HxDropdownHeader>
+        @foreach (var clientType in Enum.GetValues<PipelineClientType>())
+        {
+            <HxDropdownItem @onclick="async () => await ShowNewClientModalAsync(clientType)">
+                <PipelineClientTypeIconComponent ClientType="clientType" />
+                @clientType.ToString()
+            </HxDropdownItem>
+        }
+    </HxDropdownMenu>
+</HxDropdown>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -29,37 +39,34 @@
                 </th>
                 <th></th>
                 <th>
-                    Resource group name
-                </th>
-                <th>
-                    Data Factory resource name
+                    Client type
                 </th>
                 <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @if (DataFactories is null)
+            @if (PipelineClients is null)
             {
                 <tr><td colspan="4">Loading...</td></tr>
             }
-            else if (DataFactories.Count == 0)
+            else if (PipelineClients.Count == 0)
             {
-                <tr><td colspan="4">No Data Factories</td></tr>
+                <tr><td colspan="4">No clients</td></tr>
             }
             else
             {
-                @foreach (var df in DataFactories)
+                @foreach (var client in PipelineClients)
                 {
-                    var jobs = df.Steps.Select(s => s.Job).Distinct().Count();
-                    var steps = df.Steps.Count();
+                    var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = client.Steps.Count();
                     <tr>
                         <td class="align-middle">
-                            @df.DataFactoryName
+                            @client.PipelineClientName
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(df)">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(client)">
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
                                 <HxDropdown>
@@ -68,16 +75,14 @@
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteDataFactory(df)">Confirm</HxDropdownItem>
+                                        <HxDropdownItem @onclick="() => DeleteClient(client)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdown>
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">
-                            @df.ResourceGroupName
-                        </td>
-                        <td class="align-middle">
-                            @df.ResourceName
+                            <PipelineClientTypeIconComponent ClientType="client.PipelineClientType" />
+                            @client.PipelineClientType
                         </td>
                         <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
@@ -86,7 +91,7 @@
                             <a class="text-dark" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                StepsDataFactory = df;
+                                StepsClient = client;
                                 await StepsModal.ShowAsync();
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
@@ -99,9 +104,15 @@
     </table>
 </div>
 
-<DataFactoryEditModal @ref="DataFactoryEditModal" AppRegistrations="AppRegistrations" OnDataFactorySubmit="OnDataFactorySubmit" />
+<DataFactoryEditModal @ref="ClientEditModals[PipelineClientType.DataFactory]"
+                      AppRegistrations="AppRegistrations"
+                      OnDataFactorySubmit="OnClientSubmit" />
 
-<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsDataFactory?.DataFactoryName}")">
+<SynapseEditModal @ref="ClientEditModals[PipelineClientType.Synapse]"
+                  AppRegistrations="AppRegistrations"
+                  OnSynapseSubmit="OnClientSubmit"/>
+
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsClient?.PipelineClientName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -113,7 +124,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in StepsDataFactory?.Steps
+                        @foreach (var step in StepsClient?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -139,22 +150,22 @@
 </HxModal>
 
 @code {
-    private List<DataFactory>? DataFactories { get; set; }
+    private List<PipelineClient>? PipelineClients { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private DataFactoryEditModal DataFactoryEditModal { get; set; } = null!;
+    private Dictionary<PipelineClientType, IPipelineClientEditModal> ClientEditModals { get; } = new();
 
-    private DataFactory? StepsDataFactory { get; set; }
+    private PipelineClient? StepsClient { get; set; }
     private HxModal StepsModal { get; set; } = null!;
 
     protected override async Task OnParametersSetAsync()
     {
         using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
-        DataFactories = await context.DataFactories
+        PipelineClients = await context.PipelineClients
             .AsNoTrackingWithIdentityResolution()
-            .Include(df => df.Steps)
+            .Include(c => c.Steps)
             .ThenInclude(step => step.Job)
-            .OrderBy(df => df.DataFactoryName)
+            .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
@@ -162,34 +173,44 @@
             .ToListAsync();
     }
 
-    private async Task DeleteDataFactory(DataFactory df)
+    private async Task DeleteClient(PipelineClient client)
     {
         using var context = DbFactory.CreateDbContext();
-        context.Remove(df);
+        context.Remove(client);
         await context.SaveChangesAsync();
-        DataFactories?.Remove(df);
+        PipelineClients?.Remove(client);
     }
 
-    private async void OnDataFactorySubmit(DataFactory dataFactory)
+    private async void OnClientSubmit(PipelineClient client)
     {
         using var context = DbFactory.CreateDbContext();
-        if (dataFactory.DataFactoryId == Guid.Empty)
+        if (client.PipelineClientId == Guid.Empty)
         {
-            context.Add(dataFactory);
-            DataFactories?.Add(dataFactory);
+            context.Add(client);
+            PipelineClients?.Add(client);
         }
         else
         {
-            DataFactories?.RemoveAll(df => df.DataFactoryId == dataFactory.DataFactoryId);
-            DataFactories?.Add(dataFactory);
-            context.Attach(dataFactory).State = EntityState.Modified;
+            PipelineClients?.RemoveAll(df => df.PipelineClientId == client.PipelineClientId);
+            PipelineClients?.Add(client);
+            context.Attach(client).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
         StateHasChanged();
     }
 
-    private async Task ShowEditModal(DataFactory? dataFactory)
+    private async Task ShowEditModalAsync(PipelineClient client)
     {
-        await DataFactoryEditModal.ShowAsync(dataFactory?.DataFactoryId ?? Guid.Empty);
+        await OpenClientEditModalAsync(client.PipelineClientType, client.PipelineClientId);
+    }
+
+    private async Task ShowNewClientModalAsync(PipelineClientType type)
+    {
+        await OpenClientEditModalAsync(type, Guid.Empty);
+    }
+
+    private async Task OpenClientEditModalAsync(PipelineClientType type, Guid clientId)
+    {
+        await ClientEditModals[type].ShowAsync(clientId);
     }
 }

@@ -4,54 +4,42 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class DataFactory
+public class DataFactory : PipelineClient
 {
-    [Key]
-    [Required]
-    [Display(Name = "Data Factory id")]
-    public Guid DataFactoryId { get; set; }
+    public DataFactory() : base(PipelineClientType.DataFactory) { }
 
-    [Required]
-    [Display(Name = "Data Factory name")]
-    public string? DataFactoryName { get; set; }
-
+    [Column("SubscriptionId")]
     [Required]
     [Display(Name = "Subscription id")]
     [MaxLength(36)]
     [MinLength(36)]
     public string? SubscriptionId { get; set; }
 
-
+    [Column("ResourceGroupName")]
     [Required]
     [Display(Name = "Resource group name")]
     public string? ResourceGroupName { get; set; }
 
+    [Column("ResourceName")]
     [Required]
     [Display(Name = "Resource name")]
     public string? ResourceName { get; set; }
-
-    [Required]
-    [Display(Name = "App registration")]
-    public Guid? AppRegistrationId { get; set; }
-
-    public AppRegistration AppRegistration { get; set; } = null!;
-
-    public IList<PipelineStep> Steps { get; set; } = null!;
 
     private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string ResourceUrl = "https://management.azure.com/";
 
     private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
     {
-        var accessToken = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var credentials = new TokenCredentials(accessToken);
         return new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
     }
 
-    public async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync(tokenService);
         var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
@@ -59,19 +47,20 @@ public class DataFactory
         return createRunResponse.RunId;
     }
 
-    public async Task<PipelineRun> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
+    public override async Task<(string Status, string Message)> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync(tokenService);
-        return await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+        var run = await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+        return (run.Status, run.Message);
     }
 
-    public async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
+    public override async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
     {
         var client = await GetClientAsync(tokenService);
         await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
     }
 
-    public async Task<Dictionary<string, List<PipelineResource>>> GetPipelinesAsync(ITokenService tokenService)
+    public override async Task<Dictionary<string, List<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
     {
         var client = await GetClientAsync(tokenService);
         var allPipelines = new List<IPage<PipelineResource>>();
@@ -87,12 +76,18 @@ public class DataFactory
             nextPage = pipelines_.NextPageLink;
         }
 
+        static PipelineInfo infoFromResource(PipelineResource res)
+        {
+            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type, p.Value.DefaultValue));
+            return new(res.Name, parameters);
+        };
+
         // Key = Folder
         // Value = List of pipelines in that folder
         return allPipelines
             .SelectMany(p => p.Select(p_ => (Folder: p_.Folder?.Name ?? "/", Pipeline: p_))) // Replace null folder (root) with forward slash.
             .GroupBy(p => p.Folder)
-            .ToDictionary(p => p.Key, p => p.Select(p_ => p_.Pipeline).ToList());
+            .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToList());
     }
 
     public async Task TestConnection(AppRegistration appRegistration)

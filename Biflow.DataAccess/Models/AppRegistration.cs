@@ -35,7 +35,7 @@ public class AppRegistration
 
     public IList<DatasetStep> Steps { get; set; } = null!;
 
-    public IList<DataFactory> DataFactories { get; set; } = null!;
+    public IList<PipelineClient> PipelineClients { get; set; } = null!;
 
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
@@ -45,7 +45,7 @@ public class AppRegistration
 
     private async Task<PowerBIClient> GetClientAsync(ITokenService tokenService)
     {
-        var accessToken = await tokenService.GetTokenAsync(this, PowerBIResourceUrl);
+        var (accessToken, _) = await tokenService.GetTokenAsync(this, PowerBIResourceUrl);
         var credentials = new TokenCredentials(accessToken);
         return new PowerBIClient(credentials);
     }

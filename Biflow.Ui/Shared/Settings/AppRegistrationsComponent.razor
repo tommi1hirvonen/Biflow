@@ -51,7 +51,7 @@
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
-                    var dataFactories = app.DataFactories.Count();
+                    var pipelineClients = app.PipelineClients.Count();
                     var functionApps = app.FunctionApps.Count();
                     <tr>
                         <td class="align-middle">
@@ -101,10 +101,10 @@
                         <td>
                             <a class="text-dark" href="javascript:void(0)" @onclick="async () =>
                             {
-                                DataFactoriesAppRegistration = app;
-                                await DataFactoriesModal.ShowAsync();
+                                PipelineClientsAppRegistration = app;
+                                await PipelineClientsModal.ShowAsync();
                             }">
-                                @(dataFactories > 0 ? $"{dataFactories} Data Factories" : null)
+                                @(pipelineClients > 0 ? $"{pipelineClients} pipeline clients" : null)
                             </a>
                         </td>
                         <td>
@@ -162,31 +162,27 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="DataFactoriesModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Data Factories using {StepsAppRegistration?.AppRegistrationName}")">
+<HxModal @ref="PipelineClientsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Pipeline clients using {StepsAppRegistration?.AppRegistrationName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <table class="table table-sm table-hover">
                     <thead>
                         <tr>
-                            <th>Data Factory name</th>
-                            <th>Resource group name</th>
-                            <th>Resource name</th>
+                            <th>Pipeline client name</th>
+                            <th>Type</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var dataFactory in DataFactoriesAppRegistration?.DataFactories
-                            .OrderBy(adf => adf.DataFactoryName) ?? Enumerable.Empty<DataFactory>())
+                        @foreach (var client in PipelineClientsAppRegistration?.PipelineClients
+                            .OrderBy(c => c.PipelineClientName) ?? Enumerable.Empty<PipelineClient>())
                         {
                             <tr>
                                 <td>
-                                    @dataFactory.DataFactoryName
+                                    @client.PipelineClientName
                                 </td>
                                 <td>
-                                    @dataFactory.ResourceGroupName
-                                </td>
-                                <td>
-                                    @dataFactory.ResourceName
+                                    @client.PipelineClientType
                                 </td>
                             </tr>
                         }
@@ -196,7 +192,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="DataFactoriesModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="PipelineClientsModal.HideAsync">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -246,8 +242,8 @@
     private AppRegistration? StepsAppRegistration { get; set; }
     private HxModal StepsModal { get; set; } = null!;
 
-    private AppRegistration? DataFactoriesAppRegistration { get; set; }
-    private HxModal DataFactoriesModal { get; set; } = null!;
+    private AppRegistration? PipelineClientsAppRegistration { get; set; }
+    private HxModal PipelineClientsModal { get; set; } = null!;
 
     private AppRegistration? FunctionAppsAppRegistration { get; set; }
     private HxModal FunctionAppsModal { get; set; } = null!;
@@ -259,7 +255,7 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(app => app.Steps)
             .ThenInclude(step => step.Job)
-            .Include(app => app.DataFactories)
+            .Include(app => app.PipelineClients)
             .Include(app => app.FunctionApps)
             .OrderBy(df => df.AppRegistrationName)
             .ToListAsync();

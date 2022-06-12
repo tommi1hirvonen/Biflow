@@ -91,7 +91,7 @@
         Job="Job"
         Steps="Steps"
         Connections="SqlConnections"
-        DataFactories="DataFactories"
+        PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
         Job="Job"
@@ -128,7 +128,7 @@
     [Parameter]
     public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
     [Parameter]
-    public List<DataFactory>? DataFactories { get; set; }
+    public List<PipelineClient>? PipelineClients { get; set; }
     [Parameter]
     public List<AppRegistration>? AppRegistrations { get; set; }
     [Parameter]

@@ -1,6 +1,4 @@
-﻿@using Microsoft.Azure.Management.DataFactory.Models
-
-@inject IConfiguration Configuration
+﻿@inject IConfiguration Configuration
 @inject IHxMessengerService Messenger
 @inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbContextFactory
@@ -116,17 +114,17 @@
     private HxOffcanvas Offcanvas { get; set; } = null!;
 
     [Parameter]
-    public Guid? DataFactoryId { get; set; }
+    public Guid? PipelineClientId { get; set; }
 
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private Dictionary<string, List<PipelineResource>>? Pipelines { get; set; }
+    private Dictionary<string, List<PipelineInfo>>? Pipelines { get; set; }
 
     private string FilterText { get; set; } = string.Empty;
 
     private string? SelectedFolder { get; set; }
-    private PipelineResource? SelectedPipeline { get; set; }
+    private PipelineInfo? SelectedPipeline { get; set; }
 
     private void OnFolderChanged(string folder)
     {
@@ -154,16 +152,16 @@
     public async Task ShowAsync()
     {
         await Offcanvas.ShowAsync();
-        if (DataFactoryId is null || DataFactoryId == Guid.Empty) return;
+        if (PipelineClientId is null || PipelineClientId == Guid.Empty) return;
         try
         {
-            Guid dataFactoryId = DataFactoryId ?? throw new ArgumentNullException(nameof(dataFactoryId), "Data Factory id cannot be null");
+            Guid clientId = PipelineClientId ?? throw new ArgumentNullException(nameof(clientId), "Pipeline client id cannot be null");
             using var context = DbContextFactory.CreateDbContext();
-            var dataFactory = await context.DataFactories
+            var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
-                .Include(df => df.AppRegistration)
-                .FirstAsync(df => df.DataFactoryId == dataFactoryId);
-            Pipelines = await dataFactory.GetPipelinesAsync(TokenService);
+                .Include(c => c.AppRegistration)
+                .FirstAsync(c => c.PipelineClientId == clientId);
+            Pipelines = await client.GetPipelinesAsync(TokenService);
             StateHasChanged();
         }
         catch (Exception ex)

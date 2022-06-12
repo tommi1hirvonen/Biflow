@@ -1,0 +1,17 @@
+﻿@inject MarkupHelperService MarkupHelper
+
+@switch (ClientType)
+{
+    case PipelineClientType.DataFactory:
+        @MarkupHelper.FromFile("icons/feather/factory.svg")
+        break;
+    case PipelineClientType.Synapse:
+        @MarkupHelper.FromFile("icons/feather/cpu.svg")
+        break;
+    default:
+        break;
+}
+
+@code {
+    [Parameter] public PipelineClientType ClientType { get; set; }
+}

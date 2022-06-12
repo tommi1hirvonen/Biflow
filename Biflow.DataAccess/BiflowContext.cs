@@ -35,7 +35,9 @@ public class BiflowContext : DbContext
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<PipelineClient> PipelineClients => Set<PipelineClient>();
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();
+    public DbSet<Synapse> Synapses => Set<Synapse>();
     public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
@@ -61,6 +63,7 @@ public class BiflowContext : DbContext
         var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
         var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
         var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
+        var pipelineClientTypeConverter = new EnumToStringConverter<PipelineClientType>();
 
         modelBuilder.Entity<Execution>(e =>
         {
@@ -397,8 +400,15 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<AccessToken>()
             .HasKey(at => new { at.AppRegistrationId, at.ResourceUrl });
 
-        modelBuilder.Entity<DataFactory>()
-            .ToTable("DataFactory");
+        modelBuilder.Entity<PipelineClient>(e =>
+        {
+            e.ToTable("PipelineClient");
+            e.Property(p => p.PipelineClientType)
+            .HasConversion(pipelineClientTypeConverter);
+            e.HasDiscriminator<PipelineClientType>("PipelineClientType")
+            .HasValue<DataFactory>(PipelineClientType.DataFactory)
+            .HasValue<Synapse>(PipelineClientType.Synapse);
+        });
 
         modelBuilder.Entity<ConnectionInfoBase>(e =>
         {

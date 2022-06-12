@@ -32,7 +32,7 @@ public partial class JobDetails : ComponentBase
 
     private List<SqlConnectionInfo>? SqlConnections { get; set; }
     private List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
-    private List<DataFactory>? DataFactories { get; set; }
+    private List<PipelineClient>? PipelineClients { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
     private List<FunctionApp>? FunctionApps { get; set; }
 
@@ -60,9 +60,9 @@ public partial class JobDetails : ComponentBase
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        DataFactories = await context.DataFactories
+        PipelineClients = await context.PipelineClients
         .AsNoTracking()
-        .OrderBy(df => df.DataFactoryName)
+        .OrderBy(df => df.PipelineClientName)
         .ToListAsync();
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
