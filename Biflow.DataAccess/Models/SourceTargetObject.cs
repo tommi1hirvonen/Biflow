@@ -43,44 +43,49 @@ public class SourceTargetObject
     {
         if (obj is SourceTargetObject dbo)
         {
-            return ServerName.Equals(dbo.ServerName)
-                && DatabaseName.Equals(dbo.DatabaseName)
-                && SchemaName.Equals(dbo.SchemaName)
-                && ObjectName.Equals(dbo.ObjectName);
+            return ServerName.EqualsIgnoreCase(dbo.ServerName)
+                && DatabaseName.EqualsIgnoreCase(dbo.DatabaseName)
+                && SchemaName.EqualsIgnoreCase(dbo.SchemaName)
+                && ObjectName.EqualsIgnoreCase(dbo.ObjectName);
         }
         else if (obj is ValueTuple<string, string, string, string> vt)
         {
-            return ServerName.Equals(vt.Item1)
-                && DatabaseName.Equals(vt.Item2)
-                && SchemaName.Equals(vt.Item3)
-                && ObjectName.Equals(vt.Item4);
+            return ServerName.EqualsIgnoreCase(vt.Item1)
+                && DatabaseName.EqualsIgnoreCase(vt.Item2)
+                && SchemaName.EqualsIgnoreCase(vt.Item3)
+                && ObjectName.EqualsIgnoreCase(vt.Item4);
         }
         else if (obj is Tuple<string, string, string, string> tuple)
         {
-            return ServerName.Equals(tuple.Item1)
-                && DatabaseName.Equals(tuple.Item2)
-                && SchemaName.Equals(tuple.Item3)
-                && ObjectName.Equals(tuple.Item4);
+            return ServerName.EqualsIgnoreCase(tuple.Item1)
+                && DatabaseName.EqualsIgnoreCase(tuple.Item2)
+                && SchemaName.EqualsIgnoreCase(tuple.Item3)
+                && ObjectName.EqualsIgnoreCase(tuple.Item4);
         }
         else if (obj is ValueTuple<string, string, string, string, bool> vt2)
         {
-            return ServerName.Equals(vt2.Item1)
-                && DatabaseName.Equals(vt2.Item2)
-                && SchemaName.Equals(vt2.Item3)
-                && ObjectName.Equals(vt2.Item4);
+            return ServerName.EqualsIgnoreCase(vt2.Item1)
+                && DatabaseName.EqualsIgnoreCase(vt2.Item2)
+                && SchemaName.EqualsIgnoreCase(vt2.Item3)
+                && ObjectName.EqualsIgnoreCase(vt2.Item4);
         }
         else if (obj is Tuple<string, string, string, string, bool> tuple2)
         {
-            return ServerName.Equals(tuple2.Item1)
-                && DatabaseName.Equals(tuple2.Item2)
-                && SchemaName.Equals(tuple2.Item3)
-                && ObjectName.Equals(tuple2.Item4);
+            return ServerName.EqualsIgnoreCase(tuple2.Item1)
+                && DatabaseName.EqualsIgnoreCase(tuple2.Item2)
+                && SchemaName.EqualsIgnoreCase(tuple2.Item3)
+                && ObjectName.EqualsIgnoreCase(tuple2.Item4);
         }
 
         return false;
     }
 
-    public override int GetHashCode() => HashCode.Combine(ServerName, DatabaseName, SchemaName, ObjectName);
+    public override int GetHashCode() =>
+        HashCode.Combine(
+            ServerName.ToLower(),
+            DatabaseName.ToLower(),
+            SchemaName.ToLower(),
+            ObjectName.ToLower());
 }
 
 public class SourceTargetMappingResult
