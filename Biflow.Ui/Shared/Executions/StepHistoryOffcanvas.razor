@@ -21,7 +21,7 @@
             <tbody>
                 @if (Executions is null)
                 {
-                    <tr><td colspan="4">Loading...</td></tr>
+                    <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
                 else if (Executions.Count == 0)
                 {

@@ -48,11 +48,11 @@
         <tbody>
             @if (PipelineClients is null)
             {
-                <tr><td colspan="4">Loading...</td></tr>
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (PipelineClients.Count == 0)
             {
-                <tr><td colspan="4">No clients</td></tr>
+                <tr><td colspan="5">No clients</td></tr>
             }
             else
             {

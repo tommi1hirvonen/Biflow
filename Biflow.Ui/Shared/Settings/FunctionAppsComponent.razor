@@ -41,11 +41,11 @@
         <tbody>
             @if (FunctionApps is null)
             {
-                <tr><td colspan="4">Loading...</td></tr>
+                <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (FunctionApps.Count == 0)
             {
-                <tr><td colspan="4">No Function Apps</td></tr>
+                <tr><td colspan="6">No Function Apps</td></tr>
             }
             else
             {

@@ -25,7 +25,11 @@
             <div class="card-body">
                 @if (User is null)
                 {
-                    <p><em>Loading...</em></p>
+                    <div class="row">
+                        <div class="col text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        </div>
+                    </div>
                 }
                 else
                 {
@@ -60,7 +64,11 @@
             <div class="card-body">
                 @if (User is null)
                 {
-                    <p><em>Loading...</em></p>
+                    <div class="row">
+                        <div class="col text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        </div>
+                    </div>
                 }
                 else
                 {

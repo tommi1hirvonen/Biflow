@@ -32,7 +32,7 @@
         <tbody>
             @if (Users is null)
             {
-                <tr><td colspan="5">Loading...</td></tr>
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (Users.Count == 0)
             {

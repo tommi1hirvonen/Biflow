@@ -24,15 +24,13 @@
                         @if (Keys is null)
                         {
                             <tr>
-                                <td>Loading...</td>
-                                <td></td>
+                                <td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
                         else if (Keys.Count == 0)
                         {
                             <tr>
-                                <td>No keys</td>
-                                <td></td>
+                                <td colspan="2">No keys</td>
                             </tr>
                         }
                         else

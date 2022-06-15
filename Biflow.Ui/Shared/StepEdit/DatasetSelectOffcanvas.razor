@@ -20,7 +20,7 @@
                     <tbody>
                         @if (Datasets is null)
                         {
-                            <tr><td>Loading...</td></tr>
+                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (Datasets.Count == 0)
                         {

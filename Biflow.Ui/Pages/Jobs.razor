@@ -73,7 +73,7 @@
         <tbody>
             @if (jobs is null)
             {
-                <tr><td colspan="7">Loading...</td></tr>
+                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (jobs.Count == 0)
             {

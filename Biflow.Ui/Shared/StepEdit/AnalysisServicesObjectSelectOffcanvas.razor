@@ -18,7 +18,7 @@
                     <tbody>
                         @if (Models is null)
                         {
-                            <tr><td class="text-secondary">Loading...</td></tr>
+                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (!Models.Any())
                         {
@@ -53,7 +53,7 @@
                     <tbody>
                         @if (Models is null)
                         {
-                            <tr><td class="text-secondary">Loading...</td></tr>
+                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (SelectedModel is null)
                         {
@@ -92,7 +92,7 @@
                     <tbody>
                         @if (Models is null)
                         {
-                            <tr><td class="text-secondary">Loading...</td></tr>
+                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (SelectedTable is null)
                         {

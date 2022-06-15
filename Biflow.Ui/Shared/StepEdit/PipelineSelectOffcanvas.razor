@@ -20,7 +20,7 @@
                     <tbody>
                         @if (Pipelines is null)
                         {
-                            <tr><td>Loading...</td></tr>
+                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (Pipelines.Count == 0)
                         {

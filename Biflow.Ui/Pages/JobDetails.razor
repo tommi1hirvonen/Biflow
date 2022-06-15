@@ -11,7 +11,7 @@
     <div class="col-auto">
         <HxButtonGroup>
             <HxDropdown>
-                <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary" Spinner="CurrentJob is null">
                     @MarkupHelper.FromFile("icons/feather/loader.svg")
                     @(CurrentJob?.JobName ?? "Loading...")
                 </HxDropdownToggleButton>

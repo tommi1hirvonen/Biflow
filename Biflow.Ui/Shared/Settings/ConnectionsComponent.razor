@@ -52,11 +52,11 @@
         <tbody>
             @if (Connections is null)
             {
-                <tr><td colspan="5">Loading...</td></tr>
+                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (Connections.Count == 0)
             {
-                <tr><td colspan="5">No connections</td></tr>
+                <tr><td colspan="7">No connections</td></tr>
             }
             else
             {
