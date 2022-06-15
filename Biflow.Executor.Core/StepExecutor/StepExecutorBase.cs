@@ -1,7 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using IronPython.Hosting;
+using CodingSeb.ExpressionEvaluator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -303,14 +303,16 @@ internal abstract class StepExecutorBase
     {
         if (!string.IsNullOrWhiteSpace(StepExecution.ExecutionConditionExpression))
         {
-            var engine = Python.CreateEngine();
-            var scope = engine.CreateScope();
-            foreach (var param in StepExecution.ExecutionConditionParameters)
+            var evaluator = new ExpressionEvaluator
             {
-                scope.SetVariable(param.ParameterName, param.ParameterValue);
-            }
-            // Evaluate the expression with a separate Task to allow the executor process to continue.
-            return await Task.Run(() => engine.Execute<bool>(StepExecution.ExecutionConditionExpression, scope));
+                OptionScriptEvaluateFunctionActive = false,
+                OptionCanDeclareMultiExpressionsLambdaInSimpleExpressionEvaluate = false
+            };
+            evaluator.Namespaces.Remove("System.IO");
+            evaluator.Variables = StepExecution.ExecutionConditionParameters
+                .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+            // Evaluate the expression/statement with a separate Task to allow the executor process to continue.
+            return await Task.Run(() => evaluator.Evaluate<bool>(StepExecution.ExecutionConditionExpression));
         }
         return true;
     }

@@ -1,7 +1,7 @@
 ﻿@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
-@using IronPython.Hosting
+@using CodingSeb.ExpressionEvaluator
 
 @if (Step is not null)
 {
@@ -93,38 +93,111 @@
     </HxButton>
 }
 
-<HxOffcanvas @ref="HelpOffcanvas" BackdropEnabled="false" Title="Execution conditions">
+<HxOffcanvas @ref="HelpOffcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" Title="Execution conditions">
     <BodyTemplate>
-        <p>Use Python expressions or statements to control whether the step is executed or not when the step's execution phase is reached (execution phase mode) or all its dependencies have completed (dependency mode).</p>
-        <p>The expressions use Python 3 syntax and expressions are evaluated using IronPython 3. Standard Python libraries are supported (e.g. datetime, math, json etc.).</p>
-        <p>The expression return type must always be boolean (True/False).</p>
-        <p>Avoid using long running operations in expressions as these can hinder the flow of the executor process. And definitely do not use time.sleep().</p>
-        <p>Use parameters to dynamically pass values to the evaluated statement.</p>
-        <h4>Examples</h4>
+        <p>Use C# expressions to control whether the step is executed or not when the step's execution phase is reached (in execution phase mode) or all its dependencies have completed (in dependency mode).</p>
+        <p>The return type for the final expression must always be boolean (True/False), however you can test and develop expressions using any kind of return type.</p>
+        <p>Use parameters to dynamically pass values to the evaluated expression.</p>
+        
         <h6>Simple expression</h6>
+        <p>The following expression takes two integer variables <code>count1</code>, <code>count2</code> and a boolean variable <code>bool1</code> which are passed using parameters of the same name.</p>
         <pre><code>
-            count1 == 0 and count2 > 0
+            count1 == 0 && count2 > 0 || bool1
         </code></pre>
-        <p>This single line expression has two integer variables <code>count1</code> and <code>count2</code> which are passed using parameters of the same name.</p>
+        
         <h6>Working with datetimes</h6>
+        <p>The following expression takes one parameter <code>lastLoadDateTime</code> of type DateTime.</p>
         <pre><code>
-            from datetime import datetime
-            dt = datetime(paramValue)
-            datetime.now() > dt
+            DateTime.Today.AddDays(-5) > lastLoadDateTime
         </code></pre>
-        <p>This multi line statement takes one parameter <code>paramValue</code> of type DateTime. Biflow uses .NET DateTime types, which need to be converted to Python datetimes using the datetime() constructor.</p>
-        <h6>Function calls</h6>
-        <pre><code>
-            def getSum(value1, value2):
-                return value1 + value2
 
-            value4 = getSum(value1, value2)
-            value1 > value4 or value3
+        <h6>Working with strings</h6>
+        <p>The following expressions take one parameter <code>myText</code> of type String.</p>
+        <pre><code>
+            myText.ToLower().Contains("test if mytext contains this text")
         </code></pre>
-        <p>This statement takes two integer parameters (<code>value1</code> and <code>value2</code>) and one boolean parameter (<code>value3</code>). Functions in the Python code need to be defined before they can be called.</p>
+
+        <h6>Working with arrays</h6>
+        <pre><code>
+            new string[] { "list", "of", "allowed", "values" }.Contains(myText)
+            // myText = "allow" => false
+
+            new string[] { "list", "of", "allowed", "values" }.Any(v => v.Contains(myText))
+            // myText = "allow" => true
+
+            myText.Split(',').Length > 3
+            // myText = "comma,separated,list,of,values" => true
+        </code></pre>
+        
+        <br/>
+
+        <p>The following namespaces, their classes and methods are available for use in expressions:</p>
+        <ul>
+            <li>System</li>
+            <li>System.Linq</li>
+            <li>System.Text</li>
+            <li>System.Text.RegularExpressions</li>
+            <li>System.ComponentModel</li>
+            <li>System.Dynamic</li>
+            <li>System.Collections</li>
+            <li>System.Collections.Generic</li>
+            <li>System.Collections.Specialized</li>
+            <li>System.Globalization</li>
+        </ul>
+        <p>The following operators are supported:</p>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Operator</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>x.y</td><td>Member access</td></tr>
+                <tr><td>x?.y</td><td>Null-conditional Member access</td></tr>
+                <tr><td>x?[y]</td><td>Null-conditional index</td></tr>
+                <tr><td>f(x)</td><td>Invocation</td></tr>
+                <tr><td>a[x]</td><td>Index</td></tr>
+                <tr><td>x++</td><td>Postfix increment</td></tr>
+                <tr><td>x--</td><td>Postfix decrement</td></tr>
+                <tr><td>new</td><td>Instanciate</td></tr>
+                <tr><td>typeof</td><td>Get the System.Type instance for a type</td></tr>
+                <tr><td>default(T)</td><td>Default value of a type</td></tr>
+                <tr><td>sizeof</td><td>Number of bytes used by a variable or a type</td></tr>
+                <tr><td>+x</td><td>Positive value</td></tr>
+                <tr><td>-x</td><td>Negative value</td></tr>
+                <tr><td>!x</td><td>Logical Negation</td></tr>
+                <tr><td>~x</td><td>Bitwise complement</td></tr>
+                <tr><td>++x</td><td>Prefix increment</td></tr>
+                <tr><td>--x</td><td>Prefix decrement</td></tr>
+                <tr><td>(T)x</td><td>Explicit cast</td></tr>
+                <tr><td>x * y</td><td>Multiplication</td></tr>
+                <tr><td>x / y</td><td>Division</td></tr>
+                <tr><td>x % y</td><td>Modulus (Integer remainder)</td></tr>
+                <tr><td>x + y</td><td>Addition</td></tr>
+                <tr><td>x - y</td><td>Substraction</td></tr>
+                <tr><td>x &#60;&#60; y</td><td>Left shift (bits)</td></tr>
+                <tr><td>x >> y</td><td>Right shift (bits)</td></tr>
+                <tr><td>x &#60; y</td><td>Less than</td></tr>
+                <tr><td>x > y</td><td>Greater than</td></tr>
+                <tr><td>x &#60;= y</td><td>Less than or equal</td></tr>
+                <tr><td>x >= y</td><td>Greater than or equal</td></tr>
+                <tr><td>is</td><td>Type testing</td></tr>
+                <tr><td>x == y</td><td>Equality comparison</td></tr>
+                <tr><td>x != y</td><td>Not equal</td></tr>
+                <tr><td>x & y</td><td>Logical and (bits)</td></tr>
+                <tr><td>x ^ y</td><td>Logical XOR (bits)</td></tr>
+                <tr><td>x | y</td><td>Logical OR (bits)</td></tr>
+                <tr><td>x && y</td><td>Conditional and (booleans)</td></tr>
+                <tr><td>x || y</td><td>Conditional or (booleans)</td></tr>
+                <tr><td>x ?? y</td><td>Null coalescing (if null take that)</td></tr>
+                <tr><td>t ? x : y</td><td>Ternary conditional operator</td></tr>
+                <tr><td>=></td><td>Lambda (Expressions and bodied)</td></tr>
+            </tbody>
+        </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton OnClick="async () => await HelpOffcanvas.HideAsync()">
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await HelpOffcanvas.HideAsync()">
             Close
         </HxButton>
     </FooterTemplate>
@@ -161,18 +234,30 @@
         try
         {
             ArgumentNullException.ThrowIfNull(JobParameters);
-            var engine = Python.CreateEngine();
-            var scope = engine.CreateScope();
+            var evaluator = new ExpressionEvaluator
+            {
+                OptionScriptEvaluateFunctionActive = false,
+                OptionCanDeclareMultiExpressionsLambdaInSimpleExpressionEvaluate = false
+            };
+            evaluator.Namespaces.Remove("System.IO");
             foreach (var param in Step.ExecutionConditionParameters)
             {
                 param.SetParameterValue();
                 var value = param.JobParameterId is not null
                 ? JobParameters.First(p => p.ParameterId == param.JobParameterId).ParameterValue
                 : param.ParameterValue;
-                scope.SetVariable(param.ParameterName, value);
+                evaluator.Variables[param.ParameterName] = value;
             }
-            var result = engine.Execute<bool>(Step.ExecutionConditionExpression, scope);
-            Messenger.AddInformation($"Result: {result}");
+            var result = evaluator.Evaluate(Step.ExecutionConditionExpression);
+
+            if (result is bool b)
+            {
+                Messenger.AddInformation($"Result: {b}");
+            }
+            else
+            {
+                Messenger.AddWarning("Return type is not boolean", $"Result: {result}");
+            }
         }
         catch (Exception ex)
         {
