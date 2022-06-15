@@ -4,7 +4,7 @@
 
 <HxDropdown AutoClose="DropdownAutoClose.Outside">
     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="@(FilterSet.Any() ? "fw-bold" : null)">
-        @Title
+        @TitleTemplate
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">
         <div class="row" style="min-width: 15rem; max-height: 380px; overflow-y: auto;">
@@ -35,7 +35,6 @@
                 @foreach (var item in FilteredItems)
                 {
                     var id = IdSelector?.Invoke(item) ?? item.ToString();
-                    var text = TextSelector?.Invoke(item) ?? item.ToString();
                     <div class="row">
                         <div class="col">
                             <div class="form-check form-check-inline">
@@ -43,7 +42,14 @@
                                        checked=@FilterSet.Contains(item)
                                        @onchange="args => Toggle((bool)args.Value!, item)">
                                 <label class="form-check-label" for="@($"{ComponentInstanceId}_{id}")">
-                                    @text
+                                    @if (ItemTemplate is not null)
+                                    {
+                                        @ItemTemplate(item)
+                                    }
+                                    else
+                                    {
+                                        @(TextSelector?.Invoke(item) ?? item.ToString())
+                                    }
                                 </label>
                             </div>
                         </div>
@@ -56,7 +62,7 @@
 
 @code {
     [Parameter]
-    public RenderFragment Title { get; set; } = @<p></p>
+    public RenderFragment TitleTemplate { get; set; } = @<p></p>
     ;
 
     [Parameter]
@@ -81,6 +87,9 @@
 
     [Parameter]
     public Func<TItem, string>? TextSelector { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? ItemTemplate { get; set; }
 
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
 

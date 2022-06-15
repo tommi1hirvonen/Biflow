@@ -124,37 +124,35 @@
             </dl>
         }
         <div class="row">
-            <div class="col-auto">
+            <div class="col-6">
+                <small>Progress:</small>
+                <div class="progress">
+                    <div class="progress-bar @Execution?.ExecutionStatus.ToString().ToLower()" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+                </div>
+            </div>
+            <div class="col-2">
                 <dl class="mx-1">
                     <dt>Started</dt>
                     <dd>@Execution?.StartDateTime?.LocalDateTime</dd>
                 </dl>
             </div>
-            <div class="col-auto">
+            <div class="col-2">
                 <dl class="mx-1">
                     <dt>Ended</dt>
                     <dd>@Execution?.EndDateTime?.LocalDateTime</dd>
                 </dl>
             </div>
-            <div class="col-auto">
+            <div class="col-2">
                 <dl class="mx-1">
                     <dt>Duration</dt>
                     <dd>@Execution?.GetDurationInReadableFormat()</dd>
                 </dl>
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <small>Progress:</small>
-                <div class="progress">
-                    <div class="progress-bar @Execution?.ExecutionStatus.ToString().ToLower()" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
-                </div>
-            </div>
-        </div>
 
         @if (ShowReport == Report.Table || ShowReport == Report.Gantt)
         {
-            <div class="row mt-3">
+            <div class="row mt-1">
                 <div class="col d-inline">
                     @MarkupHelper.FromFile("icons/feather/filter.svg")
                     <span class="me-3">Filter</span>
@@ -172,10 +170,10 @@
                                 .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                                         OnChange="StateHasChanged"
                                         IsSearchable="true">
-                            <Title>
+                            <TitleTemplate>
                                 @MarkupHelper.FromFile("icons/feather/list.svg")
                                 Step
-                            </Title>
+                            </TitleTemplate>
                         </FilterDropdown>
                         <FilterDropdown TItem="StepType"
                                         FilterSet="StepTypeFilter"
@@ -188,10 +186,14 @@
                                 .Distinct()
                                 .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
                                         OnChange="StateHasChanged">
-                            <Title>
+                            <TitleTemplate>
                                 @MarkupHelper.FromFile("icons/feather/tool.svg")
                                 Step type
-                            </Title>
+                            </TitleTemplate>
+                            <ItemTemplate Context="item">
+                                <StepTypeIconComponent StepType_="item" />
+                                @item.ToString()
+                            </ItemTemplate>
                         </FilterDropdown>
                         <FilterDropdown TItem="StepExecutionStatus"
                                         FilterSet="StepStatusFilter"
@@ -204,10 +206,13 @@
                                 .Distinct()
                                 .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
                                         OnChange="StateHasChanged">
-                            <Title>
+                            <TitleTemplate>
                                 @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
                                 Status
-                            </Title>
+                            </TitleTemplate>
+                            <ItemTemplate Context="item">
+                                <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                            </ItemTemplate>
                         </FilterDropdown>
                         <FilterDropdown TItem="string"
                                         FilterSet="TagFilter"
@@ -220,10 +225,10 @@
                                 .Distinct()
                                 .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                         OnChange="StateHasChanged">
-                            <Title>
+                            <TitleTemplate>
                                 @MarkupHelper.FromFile("icons/feather/tag.svg")
                                 Tag
-                            </Title>
+                            </TitleTemplate>
                         </FilterDropdown>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                   @onclick="() => { StepStatusFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">

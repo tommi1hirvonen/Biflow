@@ -116,10 +116,14 @@
                                 FilterSet="StepTypeFilter"
                                 Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/tool.svg")
                         Step type
-                    </Title>
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepTypeIconComponent StepType_="item" />
+                        @item.ToString()
+                    </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="SqlConnectionInfo"
                                 FilterSet="ConnectionFilter"
@@ -131,10 +135,10 @@
                                         .OrderBy(c => c.ConnectionName)
                                         ?? Enumerable.Empty<SqlConnectionInfo>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/database.svg")
                         Connection
-                    </Title>
+                    </TitleTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
                     {

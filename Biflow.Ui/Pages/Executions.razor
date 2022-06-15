@@ -161,10 +161,10 @@
                                .Distinct()
                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                             OnChange="StateHasChanged">
-                <Title>
+                <TitleTemplate>
                     @MarkupHelper.FromFile("icons/feather/loader.svg")
                     Job
-                </Title>
+                </TitleTemplate>
             </FilterDropdown>
 
             @if (ShowSteps)
@@ -186,10 +186,10 @@
                                    .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/list.svg")
                         Step
-                    </Title>
+                    </TitleTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
                                 FilterSet="StepTypeFilter"
@@ -207,10 +207,14 @@
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/tool.svg")
                         Step type
-                    </Title>
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepTypeIconComponent StepType_="item" />
+                        @item.ToString()
+                    </ItemTemplate>
                 </FilterDropdown>
             }
 
@@ -227,10 +231,13 @@
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
                         Status
-                    </Title>
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <JobExecutionStatusBadgeComponent ExecutionStatus_="item" />
+                    </ItemTemplate>
                 </FilterDropdown>
             }
             else
@@ -251,10 +258,13 @@
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
                         Status
-                    </Title>
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                    </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
                                 FilterSet="TagFilter"
@@ -272,10 +282,10 @@
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
-                    <Title>
+                    <TitleTemplate>
                         @MarkupHelper.FromFile("icons/feather/tag.svg")
                         Tag
-                    </Title>
+                    </TitleTemplate>
                 </FilterDropdown>
             }
 
