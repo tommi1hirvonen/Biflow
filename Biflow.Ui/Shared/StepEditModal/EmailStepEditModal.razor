@@ -12,7 +12,7 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.Recipients" @oninput="ResetStepError" />
                 </div>
-                <div class="form-text">Comma separated list of recipient email addresses</div>
+                <div class="form-text">Comma separated list of recipient email addresses. Step parameters can be used to dynamically set the value of recipients, subject and body properties.</div>
             </div>
         </div>
         <div class="row mt-3">
@@ -24,7 +24,6 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.Subject" @oninput="ResetStepError" />
                 </div>
-                <div class="form-text">Parameters apply to the subject and body</div>
             </div>
         </div>
         <div class="row mt-3">

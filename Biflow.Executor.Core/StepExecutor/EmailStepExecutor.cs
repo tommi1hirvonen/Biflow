@@ -42,6 +42,7 @@ internal class EmailStepExecutor : StepExecutorBase
                 DateTime dt => dt.ToString("o"),
                 _ => param.ParameterValue.ToString()
             };
+            recipients = recipients.Select(r => r.Replace(param.ParameterName, value)).ToList();
             subject = subject.Replace(param.ParameterName, value);
             body = body.Replace(param.ParameterName, value);
         }
