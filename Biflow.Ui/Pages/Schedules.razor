@@ -23,15 +23,24 @@
 
 <h4>Schedules</h4>
 
+
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <div class="mt-3">
-        <HxButton Color="ThemeColor.Success" @onclick="async () => await EditModal.ShowAsync(Guid.Empty)" Enabled="Jobs is not null && Jobs?.Any() == true">
-            Add schedule
-        </HxButton>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
-            @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-            Synchronize
-        </HxButton>
+    <div class="row mt-3">
+        <div class="col">
+            <HxButton Color="ThemeColor.Success" @onclick="async () => await EditModal.ShowAsync(Guid.Empty)" Enabled="Jobs is not null && Jobs?.Any() == true">
+                Add schedule
+            </HxButton>
+            <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                Synchronize
+            </HxButton>
+        </div>
+        <div class="col text-end">
+            <HxButton OnClick="async () => await HelpModal.ShowAsync()">
+                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+                Help
+            </HxButton>
+        </div>
     </div>
 </AuthorizeView>
 
@@ -157,6 +166,8 @@
     <ScheduleEditModal @ref="EditModal" Jobs="Jobs" OnSubmit="OnScheduleSubmit" />
 </AuthorizeView>
 
+<SchedulesHelpModal @ref="HelpModal" />
+
 
 @code {
     private List<Job>? Jobs { get; set; }
@@ -164,6 +175,8 @@
     private List<Schedule>? Schedules_ { get; set; }
 
     private ScheduleEditModal EditModal { get; set; } = null!;
+
+    private SchedulesHelpModal HelpModal { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
