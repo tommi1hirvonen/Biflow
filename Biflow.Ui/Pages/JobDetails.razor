@@ -59,6 +59,7 @@
                             <div class="mt-3">
                                 <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
                                 <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
+                                <div class="form-text">If the job's execution exceeds the overtime limit, an email is automatically sent to users who have subscribed to this job's overtime notifications.</div>
                             </div>
                             <HxSubmit CssClass="mt-3" Size="ButtonSize.Small" Color="ThemeColor.Success">Save</HxSubmit>
                         </EditForm>
@@ -144,12 +145,28 @@
                            @onchange="() => ToggleDependencyMode(false)">
                     <label class="form-check-label" for="radio_execution_phase_mode">Execution phase mode</label>
                 </div>
+                <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Hover" WrapperCssClass="me-3" Title="Execution phase mode"
+                           Content="Steps are executed in order based on their execution phase. Steps in the same execution phase can be started at the same time. Execution phases are started from the lowest value up.">
+                    <ChildContent>
+                        <span style="cursor: pointer;">
+                            @MarkupHelper.FromFile("icons/feather/info.svg")
+                        </span>
+                    </ChildContent>
+                </HxPopover>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_dependency_mode"
                            checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)"
                            @onchange="() => ToggleDependencyMode(true)">
                     <label class="form-check-label" for="radio_dependency_mode">Dependency mode</label>
                 </div>
+                <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Hover" Title="Dependency mode"
+                           Content="Steps are executed in order based on their dependencies. Steps that have no dependencies are started first. Steps that have no dependencies between them can be executed at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria is met.">
+                    <ChildContent>
+                        <span style="cursor: pointer;">
+                            @MarkupHelper.FromFile("icons/feather/info.svg")
+                        </span>
+                    </ChildContent>
+                </HxPopover>
             </div>
             @*Only show StopOnFirstError setting if job uses execution phase mode.*@
             @if (CurrentJob?.UseDependencyMode == false)
@@ -160,6 +177,14 @@
                            @onchange="ToggleStopOnFirstError">
                     <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                 </div>
+                <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Hover" WrapperCssClass="me-3" Title="Execution phase mode"
+                           Content="Stop the entire execution if a step fails. The steps that have been started will run to completion. Available only in execution phase mode.">
+                    <ChildContent>
+                        <span style="cursor: pointer;">
+                            @MarkupHelper.FromFile("icons/feather/info.svg")
+                        </span>
+                    </ChildContent>
+                </HxPopover>
             }
         </AuthorizeView>
         <AuthorizeView Roles="Operator, Viewer">

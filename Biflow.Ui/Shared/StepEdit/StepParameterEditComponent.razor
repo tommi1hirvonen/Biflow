@@ -3,7 +3,18 @@
 @if (Step is not null)
 {
     <p />
-    <h5>Parameters</h5>
+    <h5>
+        Parameters
+        &nbsp;
+        <HxPopover Placement="PopoverPlacement.Right" Trigger="PopoverTrigger.Hover" Html Sanitize="false"
+                    Content="@("<div><p>Use parameters to dynamically pass values to the step during execution.</p><p>Parameters are matched using their names. Let's say you have defined a parameter named <code>@@MyStringParam</code> with a value of <code>Hello World!</code>. Using the parameter's name in the step's supported properties will replace the name with the parameter value during execution. For example, a SQL statement like <code>exec MyProcedure @@MyStringParam</code> will become <code>exec MyProcedure 'Hello World!'</code></p></div>")">
+            <ChildContent>
+                <span style="cursor: pointer;">
+                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                </span>
+            </ChildContent>
+        </HxPopover>
+    </h5>
     <table id="parameters_table" class="table table-sm">
         <thead>
             <tr>
