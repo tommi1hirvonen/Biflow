@@ -58,6 +58,24 @@ public class Synapse : PipelineClient
             .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToList());
     }
 
+    public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
+    {
+        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var client = new Azure.Analytics.Synapse.Artifacts.PipelineClient(SynapseEndpoint, token);
+        var pipeline = await client.GetPipelineAsync(pipelineName);
+        return pipeline.Value.Parameters.Select(param =>
+        {
+            var datatype = param.Value.Type.ToString() switch
+            {
+                "int" => ParameterValueType.Int32,
+                "bool" => ParameterValueType.Boolean,
+                "float" => ParameterValueType.Double,
+                _ => ParameterValueType.String
+            };
+            return (param.Key, datatype, (object?)param.Value.DefaultValue);
+        });
+    }
+
     public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
         var token = new SynapseTokenCredential(tokenService, AppRegistration);

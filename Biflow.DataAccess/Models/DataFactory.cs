@@ -90,6 +90,23 @@ public class DataFactory : PipelineClient
             .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToList());
     }
 
+    public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
+    {
+        var client = await GetClientAsync(tokenService);
+        var pipeline = await client.Pipelines.GetAsync(ResourceGroupName, ResourceName, pipelineName);
+        return pipeline.Parameters.Select(param =>
+        {
+            var datatype = param.Value.Type switch
+            {
+                "int" => ParameterValueType.Int32,
+                "bool" => ParameterValueType.Boolean,
+                "float" => ParameterValueType.Double,
+                _ => ParameterValueType.String
+            };
+            return (param.Key, datatype, (object?)param.Value.DefaultValue);
+        });
+    }
+
     public async Task TestConnection(AppRegistration appRegistration)
     {
         var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);

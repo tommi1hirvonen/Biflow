@@ -78,12 +78,12 @@ public class SqlServerHelperService
         return new SSISCatalog(folders);
     }
 
-    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object DefaultValue)>> GetPackageParameters(Guid connectionId, string folder, string project, string package)
+    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object? DefaultValue)>> GetPackageParameters(Guid connectionId, string folder, string project, string package)
     {
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
-        var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object Default)>(@"
+        var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object? Default)>(@"
         SELECT
 	        ParameterLevel = 'Project',
 	        ParameterName = [object_parameters].[parameter_name],

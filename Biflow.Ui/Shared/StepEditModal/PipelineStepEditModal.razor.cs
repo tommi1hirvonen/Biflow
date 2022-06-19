@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Shared.StepEdit;
+using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,8 @@ namespace Biflow.Ui.Shared.StepEditModal;
 public partial class PipelineStepEditModal : ParameterizedStepEditModal<PipelineStep>
 {
     [Parameter] public IList<PipelineClient>? PipelineClients { get; set; }
+
+    [Inject] private ITokenService TokenService { get; set; } = null!;
 
     internal override string FormId => "pipeline_step_edit_form";
 
@@ -40,6 +43,43 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
         .Include(step => step.Targets)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
+
+    private async Task ImportParametersAsync()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Step?.PipelineName))
+            {
+                Messenger.AddWarning("Pipeline name was empty");
+                return;
+            }
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var client = await context.PipelineClients
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.AppRegistration)
+                .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
+            var parameters = await client.GetPipelineParametersAsync(TokenService, Step.PipelineName);
+            if (!parameters.Any())
+            {
+                Messenger.AddWarning($"No parameters found for pipeline {Step.PipelineName}");
+                return;
+            }
+            Step.StepParameters.Clear();
+            foreach (var param in parameters)
+            {
+                Step.StepParameters.Add(new StepParameter
+                {
+                    ParameterName = param.Name,
+                    ParameterValueType = param.Type,
+                    ParameterValue = param.Default
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error importing parameters", ex.Message);
+        }
+    }
 
     private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.ShowAsync();
 

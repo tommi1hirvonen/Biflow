@@ -42,10 +42,16 @@
         </div>
         <div class="row my-3">
             <div class="col">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
-                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                    Browse pipelines
-                </HxButton>
+                <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
+                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                        Browse pipelines
+                    </HxButton>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="ImportParametersAsync">
+                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                        Import parameters
+                    </HxButton>
+                </HxButtonGroup>
             </div>
         </div>
         <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" PipelineClientId="Step.PipelineClientId" OnPipelineSelected="OnPipelineSelected" />
