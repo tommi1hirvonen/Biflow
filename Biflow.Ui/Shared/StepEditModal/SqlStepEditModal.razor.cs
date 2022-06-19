@@ -77,23 +77,10 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
         Step.StepParameters.Clear();
         foreach (var parameter in parameters)
         {
-            var datatype = parameter.ParameterType switch
-            {
-                string a when a.Contains("char") => ParameterValueType.String,
-                "tinyint" or "smallint" => ParameterValueType.Int16,
-                "int" => ParameterValueType.Int32,
-                "bigint" => ParameterValueType.Int64,
-                "smallmoney" or "money" or "numeric" or "decimal" => ParameterValueType.Decimal,
-                "real" => ParameterValueType.Single,
-                "float" => ParameterValueType.Double,
-                string d when d.Contains("date") => ParameterValueType.DateTime,
-                "bit" => ParameterValueType.Boolean,
-                _ => ParameterValueType.String
-            };
             Step.StepParameters.Add(new StepParameter
             {
                 ParameterName = parameter.ParameterName,
-                ParameterValueType = datatype
+                ParameterValueType = parameter.ParameterType
             });
         }
     }

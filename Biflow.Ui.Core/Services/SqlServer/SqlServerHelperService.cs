@@ -2,6 +2,7 @@
 using Biflow.DataAccess;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Biflow.DataAccess.Models;
 
 namespace Biflow.Ui.Core;
 
@@ -77,6 +78,60 @@ public class SqlServerHelperService
         return new SSISCatalog(folders);
     }
 
+    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object DefaultValue)>> GetPackageParameters(Guid connectionId, string folder, string project, string package)
+    {
+        var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(catalogConnectionString);
+        using var sqlConnection = new SqlConnection(catalogConnectionString);
+        var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object Default)>(@"
+        SELECT
+	        ParameterLevel = 'Project',
+	        ParameterName = [object_parameters].[parameter_name],
+	        ParameterType = [object_parameters].[data_type],
+	        DefaultValue = [object_parameters].[design_default_value]
+        FROM [SSISDB].[catalog].[folders]
+	        INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+	        INNER JOIN [SSISDB].[catalog].[object_parameters] ON
+		        [projects].[project_id] = [object_parameters].[project_id] AND
+		        [projects].[name] = [object_parameters].[object_name] AND
+		        [object_parameters].[object_type] = 20
+        WHERE [object_parameters].[parameter_name] NOT LIKE 'CM.%'
+	        AND [folders].[name] = @FolderName AND [projects].[name] = @ProjectName
+        UNION ALL
+        SELECT
+	        ParameterLevel = 'Package',
+	        ParameterName = [object_parameters].[parameter_name],
+	        ParameterType = [object_parameters].[data_type],
+	        DefaultValue = [object_parameters].[design_default_value]
+        FROM [SSISDB].[catalog].[folders]
+	        INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+	        INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+	        INNER JOIN [SSISDB].[catalog].[object_parameters] ON
+		        [packages].[project_id] = [object_parameters].[project_id] AND
+		        [packages].[name] = [object_parameters].[object_name] AND
+		        [object_parameters].[object_type] = 30
+        WHERE [folders].[name] = @FolderName AND [projects].[name] = @ProjectName AND [packages].[name] = @PackageName AND [object_parameters].[parameter_name] NOT LIKE 'CM.%'", new
+        {
+            FolderName = folder,
+            ProjectName = project,
+            PackageName = package
+        });
+        return rows.Select(param =>
+        {
+            var level = Enum.Parse<ParameterLevel>(param.Level);
+            if (!Enum.TryParse(param.Type, out ParameterValueType datatype))
+            {
+                datatype = param.Level switch
+                {
+                    "UInt32" => ParameterValueType.Int32,
+                    "UInt64" => ParameterValueType.Int64,
+                    _ => ParameterValueType.String
+                };
+            }
+            return (level, param.Name, datatype, param.Default);
+        });
+    }
+
     public async Task<List<StoredProcedure>> GetStoredProcedures(Guid connectionId)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
@@ -117,12 +172,12 @@ public class SqlServerHelperService
         return procedures.Values.ToList();
     }
 
-    public async Task<IEnumerable<(string ParameterName, string ParameterType)>> GetStoredProcedureParameters(Guid connectionId, string schema, string procedure)
+    public async Task<IEnumerable<(string ParameterName, ParameterValueType ParameterType)>> GetStoredProcedureParameters(Guid connectionId, string schema, string procedure)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        return await sqlConnection.QueryAsync<(string, string)>(@"
+        var rows = await sqlConnection.QueryAsync<(string Name, string Type)>(@"
         select
             ParameterName = c.name,
             ParameterType = TYPE_NAME(c.user_type_id)
@@ -130,10 +185,27 @@ public class SqlServerHelperService
             inner join sys.schemas as b on a.schema_id = b.schema_id
             inner join sys.parameters as c on a.object_id = c.object_id
         where a.name = @procedure and b.name = @schema
-        ", new
+        ", param: new
         {
             procedure,
             schema
+        });
+        return rows.Select(param =>
+        {
+            var datatype = param.Type switch
+            {
+                string a when a.Contains("char") => ParameterValueType.String,
+                "tinyint" or "smallint" => ParameterValueType.Int16,
+                "int" => ParameterValueType.Int32,
+                "bigint" => ParameterValueType.Int64,
+                "smallmoney" or "money" or "numeric" or "decimal" => ParameterValueType.Decimal,
+                "real" => ParameterValueType.Single,
+                "float" => ParameterValueType.Double,
+                string d when d.Contains("date") => ParameterValueType.DateTime,
+                "bit" => ParameterValueType.Boolean,
+                _ => ParameterValueType.String
+            };
+            return (param.Name, datatype);
         });
     }
 

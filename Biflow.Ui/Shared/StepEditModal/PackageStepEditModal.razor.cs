@@ -1,6 +1,9 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -8,6 +11,7 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageStep>
 {
+    [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
     private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
 
@@ -111,6 +115,30 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         }
 
         return (true, null);
+    }
+
+    private async Task ImportParametersAsync()
+    {
+        if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
+        {
+            return;
+        }
+        var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName);
+        if (!parameters.Any())
+        {
+            Messenger.AddWarning($"No parameters found for {Step.PackageFolderName}/{Step.PackageProjectName}/{Step.PackageName}.dtsx");
+            return;
+        }
+        Step.StepParameters.Clear();
+        foreach (var parameter in parameters)
+        {
+            Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
+            {
+                ParameterName = parameter.ParameterName,
+                ParameterValueType = parameter.ParameterType,
+                ParameterValue = parameter.DefaultValue
+            });
+        }
     }
 
     private Task OpenPackageSelectOffcanvas() => PackageSelectOffcanvas.ShowAsync();

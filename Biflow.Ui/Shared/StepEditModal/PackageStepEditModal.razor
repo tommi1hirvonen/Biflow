@@ -61,10 +61,16 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPackageSelectOffcanvas">
-                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                    Browse catalog
-                </HxButton>
+                <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPackageSelectOffcanvas">
+                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                        Browse catalog
+                    </HxButton>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="ImportParametersAsync">
+                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                        Import parameters
+                    </HxButton>
+                </HxButtonGroup>
             </div>
         </div>
         <PackageSelectOffcanvas @ref="PackageSelectOffcanvas" ConnectionId="Step.ConnectionId" OnPackageSelected="OnPackageSelected" />
