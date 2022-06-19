@@ -1,12 +1,16 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 {
+    [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
     internal override string FormId => "sql_step_edit_form";
 
@@ -53,6 +57,46 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
     }
 
     private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.ShowAsync();
+
+    private async Task ImportParametersAsync()
+    {
+        var procedure = Step?.SqlStatement?.ParseStoredProcedureFromSqlStatement();
+        if (procedure is null || procedure.Value.ProcedureName is null || Step?.ConnectionId is null)
+        {
+            Messenger.AddWarning("Stored procedure could not be parsed from SQL statement");
+            return;
+        }
+        var schema = procedure.Value.Schema ?? "dbo";
+        var name = procedure.Value.ProcedureName;
+        var parameters = await SqlServerHelper.GetStoredProcedureParameters((Guid)Step.ConnectionId, schema, name);
+        if (!parameters.Any())
+        {
+            Messenger.AddWarning($"No parameters found for [{schema}].[{name}]");
+            return;
+        }
+        Step.StepParameters.Clear();
+        foreach (var parameter in parameters)
+        {
+            var datatype = parameter.ParameterType switch
+            {
+                string a when a.Contains("char") => ParameterValueType.String,
+                "tinyint" or "smallint" => ParameterValueType.Int16,
+                "int" => ParameterValueType.Int32,
+                "bigint" => ParameterValueType.Int64,
+                "smallmoney" or "money" or "numeric" or "decimal" => ParameterValueType.Decimal,
+                "real" => ParameterValueType.Single,
+                "float" => ParameterValueType.Double,
+                string d when d.Contains("date") => ParameterValueType.DateTime,
+                "bit" => ParameterValueType.Boolean,
+                _ => ParameterValueType.String
+            };
+            Step.StepParameters.Add(new StepParameter
+            {
+                ParameterName = parameter.ParameterName,
+                ParameterValueType = datatype
+            });
+        }
+    }
 
     private void OnStoredProcedureSelected(string procedure)
     {

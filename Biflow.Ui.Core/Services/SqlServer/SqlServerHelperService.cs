@@ -117,6 +117,26 @@ public class SqlServerHelperService
         return procedures.Values.ToList();
     }
 
+    public async Task<IEnumerable<(string ParameterName, string ParameterType)>> GetStoredProcedureParameters(Guid connectionId, string schema, string procedure)
+    {
+        var connectionString = await GetSqlConnectionStringAsync(connectionId);
+        ArgumentNullException.ThrowIfNull(connectionString);
+        using var sqlConnection = new SqlConnection(connectionString);
+        return await sqlConnection.QueryAsync<(string, string)>(@"
+        select
+            ParameterName = c.name,
+            ParameterType = TYPE_NAME(c.user_type_id)
+        from sys.procedures as a
+            inner join sys.schemas as b on a.schema_id = b.schema_id
+            inner join sys.parameters as c on a.object_id = c.object_id
+        where a.name = @procedure and b.name = @schema
+        ", new
+        {
+            procedure,
+            schema
+        });
+    }
+
     public async Task<List<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
