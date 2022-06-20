@@ -21,7 +21,7 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            ConnectionId = AsConnections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
