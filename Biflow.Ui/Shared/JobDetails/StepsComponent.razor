@@ -33,7 +33,7 @@
     @*Same as bg-light but with slight transparency*@
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
-            <HxDropdown CssClass="me-3">
+            <HxDropdownButtonGroup CssClass="me-3">
                 <HxDropdownToggleButton Color="ThemeColor.Success">
                     Add step
                 </HxDropdownToggleButton>
@@ -48,7 +48,7 @@
                         </HxDropdownItem>
                     }
                 </HxDropdownMenu>
-            </HxDropdown>
+            </HxDropdownButtonGroup>
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
             <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobParametersModal?.Show() ?? Task.CompletedTask)">
@@ -319,7 +319,7 @@
                                     </HxButton>
 
                                     <AuthorizeView Roles="Admin, Editor">
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @MarkupHelper.FromFile("icons/feather/copy.svg")
                                             </HxDropdownToggleButton>
@@ -332,9 +332,9 @@
                                                     <HxDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</HxDropdownItem>
                                                 }
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
 
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                             </HxDropdownToggleButton>
@@ -342,7 +342,7 @@
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="() => DeleteStep(item)">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
                                     </AuthorizeView>
                                 </div>
                             </div>

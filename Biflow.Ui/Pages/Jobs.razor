@@ -24,25 +24,31 @@
 <div class="btn-toolbar mt-3">
     <AuthorizeView Roles="Admin, Editor">
         @*Dropdown to create new jobs*@
-        <HxDropdown CssClass="me-3">
+        <HxDropdownButtonGroup CssClass="me-3">
             <HxDropdownToggleButton Color="ThemeColor.Success">Add job</HxDropdownToggleButton>
             <HxDropdownContent CssClass="p-4">
                 <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
-                    <div>
-                        <label class="form-label">Job name</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">
-                                @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                            </span>
-                            <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">Job name</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">
+                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                </span>
+                                <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
+                            </div>
                         </div>
                     </div>
-                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null" CssClass="mt-3">Add</HxSubmit>
+                    <div class="row">
+                        <div class="col">
+                            <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null">Add</HxSubmit>
+                        </div>
+                    </div>
                 </EditForm>
             </HxDropdownContent>
-        </HxDropdown>
+        </HxDropdownButtonGroup>
     </AuthorizeView>
     <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
         @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
@@ -107,7 +113,7 @@
                                     <HxButtonGroup CssClass="ms-2 btn-row" Size="ButtonGroupSize.Small">
 
                                         @*Dropdown to edit the job's name*@
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
                                                 @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                             </HxDropdownToggleButton>
@@ -115,25 +121,31 @@
                                                 <EditForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context" style="min-width: 25rem;">
                                                     <DataAnnotationsValidator />
                                                     <ValidationSummary />
-                                                    <div>
-                                                        <label class="form-label">New name</label>
-                                                        <InputText class="form-control form-control-sm" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <label class="form-label">New name</label>
+                                                            <InputText class="form-control form-control-sm" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
+                                                        </div>
                                                     </div>
-                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">Save</HxSubmit>
+                                                        </div>
+                                                    </div>
                                                 </EditForm>
                                             </HxDropdownContent>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
 
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @MarkupHelper.FromFile("icons/feather/copy.svg")
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
 
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                 @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                             </HxDropdownToggleButton>
@@ -141,7 +153,7 @@
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="() => DeleteJob(item)">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
 
                                     </HxButtonGroup>
                                 </AuthorizeView>

@@ -38,7 +38,7 @@
             @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
             {
                 <HxButtonToolbar CssClass="mt-3">
-                    <HxDropdown>
+                    <HxDropdownButtonGroup>
                         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
                             @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                             Stop
@@ -46,7 +46,7 @@
                         <HxDropdownMenu>
                             <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
                         </HxDropdownMenu>
-                    </HxDropdown>
+                    </HxDropdownButtonGroup>
                 </HxButtonToolbar>
             }
         </AuthorizeView>

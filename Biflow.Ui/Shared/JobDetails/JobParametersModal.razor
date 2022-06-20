@@ -21,6 +21,10 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @if (!Job?.JobParameters?.Any() ?? true)
+                        {
+                            <tr><td colspan="5">No parameters</td></tr>
+                        }
                         @foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
                             var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.JobParameterId == param.ParameterId) ?? false);
@@ -60,9 +64,13 @@
                     </tbody>
                 </table>
                 @{ var type = ParameterValueType.String; }
-                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
-                    @MarkupHelper.FromFile("icons/feather/plus.svg")
-                </HxButton>
+                <div class="row">
+                    <div class="col">
+                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
+                            @MarkupHelper.FromFile("icons/feather/plus.svg")
+                        </HxButton>
+                    </div>
+                </div>
                 <p class="text-danger">@ErrorMessage</p>
             </EditForm>
         }

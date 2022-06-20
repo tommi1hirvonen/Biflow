@@ -3,7 +3,7 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "bootstrap@5.1.1",
+      "library": "bootstrap@5.2.0-beta1",
       "destination": "wwwroot/lib/bootstrap/"
     },
     {
@@ -15,16 +15,15 @@
       "destination": "wwwroot/lib/Chart.js/"
     },
     {
-      "library": "highlight.js@11.4.0",
+      "library": "highlight.js@11.5.1",
       "destination": "wwwroot/lib/highlight.js/",
       "files": [
         "highlight.min.js"
       ]
+    },
+    {
+      "library": "chartjs-adapter-moment@1.0.0",
+      "destination": "wwwroot/lib/chartjs-adapter-moment/"
     }
-  ,
-{
-  "library": "chartjs-adapter-moment@1.0.0",
-  "destination": "wwwroot/lib/chartjs-adapter-moment/"
-}
-]
+  ]
 }

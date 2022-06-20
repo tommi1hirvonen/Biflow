@@ -87,7 +87,7 @@
                                 <AuthorizeView Roles="Admin, Editor, Operator">
                                     @if (item.ExecutionStatus == StepExecutionStatus.Running)
                                     {
-                                        <HxDropdown CssClass="ms-3">
+                                        <HxDropdownButtonGroup CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
                                                 @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                                                 Stop
@@ -95,7 +95,7 @@
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
                                     }
                                 </AuthorizeView>
                             </HxButtonToolbar>

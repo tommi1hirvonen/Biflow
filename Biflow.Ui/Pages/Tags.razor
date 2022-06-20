@@ -70,7 +70,7 @@
                                     <td>
                                         <div class="btn-group btn-row">
                                             @*Dropdown to edit the tag's name*@
-                                            <HxDropdown>
+                                            <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => TemplateTag.TagName = tag.TagName">
                                                     @MarkupHelper.FromFile("icons/feather/edit-3.svg")
                                                 </HxDropdownToggleButton>
@@ -85,8 +85,8 @@
                                                         <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
                                                     </EditForm>
                                                 </HxDropdownContent>
-                                            </HxDropdown>
-                                            <HxDropdown>
+                                            </HxDropdownButtonGroup>
+                                            <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                     @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                                 </HxDropdownToggleButton>
@@ -94,8 +94,8 @@
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                     <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
                                                 </HxDropdownMenu>
-                                            </HxDropdown>
-                                            <HxDropdown>
+                                            </HxDropdownButtonGroup>
+                                            <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                     @tag.Color
                                                 </HxDropdownToggleButton>
@@ -106,7 +106,7 @@
                                                         <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">@color</HxDropdownItem>
                                                     }
                                                 </HxDropdownMenu>
-                                            </HxDropdown>
+                                            </HxDropdownButtonGroup>
                                         </div>
                                     </td>
                                     <td class="align-middle">

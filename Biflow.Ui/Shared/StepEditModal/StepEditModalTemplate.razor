@@ -54,7 +54,7 @@
                                 </HxButtonGroup>
                             </div>
                         </div>
-                        <div class="row mt-2">
+                        <div class="row">
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                             @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
@@ -84,7 +84,7 @@
                         {
                             @if (Modal.Steps is not null)
                             {
-                                <div class="row mt-3">
+                                <div class="row">
                                     <div class="@(Fullscreen ? "col-xl-6" : "col")">
                                         <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" Job="Modal.Job" />
                                     </div>
@@ -93,7 +93,7 @@
                         }
                         else if (Modal.CurrentView == StepEditModalView.Settings)
                         {
-                            <div class="row mt-3">
+                            <div class="row">
                                 <div class="@(Fullscreen ? "col-xl-6" : "col-12")">
                                     <div class="row">
                                         <div class="col">
@@ -123,7 +123,7 @@
                                             <HxInputTags @bind-Value="Modal.Tags" DataProvider="Modal.GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
                                         </div>
                                     </div>
-                                    <div class="row">
+                                    <div class="row mt-3">
                                         <div class="col">
                                             <label class="form-label">Execution phase</label>
                                             <div class="input-group input-group-sm">
@@ -160,7 +160,7 @@
                         }
                         else if (Modal.CurrentView == StepEditModalView.Sources)
                         {
-                            <div class="row mt-3">
+                            <div class="row">
                                 <div class="col">
                                     <SourceTargetManagementComponent
                                     ListName="source"
@@ -179,7 +179,7 @@
                         }
                         else if (Modal.CurrentView == StepEditModalView.Targets)
                         {
-                            <div class="row mt-3">
+                            <div class="row">
                                 <div class="col">
                                     <SourceTargetManagementComponent
                                     ListName="target"
@@ -197,7 +197,7 @@
                         }
                         else if (Modal.CurrentView == StepEditModalView.Condition)
                         {
-                            <div class="row mt-3">
+                            <div class="row">
                                 <div class="col">
                                     <ExecutionConditionEditComponent Step="Modal.Step" JobParameters="Modal.Job?.JobParameters" />
                                 </div>

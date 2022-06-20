@@ -62,7 +62,7 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
-                                <HxDropdown>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
@@ -70,8 +70,8 @@
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
-                                </HxDropdown>
-                                <HxDropdown>
+                                </HxDropdownButtonGroup>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="clear tokens">
                                         @MarkupHelper.FromFile("icons/feather/x.svg")
                                     </HxDropdownToggleButton>
@@ -79,7 +79,7 @@
                                         <HxDropdownHeader>Clear access tokens?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => ClearTokens(app)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
-                                </HxDropdown>
+                                </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">

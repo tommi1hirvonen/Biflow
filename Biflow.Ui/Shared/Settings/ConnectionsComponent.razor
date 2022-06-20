@@ -14,7 +14,7 @@
 
 <PageTitle>Connections | Biflow</PageTitle>
 
-<HxDropdown>
+<HxDropdownButtonGroup>
     <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Connections is not null">
         Add connection
     </HxDropdownToggleButton>
@@ -27,7 +27,7 @@
             </HxDropdownItem>
         }
     </HxDropdownMenu>
-</HxDropdown>
+</HxDropdownButtonGroup>
 
 
 <div class="card shadow-sm pt-2 my-4">
@@ -88,7 +88,7 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(connection)">
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
-                                <HxDropdown>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
@@ -96,7 +96,7 @@
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
-                                </HxDropdown>
+                                </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
                         <td>

@@ -50,23 +50,28 @@
                         }
                     </tbody>
                 </table>
-                <HxDropdown>
-                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small">
-                        @MarkupHelper.FromFile("icons/feather/plus.svg")
-                    </HxDropdownToggleButton>
-                    <HxDropdownMenu>
-                        <HxDropdownHeader>
-                            Step type
-                        </HxDropdownHeader>
-                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !Job?.JobConcurrencies.Any(c => c.StepType == type) ?? false))
-                        {
-                            <HxDropdownItem @onclick="() => Job?.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
-                                <StepTypeIconComponent StepType_="stepType" />
-                                @stepType
-                            </HxDropdownItem>
-                        }
-                    </HxDropdownMenu>
-                </HxDropdown>
+                <div class="row">
+                    <div class="col">
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small">
+                                @MarkupHelper.FromFile("icons/feather/plus.svg")
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                <HxDropdownHeader>
+                                    Step type
+                                </HxDropdownHeader>
+                                @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !Job?.JobConcurrencies.Any(c => c.StepType == type) ?? false))
+                                {
+                                    <HxDropdownItem @onclick="() => Job?.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                                        <StepTypeIconComponent StepType_="stepType" />
+                                        @stepType
+                                    </HxDropdownItem>
+                                }
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                    </div>
+                </div>
+                
                 <p class="text-danger">@ErrorMessage</p>
             </EditForm>
         }

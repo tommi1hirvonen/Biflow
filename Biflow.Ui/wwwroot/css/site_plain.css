@@ -17,6 +17,11 @@ for details on configuring this project to bundle and minify static web assets. 
     --hx-offcanvas-horizontal-width-lg: 700px;
 }
 
+form {
+    display: grid;
+    flex-direction: unset;
+}
+
 .offcanvas-end {
     width: 600px;
 }

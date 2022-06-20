@@ -121,7 +121,7 @@
                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" OnClick="async () => await SetEditContextAsync(obj)">
                                                         @MarkupHelper.FromFile("icons/feather/edit-3.svg")
                                                     </HxButton>
-                                                    <HxDropdown>
+                                                    <HxDropdownButtonGroup>
                                                         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
                                                             @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                                         </HxDropdownToggleButton>
@@ -129,7 +129,7 @@
                                                             <HxDropdownHeader>Delete?</HxDropdownHeader>
                                                             <HxDropdownItem @onclick="async () => await DeleteDatabaseObject(obj)">Confirm</HxDropdownItem>
                                                         </HxDropdownMenu>
-                                                    </HxDropdown>
+                                                    </HxDropdownButtonGroup>
                                                 </div>
                                             </td>
                                             <td class="align-middle">

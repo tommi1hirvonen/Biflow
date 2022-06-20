@@ -62,7 +62,7 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="() => ShowEditModal(app)">
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
-                                <HxDropdown>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
                                         @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
@@ -70,7 +70,7 @@
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteFunctionApp(app)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
-                                </HxDropdown>
+                                </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">

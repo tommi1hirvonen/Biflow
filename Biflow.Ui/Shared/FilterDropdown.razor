@@ -2,7 +2,7 @@
 
 @inject MarkupHelperService MarkupHelper
 
-<HxDropdown AutoClose="DropdownAutoClose.Outside">
+<HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="@(FilterSet.Any() ? "fw-bold" : null)">
         @TitleTemplate
     </HxDropdownToggleButton>
@@ -58,7 +58,7 @@
             </div>
         </div>
     </HxDropdownContent>
-</HxDropdown>
+</HxDropdownButtonGroup>
 
 @code {
     [Parameter]

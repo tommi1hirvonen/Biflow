@@ -5,7 +5,7 @@
 <div class="row">
     <div class="col-auto">
         <HxButtonToolbar>
-            <HxDropdown>
+            <HxDropdownButtonGroup>
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
                     @if (SelectedTable is not null)
                     {
@@ -32,7 +32,7 @@
                         </HxDropdownItem>
                     }
                 </HxDropdownMenu>
-            </HxDropdown>
+            </HxDropdownButtonGroup>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small" Enabled="Editor is not null && Editor.IsEditable" OnClick="SaveChangesAsync">
                 @MarkupHelper.FromFile("icons/feather/save.svg")

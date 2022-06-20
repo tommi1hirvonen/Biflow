@@ -52,7 +52,7 @@
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
 
-                                <HxDropdown>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
                                         @MarkupHelper.FromFile("icons/feather/key.svg")
                                     </HxDropdownToggleButton>
@@ -84,9 +84,9 @@
                                         </div>
                                         
                                     </HxDropdownContent>
-                                </HxDropdown>
+                                </HxDropdownButtonGroup>
 
-                                <HxDropdown>
+                                <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
                                         @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                     </HxDropdownToggleButton>
@@ -94,7 +94,7 @@
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
-                                </HxDropdown>
+                                </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">

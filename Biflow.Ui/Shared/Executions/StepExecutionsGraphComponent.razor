@@ -60,7 +60,7 @@
                                     @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
                              && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
                                     {
-                                        <HxDropdown CssClass="ms-3">
+                                        <HxDropdownButtonGroup CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
                                                 @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
                                                 Stop
@@ -68,7 +68,7 @@
                                             <HxDropdownMenu>
                                                 <HxDropdownItem @onclick="() => StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
                                     }
                                 </AuthorizeView>
                             </HxButtonToolbar>

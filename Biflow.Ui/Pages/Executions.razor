@@ -45,7 +45,7 @@
                     Graph
                 </HxButton>
             </HxButtonGroup>
-            <HxDropdown CssClass="ms-3">
+            <HxDropdownButtonGroup CssClass="ms-3">
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary">
                     @MarkupHelper.FromFile("icons/feather/bookmark.svg")
                     Presets
@@ -86,7 +86,7 @@
                     <HxDropdownItem @onclick="() => SelectPreset(startPrevWeek, endPrevWeek)">Week</HxDropdownItem>
                     <HxDropdownItem @onclick="() => SelectPreset(startPrevMonth, endPrevMonth)">Month</HxDropdownItem>
                 </HxDropdownMenu>
-            </HxDropdown>
+            </HxDropdownButtonGroup>
 
             <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="Loading" Enabled="!Loading" CssClass="ms-3">
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")

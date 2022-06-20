@@ -171,7 +171,7 @@
 
     <FooterTemplate>
         <div class="col mr-auto">
-            <HxDropdown AutoClose="DropdownAutoClose.Outside">
+            <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
                 <HxDropdownToggleButton Color="ThemeColor.Secondary">
                     @MarkupHelper.FromFile("icons/feather/bell.svg")
                     Notifications
@@ -219,7 +219,7 @@
                         </div>
                     </div>
                 </HxDropdownContent>
-            </HxDropdown>
+            </HxDropdownButtonGroup>
         </div>
         <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute">
             @MarkupHelper.FromFile("icons/feather/play.svg")

@@ -31,6 +31,11 @@
     --hx-offcanvas-horizontal-width-sm: 600px;
 }
 
+form {
+    display: grid;
+    flex-direction: unset;
+}
+
 .offcanvas-end {
     width: 600px;
 }
