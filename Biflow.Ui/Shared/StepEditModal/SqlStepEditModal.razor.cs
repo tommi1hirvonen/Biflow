@@ -60,28 +60,35 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 
     private async Task ImportParametersAsync()
     {
-        var procedure = Step?.SqlStatement?.ParseStoredProcedureFromSqlStatement();
-        if (procedure is null || procedure.Value.ProcedureName is null || Step?.ConnectionId is null)
+        try
         {
-            Messenger.AddWarning("Stored procedure could not be parsed from SQL statement");
-            return;
-        }
-        var schema = procedure.Value.Schema ?? "dbo";
-        var name = procedure.Value.ProcedureName;
-        var parameters = await SqlServerHelper.GetStoredProcedureParameters((Guid)Step.ConnectionId, schema, name);
-        if (!parameters.Any())
-        {
-            Messenger.AddWarning($"No parameters found for [{schema}].[{name}]");
-            return;
-        }
-        Step.StepParameters.Clear();
-        foreach (var parameter in parameters)
-        {
-            Step.StepParameters.Add(new StepParameter
+            var procedure = Step?.SqlStatement?.ParseStoredProcedureFromSqlStatement();
+            if (procedure is null || procedure.Value.ProcedureName is null || Step?.ConnectionId is null)
             {
-                ParameterName = parameter.ParameterName,
-                ParameterValueType = parameter.ParameterType
-            });
+                Messenger.AddWarning("Stored procedure could not be parsed from SQL statement");
+                return;
+            }
+            var schema = procedure.Value.Schema ?? "dbo";
+            var name = procedure.Value.ProcedureName;
+            var parameters = await SqlServerHelper.GetStoredProcedureParameters((Guid)Step.ConnectionId, schema, name);
+            if (!parameters.Any())
+            {
+                Messenger.AddInformation($"No parameters for [{schema}].[{name}]");
+                return;
+            }
+            Step.StepParameters.Clear();
+            foreach (var parameter in parameters)
+            {
+                Step.StepParameters.Add(new StepParameter
+                {
+                    ParameterName = parameter.ParameterName,
+                    ParameterValueType = parameter.ParameterType
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error importing parameters", ex.Message);
         }
     }
 

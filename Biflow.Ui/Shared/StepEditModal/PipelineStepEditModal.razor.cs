@@ -61,7 +61,7 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
             var parameters = await client.GetPipelineParametersAsync(TokenService, Step.PipelineName);
             if (!parameters.Any())
             {
-                Messenger.AddWarning($"No parameters found for pipeline {Step.PipelineName}");
+                Messenger.AddInformation($"No parameters for pipeline {Step.PipelineName}");
                 return;
             }
             Step.StepParameters.Clear();

@@ -119,25 +119,32 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 
     private async Task ImportParametersAsync()
     {
-        if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
+        try
         {
-            return;
-        }
-        var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName);
-        if (!parameters.Any())
-        {
-            Messenger.AddWarning($"No parameters found for {Step.PackageFolderName}/{Step.PackageProjectName}/{Step.PackageName}.dtsx");
-            return;
-        }
-        Step.StepParameters.Clear();
-        foreach (var parameter in parameters)
-        {
-            Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
+            if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
             {
-                ParameterName = parameter.ParameterName,
-                ParameterValueType = parameter.ParameterType,
-                ParameterValue = parameter.DefaultValue
-            });
+                return;
+            }
+            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName);
+            if (!parameters.Any())
+            {
+                Messenger.AddInformation($"No parameters for package {Step.PackageFolderName}/{Step.PackageProjectName}/{Step.PackageName}.dtsx");
+                return;
+            }
+            Step.StepParameters.Clear();
+            foreach (var parameter in parameters)
+            {
+                Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
+                {
+                    ParameterName = parameter.ParameterName,
+                    ParameterValueType = parameter.ParameterType,
+                    ParameterValue = parameter.DefaultValue
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error importing parameters", ex.Message);
         }
     }
 

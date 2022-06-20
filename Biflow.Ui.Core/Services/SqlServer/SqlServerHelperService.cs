@@ -83,6 +83,24 @@ public class SqlServerHelperService
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
+        var count = await sqlConnection.ExecuteScalarAsync<int>(@"
+        SELECT COUNT(*)
+        FROM [SSISDB].[catalog].[folders]
+	                INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+	                INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+        WHERE [folders].[name] = @FolderName AND [projects].[name] = @ProjectName AND [packages].[name] = @PackageName
+        ", new
+        {
+            FolderName = folder,
+            ProjectName = project,
+            PackageName = package
+        });
+
+        if (count == 0)
+        {
+            throw new ObjectNotFoundException($"{folder}/{project}/{package}");
+        }
+
         var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object? Default)>(@"
         SELECT
 	        ParameterLevel = 'Project',
@@ -177,19 +195,24 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
+        var objectId = await sqlConnection.ExecuteScalarAsync<long?>(
+            @"select top 1 object_id
+            from sys.procedures
+            where name = @procedure and object_schema_name(object_id) = @schema",
+            new { procedure, schema })
+            ?? throw new ObjectNotFoundException($"{schema}.{procedure}");
+
         var rows = await sqlConnection.QueryAsync<(string Name, string Type)>(@"
         select
-            ParameterName = c.name,
-            ParameterType = TYPE_NAME(c.user_type_id)
-        from sys.procedures as a
-            inner join sys.schemas as b on a.schema_id = b.schema_id
-            inner join sys.parameters as c on a.object_id = c.object_id
-        where a.name = @procedure and b.name = @schema
+            ParameterName = name,
+            ParameterType = TYPE_NAME(user_type_id)
+        from sys.parameters
+        where object_id = @objectId
         ", param: new
         {
-            procedure,
-            schema
+            objectId
         });
+
         return rows.Select(param =>
         {
             var datatype = param.Type switch
