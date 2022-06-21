@@ -48,7 +48,7 @@ public class Synapse : PipelineClient
 
         static PipelineInfo infoFromResource(PipelineResource res)
         {
-            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue));
+            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value?.DefaultValue));
             return new(res.Name, parameters);
         };
 
