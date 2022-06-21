@@ -205,7 +205,7 @@
                                 @if (SelectedSteps.Any())
                                 {
                                     <div class="btn-group btn-row">
-                                        <HxDropdown>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
                                                 @MarkupHelper.FromFile("icons/feather/trash-2.svg")
                                             </HxDropdownToggleButton>
@@ -213,8 +213,8 @@
                                                 <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
                                                 <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
                                             </HxDropdownMenu>
-                                        </HxDropdown>
-                                        <HxDropdown>
+                                        </HxDropdownButtonGroup>
+                                        <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
                                                 @MarkupHelper.FromFile("icons/feather/copy.svg")
                                             </HxDropdownToggleButton>
@@ -227,7 +227,7 @@
                                                     <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
                                                 }
                                             </HxDropdownMenu>
-                                        </HxDropdown>
+                                        </HxDropdownButtonGroup>
                                     </div>
                                 }
                             </div>
