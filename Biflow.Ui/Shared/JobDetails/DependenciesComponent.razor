@@ -20,10 +20,10 @@
     </HxAlert>
 }
 
-<div class="row mb-3">
-    <div class="col-xl-6 col-lg-8 col-md-10">
+<div class="row align-items-end mb-3">
+    <div class="col-xl-5 col-lg-5 col-12">
         <HxAutosuggest  TItem="Step"
-                        TValue="Guid"
+                        TValue="Step"
                         DataProvider="ProvideSuggestions"
                         ValueSelector="ValueSelector"
                         ItemFromValueResolver="ResolveAutosuggestItemFromValue"
@@ -43,6 +43,34 @@
             </EmptyTemplate>
         </HxAutosuggest>
     </div>
+    <div class="col-xl-2 col-lg-3 col-5">
+        <div class="form-group">
+            <label class="form-label">Depth backwards</label>
+            <HxPopover Trigger="PopoverTrigger.Focus" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                <ChildContent>
+                    <span class="vismaicon vismaicon-sm vismaicon-dynamic vismaicon-filled vismaicon-help"></span>
+                </ChildContent>
+            </HxPopover>
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(StepFilter is null) />
+        </div>
+    </div>
+    <div class="col-xl-2 col-lg-3 col-5">
+        <div class="form-group">
+            <label class="form-label">Depth forwards</label>
+            <HxPopover Trigger="PopoverTrigger.Focus" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                <ChildContent>
+                    <span class="vismaicon vismaicon-sm vismaicon-dynamic vismaicon-filled vismaicon-help"></span>
+                </ChildContent>
+            </HxPopover>
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(StepFilter is null) />
+        </div>
+    </div>
+    <div class="col-2">
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" OnClick="LoadGraph">
+            Apply depth filters
+        </HxButton>
+    </div>
+
 </div>
 
 <div class="container-fluid h-100 flex-column p-0">
@@ -140,7 +168,23 @@
 
     private bool GrapShouldRender { get; set; }
 
-    private Guid StepFilter { get; set; }
+    private Step? StepFilter { get; set; }
+
+    private int FilterDepthBackwards
+    {
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+    }
+
+    private int _filterDepthBackwards;
+
+    private int FilterDepthForwards
+    {
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+    }
+
+    private int _filterDepthForwards;
 
     protected override void OnInitialized()
     {
@@ -156,7 +200,7 @@
         if (Job != PrevJob)
         {
             PrevJob = Job;
-            StepFilter = Guid.Empty;
+            StepFilter = null;
             StateHasChanged();
             GrapShouldRender = true;
         }
@@ -174,7 +218,7 @@
         string? stepsJson = null;
         string? dependenciesJson = null;
 
-        if (StepFilter == Guid.Empty)
+        if (StepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
             var steps = Steps.Select(step => new
@@ -198,12 +242,12 @@
         }
         else
         {
-            var startStep = Steps.FirstOrDefault(s => s.StepId == StepFilter);
+            var startStep = Steps.FirstOrDefault(s => s.StepId == StepFilter.StepId);
             if (startStep is not null)
             {
-                var steps = RecurseDependenciesBackward(startStep, new());
+                var steps = RecurseDependenciesBackward(startStep, new(), 0);
                 steps.Remove(startStep);
-                steps = RecurseDependenciesForward(startStep, steps);
+                steps = RecurseDependenciesForward(startStep, steps, 0);
 
                 var dependencies = steps
                     .SelectMany(step => step.Dependencies)
@@ -230,12 +274,18 @@
             await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
     }
 
-    private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps)
+    private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps, int depth)
     {
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
+        {
+            depth--;
             return processedSteps;
         }
 
@@ -247,16 +297,24 @@
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
         {
-            RecurseDependenciesBackward(depencyStep, processedSteps);
+            RecurseDependenciesBackward(depencyStep, processedSteps, depth);
         }
+
+        depth--;
 
         return processedSteps;
     }
 
-    private List<Step> RecurseDependenciesForward(Step step, List<Step> processedSteps)
+    private List<Step> RecurseDependenciesForward(Step step, List<Step> processedSteps, int depth)
     {
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
+        {
+            depth--;
             return processedSteps;
         }
 
@@ -266,15 +324,18 @@
 
         foreach (var depencyStep in dependencySteps)
         {
-            RecurseDependenciesForward(depencyStep, processedSteps);
+            RecurseDependenciesForward(depencyStep, processedSteps, depth);
         }
+
+        depth--;
 
         return processedSteps;
     }
 
-    private async Task LimitGraph(Guid value)
+
+    private async Task LimitGraph(Step step)
     {
-        StepFilter = value;
+        StepFilter = step;
         GrapShouldRender = true;
         await LoadGraph();
     }
@@ -333,14 +394,14 @@
         };
     }
 
-    private Guid ValueSelector(Step step) => step.StepId;
+    private Step ValueSelector(Step step) => step;
 
     private string TextSelector(Step step) => step.StepName ?? "";
 
-    private Task<Step> ResolveAutosuggestItemFromValue(Guid value)
+    private Task<Step> ResolveAutosuggestItemFromValue(Step step)
     {
-        var step = Task.FromResult(Steps.First(step => step.StepId == value));
-        return step;
+        var step_ = Task.FromResult(Steps.First(s => s.StepId == step.StepId));
+        return step_;
     }
 
     public void Dispose()
