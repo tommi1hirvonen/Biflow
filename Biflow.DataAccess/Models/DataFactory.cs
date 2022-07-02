@@ -94,7 +94,7 @@ public class DataFactory : PipelineClient
     {
         var client = await GetClientAsync(tokenService);
         var pipeline = await client.Pipelines.GetAsync(ResourceGroupName, ResourceName, pipelineName);
-        return pipeline.Parameters.Select(param =>
+        return pipeline.Parameters?.Select(param =>
         {
             var datatype = param.Value.Type switch
             {
@@ -104,7 +104,7 @@ public class DataFactory : PipelineClient
                 _ => ParameterValueType.String
             };
             return (param.Key, datatype, (object?)param.Value.DefaultValue);
-        });
+        }) ?? Enumerable.Empty<(string, ParameterValueType, object?)>();
     }
 
     public async Task TestConnection(AppRegistration appRegistration)
