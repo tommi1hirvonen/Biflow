@@ -305,8 +305,8 @@
             }
         }
 
-        <div class="container-fluid h-100 flex-column p-0 mt-3" hidden=@(ShowReport != Report.Dependencies)>
-            <div class="row flex-fill dependency-graph border" id="div_dependency_graph">
+        <div class="border mt-3" hidden=@(ShowReport != Report.Dependencies) style="resize: both; overflow: hidden;">
+            <div class="p-1 dependency-graph" id="div_dependency_graph">
                 <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
                     <g id="g_dependency_graph" />
                 </svg>
