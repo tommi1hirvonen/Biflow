@@ -27,6 +27,7 @@ public partial class StepsComponent : ComponentBase
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     private IEnumerable<Step> FilteredSteps => Steps?
+        .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
         .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
         .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
@@ -86,6 +87,10 @@ public partial class StepsComponent : ComponentBase
         StepType.Tabular => AsConnections?.Any() == false,
         _ => false,
     };
+
+    private enum StateFilter { All, Enabled, Disabled }
+
+    private StateFilter stateFilter = StateFilter.All;
 
     private async Task ShowEditModal(Step step) => await OpenStepEditModal(step.StepId, step.StepType);
 

@@ -80,7 +80,27 @@
     }
 
     <div class="row mt-3">
-        <div class="col">
+        <div class="col-auto">
+            <div class="form-check form-check-inline">
+                <input type="radio" class="form-check-input" id="radio_all"
+                       checked=@(stateFilter == StateFilter.All)
+                       @onchange="() => stateFilter = StateFilter.All">
+                <label class="form-check-label" for="radio_all">All</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input type="radio" class="form-check-input" id="radio_enabled"
+                       checked=@(stateFilter == StateFilter.Enabled)
+                       @onchange="() => stateFilter = StateFilter.Enabled">
+                <label class="form-check-label" for="radio_enabled">Enabled</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input type="radio" class="form-check-input" id="radio_disabled"
+                       checked=@(stateFilter == StateFilter.Disabled)
+                       @onchange="() => stateFilter = StateFilter.Disabled">
+                <label class="form-check-label" for="radio_disabled">Disabled</label>
+            </div>
+        </div>
+        <div class="col-lg mt-2 mt-lg-0">
             @MarkupHelper.FromFile("icons/feather/tag.svg")
             <span class="me-3">Tags</span>
             @if (!Tags.Any())
@@ -236,7 +256,10 @@
                              @countText
                         </div>
                         <div class="col text-secondary text-end fw-bold small">
-                            @disabledCountText
+                            @if (stateFilter == StateFilter.All)
+                            {
+                                @disabledCountText
+                            }
                         </div>
                     </div>
                 </li>
