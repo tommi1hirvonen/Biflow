@@ -19,9 +19,14 @@ public static class Extensions
         IConfigurationSection? baseSection = null)
         where TExecutorLauncher : class, IExecutorLauncher
     {
-        services.AddDbContextFactory<BiflowContext>(options =>
-        options.UseSqlServer(biflowConnectionString, o =>
-            o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+        
+        services.AddDbContextFactory<BiflowContext>((services, options) =>
+        {
+            var configuration = services.GetRequiredService<IConfiguration>();
+            var sensitiveDataLogging = (baseSection ?? configuration).GetValue<bool>("SensitiveDataLogging");
+            options.EnableSensitiveDataLogging(sensitiveDataLogging)
+            .UseSqlServer(biflowConnectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));    
+        });
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<ITokenService, TokenService>();
