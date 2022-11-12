@@ -40,11 +40,8 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseCookiePolicy();
 app.UseAuthentication();
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapBlazorHub();
-    endpoints.MapFallbackToPage("/_Host");
-});
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
 
 if (schedulerType == "SelfHosted")
 {
