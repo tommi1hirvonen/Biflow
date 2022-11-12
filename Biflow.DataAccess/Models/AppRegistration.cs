@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Azure.Core;
+using Azure.Identity;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
@@ -39,7 +40,6 @@ public class AppRegistration
 
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
-    private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api";
     private const string AzureResourceUrl = "https://management.azure.com/";
 
@@ -79,17 +79,18 @@ public class AppRegistration
 
     public async Task TestConnection()
     {
-        var context = new AuthenticationContext(AuthenticationUrl + TenantId);
-        var clientCredential = new ClientCredential(ClientId, ClientSecret);
-        var _ = await context.AcquireTokenAsync(AzureResourceUrl, clientCredential);
+        var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);
+        var context = new TokenRequestContext(new[] { AzureResourceUrl });
+        var _ = await credential.GetTokenAsync(context);
     }
 
     public async Task TestPowerBIConnection()
     {
-        var context = new AuthenticationContext(AuthenticationUrl + TenantId);
-        var clientCredential = new ClientCredential(ClientId, ClientSecret);
-        var result = await context.AcquireTokenAsync(PowerBIResourceUrl, clientCredential);
-        var credentials = new TokenCredentials(result.AccessToken);
+        var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);
+        var context = new TokenRequestContext(new[] { PowerBIResourceUrl });
+        var token = await credential.GetTokenAsync(context);
+
+        var credentials = new TokenCredentials(token.Token);
         var client = new PowerBIClient(credentials);
         var _ = await client.Groups.GetGroupsAsync();
     }

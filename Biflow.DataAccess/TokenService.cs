@@ -1,13 +1,13 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Azure.Core;
+using Azure.Identity;
+using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Biflow.DataAccess;
 
 public class TokenService : ITokenService
 {
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
-    private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
 
     private Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> AccessTokens { get; } = new();
@@ -31,7 +31,7 @@ public class TokenService : ITokenService
             }
             else
             {
-                AccessToken resultToken;
+                Models.AccessToken resultToken;
 
                 using var context = _dbContextFactory.CreateDbContext();
                 var accessToken = await context.AccessTokens
@@ -53,7 +53,7 @@ public class TokenService : ITokenService
                 else
                 {
                     (var token_, var expiresOn_) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    accessToken = new AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
+                    accessToken = new Models.AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
                     context.Add(accessToken);
                     await context.SaveChangesAsync();
                     resultToken = accessToken;
@@ -75,10 +75,10 @@ public class TokenService : ITokenService
 
     private static async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenFromApiAsync(AppRegistration appRegistration, string resourceUrl)
     {
-        var authContext = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
-        var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
-        var result = await authContext.AcquireTokenAsync(resourceUrl, clientCredential);
-        return (result.AccessToken, result.ExpiresOn);
+        var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
+        var context = new TokenRequestContext(new[] { resourceUrl });
+        var token = await credential.GetTokenAsync(context);
+        return (token.Token, token.ExpiresOn);
     }
 
     public void Clear()

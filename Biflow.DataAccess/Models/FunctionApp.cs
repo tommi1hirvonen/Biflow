@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Azure.Core;
+using Azure.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
@@ -45,7 +46,6 @@ public class FunctionApp
 
     public IList<FunctionStep> Steps { get; set; } = null!;
 
-    private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string ResourceUrl = "https://management.azure.com/";
 
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
@@ -102,13 +102,13 @@ public class FunctionApp
 
     public async Task TestConnection(HttpClient client)
     {
-        var context = new AuthenticationContext(AuthenticationUrl + AppRegistration.TenantId);
-        var clientCredential = new ClientCredential(AppRegistration.ClientId, AppRegistration.ClientSecret);
-        var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
+        var credential = new ClientSecretCredential(AppRegistration.TenantId, AppRegistration.ClientId, AppRegistration.ClientSecret);
+        var context = new TokenRequestContext(new[] { ResourceUrl });
+        var token = await credential.GetTokenAsync(context);
 
         var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
         var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
-        message.Headers.Add("authorization", $"Bearer {result.AccessToken}");
+        message.Headers.Add("authorization", $"Bearer {token.Token}");
         var response = await client.SendAsync(message);
         response.EnsureSuccessStatusCode();
     }

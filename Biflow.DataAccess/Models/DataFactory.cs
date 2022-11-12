@@ -1,6 +1,7 @@
-﻿using Microsoft.Azure.Management.DataFactory;
+﻿using Azure.Core;
+using Azure.Identity;
+using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Azure.Management.DataFactory.Models;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
 using System.ComponentModel.DataAnnotations;
@@ -29,7 +30,6 @@ public class DataFactory : PipelineClient
     [Display(Name = "Resource name")]
     public string? ResourceName { get; set; }
 
-    private const string AuthenticationUrl = "https://login.microsoftonline.com/";
     private const string ResourceUrl = "https://management.azure.com/";
 
     private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
@@ -109,10 +109,11 @@ public class DataFactory : PipelineClient
 
     public async Task TestConnection(AppRegistration appRegistration)
     {
-        var context = new AuthenticationContext(AuthenticationUrl + appRegistration.TenantId);
-        var clientCredential = new ClientCredential(appRegistration.ClientId, appRegistration.ClientSecret);
-        var result = await context.AcquireTokenAsync(ResourceUrl, clientCredential);
-        var credentials = new TokenCredentials(result.AccessToken);
+        var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
+        var context = new TokenRequestContext(new[] { ResourceUrl });
+        var token = await credential.GetTokenAsync(context);
+
+        var credentials = new TokenCredentials(token.Token);
         var client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
         var _ = await client.Factories.GetAsync(ResourceGroupName, ResourceName);
     }
