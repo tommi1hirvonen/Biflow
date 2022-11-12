@@ -86,7 +86,7 @@ public static partial class Utility
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {
         // Can handle white space inside object names
-        var regex1 = new Regex(@"EXEC(?:UTE)?[\s*](\[.*\]).(\[.*\])", RegexOptions.IgnoreCase);
+        var regex1 = ProcedureWithSchemaWithBracketsRegex();
         var match1 = regex1.Match(sqlStatement);
         if (match1.Success)
         {
@@ -96,7 +96,7 @@ public static partial class Utility
         }
 
         // No square brackets => no whitespace in object names
-        var regex2 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)\.(\S*)", RegexOptions.IgnoreCase);
+        var regex2 = ProcedureWithSchemaWithoutBracketsRegex();
         var match2 = regex2.Match(sqlStatement);
         if (match2.Success)
         {
@@ -106,7 +106,7 @@ public static partial class Utility
         }
 
         // Can handle white space inside object names
-        var regex3 = new Regex(@"EXEC(?:UTE)?[\s*](\[.*\])", RegexOptions.IgnoreCase);
+        var regex3 = ProcedureWithoutSchemaWithBracketsRegex();
         var match3 = regex3.Match(sqlStatement);
         if (match3.Success)
         {
@@ -115,7 +115,7 @@ public static partial class Utility
         }
 
         // No square brackets => no whitespace in object names
-        var regex4 = new Regex(@"EXEC(?:UTE)?[\s*](\S*)", RegexOptions.IgnoreCase);
+        var regex4 = ProcedureWithoutSchemaWithoutBracketsRegex();
         var match4 = regex4.Match(sqlStatement);
         if (match4.Success)
         {
@@ -260,7 +260,7 @@ public static partial class Utility
     {
         if (value.Length > length)
         {
-            return value.Substring(0, length);
+            return value[..length];
         }
 
         return value;
@@ -282,4 +282,21 @@ public static partial class Utility
         return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
+    // Using the GeneratedRegex attributes we can create the regex already at compile time.
+
+    // Can handle white space inside object names
+    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\]).(\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex ProcedureWithSchemaWithBracketsRegex();
+
+    // No square brackets => no whitespace in object names
+    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)\\.(\\S*)", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex ProcedureWithSchemaWithoutBracketsRegex();
+
+    // Can handle white space inside object names
+    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex ProcedureWithoutSchemaWithBracketsRegex();
+
+    // No square brackets => no whitespace in object names
+    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex ProcedureWithoutSchemaWithoutBracketsRegex();
 }
