@@ -96,7 +96,7 @@
     </HxButton>
 }
 
-<HxOffcanvas @ref="HelpOffcanvas" Size="OffcanvasSize.Large" BackdropEnabled="false" Title="Execution conditions">
+<HxOffcanvas @ref="HelpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
     <BodyTemplate>
         <p>Use C# expressions to control whether the step is executed or not when the step's execution phase is reached (in execution phase mode) or all its dependencies have completed (in dependency mode).</p>
         <p>The return type for the final expression must always be boolean (True/False), however you can test and develop expressions using any kind of return type.</p>
