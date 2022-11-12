@@ -26,6 +26,7 @@ public static partial class Utility
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("BiflowContext");
+        ArgumentException.ThrowIfNullOrEmpty(connectionString);
         services.AddDbContextFactory<BiflowContext>(options =>
         {
             options.UseSqlServer(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));

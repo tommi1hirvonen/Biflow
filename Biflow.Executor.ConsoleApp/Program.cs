@@ -18,6 +18,7 @@ using System.Text;
 using System.Text.Json;
 
 var assemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+ArgumentException.ThrowIfNullOrEmpty(assemblyPath);
 
 var host = Host.CreateDefaultBuilder(args)
     .UseContentRoot(assemblyPath) // Force console app to read appsettings from its own folder (instead of launching UI app's folder).
@@ -30,6 +31,7 @@ var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
         var connectionString = context.Configuration.GetConnectionString("BiflowContext");
+        ArgumentException.ThrowIfNullOrEmpty(connectionString);
         services.AddExecutorServices<ExecutorLauncher>(connectionString);
         services.AddSingleton<IExecutionStopper, ExecutionStopper>();
     })

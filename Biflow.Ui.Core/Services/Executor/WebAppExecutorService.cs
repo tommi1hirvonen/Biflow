@@ -12,7 +12,7 @@ public class WebAppExecutorService : IExecutorService
     private string Url => _configuration
         .GetSection("Executor")
         .GetSection("WebApp")
-        .GetValue<string>("Url");
+        .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
 
     public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {

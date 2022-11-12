@@ -26,6 +26,7 @@ internal class EmailTest : IEmailTest
         MailMessage mailMessage;
         try
         {
+            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
             mailMessage = new MailMessage
             {
                 From = new MailAddress(_emailConfiguration.FromAddress),

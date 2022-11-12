@@ -21,7 +21,8 @@ public class ExecutionJob : ExecutionJobBase
         _executionManager = executionManager;
     }
 
-    protected override string BiflowConnectionString => _configuration.GetConnectionString("BiflowContext");
+    protected override string BiflowConnectionString =>
+        _configuration.GetConnectionString("BiflowContext") ?? throw new ArgumentNullException(nameof(BiflowConnectionString));
 
     protected override Task StartExecutorAsync(Guid executionId)
     {

@@ -193,6 +193,7 @@ internal class EmailService : INotificationService
         MailMessage mailMessage;
         try
         {
+            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
             mailMessage = new MailMessage
             {
                 From = new MailAddress(_emailConfiguration.FromAddress),
@@ -207,7 +208,7 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(recipient => mailMessage.Bcc.Add(recipient));
+        recipients.ForEach(mailMessage.Bcc.Add);
 
         try
         {
@@ -280,6 +281,7 @@ internal class EmailService : INotificationService
         MailMessage mailMessage;
         try
         {
+            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
             mailMessage = new MailMessage
             {
                 From = new MailAddress(_emailConfiguration.FromAddress),
@@ -310,6 +312,7 @@ internal class EmailService : INotificationService
 
     public async Task SendNotification(IEnumerable<string> recipients, string subject, string body, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
         var client = _emailConfiguration.Client;
         var mailMessage = new MailMessage
         {

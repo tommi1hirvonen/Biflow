@@ -14,7 +14,7 @@ public class ConsoleAppExecutorService : IExecutorService
     private string ExecutorPath => _configuration
         .GetSection("Executor")
         .GetSection("ConsoleApp")
-        .GetValue<string>("BiflowExecutorPath");
+        .GetValue<string>("BiflowExecutorPath") ?? throw new ArgumentNullException(nameof(ExecutorPath));
 
     public ConsoleAppExecutorService(IConfiguration configuration)
     {

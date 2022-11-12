@@ -40,6 +40,11 @@ builder.Services.AddAuthorization(options =>
     if (useWindowsAuth)
     {
         var allowedUsers = windowsAuth.GetSection("AllowedUsers").Get<string[]>();
+        if (allowedUsers is null)
+        {
+            throw new ArgumentNullException(nameof(allowedUsers),
+                "Property AllowedUsers must be defined if Windows Authorization is enabled");
+        }
         options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserNamesRequirement(allowedUsers)).Build();
     }
     // Otherwise allow anonymous access.
@@ -58,6 +63,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 
 var connectionString = builder.Configuration.GetConnectionString("BiflowContext");
+ArgumentException.ThrowIfNullOrEmpty(connectionString);
 var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
 if (executorType == "ConsoleApp")
 {

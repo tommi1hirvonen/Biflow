@@ -8,7 +8,7 @@ internal class ExecutionConfiguration : IExecutionConfiguration
     private readonly IConfiguration _configuration;
     private readonly IConfigurationSection? _baseSection;
 
-    public string ConnectionString => _configuration.GetConnectionString("BiflowContext");
+    public string? ConnectionString => _configuration.GetConnectionString("BiflowContext");
     public int MaxParallelSteps => (_baseSection ?? _configuration).GetValue<int>("MaximumParallelSteps");
     public int PollingIntervalMs => (_baseSection ?? _configuration).GetValue<int>("PollingIntervalMs");
 

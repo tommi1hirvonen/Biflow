@@ -30,7 +30,7 @@ public class WebAppExecutionJob : ExecutionJobBase
     private string Url => _configuration
         .GetSection("Executor")
         .GetSection("WebApp")
-        .GetValue<string>("Url");
+        .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {

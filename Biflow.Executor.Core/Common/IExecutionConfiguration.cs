@@ -2,7 +2,7 @@
 
 public interface IExecutionConfiguration
 {
-    public string ConnectionString { get; }
+    public string? ConnectionString { get; }
 
     public int MaxParallelSteps { get; }
 

@@ -14,7 +14,7 @@ public class WebAppSchedulerService : ISchedulerService
     private string Url => _configuration
         .GetSection("Scheduler")
         .GetSection("WebApp")
-        .GetValue<string>("Url");
+        .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
 
     public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {

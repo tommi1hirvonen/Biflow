@@ -10,6 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connectionString = builder.Configuration.GetConnectionString("BiflowContext");
+ArgumentException.ThrowIfNullOrEmpty(connectionString);
 builder.Services.AddExecutorServices<ExecutorLauncher>(connectionString);
 builder.Services.AddSingleton<ExecutionManager>();
 

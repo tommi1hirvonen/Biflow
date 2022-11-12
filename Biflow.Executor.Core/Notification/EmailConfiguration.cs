@@ -16,13 +16,13 @@ internal class EmailConfiguration : IEmailConfiguration
     }
 
     private IConfigurationSection MailSection => (_baseSection ?? _configuration).GetSection("EmailSettings");
-    private string SmtpServer => MailSection.GetValue<string>("SmtpServer");
+    private string? SmtpServer => MailSection.GetValue<string>("SmtpServer");
     private bool EnableSsl => MailSection.GetValue<bool>("EnableSsl");
     private int Port => MailSection.GetValue<int>("Port");
-    public string FromAddress => MailSection.GetValue<string>("FromAddress");
+    public string? FromAddress => MailSection.GetValue<string>("FromAddress");
     private bool AnonymousAuthentication => MailSection.GetValue<bool>("AnonymousAuthentication");
-    private string Username => MailSection.GetValue<string>("Username");
-    private string Password => MailSection.GetValue<string>("Password");
+    private string? Username => MailSection.GetValue<string>("Username");
+    private string? Password => MailSection.GetValue<string>("Password");
     public SmtpClient Client
     {
         get
