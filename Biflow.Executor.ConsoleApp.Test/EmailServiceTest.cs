@@ -14,7 +14,7 @@ public class EmailServiceTest
     [TestMethod]
     public async Task TestEmailService()
     {
-        var settings = new Dictionary<string, string>
+        var settings = new Dictionary<string, string?>
         {
             { "EmailSettings:SmtpServer", "" },
             { "EmailSettings:EnableSsl", "" },
@@ -61,7 +61,7 @@ public class EmailServiceTest
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as FunctionStepExecution)!.FunctionApp)
                     .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as PipelineStepExecution)!.DataFactory)
+                    .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
                     .ThenInclude(df => df.AppRegistration)
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as SqlStepExecution)!.Connection)
@@ -75,6 +75,6 @@ public class EmailServiceTest
 
         var emailService = services.GetService<INotificationService>();
         Assert.IsNotNull(emailService);
-        await emailService.SendCompletionNotification(execution, true, null);
+        await emailService.SendCompletionNotification(execution);
     }
 }

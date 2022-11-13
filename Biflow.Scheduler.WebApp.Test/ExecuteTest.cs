@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quartz;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ public class ExecuteTest
     {
         var connectionString = "Server=localhost;Database=Biflow;Integrated Security=true;MultipleActiveResultSets=true";
 
-        var settings = new Dictionary<string, string>
+        var settings = new Dictionary<string, string?>
         {
             { "ConnectionStrings:BiflowContext", connectionString },
             { "EtlManagerExecutorPath", @"C:\EtlManager\EtlManagerExecutor\EtlManagerExecutor.exe" }

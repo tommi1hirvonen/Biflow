@@ -4,7 +4,9 @@ using Biflow.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Net.Mail;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("Biflow.Executor.ConsoleApp.Test")]
 namespace Biflow.Executor.Core.Notification;
 
 internal class EmailService : INotificationService
