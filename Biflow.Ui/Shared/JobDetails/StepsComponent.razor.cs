@@ -48,19 +48,19 @@ public partial class StepsComponent : ComponentBase
 
     private HashSet<Step> SelectedSteps { get; set; } = new();
 
-    private JobParametersModal JobParametersModal { get; set; } = null!;
-    private JobConcurrencyModal JobConcurrencyModal { get; set; } = null!;
-    private SynchronizeDependenciesModal SynchronizeDependenciesModal { get; set; } = null!;
+    private JobParametersModal? JobParametersModal { get; set; }
+    private JobConcurrencyModal? JobConcurrencyModal { get; set; }
+    private SynchronizeDependenciesModal? SynchronizeDependenciesModal { get; set; }
 
-    private Dictionary<StepType, IStepEditModal> StepEditModals { get; } = new();
+    private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
 
-    private StepDetailsModal StepDetailsModal { get; set; } = null!;
+    private StepDetailsModal? StepDetailsModal { get; set; }
     private Step? DetailsModalStep { get; set; }
 
-    private StepHistoryOffcanvas StepHistoryOffcanvas { get; set; } = null!;
+    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
     private Step? HistoryModalStep { get; set; }
 
-    private ExecuteModal ExecuteModal { get; set; } = null!;
+    private ExecuteModal? ExecuteModal { get; set; }
 
     private bool ShowExecutionAlert { get; set; } = false;
 
@@ -71,7 +71,7 @@ public partial class StepsComponent : ComponentBase
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private HashSet<SqlConnectionInfo> ConnectionFilter { get; set;} = new();
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
+    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
 
     private bool ShowDetails { get; set; } = false;
@@ -99,7 +99,7 @@ public partial class StepsComponent : ComponentBase
     private async Task OpenStepEditModal(Guid stepId, StepType? stepType)
     {
         if (stepType is not null)
-            await StepEditModals[(StepType)stepType].ShowAsync(stepId);
+            await StepEditModals[(StepType)stepType].LetAsync(x => x.ShowAsync(stepId));
     }
 
     private void ToggleAllStepsSelected(bool value)
@@ -287,7 +287,7 @@ public partial class StepsComponent : ComponentBase
     private async Task ShowStepDetailsModal(Step step)
     {
         DetailsModalStep = step;
-        await StepDetailsModal.Modal.ShowAsync();
+        await StepDetailsModal.LetAsync(x => x.Modal.LetAsync(y => y.ShowAsync()));
     }
 
     private async Task ShowStepHistoryOffcanvas(Step step)
@@ -296,7 +296,7 @@ public partial class StepsComponent : ComponentBase
         if (step != HistoryModalStep)
             HistoryModalStep = step;
 
-        await StepHistoryOffcanvas.ShowAsync();
+        await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private void OnExecutionStarted(Guid executionId)
@@ -305,5 +305,5 @@ public partial class StepsComponent : ComponentBase
         ShowExecutionAlert = true;
     }
 
-    private async Task OpenJobExecutionModal() => await JobExecutionModal.ShowAsync();
+    private async Task OpenJobExecutionModal() => await JobExecutionModal.LetAsync(x => x.ShowAsync());
 }

@@ -67,7 +67,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(Synapse?.PipelineClientId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -80,7 +80,7 @@
 
     private Synapse? Synapse { get; set; }
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -88,7 +88,7 @@
     private async Task SubmitSynapseAsync()
     {
         await OnSynapseSubmit.InvokeAsync(Synapse);
-        await Modal.HideAsync();
+        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
@@ -119,7 +119,7 @@
     public async Task ShowAsync(Guid pipelineClientId)
     {
         Synapse = null;
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();

@@ -186,7 +186,7 @@
     
     <FooterTemplate>
         <HxSubmit form="user_edit_form" Color="ThemeColor.Success">@(IsNewUser ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -197,7 +197,7 @@
     private List<Job>? Jobs { get; set; }
     private List<DataTable>? DataTables { get; set; } 
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private User? User { get; set; }
 
@@ -301,7 +301,7 @@
                     Password = null;
                     ConfirmPassword = null;
                     await OnUserSubmit.InvokeAsync(User);
-                    await Modal.HideAsync();
+                    await Modal.LetAsync(x => x.HideAsync());
                 }
                 else
                 {
@@ -320,7 +320,7 @@
             {
                 await Context.SaveChangesAsync();
                 await OnUserSubmit.InvokeAsync(User);
-                await Modal.HideAsync();
+                await Modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -331,7 +331,7 @@
 
     public async Task ShowAsync(string? username)
     {
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         PreviousUsername = username;
         if (username is null)
         {

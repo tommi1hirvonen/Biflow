@@ -120,7 +120,7 @@
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
-    private StepHistoryOffcanvas StepHistoryOffcanvas { get; set; } = null!;
+    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
     private string? HistoryModalStepId { get; set; }
 
     private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
@@ -134,7 +134,7 @@
     private async Task ShowStepHistoryOffcanvasAsync(string stepId)
     {
         HistoryModalStepId = stepId;
-        await StepHistoryOffcanvas.ShowAsync();
+        await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)

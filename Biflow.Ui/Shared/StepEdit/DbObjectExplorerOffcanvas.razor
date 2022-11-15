@@ -72,6 +72,6 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" Spinner="false" OnClick="OnDbObjectSelectedAsync" Enabled="SelectedObject is not null">Select</HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="Offcanvas.HideAsync" CssClass="ms-3">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())" CssClass="ms-3">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

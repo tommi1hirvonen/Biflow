@@ -57,12 +57,12 @@
                         <div class="row">
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                            @onclick="async () => await SqlDefinitionOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                      @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                                     @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                     Definition explorer
                                 </HxButton>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                            @onclick="async () => await SqlReferenceOffcanvas.ShowAsync(ConnectionId, SqlStatement)">
+                                            @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                                     @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                     Reference explorer
                                 </HxButton>
@@ -228,7 +228,7 @@
             @(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")
         </HxSubmit>
         
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.Modal.HideAsync()">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.Modal.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -239,21 +239,21 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    private SqlReferenceExplorerOffcanvas SqlReferenceOffcanvas { get; set; } = null!;
+    private SqlReferenceExplorerOffcanvas? SqlReferenceOffcanvas { get; set; }
 
-    private SqlDefinitionExplorerOffcanvas SqlDefinitionOffcanvas { get; set; } = null!;
+    private SqlDefinitionExplorerOffcanvas? SqlDefinitionOffcanvas { get; set; }
 
     private bool Fullscreen { get; set; } = false;
 
     private void ToggleFullscreen() => Fullscreen = !Fullscreen;
 
-    private string? SqlStatement => Modal.Step switch
+    private string? SqlStatement => Modal?.Step switch
     {
         SqlStep sql => sql.SqlStatement,
         _ => null
     };
 
-    private Guid? ConnectionId => Modal.Step switch
+    private Guid? ConnectionId => Modal?.Step switch
     {
         SqlStep sql => sql.ConnectionId,
         AgentJobStep agent => agent.ConnectionId,

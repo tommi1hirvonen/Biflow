@@ -119,7 +119,7 @@
 @code {
     private List<User> Users { get; set; } = null!;
 
-    private UserEditModal UserEditModal { get; set; } = null!;
+    private UserEditModal? UserEditModal { get; set; }
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
@@ -161,7 +161,7 @@
 
     private async Task ShowEditModalAsync(User? user)
     {
-        await UserEditModal.ShowAsync(user?.Username);
+        await UserEditModal.LetAsync(x => x.ShowAsync(user?.Username));
     }
 
     private async Task UpdatePassword(User user)

@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -15,7 +16,7 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
 
     internal override string FormId => "pipeline_step_edit_form";
 
-    private PipelineSelectOffcanvas PipelineSelectOffcanvas { get; set; } = null!;
+    private PipelineSelectOffcanvas? PipelineSelectOffcanvas { get; set; }
 
     protected override PipelineStep CreateNewStep(Job job) =>
         new()
@@ -81,7 +82,7 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
         }
     }
 
-    private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.ShowAsync();
+    private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     private void OnPipelineSelected(string pipelineName)
     {

@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +11,11 @@ public partial class FunctionStepEditModal : ParameterizedStepEditModal<Function
 {
     [Parameter] public IList<FunctionApp>? FunctionApps { get; set; }
 
-    private FunctionSelectOffcanvas FunctionSelectOffcanvas { get; set; } = null!;
+    private FunctionSelectOffcanvas? FunctionSelectOffcanvas { get; set; }
 
     internal override string FormId => "function_step_edit_form";
 
-    private async Task OpenFunctionSelectOffcanvas() => await FunctionSelectOffcanvas.ShowAsync();
+    private Task OpenFunctionSelectOffcanvas() => FunctionSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     private void OnFunctionSelected(string functionUrl)
     {

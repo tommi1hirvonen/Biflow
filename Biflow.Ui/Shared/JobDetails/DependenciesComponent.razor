@@ -164,7 +164,7 @@
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
-    private Dictionary<StepType, IStepEditModal> StepEditModals = new();
+    private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
 
     private bool GrapShouldRender { get; set; }
 
@@ -341,12 +341,12 @@
     }
 
     // Step edit modals can be opened from JS using JSInterop by calling this method. See site.js => drawDependencyGraph().
-    private void OpenStepEditModal(string id)
+    private async void OpenStepEditModal(string id)
     {
         var stepId = Guid.Parse(id);
         var step = Steps.First(s => s.StepId == stepId);
         StateHasChanged();
-        StepEditModals[step.StepType].ShowAsync(step.StepId, StepEditModalView.Dependencies);
+        await StepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
     }
 
     private async Task OnStepSubmit(Step step)

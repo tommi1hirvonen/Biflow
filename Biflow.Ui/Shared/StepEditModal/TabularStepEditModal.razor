@@ -66,7 +66,7 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.ShowAsync()">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.LetAsync(x => x.ShowAsync())">
                     @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                     Browse objects
                 </HxButton>

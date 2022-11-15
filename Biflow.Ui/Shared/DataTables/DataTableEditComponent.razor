@@ -34,32 +34,44 @@
                 </HxDropdownMenu>
             </HxDropdownButtonGroup>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small" Enabled="Editor is not null && Editor.IsEditable" OnClick="SaveChangesAsync">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small"
+                Enabled="Editor is not null && Editor.IsEditable"
+                OnClick="SaveChangesAsync">
                 @MarkupHelper.FromFile("icons/feather/save.svg")
                 Save changes
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small" Enabled="Editor is not null && Editor.IsEditable" OnClick="() => Editor?.AddRecord()">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small"
+                Enabled="Editor is not null && Editor.IsEditable"
+                OnClick="() => Editor?.AddRecord()">
                 @MarkupHelper.FromFile("icons/feather/plus.svg")
                 Add record
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="Editor is not null" OnClick="async () => await ReloadDataAsync()">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                Enabled="Editor is not null"
+                OnClick="async () => await ReloadDataAsync()">
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                 Reload
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="FilterSet is not null" OnClick="async () => await FilterSetOffcanvas.ShowAsync()">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                Enabled="FilterSet is not null"
+                OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
                 @MarkupHelper.FromFile("icons/feather/filter.svg")
                 Filters
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="ColumnSelections is not null" OnClick="SelectColumnsOffcanvas.ShowAsync">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                Enabled="ColumnSelections is not null"
+                OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
                 @MarkupHelper.FromFile("icons/feather/columns.svg")
                 Columns
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)" OnClick="TableInfoOffcanvas.ShowAsync">
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)"
+                OnClick="async () => await TableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
                 @MarkupHelper.FromFile("icons/feather/info.svg")
                 Table info
             </HxButton>
@@ -276,11 +288,11 @@
 
     private bool IsColumnSelected(string column) => (ColumnSelections?.ContainsKey(column) ?? false) && ColumnSelections[column];
 
-    private FilterSetOffcanvas FilterSetOffcanvas { get; set; } = null!;
+    private FilterSetOffcanvas? FilterSetOffcanvas { get; set; }
 
-    private HxOffcanvas TableInfoOffcanvas { get; set; } = null!;
+    private HxOffcanvas? TableInfoOffcanvas { get; set; }
 
-    private SelectColumnsOffcanvas SelectColumnsOffcanvas { get; set; } = null!;
+    private SelectColumnsOffcanvas? SelectColumnsOffcanvas { get; set; }
 
     private bool EditModeEnabled { get; set; } = true;
 

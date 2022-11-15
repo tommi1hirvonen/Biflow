@@ -261,13 +261,13 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxModal>
 
 
 @code {
-    public HxModal Modal { get; set; } = null!;
+    public HxModal? Modal { get; set; }
 
     [Parameter]
     public Step? Step { get; set; }

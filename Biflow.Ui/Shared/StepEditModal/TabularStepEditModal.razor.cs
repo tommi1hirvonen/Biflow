@@ -10,7 +10,7 @@ public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
 {
     [Parameter] public IList<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
 
-    private AnalysisServicesObjectSelectOffcanvas Offcanvas { get; set; } = null!;
+    private AnalysisServicesObjectSelectOffcanvas? Offcanvas { get; set; }
 
     internal override string FormId => "tabular_step_edit_form";
 

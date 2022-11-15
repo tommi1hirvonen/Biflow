@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,7 @@ namespace Biflow.Ui.Shared.StepEditModal;
 public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
 {
 
-    private AgentJobSelectOffcanvas AgentJobSelectOffcanvas { get; set; } = null!;
+    private AgentJobSelectOffcanvas? AgentJobSelectOffcanvas { get; set; }
 
     internal override string FormId => "agent_job_step_edit_form";
 
@@ -36,7 +37,7 @@ public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.ShowAsync();
+    private Task OpenAgentJobSelectOffcanvas() => AgentJobSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     private void OnAgentJobSelected(string agentJobName)
     {

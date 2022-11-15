@@ -225,7 +225,7 @@
             @MarkupHelper.FromFile("icons/feather/play.svg")
             Execute
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -246,7 +246,7 @@
     .Distinct()
     .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private List<Step> StepsToExecute { get; set; } = new();
 
@@ -291,7 +291,7 @@
         }
 
         StepsToExecute.Clear();
-        await Modal.HideAsync();
+        await Modal.LetAsync(x => x.HideAsync());
         Notify = false;
         NotifyMe = null;
         NotifyMeOvertime = false;
@@ -344,7 +344,7 @@
         {
             StepsToExecute.AddRange(initiallySelectedSteps);
         }
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
     }
 
 }

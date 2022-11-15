@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "BiflowExecutor": {
+    "Biflow.Executor.ConsoleApp": {
       "commandName": "Project",
       "commandLineArgs": "execute -i 7727092b-626f-4d04-b8f1-6c0c2fb609f0",
       "workingDirectory": "C:\\Program Files\\Biflow\\BiflowExecutor"

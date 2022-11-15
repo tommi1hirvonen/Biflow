@@ -317,6 +317,6 @@
 
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxModal>

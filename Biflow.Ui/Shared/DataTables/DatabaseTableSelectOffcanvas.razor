@@ -62,7 +62,7 @@
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectTableAsync" Enabled="SelectedTable is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -71,7 +71,7 @@
 @code {
     [Parameter] public EventCallback<(string Schema, string Table)> OnTableSelected { get; set; }
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private Guid ConnectionId { get; set; }
 
@@ -95,7 +95,7 @@
             return;
         }
         await OnTableSelected.InvokeAsync((SelectedTable.Value.Schema, SelectedTable.Value.Table));
-        await Offcanvas.HideAsync();
+        await Offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()
@@ -120,6 +120,6 @@
                 Messenger.AddError("Error loading tables", ex.Message);
             }
         }
-        await Offcanvas.ShowAsync();
+        await Offcanvas.LetAsync(x => x.ShowAsync());
     }
 }

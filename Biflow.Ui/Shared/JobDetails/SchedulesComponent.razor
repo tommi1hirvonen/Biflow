@@ -12,7 +12,7 @@
 <PageTitle>@Job?.JobName | Schedules | Biflow</PageTitle>
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <HxButton Color="ThemeColor.Success" @onclick="async () => await EditModal.ShowAsync(Guid.Empty)">
+    <HxButton Color="ThemeColor.Success" @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
         Add schedule
     </HxButton>
 </AuthorizeView>
@@ -96,7 +96,7 @@
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                                     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row"
-                                              @onclick="async () => await EditModal.ShowAsync(item.ScheduleId)">
+                                              @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
                                         @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                     </HxButton>
                                 </HxButtonGroup>
@@ -138,7 +138,7 @@
 
     private List<Schedule>? Schedules { get; set; }
 
-    private ScheduleEditModal EditModal { get; set; } = null!;
+    private ScheduleEditModal? EditModal { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {

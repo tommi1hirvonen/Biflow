@@ -89,7 +89,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="schedule_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -103,7 +103,7 @@
 
     private Schedule Schedule { get; set; } = new() { Tags = new List<Tag>() };
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private List<string> Tags { get; set; } = new();
     public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
@@ -158,7 +158,7 @@
                     ?? throw new InvalidOperationException("Job cannot be null");
 
                 await OnSubmit.InvokeAsync(Schedule);
-                await Modal.HideAsync();
+                await Modal.LetAsync(x => x.HideAsync());
                 Tags.Clear();
             }
             catch (Exception ex)
@@ -190,7 +190,7 @@
                 await context.SaveChangesAsync();
 
                 await OnSubmit.InvokeAsync(Schedule);
-                await Modal.HideAsync();
+                await Modal.LetAsync(x => x.HideAsync());
                 Tags.Clear();
             }
             catch (Exception ex)
@@ -226,7 +226,7 @@
                 .OrderBy(t => t)
                 .ToList();
 
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
     }
 
 }

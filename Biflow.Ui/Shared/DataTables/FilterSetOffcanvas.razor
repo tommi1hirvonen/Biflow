@@ -339,7 +339,7 @@
 @code {
     [Parameter] public FilterSet? Filters { get; set; }
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
-    public Task ShowAsync() => Offcanvas.ShowAsync();
+    public Task ShowAsync() => Offcanvas.LetAsync(x => x.ShowAsync());
 }

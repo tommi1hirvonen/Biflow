@@ -71,7 +71,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit form="pbi_edit_form" Color="ThemeColor.Success">@(AppRegistration?.AppRegistrationId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate> 
 </HxModal>
 
@@ -81,7 +81,7 @@
 
     private AppRegistration? AppRegistration { get; set; }
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
@@ -89,7 +89,7 @@
     private async Task SubmitAppRegistration()
     {
         await OnAppRegistrationSubmit.InvokeAsync(AppRegistration);
-        await Modal.HideAsync();
+        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
@@ -138,7 +138,7 @@
     {
         AppRegistration = null;
         ConnectionTestSuccess = null;
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         if (appRegistrationId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();

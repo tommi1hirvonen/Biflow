@@ -11,7 +11,7 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 
     private Guid? ConnectionId { get; set; }
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private string ReferencingSchemaOperator { get; set; } = "like";
     private string ReferencingSchemaFilter { get; set; } = string.Empty;
@@ -121,7 +121,7 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
             ReferencingNameFilter = name;
             ReferencingNameOperator = "=";
         }
-        await Offcanvas.ShowAsync();
+        await Offcanvas.LetAsync(x => x.ShowAsync());
         await RunQueryAsync();
     }
 }

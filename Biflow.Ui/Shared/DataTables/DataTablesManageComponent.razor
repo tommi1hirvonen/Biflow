@@ -52,7 +52,7 @@
                                                                     Cancel
                                                                 </HxButton>
                                                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
-                                                                        OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                                        OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.ConnectionId))">
                                                                     @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                                                     Browse tables
                                                                 </HxButton>
@@ -124,7 +124,7 @@
                                                                         Cancel
                                                                     </HxButton>
                                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
-                                                                            OnClick="async () => await Offcanvas.ShowAsync(EditTable.ConnectionId)">
+                                                                            OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.ConnectionId))">
                                                                         @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                                                                         Browse tables
                                                                     </HxButton>
@@ -228,7 +228,7 @@
 
     private BiflowContext? EditContext { get; set; }
 
-    private DatabaseTableSelectOffcanvas Offcanvas { get; set; } = null!;
+    private DatabaseTableSelectOffcanvas? Offcanvas { get; set; }
 
     private async Task DeleteTableAsync(DataTable table)
     {

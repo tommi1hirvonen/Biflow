@@ -33,7 +33,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     internal List<string> Tags { get; set; } = new();
 
-    internal HxModal Modal { get; set; } = null!;
+    internal HxModal? Modal { get; set; }
 
     internal string StepError { get; private set; } = string.Empty;
 
@@ -201,7 +201,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             await Context.SaveChangesAsync();
 
             await OnStepSubmit.InvokeAsync(Step);
-            await Modal.HideAsync();
+            await Modal.LetAsync(x => x.HideAsync());
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -306,7 +306,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     public async Task ShowAsync(Guid stepId, StepEditModalView startView = StepEditModalView.Settings)
     {
         CurrentView = startView;
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
         if (stepId != Guid.Empty)
         {

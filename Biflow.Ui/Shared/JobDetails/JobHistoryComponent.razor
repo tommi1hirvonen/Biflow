@@ -128,7 +128,7 @@
     public decimal AverageSuccessRate { get; set; }
     public double AverageDurationInSeconds { get; set; }
 
-    private JobExecutionDetailsModal JobExecutionModal { get; set; } = null!;
+    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
@@ -163,7 +163,7 @@
     private async Task OpenJobExecutionModal(Guid executionId)
     {
         SelectedJobExecutionId = executionId;
-        await JobExecutionModal.ShowAsync();
+        await JobExecutionModal.LetAsync(x => x.ShowAsync());
     }
 
 }

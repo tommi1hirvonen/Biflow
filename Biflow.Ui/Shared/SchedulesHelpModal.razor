@@ -85,12 +85,12 @@
         </p>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="Offcanvas.HideAsync">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
-    public Task ShowAsync() => Offcanvas.ShowAsync();
+    public Task ShowAsync() => Offcanvas.LetAsync(x => x.ShowAsync());
 }

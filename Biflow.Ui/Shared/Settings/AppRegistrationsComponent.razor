@@ -93,7 +93,7 @@
                             @onclick="async () =>
                             {
                                 StepsAppRegistration = app;
-                                await StepsModal.ShowAsync();
+                                await StepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -102,7 +102,7 @@
                             <a class="text-dark" href="javascript:void(0)" @onclick="async () =>
                             {
                                 PipelineClientsAppRegistration = app;
-                                await PipelineClientsModal.ShowAsync();
+                                await PipelineClientsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(pipelineClients > 0 ? $"{pipelineClients} pipeline clients" : null)
                             </a>
@@ -111,7 +111,7 @@
                             <a class="text-dark" href="javascript:void(0)" @onclick="async () =>
                             {
                                 FunctionAppsAppRegistration = app;
-                                await FunctionAppsModal.ShowAsync();
+                                await FunctionAppsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(functionApps > 0 ? $"{functionApps} Function Apps" : null)
                             </a>
@@ -158,7 +158,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -192,7 +192,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="PipelineClientsModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await PipelineClientsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -230,23 +230,23 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="FunctionAppsModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await FunctionAppsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private AppRegistrationEditModal AppRegistrationEditModal { get; set; } = null!;
+    private AppRegistrationEditModal? AppRegistrationEditModal { get; set; }
 
     private AppRegistration? StepsAppRegistration { get; set; }
-    private HxModal StepsModal { get; set; } = null!;
+    private HxModal? StepsModal { get; set; }
 
     private AppRegistration? PipelineClientsAppRegistration { get; set; }
-    private HxModal PipelineClientsModal { get; set; } = null!;
+    private HxModal? PipelineClientsModal { get; set; }
 
     private AppRegistration? FunctionAppsAppRegistration { get; set; }
-    private HxModal FunctionAppsModal { get; set; } = null!;
+    private HxModal? FunctionAppsModal { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -298,6 +298,6 @@
 
     private async Task ShowEditModalAsync(AppRegistration? appRegistration)
     {
-        await AppRegistrationEditModal.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty);
+        await AppRegistrationEditModal.LetAsync(x => x.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty));
     }
 }

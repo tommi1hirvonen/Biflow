@@ -105,13 +105,13 @@
                   Enabled="SelectedPipeline is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     [Parameter]
     public Guid? PipelineClientId { get; set; }
@@ -138,7 +138,7 @@
     private async Task SelectPipelineAsync()
     {
         await OnPipelineSelected.InvokeAsync(SelectedPipeline?.Name);
-        await Offcanvas.HideAsync();
+        await Offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()
@@ -151,7 +151,7 @@
 
     public async Task ShowAsync()
     {
-        await Offcanvas.ShowAsync();
+        await Offcanvas.LetAsync(x => x.ShowAsync());
         if (PipelineClientId is null || PipelineClientId == Guid.Empty) return;
         try
         {

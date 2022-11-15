@@ -24,7 +24,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
 
     private Guid ExecutionId => ExecutionId_ switch { not null => Guid.Parse(ExecutionId_), _ => Guid.Empty };
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private Execution? Execution { get; set; }
 
@@ -62,7 +62,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
     private SortMode SortMode_ { get; set; } = SortMode.StartedAsc;
     private enum SortMode { StartedAsc, StartedDesc, DurationAsc, DurationDesc }
 
-    private StepExecutionDetailsOffcanvas StepExecutionDetailsOffcanvas { get; set; } = null!;
+    private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
     private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
@@ -156,7 +156,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
         StateHasChanged();
     }
 
-    private void ShowStepExecutionOffcanvas(string text)
+    private async void ShowStepExecutionOffcanvas(string text)
     {
         if (Guid.TryParse(text, out Guid id))
         {
@@ -164,7 +164,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
             var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
             SelectedStepExecutionAttempt = attempt;
             StateHasChanged();
-            StepExecutionDetailsOffcanvas.ShowAsync().Wait();
+            await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync());
         }
     }
 
@@ -201,7 +201,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
         }
     }
 
-    public async Task ShowAsync() => await Modal.ShowAsync();
+    public async Task ShowAsync() => await Modal.LetAsync(x => x.ShowAsync());
 
     public void Dispose() => ObjectReference?.Dispose();
 }

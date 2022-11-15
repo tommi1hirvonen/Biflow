@@ -79,13 +79,13 @@
                   Enabled="SelectedDataset is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     [Parameter]
     public Guid? AppRegistrationId { get; set; }
@@ -114,7 +114,7 @@
         if (groupId is not null && datasetId is not null)
         {
             await OnDatasetSelected.InvokeAsync((groupId, datasetId));
-            await Offcanvas.HideAsync();
+            await Offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
@@ -127,7 +127,7 @@
 
     public async Task ShowAsync()
     {
-        await Offcanvas.ShowAsync();
+        await Offcanvas.LetAsync(x => x.ShowAsync());
         if (AppRegistrationId is null || AppRegistrationId == Guid.Empty) return;
         try
         {

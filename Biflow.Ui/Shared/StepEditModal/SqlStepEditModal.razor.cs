@@ -14,7 +14,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
 
     internal override string FormId => "sql_step_edit_form";
 
-    private StoredProcedureSelectOffcanvas StoredProcedureSelectModal { get; set; } = null!;
+    private StoredProcedureSelectOffcanvas? StoredProcedureSelectModal { get; set; }
     
     protected override Task<SqlStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.SqlSteps
@@ -56,7 +56,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
         }
     }
 
-    private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.ShowAsync();
+    private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.LetAsync(x => x.ShowAsync());
 
     private async Task ImportParametersAsync()
     {

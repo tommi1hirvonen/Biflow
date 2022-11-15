@@ -78,13 +78,13 @@
 
     <FooterTemplate>
         <HxSubmit form="job_parameter_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     [Parameter]
     [EditorRequired]
@@ -118,7 +118,7 @@
         try
         {
             await Context.SaveChangesAsync();
-            await Modal.HideAsync();
+            await Modal.LetAsync(x => x.HideAsync());
             if (Job is not null)
             {
                 Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();    
@@ -195,7 +195,7 @@
 
     public async Task Show()
     {
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         Context.Attach(Job);
     }
 

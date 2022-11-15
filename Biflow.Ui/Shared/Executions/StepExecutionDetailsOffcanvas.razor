@@ -4,7 +4,7 @@
         <StepExecutionDetailsComponent StepExecutionAttempt="StepExecutionAttempt" ShowExtraDetails="true" />
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -12,7 +12,7 @@
     [Parameter]
     public StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
-    public async Task ShowAsync() => await Offcanvas.ShowAsync();
+    public async Task ShowAsync() => await Offcanvas.LetAsync(x => x.ShowAsync());
 }

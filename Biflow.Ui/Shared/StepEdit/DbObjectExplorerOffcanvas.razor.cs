@@ -20,7 +20,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
 
     private Guid? ConnectionId { get; set; }
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> DatabaseObjects { get; set; } =
         Enumerable.Empty<(string, string, string, string, string)>();
@@ -66,7 +66,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
     private async Task OnDbObjectSelectedAsync()
     {
         if (SelectedObject is null) return;
-        await Offcanvas.HideAsync();
+        await Offcanvas.LetAsync(x => x.HideAsync());
         var dbObject = (SelectedObject.Value.Item1, SelectedObject.Value.Item2, SelectedObject.Value.Item3, SelectedObject.Value.Item4);
         OnDbObjectSelected(dbObject);
     }
@@ -74,7 +74,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
     public async Task ShowAsync(Guid? connectionId)
     {
         ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        await Offcanvas.ShowAsync();
+        await Offcanvas.LetAsync(x => x.ShowAsync());
         await RunQueryAsync();
     }
 }

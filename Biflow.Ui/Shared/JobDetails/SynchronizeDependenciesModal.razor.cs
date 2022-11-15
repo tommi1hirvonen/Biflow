@@ -18,7 +18,7 @@ public partial class SynchronizeDependenciesModal : ComponentBase
 
     [Parameter] public Action? OnModalClosed { get; set; }
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private List<Dependency>? DependenciesToAdd { get; set; }
     private List<Dependency>? DependenciesToRemove { get; set; }
@@ -75,7 +75,7 @@ public partial class SynchronizeDependenciesModal : ComponentBase
         {
             await RemoveDependencyAsync(DependenciesToRemove.First());
         }
-        await Modal.HideAsync();
+        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task AddDependencyAsync(Dependency dependency)
@@ -136,5 +136,5 @@ public partial class SynchronizeDependenciesModal : ComponentBase
         OnModalClosed?.Invoke();
     }
 
-    public Task ShowAsync() => Modal.ShowAsync();
+    public Task ShowAsync() => Modal.LetAsync(x => x.ShowAsync());
 }

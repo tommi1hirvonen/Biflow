@@ -63,7 +63,7 @@
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                 Sync dependencies
             </HxButton>
-            <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.ShowAsync(SelectedSteps)">
+            <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
                 @MarkupHelper.FromFile("icons/feather/play.svg")
                 Execute
             </HxButton>

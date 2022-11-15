@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Builder;
 
 namespace Biflow.Ui.Core;
 
-public static partial class Utility
+public static partial class Extensions
 {
     public static async Task ReadAllSchedulesAsync(this WebApplication app)
     {
@@ -281,6 +281,12 @@ public static partial class Utility
     {
         return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
     }
+
+    public static Task LetAsync<T>(this T? obj, Func<T, Task> block) => obj switch
+    {
+        not null => block(obj),
+        _ => Task.CompletedTask
+    };
 
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
 

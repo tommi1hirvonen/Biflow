@@ -5,7 +5,6 @@
     <UserSecretsId>8cf96230-2050-421c-964f-7a7832beccca</UserSecretsId>
 	<Nullable>enable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
-	<AssemblyName>$(MSBuildProjectName.Replace(".", ""))</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

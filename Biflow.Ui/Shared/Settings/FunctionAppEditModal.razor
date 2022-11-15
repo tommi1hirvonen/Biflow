@@ -94,7 +94,7 @@
     
     <FooterTemplate>
         <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(FunctionApp?.FunctionAppId == Guid.Empty ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.HideAsync()">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -107,12 +107,12 @@
 
     private FunctionApp? FunctionApp { get; set; }
 
-    private HxModal Modal { get; set; } = null!;
+    private HxModal? Modal { get; set; }
 
     private bool? ConnectionTestSuccess { get; set; } = null;
     private bool TestingConnection { get; set; } = false;
 
-    private FunctionAppKeySelectOffcanvas KeySelectOffcanvas { get; set; } = null!;
+    private FunctionAppKeySelectOffcanvas? KeySelectOffcanvas { get; set; }
 
     private void AppRegistrationChanged(object? value)
     {
@@ -136,14 +136,14 @@
 
     private async Task OpenKeySelectOffcanvasAsync()
     {
-        await KeySelectOffcanvas.ShowAsync();
+        await KeySelectOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task SubmitFunctionApp()
     {
         if (FunctionApp is not null) FunctionApp.AppRegistration = null!;
         await OnFunctionAppSubmit.InvokeAsync(FunctionApp);
-        await Modal.HideAsync();
+        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
@@ -167,7 +167,7 @@
     {
         FunctionApp = null;
         ConnectionTestSuccess = null;
-        await Modal.ShowAsync();
+        await Modal.LetAsync(x => x.ShowAsync());
         if (functionAppId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();

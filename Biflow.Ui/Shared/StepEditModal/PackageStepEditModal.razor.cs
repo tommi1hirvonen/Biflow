@@ -13,7 +13,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
 {
     [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
-    private PackageSelectOffcanvas PackageSelectOffcanvas { get; set; } = null!;
+    private PackageSelectOffcanvas? PackageSelectOffcanvas { get; set; }
 
     internal override string FormId => "package_step_edit_form";
 
@@ -148,7 +148,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         }
     }
 
-    private Task OpenPackageSelectOffcanvas() => PackageSelectOffcanvas.ShowAsync();
+    private Task OpenPackageSelectOffcanvas() => PackageSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     private void OnPackageSelected((string Folder, string Project, string Package) package)
     {

@@ -125,7 +125,7 @@
                             @MarkupHelper.FromFile("icons/feather/x.svg")
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
-                                OnClick="async () => await DbObjectExplorerOffcanvas.ShowAsync(ConnectionId)">
+                              OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
                             @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
                         </HxButton>
                     </HxButtonGroup>
@@ -240,7 +240,7 @@
 
     private DatabaseObjectType? SuggestType { get; set; }
 
-    private DbObjectExplorerOffcanvas DbObjectExplorerOffcanvas { get; set; } = null!;
+    private DbObjectExplorerOffcanvas? DbObjectExplorerOffcanvas { get; set; }
 
     private enum DatabaseObjectType
     {

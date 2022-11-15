@@ -151,7 +151,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="ConfirmDeleteModal.HideAsync">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await ConfirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
@@ -197,7 +197,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="EditModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await EditModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -246,7 +246,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="SchedulesModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await SchedulesModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -257,11 +257,11 @@
 
     private bool? ConfirmResult { get; set; }
 
-    private HxModal ConfirmDeleteModal { get; set; } = null!;
+    private HxModal? ConfirmDeleteModal { get; set; }
 
-    private HxModal EditModal { get; set; } = null!;
+    private HxModal? EditModal { get; set; }
 
-    private HxModal SchedulesModal { get; set; } = null!;
+    private HxModal? SchedulesModal { get; set; }
 
     private Tag? EditTag { get; set; }
 
@@ -290,7 +290,7 @@
             return;
         }
 
-        await ConfirmDeleteModal.ShowAsync();
+        await ConfirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedTagsAsync()
@@ -302,7 +302,7 @@
             Tags_?.Remove(tag);
         }
         await context.SaveChangesAsync();
-        await ConfirmDeleteModal.HideAsync();
+        await ConfirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task UpdateTagNameAsync(Tag tag)
@@ -368,12 +368,12 @@
     private async Task ShowEditModalAsync(Tag tag)
     {
         EditTag = tag;
-        await EditModal.ShowAsync();
+        await EditModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task ShowSchedulesModalAsync(Tag tag)
     {
         SchedulesModalTag = tag;
-        await SchedulesModal.ShowAsync();
+        await SchedulesModal.LetAsync(x => x.ShowAsync());
     }
 }

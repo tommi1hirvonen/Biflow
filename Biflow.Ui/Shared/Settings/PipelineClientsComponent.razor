@@ -92,7 +92,7 @@
                             @onclick="async () =>
                             {
                                 StepsClient = client;
-                                await StepsModal.ShowAsync();
+                                await StepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -145,7 +145,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="StepsModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -153,10 +153,10 @@
     private List<PipelineClient>? PipelineClients { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
 
-    private Dictionary<PipelineClientType, IPipelineClientEditModal> ClientEditModals { get; } = new();
+    private Dictionary<PipelineClientType, IPipelineClientEditModal?> ClientEditModals { get; } = new();
 
     private PipelineClient? StepsClient { get; set; }
-    private HxModal StepsModal { get; set; } = null!;
+    private HxModal? StepsModal { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -211,6 +211,6 @@
 
     private async Task OpenClientEditModalAsync(PipelineClientType type, Guid clientId)
     {
-        await ClientEditModals[type].ShowAsync(clientId);
+        await ClientEditModals[type].LetAsync(x => x.ShowAsync(clientId));
     }
 }

@@ -51,7 +51,7 @@
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.HideAsync()">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -64,7 +64,7 @@
 
     private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private List<StepExecutionAttempt>? Executions { get; set; }
 
@@ -105,6 +105,6 @@
         StateHasChanged();
     }
 
-    public async Task ShowAsync() => await Offcanvas.ShowAsync();
+    public async Task ShowAsync() => await Offcanvas.LetAsync(x => x.ShowAsync());
 
 }

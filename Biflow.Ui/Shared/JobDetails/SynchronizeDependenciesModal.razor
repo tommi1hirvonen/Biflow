@@ -133,7 +133,7 @@
             @MarkupHelper.FromFile("icons/feather/check.svg")
             Commit all
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Modal.HideAsync()">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Modal.LetAsync(x => x.HideAsync())">
             @MarkupHelper.FromFile("icons/feather/x.svg")
             Close    
         </HxButton>

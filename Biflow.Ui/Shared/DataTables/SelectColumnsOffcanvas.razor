@@ -24,7 +24,7 @@
 
     [Parameter] public Dictionary<string, bool>? ColumnSelections {get;set;}
 
-    private HxOffcanvas Offcanvas { get; set; } = null!;
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private async Task SelectionChanged(ChangeEventArgs args, string column)
     {
@@ -37,5 +37,5 @@
     }
 
 
-    public Task ShowAsync() => Offcanvas.ShowAsync();
+    public Task ShowAsync() => Offcanvas.LetAsync(x => x.ShowAsync());
 }

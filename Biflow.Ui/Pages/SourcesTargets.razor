@@ -141,7 +141,7 @@
                                                         SourcesTargetsModalGetSteps = o => o.Sources;
                                                         SourcesTargetsModalGetStepsExpression = o => o.Sources;
                                                         SourcesTargetsModalTitle = sourcesTitle;
-                                                        await SourcesTargetsModal.ShowAsync();
+                                                        await SourcesTargetsModal.LetAsync(x => x.ShowAsync());
                                                     }">
                                                     @(sources > 0 ? $"{sources} source(s)" : null)
                                                 </a>
@@ -155,7 +155,7 @@
                                                         SourcesTargetsModalGetSteps = o => o.Targets;
                                                         SourcesTargetsModalGetStepsExpression = o => o.Targets;
                                                         SourcesTargetsModalTitle = targetsTitle;
-                                                        await SourcesTargetsModal.ShowAsync();
+                                                        await SourcesTargetsModal.LetAsync(x => x.ShowAsync());
                                                     }">
                                                     @(targets > 0 ? $"{targets} target(s)" : null)
                                                 </a>
@@ -206,7 +206,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="ConfirmDeleteModal.HideAsync">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await ConfirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedDatabaseObjectsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
@@ -255,7 +255,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="SourcesTargetsModal.HideAsync">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await SourcesTargetsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -275,13 +275,13 @@
         .Where(t => !t.Sources.Any() && !t.Targets.Any())
         ?? Enumerable.Empty<SourceTargetObject>();
 
-    private HxModal ConfirmDeleteModal { get; set; } = null!;
+    private HxModal? ConfirmDeleteModal { get; set; }
 
     private SourceTargetObject EditObject { get; set; } = new();
 
     private BiflowContext? EditContext { get; set; }
 
-    private HxModal SourcesTargetsModal { get; set; } = null!;
+    private HxModal? SourcesTargetsModal { get; set; }
     private string SourcesTargetsModalTitle { get; set; } = string.Empty;
     private SourceTargetObject? SourcesTargetsModalObject { get; set; }
     private Func<SourceTargetObject, IList<Step>>? SourcesTargetsModalGetSteps { get; set; }
@@ -311,7 +311,7 @@
             return;
         }
 
-        await ConfirmDeleteModal.ShowAsync();
+        await ConfirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedDatabaseObjectsAsync()
@@ -323,7 +323,7 @@
             Objects?.Remove(obj);
         }
         await context.SaveChangesAsync();
-        await ConfirmDeleteModal.HideAsync();
+        await ConfirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task DeleteDatabaseObject(SourceTargetObject obj)
