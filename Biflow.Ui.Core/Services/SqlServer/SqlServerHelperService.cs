@@ -21,26 +21,27 @@ public class SqlServerHelperService
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
-        var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>(
-            @"SELECT
-	            FolderId = [folders].[folder_id],
-	            FolderName = [folders].[name],
-	            ProjectId = [projects].[project_id],
-	            ProjectName = [projects].[name],
-	            PackageId = [packages].[package_id],
-	            PackageName = [packages].[name],
-	            ParameterId = [object_parameters].[parameter_id],
-	            ParameterName = [object_parameters].[parameter_name],
-	            ParameterType = [object_parameters].[data_type],
-	            DesignDefaultValue = [object_parameters].[design_default_value],
-	            DefaultValue = [object_parameters].[default_value]
+        var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>("""
+            SELECT
+                FolderId = [folders].[folder_id],
+                FolderName = [folders].[name],
+                ProjectId = [projects].[project_id],
+                ProjectName = [projects].[name],
+                PackageId = [packages].[package_id],
+                PackageName = [packages].[name],
+                ParameterId = [object_parameters].[parameter_id],
+                ParameterName = [object_parameters].[parameter_name],
+                ParameterType = [object_parameters].[data_type],
+                DesignDefaultValue = [object_parameters].[design_default_value],
+                DefaultValue = [object_parameters].[default_value]
             FROM [SSISDB].[catalog].[folders]
-	            LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-	            LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-	            LEFT JOIN [SSISDB].[catalog].[object_parameters] ON
-		            [packages].[project_id] = [object_parameters].[project_id] AND
-		            [packages].[name] = [object_parameters].[object_name] AND
-		            [object_parameters].[object_type] = 30",
+                LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+                LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+                LEFT JOIN [SSISDB].[catalog].[object_parameters] ON
+                    [packages].[project_id] = [object_parameters].[project_id] AND
+                    [packages].[name] = [object_parameters].[object_name] AND
+                    [object_parameters].[object_type] = 30
+            """,
             (folder, project, package, param) =>
             {
                 if (!folders.TryGetValue(folder.FolderId, out var folderEntry))
@@ -83,57 +84,61 @@ public class SqlServerHelperService
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
-        var count = await sqlConnection.ExecuteScalarAsync<int>(@"
-        SELECT COUNT(*)
-        FROM [SSISDB].[catalog].[folders]
-	                INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-	                INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-        WHERE [folders].[name] = @FolderName AND [projects].[name] = @ProjectName AND [packages].[name] = @PackageName
-        ", new
-        {
-            FolderName = folder,
-            ProjectName = project,
-            PackageName = package
-        });
+        var count = await sqlConnection.ExecuteScalarAsync<int>("""
+            SELECT COUNT(*)
+            FROM [SSISDB].[catalog].[folders]
+                INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+                INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+            WHERE [folders].[name] = @FolderName AND [projects].[name] = @ProjectName AND [packages].[name] = @PackageName
+            """, new
+            {
+                FolderName = folder,
+                ProjectName = project,
+                PackageName = package
+            });
 
         if (count == 0)
         {
             throw new ObjectNotFoundException($"{folder}/{project}/{package}");
         }
 
-        var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object? Default)>(@"
-        SELECT
-	        ParameterLevel = 'Project',
-	        ParameterName = [object_parameters].[parameter_name],
-	        ParameterType = [object_parameters].[data_type],
-	        DefaultValue = [object_parameters].[design_default_value]
-        FROM [SSISDB].[catalog].[folders]
-	        INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-	        INNER JOIN [SSISDB].[catalog].[object_parameters] ON
-		        [projects].[project_id] = [object_parameters].[project_id] AND
-		        [projects].[name] = [object_parameters].[object_name] AND
-		        [object_parameters].[object_type] = 20
-        WHERE [object_parameters].[parameter_name] NOT LIKE 'CM.%'
-	        AND [folders].[name] = @FolderName AND [projects].[name] = @ProjectName
-        UNION ALL
-        SELECT
-	        ParameterLevel = 'Package',
-	        ParameterName = [object_parameters].[parameter_name],
-	        ParameterType = [object_parameters].[data_type],
-	        DefaultValue = [object_parameters].[design_default_value]
-        FROM [SSISDB].[catalog].[folders]
-	        INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-	        INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-	        INNER JOIN [SSISDB].[catalog].[object_parameters] ON
-		        [packages].[project_id] = [object_parameters].[project_id] AND
-		        [packages].[name] = [object_parameters].[object_name] AND
-		        [object_parameters].[object_type] = 30
-        WHERE [folders].[name] = @FolderName AND [projects].[name] = @ProjectName AND [packages].[name] = @PackageName AND [object_parameters].[parameter_name] NOT LIKE 'CM.%'", new
-        {
-            FolderName = folder,
-            ProjectName = project,
-            PackageName = package
-        });
+        var rows = await sqlConnection.QueryAsync<(string Level, string Name, string Type, object? Default)>("""
+            SELECT
+                ParameterLevel = 'Project',
+                ParameterName = [object_parameters].[parameter_name],
+                ParameterType = [object_parameters].[data_type],
+                DefaultValue = [object_parameters].[design_default_value]
+            FROM [SSISDB].[catalog].[folders]
+                INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+                INNER JOIN [SSISDB].[catalog].[object_parameters] ON
+                    [projects].[project_id] = [object_parameters].[project_id] AND
+                    [projects].[name] = [object_parameters].[object_name] AND
+                    [object_parameters].[object_type] = 20
+            WHERE [object_parameters].[parameter_name] NOT LIKE 'CM.%'
+                AND [folders].[name] = @FolderName AND [projects].[name] = @ProjectName
+            UNION ALL
+            SELECT
+                ParameterLevel = 'Package',
+                ParameterName = [object_parameters].[parameter_name],
+                ParameterType = [object_parameters].[data_type],
+                DefaultValue = [object_parameters].[design_default_value]
+            FROM [SSISDB].[catalog].[folders]
+                INNER JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
+                INNER JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
+                INNER JOIN [SSISDB].[catalog].[object_parameters] ON
+                    [packages].[project_id] = [object_parameters].[project_id] AND
+                    [packages].[name] = [object_parameters].[object_name] AND
+                    [object_parameters].[object_type] = 30
+            WHERE [folders].[name] = @FolderName AND
+                [projects].[name] = @ProjectName AND
+                [packages].[name] = @PackageName AND
+                [object_parameters].[parameter_name] NOT LIKE 'CM.%'
+            """, new
+            {
+                FolderName = folder,
+                ProjectName = project,
+                PackageName = package
+            });
         return rows.Select(param =>
         {
             var level = Enum.Parse<ParameterLevel>(param.Level);
@@ -155,21 +160,22 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var sql = @"
+        var sql = """
             select
-	            ProcedureId = a.object_id,
-	            SchemaName = b.name,
-	            ProcedureName = a.name,
-	            ParameterId = c.parameter_id,
-	            ParameterName = c.name,
-	            ParameterType = TYPE_NAME(c.user_type_id)
+                ProcedureId = a.object_id,
+                SchemaName = b.name,
+                ProcedureName = a.name,
+                ParameterId = c.parameter_id,
+                ParameterName = c.name,
+                ParameterType = TYPE_NAME(c.user_type_id)
             from sys.procedures as a
-	            inner join sys.schemas as b on a.schema_id = b.schema_id
-	            left join sys.parameters as c on a.object_id = c.object_id
+                inner join sys.schemas as b on a.schema_id = b.schema_id
+                left join sys.parameters as c on a.object_id = c.object_id
             order by
-	            SchemaName,
-	            ProcedureName,
-	            ParameterId";
+                SchemaName,
+                ProcedureName,
+                ParameterId
+            """;
         var procedures = new Dictionary<int, StoredProcedure>();
         var data = await sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter?, StoredProcedure>(
             sql,
@@ -195,23 +201,24 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var objectId = await sqlConnection.ExecuteScalarAsync<long?>(
-            @"select top 1 object_id
+        var objectId = await sqlConnection.ExecuteScalarAsync<long?>("""
+            select top 1 object_id
             from sys.procedures
-            where name = @procedure and object_schema_name(object_id) = @schema",
+            where name = @procedure and object_schema_name(object_id) = @schema
+            """,
             new { procedure, schema })
             ?? throw new ObjectNotFoundException($"{schema}.{procedure}");
 
-        var rows = await sqlConnection.QueryAsync<(string Name, string Type)>(@"
-        select
-            ParameterName = name,
-            ParameterType = TYPE_NAME(user_type_id)
-        from sys.parameters
-        where object_id = @objectId
-        ", param: new
-        {
-            objectId
-        });
+        var rows = await sqlConnection.QueryAsync<(string Name, string Type)>("""
+            select
+                ParameterName = name,
+                ParameterType = TYPE_NAME(user_type_id)
+            from sys.parameters
+            where object_id = @objectId
+            """, param: new
+            {
+                objectId
+            });
 
         return rows.Select(param =>
         {
@@ -248,8 +255,8 @@ public class SqlServerHelperService
         ArgumentNullException.ThrowIfNull(connectionString);
 
         using var sqlConnection = new SqlConnection(connectionString);
-        var results = await sqlConnection.QueryAsync<(string, string, string)?>(
-            @"select
+        var results = await sqlConnection.QueryAsync<(string, string, string)?>("""
+            select
                 SchemaName = c.name,
                 ObjectName = b.name,
                 ObjectType = b.type_desc
@@ -258,7 +265,8 @@ public class SqlServerHelperService
                 join sys.schemas as c on b.schema_id = c.schema_id
             order by
                 SchemaName,
-                ObjectName");
+                ObjectName
+            """);
         return results;
     }
 
@@ -308,31 +316,32 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var rows = await sqlConnection.QueryAsync<SqlReference>(
-            $@"select distinct
-	            ReferencingSchema = c.name,
-	            ReferencingName = b.name,
-	            ReferencingType = b.type_desc,
-	            ReferencedDatabase = a.referenced_database_name,
-	            ReferencedSchema = isnull(e.name, a.referenced_schema_name),
-	            ReferencedName = isnull(d.name, a.referenced_entity_name),
-	            ReferencedType = isnull(d.type_desc, 'UNKNOWN')
+        var rows = await sqlConnection.QueryAsync<SqlReference>($"""
+            select distinct
+                ReferencingSchema = c.name,
+                ReferencingName = b.name,
+                ReferencingType = b.type_desc,
+                ReferencedDatabase = a.referenced_database_name,
+                ReferencedSchema = isnull(e.name, a.referenced_schema_name),
+                ReferencedName = isnull(d.name, a.referenced_entity_name),
+                ReferencedType = isnull(d.type_desc, 'UNKNOWN')
             from sys.sql_expression_dependencies as a
-	            inner join sys.objects as b on a.referencing_id = b.object_id
-	            inner join sys.schemas as c on b.schema_id = c.schema_id
-	            left join sys.objects as d on a.referenced_id = d.object_id
-	            left join sys.schemas as e on d.schema_id = e.schema_id
+                inner join sys.objects as b on a.referencing_id = b.object_id
+                inner join sys.schemas as c on b.schema_id = c.schema_id
+                left join sys.objects as d on a.referenced_id = d.object_id
+                left join sys.schemas as e on d.schema_id = e.schema_id
             where
                 c.name {referencingSchemaOperator} @ReferencingSchemaFilter and
                 b.name {referencingNameOperator} @ReferencingNameFilter and
                 isnull(e.name, a.referenced_schema_name) {referencedSchemaOperator} @ReferencedSchemaFilter and
                 isnull(d.name, a.referenced_entity_name) {referencedNameOperator} @ReferencedNameFilter
             order by
-	            ReferencingSchema,
-	            ReferencingName,
-	            ReferencedDatabase,
-	            ReferencedSchema,
-	            ReferencedName", new
+                ReferencingSchema,
+                ReferencingName,
+                ReferencedDatabase,
+                ReferencedSchema,
+                ReferencedName
+            """, new
             {
                 ReferencingSchemaFilter = encodedReferencingSchemaFilter,
                 ReferencingNameFilter = encodedReferencingNameFilter,
@@ -350,8 +359,8 @@ public class SqlServerHelperService
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>(
-            @"select distinct
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
+            select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
                 referenced_schema_name = isnull(a.referenced_schema_name, c.name),
@@ -365,7 +374,8 @@ public class SqlServerHelperService
                 and isnull(a.referenced_database_name, db_name()) is not null
                 and isnull(a.referenced_schema_name, c.name) is not null
                 and a.referenced_entity_name is not null
-                and isnull(b.[type], 'U') in ('U','V')", new
+                and isnull(b.[type], 'U') in ('U','V')
+            """, new
             {
                 ObjectName = objectName
             });
@@ -380,8 +390,8 @@ public class SqlServerHelperService
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>(
-            @"select distinct
+        var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
+            select distinct
                 referenced_server_name = isnull(a.referenced_server_name, @@servername),
                 referenced_database_name = isnull(a.referenced_database_name, db_name()),
                 referenced_schema_name = isnull(a.referenced_schema_name, c.name),
@@ -396,7 +406,8 @@ public class SqlServerHelperService
                 and isnull(a.referenced_database_name, db_name()) is not null
                 and isnull(a.referenced_schema_name, c.name) is not null
                 and a.referenced_entity_name is not null
-                and isnull(b.[type], 'U') in ('U','V')", new
+                and isnull(b.[type], 'U') in ('U','V')
+            """, new
             {
                 ObjectName = objectName
             });
@@ -408,8 +419,8 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var command = new CommandDefinition(
-            @"select
+        var command = new CommandDefinition("""
+            select
                 [server_name] = @@servername,
                 [database_name] = db_name(),
                 [schema_name] = b.name,
@@ -418,7 +429,8 @@ public class SqlServerHelperService
             from sys.objects as a
                 join sys.schemas as b on a.schema_id = b.schema_id
             where a.[type] in ('U', 'V')
-            order by b.name, a.name", cancellationToken: cancellationToken);
+            order by b.name, a.name
+            """, cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
         return rows;
     }
@@ -428,15 +440,16 @@ public class SqlServerHelperService
         var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var command = new CommandDefinition(
-            @"select
+        var command = new CommandDefinition("""
+            select
                 [schema_name] = b.[name],
                 [table_name] = a.[name],
                 [has_pk] = convert(bit, case when c.[index_id] is not null then 1 else 0 end)
             from [sys].[tables] as a
                 inner join [sys].[schemas] as b on a.[schema_id] = b.[schema_id]
                 left join [sys].[indexes] as c on a.[object_id] = c.[object_id] and c.[is_primary_key] = 1
-            order by [schema_name], [table_name]",
+            order by [schema_name], [table_name]
+            """,
             cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, bool)>(command);
         return rows;

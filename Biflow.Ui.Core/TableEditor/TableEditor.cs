@@ -47,29 +47,31 @@ public class TableEditorHelper
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
 
-        var primaryKeyColumns = await connection.QueryAsync<string>(
-            @"select
+        var primaryKeyColumns = await connection.QueryAsync<string>("""
+            select
                 c.[name]
             from sys.index_columns as a
                 inner join sys.indexes as b on a.index_id = b.index_id and a.object_id = b.object_id 
                 inner join sys.columns as c on a.object_id = c.object_id and a.column_id = c.column_id
                 inner join sys.tables as d on a.object_id = d.object_id
                 inner join sys.schemas as e on d.schema_id = e.schema_id
-            where b.is_primary_key = 1 and d.[name] = @TableName and e.[name] = @SchemaName",
+            where b.is_primary_key = 1 and d.[name] = @TableName and e.[name] = @SchemaName
+            """,
             new { TableName = _table, SchemaName = _schema }
         );
 
-        IdentityColumn = await connection.ExecuteScalarAsync<string?>(
-            @"select top 1 a.[name]
+        IdentityColumn = await connection.ExecuteScalarAsync<string?>("""
+            select top 1 a.[name]
             from sys.columns as a
                 inner join sys.tables as b on a.object_id = b.object_id
                 inner join sys.schemas as c on b.schema_id = c.schema_id
-            where a.is_identity = 1 and c.[name] = @SchemaName and b.[name] = @TableName",
+            where a.is_identity = 1 and c.[name] = @SchemaName and b.[name] = @TableName
+            """,
             new { TableName = _table, SchemaName = _schema }
         );
 
-        var columnDatatypes = await connection.QueryAsync<(string, string, string)>(
-            @"select
+        var columnDatatypes = await connection.QueryAsync<(string, string, string)>("""
+            select
                 ColumnName = b.[name],
                 DataType = c.[name],
                 DataTypeDescription = concat(
@@ -95,7 +97,8 @@ public class TableEditorHelper
                 inner join sys.columns as b on a.object_id = b.object_id
                 inner join sys.types as c on b.user_type_id = c.user_type_id
                 inner join sys.schemas as d on a.schema_id = d.schema_id
-            where a.[name] = @TableName and d.[name] = @SchemaName",
+            where a.[name] = @TableName and d.[name] = @SchemaName
+            """,
             new { TableName = _table, SchemaName = _schema }
         );
 

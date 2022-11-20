@@ -40,16 +40,27 @@ public class DbHelperService
             if (stepIds is not null && stepIds.Count > 0)
             {
                 parameters.Add("StepIds_", string.Join(',', stepIds));
-                command = new CommandDefinition(
-                    @"EXEC [biflow].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_, @StepIds = @StepIds_,
-                    @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
+                command = new CommandDefinition("""
+                    EXEC [biflow].[ExecutionInitialize]
+                        @JobId = @JobId_,
+                        @Username = @Username_,
+                        @StepIds = @StepIds_,
+                        @Notify = @Notify_,
+                        @NotifyCaller = @NotifyCaller_,
+                        @NotifyCallerOvertime = @NotifyCallerOvertime_
+                    """,
                     parameters);
             }
             else
             {
-                command = new CommandDefinition(
-                    @"EXEC [biflow].[ExecutionInitialize] @JobId = @JobId_, @Username = @Username_,
-                    @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
+                command = new CommandDefinition("""
+                    EXEC [biflow].[ExecutionInitialize]
+                        @JobId = @JobId_,
+                        @Username = @Username_,
+                        @Notify = @Notify_,
+                        @NotifyCaller = @NotifyCaller_,
+                        @NotifyCallerOvertime = @NotifyCallerOvertime_
+                    """,
                     parameters);
             }
             executionId = await sqlConnection.ExecuteScalarAsync<Guid>(command);
