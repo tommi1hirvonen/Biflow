@@ -94,24 +94,25 @@ internal class AgentJobStepExecutor : StepExecutorBase
                 new { InstanceId = historyId });
 
             // Get data for all steps belonging to this agent job execution (including the job outcome).
-            var messageRows = await connection.QueryAsync<dynamic>(
-                @"SELECT
-	                    a.instance_id,
-	                    a.step_id,
-	                    a.step_name,
-	                    a.message,
-	                    a.run_status,
-	                    a.run_date,
-	                    a.run_time,
-	                    a.run_duration,
-	                    a.retries_attempted,
-	                    a.server
+            var messageRows = await connection.QueryAsync<dynamic>("""
+                    SELECT
+                        a.instance_id,
+                        a.step_id,
+                        a.step_name,
+                        a.message,
+                        a.run_status,
+                        a.run_date,
+                        a.run_time,
+                        a.run_duration,
+                        a.retries_attempted,
+                        a.server
                     FROM msdb.dbo.sysjobhistory AS a
-                    	INNER JOIN msdb.dbo.sysjobhistory AS b ON b.instance_id = @InstanceId
+                        INNER JOIN msdb.dbo.sysjobhistory AS b ON b.instance_id = @InstanceId
                     WHERE a.instance_id <= b.instance_id AND
-	                    a.run_date >= b.run_date AND
-	                    a.run_time >= b.run_time
-                    ORDER BY a.instance_id",
+                        a.run_date >= b.run_date AND
+                        a.run_time >= b.run_time
+                    ORDER BY a.instance_id
+                    """,
                 new { InstanceId = historyId });
 
             var options = new JsonSerializerOptions

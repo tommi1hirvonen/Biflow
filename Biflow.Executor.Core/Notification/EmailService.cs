@@ -96,83 +96,83 @@ internal class EmailService : INotificationService
             .StepExecutions
             .SelectMany(e => e.StepExecutionAttempts)
             .Where(e => e.ExecutionStatus != StepExecutionStatus.Succeeded)
-            .Select(e => $@"
-<tr>
-    <td>{e.StepExecution.StepName}</td>
-    <td>{e.StepType}</td>
-    <td>{e.StartDateTime}</td>
-    <td>{e.EndDateTime}</td>
-    <td>{e.GetDurationInReadableFormat()}</td>
-    <td>{e.ExecutionStatus}</td>
-    <td>{e.ErrorMessage}</td>
-</tr>
-");
+            .Select(e => $"""
+            <tr>
+                <td>{e.StepExecution.StepName}</td>
+                <td>{e.StepType}</td>
+                <td>{e.StartDateTime}</td>
+                <td>{e.EndDateTime}</td>
+                <td>{e.GetDurationInReadableFormat()}</td>
+                <td>{e.ExecutionStatus}</td>
+                <td>{e.ErrorMessage}</td>
+            </tr>
+            """);
 
-            messageBody = $@"
-<html>
-    <head>
-        <style>
-            body {{
-                font-family: system-ui;
-            }}
-            table {{
-                border-collapse: collapse;
-            }}
-            th {{
-                padding: 8px;
-	            background-color: #ccc;
-            }}
-            td {{
-                padding: 8px;
-            }}
-            tr:nth-child(even) {{
-                background-color: #f5f5f5;
-            }}
-        </style>
-    </head>
-    <body>
-        <h3>{execution.JobName}</h3>
-        <hr />
-        <table>
-            <tbody>
-                <tr>
-                    <td><strong>Status:</strong></td>
-                    <td><span style=""color:{statusColor};""><strong>{execution.ExecutionStatus}</strong></span></td>
-                </tr>
-                <tr>
-                    <td>Start time:</td>
-                    <td>{execution.StartDateTime}</td>
-                </tr>
-                <tr>
-                    <td>End time:</td>
-                    <td>{execution.EndDateTime}</td>
-                </tr>
-                <tr>
-                    <td>Duration:</td>
-                    <td>{execution.GetDurationInReadableFormat()}</td >
-                </tr>
-            </tbody>
-        </table>
-        <h4>Failed steps</h4>
-        <table border=""1"">
-            <thead>
-                <tr>
-                    <th>Step name</th>
-                    <th>Step type</th>
-                    <th>Start time</th>
-                    <th>End time</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                    <th>Error message</th>
-                </tr>
-            </thead>
-            <tbody>
-                {string.Join("\n", failedSteps)}
-            </tbody>
-        </table>
-    </body>
-</html>
-";
+            messageBody = $$"""
+            <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: system-ui;
+                        }
+                        table {
+                            border-collapse: collapse;
+                        }
+                        th {
+                            padding: 8px;
+                            background-color: #ccc;
+                        }
+                        td {
+                            padding: 8px;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f5f5f5;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h3>{{execution.JobName}}</h3>
+                    <hr />
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td><span style="color:{{statusColor}};"><strong>{{execution.ExecutionStatus}}</strong></span></td>
+                            </tr>
+                            <tr>
+                                <td>Start time:</td>
+                                <td>{{execution.StartDateTime}}</td>
+                            </tr>
+                            <tr>
+                                <td>End time:</td>
+                                <td>{{execution.EndDateTime}}</td>
+                            </tr>
+                            <tr>
+                                <td>Duration:</td>
+                                <td>{{execution.GetDurationInReadableFormat()}}</td >
+                            </tr>
+                        </tbody>
+                    </table>
+                    <h4>Failed steps</h4>
+                    <table border="1">
+                        <thead>
+                            <tr>
+                                <th>Step name</th>
+                                <th>Step type</th>
+                                <th>Start time</th>
+                                <th>End time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Error message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{string.Join("\n", failedSteps)}}
+                        </tbody>
+                    </table>
+                </body>
+            </html>
+            """;
         }
         catch (Exception ex)
         {

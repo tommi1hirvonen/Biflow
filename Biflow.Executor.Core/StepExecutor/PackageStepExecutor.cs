@@ -135,49 +135,51 @@ internal class PackageStepExecutor : StepExecutorBase
         if (Step.ExecuteAsLogin is not null)
             commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
 
-        commandBuilder.Append(
-            @"DECLARE @execution_id BIGINT
+        commandBuilder.Append("""
+            DECLARE @execution_id BIGINT
 
-                EXEC [SSISDB].[catalog].[create_execution]
-                    @package_name = @PackageName,
-                    @execution_id = @execution_id OUTPUT,
-                    @folder_name = @PackageFolderName,
-                    @project_name = @PackageProjectName,
-                    @use32bitruntime = @ExecuteIn32BitMode,
-                    @reference_id = NULL
+            EXEC [SSISDB].[catalog].[create_execution]
+                @package_name = @PackageName,
+                @execution_id = @execution_id OUTPUT,
+                @folder_name = @PackageFolderName,
+                @project_name = @PackageProjectName,
+                @use32bitruntime = @ExecuteIn32BitMode,
+                @reference_id = NULL
 
-                EXEC [SSISDB].[catalog].[set_execution_parameter_value]
-                    @execution_id,
-                    @object_type = 50,
-                    @parameter_name = N'LOGGING_LEVEL',
-                    @parameter_value = 1
+            EXEC [SSISDB].[catalog].[set_execution_parameter_value]
+                @execution_id,
+                @object_type = 50,
+                @parameter_name = N'LOGGING_LEVEL',
+                @parameter_value = 1
 
-                EXEC [SSISDB].[catalog].[set_execution_parameter_value]
-                    @execution_id,
-                    @object_type = 50,
-                    @parameter_name = N'SYNCHRONIZED',
-                    @parameter_value = 0" + "\n"
-            );
+            EXEC [SSISDB].[catalog].[set_execution_parameter_value]
+                @execution_id,
+                @object_type = 50,
+                @parameter_name = N'SYNCHRONIZED',
+                @parameter_value = 0
+
+            """);
 
         foreach (var parameter in Step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
         {
-            var objectType = parameter.ParameterLevel == ParameterLevel.Project ? "20" : "30"; // 20 => project parameter; 30 => package parameter
-                                                                                               // Same parameter name can be used for project and package parameter.
-                                                                                               // Use level in addition to name to uniquely identify each parameter.
-            commandBuilder.Append(
-                @"EXEC [SSISDB].[catalog].[set_execution_parameter_value]
-                        @execution_id,
-                        @object_type = " + objectType + @",
-                        @parameter_name = @ParameterName" + parameter.ParameterName + parameter.ParameterLevel + @",
-                        @parameter_value = @ParameterValue" + parameter.ParameterName + parameter.ParameterLevel + "\n"
-                );
+            var objectType = parameter.ParameterLevel == ParameterLevel.Project ? 20 : 30;  // 20 => project parameter; 30 => package parameter
+                                                                                            // Same parameter name can be used for project and package parameter.
+                                                                                            // Use level in addition to name to uniquely identify each parameter.
+            commandBuilder.Append($"""
+                EXEC [SSISDB].[catalog].[set_execution_parameter_value]
+                    @execution_id,
+                    @object_type = {objectType},
+                    @parameter_name = @ParameterName{parameter.ParameterName}{parameter.ParameterLevel},
+                    @parameter_value = @ParameterValue{parameter.ParameterName}{parameter.ParameterLevel}
+
+                """);
         }
 
-        commandBuilder.Append(
-            @"EXEC [SSISDB].[catalog].[start_execution] @execution_id
+        commandBuilder.Append("""
+            EXEC [SSISDB].[catalog].[start_execution] @execution_id
 
-                SELECT @execution_id"
-            );
+            SELECT @execution_id"
+            """);
 
         string commandString = commandBuilder.ToString();
         var dynamicParams = new DynamicParameters();
@@ -235,10 +237,11 @@ internal class PackageStepExecutor : StepExecutorBase
     private static async Task<List<string?>> GetErrorMessagesAsync(string connectionString, long packageOperationId)
     {
         using var sqlConnection = new SqlConnection(connectionString);
-        var messages = await sqlConnection.QueryAsync<string?>(
-            @"SELECT message
-                FROM SSISDB.catalog.operation_messages
-                WHERE message_type = 120 AND operation_id = @OperationId", // message_type = 120 => error message
+        var messages = await sqlConnection.QueryAsync<string?>("""
+            SELECT message
+            FROM SSISDB.catalog.operation_messages
+            WHERE message_type = 120 AND operation_id = @OperationId
+            """, // message_type = 120 => error message
             new { OperationId = packageOperationId });
         return messages.ToList();
     }
