@@ -86,9 +86,9 @@ internal abstract class OrchestratorBase
     {
         // Cancel just one step
         var step = Execution.StepExecutions.FirstOrDefault(e => e.StepId == stepId);
-        if (step is not null && CancellationTokenSources.ContainsKey(step))
+        if (step is not null && CancellationTokenSources.TryGetValue(step, out var cts))
         {
-            CancellationTokenSources[step].Cancel(username);
+            cts.Cancel(username);
         }
     }
 

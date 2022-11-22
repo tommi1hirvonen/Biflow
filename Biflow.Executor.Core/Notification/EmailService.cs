@@ -215,7 +215,7 @@ internal class EmailService : INotificationService
         try
         {
             await client.SendMailAsync(mailMessage);
-            _logger.LogInformation("{ExecutionId} Notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
+            _logger.LogInformation("{ExecutionId} Notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
@@ -304,7 +304,7 @@ internal class EmailService : INotificationService
         try
         {
             await client.SendMailAsync(mailMessage);
-            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: " + string.Join(", ", recipients), execution.ExecutionId);
+            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
