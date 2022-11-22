@@ -4,50 +4,27 @@ using System.Text;
 
 namespace Biflow.Ui.Core;
 
-public class TableEditorHelper
+public class DatasetLoader
 {
-    private readonly string _connectionString;
-    private readonly string _schema;
-    private readonly string _table;
+    internal string ConnectionString { get; }
+    internal string Schema { get; }
+    internal string Table { get; }
 
-    private HashSet<string>? PrimaryKeyColumns { get; set; }
-
-    private string? IdentityColumn { get; set; }
-
-    private Dictionary<string, DbDataType>? ColumnDbDataTypes { get; set; }
-
-    private LinkedList<RowRecord>? WorkingData { get; set; }
-
-    private int TopRows { get; set; } = 1000;
-
-    public TableEditorHelper(string connectionString, string schema, string table)
+    public DatasetLoader(string connectionString, string schema, string table)
     {
-        _connectionString = connectionString;
-        _schema = schema;
-        _table = table;
+        ConnectionString = connectionString;
+        Schema = schema;
+        Table = table;
     }
 
-    public bool IsInitialized => WorkingData is not null;
-
-    public bool IsEditable => PrimaryKeyColumns?.Any() ?? false;
-
-    public IEnumerable<(string ColumnName, DbDataType DataType, bool IsPrimaryKey)> Columns =>
-        ColumnDbDataTypes?.Keys.Select(col => (col, ColumnDbDataTypes[col], PrimaryKeyColumns?.Contains(col) ?? false))
-        ?? Enumerable.Empty<(string, DbDataType, bool)>();
-
-    public IEnumerable<RowRecord> RowRecords =>
-        WorkingData?.Where(r => !r.ToBeDeleted) ?? Enumerable.Empty<RowRecord>();
-
-    public FilterSet EmptyFilterSet => new(ColumnDbDataTypes ?? new());
-
-    public async Task LoadDataAsync(int? top = null, FilterSet? filters = null)
+    public async Task<Dataset> LoadDataAsync(int? top = null, FilterSet? filters = null)
     {
-        TopRows = top ?? TopRows;
+        top ??= 1000;
 
-        using var connection = new SqlConnection(_connectionString);
+        using var connection = new SqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        var primaryKeyColumns = await connection.QueryAsync<string>("""
+        var primaryKeyColumns = (await connection.QueryAsync<string>("""
             select
                 c.[name]
             from sys.index_columns as a
@@ -57,17 +34,17 @@ public class TableEditorHelper
                 inner join sys.schemas as e on d.schema_id = e.schema_id
             where b.is_primary_key = 1 and d.[name] = @TableName and e.[name] = @SchemaName
             """,
-            new { TableName = _table, SchemaName = _schema }
-        );
+            new { TableName = Table, SchemaName = Schema }
+        )).ToHashSet();
 
-        IdentityColumn = await connection.ExecuteScalarAsync<string?>("""
+        var identityColumn = await connection.ExecuteScalarAsync<string?>("""
             select top 1 a.[name]
             from sys.columns as a
                 inner join sys.tables as b on a.object_id = b.object_id
                 inner join sys.schemas as c on b.schema_id = c.schema_id
             where a.is_identity = 1 and c.[name] = @SchemaName and b.[name] = @TableName
             """,
-            new { TableName = _table, SchemaName = _schema }
+            new { TableName = Table, SchemaName = Schema }
         );
 
         var columnDatatypes = await connection.QueryAsync<(string, string, string)>("""
@@ -99,16 +76,15 @@ public class TableEditorHelper
                 inner join sys.schemas as d on a.schema_id = d.schema_id
             where a.[name] = @TableName and d.[name] = @SchemaName
             """,
-            new { TableName = _table, SchemaName = _schema }
+            new { TableName = Table, SchemaName = Schema }
         );
 
-        PrimaryKeyColumns = primaryKeyColumns.ToHashSet();
-        ColumnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3));
+        var columnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3));
 
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
 
-        cmdBuilder.Append("SELECT TOP ").Append(TopRows).Append(" * FROM [").Append(_schema).Append("].[").Append(_table).Append(']');
+        cmdBuilder.Append("SELECT TOP ").Append(top).Append(" * FROM [").Append(Schema).Append("].[").Append(Table).Append(']');
 
         if (filters?.Filters.Any(f => f.Value.Enabled1) ?? false)
         {
@@ -151,8 +127,7 @@ public class TableEditorHelper
             originalData.Add(dict);
         }
 
-        var records = originalData.Select(d => new RowRecord(ColumnDbDataTypes, PrimaryKeyColumns, IdentityColumn, d));
-        WorkingData = new LinkedList<RowRecord>(records);
+        return new Dataset(this, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData);
     }
 
     private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string column, Enum oper, object filterValue, int index)
@@ -246,54 +221,5 @@ public class TableEditorHelper
         }
         return (statementBuilder.ToString(), parameters);
     }
-
-    public async Task<(int Inserted, int Updated, int Deleted)> SaveChangesAsync()
-    {
-        var changes = WorkingData?
-            .OrderByDescending(record => record.ToBeDeleted) // handle records to be deleted first
-            .Select(record => record.GetChangeSqlCommand(_schema, _table))
-            .Where(command => command is not null)
-            .Cast<(string Command, DynamicParameters Parameters, DataTableCommandType CommandType)>();
-
-        if (changes is null || !changes.Any())
-        {
-            return (0, 0, 0);
-        }
-
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
-
-        using var transaction = await connection.BeginTransactionAsync();
-
-        try
-        {
-            foreach (var (command, parameters, type) in changes)
-            {
-                await connection.ExecuteAsync(command, parameters, transaction);
-            }
-            await transaction.CommitAsync();
-            WorkingData = null;
-            await LoadDataAsync();
-            var inserted = changes.Where(c => c.CommandType == DataTableCommandType.Insert).Count();
-            var updated = changes.Where(c => c.CommandType == DataTableCommandType.Update).Count();
-            var deleted = changes.Where(c => c.CommandType == DataTableCommandType.Delete).Count();
-            return (inserted, updated, deleted);
-        }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-    }
-
-    public void AddRecord()
-    {
-        if (WorkingData is null || ColumnDbDataTypes is null || PrimaryKeyColumns is null)
-        {
-            return;
-        }
-
-        var record = new RowRecord(ColumnDbDataTypes, PrimaryKeyColumns, IdentityColumn);
-        WorkingData.AddFirst(record);
-    }
+    
 }

@@ -288,6 +288,12 @@ public static partial class Extensions
         _ => Task.CompletedTask
     };
 
+    public static async Task<R?> LetAsync<T, R>(this T? obj, Func<T, Task<R>> block) where R : class => obj switch
+    {
+        not null => await block(obj),
+        _ => null
+    };
+
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
 
     // Can handle white space inside object names

@@ -35,21 +35,21 @@
             </HxDropdownButtonGroup>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small"
-                Enabled="Editor is not null && Editor.IsEditable"
+                Enabled="Dataset is not null && Dataset.IsEditable"
                 OnClick="SaveChangesAsync">
                 @MarkupHelper.FromFile("icons/feather/save.svg")
                 Save changes
             </HxButton>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small"
-                Enabled="Editor is not null && Editor.IsEditable"
-                OnClick="() => Editor?.AddRecord()">
+                Enabled="Dataset is not null && Dataset.IsEditable"
+                OnClick="() => Dataset?.AddRecord()">
                 @MarkupHelper.FromFile("icons/feather/plus.svg")
                 Add record
             </HxButton>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="Editor is not null"
+                Enabled="DatasetLoader is not null"
                 OnClick="async () => await ReloadDataAsync()">
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                 Reload
@@ -87,14 +87,14 @@
     <div class="col-auto align-items-center">
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="editmode_radio"
-                    disabled="@(!Editor?.IsEditable ?? true)"
+                    disabled="@(!Dataset?.IsEditable ?? true)"
                     checked="@(EditModeEnabled)"
                     @onchange="() => { EditModeEnabled = true; }">
             <label class="form-check-label" for="editmode_radio">Edit mode</label>
         </div>
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="viewmode_radio"
-                    disabled="@(!Editor?.IsEditable ?? true)"
+                    disabled="@(!Dataset?.IsEditable ?? true)"
                     checked="@(!EditModeEnabled)"
                     @onchange="() => { EditModeEnabled = false; }">
             <label class="form-check-label" for="viewmode_radio">View mode</label>
@@ -113,16 +113,16 @@
                 {
                     <small class="text-secondary px-3">@records.Count record(s)</small>
                 }
-                @if (!Editor?.IsEditable ?? false)
+                @if (!Dataset?.IsEditable ?? false)
                 {
                     <small class="text-secondary px-3">Table is not editable</small>
                 }
-                @if ((Editor?.IsInitialized ?? false) && records is not null)
+                @if (Dataset is not null && records is not null)
                 {
                     <table class="table">
                         <thead>
                             <tr>
-                                @foreach (var column in Editor.Columns.Where(c => IsColumnSelected(c.ColumnName)))
+                                @foreach (var column in Dataset.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                 {
                                     var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
                                     <th @onclick="() => ToggleOrderBy(column.ColumnName)" title="@column.DataType.DisplayDataType">
@@ -148,7 +148,7 @@
                                         }
                                     </th>
                                 }
-                                @if (Editor.IsEditable && EditModeEnabled)
+                                @if (Dataset.IsEditable && EditModeEnabled)
                                 {
                                     <th></th>    
                                 }
@@ -161,7 +161,7 @@
                                     @foreach (var (column, datatype) in row.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                     {
                                         <td>
-                                            @if (Editor.IsEditable && EditModeEnabled)
+                                            @if (Dataset.IsEditable && EditModeEnabled)
                                             {
                                                 @if (datatype == typeof(byte))
                                                 {
@@ -219,7 +219,7 @@
                                             }
                                         </td>
                                     }
-                                    @if (Editor.IsEditable && EditModeEnabled)
+                                    @if (Dataset.IsEditable && EditModeEnabled)
                                     {
                                         <td>
                                             <button class="btn btn-sm btn-outline-danger" @onclick="() => row.ToBeDeleted = true">
@@ -232,7 +232,7 @@
                         </tbody>
                     </table>
                 }
-                else if (Editor is not null)
+                else if (DatasetLoader is not null)
                 {
                     <p class="px-3">Loading data...</p>
                 }
@@ -270,7 +270,9 @@
 
     private DataTable? SelectedTable { get; set; }
 
-    private TableEditorHelper? Editor { get; set; }
+    private DatasetLoader? DatasetLoader { get; set; }
+
+    private Dataset? Dataset { get; set; }
 
     private int TopRows
     {
@@ -298,7 +300,7 @@
 
     private List<RowRecord>? GetOrderedRowRecords()
     {
-        var records = Editor?.RowRecords;
+        var records = Dataset?.RowRecords;
         foreach (var orderBy in OrderBy)
         {
             if (orderBy.Descending)
@@ -340,10 +342,10 @@
             FilterSet = null;
             ColumnSelections = null;
             SelectedTable = table;
-            Editor = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
+            DatasetLoader = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
         }
 
-        if (Editor is null)
+        if (DatasetLoader is null)
         {
             Messenger.AddError("Error loading data", $"Table editor helper object was null.");
             return;
@@ -351,9 +353,9 @@
 
         try
         {
-            await Editor.LoadDataAsync(TopRows, FilterSet);
-            FilterSet ??= Editor.EmptyFilterSet;
-            ColumnSelections ??= Editor.Columns.ToDictionary(x => x.ColumnName, x => true);
+            Dataset = await DatasetLoader.LoadDataAsync(TopRows, FilterSet);
+            FilterSet ??= Dataset.EmptyFilterSet;
+            ColumnSelections ??= Dataset.Columns.ToDictionary(x => x.ColumnName, x => true);
         }
         catch (Exception ex)
         {
@@ -363,15 +365,15 @@
 
     private async Task SaveChangesAsync()
     {
-        if (Editor is null)
+        if (Dataset is null)
         {
-            Messenger.AddError("Error saving changes", $"Table editor helper object was null.");
+            Messenger.AddError("Error saving changes", $"Table editor dataset object was null.");
             return;
         }
 
         try
         {
-            var (inserted, updated, deleted) = await Editor.SaveChangesAsync();
+            var (inserted, updated, deleted) = await Dataset.SaveChangesAsync();
             var message = new StringBuilder();
             if (inserted == 0 && updated == 0 && deleted == 0)
             {
@@ -390,6 +392,8 @@
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             Messenger.AddInformation("Changes saved", message.ToString());
+            var dataset = await DatasetLoader.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet));
+            Dataset = await DatasetLoader.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? Dataset;
         }
         catch (Exception ex)
         {

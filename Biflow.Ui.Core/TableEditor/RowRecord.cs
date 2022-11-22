@@ -5,11 +5,8 @@ namespace Biflow.Ui.Core;
 
 public class RowRecord
 {
-    private readonly Dictionary<string, DbDataType> _columnDbDatatypes;
-    private readonly HashSet<string> _primaryKeyColumns;
-    private readonly string? _identityColumn;
-
-    private Dictionary<string, object?>? OriginalValues { get; }
+    private readonly Dataset _dataset;
+    private readonly Dictionary<string, object?>? _originalValues;
 
     public Dictionary<string, object?> WorkingValues { get; }
 
@@ -27,16 +24,12 @@ public class RowRecord
     public bool ToBeDeleted { get; set; }
 
     public RowRecord(
-        Dictionary<string, DbDataType> columnDbDatatypes,
-        HashSet<string> primaryKeyColumns,
-        string? identityColumn,
+        Dataset dataset,
         Dictionary<string, object?>? originalValues = null)
     {
-        _columnDbDatatypes = columnDbDatatypes;
-        _primaryKeyColumns = primaryKeyColumns;
-        _identityColumn = identityColumn;
-        OriginalValues = originalValues;
-        WorkingValues = OriginalValues is not null ? new(OriginalValues) : new();
+        _dataset= dataset;
+        _originalValues = originalValues;
+        WorkingValues = _originalValues is not null ? new(_originalValues) : new();
         
         ByteIndexer = new(WorkingValues);
         ShortIndexer = new(WorkingValues);
@@ -49,13 +42,13 @@ public class RowRecord
         BooleanIndexer = new(WorkingValues);
         DateTimeIndexer = new(WorkingValues);
 
-        if (OriginalValues is null)
+        if (_originalValues is null)
         {
-            foreach (var columnInfo in _columnDbDatatypes)
+            foreach (var columnInfo in _dataset.ColumnDbDataTypes)
             {
                 var column = columnInfo.Key;
                 var dbDatatype = columnInfo.Value.BaseDataType;
-                if (column != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
+                if (column != _dataset.IdentityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
                 {
                     if (datatype == typeof(byte))
                         ByteIndexer[column] = 0;
@@ -89,11 +82,11 @@ public class RowRecord
     }
 
     public IEnumerable<(string ColumnName, Type? Datatype)> Columns =>
-        _columnDbDatatypes.Select(c =>
+        _dataset.ColumnDbDataTypes.Select(c =>
         {
             var columnName = c.Key;
             var dbDatatype = c.Value.BaseDataType;
-            if (columnName != _identityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
+            if (columnName != _dataset.IdentityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
             {
                 return (columnName, typeMapping);
             }
@@ -109,14 +102,15 @@ public class RowRecord
     /// <param name="schema"></param>
     /// <param name="table"></param>
     /// <returns>null if there are no pending changes</returns>
-    public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand(string schema, string table)
+    public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var nonIdentity = WorkingValues.Where(w => w.Key != _identityColumn).ToList();
+        var (schema, table) = (_dataset.Loader.Schema, _dataset.Loader.Table);
+        var nonIdentity = WorkingValues.Where(w => w.Key != _dataset.IdentityColumn).ToList();
 
         // Existing entity
-        if (OriginalValues is not null && !ToBeDeleted)
+        if (_originalValues is not null && !ToBeDeleted)
         {
-            var changes = nonIdentity.Where(w => w.Value?.ToString() != OriginalValues[w.Key]?.ToString()).ToList();
+            var changes = nonIdentity.Where(w => w.Value?.ToString() != _originalValues[w.Key]?.ToString()).ToList();
             // No changes => skip this record
             if (!changes.Any())
             {
@@ -140,12 +134,12 @@ public class RowRecord
             }
             var k = 1;
             builder.Append(" WHERE ");
-            foreach (var pk in _primaryKeyColumns)
+            foreach (var pk in _dataset.PrimaryKeyColumns)
             {
-                var value = OriginalValues[pk];
+                var value = _originalValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(k);
                 parameters.Add($"Orig_{k}", value);
-                if (k < _primaryKeyColumns.Count)
+                if (k < _dataset.PrimaryKeyColumns.Count)
                 {
                     builder.Append(" AND ");
                 }
@@ -154,19 +148,19 @@ public class RowRecord
 
             return (builder.ToString(), parameters, DataTableCommandType.Update);
         }
-        else if (OriginalValues is not null)
+        else if (_originalValues is not null)
         {
             // Existing record to be deleted
             var builder = new StringBuilder();
             var parameters = new DynamicParameters();
             builder.Append("DELETE [").Append(schema).Append("].[").Append(table).Append("] WHERE ");
             var k = 1;
-            foreach (var pk in _primaryKeyColumns)
+            foreach (var pk in _dataset.PrimaryKeyColumns)
             {
-                var value = OriginalValues[pk];
+                var value = _originalValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(k);
                 parameters.Add($"Orig_{k}", value);
-                if (k < _primaryKeyColumns.Count)
+                if (k < _dataset.PrimaryKeyColumns.Count)
                 {
                     builder.Append(" AND ");
                 }
