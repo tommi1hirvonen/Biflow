@@ -101,7 +101,7 @@ public abstract class ExecutionJobBase : IJob
 
             await StartExecutorAsync(executionId);
 
-            _logger.LogInformation($"Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}");
+            _logger.LogInformation("Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}", jobId, scheduleId, executionId);
 
             await WaitForExecutionToFinish(executionId);
         }
