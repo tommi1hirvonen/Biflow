@@ -336,6 +336,9 @@
 
     private async Task ReloadDataAsync(DataTable? table = null)
     {
+        Dataset = null;
+        StateHasChanged();
+
         if (table is not null)
         {
             OrderBy.Clear();
