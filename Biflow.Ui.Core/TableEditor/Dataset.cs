@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Biflow.DataAccess.Models;
+using Dapper;
 using Microsoft.Data.SqlClient;
 
 namespace Biflow.Ui.Core;
@@ -7,7 +8,7 @@ public class Dataset
 {
     private readonly LinkedList<RowRecord> _workingData;
 
-    internal DatasetLoader Loader { get; }
+    internal DataTable DataTable { get; }
 
     internal HashSet<string> PrimaryKeyColumns { get; }
 
@@ -16,13 +17,13 @@ public class Dataset
     internal Dictionary<string, DbDataType> ColumnDbDataTypes { get; }
 
     internal Dataset(
-        DatasetLoader loader,
+        DataTable dataTable,
         HashSet<string> primaryKeyColumns,
         string? identityColumn,
         Dictionary<string, DbDataType> columnDbDataTypes,
         List<Dictionary<string, object?>> data)
     {
-        Loader = loader;
+        DataTable = dataTable;
         PrimaryKeyColumns = primaryKeyColumns;
         IdentityColumn = identityColumn;
         ColumnDbDataTypes = columnDbDataTypes;
@@ -51,7 +52,7 @@ public class Dataset
             return (0, 0, 0);
         }
 
-        using var connection = new SqlConnection(Loader.ConnectionString);
+        using var connection = new SqlConnection(DataTable.Connection.ConnectionString);
         await connection.OpenAsync();
 
         using var transaction = await connection.BeginTransactionAsync();

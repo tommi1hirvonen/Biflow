@@ -1,27 +1,17 @@
-﻿using Dapper;
+﻿using Biflow.DataAccess.Models;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Text;
 
 namespace Biflow.Ui.Core;
 
-public class DatasetLoader
+public static class TableEditorExtensions
 {
-    internal string ConnectionString { get; }
-    internal string Schema { get; }
-    internal string Table { get; }
-
-    public DatasetLoader(string connectionString, string schema, string table)
-    {
-        ConnectionString = connectionString;
-        Schema = schema;
-        Table = table;
-    }
-
-    public async Task<Dataset> LoadDataAsync(int? top = null, FilterSet? filters = null)
+    public static async Task<Dataset> LoadDataAsync(this DataTable table, int? top = null, FilterSet? filters = null)
     {
         top ??= 1000;
 
-        using var connection = new SqlConnection(ConnectionString);
+        using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
 
         var primaryKeyColumns = (await connection.QueryAsync<string>("""
@@ -34,7 +24,7 @@ public class DatasetLoader
                 inner join sys.schemas as e on d.schema_id = e.schema_id
             where b.is_primary_key = 1 and d.[name] = @TableName and e.[name] = @SchemaName
             """,
-            new { TableName = Table, SchemaName = Schema }
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         )).ToHashSet();
 
         var identityColumn = await connection.ExecuteScalarAsync<string?>("""
@@ -44,7 +34,7 @@ public class DatasetLoader
                 inner join sys.schemas as c on b.schema_id = c.schema_id
             where a.is_identity = 1 and c.[name] = @SchemaName and b.[name] = @TableName
             """,
-            new { TableName = Table, SchemaName = Schema }
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
         var columnDatatypes = await connection.QueryAsync<(string, string, string)>("""
@@ -76,7 +66,7 @@ public class DatasetLoader
                 inner join sys.schemas as d on a.schema_id = d.schema_id
             where a.[name] = @TableName and d.[name] = @SchemaName
             """,
-            new { TableName = Table, SchemaName = Schema }
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
         var columnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3));
@@ -84,7 +74,7 @@ public class DatasetLoader
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
 
-        cmdBuilder.Append("SELECT TOP ").Append(top).Append(" * FROM [").Append(Schema).Append("].[").Append(Table).Append(']');
+        cmdBuilder.Append("SELECT TOP ").Append(top).Append(" * FROM [").Append(table.TargetSchemaName).Append("].[").Append(table.TargetTableName).Append(']');
 
         if (filters?.Filters.Any(f => f.Value.Enabled1) ?? false)
         {
@@ -127,7 +117,7 @@ public class DatasetLoader
             originalData.Add(dict);
         }
 
-        return new Dataset(this, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData);
+        return new Dataset(table, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData);
     }
 
     private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string column, Enum oper, object filterValue, int index)
@@ -221,5 +211,4 @@ public class DatasetLoader
         }
         return (statementBuilder.ToString(), parameters);
     }
-    
 }

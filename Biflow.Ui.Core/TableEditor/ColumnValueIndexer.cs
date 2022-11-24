@@ -12,6 +12,10 @@ public class ColumnValueIndexer<T>
     public T? this[string column]
     {
         get => (T?)_data[column];
-        set => _data[column] = value;
+        set => _data[column] = value switch
+        {
+            not null and string and { Length: 0 } => null,
+            _ => value
+        };
     }
 }

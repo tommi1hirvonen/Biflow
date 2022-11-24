@@ -65,7 +65,7 @@ public class RowRecord
                     else if (datatype == typeof(float))
                         FloatIndexer[column] = 0;
                     else if (datatype == typeof(string))
-                        StringIndexer[column] = string.Empty;
+                        StringIndexer[column] = null;
                     else if (datatype == typeof(bool))
                         BooleanIndexer[column] = false;
                     else if (datatype == typeof(DateTime))
@@ -104,7 +104,7 @@ public class RowRecord
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var (schema, table) = (_dataset.Loader.Schema, _dataset.Loader.Table);
+        var (schema, table) = (_dataset.DataTable.TargetSchemaName, _dataset.DataTable.TargetTableName);
         var nonIdentity = WorkingValues.Where(w => w.Key != _dataset.IdentityColumn).ToList();
 
         // Existing entity

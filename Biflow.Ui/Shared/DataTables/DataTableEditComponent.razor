@@ -49,7 +49,7 @@
             </HxButton>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="DatasetLoader is not null"
+                Enabled="SelectedTable is not null"
                 OnClick="async () => await ReloadDataAsync()">
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
                 Reload
@@ -232,7 +232,7 @@
                         </tbody>
                     </table>
                 }
-                else if (DatasetLoader is not null)
+                else if (SelectedTable is not null)
                 {
                     <p class="px-3">Loading data...</p>
                 }
@@ -269,8 +269,6 @@
     [Parameter] public List<DataTable>? Tables { get; set; }
 
     private DataTable? SelectedTable { get; set; }
-
-    private DatasetLoader? DatasetLoader { get; set; }
 
     private Dataset? Dataset { get; set; }
 
@@ -345,18 +343,17 @@
             FilterSet = null;
             ColumnSelections = null;
             SelectedTable = table;
-            DatasetLoader = new(table.Connection.ConnectionString, table.TargetSchemaName, table.TargetTableName);
         }
 
-        if (DatasetLoader is null)
+        if (SelectedTable is null)
         {
-            Messenger.AddError("Error loading data", $"Table editor helper object was null.");
+            Messenger.AddError("Error loading data", $"Selected table was null.");
             return;
         }
 
         try
         {
-            Dataset = await DatasetLoader.LoadDataAsync(TopRows, FilterSet);
+            Dataset = await SelectedTable.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= Dataset.EmptyFilterSet;
             ColumnSelections ??= Dataset.Columns.ToDictionary(x => x.ColumnName, x => true);
         }
@@ -395,8 +392,8 @@
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             Messenger.AddInformation("Changes saved", message.ToString());
-            var dataset = await DatasetLoader.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet));
-            Dataset = await DatasetLoader.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? Dataset;
+            var dataset = await SelectedTable.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet));
+            Dataset = await SelectedTable.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? Dataset;
         }
         catch (Exception ex)
         {
