@@ -1,19 +1,21 @@
-﻿ @implements IDisposable
- 
- @inject MarkupHelperService MarkupHelper
- @inject IDbContextFactory<BiflowContext> DbContextFactory
- @inject IHxMessengerService Messenger
+﻿@implements IDisposable
 
- <HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await SetEditContextAsync()">
-     Add table
- </HxButton>
+@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+@inject IHxMessageBoxService MessageBox
+@inject IJSRuntime JSRuntime
+
+<HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await SetEditContextAsync()">
+    Add table
+</HxButton>
 
 <div class="row my-4">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
                 <EditForm Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
-                    <DataAnnotationsValidator />
+                    <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
                     <table class="table">
                         <thead>
@@ -36,6 +38,7 @@
                             {
                                 @if (EditTable.DataTableId == Guid.Empty && EditTable.ConnectionId != Guid.Empty)
                                 {
+                                    <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                                     <tr>
                                         <td colspan="5">
                                             <div class="row my-3">
@@ -101,14 +104,83 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <button class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
+                                                </div>
+                                            </div>
+                                            @foreach (var lookup in EditTable.Lookups)
+                                            {
+                                                <div class="row mt-2">
+                                                    <div class="col">
+                                                        <HxAutosuggest Label="Column"
+                                                           TItem="string"
+                                                           TValue="string"
+                                                           InputSize="InputSize.Small"
+                                                           @bind-Value="lookup.ColumnName"
+                                                           Delay="0"
+                                                           MinimumLength="0"
+                                                           DataProvider="ProvideColumnSuggestions">
+                                                        </HxAutosuggest>
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (!string.IsNullOrEmpty(lookup.ColumnName))
+                                                        {
+                                                            <HxAutosuggest Label="Lookup table"
+                                                           TItem="DataTable"
+                                                           TValue="Guid"
+                                                           InputSize="InputSize.Small"
+                                                           Delay="0"
+                                                           MinimumLength="0"
+                                                           ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
+                                                           ValueChanged="guid => SetLookupTable(guid, lookup)"
+                                                           Value="lookup.LookupDataTableId"
+                                                           ValueExpression="() => lookup.LookupDataTableId"
+                                                           ValueSelector="table => table.DataTableId"
+                                                           TextSelector="table => table.DataTableName"
+                                                           DataProvider="ProvideLookupTableSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <HxAutosuggest Label="Lookup value"
+                                                           TItem="string"
+                                                           TValue="string"
+                                                           InputSize="InputSize.Small"
+                                                           @bind-Value="lookup.LookupValueColumn"
+                                                           Delay="0"
+                                                           MinimumLength="0"
+                                                           DataProvider="ProvideLookupColumnSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <HxAutosuggest Label="Lookup description"
+                                                           TItem="string"
+                                                           TValue="string"
+                                                           InputSize="InputSize.Small"
+                                                           @bind-Value="lookup.LookupDescriptionColumn"
+                                                           Delay="0"
+                                                           MinimumLength="0"
+                                                           DataProvider="ProvideLookupColumnSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
                                         </td>
                                     </tr>
                                 }
-                                @foreach (var table in Tables)
+                                @foreach (var table in Tables.OrderBy(t => t.DataTableName))
                                 {
                                     <tr>
                                         @if (EditTable?.DataTableId == table.DataTableId)
                                         {
+                                            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                                             <td colspan="5">
                                                 <div class="row my-3">
                                                     <div class="col">
@@ -173,6 +245,75 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <div class="row">
+                                                <div class="col">
+                                                    <button class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
+                                                </div>
+                                            </div>
+                                            @foreach (var lookup in EditTable.Lookups)
+                                            {
+                                                <div class="row mt-2">
+                                                    <div class="col">
+                                                        <HxAutosuggest
+                                                            Label="Column"
+                                                            TItem="string"
+                                                            TValue="string"
+                                                            InputSize="InputSize.Small"
+                                                            @bind-Value="lookup.ColumnName"
+                                                            Delay="0"
+                                                            MinimumLength="0"
+                                                            DataProvider="ProvideColumnSuggestions">
+                                                        </HxAutosuggest>
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (!string.IsNullOrEmpty(lookup.ColumnName))
+                                                        {
+                                                            <HxAutosuggest Label="Lookup table"
+                                                               TItem="DataTable"
+                                                               TValue="Guid"
+                                                               InputSize="InputSize.Small"
+                                                               Delay="0"
+                                                               MinimumLength="0"
+                                                               ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
+                                                               ValueChanged="guid => SetLookupTable(guid, lookup)"
+                                                               Value="lookup.LookupDataTableId"
+                                                               ValueExpression="() => lookup.LookupDataTableId"
+                                                               ValueSelector="table => table.DataTableId"
+                                                               TextSelector="table => table.DataTableName"
+                                                               DataProvider="ProvideLookupTableSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <HxAutosuggest Label="Lookup value"
+                                                               TItem="string"
+                                                               TValue="string"
+                                                               InputSize="InputSize.Small"
+                                                               @bind-Value="lookup.LookupValueColumn"
+                                                               Delay="0"
+                                                               MinimumLength="0"
+                                                               DataProvider="ProvideLookupColumnSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                    <div class="col">
+                                                            @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <HxAutosuggest Label="Lookup description"
+                                                               TItem="string"
+                                                               TValue="string"
+                                                               InputSize="InputSize.Small"
+                                                               @bind-Value="lookup.LookupDescriptionColumn"
+                                                               Delay="0"
+                                                               MinimumLength="0"
+                                                               DataProvider="ProvideLookupColumnSuggestions">
+                                                            </HxAutosuggest>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
                                             </td>
                                         }
                                         else
@@ -224,11 +365,14 @@
 
     [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
 
-    private DataTable EditTable { get; set; } = new();
+    private DataTable EditTable { get; set; } = new() { Lookups = new List<DataTableLookup>() };
 
     private BiflowContext? EditContext { get; set; }
 
     private DatabaseTableSelectOffcanvas? Offcanvas { get; set; }
+
+    private IEnumerable<string>? Columns { get; set; }
+    private IEnumerable<string>? LookupColumns { get; set; }
 
     private async Task DeleteTableAsync(DataTable table)
     {
@@ -252,15 +396,79 @@
         {
             EditTable = await EditContext.DataTables
                 .Include(t => t.Connection)
+                .Include(t => t.Lookups)
+                .ThenInclude(l => l.LookupDataTable)
                 .FirstAsync(t => t.DataTableId == table.DataTableId);
         }
         StateHasChanged();
     }
 
+    private async void SetLookupTable(Guid guid, DataTableLookup lookup)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Tables);
+            var dataTable = Tables.FirstOrDefault(t => t.DataTableId == guid);
+            lookup.LookupValueColumn = "";
+            lookup.LookupDescriptionColumn = "";
+            if (dataTable is null)
+            {
+                lookup.LookupDataTableId = Guid.Empty;
+                LookupColumns = null;
+                return;
+            }
+            lookup.LookupDataTableId = guid;
+            LookupColumns = await dataTable.GetColumnsAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error selecting lookup table", ex.Message);   
+        }
+    }
+
+    private async Task<AutosuggestDataProviderResult<string>> ProvideColumnSuggestions(AutosuggestDataProviderRequest request)
+    {
+        try
+        {
+            Columns ??= await EditTable.GetColumnsAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error fetching table columns", ex.Message);
+            return new AutosuggestDataProviderResult<string> { Data = Enumerable.Empty<string>() };   
+        }
+        return new AutosuggestDataProviderResult<string>
+            {
+                Data = Columns.Where(c => c.ContainsIgnoreCase(request.UserInput))
+            };
+    }
+
+    private async Task<AutosuggestDataProviderResult<string>> ProvideLookupColumnSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(100);
+        ArgumentNullException.ThrowIfNull(LookupColumns);
+        return new AutosuggestDataProviderResult<string>
+            {
+                Data = LookupColumns.Where(c => c.ContainsIgnoreCase(request.UserInput))
+            };
+    }
+
+    private async Task<AutosuggestDataProviderResult<DataTable>> ProvideLookupTableSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(100);
+        ArgumentNullException.ThrowIfNull(Tables);
+        return new AutosuggestDataProviderResult<DataTable>
+            {
+                Data = Tables.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput))
+            };
+    }
+
     private void EndEditContext()
     {
         EditContext?.Dispose();
-        EditTable = new();
+        EditTable = new() { Lookups = new List<DataTableLookup>() };
+        Columns = null;
+        LookupColumns = null;
         StateHasChanged();
     }
 
@@ -302,6 +510,15 @@
         catch (Exception ex)
         {
             Messenger.AddError("Error updating data table", ex.Message);
+        }
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
         }
     }
 

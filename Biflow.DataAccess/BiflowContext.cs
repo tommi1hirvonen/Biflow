@@ -64,6 +64,7 @@ public class BiflowContext : DbContext
         var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
         var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
         var pipelineClientTypeConverter = new EnumToStringConverter<PipelineClientType>();
+        var lookupDisplayTypeConverter = new EnumToStringConverter<LookupDisplayType>();
 
         modelBuilder.Entity<Execution>(e =>
         {
@@ -423,12 +424,24 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<FunctionApp>()
             .ToTable("FunctionApp");
 
+        modelBuilder.Entity<DataTableLookup>(e =>
+        {
+            e.ToTable("DataTableLookup");
+            e.HasOne(l => l.DataTable).WithMany(t => t.Lookups);
+            e.HasKey(p => new { p.DataTableId, p.ColumnName });
+            e.Property(p => p.LookupDisplayType).HasConversion(lookupDisplayTypeConverter);
+        });
+
         modelBuilder.Entity<DataTable>(e =>
         {
             e.ToTable("DataTable");
+            
+            e.HasMany(t => t.Lookups).WithOne(l => l.DataTable);
+            
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)
             .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
+            
             x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
             x => x.HasOne<DataTable>().WithMany().HasForeignKey("DataTableId"));
 

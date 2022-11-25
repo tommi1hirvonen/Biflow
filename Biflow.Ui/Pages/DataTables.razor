@@ -51,6 +51,8 @@ else
         using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
         Tables = await context.DataTables
             .Include(t => t.Connection)
+            .Include(t => t.Lookups)
+            .ThenInclude(t => t.LookupDataTable)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
         Connections = await context.SqlConnections

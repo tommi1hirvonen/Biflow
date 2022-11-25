@@ -30,4 +30,6 @@ public class DataTable
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     public ICollection<User> Users { get; set; } = null!;
+
+    public ICollection<DataTableLookup> Lookups { get; set; } = null!;
 }

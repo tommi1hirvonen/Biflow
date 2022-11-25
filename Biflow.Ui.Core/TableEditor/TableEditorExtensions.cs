@@ -7,6 +7,23 @@ namespace Biflow.Ui.Core;
 
 public static class TableEditorExtensions
 {
+    public static async Task<IEnumerable<string>> GetColumnsAsync(this DataTable table)
+    {
+        using var connection = new SqlConnection(table.Connection.ConnectionString);
+        await connection.OpenAsync();
+        var columns = await connection.QueryAsync<string>("""
+            select b.[name]
+            from sys.tables as a
+                inner join sys.columns as b on a.object_id = b.object_id
+                inner join sys.schemas as d on a.schema_id = d.schema_id
+            where a.[name] = @TableName and d.[name] = @SchemaName
+            order by 1
+            """,
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
+        );
+        return columns;
+    }
+
     public static async Task<Dataset> LoadDataAsync(this DataTable table, int? top = null, FilterSet? filters = null)
     {
         top ??= 1000;
