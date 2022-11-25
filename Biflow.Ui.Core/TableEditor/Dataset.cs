@@ -7,6 +7,8 @@ namespace Biflow.Ui.Core;
 public class Dataset
 {
     private readonly LinkedList<RowRecord> _workingData;
+    
+    internal Dictionary<string, IEnumerable<(object? Value, object? Description)>> LookupData { get; }
 
     internal DataTable DataTable { get; }
 
@@ -21,13 +23,15 @@ public class Dataset
         HashSet<string> primaryKeyColumns,
         string? identityColumn,
         Dictionary<string, DbDataType> columnDbDataTypes,
-        List<Dictionary<string, object?>> data)
+        IEnumerable<IDictionary<string, object?>> data,
+        Dictionary<string, IEnumerable<(object? Value, object? Description)>> lookupData)
     {
         DataTable = dataTable;
         PrimaryKeyColumns = primaryKeyColumns;
         IdentityColumn = identityColumn;
         ColumnDbDataTypes = columnDbDataTypes;
         _workingData = new LinkedList<RowRecord>(data.Select(row => new RowRecord(this, row)));
+        LookupData = lookupData;
     }
 
     public bool IsEditable => PrimaryKeyColumns.Any();

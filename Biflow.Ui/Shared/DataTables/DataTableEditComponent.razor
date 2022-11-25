@@ -158,7 +158,7 @@
                             @foreach (var row in records)
                             {
                                 <tr>
-                                    @foreach (var (column, datatype) in row.Columns.Where(c => IsColumnSelected(c.ColumnName)))
+                                    @foreach (var (column, datatype, lookupValues) in row.Columns.Where(c => IsColumnSelected(c.ColumnName)))
                                     {
                                         <td>
                                             @if (Dataset.IsEditable && EditModeEnabled)
@@ -190,6 +190,16 @@
                                                 else if (datatype == typeof(float))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.FloatIndexer[column]" />
+                                                }
+                                                else if (datatype == typeof(string) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.StringIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.Description</option>
+                                                        }
+                                                    </select>
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {

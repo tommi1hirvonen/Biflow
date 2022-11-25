@@ -6,7 +6,7 @@ namespace Biflow.Ui.Core;
 public class RowRecord
 {
     private readonly Dataset _dataset;
-    private readonly Dictionary<string, object?>? _originalValues;
+    private readonly IDictionary<string, object?>? _originalValues;
 
     public Dictionary<string, object?> WorkingValues { get; }
 
@@ -25,7 +25,7 @@ public class RowRecord
 
     public RowRecord(
         Dataset dataset,
-        Dictionary<string, object?>? originalValues = null)
+        IDictionary<string, object?>? originalValues = null)
     {
         _dataset= dataset;
         _originalValues = originalValues;
@@ -81,18 +81,19 @@ public class RowRecord
         }
     }
 
-    public IEnumerable<(string ColumnName, Type? Datatype)> Columns =>
+    public IEnumerable<(string ColumnName, Type? Datatype, IEnumerable<(object? Value, object? Description)>? LookupValues)> Columns =>
         _dataset.ColumnDbDataTypes.Select(c =>
         {
             var columnName = c.Key;
             var dbDatatype = c.Value.BaseDataType;
+            var lookupValues = _dataset.LookupData.GetValueOrDefault(columnName);
             if (columnName != _dataset.IdentityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
             {
-                return (columnName, typeMapping);
+                return (columnName, typeMapping, lookupValues);
             }
             else
             {
-                return (columnName, null as Type);
+                return (columnName, null as Type, lookupValues);
             }
         });
 

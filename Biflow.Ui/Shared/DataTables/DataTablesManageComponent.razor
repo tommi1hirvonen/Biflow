@@ -40,7 +40,7 @@
                                 {
                                     <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                                     <tr>
-                                        <td colspan="5">
+                                        <td colspan="5" class="bg-light">
                                             <div class="row my-3">
                                                 <div class="col">
                                                     <div class="row">
@@ -175,13 +175,13 @@
                                         </td>
                                     </tr>
                                 }
-                                @foreach (var table in Tables.OrderBy(t => t.DataTableName))
+                                @foreach (var table in Tables)
                                 {
                                     <tr>
                                         @if (EditTable?.DataTableId == table.DataTableId)
                                         {
                                             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-                                            <td colspan="5">
+                                            <td colspan="5" class="bg-light">
                                                 <div class="row my-3">
                                                     <div class="col">
                                                         <div class="row">
@@ -500,6 +500,7 @@
                 Tables?.Remove(toRemove);
             }
             Tables?.Add(EditTable);
+            Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
 
             EditTable = new();
         }

@@ -123,18 +123,21 @@ public static class TableEditorExtensions
 
         var cmd = cmdBuilder.ToString();
         var rows = await connection.QueryAsync(cmd, parameters);
-        var originalData = new List<Dictionary<string, object?>>();
-        foreach (var row in rows)
-        {
-            var dict = new Dictionary<string, object?>();
-            foreach (var value in row)
-            {
-                dict[value.Key] = value.Value;
-            }
-            originalData.Add(dict);
-        }
+        var originalData = rows.Cast<IDictionary<string, object?>>();
 
-        return new Dataset(table, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData);
+        var lookupData = await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
+        {
+            using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
+            await connection.OpenAsync();
+            var query = $"""
+                SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
+                FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
+                """;
+            var data = await connection.QueryAsync<(object? Value, object? Description)>(query);
+            return (lookup.ColumnName, data);
+        }).ToDictionaryAsync(key => key.ColumnName, value => value.data);
+        
+        return new Dataset(table, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData, lookupData);
     }
 
     private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string column, Enum oper, object filterValue, int index)
