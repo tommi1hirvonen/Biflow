@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Biflow.DataAccess.Models;
+using Dapper;
 using System.Text;
 
 namespace Biflow.Ui.Core;
@@ -81,7 +82,7 @@ public class RowRecord
         }
     }
 
-    public IEnumerable<(string ColumnName, Type? Datatype, IEnumerable<(object? Value, object? Description)>? LookupValues)> Columns =>
+    public IEnumerable<(string ColumnName, Type? Datatype, IEnumerable<(object? Value, object? DisplayValue)>? LookupValues)> Columns =>
         _dataset.ColumnDbDataTypes.Select(c =>
         {
             var columnName = c.Key;

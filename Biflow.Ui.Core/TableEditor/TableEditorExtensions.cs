@@ -133,7 +133,18 @@ public static class TableEditorExtensions
                 SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
                 FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
                 """;
-            var data = await connection.QueryAsync<(object? Value, object? Description)>(query);
+            var results = await connection.QueryAsync<(object? Value, object? Description)>(query);
+            var data = results.Select(value =>
+            {
+                var displayValue = lookup.LookupDisplayType switch
+                {
+                    LookupDisplayType.Value => value.Value,
+                    LookupDisplayType.Description => value.Description,
+                    LookupDisplayType.ValueAndDescription => string.Join(' ', value.Value, value.Description),
+                    _ => value.Description
+                };
+                return (value.Value, displayValue);
+            });
             return (lookup.ColumnName, data);
         }).ToDictionaryAsync(key => key.ColumnName, value => value.data);
         

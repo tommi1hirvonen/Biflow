@@ -8,7 +8,7 @@ public class Dataset
 {
     private readonly LinkedList<RowRecord> _workingData;
     
-    internal Dictionary<string, IEnumerable<(object? Value, object? Description)>> LookupData { get; }
+    internal Dictionary<string, IEnumerable<(object? Value, object? DisplayValue)>> LookupData { get; }
 
     internal DataTable DataTable { get; }
 
@@ -24,7 +24,7 @@ public class Dataset
         string? identityColumn,
         Dictionary<string, DbDataType> columnDbDataTypes,
         IEnumerable<IDictionary<string, object?>> data,
-        Dictionary<string, IEnumerable<(object? Value, object? Description)>> lookupData)
+        Dictionary<string, IEnumerable<(object? Value, object? DisplayValue)>> lookupData)
     {
         DataTable = dataTable;
         PrimaryKeyColumns = primaryKeyColumns;

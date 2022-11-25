@@ -106,12 +106,12 @@
                                             </div>
                                             <div class="row">
                                                 <div class="col">
-                                                    <button class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
+                                                    <button type="button" class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
                                                 </div>
                                             </div>
                                             @foreach (var lookup in EditTable.Lookups)
                                             {
-                                                <div class="row mt-2">
+                                                <div class="row mt-2 align-items-end">
                                                     <div class="col">
                                                         <HxAutosuggest Label="Column"
                                                            TItem="string"
@@ -169,6 +169,24 @@
                                                            DataProvider="ProvideLookupColumnSuggestions">
                                                             </HxAutosuggest>
                                                         }
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <label class="form-label">Show</label>
+                                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
+                                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
+                                                                {
+                                                                    <option>@type</option>
+                                                                }
+                                                            </select>
+                                                        }
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
+                                                                OnClick="() => EditTable.Lookups.Remove(lookup)">
+                                                            Delete
+                                                        </HxButton>
                                                     </div>
                                                 </div>
                                             }
@@ -247,12 +265,12 @@
                                                 </div>
                                                 <div class="row">
                                                 <div class="col">
-                                                    <button class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
+                                                    <button type="button" class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">Add lookup</button>
                                                 </div>
                                             </div>
                                             @foreach (var lookup in EditTable.Lookups)
                                             {
-                                                <div class="row mt-2">
+                                                <div class="row mt-2 align-items-end">
                                                     <div class="col">
                                                         <HxAutosuggest
                                                             Label="Column"
@@ -299,7 +317,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                            @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
                                                         {
                                                             <HxAutosuggest Label="Lookup description"
                                                                TItem="string"
@@ -311,6 +329,24 @@
                                                                DataProvider="ProvideLookupColumnSuggestions">
                                                             </HxAutosuggest>
                                                         }
+                                                    </div>
+                                                    <div class="col">
+                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        {
+                                                            <label class="form-label">Show</label>
+                                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
+                                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
+                                                                {
+                                                                    <option>@type</option>
+                                                                }
+                                                            </select>       
+                                                        }
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
+                                                            OnClick="() => EditTable.Lookups.Remove(lookup)">
+                                                            Delete
+                                                        </HxButton>
                                                     </div>
                                                 </div>
                                             }
@@ -376,10 +412,17 @@
 
     private async Task DeleteTableAsync(DataTable table)
     {
-        using var context = DbContextFactory.CreateDbContext();
-        context.DataTables.Remove(table);
-        await context.SaveChangesAsync();
-        Tables?.Remove(table);
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            context.DataTables.Remove(table);
+            await context.SaveChangesAsync();
+            Tables?.Remove(table);
+        }
+        catch(Exception ex)
+        {
+            Messenger.AddError("Error deleting data table", ex.Message);
+        }
     }
 
     private async Task SetEditContextAsync(DataTable? table = null)
@@ -501,6 +544,12 @@
             }
             Tables?.Add(EditTable);
             Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
+
+            foreach (var lookup in EditTable.Lookups)
+            {
+                var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupDataTableId);
+                if (lookupTable is not null) lookup.LookupDataTable = lookupTable;
+            }
 
             EditTable = new();
         }

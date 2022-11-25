@@ -167,22 +167,67 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.ByteIndexer[column]" />
                                                 }
+                                                
+                                                else if (datatype == typeof(short) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.ShortIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
+                                                        }
+                                                    </select>
+                                                }
                                                 else if (datatype == typeof(short))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.ShortIndexer[column]" />
+                                                }
+                                                
+                                                else if (datatype == typeof(int) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.IntIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
+                                                        }
+                                                    </select>
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.IntIndexer[column]" />
                                                 }
+                                                
+                                                else if (datatype == typeof(long) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.LongIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
+                                                        }
+                                                    </select>
+                                                }
                                                 else if (datatype == typeof(long))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.LongIndexer[column]" />
+                                                }
+
+                                                else if (datatype == typeof(decimal) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.DecimalIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
+                                                        }
+                                                    </select>
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.DecimalIndexer[column]" />
                                                 }
+
                                                 else if (datatype == typeof(double))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.DoubleIndexer[column]" />
@@ -191,13 +236,14 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.FloatIndexer[column]" />
                                                 }
+
                                                 else if (datatype == typeof(string) && lookupValues is not null)
                                                 {
                                                     <select @bind="row.StringIndexer[column]" class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
-                                                            <option value="@lookup.Value">@lookup.Description</option>
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
                                                         }
                                                     </select>
                                                 }
@@ -205,6 +251,7 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="text" @bind-value="row.StringIndexer[column]" />
                                                 }
+
                                                 else if (datatype == typeof(bool))
                                                 {
                                                     var id = Guid.NewGuid();
@@ -213,6 +260,17 @@
                                                                 checked=@row.BooleanIndexer[column] @bind-value="row.BooleanIndexer[column]">
                                                         <label class="form-check-label" for="@id"></label>
                                                     </div>
+                                                }
+
+                                                else if (datatype == typeof(DateTime) && lookupValues is not null)
+                                                {
+                                                    <select @bind="row.DateTimeIndexer[column]" class="form-select form-select-sm">
+                                                        <option value="">null</option>
+                                                        @foreach (var lookup in lookupValues)
+                                                        {
+                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
+                                                        }
+                                                    </select>
                                                 }
                                                 else if (datatype == typeof(DateTime))
                                                 {

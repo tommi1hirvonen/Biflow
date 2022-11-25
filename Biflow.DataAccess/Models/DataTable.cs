@@ -32,4 +32,6 @@ public class DataTable
     public ICollection<User> Users { get; set; } = null!;
 
     public ICollection<DataTableLookup> Lookups { get; set; } = null!;
+
+    public ICollection<DataTableLookup> DependentLookups { get; set; } = null!;
 }
