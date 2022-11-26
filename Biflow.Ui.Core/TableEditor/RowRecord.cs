@@ -131,29 +131,25 @@ public class RowRecord
             var builder = new StringBuilder();
 
             builder.Append("UPDATE [").Append(schema).Append("].[").Append(table).Append("] SET ");
-            var j = 1;
-            foreach (var value in changes)
+            foreach (var (value, index) in changes.Select((c, i) => (c, i + 1)))
             {
-                builder.Append('[').Append(value.Key).Append(']').Append(" = @Working_").Append(j);
-                parameters.Add($"Working_{j}", value.Value);
-                if (j < changes.Count)
+                builder.Append('[').Append(value.Key).Append(']').Append(" = @Working_").Append(index);
+                parameters.Add($"Working_{index}", value.Value);
+                if (index < changes.Count)
                 {
                     builder.Append(',');
                 }
-                j++;
             }
-            var k = 1;
             builder.Append(" WHERE ");
-            foreach (var pk in _dataset.PrimaryKeyColumns)
+            foreach (var (pk, index) in _dataset.PrimaryKeyColumns.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _originalValues[pk];
-                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(k);
-                parameters.Add($"Orig_{k}", value);
-                if (k < _dataset.PrimaryKeyColumns.Count)
+                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
+                parameters.Add($"Orig_{index}", value);
+                if (index < _dataset.PrimaryKeyColumns.Count)
                 {
                     builder.Append(" AND ");
                 }
-                k++;
             }
 
             return (builder.ToString(), parameters, DataTableCommandType.Update);
@@ -164,17 +160,15 @@ public class RowRecord
             var builder = new StringBuilder();
             var parameters = new DynamicParameters();
             builder.Append("DELETE [").Append(schema).Append("].[").Append(table).Append("] WHERE ");
-            var k = 1;
-            foreach (var pk in _dataset.PrimaryKeyColumns)
+            foreach (var (pk, index) in _dataset.PrimaryKeyColumns.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _originalValues[pk];
-                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(k);
-                parameters.Add($"Orig_{k}", value);
-                if (k < _dataset.PrimaryKeyColumns.Count)
+                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
+                parameters.Add($"Orig_{index}", value);
+                if (index < _dataset.PrimaryKeyColumns.Count)
                 {
                     builder.Append(" AND ");
                 }
-                k++;
             }
 
             return (builder.ToString(), parameters, DataTableCommandType.Delete);
@@ -192,16 +186,14 @@ public class RowRecord
                 .Append("] (")
                 .AppendJoin(',', upsertableColumns.Select(k => $"[{k.Key}]"))
                 .Append(") VALUES (");
-            var j = 1;
-            foreach (var value in upsertableColumns) // do not include possible identity column in insert statement
+            foreach (var (value, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
             {
-                builder.Append("@Working_").Append(j);
-                parameters.Add($"Working_{j}", value.Value);
-                if (j < upsertableColumns.Count)
+                builder.Append("@Working_").Append(index);
+                parameters.Add($"Working_{index}", value.Value);
+                if (index < upsertableColumns.Count)
                 {
                     builder.Append(',');
                 }
-                j++;
             }
             builder.Append(')');
             return (builder.ToString(), parameters, DataTableCommandType.Insert);
