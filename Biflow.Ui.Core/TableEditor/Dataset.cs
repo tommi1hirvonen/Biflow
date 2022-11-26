@@ -103,7 +103,8 @@ public class Dataset
                 sheet.Cell(rowIndex + 2, columnIndex + 1).Value = value;
             }
         }
-        sheet.Columns(1, ColumnDbDataTypes.Keys.Count).AdjustToContents();
+        // Adjust column widths based on only the first 100 rows for much better performance.
+        sheet.Columns(1, ColumnDbDataTypes.Keys.Count).AdjustToContents(1, 100);
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Position = 0;
