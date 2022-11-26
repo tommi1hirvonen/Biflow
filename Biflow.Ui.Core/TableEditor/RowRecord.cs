@@ -87,14 +87,15 @@ public class RowRecord
         {
             var columnName = c.Key;
             var dbDatatype = c.Value.BaseDataType;
+            var isComputed = c.Value.IsComputed;
             var lookupValues = _dataset.LookupData.GetValueOrDefault(columnName);
-            if (columnName != _dataset.IdentityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
+            if (columnName != _dataset.IdentityColumn && !isComputed && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
             {
                 return (columnName, typeMapping, lookupValues);
             }
             else
             {
-                return (columnName, null as Type, lookupValues);
+                return (columnName, null as Type, null as IEnumerable<(object? Value, object? DisplayValue)>);
             }
         });
 
@@ -107,12 +108,19 @@ public class RowRecord
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
         var (schema, table) = (_dataset.DataTable.TargetSchemaName, _dataset.DataTable.TargetTableName);
-        var nonIdentity = WorkingValues.Where(w => w.Key != _dataset.IdentityColumn).ToList();
+        var computedColumns = _dataset.ColumnDbDataTypes
+            .Where(c => c.Value.IsComputed)
+            .Select(c => c.Key)
+            .ToList();
+        var upsertableColumns = WorkingValues
+            .Where(w => w.Key != _dataset.IdentityColumn)
+            .Where(w => !computedColumns.Any(c => c == w.Key))
+            .ToList();
 
         // Existing entity
         if (_originalValues is not null && !ToBeDeleted)
         {
-            var changes = nonIdentity.Where(w => w.Value?.ToString() != _originalValues[w.Key]?.ToString()).ToList();
+            var changes = upsertableColumns.Where(w => w.Value?.ToString() != _originalValues[w.Key]?.ToString()).ToList();
             // No changes => skip this record
             if (!changes.Any())
             {
@@ -182,14 +190,14 @@ public class RowRecord
                 .Append("].[")
                 .Append(table)
                 .Append("] (")
-                .AppendJoin(',', nonIdentity.Select(k => $"[{k.Key}]"))
+                .AppendJoin(',', upsertableColumns.Select(k => $"[{k.Key}]"))
                 .Append(") VALUES (");
             var j = 1;
-            foreach (var value in nonIdentity) // do not include possible identity column in insert statement
+            foreach (var value in upsertableColumns) // do not include possible identity column in insert statement
             {
                 builder.Append("@Working_").Append(j);
                 parameters.Add($"Working_{j}", value.Value);
-                if (j < nonIdentity.Count)
+                if (j < upsertableColumns.Count)
                 {
                     builder.Append(',');
                 }

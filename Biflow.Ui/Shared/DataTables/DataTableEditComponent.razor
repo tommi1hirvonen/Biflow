@@ -133,6 +133,12 @@
                                                 @MarkupHelper.FromFile("icons/feather/key.svg")
                                             </span>
                                         }
+                                        @if (column.DataType.IsComputed)
+                                        {
+                                            <span class="ms-2">
+                                                @MarkupHelper.FromFile("icons/feather/code.svg")
+                                            </span>
+                                        }
                                         @if (orderBy.Column is not null)
                                         {
                                             <span class="ms-2"> 
@@ -291,7 +297,7 @@
                                     {
                                         <td>
                                             <button class="btn btn-sm btn-outline-danger" @onclick="() => row.ToBeDeleted = true">
-                                                Delete
+                                                @MarkupHelper.FromFile("icons/feather/delete.svg")
                                             </button>
                                         </td>   
                                     }

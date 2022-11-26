@@ -54,7 +54,7 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-        var columnDatatypes = await connection.QueryAsync<(string, string, string)>("""
+        var columnDatatypes = await connection.QueryAsync<(string, string, string, bool)>("""
             select
                 ColumnName = b.[name],
                 DataType = c.[name],
@@ -76,7 +76,8 @@ public static class TableEditorExtensions
                         end,
                         case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
                         case when b.is_nullable = 1 then N' null' else N' not null' end
-                    )
+                    ),
+                IsComputed = b.is_computed
             from sys.tables as a
                 inner join sys.columns as b on a.object_id = b.object_id
                 inner join sys.types as c on b.user_type_id = c.user_type_id
@@ -86,7 +87,7 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-        var columnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3));
+        var columnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3, value.Item4));
 
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
