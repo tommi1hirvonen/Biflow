@@ -1,6 +1,8 @@
 ﻿@using System.Text
+@using System.Text.RegularExpressions
 @inject IHxMessengerService Messenger
 @inject MarkupHelperService MarkupHelper
+@inject IJSRuntime JS
 
 <div class="row">
     <div class="col-auto">
@@ -75,10 +77,26 @@
                 @MarkupHelper.FromFile("icons/feather/info.svg")
                 Table info
             </HxButton>
-            
+
+            <HxDropdownButtonGroup CssClass="ms-3">
+                <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="SelectedTable is not null && !Exporting">
+                    @MarkupHelper.FromFile("icons/feather/download.svg")
+                    Export
+                </HxDropdownToggleButton>
+                <HxDropdownMenu>
+                    <HxDropdownItem OnClick="async () => await DownloadExportAsync(true)">
+                        Filtered data
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="async () => await DownloadExportAsync(false)">
+                        All data
+                    </HxDropdownItem>
+                </HxDropdownMenu>
+            </HxDropdownButtonGroup>
+
         </HxButtonToolbar>
     </div>
 </div>
+
 <div class="row mt-3">
     <div class="col-auto d-inline-flex align-items-center">
         <label>Limit rows</label>
@@ -370,6 +388,8 @@
 
     private bool EditModeEnabled { get; set; } = true;
 
+    private bool Exporting { get; set; } = false;
+
     private List<RowRecord>? GetOrderedRowRecords()
     {
         var records = Dataset?.RowRecords;
@@ -474,4 +494,32 @@
             Messenger.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
         }
     }
+
+    private async Task DownloadExportAsync(bool filtered)
+    {
+        Exporting = true;
+        try
+        {
+            ArgumentNullException.ThrowIfNull(SelectedTable);
+            var filterSet = filtered ? FilterSet : null;
+            var dataset = await SelectedTable.LoadDataAsync(top: int.MaxValue, filters: filterSet);
+            using var stream = dataset.GetExcelExportStream();
+
+            var regexSearch = new string(Path.GetInvalidFileNameChars());
+            var regex = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            var tableName = SelectedTable is not null ? regex.Replace(SelectedTable.DataTableName, "") : "export";
+            var fileName = $"{tableName}.xlsx";
+            using var streamRef = new DotNetStreamReference(stream: stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error exporting", ex.Message);
+        }
+        finally
+        {
+            Exporting = false;
+        }
+    }
+
 }

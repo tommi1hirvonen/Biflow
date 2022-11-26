@@ -1,4 +1,5 @@
 ﻿using Biflow.DataAccess.Models;
+using ClosedXML.Excel;
 using Dapper;
 using Microsoft.Data.SqlClient;
 
@@ -84,5 +85,28 @@ public class Dataset
     {
         var record = new RowRecord(this);
         _workingData.AddFirst(record);
+    }
+
+    public Stream GetExcelExportStream()
+    {
+        var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("Export");
+        foreach (var (column, index) in ColumnDbDataTypes.Keys.Select((c, i) => (c, i)))
+        {
+            sheet.Cell(1, index + 1).SetValue(column).Style.Font.Bold = true;
+        }
+        foreach (var (rowRecod, rowIndex) in _workingData.Select((r, i) => (r, i)))
+        {
+            var values = rowRecod.WorkingValues.Values.Select((v, i) => (v, i));
+            foreach (var (value, columnIndex) in values)
+            {
+                sheet.Cell(rowIndex + 2, columnIndex + 1).Value = value;
+            }
+        }
+        sheet.Columns(1, ColumnDbDataTypes.Keys.Count).AdjustToContents();
+        var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Position = 0;
+        return stream;
     }
 }
