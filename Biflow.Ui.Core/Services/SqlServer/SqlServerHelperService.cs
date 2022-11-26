@@ -360,21 +360,52 @@ public class SqlServerHelperService
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
+            ;with cte as (
+               select
+                   referenced_server_name = isnull(a.referenced_server_name, @@servername),
+                   referenced_database_name = isnull(a.referenced_database_name, db_name()),
+                   referenced_schema_name = isnull(a.referenced_schema_name, c.name),
+                   referenced_entity_name = a.referenced_entity_name,
+                   is_unreliable = case when a.is_select_all = 0 and a.is_selected = 0 then 1 else 0 end,
+                   [type] = isnull(b.[type], 'U')
+               from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
+                   left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
+                   left join sys.schemas as c on b.schema_id = c.schema_id
+               where a.is_updated = 0
+                   and isnull(a.referenced_server_name, @@servername) is not null
+                   and isnull(a.referenced_database_name, db_name()) is not null
+                   and isnull(a.referenced_schema_name, c.name) is not null
+                   and a.referenced_entity_name is not null
+                   and isnull(b.[type], 'U') in ('U','V')
+               union all
+               select
+                   referenced_server_name = isnull(b.referenced_server_name, @@servername),
+                   referenced_database_name = isnull(b.referenced_database_name, db_name()),
+                   referenced_schema_name = isnull(b.referenced_schema_name, c.name),
+                   referenced_entity_name = b.referenced_entity_name,
+                   is_unreliable = case when b.is_select_all = 0 and b.is_selected = 0 then 1 else 0 end,
+                   [type] = isnull(c.[type], 'U')
+               from cte as a
+                   cross apply sys.dm_sql_referenced_entities(a.referenced_schema_name + '.' + a.referenced_entity_name, 'OBJECT') as b
+                   inner join sys.objects as c on b.referenced_id = c.object_id and b.referenced_entity_name = c.name
+                   inner join sys.schemas as d on c.schema_id = d.schema_id
+               where a.[type] = 'V'
+                   and b.is_updated = 0
+                   and isnull(b.referenced_server_name, @@servername) is not null
+                   and isnull(b.referenced_database_name, db_name()) is not null
+                   and isnull(b.referenced_schema_name, c.name) is not null
+                   and b.referenced_entity_name is not null
+                   and isnull(c.[type], 'U') in ('U','V')
+
+            )
             select distinct
-                referenced_server_name = isnull(a.referenced_server_name, @@servername),
-                referenced_database_name = isnull(a.referenced_database_name, db_name()),
-                referenced_schema_name = isnull(a.referenced_schema_name, c.name),
-                referenced_entity_name = a.referenced_entity_name,
-                is_unreliable = case when a.is_select_all = 0 and a.is_selected = 0 then 1 else 0 end
-            from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
-                left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
-                left join sys.schemas as c on b.schema_id = c.schema_id
-            where is_updated = 0
-                and isnull(a.referenced_server_name, @@servername) is not null
-                and isnull(a.referenced_database_name, db_name()) is not null
-                and isnull(a.referenced_schema_name, c.name) is not null
-                and a.referenced_entity_name is not null
-                and isnull(b.[type], 'U') in ('U','V')
+               referenced_server_name,
+               referenced_database_name,
+               referenced_schema_name,
+               referenced_entity_name,
+               is_unreliable
+            from cte
+            where [type] = 'U'
             """, new
             {
                 ObjectName = objectName
@@ -391,22 +422,52 @@ public class SqlServerHelperService
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
+            ;with cte as (
+                select
+                    referenced_server_name = isnull(a.referenced_server_name, @@servername),
+                    referenced_database_name = isnull(a.referenced_database_name, db_name()),
+                    referenced_schema_name = isnull(a.referenced_schema_name, c.name),
+                    referenced_entity_name = a.referenced_entity_name,
+                    is_unreliable = case when a.is_updated = 0 then 1 else 0 end,
+                    [type] = isnull(b.[type], 'U')
+                from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
+                    left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
+                    left join sys.schemas as c on b.schema_id = c.schema_id
+                where a.is_selected = 0
+                    and a.is_select_all = 0
+                    and isnull(a.referenced_server_name, @@servername) is not null
+                    and isnull(a.referenced_database_name, db_name()) is not null
+                    and isnull(a.referenced_schema_name, c.name) is not null
+                    and a.referenced_entity_name is not null
+                    and isnull(b.[type], 'U') in ('U','V')
+                union all
+                select
+                    referenced_server_name = isnull(b.referenced_server_name, @@servername),
+                    referenced_database_name = isnull(b.referenced_database_name, db_name()),
+                    referenced_schema_name = isnull(b.referenced_schema_name, c.name),
+                    referenced_entity_name = b.referenced_entity_name,
+                    is_unreliable = case when b.is_updated = 0 then 1 else 0 end,
+                    [type] = isnull(c.[type], 'U')
+                from cte as a
+                    cross apply sys.dm_sql_referenced_entities(a.referenced_schema_name + '.' + a.referenced_entity_name, 'OBJECT') as b
+                    inner join sys.objects as c on b.referenced_id = c.object_id and b.referenced_entity_name = c.name
+                    inner join sys.schemas as d on c.schema_id = d.schema_id
+                where a.[type] = 'V'
+                    and b.is_selected = 0
+                    and b.is_select_all = 0
+                    and isnull(b.referenced_server_name, @@servername) is not null
+                    and isnull(b.referenced_database_name, db_name()) is not null
+                    and isnull(b.referenced_schema_name, c.name) is not null
+                    and b.referenced_entity_name is not null
+                    and isnull(c.[type], 'U') in ('U','V')
+            )
             select distinct
-                referenced_server_name = isnull(a.referenced_server_name, @@servername),
-                referenced_database_name = isnull(a.referenced_database_name, db_name()),
-                referenced_schema_name = isnull(a.referenced_schema_name, c.name),
-                referenced_entity_name = a.referenced_entity_name,
-                is_unreliable = case when a.is_updated = 0 then 1 else 0 end
-            from sys.dm_sql_referenced_entities(@ObjectName, 'OBJECT') as a
-                left join sys.objects as b on a.referenced_id = b.object_id and a.referenced_entity_name = b.name
-                left join sys.schemas as c on b.schema_id = c.schema_id
-            where is_selected = 0
-                and is_select_all = 0
-                and isnull(a.referenced_server_name, @@servername) is not null
-                and isnull(a.referenced_database_name, db_name()) is not null
-                and isnull(a.referenced_schema_name, c.name) is not null
-                and a.referenced_entity_name is not null
-                and isnull(b.[type], 'U') in ('U','V')
+                referenced_server_name,
+                referenced_database_name,
+                referenced_schema_name,
+                referenced_entity_name,
+                is_unreliable
+            from cte
             """, new
             {
                 ObjectName = objectName
