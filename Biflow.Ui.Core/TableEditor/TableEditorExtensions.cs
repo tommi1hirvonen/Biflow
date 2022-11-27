@@ -38,6 +38,10 @@ public static class TableEditorExtensions
         var columnDatatypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>(ColumnDatatypeQuery,
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
+        if (table.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != table.Connection.ConnectionId))
+        {
+            throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
+        }
         var lookups = await table.GetLookupsAsync();
         var columns = columnDatatypes.Select(c =>
         {

@@ -534,6 +534,12 @@
             return;
         }
 
+        if (EditTable.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != EditTable.ConnectionId))
+        {
+            Messenger.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
+            return;
+        }
+
         try
         {
             if (EditTable.DataTableId == Guid.Empty)
@@ -555,6 +561,14 @@
             {
                 var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupDataTableId);
                 if (lookupTable is not null) lookup.LookupDataTable = lookupTable;
+            }
+
+            foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<DataTableLookup>())
+            {
+                if (lookup.LookupDataTableId == EditTable.DataTableId)
+                {
+                    lookup.LookupDataTable = EditTable;
+                }
             }
 
             EditTable = new();
