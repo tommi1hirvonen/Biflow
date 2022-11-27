@@ -2,8 +2,6 @@
 
 public class FilterSet
 {
-    private readonly Dictionary<string, DbDataType> _columnDbDatatypes;
-
     public Dictionary<string, IFilter> Filters { get; } = new();
 
     public FilterIndexer<ValueFilter<byte, NumberFilterOperator>> ByteIndexer { get; }
@@ -17,12 +15,9 @@ public class FilterSet
     public FilterIndexer<ValueFilter<bool, BooleanFilterOperator>> BooleanIndexer { get; }
     public FilterIndexer<ValueFilter<DateTime, NumberFilterOperator>> DateTimeIndexer { get; }
 
-    public IEnumerable<(string ColumnName, Type Datatype)> Columns =>
-        _columnDbDatatypes
-        .Where(c => RowRecord.DataTypeMapping.ContainsKey(c.Value.BaseDataType))
-        .Select(c => (c.Key, RowRecord.DataTypeMapping[c.Value.BaseDataType]));
+    public HashSet<Column> Columns { get; }
 
-    public FilterSet(Dictionary<string, DbDataType> columnDbDatatypes)
+    public FilterSet(HashSet<Column> columns)
     {
         ByteIndexer = new(Filters);
         ShortIndexer = new(Filters);
@@ -35,34 +30,33 @@ public class FilterSet
         BooleanIndexer = new(Filters);
         DateTimeIndexer = new(Filters);
 
-        _columnDbDatatypes = columnDbDatatypes;
-        foreach (var columnInfo in _columnDbDatatypes)
+        Columns = columns;
+        foreach (var columnInfo in Columns)
         {
-            var column = columnInfo.Key;
-            var dbDatatype = columnInfo.Value.BaseDataType;
-            if (RowRecord.DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
-            {
-                if (datatype == typeof(byte))
-                    ByteIndexer[column] = new ValueFilter<byte, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(short))
-                    ShortIndexer[column] = new ValueFilter<short, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(int))
-                    IntIndexer[column] = new ValueFilter<int, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(long))
-                    LongIndexer[column] = new ValueFilter<long, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(decimal))
-                    DecimalIndexer[column] = new ValueFilter<decimal, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(double))
-                    DoubleIndexer[column] = new ValueFilter<double, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(float))
-                    FloatIndexer[column] = new ValueFilter<float, NumberFilterOperator>(NumberFilterOperator.Equals);
-                else if (datatype == typeof(string))
-                    StringIndexer[column] = new StringFilter();
-                else if (datatype == typeof(bool))
-                    BooleanIndexer[column] = new ValueFilter<bool, BooleanFilterOperator>(BooleanFilterOperator.Equals);
-                else if (datatype == typeof(DateTime))
-                    DateTimeIndexer[column] = new ValueFilter<DateTime, NumberFilterOperator>(NumberFilterOperator.Equals);
-            }
+            var column = columnInfo.Name;
+            var datatype = columnInfo.Datatype;
+            if (datatype == typeof(byte))
+                ByteIndexer[column] = new ValueFilter<byte, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(short))
+                ShortIndexer[column] = new ValueFilter<short, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(int))
+                IntIndexer[column] = new ValueFilter<int, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(long))
+                LongIndexer[column] = new ValueFilter<long, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(decimal))
+                DecimalIndexer[column] = new ValueFilter<decimal, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(double))
+                DoubleIndexer[column] = new ValueFilter<double, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(float))
+                FloatIndexer[column] = new ValueFilter<float, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(string))
+                StringIndexer[column] = new StringFilter();
+            else if (datatype == typeof(bool))
+                BooleanIndexer[column] = new ValueFilter<bool, BooleanFilterOperator>(BooleanFilterOperator.Equals);
+            else if (datatype == typeof(DateTime))
+                DateTimeIndexer[column] = new ValueFilter<DateTime, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else
+                throw new ArgumentException($"Unsupported datatype {datatype}");
         }
     }
 }

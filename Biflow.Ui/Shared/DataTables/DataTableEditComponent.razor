@@ -140,18 +140,18 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                @foreach (var column in Dataset.Columns.Where(c => IsColumnSelected(c.ColumnName)))
+                                @foreach (var column in Dataset.Columns.Where(c => IsColumnSelected(c.Name)))
                                 {
-                                    var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.ColumnName);
-                                    <th @onclick="() => ToggleOrderBy(column.ColumnName)" title="@column.DataType.DisplayDataType">
-                                        @column.ColumnName
+                                    var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.Name);
+                                    <th @onclick="() => ToggleOrderBy(column.Name)" title="@column.DbDatatypeDescription">
+                                        @column.Name
                                         @if (column.IsPrimaryKey)
                                         {
                                             <span class="ms-2">
                                                 @MarkupHelper.FromFile("icons/feather/key.svg")
                                             </span>
                                         }
-                                        @if (column.DataType.IsComputed)
+                                        @if (column.IsComputed)
                                         {
                                             <span class="ms-2">
                                                 @MarkupHelper.FromFile("icons/feather/code.svg")
@@ -182,12 +182,20 @@
                             @foreach (var row in records)
                             {
                                 <tr>
-                                    @foreach (var (column, datatype, lookupValues) in row.Columns.Where(c => IsColumnSelected(c.ColumnName)))
+                                    @foreach (var columnInfo in Dataset.Columns.Where(c => IsColumnSelected(c.Name)))
                                     {
+                                        var column = columnInfo.Name;
+                                        var datatype = columnInfo.Datatype;
+                                        var lookupValues = columnInfo.LookupValues;
                                         <td>
                                             @if (Dataset.IsEditable && EditModeEnabled)
                                             {
-                                                @if (datatype == typeof(byte))
+                                                @if (!columnInfo.IsEditable)
+                                                {
+                                                    <text>@row.WorkingValues[column]</text>
+                                                }
+                                                
+                                                else if (datatype == typeof(byte))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.ByteIndexer[column]" />
                                                 }
@@ -449,7 +457,7 @@
         {
             Dataset = await SelectedTable.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= Dataset.EmptyFilterSet;
-            ColumnSelections ??= Dataset.Columns.ToDictionary(x => x.ColumnName, x => true);
+            ColumnSelections ??= Dataset.Columns.ToDictionary(x => x.Name, x => true);
         }
         catch (Exception ex)
         {

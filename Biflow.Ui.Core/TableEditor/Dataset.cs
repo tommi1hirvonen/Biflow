@@ -8,39 +8,24 @@ namespace Biflow.Ui.Core;
 public class Dataset
 {
     private readonly LinkedList<RowRecord> _workingData;
-    
-    internal Dictionary<string, IEnumerable<(object? Value, object? DisplayValue)>> LookupData { get; }
 
     internal DataTable DataTable { get; }
 
-    internal HashSet<string> PrimaryKeyColumns { get; }
-
-    internal string? IdentityColumn { get; }
-
-    internal Dictionary<string, DbDataType> ColumnDbDataTypes { get; }
+    public HashSet<Column> Columns { get; }
 
     internal Dataset(
         DataTable dataTable,
-        HashSet<string> primaryKeyColumns,
-        string? identityColumn,
-        Dictionary<string, DbDataType> columnDbDataTypes,
-        IEnumerable<IDictionary<string, object?>> data,
-        Dictionary<string, IEnumerable<(object? Value, object? DisplayValue)>> lookupData)
+        HashSet<Column> columns,
+        IEnumerable<IDictionary<string, object?>> data)
     {
         DataTable = dataTable;
-        PrimaryKeyColumns = primaryKeyColumns;
-        IdentityColumn = identityColumn;
-        ColumnDbDataTypes = columnDbDataTypes;
+        Columns = columns;
         _workingData = new LinkedList<RowRecord>(data.Select(row => new RowRecord(this, row)));
-        LookupData = lookupData;
     }
 
-    public bool IsEditable => PrimaryKeyColumns.Any();
+    public bool IsEditable => Columns.Any(c => c.IsPrimaryKey);
 
-    public FilterSet EmptyFilterSet => new(ColumnDbDataTypes);
-
-    public IEnumerable<(string ColumnName, DbDataType DataType, bool IsPrimaryKey)> Columns =>
-        ColumnDbDataTypes.Keys.Select(col => (col, ColumnDbDataTypes[col], PrimaryKeyColumns.Contains(col)));
+    public FilterSet EmptyFilterSet => new(Columns);
 
     public IEnumerable<RowRecord> RowRecords => _workingData.Where(r => !r.ToBeDeleted);
 
@@ -90,9 +75,9 @@ public class Dataset
     public Stream GetExcelExportStream()
     {
         var data = new System.Data.DataTable();
-        foreach (var column in ColumnDbDataTypes.Keys)
+        foreach (var column in Columns)
         {
-            data.Columns.Add(column);
+            data.Columns.Add(column.Name);
         }
         foreach (var rowRecod in _workingData)
         {
@@ -107,7 +92,7 @@ public class Dataset
         var workbook = new XLWorkbook(XLEventTracking.Disabled);
         var sheet = workbook.Worksheets.Add(data, "Sheet1");
         // Adjust column widths based on only the first 100 rows for much better performance.
-        sheet.Columns(1, ColumnDbDataTypes.Keys.Count).AdjustToContents(1, 100);
+        sheet.Columns(1, Columns.Count).AdjustToContents(1, 100);
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Position = 0;

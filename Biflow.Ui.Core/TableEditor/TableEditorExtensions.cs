@@ -54,7 +54,7 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-        var columnDatatypes = await connection.QueryAsync<(string, string, string, bool)>("""
+        var columnDatatypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>("""
             select
                 ColumnName = b.[name],
                 DataType = c.[name],
@@ -87,7 +87,36 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-        var columnDbDataTypes = columnDatatypes.ToDictionary(key => key.Item1, value => new DbDataType(value.Item2, value.Item3, value.Item4));
+        var lookupData = await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
+        {
+            using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
+            await connection.OpenAsync();
+            var query = $"""
+                SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
+                FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
+                """;
+            var results = await connection.QueryAsync<(object? Value, object? Description)>(query);
+            var data = results.Select(value =>
+            {
+                var displayValue = lookup.LookupDisplayType switch
+                {
+                    LookupDisplayType.Value => value.Value,
+                    LookupDisplayType.Description => value.Description,
+                    LookupDisplayType.ValueAndDescription => string.Join(' ', value.Value, value.Description),
+                    _ => value.Description
+                };
+                return (value.Value, displayValue);
+            });
+            return (lookup.ColumnName, data);
+        }).ToDictionaryAsync(key => key.ColumnName, value => value.data);
+
+        var columns = columnDatatypes.Select(c =>
+        {
+            var isPk = primaryKeyColumns.Contains(c.Name);
+            var isIdent = identityColumn == c.Name;
+            var lookupValues = lookupData.GetValueOrDefault(c.Name);
+            return new Column(c.Name, isPk, isIdent, c.Computed, c.Datatype, c.DatatypeDesc, lookupValues);
+        }).ToHashSet();
 
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
@@ -125,31 +154,8 @@ public static class TableEditorExtensions
         var cmd = cmdBuilder.ToString();
         var rows = await connection.QueryAsync(cmd, parameters);
         var originalData = rows.Cast<IDictionary<string, object?>>();
-
-        var lookupData = await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
-        {
-            using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
-            await connection.OpenAsync();
-            var query = $"""
-                SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
-                FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
-                """;
-            var results = await connection.QueryAsync<(object? Value, object? Description)>(query);
-            var data = results.Select(value =>
-            {
-                var displayValue = lookup.LookupDisplayType switch
-                {
-                    LookupDisplayType.Value => value.Value,
-                    LookupDisplayType.Description => value.Description,
-                    LookupDisplayType.ValueAndDescription => string.Join(' ', value.Value, value.Description),
-                    _ => value.Description
-                };
-                return (value.Value, displayValue);
-            });
-            return (lookup.ColumnName, data);
-        }).ToDictionaryAsync(key => key.ColumnName, value => value.data);
         
-        return new Dataset(table, primaryKeyColumns, identityColumn, columnDbDataTypes, originalData, lookupData);
+        return new Dataset(table, columns, originalData);
     }
 
     private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string column, Enum oper, object filterValue, int index)

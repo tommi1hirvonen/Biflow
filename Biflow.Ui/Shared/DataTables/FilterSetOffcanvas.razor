@@ -4,8 +4,10 @@
     <BodyTemplate>
         @if (Filters is not null)
         {
-            @foreach (var (column, datatype) in Filters.Columns)
+            @foreach (var columnInfo in Filters.Columns)
             {
+                var column = columnInfo.Name;
+                var datatype = columnInfo.Datatype;
                 RenderFragment? value1Input = null;
                 RenderFragment? operator1Input = null;
                 RenderFragment? value2Input = null;

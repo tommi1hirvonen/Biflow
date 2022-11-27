@@ -45,59 +45,42 @@ public class RowRecord
 
         if (_originalValues is null)
         {
-            foreach (var columnInfo in _dataset.ColumnDbDataTypes)
+            foreach (var column in _dataset.Columns)
             {
-                var column = columnInfo.Key;
-                var dbDatatype = columnInfo.Value.BaseDataType;
-                if (column != _dataset.IdentityColumn && DataTypeMapping.TryGetValue(dbDatatype, out var datatype))
+                //var column = columnInfo.Name;
+                //var dbDatatype = columnInfo.DbDatatype;
+                if (column.IsIdentity)
                 {
-                    if (datatype == typeof(byte))
-                        ByteIndexer[column] = 0;
-                    else if (datatype == typeof(short))
-                        ShortIndexer[column] = 0;
-                    else if (datatype == typeof(int))
-                        IntIndexer[column] = 0;
-                    else if (datatype == typeof(long))
-                        LongIndexer[column] = 0;
-                    else if (datatype == typeof(decimal))
-                        DecimalIndexer[column] = 0;
-                    else if (datatype == typeof(double))
-                        DoubleIndexer[column] = 0;
-                    else if (datatype == typeof(float))
-                        FloatIndexer[column] = 0;
-                    else if (datatype == typeof(string))
-                        StringIndexer[column] = null;
-                    else if (datatype == typeof(bool))
-                        BooleanIndexer[column] = false;
-                    else if (datatype == typeof(DateTime))
-                        DateTimeIndexer[column] = DateTime.Now;
-                    else
-                        WorkingValues[column] = default;
+                    WorkingValues[column.Name] = default;
                 }
                 else
                 {
-                    WorkingValues[column] = default;
+                    if (column.Datatype == typeof(byte))
+                        ByteIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(short))
+                        ShortIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(int))
+                        IntIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(long))
+                        LongIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(decimal))
+                        DecimalIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(double))
+                        DoubleIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(float))
+                        FloatIndexer[column.Name] = 0;
+                    else if (column.Datatype == typeof(string))
+                        StringIndexer[column.Name] = null;
+                    else if (column.Datatype == typeof(bool))
+                        BooleanIndexer[column.Name] = false;
+                    else if (column.Datatype == typeof(DateTime))
+                        DateTimeIndexer[column.Name] = DateTime.Now;
+                    else
+                        WorkingValues[column.Name] = default;
                 }
             }
         }
     }
-
-    public IEnumerable<(string ColumnName, Type? Datatype, IEnumerable<(object? Value, object? DisplayValue)>? LookupValues)> Columns =>
-        _dataset.ColumnDbDataTypes.Select(c =>
-        {
-            var columnName = c.Key;
-            var dbDatatype = c.Value.BaseDataType;
-            var isComputed = c.Value.IsComputed;
-            var lookupValues = _dataset.LookupData.GetValueOrDefault(columnName);
-            if (columnName != _dataset.IdentityColumn && !isComputed && DataTypeMapping.TryGetValue(dbDatatype, out var typeMapping))
-            {
-                return (columnName, typeMapping, lookupValues);
-            }
-            else
-            {
-                return (columnName, null as Type, null as IEnumerable<(object? Value, object? DisplayValue)>);
-            }
-        });
 
     /// <summary>
     /// 
@@ -108,19 +91,23 @@ public class RowRecord
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
         var (schema, table) = (_dataset.DataTable.TargetSchemaName, _dataset.DataTable.TargetTableName);
-        var computedColumns = _dataset.ColumnDbDataTypes
-            .Where(c => c.Value.IsComputed)
-            .Select(c => c.Key)
+
+        var upsertableColumns = _dataset.Columns
+            .Where(c => !c.IsIdentity && !c.IsComputed)
+            .Select(c => c.Name)
             .ToList();
-        var upsertableColumns = WorkingValues
-            .Where(w => w.Key != _dataset.IdentityColumn)
-            .Where(w => !computedColumns.Any(c => c == w.Key))
+        var primaryKey = _dataset.Columns
+            .Where(c => c.IsPrimaryKey)
+            .Select(c => c.Name)
             .ToList();
 
         // Existing entity
         if (_originalValues is not null && !ToBeDeleted)
         {
-            var changes = upsertableColumns.Where(w => w.Value?.ToString() != _originalValues[w.Key]?.ToString()).ToList();
+            var changes = WorkingValues
+                .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _originalValues[w.Key]?.ToString())
+                .ToList();
+                        
             // No changes => skip this record
             if (!changes.Any())
             {
@@ -141,12 +128,12 @@ public class RowRecord
                 }
             }
             builder.Append(" WHERE ");
-            foreach (var (pk, index) in _dataset.PrimaryKeyColumns.Select((pk, i) => (pk, i + 1)))
+            foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _originalValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < _dataset.PrimaryKeyColumns.Count)
+                if (index < primaryKey.Count)
                 {
                     builder.Append(" AND ");
                 }
@@ -160,12 +147,12 @@ public class RowRecord
             var builder = new StringBuilder();
             var parameters = new DynamicParameters();
             builder.Append("DELETE [").Append(schema).Append("].[").Append(table).Append("] WHERE ");
-            foreach (var (pk, index) in _dataset.PrimaryKeyColumns.Select((pk, i) => (pk, i + 1)))
+            foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _originalValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < _dataset.PrimaryKeyColumns.Count)
+                if (index < primaryKey.Count)
                 {
                     builder.Append(" AND ");
                 }
@@ -184,12 +171,13 @@ public class RowRecord
                 .Append("].[")
                 .Append(table)
                 .Append("] (")
-                .AppendJoin(',', upsertableColumns.Select(k => $"[{k.Key}]"))
+                .AppendJoin(',', upsertableColumns.Select(c => $"[{c}]"))
                 .Append(") VALUES (");
-            foreach (var (value, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
+            foreach (var (column, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
             {
+                var value = WorkingValues[column];
                 builder.Append("@Working_").Append(index);
-                parameters.Add($"Working_{index}", value.Value);
+                parameters.Add($"Working_{index}", value);
                 if (index < upsertableColumns.Count)
                 {
                     builder.Append(',');
@@ -201,27 +189,4 @@ public class RowRecord
 
         return null;
     }
-
-    public static readonly Dictionary<string, Type> DataTypeMapping = new()
-    {
-        { "char", typeof(string) },
-        { "varchar", typeof(string) },
-        { "nchar", typeof(string) },
-        { "nvarchar", typeof(string) },
-        { "tinyint", typeof(byte) },
-        { "smallint", typeof(short) },
-        { "int", typeof(int) },
-        { "bigint", typeof(long) },
-        { "smallmoney", typeof(decimal) },
-        { "money", typeof(decimal) },
-        { "numeric", typeof(decimal) },
-        { "decimal", typeof(decimal) },
-        { "real", typeof(float) },
-        { "float", typeof(double) },
-        { "smalldatetime", typeof(DateTime) },
-        { "datetime", typeof(DateTime) },
-        { "datetime2", typeof(DateTime) },
-        { "date", typeof(DateTime) },
-        { "bit", typeof(bool) }
-    };
 }
