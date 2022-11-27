@@ -7,7 +7,7 @@
             @foreach (var columnInfo in Filters.Columns)
             {
                 var column = columnInfo.Name;
-                var datatype = columnInfo.Datatype;
+                var datatype = columnInfo.Lookup?.DisplayValueDatatype ?? columnInfo.Datatype;
                 RenderFragment? value1Input = null;
                 RenderFragment? operator1Input = null;
                 RenderFragment? value2Input = null;

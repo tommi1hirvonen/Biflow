@@ -186,7 +186,7 @@
                                     {
                                         var column = columnInfo.Name;
                                         var datatype = columnInfo.Datatype;
-                                        var lookupValues = columnInfo.LookupValues;
+                                        var lookupValues = columnInfo.Lookup?.Values;
                                         <td>
                                             @if (Dataset.IsEditable && EditModeEnabled)
                                             {

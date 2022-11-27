@@ -7,6 +7,8 @@ namespace Biflow.Ui.Core;
 
 public static class TableEditorExtensions
 {
+    
+
     public static async Task<IEnumerable<string>> GetColumnsAsync(this DataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
@@ -31,7 +33,30 @@ public static class TableEditorExtensions
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
 
-        var primaryKeyColumns = (await connection.QueryAsync<string>("""
+        var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
+        var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);
+        var columnDatatypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>(ColumnDatatypeQuery,
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
+        );
+        var lookups = await table.GetLookupsAsync();
+        var columns = columnDatatypes.Select(c =>
+        {
+            var isPk = primaryKeyColumns.Contains(c.Name);
+            var isIdent = identityColumn == c.Name;
+            var lookup = lookups.GetValueOrDefault(c.Name);
+            var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
+            return new Column(c.Name, isPk, isIdent, c.Computed, c.Datatype, c.DatatypeDesc, datatype, lookup);
+        }).ToHashSet();
+
+        var (query, parameters) = new DataTableQueryBuilder(table, (int)top, filters).Build();
+        var rows = await connection.QueryAsync(query, parameters);
+        var originalData = rows.Cast<IDictionary<string, object?>>();
+        
+        return new Dataset(table, columns, originalData);
+    }
+
+    private static Task<IEnumerable<string>> GetPrimaryKeyAsync(this DataTable table, SqlConnection connection) =>
+        connection.QueryAsync<string>("""
             select
                 c.[name]
             from sys.index_columns as a
@@ -42,9 +67,10 @@ public static class TableEditorExtensions
             where b.is_primary_key = 1 and d.[name] = @TableName and e.[name] = @SchemaName
             """,
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
-        )).ToHashSet();
+        );
 
-        var identityColumn = await connection.ExecuteScalarAsync<string?>("""
+    private static Task<string?> GetIdentityColumnOrNullAsync(this DataTable table, SqlConnection connection) =>
+        connection.ExecuteScalarAsync<string?>("""
             select top 1 a.[name]
             from sys.columns as a
                 inner join sys.tables as b on a.object_id = b.object_id
@@ -54,48 +80,32 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-        var columnDatatypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>("""
-            select
-                ColumnName = b.[name],
-                DataType = c.[name],
-                DataTypeDescription = concat(
-                        type_name(b.user_type_id),
-                        case
-                            --types with precision and scale specification
-                            when type_name(b.user_type_id) in (N'decimal', N'numeric')
-                                then concat(N'(', b.precision, N',', b.scale, N')')
-                            --types with scale specification only
-                            when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
-                                then concat(N'(', b.scale, N')')
-                            --float default precision is 53 - add precision when column has a different precision value
-                            when type_name(b.user_type_id) in (N'float')
-                                then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
-                            --types with length specifiecation
-                            when type_name(b.user_type_id) like N'%char'
-                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
-                        end,
-                        case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
-                        case when b.is_nullable = 1 then N' null' else N' not null' end
-                    ),
-                IsComputed = b.is_computed
-            from sys.tables as a
-                inner join sys.columns as b on a.object_id = b.object_id
-                inner join sys.types as c on b.user_type_id = c.user_type_id
-                inner join sys.schemas as d on a.schema_id = d.schema_id
-            where a.[name] = @TableName and d.[name] = @SchemaName
-            """,
-            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
-        );
-
-        var lookupData = await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
+    private static async Task<Dictionary<string, Lookup>> GetLookupsAsync(this DataTable table) =>
+        await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
         {
             using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
             await connection.OpenAsync();
-            var query = $"""
+
+            var dataTypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>(ColumnDatatypeQuery,
+                new { TableName = lookup.LookupDataTable.TargetTableName, SchemaName = lookup.LookupDataTable.TargetSchemaName }
+            );
+
+            var lookupDisplayValueDatatype = lookup.LookupDisplayType switch
+            {
+                LookupDisplayType.Value =>
+                    DatatypeMapping.GetValueOrDefault(dataTypes.First(dt => dt.Name == lookup.LookupValueColumn).Datatype),
+                LookupDisplayType.Description =>
+                    DatatypeMapping.GetValueOrDefault(dataTypes.First(dt => dt.Name == lookup.LookupDescriptionColumn).Datatype),
+                LookupDisplayType.ValueAndDescription => typeof(string),
+                _ => null
+            };
+            ArgumentNullException.ThrowIfNull(lookupDisplayValueDatatype);
+
+            var results = await connection.QueryAsync<(object? Value, object? Description)>($"""
                 SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
                 FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
-                """;
-            var results = await connection.QueryAsync<(object? Value, object? Description)>(query);
+                """);
+
             var data = results.Select(value =>
             {
                 var displayValue = lookup.LookupDisplayType switch
@@ -107,146 +117,61 @@ public static class TableEditorExtensions
                 };
                 return (value.Value, displayValue);
             });
-            return (lookup.ColumnName, data);
-        }).ToDictionaryAsync(key => key.ColumnName, value => value.data);
 
-        var columns = columnDatatypes.Select(c =>
-        {
-            var isPk = primaryKeyColumns.Contains(c.Name);
-            var isIdent = identityColumn == c.Name;
-            var lookupValues = lookupData.GetValueOrDefault(c.Name);
-            return new Column(c.Name, isPk, isIdent, c.Computed, c.Datatype, c.DatatypeDesc, lookupValues);
-        }).ToHashSet();
+            return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
+        }).ToDictionaryAsync(key => key.ColumnName, value => value.Item2);
 
-        var cmdBuilder = new StringBuilder();
-        var parameters = new DynamicParameters();
+    private const string ColumnDatatypeQuery = """
+        select
+            ColumnName = b.[name],
+            DataType = c.[name],
+            DataTypeDescription = concat(
+                    type_name(b.user_type_id),
+                    case
+                        --types with precision and scale specification
+                        when type_name(b.user_type_id) in (N'decimal', N'numeric')
+                            then concat(N'(', b.precision, N',', b.scale, N')')
+                        --types with scale specification only
+                        when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
+                            then concat(N'(', b.scale, N')')
+                        --float default precision is 53 - add precision when column has a different precision value
+                        when type_name(b.user_type_id) in (N'float')
+                            then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
+                        --types with length specifiecation
+                        when type_name(b.user_type_id) like N'%char'
+                            then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
+                    end,
+                    case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
+                    case when b.is_nullable = 1 then N' null' else N' not null' end
+                ),
+            IsComputed = b.is_computed
+        from sys.tables as a
+            inner join sys.columns as b on a.object_id = b.object_id
+            inner join sys.types as c on b.user_type_id = c.user_type_id
+            inner join sys.schemas as d on a.schema_id = d.schema_id
+        where a.[name] = @TableName and d.[name] = @SchemaName
+        """;
 
-        cmdBuilder.Append("SELECT TOP ").Append(top).Append(" * FROM [").Append(table.TargetSchemaName).Append("].[").Append(table.TargetTableName).Append(']');
-
-        if (filters?.Filters.Any(f => f.Value.Enabled1) ?? false)
-        {
-            cmdBuilder.Append(" WHERE ");
-            var index = 1;
-            foreach (var (column, filter) in filters.Filters.Where(f => f.Value.Enabled1))
-            {
-                if (index > 1)
-                {
-                    cmdBuilder.Append(" AND ");
-                }
-                cmdBuilder.Append('(');
-                var (statement1, paramsToAdd1) = GenerateFilterStatement(column, filter.Operator1, filter.FilterValue1, index);
-                cmdBuilder.Append(statement1);
-                parameters.AddDynamicParams(paramsToAdd1);
-                if (filter.Enabled2)
-                {
-                    index++;
-                    var operand = filter.AndOr ? " AND " : " OR ";
-                    cmdBuilder.Append(operand);
-                    var (statement2, paramsToAdd2) = GenerateFilterStatement(column, filter.Operator2, filter.FilterValue2, index);
-                    cmdBuilder.Append(statement2);
-                    parameters.AddDynamicParams(paramsToAdd2);
-                }
-                cmdBuilder.Append(')');
-                index++;
-            }
-        }
-
-        var cmd = cmdBuilder.ToString();
-        var rows = await connection.QueryAsync(cmd, parameters);
-        var originalData = rows.Cast<IDictionary<string, object?>>();
-        
-        return new Dataset(table, columns, originalData);
-    }
-
-    private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string column, Enum oper, object filterValue, int index)
+    public static readonly Dictionary<string, Type> DatatypeMapping = new()
     {
-        var statementBuilder = new StringBuilder();
-        var parameters = new DynamicParameters();
-        statementBuilder.Append(" [").Append(column).Append("] ");
-        if (oper is NumberFilterOperator nfo)
-        {
-            var operatorText = nfo switch
-            {
-                NumberFilterOperator.Equals => " = ",
-                NumberFilterOperator.DoesNotEqual => " <> ",
-                NumberFilterOperator.GreaterThan => " > ",
-                NumberFilterOperator.GreaterThanOrEqual => " >= ",
-                NumberFilterOperator.LessThan => " < ",
-                NumberFilterOperator.LessThanOrEqual => " <= ",
-                NumberFilterOperator.IsBlank => " IS NULL",
-                NumberFilterOperator.IsNotBlank => " IS NOT NULL",
-                _ => throw new ArgumentException($"Unsupported NumberFilterOperator value {nfo}")
-            };
-            if (nfo == NumberFilterOperator.IsBlank || nfo == NumberFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText);
-            }
-            else
-            {
-                statementBuilder.Append(operatorText).Append("@Parameter_").Append(index);
-                parameters.Add($"Parameter_{index}", filterValue);
-            }
-        }
-        else if (oper is TextFilterOperator tfo)
-        {
-            var operatorText = tfo switch
-            {
-                TextFilterOperator.Equals => " = ",
-                TextFilterOperator.DoesNotEqual => " <> ",
-                TextFilterOperator.Contains => " LIKE ",
-                TextFilterOperator.DoesNotContain => " NOT LIKE ",
-                TextFilterOperator.StartsWith => " LIKE ",
-                TextFilterOperator.DoesNotStartWith => " NOT LIKE ",
-                TextFilterOperator.EndsWith => " LIKE ",
-                TextFilterOperator.DoesNotEndWith => " NOT LIKE ",
-                TextFilterOperator.GreaterThan => " > ",
-                TextFilterOperator.GreaterThanOrEqual => " >= ",
-                TextFilterOperator.LessThan => " < ",
-                TextFilterOperator.LessThanOrEqual => " <= ",
-                TextFilterOperator.IsBlank => " IS NULL",
-                TextFilterOperator.IsNotBlank => " IS NOT NULL",
-                _ => throw new ArgumentException($"Unsupported TextFilterOperator value {tfo}")
-            };
-            static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-            var value = filterValue;
-            if (tfo == TextFilterOperator.IsBlank || tfo == TextFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText);
-            }
-
-            if (tfo == TextFilterOperator.Contains || tfo == TextFilterOperator.DoesNotContain)
-            {
-                value = $"%{encodeForLike(value.ToString() ?? "")}%";
-            }
-            else if (tfo == TextFilterOperator.StartsWith || tfo == TextFilterOperator.DoesNotStartWith)
-            {
-                value = $"{encodeForLike(value.ToString() ?? "")}%";
-            }
-            else if (tfo == TextFilterOperator.EndsWith || tfo == TextFilterOperator.DoesNotEndWith)
-            {
-                value = $"%{encodeForLike(value.ToString() ?? "")}";
-            }
-
-            if (tfo != TextFilterOperator.IsBlank && tfo != TextFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText).Append("@Parameter_").Append(index);
-                parameters.Add($"Parameter_{index}", value);
-            }
-        }
-        else if (oper is BooleanFilterOperator bfo)
-        {
-            var operatorText = bfo switch
-            {
-                BooleanFilterOperator.Equals => " = ",
-                _ => throw new ArgumentException($"Unsupported BooleanFilterOperator value {bfo}")
-            };
-            statementBuilder.Append(operatorText).Append("@Parameter_").Append(index);
-            parameters.Add($"Parameter_{index}", filterValue);
-        }
-        else
-        {
-            throw new ArgumentException($"Unsupported filter operator type {oper.GetType()}");
-        }
-        return (statementBuilder.ToString(), parameters);
-    }
+        { "char", typeof(string) },
+        { "varchar", typeof(string) },
+        { "nchar", typeof(string) },
+        { "nvarchar", typeof(string) },
+        { "tinyint", typeof(byte) },
+        { "smallint", typeof(short) },
+        { "int", typeof(int) },
+        { "bigint", typeof(long) },
+        { "smallmoney", typeof(decimal) },
+        { "money", typeof(decimal) },
+        { "numeric", typeof(decimal) },
+        { "decimal", typeof(decimal) },
+        { "real", typeof(float) },
+        { "float", typeof(double) },
+        { "smalldatetime", typeof(DateTime) },
+        { "datetime", typeof(DateTime) },
+        { "datetime2", typeof(DateTime) },
+        { "date", typeof(DateTime) },
+        { "bit", typeof(bool) }
+    };
 }

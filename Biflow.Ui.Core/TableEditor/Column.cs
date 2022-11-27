@@ -16,7 +16,7 @@ public class Column
 
     public Type? Datatype { get; }
 
-    public IEnumerable<(object? Value, object? DisplayValue)>? LookupValues { get; }
+    public Lookup? Lookup { get; }
 
     public bool IsEditable => !IsIdentity && !IsComputed && Datatype is not null;
 
@@ -27,7 +27,8 @@ public class Column
         bool isComputed,
         string dbDatatype,
         string dbDatatypeDescription,
-        IEnumerable<(object? Value, object? DisplayValue)>? lookupValues)
+        Type? datatype,
+        Lookup? lookup)
     {
         Name = name;
         IsPrimaryKey = isPrimaryKey;
@@ -35,30 +36,9 @@ public class Column
         IsComputed = isComputed;
         DbDatatype = dbDatatype;
         DbDatatypeDescription = dbDatatypeDescription;
-        Datatype = DatatypeMapping.GetValueOrDefault(dbDatatype);
-        LookupValues = lookupValues;
+        Datatype = datatype;
+        Lookup = lookup;
     }
 
-    public static readonly Dictionary<string, Type> DatatypeMapping = new()
-    {
-        { "char", typeof(string) },
-        { "varchar", typeof(string) },
-        { "nchar", typeof(string) },
-        { "nvarchar", typeof(string) },
-        { "tinyint", typeof(byte) },
-        { "smallint", typeof(short) },
-        { "int", typeof(int) },
-        { "bigint", typeof(long) },
-        { "smallmoney", typeof(decimal) },
-        { "money", typeof(decimal) },
-        { "numeric", typeof(decimal) },
-        { "decimal", typeof(decimal) },
-        { "real", typeof(float) },
-        { "float", typeof(double) },
-        { "smalldatetime", typeof(DateTime) },
-        { "datetime", typeof(DateTime) },
-        { "datetime2", typeof(DateTime) },
-        { "date", typeof(DateTime) },
-        { "bit", typeof(bool) }
-    };
+    
 }

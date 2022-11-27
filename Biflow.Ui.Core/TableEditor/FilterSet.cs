@@ -34,7 +34,7 @@ public class FilterSet
         foreach (var columnInfo in Columns)
         {
             var column = columnInfo.Name;
-            var datatype = columnInfo.Datatype;
+            var datatype = columnInfo.Lookup?.DisplayValueDatatype ?? columnInfo.Datatype;
             if (datatype == typeof(byte))
                 ByteIndexer[column] = new ValueFilter<byte, NumberFilterOperator>(NumberFilterOperator.Equals);
             else if (datatype == typeof(short))
