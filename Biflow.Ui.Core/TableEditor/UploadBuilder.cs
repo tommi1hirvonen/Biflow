@@ -1,17 +1,18 @@
 ﻿using Biflow.DataAccess.Models;
 using ClosedXML.Excel;
-using Microsoft.Data.SqlClient;
 
 namespace Biflow.Ui.Core;
 
 public class UploadBuilder
 {
-    private readonly List<(string ColumnName, Type Datatype, string CreateDatatype)> _columns;
+    private readonly List<Column> _columns;
+    private readonly DataTable _table;
 
-    public IEnumerable<string> Columns => _columns.Select(c => c.ColumnName);
+    public IEnumerable<string> Columns => _columns.Select(c => c.Name);
 
-    private UploadBuilder(List<(string ColumnName, Type Datatype, string CreateDatatype)> columns)
+    private UploadBuilder(DataTable table, List<Column> columns)
     {
+        _table = table;
         _columns = columns;
     }
 
@@ -24,15 +25,17 @@ public class UploadBuilder
             .DataRange
             .Rows();
         var data = new System.Data.DataTable();
-        foreach (var (name, type, _) in _columns)
+        foreach (var column in _columns)
         {
-            data.Columns.Add(name, type);
+            ArgumentNullException.ThrowIfNull(column.Datatype);
+            data.Columns.Add(column.Name, column.Datatype);
         }
         foreach (var row in rows)
         {
             var dataRow = data.NewRow();
-            foreach (var (col, type, _) in _columns)
+            foreach (var column in _columns)
             {
+                var (col, type) = (column.Name, column.Datatype);
                 var cell = row.Field(col);
                 if (type == typeof(string))
                 {
@@ -81,21 +84,17 @@ public class UploadBuilder
             }
             data.Rows.Add(dataRow);
         }
-        return new Upload(_columns.Select(c => (c.ColumnName, c.CreateDatatype)), data);
+        return new Upload(_table, _columns, data);
     }
 
     public static async Task<UploadBuilder> FromTableAsync(DataTable table)
     {
-        using var connection = new SqlConnection(table.Connection.ConnectionString);
-        await connection.OpenAsync();
-        var rows = await table.GetColumnDatatypesAsync(connection);
-        var columns = rows.Select(row =>
+        var columns = (await table.GetColumnsAsync(includeLookups: false)).ToList();
+        var notSupportedColumns = columns.Where(c => c.Datatype is null).Select(c => $"c.Name ({c.DbDatatype})");
+        if (notSupportedColumns.Any())
         {
-            var datatype = TableEditorExtensions.DatatypeMapping.GetValueOrDefault(row.Datatype)
-                ?? throw new NotSupportedException($"Database datatype {row.Datatype} is not supported");
-            return (row.Name, datatype, row.CreateDatatype);
-            
-        }).ToList();
-        return new UploadBuilder(columns);
+            throw new NotSupportedException($"Unsupported database datatypes detected: {string.Join(',', notSupportedColumns)}");
+        }
+        return new UploadBuilder(table, columns);
     }
 }

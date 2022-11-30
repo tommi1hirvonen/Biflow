@@ -467,7 +467,7 @@
                 return;
             }
             lookup.LookupDataTableId = guid;
-            LookupColumns = await dataTable.GetColumnsAsync();
+            LookupColumns = await dataTable.GetColumnNamesAsync();
         }
         catch (Exception ex)
         {
@@ -479,7 +479,7 @@
     {
         try
         {
-            Columns ??= await EditTable.GetColumnsAsync();
+            Columns ??= await EditTable.GetColumnNamesAsync();
         }
         catch (Exception ex)
         {

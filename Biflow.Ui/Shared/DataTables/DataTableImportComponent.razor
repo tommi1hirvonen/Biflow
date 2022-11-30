@@ -8,7 +8,26 @@
     <div class="col" style="max-width: 40rem;">
         <div>
             <label for="formFile" class="form-label">Select Excel file to import</label>
-            <InputFile @ref="InputFile" class="form-control form-control-sm" OnChange="LoadFiles" />
+            <InputFile @ref="InputFile" class="form-control form-control-sm" OnChange="LoadFileAsync" />
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="Upload is not null">
+            Upload
+        </HxButton>
+    </div>
+    <div class="col-auto">
+        <div>
+            <label class="form-label">Upload type</label>
+            <select @bind="UploadType" class="form-select form-select-sm">
+                @foreach (var type in Enum.GetValues<UploadType>())
+                {
+                    <option value="@type">@type</option>
+                }
+            </select>
         </div>
     </div>
 </div>
@@ -76,6 +95,8 @@
 
     private bool Loading { get; set; } = false;
 
+    private UploadType UploadType { get; set; } = UploadType.Upsert;
+
     private UploadBuilder? Builder { get; set; }
 
     private Upload? Upload { get; set; }
@@ -89,7 +110,7 @@
         Builder = await UploadBuilder.FromTableAsync(Table);
     }
 
-    private async Task LoadFiles(InputFileChangeEventArgs e)
+    private async Task LoadFileAsync(InputFileChangeEventArgs e)
     {
         Loading = true;
         try
@@ -110,5 +131,16 @@
         }
     }
 
-
+    private async Task UploadAsync()
+    {
+        try
+        {
+            await Upload.LetAsync(x => x.SaveUploadToDbAsync(UploadType));
+            Messenger.AddInformation("Data updated successfully");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating data", ex.Message);
+        }
+    }
 }

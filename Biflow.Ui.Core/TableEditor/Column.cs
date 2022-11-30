@@ -20,6 +20,8 @@ public class Column
 
     public bool IsEditable => !IsIdentity && !IsComputed && Datatype is not null;
 
+    internal string DbCreateDatatype { get; }
+
     public Column(
         string name,
         bool isPrimaryKey,
@@ -27,6 +29,7 @@ public class Column
         bool isComputed,
         string dbDatatype,
         string dbDatatypeDescription,
+        string dbCreateDatatype,
         Type? datatype,
         Lookup? lookup)
     {
@@ -36,6 +39,7 @@ public class Column
         IsComputed = isComputed;
         DbDatatype = dbDatatype;
         DbDatatypeDescription = dbDatatypeDescription;
+        DbCreateDatatype = dbCreateDatatype;
         Datatype = datatype;
         Lookup = lookup;
     }

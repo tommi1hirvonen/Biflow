@@ -8,7 +8,7 @@ namespace Biflow.Ui.Core;
 
 public static class TableEditorExtensions
 {
-    public static async Task<IEnumerable<string>> GetColumnsAsync(this DataTable table)
+    public static async Task<IEnumerable<string>> GetColumnNamesAsync(this DataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
@@ -27,33 +27,48 @@ public static class TableEditorExtensions
 
     public static async Task<Dataset> LoadDataAsync(this DataTable table, int? top = null, FilterSet? filters = null)
     {
+        if (table.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != table.Connection.ConnectionId))
+        {
+            throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
+        }
+
         top ??= 1000;
 
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
 
-        var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
-        var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);
-        var columnDatatypes = await table.GetColumnDatatypesAsync(connection);
-        if (table.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != table.Connection.ConnectionId))
-        {
-            throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
-        }
-        var lookups = await table.GetLookupsAsync();
-        var columns = columnDatatypes.Select(c =>
-        {
-            var isPk = primaryKeyColumns.Contains(c.Name);
-            var isIdent = identityColumn == c.Name;
-            var lookup = lookups.GetValueOrDefault(c.Name);
-            var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
-            return new Column(c.Name, isPk, isIdent, c.Computed, c.Datatype, c.DatatypeDesc, datatype, lookup);
-        }).ToHashSet();
+        var columns = (await table.GetColumnsAsync(connection)).ToHashSet();
 
         var (query, parameters) = new DataTableQueryBuilder(table, (int)top, filters).Build();
         var rows = await connection.QueryAsync(query, parameters);
         var originalData = rows.Cast<IDictionary<string, object?>>();
         
         return new Dataset(table, columns, originalData);
+    }
+
+    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this DataTable table, bool includeLookups = true)
+    {
+        using var connection = new SqlConnection(table.Connection.ConnectionString);
+        await connection.OpenAsync();
+        return await table.GetColumnsAsync(connection, includeLookups);
+    }
+
+    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this DataTable table, SqlConnection connection, bool includeLookups = true)
+    {
+        var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
+        var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);
+        var columnDatatypes = await table.GetColumnDatatypesAsync(connection);
+
+        var lookups = includeLookups ? await table.GetLookupsAsync() : null;
+        var columns = columnDatatypes.Select(c =>
+        {
+            var isPk = primaryKeyColumns.Contains(c.Name);
+            var isIdentity = identityColumn == c.Name;
+            var lookup = lookups?.GetValueOrDefault(c.Name);
+            var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
+            return new Column(c.Name, isPk, isIdentity, c.Computed, c.Datatype, c.DatatypeDesc, c.CreateDatatype, datatype, lookup);
+        });
+        return columns;
     }
 
     private static Task<IEnumerable<string>> GetPrimaryKeyAsync(this DataTable table, SqlConnection connection) =>
@@ -120,7 +135,7 @@ public static class TableEditorExtensions
             return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
         }).ToDictionaryAsync(key => key.ColumnName, value => value.Item2);
 
-    internal static Task<IEnumerable<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>>
+    private static Task<IEnumerable<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>>
         GetColumnDatatypesAsync(this DataTable table, SqlConnection connection) =>
         connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>(
             """
