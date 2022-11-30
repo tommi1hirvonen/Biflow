@@ -1,4 +1,4 @@
-﻿@page "/datatables/{Page?}"
+﻿@page "/datatables/{Page?}/{DataTableId:guid?}"
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
@@ -34,6 +34,10 @@ else if (Page == "manage")
         <DataTablesManageComponent Tables="Tables" Connections="Connections" />
     </AuthorizeView>
 }
+else if (Page == "import")
+{
+    <DataTableImportComponent DataTableId="DataTableId" />
+}
 else
 {
     <p>Sorry, nothing at this address.</p>
@@ -41,6 +45,8 @@ else
 
 @code {
     [Parameter] public string? Page { get; set; }
+
+    [Parameter] public Guid? DataTableId { get; set; }
 
     private List<DataTable>? Tables { get; set; }
 

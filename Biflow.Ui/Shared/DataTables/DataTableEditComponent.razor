@@ -93,6 +93,11 @@
                 </HxDropdownMenu>
             </HxDropdownButtonGroup>
 
+            <a class="btn btn-sm btn-secondary ms-3 @(SelectedTable is null ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
+                @MarkupHelper.FromFile("icons/feather/upload.svg")
+                Import
+            </a>
+
         </HxButtonToolbar>
     </div>
 </div>

@@ -1,14 +1,13 @@
 ﻿using Biflow.DataAccess.Models;
+using ClosedXML.Excel;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using System.Text;
+using System.Linq;
 
 namespace Biflow.Ui.Core;
 
 public static class TableEditorExtensions
 {
-    
-
     public static async Task<IEnumerable<string>> GetColumnsAsync(this DataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
@@ -19,7 +18,7 @@ public static class TableEditorExtensions
                 inner join sys.columns as b on a.object_id = b.object_id
                 inner join sys.schemas as d on a.schema_id = d.schema_id
             where a.[name] = @TableName and d.[name] = @SchemaName
-            order by 1
+            order by b.[column_id]
             """,
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
@@ -35,9 +34,7 @@ public static class TableEditorExtensions
 
         var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
         var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);
-        var columnDatatypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>(ColumnDatatypeQuery,
-            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
-        );
+        var columnDatatypes = await table.GetColumnDatatypesAsync(connection);
         if (table.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != table.Connection.ConnectionId))
         {
             throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
@@ -90,9 +87,7 @@ public static class TableEditorExtensions
             using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
             await connection.OpenAsync();
 
-            var dataTypes = await connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, bool Computed)>(ColumnDatatypeQuery,
-                new { TableName = lookup.LookupDataTable.TargetTableName, SchemaName = lookup.LookupDataTable.TargetSchemaName }
-            );
+            var dataTypes = await lookup.LookupDataTable.GetColumnDatatypesAsync(connection);
 
             var lookupDisplayValueDatatype = lookup.LookupDisplayType switch
             {
@@ -125,38 +120,63 @@ public static class TableEditorExtensions
             return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
         }).ToDictionaryAsync(key => key.ColumnName, value => value.Item2);
 
-    private const string ColumnDatatypeQuery = """
-        select
-            ColumnName = b.[name],
-            DataType = c.[name],
-            DataTypeDescription = concat(
-                    type_name(b.user_type_id),
-                    case
-                        --types with precision and scale specification
-                        when type_name(b.user_type_id) in (N'decimal', N'numeric')
-                            then concat(N'(', b.precision, N',', b.scale, N')')
-                        --types with scale specification only
-                        when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
-                            then concat(N'(', b.scale, N')')
-                        --float default precision is 53 - add precision when column has a different precision value
-                        when type_name(b.user_type_id) in (N'float')
-                            then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
-                        --types with length specifiecation
-                        when type_name(b.user_type_id) like N'%char'
-                            then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
-                    end,
-                    case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
-                    case when b.is_nullable = 1 then N' null' else N' not null' end
-                ),
-            IsComputed = b.is_computed
-        from sys.tables as a
-            inner join sys.columns as b on a.object_id = b.object_id
-            inner join sys.types as c on b.user_type_id = c.user_type_id
-            inner join sys.schemas as d on a.schema_id = d.schema_id
-        where a.[name] = @TableName and d.[name] = @SchemaName
-        """;
+    internal static Task<IEnumerable<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>>
+        GetColumnDatatypesAsync(this DataTable table, SqlConnection connection) =>
+        connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>(
+            """
+            select
+                ColumnName = b.[name],
+                DataType = c.[name],
+                DataTypeDescription = concat(
+                        type_name(b.user_type_id),
+                        case
+                            --types with precision and scale specification
+                            when type_name(b.user_type_id) in (N'decimal', N'numeric')
+                                then concat(N'(', b.precision, N',', b.scale, N')')
+                            --types with scale specification only
+                            when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
+                                then concat(N'(', b.scale, N')')
+                            --float default precision is 53 - add precision when column has a different precision value
+                            when type_name(b.user_type_id) in (N'float')
+                                then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
+                            --types with length specification
+                            when type_name(b.user_type_id) like N'n%char'
+                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
+                            when type_name(b.user_type_id) like N'%char'
+                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
+                        end,
+                        case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
+                        case when b.is_nullable = 1 then N' null' else N' not null' end
+                    ),
+                CreateTableDatatype = concat(
+                        type_name(b.user_type_id),
+                        case
+                            --types with precision and scale specification
+                            when type_name(b.user_type_id) in (N'decimal', N'numeric')
+                                then concat(N'(', b.precision, N',', b.scale, N')')
+                            --types with scale specification only
+                            when type_name(b.user_type_id) in (N'time', N'datetime2', N'datetimeoffset') 
+                                then concat(N'(', b.scale, N')')
+                            --float default precision is 53 - add precision when column has a different precision value
+                            when type_name(b.user_type_id) in (N'float')
+                                then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
+                            --types with length specifiecation
+                            when type_name(b.user_type_id) like N'n%char'
+                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
+                            when type_name(b.user_type_id) like N'%char'
+                                then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
+                        end),
+                IsComputed = b.is_computed
+            from sys.tables as a
+                inner join sys.columns as b on a.object_id = b.object_id
+                inner join sys.types as c on b.user_type_id = c.user_type_id
+                inner join sys.schemas as d on a.schema_id = d.schema_id
+            where a.[name] = @TableName and d.[name] = @SchemaName
+            order by b.[column_id]
+            """,
+            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName });
 
-    public static readonly Dictionary<string, Type> DatatypeMapping = new()
+    internal static readonly Dictionary<string, Type> DatatypeMapping = new()
     {
         { "char", typeof(string) },
         { "varchar", typeof(string) },

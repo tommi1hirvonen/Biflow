@@ -1,0 +1,114 @@
+﻿@using System.Data;
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<h4>Import data – @Table?.DataTableName</h4>
+
+<div class="row mt-3">
+    <div class="col" style="max-width: 40rem;">
+        <div>
+            <label for="formFile" class="form-label">Select Excel file to import</label>
+            <InputFile @ref="InputFile" class="form-control form-control-sm" OnChange="LoadFiles" />
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                @if (Upload is not null)
+                {
+                    <small class="text-secondary px-3">@Upload.Data.Rows.Count record(s)</small>
+                }
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            @foreach (var column in Builder?.Columns ?? Enumerable.Empty<string>())
+                            {
+                                <th>@column</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Upload is null)
+                        {
+                            <tr>
+                                <td colspan="@(Builder?.Columns.Count() ?? 1)" class="@(Loading ? "text-center" : null)">
+                                    @if (Loading)
+                                    {
+                                        <HxSpinner Color="ThemeColor.Secondary" />
+                                    }
+                                    else
+                                    {
+                                        <em>Upload file to preview data</em>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (DataRow row in Upload.Data.Rows)
+                            {
+                                <tr>
+                                    @foreach (DataColumn column in Upload.Data.Columns)
+                                    {
+                                        <td>@row[column]</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public Guid? DataTableId { get; set; }
+
+    private Biflow.DataAccess.Models.DataTable? Table { get; set; }
+
+    private InputFile? InputFile { get; set; }
+
+    private bool Loading { get; set; } = false;
+
+    private UploadBuilder? Builder { get; set; }
+
+    private Upload? Upload { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        Table = await context.DataTables
+            .Include(t => t.Connection)
+            .FirstAsync(t => t.DataTableId == DataTableId);
+        Builder = await UploadBuilder.FromTableAsync(Table);
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        Loading = true;
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Builder);
+            using var stream = new MemoryStream();
+            await e.File.OpenReadStream().CopyToAsync(stream);
+            stream.Position = 0;
+            Upload = Builder.BuildFromExcelStream(stream);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error reading Excel file", ex.Message);
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+
+}
