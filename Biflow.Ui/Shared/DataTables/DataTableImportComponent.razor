@@ -71,15 +71,14 @@
                         }
                         else
                         {
-                            @foreach (DataRow row in Upload.Data.Rows)
-                            {
+                            <Virtualize ItemsProvider="GetRows" TItem="DataRow" Context="row" SpacerElement="tr"> 
                                 <tr>
                                     @foreach (DataColumn column in Upload.Data.Columns)
                                     {
                                         <td>@row[column]</td>
                                     }
                                 </tr>
-                            }
+                            </Virtualize>
                         }
                     </tbody>
                 </table>
@@ -112,6 +111,13 @@
             .Include(t => t.Connection)
             .FirstAsync(t => t.DataTableId == DataTableId);
         Builder = await UploadBuilder.FromTableAsync(Table);
+    }
+
+    private ValueTask<ItemsProviderResult<DataRow>> GetRows(ItemsProviderRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(Upload);
+        var rows = Upload.Data.Rows.OfType<DataRow>().Skip(request.StartIndex).Take(request.Count);
+        return new(new ItemsProviderResult<DataRow>(rows, Upload.Data.Rows.Count));
     }
 
     private async Task LoadFileAsync(InputFileChangeEventArgs e)

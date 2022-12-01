@@ -192,8 +192,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var row in records)
-                            {
+                            <Virtualize Items="records" Context="row" SpacerElement="tr">
                                 <tr>
                                     @foreach (var columnInfo in Dataset.Columns.Where(c => IsColumnSelected(c.Name)))
                                     {
@@ -207,12 +206,12 @@
                                                 {
                                                     <text>@row.WorkingValues[column]</text>
                                                 }
-                                                
+
                                                 else if (datatype == typeof(byte))
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.ByteIndexer[column]" />
                                                 }
-                                                
+
                                                 else if (datatype == typeof(short) && lookupValues is not null)
                                                 {
                                                     <select @bind="row.ShortIndexer[column]" class="form-select form-select-sm">
@@ -227,7 +226,7 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.ShortIndexer[column]" />
                                                 }
-                                                
+
                                                 else if (datatype == typeof(int) && lookupValues is not null)
                                                 {
                                                     <select @bind="row.IntIndexer[column]" class="form-select form-select-sm">
@@ -242,7 +241,7 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="number" @bind-value="row.IntIndexer[column]" />
                                                 }
-                                                
+
                                                 else if (datatype == typeof(long) && lookupValues is not null)
                                                 {
                                                     <select @bind="row.LongIndexer[column]" class="form-select form-select-sm">
@@ -302,7 +301,7 @@
                                                     var id = Guid.NewGuid();
                                                     <div class="form-check">
                                                         <input type="checkbox" class="form-check-input" id="@id"
-                                                                checked=@row.BooleanIndexer[column] @bind-value="row.BooleanIndexer[column]">
+                                               checked=@row.BooleanIndexer[column] @bind-value="row.BooleanIndexer[column]">
                                                         <label class="form-check-label" for="@id"></label>
                                                     </div>
                                                 }
@@ -338,10 +337,10 @@
                                             <button class="btn btn-sm btn-outline-danger" @onclick="() => row.ToBeDeleted = true">
                                                 @MarkupHelper.FromFile("icons/feather/delete.svg")
                                             </button>
-                                        </td>   
+                                        </td>
                                     }
                                 </tr>
-                            }
+                            </Virtualize>
                         </tbody>
                     </table>
                 }
