@@ -1,6 +1,7 @@
 ﻿@using System.Data;
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
 
 <h4>Import data – @Table?.DataTableName</h4>
 
@@ -13,15 +14,18 @@
     </div>
 </div>
 
-<div class="row mt-3">
+<div class="row align-items-center mt-3">
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="Upload is not null">
-            Upload
+            @MarkupHelper.FromFile("icons/feather/save.svg")
+            Save
         </HxButton>
+    </div>
+    <div class="col-auto ms-3">
+        <label class="col-form-label">Upload type</label>
     </div>
     <div class="col-auto">
         <div>
-            <label class="form-label">Upload type</label>
             <select @bind="UploadType" class="form-select form-select-sm">
                 @foreach (var type in Enum.GetValues<UploadType>())
                 {

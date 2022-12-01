@@ -5,99 +5,107 @@
 @inject IJSRuntime JS
 
 <div class="row">
+    <div class="col">
+        <HxDropdownButtonGroup>
+            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
+                @if (SelectedTable is not null)
+                {
+                    @SelectedTable.DataTableName
+                }
+                else if (Tables is null)
+                {
+                    <text>Loading</text>
+                }
+                else if (Tables.Any())
+                {
+                    <text>Select table</text>
+                }
+                else
+                {
+                    <text>No tables</text>
+                }
+            </HxDropdownToggleButton>
+            <HxDropdownMenu>
+                @foreach (var table in Tables ?? Enumerable.Empty<DataTable>())
+                {
+                    <HxDropdownItem OnClick="async () => await ReloadDataAsync(table)">
+                        @table.DataTableName
+                    </HxDropdownItem>
+                }
+            </HxDropdownMenu>
+        </HxDropdownButtonGroup>
+    </div>
+</div>
+
+<div class="row mt-3">
     <div class="col-auto">
         <HxButtonToolbar>
-            <HxDropdownButtonGroup>
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
-                    @if (SelectedTable is not null)
-                    {
-                        @SelectedTable.DataTableName
-                    }
-                    else if (Tables is null)
-                    {
-                        <text>Loading</text>
-                    }
-                    else if (Tables.Any())
-                    {
-                        <text>Select table</text>
-                    }
-                    else
-                    {
-                        <text>No tables</text>
-                    }
-                </HxDropdownToggleButton>
-                <HxDropdownMenu>
-                    @foreach (var table in Tables ?? Enumerable.Empty<DataTable>())
-                    {
-                        <HxDropdownItem OnClick="async () => await ReloadDataAsync(table)">
-                            @table.DataTableName
-                        </HxDropdownItem>
-                    }
-                </HxDropdownMenu>
-            </HxDropdownButtonGroup>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Primary" Size="ButtonSize.Small"
-                Enabled="Dataset is not null && Dataset.IsEditable"
-                OnClick="SaveChangesAsync">
+            <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
+                      Enabled="Dataset is not null && Dataset.IsEditable"
+                      OnClick="SaveChangesAsync">
                 @MarkupHelper.FromFile("icons/feather/save.svg")
                 Save changes
             </HxButton>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small"
-                Enabled="Dataset is not null && Dataset.IsEditable"
-                OnClick="() => Dataset?.AddRecord()">
+                      Enabled="Dataset is not null && Dataset.IsEditable"
+                      OnClick="() => Dataset?.AddRecord()">
                 @MarkupHelper.FromFile("icons/feather/plus.svg")
                 Add record
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="SelectedTable is not null"
-                OnClick="async () => await ReloadDataAsync()">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-                Reload
-            </HxButton>
+            <HxButtonGroup CssClass="ms-3" Size="ButtonGroupSize.Small">
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="FilterSet is not null"
-                OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
-                @MarkupHelper.FromFile("icons/feather/filter.svg")
-                Filters
-            </HxButton>
+                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                    Enabled="SelectedTable is not null"
+                    OnClick="async () => await ReloadDataAsync()">
+                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    Reload
+                </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="ColumnSelections is not null"
-                OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
-                @MarkupHelper.FromFile("icons/feather/columns.svg")
-                Columns
-            </HxButton>
+                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                    Enabled="FilterSet is not null"
+                    OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
+                    @MarkupHelper.FromFile("icons/feather/filter.svg")
+                    Filters
+                </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)"
-                OnClick="async () => await TableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
-                @MarkupHelper.FromFile("icons/feather/info.svg")
-                Table info
-            </HxButton>
+                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                    Enabled="ColumnSelections is not null"
+                    OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
+                    @MarkupHelper.FromFile("icons/feather/columns.svg")
+                    Columns
+                </HxButton>
 
-            <HxDropdownButtonGroup CssClass="ms-3">
-                <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="SelectedTable is not null && !Exporting">
-                    @MarkupHelper.FromFile("icons/feather/download.svg")
-                    Export
-                </HxDropdownToggleButton>
-                <HxDropdownMenu>
-                    <HxDropdownItem OnClick="async () => await DownloadExportAsync(true)">
-                        Filtered data
-                    </HxDropdownItem>
-                    <HxDropdownItem OnClick="async () => await DownloadExportAsync(false)">
-                        All data
-                    </HxDropdownItem>
-                </HxDropdownMenu>
-            </HxDropdownButtonGroup>
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="SelectedTable is not null && !Exporting">
+                        @MarkupHelper.FromFile("icons/feather/download.svg")
+                        Export
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownItem OnClick="async () => await DownloadExportAsync(true)">
+                            Filtered data
+                        </HxDropdownItem>
+                        <HxDropdownItem OnClick="async () => await DownloadExportAsync(false)">
+                            All data
+                        </HxDropdownItem>
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
 
-            <a class="btn btn-sm btn-secondary ms-3 @(SelectedTable is null ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
-                @MarkupHelper.FromFile("icons/feather/upload.svg")
-                Import
-            </a>
+                <a class="btn btn-sm btn-secondary @(SelectedTable is null ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
+                    @MarkupHelper.FromFile("icons/feather/upload.svg")
+                    Import
+                </a>
 
+                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                          Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)"
+                          OnClick="async () => await TableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
+                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                    Table info
+                </HxButton>
+
+            </HxButtonGroup>
         </HxButtonToolbar>
     </div>
 </div>
