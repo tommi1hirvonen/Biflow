@@ -77,6 +77,10 @@ public class UploadBuilder
                 {
                     dataRow[col] = cell.GetBoolean();
                 }
+                else if (type == typeof(DateTime))
+                {
+                    dataRow[col] = cell.GetDateTime();
+                }
                 else
                 {
                     throw new NotSupportedException($"Unsupported datatype {type} for column {col}");
