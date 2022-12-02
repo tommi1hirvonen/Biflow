@@ -3,6 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Biflow.Ui.Core;
 
+/// <summary>
+/// Utility class that provides IDataReader functionality for IEnumerables of IDictionaries.
+/// Only implements IDataReader members and methods which are required for
+/// System.Data.SqlBulkCopy.WriteToServerAsync(IDataReader) to function.
+/// </summary>
 internal class DictionaryReader : IDataReader
 {
     private readonly IEnumerator<IDictionary<string, object?>> _enumerator;

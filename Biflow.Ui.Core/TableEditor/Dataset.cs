@@ -74,23 +74,27 @@ public class Dataset
 
     public Stream GetExcelExportStream()
     {
-        var data = new System.Data.DataTable();
-        foreach (var column in Columns)
-        {
-            data.Columns.Add(column.Name);
-        }
-        foreach (var rowRecod in _workingData)
-        {
-            var row = data.NewRow();
-            var values = rowRecod.WorkingValues;
-            foreach (var (column, value) in values)
-            {
-                row[column] = value;
-            }
-            data.Rows.Add(row);
-        }
         var workbook = new XLWorkbook(XLEventTracking.Disabled);
-        var sheet = workbook.Worksheets.Add(data, "Sheet1");
+        var sheet = workbook.Worksheets.Add("Sheet1");
+        for (int i = 0; i < Columns.Count; i++)
+        {
+            sheet.Cell(1, i + 1).SetValue(Columns.ElementAt(i).Name);
+        }
+        var rowIndex = 2;
+        foreach (var row in _workingData)
+        {
+            var colIndex = 1;
+            foreach (var column in Columns)
+            {
+                sheet.Cell(rowIndex, colIndex).Value = row.WorkingValues[column.Name];
+                colIndex++;
+            }
+            rowIndex++;
+        }
+        var firstCell = sheet.Cell(1, 1);
+        var lastCell = sheet.Cell(_workingData.Count, Columns.Count);
+        var range = sheet.Range(firstCell, lastCell);
+        range.CreateTable();
         // Adjust column widths based on only the first 100 rows for much better performance.
         sheet.Columns(1, Columns.Count).AdjustToContents(1, 100);
         var stream = new MemoryStream();
