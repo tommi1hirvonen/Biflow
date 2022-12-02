@@ -42,7 +42,7 @@
             <div class="card-body px-0">
                 @if (Upload is not null)
                 {
-                    <small class="text-secondary px-3">@Upload.Data.Rows.Count record(s)</small>
+                    <small class="text-secondary px-3">@Upload.Data.Count record(s)</small>
                 }
                 <table class="table table-sm">
                     <thead>
@@ -71,9 +71,9 @@
                         }
                         else
                         {
-                            <Virtualize ItemsProvider="GetRows" TItem="DataRow" Context="row" SpacerElement="tr"> 
+                            <Virtualize Items="Upload.Data" Context="row" SpacerElement="tr"> 
                                 <tr>
-                                    @foreach (DataColumn column in Upload.Data.Columns)
+                                    @foreach (var column in Builder?.Columns ?? Enumerable.Empty<string>())
                                     {
                                         <td>@row[column]</td>
                                     }
@@ -111,13 +111,6 @@
             .Include(t => t.Connection)
             .FirstAsync(t => t.DataTableId == MasterDataTableId);
         Builder = await UploadBuilder.FromTableAsync(Table);
-    }
-
-    private ValueTask<ItemsProviderResult<DataRow>> GetRows(ItemsProviderRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(Upload);
-        var rows = Upload.Data.Rows.OfType<DataRow>().Skip(request.StartIndex).Take(request.Count);
-        return new(new ItemsProviderResult<DataRow>(rows, Upload.Data.Rows.Count));
     }
 
     private async Task LoadFileAsync(InputFileChangeEventArgs e)

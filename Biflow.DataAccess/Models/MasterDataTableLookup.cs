@@ -1,18 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
 public class MasterDataTableLookup
 {
     [Required]
-    public Guid DataTableId { get; set; }
+    [Column("DataTableId")]
+    public Guid TableId { get; set; }
 
     [Required]
     [MaxLength(128)]
     public string ColumnName { get; set; } = "";
 
     [Required]
-    public Guid LookupDataTableId { get; set; }
+    [Column("LookupDataTableId")]
+    public Guid LookupTableId { get; set; }
 
     [Required]
     [MaxLength(128)]

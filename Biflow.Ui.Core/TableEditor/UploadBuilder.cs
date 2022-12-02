@@ -25,69 +25,60 @@ public class UploadBuilder
             .Table(0)
             .DataRange
             .Rows();
-        var data = new DataTable();
-        foreach (var column in _columns)
-        {
-            ArgumentNullException.ThrowIfNull(column.Datatype);
-            data.Columns.Add(column.Name, column.Datatype);
-        }
+        var data = new List<IDictionary<string, object?>>();
         foreach (var row in rows)
         {
-            var dataRow = data.NewRow();
+            var dataRow = new Dictionary<string, object?>();
             foreach (var column in _columns)
             {
                 var (col, type) = (column.Name, column.Datatype);
                 var cell = row.Field(col);
                 if (type == typeof(string))
                 {
-                    dataRow[col] = cell.GetString();
+                    dataRow[col] = cell.GetValue<string?>();
                 }
                 else if (type == typeof(byte))
                 {
-                    dataRow[col] = cell.GetValue<byte>();
+                    dataRow[col] = cell.GetValue<byte?>();
                 }
                 else if (type == typeof(short))
                 {
-                    dataRow[col] = cell.GetValue<short>();
+                    dataRow[col] = cell.GetValue<short?>();
                 }
                 else if (type == typeof(int))
                 {
-                    dataRow[col] = cell.GetValue<int>();
+                    dataRow[col] = cell.GetValue<int?>();
                 }
                 else if (type == typeof(long))
                 {
-                    dataRow[col] = cell.GetValue<long>();
+                    dataRow[col] = cell.GetValue<long?>();
                 }
                 else if (type == typeof(decimal))
                 {
-                    dataRow[col] = cell.GetValue<decimal>();
+                    dataRow[col] = cell.GetValue<decimal?>();
                 }
                 else if (type == typeof(float))
                 {
-                    dataRow[col] = cell.GetValue<float>();
+                    dataRow[col] = cell.GetValue<float?>();
                 }
                 else if (type == typeof(double))
                 {
-                    dataRow[col] = cell.GetDouble();
-                }
-                else if (type == typeof(int))
-                {
-                    dataRow[col] = cell.GetDateTime();
-                }
-                else if (type == typeof(bool))
-                {
-                    dataRow[col] = cell.GetBoolean();
+                    dataRow[col] = cell.GetValue<double?>();
                 }
                 else if (type == typeof(DateTime))
                 {
-                    dataRow[col] = cell.GetDateTime();
+                    dataRow[col] = cell.GetValue<DateTime?>();
+                }
+                else if (type == typeof(bool))
+                {
+                    dataRow[col] = cell.GetValue<bool?>();
                 }
                 else
                 {
                     throw new NotSupportedException($"Unsupported datatype {type} for column {col}");
                 }
             }
-            data.Rows.Add(dataRow);
+            data.Add(dataRow);
         }
         return new Upload(_table, _columns, data);
     }

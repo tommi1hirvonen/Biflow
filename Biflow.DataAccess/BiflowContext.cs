@@ -429,7 +429,7 @@ public class BiflowContext : DbContext
             e.ToTable("DataTableLookup");
             e.HasOne(l => l.Table).WithMany(t => t.Lookups);
             e.HasOne(l => l.LookupTable).WithMany(t => t.DependentLookups).OnDelete(DeleteBehavior.Restrict);
-            e.HasKey(p => new { p.DataTableId, p.ColumnName });
+            e.HasKey(p => new { p.TableId, p.ColumnName });
             e.Property(p => p.LookupDisplayType).HasConversion(lookupDisplayTypeConverter);
         });
 

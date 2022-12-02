@@ -137,8 +137,8 @@
                                                            MinimumLength="0"
                                                            ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
                                                            ValueChanged="guid => SetLookupTable(guid, lookup)"
-                                                           Value="lookup.LookupDataTableId"
-                                                           ValueExpression="() => lookup.LookupDataTableId"
+                                                           Value="lookup.LookupTableId"
+                                                           ValueExpression="() => lookup.LookupTableId"
                                                            ValueSelector="table => table.DataTableId"
                                                            TextSelector="table => table.DataTableName"
                                                            DataProvider="ProvideLookupTableSuggestions">
@@ -146,7 +146,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <HxAutosuggest Label="Lookup value"
                                                            TItem="string"
@@ -160,7 +160,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <HxAutosuggest Label="Lookup description"
                                                            TItem="string"
@@ -174,7 +174,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <label class="form-label">Show</label>
                                                             <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
@@ -300,8 +300,8 @@
                                                                MinimumLength="0"
                                                                ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
                                                                ValueChanged="guid => SetLookupTable(guid, lookup)"
-                                                               Value="lookup.LookupDataTableId"
-                                                               ValueExpression="() => lookup.LookupDataTableId"
+                                                               Value="lookup.LookupTableId"
+                                                               ValueExpression="() => lookup.LookupTableId"
                                                                ValueSelector="table => table.DataTableId"
                                                                TextSelector="table => table.DataTableName"
                                                                DataProvider="ProvideLookupTableSuggestions">
@@ -309,7 +309,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <HxAutosuggest Label="Lookup value"
                                                                TItem="string"
@@ -323,7 +323,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <HxAutosuggest Label="Lookup description"
                                                                TItem="string"
@@ -337,7 +337,7 @@
                                                         }
                                                     </div>
                                                     <div class="col">
-                                                        @if (lookup.LookupDataTableId != Guid.Empty)
+                                                        @if (lookup.LookupTableId != Guid.Empty)
                                                         {
                                                             <label class="form-label">Show</label>
                                                             <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
@@ -462,11 +462,11 @@
             lookup.LookupDescriptionColumn = "";
             if (dataTable is null)
             {
-                lookup.LookupDataTableId = Guid.Empty;
+                lookup.LookupTableId = Guid.Empty;
                 LookupColumns = null;
                 return;
             }
-            lookup.LookupDataTableId = guid;
+            lookup.LookupTableId = guid;
             LookupColumns = await dataTable.GetColumnNamesAsync();
         }
         catch (Exception ex)
@@ -559,13 +559,13 @@
 
             foreach (var lookup in EditTable.Lookups)
             {
-                var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupDataTableId);
+                var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupTableId);
                 if (lookupTable is not null) lookup.LookupTable = lookupTable;
             }
 
             foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
             {
-                if (lookup.LookupDataTableId == EditTable.DataTableId)
+                if (lookup.LookupTableId == EditTable.DataTableId)
                 {
                     lookup.LookupTable = EditTable;
                 }

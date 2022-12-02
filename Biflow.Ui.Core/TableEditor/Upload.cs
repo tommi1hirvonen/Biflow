@@ -9,10 +9,10 @@ public class Upload
 {
     private readonly List<Column> _columns;
     private readonly MasterDataTable _table;
+    
+    public ICollection<IDictionary<string, object?>> Data { get; }
 
-    public DataTable Data { get; }
-
-    internal Upload(DataAccess.Models.MasterDataTable table, List<Column> columns, DataTable data)
+    internal Upload(MasterDataTable table, List<Column> columns, ICollection<IDictionary<string, object?>> data)
     {
         _table = table;
         _columns = columns;
@@ -79,7 +79,8 @@ public class Upload
             var mapping = new SqlBulkCopyColumnMapping(column.Name, column.Name);
             copy.ColumnMappings.Add(mapping);
         }
-        await copy.WriteToServerAsync(Data);
+        var reader = new DictionaryReader(_columns.Select(c => c.Name), Data);
+        await copy.WriteToServerAsync(reader);
 
         var transaction = await connection.BeginTransactionAsync();
         try
