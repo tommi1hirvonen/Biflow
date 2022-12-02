@@ -195,7 +195,7 @@
     public EventCallback<User> OnUserSubmit { get; set; }
 
     private List<Job>? Jobs { get; set; }
-    private List<DataTable>? DataTables { get; set; } 
+    private List<MasterDataTable>? DataTables { get; set; } 
 
     private HxModal? Modal { get; set; }
 
@@ -230,7 +230,7 @@
         }
     }
 
-    private void ToggleDataTableAuthorization(ChangeEventArgs args, DataTable table)
+    private void ToggleDataTableAuthorization(ChangeEventArgs args, MasterDataTable table)
     {
         var enabled = (bool)args.Value!;
         if (enabled)
@@ -280,7 +280,7 @@
                         .Include(u => u.DataTables)
                         .FirstAsync(u => u.Username == User.Username);
                     var jobs = await context.Jobs.ToListAsync();
-                    var dataTables = await context.DataTables.ToListAsync();
+                    var dataTables = await context.MasterDataTables.ToListAsync();
                     user.AuthorizeAllJobs = User.AuthorizeAllJobs;
                     user.AuthorizeAllDataTables = User.AuthorizeAllDataTables;
                     foreach (var jobToAdd in User.Jobs)
@@ -340,7 +340,7 @@
             {
                 Role = "Viewer",
                 Jobs = new List<Job>(),
-                DataTables = new List<DataTable>()
+                DataTables = new List<MasterDataTable>()
             };
         }
         else
@@ -352,7 +352,7 @@
                 .FirstAsync(user => user.Username == username);            
         }
         Jobs = await Context.Jobs.OrderBy(j => j.JobName).ToListAsync();
-        DataTables = await Context.DataTables.OrderBy(t => t.DataTableName).ToListAsync();
+        DataTables = await Context.MasterDataTables.OrderBy(t => t.DataTableName).ToListAsync();
     }
 
 

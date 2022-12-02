@@ -47,7 +47,7 @@ public class BiflowContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
     public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
-    public DbSet<DataTable> DataTables => Set<DataTable>();
+    public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -424,27 +424,27 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<FunctionApp>()
             .ToTable("FunctionApp");
 
-        modelBuilder.Entity<DataTableLookup>(e =>
+        modelBuilder.Entity<MasterDataTableLookup>(e =>
         {
             e.ToTable("DataTableLookup");
-            e.HasOne(l => l.DataTable).WithMany(t => t.Lookups);
-            e.HasOne(l => l.LookupDataTable).WithMany(t => t.DependentLookups).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.Table).WithMany(t => t.Lookups);
+            e.HasOne(l => l.LookupTable).WithMany(t => t.DependentLookups).OnDelete(DeleteBehavior.Restrict);
             e.HasKey(p => new { p.DataTableId, p.ColumnName });
             e.Property(p => p.LookupDisplayType).HasConversion(lookupDisplayTypeConverter);
         });
 
-        modelBuilder.Entity<DataTable>(e =>
+        modelBuilder.Entity<MasterDataTable>(e =>
         {
             e.ToTable("DataTable");
             
-            e.HasMany(t => t.Lookups).WithOne(l => l.DataTable);
+            e.HasMany(t => t.Lookups).WithOne(l => l.Table);
             
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)
             .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
             
             x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
-            x => x.HasOne<DataTable>().WithMany().HasForeignKey("DataTableId"));
+            x => x.HasOne<MasterDataTable>().WithMany().HasForeignKey("DataTableId"));
 
             if (_httpContextAccessor is not null)
             {

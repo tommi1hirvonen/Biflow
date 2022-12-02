@@ -6,11 +6,11 @@ namespace Biflow.Ui.Core;
 
 internal class DataTableQueryBuilder
 {
-    private readonly DataTable _table;
+    private readonly MasterDataTable _table;
     private readonly FilterSet? _filters;
     private readonly int _top;
 
-    public DataTableQueryBuilder(DataTable table, int top, FilterSet? filters)
+    public DataTableQueryBuilder(MasterDataTable table, int top, FilterSet? filters)
     {
         _table = table;
         _filters = filters;
@@ -42,8 +42,8 @@ internal class DataTableQueryBuilder
             if (column.Lookup is null) continue;
             var dataTableLookup = column.Lookup.DataTableLookup;
             var columnName = dataTableLookup.ColumnName;
-            var lookupSchema = dataTableLookup.LookupDataTable.TargetSchemaName;
-            var lookupTable = dataTableLookup.LookupDataTable.TargetTableName;
+            var lookupSchema = dataTableLookup.LookupTable.TargetSchemaName;
+            var lookupTable = dataTableLookup.LookupTable.TargetTableName;
             var lookupValueColumn = dataTableLookup.LookupValueColumn;
             var lookupFilterColumn = dataTableLookup.LookupDisplayType switch
             {

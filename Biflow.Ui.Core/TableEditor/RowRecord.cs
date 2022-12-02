@@ -90,7 +90,7 @@ public class RowRecord
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var (schema, table) = (_dataset.DataTable.TargetSchemaName, _dataset.DataTable.TargetTableName);
+        var (schema, table) = (_dataset.MasterDataTable.TargetSchemaName, _dataset.MasterDataTable.TargetTableName);
 
         var upsertableColumns = _dataset.Columns
             .Where(c => !c.IsIdentity && !c.IsComputed)

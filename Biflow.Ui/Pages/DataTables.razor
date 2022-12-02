@@ -1,4 +1,4 @@
-﻿@page "/datatables/{Page?}/{DataTableId:guid?}"
+﻿@page "/datatables/{Page?}/{MasterDataTableId:guid?}"
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
@@ -36,7 +36,7 @@ else if (Page == "manage")
 }
 else if (Page == "import")
 {
-    <DataTableImportComponent DataTableId="DataTableId" />
+    <DataTableImportComponent MasterDataTableId="MasterDataTableId" />
 }
 else
 {
@@ -46,19 +46,19 @@ else
 @code {
     [Parameter] public string? Page { get; set; }
 
-    [Parameter] public Guid? DataTableId { get; set; }
+    [Parameter] public Guid? MasterDataTableId { get; set; }
 
-    private List<DataTable>? Tables { get; set; }
+    private List<MasterDataTable>? Tables { get; set; }
 
     private List<SqlConnectionInfo>? Connections { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
-        Tables = await context.DataTables
+        Tables = await context.MasterDataTables
             .Include(t => t.Connection)
             .Include(t => t.Lookups)
-            .ThenInclude(t => t.LookupDataTable)
+            .ThenInclude(t => t.LookupTable)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
         Connections = await context.SqlConnections

@@ -8,7 +8,7 @@ namespace Biflow.Ui.Core;
 
 public static class TableEditorExtensions
 {
-    public static async Task<IEnumerable<string>> GetColumnNamesAsync(this DataTable table)
+    public static async Task<IEnumerable<string>> GetColumnNamesAsync(this MasterDataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
@@ -25,9 +25,9 @@ public static class TableEditorExtensions
         return columns;
     }
 
-    public static async Task<Dataset> LoadDataAsync(this DataTable table, int? top = null, FilterSet? filters = null)
+    public static async Task<Dataset> LoadDataAsync(this MasterDataTable table, int? top = null, FilterSet? filters = null)
     {
-        if (table.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != table.Connection.ConnectionId))
+        if (table.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != table.Connection.ConnectionId))
         {
             throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
         }
@@ -46,14 +46,14 @@ public static class TableEditorExtensions
         return new Dataset(table, columns, originalData);
     }
 
-    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this DataTable table, bool includeLookups = true)
+    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
         return await table.GetColumnsAsync(connection, includeLookups);
     }
 
-    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this DataTable table, SqlConnection connection, bool includeLookups = true)
+    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, SqlConnection connection, bool includeLookups = true)
     {
         var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
         var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);
@@ -71,7 +71,7 @@ public static class TableEditorExtensions
         return columns;
     }
 
-    private static Task<IEnumerable<string>> GetPrimaryKeyAsync(this DataTable table, SqlConnection connection) =>
+    private static Task<IEnumerable<string>> GetPrimaryKeyAsync(this MasterDataTable table, SqlConnection connection) =>
         connection.QueryAsync<string>("""
             select
                 c.[name]
@@ -85,7 +85,7 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-    private static Task<string?> GetIdentityColumnOrNullAsync(this DataTable table, SqlConnection connection) =>
+    private static Task<string?> GetIdentityColumnOrNullAsync(this MasterDataTable table, SqlConnection connection) =>
         connection.ExecuteScalarAsync<string?>("""
             select top 1 a.[name]
             from sys.columns as a
@@ -96,13 +96,13 @@ public static class TableEditorExtensions
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
         );
 
-    private static async Task<Dictionary<string, Lookup>> GetLookupsAsync(this DataTable table) =>
+    private static async Task<Dictionary<string, Lookup>> GetLookupsAsync(this MasterDataTable table) =>
         await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
         {
-            using var connection = new SqlConnection(lookup.LookupDataTable.Connection.ConnectionString);
+            using var connection = new SqlConnection(lookup.LookupTable.Connection.ConnectionString);
             await connection.OpenAsync();
 
-            var dataTypes = await lookup.LookupDataTable.GetColumnDatatypesAsync(connection);
+            var dataTypes = await lookup.LookupTable.GetColumnDatatypesAsync(connection);
 
             var lookupDisplayValueDatatype = lookup.LookupDisplayType switch
             {
@@ -117,7 +117,7 @@ public static class TableEditorExtensions
 
             var results = await connection.QueryAsync<(object? Value, object? Description)>($"""
                 SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
-                FROM [{lookup.LookupDataTable.TargetSchemaName}].[{lookup.LookupDataTable.TargetTableName}]
+                FROM [{lookup.LookupTable.TargetSchemaName}].[{lookup.LookupTable.TargetTableName}]
                 """);
 
             var data = results.Select(value =>
@@ -136,7 +136,7 @@ public static class TableEditorExtensions
         }).ToDictionaryAsync(key => key.ColumnName, value => value.Item2);
 
     private static Task<IEnumerable<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>>
-        GetColumnDatatypesAsync(this DataTable table, SqlConnection connection) =>
+        GetColumnDatatypesAsync(this MasterDataTable table, SqlConnection connection) =>
         connection.QueryAsync<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>(
             """
             select

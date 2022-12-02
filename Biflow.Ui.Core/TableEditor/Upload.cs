@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using Biflow.DataAccess.Models;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
@@ -7,11 +8,11 @@ namespace Biflow.Ui.Core;
 public class Upload
 {
     private readonly List<Column> _columns;
-    private readonly DataAccess.Models.DataTable _table;
+    private readonly MasterDataTable _table;
 
     public DataTable Data { get; }
 
-    internal Upload(DataAccess.Models.DataTable table, List<Column> columns, DataTable data)
+    internal Upload(DataAccess.Models.MasterDataTable table, List<Column> columns, DataTable data)
     {
         _table = table;
         _columns = columns;

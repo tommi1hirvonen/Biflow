@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class DataTableLookup
+public class MasterDataTableLookup
 {
     [Required]
     public Guid DataTableId { get; set; }
@@ -24,7 +24,7 @@ public class DataTableLookup
 
     public LookupDisplayType LookupDisplayType { get; set; }
 
-    public DataTable DataTable { get; set; } = null!;
+    public MasterDataTable Table { get; set; } = null!;
 
-    public DataTable LookupDataTable { get; set; } = null!;
+    public MasterDataTable LookupTable { get; set; } = null!;
 }

@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class DataTable
+public class MasterDataTable
 {
     [Key]
     public Guid DataTableId { get; set; }
@@ -31,7 +31,7 @@ public class DataTable
 
     public ICollection<User> Users { get; set; } = null!;
 
-    public ICollection<DataTableLookup> Lookups { get; set; } = null!;
+    public ICollection<MasterDataTableLookup> Lookups { get; set; } = null!;
 
-    public ICollection<DataTableLookup> DependentLookups { get; set; } = null!;
+    public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 }

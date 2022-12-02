@@ -26,7 +26,7 @@
                 }
             </HxDropdownToggleButton>
             <HxDropdownMenu>
-                @foreach (var table in Tables ?? Enumerable.Empty<DataTable>())
+                @foreach (var table in Tables ?? Enumerable.Empty<MasterDataTable>())
                 {
                     <HxDropdownItem OnClick="async () => await ReloadDataAsync(table)">
                         @table.DataTableName
@@ -378,9 +378,9 @@
 <SelectColumnsOffcanvas @ref="SelectColumnsOffcanvas" ColumnSelections="ColumnSelections" OnSelectionsChanged="StateHasChanged" />
 
 @code {
-    [Parameter] public List<DataTable>? Tables { get; set; }
+    [Parameter] public List<MasterDataTable>? Tables { get; set; }
 
-    private DataTable? SelectedTable { get; set; }
+    private MasterDataTable? SelectedTable { get; set; }
 
     private Dataset? Dataset { get; set; }
 
@@ -446,7 +446,7 @@
         }
     }
 
-    private async Task ReloadDataAsync(DataTable? table = null)
+    private async Task ReloadDataAsync(MasterDataTable? table = null)
     {
         Dataset = null;
         StateHasChanged();

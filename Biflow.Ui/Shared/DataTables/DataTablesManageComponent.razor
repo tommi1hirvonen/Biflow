@@ -130,7 +130,7 @@
                                                         @if (!string.IsNullOrEmpty(lookup.ColumnName))
                                                         {
                                                             <HxAutosuggest Label="Lookup table"
-                                                           TItem="DataTable"
+                                                           TItem="MasterDataTable"
                                                            TValue="Guid"
                                                            InputSize="InputSize.Small"
                                                            Delay="0"
@@ -293,7 +293,7 @@
                                                         @if (!string.IsNullOrEmpty(lookup.ColumnName))
                                                         {
                                                             <HxAutosuggest Label="Lookup table"
-                                                               TItem="DataTable"
+                                                               TItem="MasterDataTable"
                                                                TValue="Guid"
                                                                InputSize="InputSize.Small"
                                                                Delay="0"
@@ -403,11 +403,11 @@
 <DatabaseTableSelectOffcanvas @ref="Offcanvas" OnTableSelected="OnTableSelected" />
 
 @code {
-    [Parameter] public List<DataTable>? Tables { get; set; }
+    [Parameter] public List<MasterDataTable>? Tables { get; set; }
 
     [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
 
-    private DataTable EditTable { get; set; } = new() { Lookups = new List<DataTableLookup>() };
+    private MasterDataTable EditTable { get; set; } = new() { Lookups = new List<MasterDataTableLookup>() };
 
     private BiflowContext? EditContext { get; set; }
 
@@ -416,12 +416,12 @@
     private IEnumerable<string>? Columns { get; set; }
     private IEnumerable<string>? LookupColumns { get; set; }
 
-    private async Task DeleteTableAsync(DataTable table)
+    private async Task DeleteTableAsync(MasterDataTable table)
     {
         try
         {
             using var context = DbContextFactory.CreateDbContext();
-            context.DataTables.Remove(table);
+            context.MasterDataTables.Remove(table);
             await context.SaveChangesAsync();
             Tables?.Remove(table);
         }
@@ -431,7 +431,7 @@
         }
     }
 
-    private async Task SetEditContextAsync(DataTable? table = null)
+    private async Task SetEditContextAsync(MasterDataTable? table = null)
     {
         EditContext?.Dispose();
         EditContext = DbContextFactory.CreateDbContext();
@@ -443,16 +443,16 @@
         }
         else
         {
-            EditTable = await EditContext.DataTables
+            EditTable = await EditContext.MasterDataTables
                 .Include(t => t.Connection)
                 .Include(t => t.Lookups)
-                .ThenInclude(l => l.LookupDataTable)
+                .ThenInclude(l => l.LookupTable)
                 .FirstAsync(t => t.DataTableId == table.DataTableId);
         }
         StateHasChanged();
     }
 
-    private async void SetLookupTable(Guid guid, DataTableLookup lookup)
+    private async void SetLookupTable(Guid guid, MasterDataTableLookup lookup)
     {
         try
         {
@@ -502,11 +502,11 @@
             };
     }
 
-    private async Task<AutosuggestDataProviderResult<DataTable>> ProvideLookupTableSuggestions(AutosuggestDataProviderRequest request)
+    private async Task<AutosuggestDataProviderResult<MasterDataTable>> ProvideLookupTableSuggestions(AutosuggestDataProviderRequest request)
     {
         await Task.Delay(100);
         ArgumentNullException.ThrowIfNull(Tables);
-        return new AutosuggestDataProviderResult<DataTable>
+        return new AutosuggestDataProviderResult<MasterDataTable>
             {
                 Data = Tables.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput))
             };
@@ -515,7 +515,7 @@
     private void EndEditContext()
     {
         EditContext?.Dispose();
-        EditTable = new() { Lookups = new List<DataTableLookup>() };
+        EditTable = new() { Lookups = new List<MasterDataTableLookup>() };
         Columns = null;
         LookupColumns = null;
         StateHasChanged();
@@ -534,7 +534,7 @@
             return;
         }
 
-        if (EditTable.Lookups.Any(lookup => lookup.LookupDataTable.ConnectionId != EditTable.ConnectionId))
+        if (EditTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != EditTable.ConnectionId))
         {
             Messenger.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
             return;
@@ -544,7 +544,7 @@
         {
             if (EditTable.DataTableId == Guid.Empty)
             {
-                EditContext.DataTables.Add(EditTable);
+                EditContext.MasterDataTables.Add(EditTable);
             }
             await EditContext.SaveChangesAsync();
             EditContext.Dispose();
@@ -560,14 +560,14 @@
             foreach (var lookup in EditTable.Lookups)
             {
                 var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupDataTableId);
-                if (lookupTable is not null) lookup.LookupDataTable = lookupTable;
+                if (lookupTable is not null) lookup.LookupTable = lookupTable;
             }
 
-            foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<DataTableLookup>())
+            foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
             {
                 if (lookup.LookupDataTableId == EditTable.DataTableId)
                 {
-                    lookup.LookupDataTable = EditTable;
+                    lookup.LookupTable = EditTable;
                 }
             }
 

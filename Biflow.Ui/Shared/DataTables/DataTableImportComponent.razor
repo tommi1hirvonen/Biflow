@@ -90,9 +90,9 @@
 
 @code {
     [Parameter]
-    public Guid? DataTableId { get; set; }
+    public Guid? MasterDataTableId { get; set; }
 
-    private Biflow.DataAccess.Models.DataTable? Table { get; set; }
+    private MasterDataTable? Table { get; set; }
 
     private InputFile? InputFile { get; set; }
 
@@ -107,9 +107,9 @@
     protected override async Task OnParametersSetAsync()
     {
         using var context = await DbContextFactory.CreateDbContextAsync();
-        Table = await context.DataTables
+        Table = await context.MasterDataTables
             .Include(t => t.Connection)
-            .FirstAsync(t => t.DataTableId == DataTableId);
+            .FirstAsync(t => t.DataTableId == MasterDataTableId);
         Builder = await UploadBuilder.FromTableAsync(Table);
     }
 

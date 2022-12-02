@@ -9,16 +9,16 @@ public class Dataset
 {
     private readonly LinkedList<RowRecord> _workingData;
 
-    internal DataTable DataTable { get; }
+    internal MasterDataTable MasterDataTable { get; }
 
     public HashSet<Column> Columns { get; }
 
     internal Dataset(
-        DataTable dataTable,
+        MasterDataTable masterDataTable,
         HashSet<Column> columns,
         IEnumerable<IDictionary<string, object?>> data)
     {
-        DataTable = dataTable;
+        MasterDataTable = masterDataTable;
         Columns = columns;
         _workingData = new LinkedList<RowRecord>(data.Select(row => new RowRecord(this, row)));
     }
@@ -42,7 +42,7 @@ public class Dataset
             return (0, 0, 0);
         }
 
-        using var connection = new SqlConnection(DataTable.Connection.ConnectionString);
+        using var connection = new SqlConnection(MasterDataTable.Connection.ConnectionString);
         await connection.OpenAsync();
 
         using var transaction = await connection.BeginTransactionAsync();

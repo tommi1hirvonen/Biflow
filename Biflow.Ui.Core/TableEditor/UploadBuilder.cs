@@ -1,16 +1,17 @@
 ﻿using Biflow.DataAccess.Models;
 using ClosedXML.Excel;
+using System.Data;
 
 namespace Biflow.Ui.Core;
 
 public class UploadBuilder
 {
     private readonly List<Column> _columns;
-    private readonly DataTable _table;
+    private readonly MasterDataTable _table;
 
     public IEnumerable<string> Columns => _columns.Select(c => c.Name);
 
-    private UploadBuilder(DataTable table, List<Column> columns)
+    private UploadBuilder(MasterDataTable table, List<Column> columns)
     {
         _table = table;
         _columns = columns;
@@ -24,7 +25,7 @@ public class UploadBuilder
             .Table(0)
             .DataRange
             .Rows();
-        var data = new System.Data.DataTable();
+        var data = new DataTable();
         foreach (var column in _columns)
         {
             ArgumentNullException.ThrowIfNull(column.Datatype);
@@ -91,7 +92,7 @@ public class UploadBuilder
         return new Upload(_table, _columns, data);
     }
 
-    public static async Task<UploadBuilder> FromTableAsync(DataTable table)
+    public static async Task<UploadBuilder> FromTableAsync(MasterDataTable table)
     {
         var columns = (await table.GetColumnsAsync(includeLookups: false)).ToList();
         var notSupportedColumns = columns.Where(c => c.Datatype is null).Select(c => $"c.Name ({c.DbDatatype})");

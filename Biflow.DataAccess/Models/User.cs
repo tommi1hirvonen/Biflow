@@ -30,5 +30,5 @@ public class User
 
     public ICollection<Job> Jobs { get; set; } = null!;
 
-    public ICollection<DataTable> DataTables { get; set; } = null!;
+    public ICollection<MasterDataTable> DataTables { get; set; } = null!;
 }
