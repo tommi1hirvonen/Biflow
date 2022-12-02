@@ -5,35 +5,35 @@ using Microsoft.Data.SqlClient;
 
 namespace Biflow.Ui.Core;
 
-public class Dataset
+public class TableData
 {
-    private readonly LinkedList<RowRecord> _workingData;
+    private readonly LinkedList<Row> _rows;
 
     internal MasterDataTable MasterDataTable { get; }
 
     public HashSet<Column> Columns { get; }
 
-    internal Dataset(
+    internal TableData(
         MasterDataTable masterDataTable,
         HashSet<Column> columns,
         IEnumerable<IDictionary<string, object?>> data)
     {
         MasterDataTable = masterDataTable;
         Columns = columns;
-        _workingData = new LinkedList<RowRecord>(data.Select(row => new RowRecord(this, row)));
+        _rows = new LinkedList<Row>(data.Select(row => new Row(this, row)));
     }
 
     public bool IsEditable => Columns.Any(c => c.IsPrimaryKey);
 
     public FilterSet EmptyFilterSet => new(Columns);
 
-    public IEnumerable<RowRecord> RowRecords => _workingData.Where(r => !r.ToBeDeleted);
+    public IEnumerable<Row> Rows => _rows.Where(r => !r.ToBeDeleted);
 
     public async Task<(int Inserted, int Updated, int Deleted)> SaveChangesAsync()
     {
-        var changes = _workingData?
-            .OrderByDescending(record => record.ToBeDeleted) // handle records to be deleted first
-            .Select(record => record.GetChangeSqlCommand())
+        var changes = _rows?
+            .OrderByDescending(row => row.ToBeDeleted) // handle records to be deleted first
+            .Select(row => row.GetChangeSqlCommand())
             .Where(command => command is not null)
             .Cast<(string Command, DynamicParameters Parameters, DataTableCommandType CommandType)>();
 
@@ -66,11 +66,7 @@ public class Dataset
         }
     }
 
-    public void AddRecord()
-    {
-        var record = new RowRecord(this);
-        _workingData.AddFirst(record);
-    }
+    public void AddRow() => _rows.AddFirst(new Row(this));
 
     public Stream GetExcelExportStream()
     {
@@ -81,18 +77,18 @@ public class Dataset
             sheet.Cell(1, i + 1).SetValue(Columns.ElementAt(i).Name);
         }
         var rowIndex = 2;
-        foreach (var row in _workingData)
+        foreach (var row in _rows)
         {
             var colIndex = 1;
             foreach (var column in Columns)
             {
-                sheet.Cell(rowIndex, colIndex).Value = row.WorkingValues[column.Name];
+                sheet.Cell(rowIndex, colIndex).Value = row.Values[column.Name];
                 colIndex++;
             }
             rowIndex++;
         }
         var firstCell = sheet.Cell(1, 1);
-        var lastCell = sheet.Cell(_workingData.Count, Columns.Count);
+        var lastCell = sheet.Cell(_rows.Count, Columns.Count);
         var range = sheet.Range(firstCell, lastCell);
         range.CreateTable();
         // Adjust column widths based on only the first 100 rows for much better performance.

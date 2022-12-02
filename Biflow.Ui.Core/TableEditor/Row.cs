@@ -1,15 +1,14 @@
-﻿using Biflow.DataAccess.Models;
-using Dapper;
+﻿using Dapper;
 using System.Text;
 
 namespace Biflow.Ui.Core;
 
-public class RowRecord
+public class Row
 {
-    private readonly Dataset _dataset;
-    private readonly IDictionary<string, object?>? _originalValues;
+    private readonly TableData _dataset;
+    private readonly IDictionary<string, object?>? _initialValues;
 
-    public Dictionary<string, object?> WorkingValues { get; }
+    public Dictionary<string, object?> Values { get; }
 
     public ColumnValueIndexer<byte?> ByteIndexer { get; }
     public ColumnValueIndexer<short?> ShortIndexer { get; }
@@ -24,26 +23,26 @@ public class RowRecord
 
     public bool ToBeDeleted { get; set; }
 
-    public RowRecord(
-        Dataset dataset,
-        IDictionary<string, object?>? originalValues = null)
+    public Row(
+        TableData dataset,
+        IDictionary<string, object?>? initialValues = null)
     {
         _dataset= dataset;
-        _originalValues = originalValues;
-        WorkingValues = _originalValues is not null ? new(_originalValues) : new();
+        _initialValues = initialValues;
+        Values = _initialValues is not null ? new(_initialValues) : new();
         
-        ByteIndexer = new(WorkingValues);
-        ShortIndexer = new(WorkingValues);
-        IntIndexer = new(WorkingValues);
-        LongIndexer = new(WorkingValues);
-        DecimalIndexer = new(WorkingValues);
-        DoubleIndexer = new(WorkingValues);
-        FloatIndexer = new(WorkingValues);
-        StringIndexer = new(WorkingValues);
-        BooleanIndexer = new(WorkingValues);
-        DateTimeIndexer = new(WorkingValues);
+        ByteIndexer = new(Values);
+        ShortIndexer = new(Values);
+        IntIndexer = new(Values);
+        LongIndexer = new(Values);
+        DecimalIndexer = new(Values);
+        DoubleIndexer = new(Values);
+        FloatIndexer = new(Values);
+        StringIndexer = new(Values);
+        BooleanIndexer = new(Values);
+        DateTimeIndexer = new(Values);
 
-        if (_originalValues is null)
+        if (_initialValues is null)
         {
             foreach (var column in _dataset.Columns)
             {
@@ -51,7 +50,7 @@ public class RowRecord
                 //var dbDatatype = columnInfo.DbDatatype;
                 if (column.IsIdentity)
                 {
-                    WorkingValues[column.Name] = default;
+                    Values[column.Name] = default;
                 }
                 else
                 {
@@ -76,7 +75,7 @@ public class RowRecord
                     else if (column.Datatype == typeof(DateTime))
                         DateTimeIndexer[column.Name] = DateTime.Now;
                     else
-                        WorkingValues[column.Name] = default;
+                        Values[column.Name] = default;
                 }
             }
         }
@@ -102,10 +101,10 @@ public class RowRecord
             .ToList();
 
         // Existing entity
-        if (_originalValues is not null && !ToBeDeleted)
+        if (_initialValues is not null && !ToBeDeleted)
         {
-            var changes = WorkingValues
-                .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _originalValues[w.Key]?.ToString())
+            var changes = Values
+                .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _initialValues[w.Key]?.ToString())
                 .ToList();
                         
             // No changes => skip this record
@@ -130,7 +129,7 @@ public class RowRecord
             builder.Append(" WHERE ");
             foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
-                var value = _originalValues[pk];
+                var value = _initialValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
                 if (index < primaryKey.Count)
@@ -141,7 +140,7 @@ public class RowRecord
 
             return (builder.ToString(), parameters, DataTableCommandType.Update);
         }
-        else if (_originalValues is not null)
+        else if (_initialValues is not null)
         {
             // Existing record to be deleted
             var builder = new StringBuilder();
@@ -149,7 +148,7 @@ public class RowRecord
             builder.Append("DELETE [").Append(schema).Append("].[").Append(table).Append("] WHERE ");
             foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
-                var value = _originalValues[pk];
+                var value = _initialValues[pk];
                 builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
                 if (index < primaryKey.Count)
@@ -175,7 +174,7 @@ public class RowRecord
                 .Append(") VALUES (");
             foreach (var (column, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
             {
-                var value = WorkingValues[column];
+                var value = Values[column];
                 builder.Append("@Working_").Append(index);
                 parameters.Add($"Working_{index}", value);
                 if (index < upsertableColumns.Count)

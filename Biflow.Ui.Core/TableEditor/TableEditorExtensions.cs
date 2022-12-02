@@ -23,7 +23,7 @@ public static class TableEditorExtensions
         return columns;
     }
 
-    public static async Task<Dataset> LoadDataAsync(this MasterDataTable table, int? top = null, FilterSet? filters = null)
+    public static async Task<TableData> LoadDataAsync(this MasterDataTable table, int? top = null, FilterSet? filters = null)
     {
         if (table.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != table.Connection.ConnectionId))
         {
@@ -39,9 +39,9 @@ public static class TableEditorExtensions
 
         var (query, parameters) = new DataTableQueryBuilder(table, (int)top, filters).Build();
         var rows = await connection.QueryAsync(query, parameters);
-        var originalData = rows.Cast<IDictionary<string, object?>>();
+        var initialValues = rows.Cast<IDictionary<string, object?>>();
         
-        return new Dataset(table, columns, originalData);
+        return new TableData(table, columns, initialValues);
     }
 
     internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)
