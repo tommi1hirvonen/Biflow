@@ -2,9 +2,9 @@
 
 public class ColumnValueIndexer<T>
 {
-    private readonly Dictionary<string, object?> _data;
+    private readonly IDictionary<string, object?> _data;
 
-    public ColumnValueIndexer(Dictionary<string, object?> data)
+    public ColumnValueIndexer(IDictionary<string, object?> data)
     {
         _data = data;
     }

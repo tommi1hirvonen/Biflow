@@ -5,10 +5,11 @@ namespace Biflow.Ui.Core;
 
 public class Row
 {
-    private readonly TableData _dataset;
+    private readonly TableData _parentTable;
     private readonly IDictionary<string, object?>? _initialValues;
+    private readonly ObservableDictionary<string, object?> _values;
 
-    public Dictionary<string, object?> Values { get; }
+    public IDictionary<string, object?> Values => _values;
 
     public ColumnValueIndexer<byte?> ByteIndexer { get; }
     public ColumnValueIndexer<short?> ShortIndexer { get; }
@@ -21,15 +22,15 @@ public class Row
     public ColumnValueIndexer<bool?> BooleanIndexer { get; }
     public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; }
 
-    public bool ToBeDeleted { get; set; }
+    public bool ToBeDeleted { get; private set; }
 
     public Row(
-        TableData dataset,
+        TableData tableData,
         IDictionary<string, object?>? initialValues = null)
     {
-        _dataset= dataset;
+        _parentTable = tableData;
         _initialValues = initialValues;
-        Values = _initialValues is not null ? new(_initialValues) : new();
+        _values = _initialValues is not null ? new(_initialValues, OnValuesChanged) : new(OnValuesChanged);
         
         ByteIndexer = new(Values);
         ShortIndexer = new(Values);
@@ -44,10 +45,8 @@ public class Row
 
         if (_initialValues is null)
         {
-            foreach (var column in _dataset.Columns)
+            foreach (var column in _parentTable.Columns)
             {
-                //var column = columnInfo.Name;
-                //var dbDatatype = columnInfo.DbDatatype;
                 if (column.IsIdentity)
                 {
                     Values[column.Name] = default;
@@ -81,6 +80,14 @@ public class Row
         }
     }
 
+    private void OnValuesChanged() => _parentTable.HasChanges = true;
+
+    public void Delete()
+    {
+        OnValuesChanged();
+        ToBeDeleted = true;
+    }
+
     /// <summary>
     /// 
     /// </summary>
@@ -89,13 +96,13 @@ public class Row
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var (schema, table) = (_dataset.MasterDataTable.TargetSchemaName, _dataset.MasterDataTable.TargetTableName);
+        var (schema, table) = (_parentTable.MasterDataTable.TargetSchemaName, _parentTable.MasterDataTable.TargetTableName);
 
-        var upsertableColumns = _dataset.Columns
+        var upsertableColumns = _parentTable.Columns
             .Where(c => !c.IsIdentity && !c.IsComputed)
             .Select(c => c.Name)
             .ToList();
-        var primaryKey = _dataset.Columns
+        var primaryKey = _parentTable.Columns
             .Where(c => c.IsPrimaryKey)
             .Select(c => c.Name)
             .ToList();

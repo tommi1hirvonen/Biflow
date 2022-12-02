@@ -13,6 +13,8 @@ public class TableData
 
     public HashSet<Column> Columns { get; }
 
+    public bool HasChanges { get; internal set; }
+
     internal TableData(
         MasterDataTable masterDataTable,
         HashSet<Column> columns,
@@ -66,7 +68,11 @@ public class TableData
         }
     }
 
-    public void AddRow() => _rows.AddFirst(new Row(this));
+    public void AddRow()
+    {
+        HasChanges = true;
+        _rows.AddFirst(new Row(this));
+    }
 
     public Stream GetExcelExportStream()
     {

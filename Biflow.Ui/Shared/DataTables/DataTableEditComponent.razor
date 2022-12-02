@@ -1,6 +1,7 @@
 ﻿@using System.Text
 @using System.Text.RegularExpressions
 @inject IHxMessengerService Messenger
+@inject IHxMessageBoxService MessageBox
 @inject MarkupHelperService MarkupHelper
 @inject IJSRuntime JS
 
@@ -150,6 +151,10 @@
                 }
                 @if (TableData is not null && rows is not null)
                 {
+                    @if (TableData.HasChanges)
+                    {
+                        <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+                    }
                     <table class="table">
                         <thead>
                             <tr>
@@ -334,7 +339,7 @@
                                     @if (TableData.IsEditable && EditModeEnabled)
                                     {
                                         <td>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => row.ToBeDeleted = true">
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="row.Delete">
                                                 @MarkupHelper.FromFile("icons/feather/delete.svg")
                                             </button>
                                         </td>
@@ -538,6 +543,15 @@
         finally
         {
             Exporting = false;
+        }
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
         }
     }
 
