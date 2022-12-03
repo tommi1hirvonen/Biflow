@@ -90,7 +90,7 @@
 
 @code {
     [Parameter]
-    public Guid? MasterDataTableId { get; set; }
+    public Guid? TableId { get; set; }
 
     private MasterDataTable? Table { get; set; }
 
@@ -109,7 +109,7 @@
         using var context = await DbContextFactory.CreateDbContextAsync();
         Table = await context.MasterDataTables
             .Include(t => t.Connection)
-            .FirstAsync(t => t.DataTableId == MasterDataTableId);
+            .FirstAsync(t => t.DataTableId == TableId);
         Builder = await UploadBuilder.FromTableAsync(Table);
     }
 

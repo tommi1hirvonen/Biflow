@@ -1,4 +1,4 @@
-﻿@page "/datatables/{Page?}/{MasterDataTableId:guid?}"
+﻿@page "/datatables/{Page?}/{TableId:guid?}"
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
@@ -10,7 +10,7 @@
 <AuthorizeView Roles="Admin, Editor">
     <ul class="nav nav-pills mt-3 mb-4" role="tablist">
         <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="datatables" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="datatables/edit" Match="NavLinkMatch.All">
                 @MarkupHelper.FromFile("icons/feather/table.svg")
                 Edit data
             </NavLink>
@@ -24,9 +24,9 @@
     </ul>
 </AuthorizeView>
 
-@if (Page is null)
+@if (Page == "edit")
 {
-    <DataTableEditComponent Tables="Tables" />
+    <DataTableEditComponent Tables="Tables" TableId="TableId" />
 }
 else if (Page == "manage")
 {
@@ -36,7 +36,7 @@ else if (Page == "manage")
 }
 else if (Page == "import")
 {
-    <DataTableImportComponent MasterDataTableId="MasterDataTableId" />
+    <DataTableImportComponent TableId="TableId" />
 }
 else
 {
@@ -46,7 +46,7 @@ else
 @code {
     [Parameter] public string? Page { get; set; }
 
-    [Parameter] public Guid? MasterDataTableId { get; set; }
+    [Parameter] public Guid? TableId { get; set; }
 
     private List<MasterDataTable>? Tables { get; set; }
 

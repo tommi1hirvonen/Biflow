@@ -29,9 +29,7 @@
             <HxDropdownMenu>
                 @foreach (var table in Tables ?? Enumerable.Empty<MasterDataTable>())
                 {
-                    <HxDropdownItem OnClick="async () => await ReloadDataAsync(table)">
-                        @table.DataTableName
-                    </HxDropdownItem>
+                    <NavLink class="btn dropdown-item" href="@($"datatables/edit/{table.DataTableId}")">@table.DataTableName</NavLink>
                 }
             </HxDropdownMenu>
         </HxDropdownButtonGroup>
@@ -385,6 +383,8 @@
 @code {
     [Parameter] public List<MasterDataTable>? Tables { get; set; }
 
+    [Parameter] public Guid? TableId { get; set; }
+
     private MasterDataTable? SelectedTable { get; set; }
 
     private TableData? TableData { get; set; }
@@ -414,6 +414,17 @@
     private bool EditModeEnabled { get; set; } = true;
 
     private bool Exporting { get; set; } = false;
+
+    private bool DiscardChanges { get; set; } = false; // used to prevent double confirmation when switching tables
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (TableId is not null && TableId != SelectedTable?.DataTableId)
+        {
+            var table = Tables?.FirstOrDefault(t => t.DataTableId == TableId);
+            await ReloadDataAsync(table);
+        }
+    }
 
     private List<Row>? GetOrderedRowRecords()
     {
@@ -453,6 +464,15 @@
 
     private async Task ReloadDataAsync(MasterDataTable? table = null)
     {
+        if (TableData?.HasChanges == true && !DiscardChanges)
+        {
+            var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+            if (!confirmed)
+            {
+                return;
+            }
+        }
+        DiscardChanges = false;
         TableData = null;
         StateHasChanged();
 
@@ -553,6 +573,7 @@
         {
             context.PreventNavigation();
         }
+        DiscardChanges = true;
     }
 
 }
