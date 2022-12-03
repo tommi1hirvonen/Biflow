@@ -1,9 +1,15 @@
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (WindowsServiceHelpers.IsWindowsService())
+{
+    builder.Host.UseWindowsService();
+}
 
 if (builder.Configuration.GetSection("Serilog").Exists())
 {
