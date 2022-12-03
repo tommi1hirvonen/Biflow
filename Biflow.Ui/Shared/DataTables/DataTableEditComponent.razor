@@ -86,7 +86,7 @@
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
 
-                <a class="btn btn-sm btn-secondary @(SelectedTable is null ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
+                <a class="btn btn-sm btn-secondary @(SelectedTable is null || TableData?.IsEditable == false ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
                     @MarkupHelper.FromFile("icons/feather/upload.svg")
                     Import
                 </a>
