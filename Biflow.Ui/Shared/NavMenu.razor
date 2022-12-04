@@ -1,4 +1,5 @@
 ﻿@inject MarkupHelperService MarkupHelper
+@inject AuthenticationMethodResolver AuthenticationResolver
 
 <nav class="sidebar @ClassString" style="z-index: 1040;">
     <ul class="nav flex-column pt-3">
@@ -72,12 +73,15 @@
                 </NavLink>
             </li>
         </AuthorizeView>
-        <li class="nav-item mt-3">
-            <NavLink class="nav-link" href="logout?returnUrl=/">
-                @MarkupHelper.FromFile("icons/feather/log-out.svg")
-                Log out
-            </NavLink>
-        </li>
+        @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+        {
+            <li class="nav-item mt-3">
+                <NavLink class="nav-link" href="logout?returnUrl=/">
+                    @MarkupHelper.FromFile("icons/feather/log-out.svg")
+                    Log out
+                </NavLink>
+            </li>
+        }
     </ul>
 </nav>
 
