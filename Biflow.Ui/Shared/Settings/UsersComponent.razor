@@ -2,6 +2,7 @@
 @inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject IHxMessengerService Messenger
+@inject AuthenticationMethodResolver AuthenticationResolver
 
 <PageTitle>Users | Biflow</PageTitle>
 
@@ -52,39 +53,42 @@
                                     @MarkupHelper.FromFile("icons/feather/edit-2.svg")
                                 </HxButton>
 
-                                <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="change password" @onclick="ResetPassword">
-                                        @MarkupHelper.FromFile("icons/feather/key.svg")
-                                    </HxDropdownToggleButton>
-                                    <HxDropdownContent CssClass="p-4">
-                                        <div style="min-width: 25rem;">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
-                                                        <InputGroupStartTemplate>
-                                                            <div class="input-group-text">
-                                                                @MarkupHelper.FromFile("icons/feather/lock.svg")
-                                                            </div>
-                                                        </InputGroupStartTemplate>
-                                                    </HxInputText>
+                                @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                                {
+                                    <HxDropdownButtonGroup>
+                                        <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
+                                            @MarkupHelper.FromFile("icons/feather/key.svg")
+                                        </HxDropdownToggleButton>
+                                        <HxDropdownContent CssClass="p-4">
+                                            <div style="min-width: 25rem;">
+                                                <div class="row">
+                                                    <div class="col">
+                                                        <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
+                                                            <InputGroupStartTemplate>
+                                                                <div class="input-group-text">
+                                                                    @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                                                </div>
+                                                            </InputGroupStartTemplate>
+                                                        </HxInputText>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="row mt-3">
-                                                <div class="col">
-                                                    <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
-                                                        <InputGroupStartTemplate>
-                                                            <div class="input-group-text">
-                                                                @MarkupHelper.FromFile("icons/feather/key.svg")
-                                                            </div>
-                                                        </InputGroupStartTemplate>
-                                                    </HxInputText>
+                                                <div class="row mt-3">
+                                                    <div class="col">
+                                                        <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
+                                                            <InputGroupStartTemplate>
+                                                                <div class="input-group-text">
+                                                                    @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                                </div>
+                                                            </InputGroupStartTemplate>
+                                                        </HxInputText>
+                                                    </div>
                                                 </div>
+                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
                                             </div>
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
-                                        </div>
-                                        
-                                    </HxDropdownContent>
-                                </HxDropdownButtonGroup>
+
+                                        </HxDropdownContent>
+                                    </HxDropdownButtonGroup>
+                                }
 
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">

@@ -1,6 +1,5 @@
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
@@ -17,7 +16,8 @@ if (builder.Configuration.GetSection("Serilog").Exists())
     builder.Logging.AddSerilog(logger, dispose: true);
 }
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+builder.Services.AddUiCoreAuthentication(builder.Configuration);
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpContextAccessor();
@@ -45,7 +45,6 @@ else
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCookiePolicy();
-app.UseAuthentication();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

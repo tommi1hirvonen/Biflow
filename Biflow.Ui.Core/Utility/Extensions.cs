@@ -1,15 +1,19 @@
-﻿using CronExpressionDescriptor;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
-using Quartz;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.DependencyInjection;
-using Biflow.DataAccess;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Biflow.Executor.Core;
 using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
+using CronExpressionDescriptor;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Quartz;
+using System.Text.RegularExpressions;
 
 namespace Biflow.Ui.Core;
 
@@ -21,6 +25,41 @@ public static partial class Extensions
         using var scope = app.Services.CreateScope();
         var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
         await scheduler.SynchronizeAsync();
+    }
+
+    public static IServiceCollection AddUiCoreAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        var authentication = configuration.GetValue<string>("Authentication");
+        AuthenticationMethod method;
+        if (authentication == "BuiltIn")
+        {
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            method = AuthenticationMethod.BuiltIn;
+        }
+        else if (authentication == "Windows")
+        {
+            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+            services.AddAuthorization(options =>
+            {
+                var connectionString = configuration.GetConnectionString("BiflowContext");
+                ArgumentNullException.ThrowIfNull(connectionString);
+                options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement(connectionString)).Build();
+            });
+            services.AddSingleton<IAuthorizationHandler, WindowsAuthorizationHandler>();
+            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            method = AuthenticationMethod.Windows;
+        }
+        else if (authentication == "AAD")
+        {
+            // TODO Implement AAD authentication support
+            throw new NotImplementedException("AAD authentication support is not implemented");
+        }
+        else
+        {
+            throw new ArgumentException($"Invalid Authentication setting: {authentication}");
+        }
+        services.AddSingleton(new AuthenticationMethodResolver(method));
+        return services;
     }
 
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)

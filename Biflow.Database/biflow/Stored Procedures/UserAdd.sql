@@ -9,7 +9,7 @@ BEGIN
 
 SET NOCOUNT ON;
 
-IF ISNULL(@Username, '') IS NULL OR ISNULL(@Password, '') IS NULL OR ISNULL(@Role, '') IS NULL
+IF ISNULL(@Username, '') IS NULL OR ISNULL(@Role, '') IS NULL
 BEGIN
 
 	SELECT 0;
@@ -34,7 +34,10 @@ BEGIN TRY
 	)
 	SELECT
 		@Username,
-		HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), @Salt)),
+		CASE
+            WHEN @Password IS NOT NULL THEN
+                HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), @Salt))
+        END,
 		@Salt,
 		@Role,
 		@Email,

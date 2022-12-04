@@ -211,7 +211,8 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`
     - Authorization:Windows:AllowedUsers
         - Array of Windows users who are authorized to issue requests to the scheduler API
-        - E.g. `[ "DOMAIN\\BiflowService" ]`
+        - If no authorization is required, remove the Windows section under Authorization from appsettings.json.
+        - E.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`
     - Kestrel:Endpoints:Http:Url
         - The http url and port which the scheduler API should listen to, for example http://localhost:5432. If there are multiple installations on the same server, the scheduler applications should listen to different ports.
 3. Open the Windows command terminal in **administrator mode**.

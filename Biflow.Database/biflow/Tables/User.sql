@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [biflow].[User] (
     [Username]                  NVARCHAR (250)   NOT NULL,
-    [PasswordHash]              BINARY (64)      NOT NULL,
+    [PasswordHash]              BINARY (64)      NULL,
     [Salt]                      UNIQUEIDENTIFIER NOT NULL,
     [Email]                     VARCHAR(254)     NULL,
     [Role]                      VARCHAR(50)      NOT NULL,
