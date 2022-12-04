@@ -232,6 +232,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - ConnectionStrings:BiflowContext
         - Connection string used to connect to the Biflow database based on steps taken in the database section of this guide.
         - Note: The connection string must have `MultipleActiveResultSets=true` enabled.
+    - Authentication
+        - BuiltIn, Windows or AAD
+        - Built-in: Users accounts and passwords are managed in Biflow. Users are application specific.
+        - Windows: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management.
+        - AAD: Authentication is done using Azure Active Directory.  User roles and access are defined in the Biflow users management.
     - Executor:Type
         - ConsoleApp, WebApp or SelfHosted
         - Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application
@@ -293,7 +298,9 @@ Some administrative tasks need to be done before the applications are ready for 
 
 ### Admin user
 
-Create an admin user in the Biflow database using the stored procedure `biflow.UserAdd`. An example is given below.
+Create an admin user in the Biflow database using the stored procedure `biflow.UserAdd`. How the user is created depends on the selected authentication method.
+
+#### Built-in authentication
 ```
 exec biflow.UserAdd
     @Username = 'admin',
@@ -301,7 +308,16 @@ exec biflow.UserAdd
     @Role = 'Admin',
     @Email = 'admin@mycompany.com'
 ```
-Navigate to the Biflow UI website. You should be able to log in using the account created above.
+#### Windows authentication
+With Windows authentication, no password is required. Authentication happens at the OS level.
+```
+exec biflow.UserAdd
+    @Username = 'DOMAIN\BiflowService',
+    @Password = null,
+    @Role = 'Admin',
+    @Email = 'admin@mycompany.com'
+```
+Navigate to the Biflow UI website. You should be able to log in using the account specified above.
 
 ### Connections
 
