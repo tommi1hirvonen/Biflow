@@ -7,10 +7,10 @@ Powerful Business Intelligence workflow orchestration
 Some requirements apply when running Biflow either on-premise or in Azure but some requirements are common.
 
 ### Common
-- SQL Server
-    - On-premise: SQL Server 2012 or newer (tested on 2017 and 2019)
+- SQL Server database to host the system database
+    - SQL Server 2012 or newer (tested on 2017 and 2019)
         - Edition: Express or above
-    - Azure: Azure SQL Database or Managed Instance
+    - Azure SQL Database or Managed Instance
 - Email notifications
     - An email account is needed to send email notifications from the application
 
@@ -29,6 +29,21 @@ Some requirements apply when running Biflow either on-premise or in Azure but so
 - Azure App Service (Linux)
     - Minimum B2/B3 level is recommended
     - For advanced networking, minimum S1 level is required for the App Service
+
+## Authentication
+
+Three methods of authentication are supported:
+- Built-in
+    - User management and authentication is done using a built in identity provider.
+    - MFA is not supported.
+- Windows (Active Directory)
+    - Authentication is done at the OS level using Active Directory accounts.
+- Azure Active Directory
+    - Users are authenticated using their Microsoft organizational accounts.
+    - Requires an app registration to be created in the host tenant's Active Directory.
+    - Requires internet access
+
+In all cases the list of authorized users and their access is managed in the application.
 
 ## Architecture
 
@@ -50,63 +65,45 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 
 ## Source code solution and projects
 
-- Database
-    - SQL Server database project containing definitions for all table structures and stored procedures
-- DataAccess
-    - Data access layer project responsible for ORM (Object-relational mapping). Contains all model definitions as well as the definitions for the Entity Framework Core database context.
-- Executor.Core
-    - Core library for the executor application
-- Executor.ConsoleApp
-    - Console front-end project for the executor application
-- Executor.WebApp
-    - Web App front-end project for the executor application
-- Scheduler.Core
-    - Core library for the scheduler service
-- Scheduler.WebApp
-    - Web App front-end project for the scheduler service
-- Ui
-    - Blazor Server UI application.
-- Ui.Core
-    - Common UI services that can be shared between different UI versions/editions
-- Utilities
-    - Common utilities library project
+|Project|Description|
+|-|-|
+|Database|SQL Server database project containing definitions for all table structures and stored procedures|
+|DataAccess|Data access layer project responsible for ORM (Object-relational mapping). Contains all model definitions as well as the definitions for the Entity Framework Core database context.|
+|Executor.Core|Core library for the executor application|
+|Executor.ConsoleApp|Console front-end project for the executor application|
+|Executor.WebApp|Web App front-end project for the executor application|
+|Scheduler.Core|Core library for the scheduler service|
+|Scheduler.WebApp|Web App front-end project for the scheduler service|
+|Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
+|Ui.Core|Common UI services that can be shared between different UI versions/editions|
+|Utilities|Common utilities library project|
 
 ## Execution statuses
 
 ### Possible job execution statuses
-- NotStarted
-    - The executions has not yet been started by the executor
-- Running
-    - One or more steps included in the execution have not yet been completed.
-- Succeeded
-    - All steps included in the execution succeeded.
-- Failed
-    - One or more steps failed for the execution.
-- Warning
-    - There were duplicate steps in the execution or some steps were retried.
-- Stopped
-    - The execution was manually stopped.
-- Suspended
-    - There were unstarted steps remaining in the execution when the execution was finished.
+
+|Status|Description|
+|-|-|
+|NotStarted |The executions has not yet been started by the executor|
+|Running    |One or more steps included in the execution have not yet been completed.|
+|Succeeded  |All steps included in the execution succeeded.|
+|Failed     |One or more steps failed for the execution.|
+|Warning    |There were duplicate steps in the execution or some steps were retried.|
+|Stopped    |The execution was manually stopped.|
+|Suspended  |There were unstarted steps remaining in the execution when the execution was finished.|
 
 ### Possible step execution statuses
-- NotStarted
-    - The step has not been started but is awaiting execution. All dependencies may not have yet been completed or there may be too many steps running in parallel.
-    - Job executions that have been termiated unexpectedly may have steps with this status.
-- Running
-    - The step is currently executing
-- Succeeded
-    - The step was completed successfully
-- Failed
-    - The step encountered an exception and failed
-- Skipped
-    - Some strict dependencies defined for the step failed or the step's execution condition was not met. Thus the step was skipped.
-- AwaitRetry
-    - The step has failed. A retry attempt will be made after the specified interval.
-- Stopped
-    - User has manually stopped the execution of the entire job or of this specific step.
-- Duplicate
-    - A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.
+
+|Status|Description|
+|-|-|
+|NotStarted |The step has not been started but is awaiting execution. All dependencies may not have yet been completed or there may be too many steps running in parallel. Job executions that have been termiated unexpectedly may have steps left with this status.|
+|Running    |The step is currently executing|
+|Succeeded  |The step was completed successfully|
+|Failed     |The step encountered an exception and failed|
+|Skipped    |Some strict dependencies defined for the step failed or the step's execution condition was not met. Thus the step was skipped.|
+|AwaitRetry |The step has failed. A retry attempt will be made after the specified interval.|
+|Stopped    |User has manually stopped the execution of the entire job or of this specific step.|
+|Duplicate  |A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.|
 
 ## User Roles
 
@@ -172,20 +169,15 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
 2. Update the appsettings.json file with the correct settings for your environment.
-    - ConnectionStrings:BiflowContext
-        - Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide.
-        - Note: the connection string must have `MultipleActiveResultSets=true` enabled.
-    - EmailSettings
-        - Settings used to send email notifications.
-    - PollingIntervalMs
-        - Time interval in milliseconds between status polling operations (applies to some step types)
-        - Default value is 5000
-    - MaximumParallelSteps
-        - Maximum number of parallel steps allowed during execution
-        - Default value is 10
-    - Serilog:WriteTo:Args:Path
-        - Enter a folder path where application will write is log files
-        - Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`
+
+|Setting|Description|
+|-|-|
+|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.|
+|EmailSettings|Settings used to send email notifications.|
+|PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
+|MaximumParallelSteps|Maximum number of parallel steps allowed during execution. Default value is `10`.|
+|Serilog:WriteTo:Args:Path|Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.|
+
 3. Test the executor application by opening the command prompt and typing in
     - `C:\Biflow\BiflowExecutor\BiflowExecutor.exe get-commit`
     - This should run without errors and return the commit SHA for the current version of the application.
@@ -196,25 +188,18 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 1. Extract the BiflowScheduler.zip file to the C: root on the application server (C:\Biflow\BiflowScheduler).
 2. Update the appsettings.json file with the correct settings
-    - ConnectionStrings:BiflowContext
-        - Connection string used to connect to the Biflow database based on steps taken in the database section of this guide.
-        - Note: The connection string must have `MultipleActiveResultSets=true` enabled.
-    - Executor:Type
-        - ConsoleApp or WebApp depending on whether the executor is installed as a console app or web app
-    - Executor:ConsoleApp:BiflowExecutorPath (when Executor:Type = ConsoleApp)
-        - Path to the executor executable
-        - Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`
-    - Executor:WebApp:Url (when Executor:Type = WebApp)
-        - Url to the executor web app
-    - Serilog:WriteTo:Args:path
-        - Enter a folder path where the application will write its log files.
-        - Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`
-    - Authorization:Windows:AllowedUsers
-        - Array of Windows users who are authorized to issue requests to the scheduler API
-        - If no authorization is required, remove the Windows section under Authorization from appsettings.json.
-        - E.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`
-    - Kestrel:Endpoints:Http:Url
-        - The http url and port which the scheduler API should listen to, for example http://localhost:5432. If there are multiple installations on the same server, the scheduler applications should listen to different ports.
+
+|Setting|Description|
+|-|-|
+|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
+|Executor:Type|`[ ConsoleApp \| WebApp ]`|
+||Whether the executor is installed as a console app or web app|
+|Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
+|Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app|
+|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization:Windows` section.|
+|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations on the same server, the scheduler applications should listen to different ports.|
+|Serilog:WriteTo:Args:path|Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`|
+
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowScheduler binpath= C:\Biflow\BiflowScheduler\BiflowScheduler.exe start= delayed-auto displayname= "Biflow Scheduler"`
 4. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
@@ -224,42 +209,49 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 ### User interface web application
 
-1. Extract the BiflowUi.zip file to the C: root on the application server (C:\Biflow\BiflowUi)).
+1. If Azure AD is used for authentication, an app registration needs to be created in the hosting tenant's Azure Active Directory.
+    - Navigate to the target tenant’s Azure portal in portal.azure.com.
+    - Go to Azure Active Directory => App registration => New registration.
+    - Register the app and save the client id and client secret someplace. You will not be able to access the client secret after it has been created.
+    - Add a redirect URL for the app registration under Manage => Authentication => Add a platform
+        - Select **Web**
+        - **Redirect URI**: This should be the URL where the UI application can be reached appended with `/signin-oidc`. For example, if the application can be reached at `https://contoso.azurewebsites.net` then the redirect URI should be `https://contoso.azurewebsites.net/signin-oidc`
+        - **Front-channel logout URL**: Similarly, the logout URL is the UI app's URL appended with `/signout-oidc`. With the base URL of the example above, the logout URL would be `https://contoso.azurewebsites.net/signout-oidc`
+        - **Implicit grant and hybrid flows**: Select **ID tokens**
+        - **Supported account types**: In most cases, the correct option will be *Accounts in this organizational directory only*. However, if you need to be able to authorize users outside your organization to access the UI, select *Accounts in any organizational directory*.
+2. Extract the BiflowUi.zip file to the C: root on the application server (C:\Biflow\BiflowUi)).
     - The account created in step 1 should have read/write access to this folder.
-2. In the folder where you extracted the installation zip file, locate the file appsettings.production.json. Update the file with the correct settings.
-    - EnvironmentName
-        - Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)
-    - ConnectionStrings:BiflowContext
-        - Connection string used to connect to the Biflow database based on steps taken in the database section of this guide.
-        - Note: The connection string must have `MultipleActiveResultSets=true` enabled.
-    - Authentication
-        - BuiltIn, Windows or AAD
-        - Built-in: Users accounts and passwords are managed in Biflow. Users are application specific.
-        - Windows: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management.
-        - AAD: Authentication is done using Azure Active Directory.  User roles and access are defined in the Biflow users management.
-    - Executor:Type
-        - ConsoleApp, WebApp or SelfHosted
-        - Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application
-    - Executor:WebApp:Url (when Executor:Type = WebApp)
-        - Url to the executor web app API
-    - Executor:ConsoleApp:BiflowExecutorPath (when Executor:Type = ConsoleApp)
-        - Path to the executor executable
-        - Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`
-    - Executor:SelfHosted (when Executor:Type = SelfHosted)
-        - Executor service settings if the executor is running embedded in the UI application
-    - Scheduler:Type
-        - WebApp or SelfHosted
-        - Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application
-    - Scheduler:WebApp:Url (when Scheduler:Type = WebApp)
-        - Url to the scheduler service web app API
-    - Kestrel:Endpoints:Http:Url
-        - The http url and port which the UI application should listen to, for example http://localhost:80. If there are multiple installations on the same server, the UI applications should listen to different ports.
-    - Serilog:WriteTo:Args:path
-        - Enter a folder path where the application will write its log files.
-        - Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`
-3. Open the Windows command terminal in **administrator mode**.
+3. In the folder where you extracted the installation zip file, locate the file appsettings.production.json. Update the file with the correct settings.
+
+|Setting|Description|
+|-|-|
+|EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
+|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
+|Authentication|`[ BuiltIn \| Windows \| AzureAd ]`|
+||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
+||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management.|
+||`AzureAd`: Authentication is done using Azure Active Directory.  User roles and access are defined in the Biflow users management.|
+|AzureAd|This section needs to be defined only if `Authentication` is set to `AzureAd`|
+|AzureAd:Instance|`https://login.microsoftonline.com/`|
+|AzureAd:Domain|Your organization domain, e.g. `contoso.com`|
+|AzureAd:TenantId|If the app registration supports *Accounts in this organizational directory only*, set the value to the directory (tenant) ID (a GUID) of your organization. If the registration supports *Accounts in any organizational directory*, set the value to `organizations`. If the registration supports *All Microsoft account users*, set the value to `common`.|
+|AzureAd:ClientId|The application (client) ID of the application that you registered in the Azure portal.|
+|AzureAd:ClientSecret|The client secret for the app registration.|
+|AzureAd:CallbackPath|`/signin-oidc`|
+|Executor:Type|`[ ConsoleApp \| WebApp \| SelfHosted ]`|
+||Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application|
+|Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
+|Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
+|Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor console application's settings section to set the values in this section.|
+|Scheduler:Type|`[ WebApp \| SelfHosted ]`|
+||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
+|Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
+|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only on-premise installations.|
+|Serilog:WriteTo:Args:path|Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`|
+
+4. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowUi binpath= C:\Biflow\BiflowUi\BiflowUi.exe start= delayed-auto displayname= "Biflow User Interface"`
-4. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
+5. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
     - Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
@@ -317,7 +309,16 @@ exec biflow.UserAdd
     @Role = 'Admin',
     @Email = 'admin@mycompany.com'
 ```
-Navigate to the Biflow UI website. You should be able to log in using the account specified above.
+#### Azure AD authentication
+With Azure AD authentication, no password is required. Authentication happens using Microsoft Identity.
+```
+exec biflow.UserAdd
+    @Username = 'admin@mycompany.com',
+    @Password = null,
+    @Role = 'Admin',
+    @Email = 'admin@mycompany.com'
+```
+Navigate to the Biflow UI website. You should be able to log in using the account specified above. With Windows authentication, the user is automatically logged in to Biflow using the account they are currently logged in as on their computer.
 
 ### Connections
 
