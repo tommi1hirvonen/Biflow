@@ -1,0 +1,39 @@
+﻿@inject ISchedulerService SchedulerService
+
+@if (SchedulerServiceErrorMessage is not null)
+{
+    <ul class="navbar-nav">
+        <li>
+            <strong class="navbar-text px-3">@SchedulerServiceErrorMessage</strong>
+        </li>
+    </ul>
+}
+
+@code {
+    private string? SchedulerServiceErrorMessage { get; set; } = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Get the scheduler service status and notify the user of a possible error.
+            try
+            {
+                (var running, var error) = await SchedulerService.GetStatusAsync();
+                if (!running)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service not detected. Make sure the service is installed and running correctly.";
+                }
+                else if (error)
+                {
+                    SchedulerServiceErrorMessage = "Scheduler service failed reading schedules from the database";
+                }
+            }
+            catch (Exception ex)
+            {
+                SchedulerServiceErrorMessage = $"Error getting scheduler service status: {ex.Message}";
+            }
+            StateHasChanged();
+        }
+    }
+}

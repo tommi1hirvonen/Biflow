@@ -82,6 +82,15 @@
                 </NavLink>
             </li>
         }
+        else if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
+        {
+            <li class="nav-item mt-3">
+                <a class="nav-link" href="MicrosoftIdentity/Account/SignOut">
+                    @MarkupHelper.FromFile("icons/feather/log-out.svg")
+                    Log out
+                </a>
+            </li>
+        }
     </ul>
 </nav>
 

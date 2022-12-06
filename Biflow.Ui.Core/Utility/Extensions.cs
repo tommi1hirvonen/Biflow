@@ -7,11 +7,14 @@ using CronExpressionDescriptor;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Text.RegularExpressions;
 
@@ -49,10 +52,19 @@ public static partial class Extensions
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.Windows;
         }
-        else if (authentication == "AAD")
+        else if (authentication == "AzureAd")
         {
-            // TODO Implement AAD authentication support
-            throw new NotImplementedException("AAD authentication support is not implemented");
+            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
+            services.AddControllersWithViews().AddMicrosoftIdentityUI();
+            services.AddAuthorization(options =>
+            {
+                var connectionString = configuration.GetConnectionString("BiflowContext");
+                ArgumentNullException.ThrowIfNull(connectionString);
+                options.FallbackPolicy = options.DefaultPolicy;
+            });
+            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            method = AuthenticationMethod.AzureAd;
         }
         else
         {
