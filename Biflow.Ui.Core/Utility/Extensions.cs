@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Quartz;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Biflow.Ui.Core;
@@ -328,10 +329,11 @@ public static partial class Extensions
         return dt.AddDays(-1 * diff).Date;
     }
 
-    public static bool ContainsIgnoreCase(this string source, string toCheck)
+    public static bool ContainsIgnoreCase(this string source, string? toCheck) => toCheck switch
     {
-        return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
-    }
+        not null => source.Contains(toCheck, StringComparison.OrdinalIgnoreCase),
+        _ => false
+    };
 
     public static Task LetAsync<T>(this T? obj, Func<T, Task> block) => obj switch
     {
@@ -344,6 +346,14 @@ public static partial class Extensions
         not null => await block(obj),
         _ => null
     };
+
+    public static TValue? GetValueOrDefault<TKey, TValue>(this ConditionalWeakTable<TKey, TValue> table, TKey key)
+        where TKey : class
+        where TValue : class => table.TryGetValue(key, out var value) switch
+        {
+            true => value,
+            false => null
+        };
 
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
 

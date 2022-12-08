@@ -69,7 +69,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter] public EventCallback<(string Schema, string Table)> OnTableSelected { get; set; }
+    [Parameter] public EventCallback<DatabaseTableSelectedResult> OnTableSelected { get; set; }
 
     private HxOffcanvas? Offcanvas { get; set; }
 
@@ -94,7 +94,7 @@
         {
             return;
         }
-        await OnTableSelected.InvokeAsync((SelectedTable.Value.Schema, SelectedTable.Value.Table));
+        await OnTableSelected.InvokeAsync(new (SelectedTable.Value.Schema, SelectedTable.Value.Table));
         await Offcanvas.LetAsync(x => x.HideAsync());
     }
 

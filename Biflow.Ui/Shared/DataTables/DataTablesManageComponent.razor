@@ -1,12 +1,10 @@
-﻿@implements IDisposable
-
-@inject MarkupHelperService MarkupHelper
+﻿@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHxMessageBoxService MessageBox
 @inject IJSRuntime JSRuntime
 
-<HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await SetEditContextAsync()">
+<HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(null))">
     Add table
 </HxButton>
 
@@ -14,407 +12,94 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                <EditForm Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
-                    <ObjectGraphDataAnnotationsValidator />
-                    <ValidationSummary />
-                    <table class="table">
-                        <thead>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Data table name</th>
+                            <th>Connection</th>
+                            <th>Target schema</th>
+                            <th>Target table</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Tables is null)
+                        {
                             <tr>
-                                <th>Data table name</th>
-                                <th>Connection</th>
-                                <th>Target schema</th>
-                                <th>Target table</th>
-                                <th></th>
+                                <td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @if (Tables is null)
+                        }
+                        else
+                        {
+                            @foreach (var table in Tables)
                             {
                                 <tr>
-                                    <td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
+                                    <td class="align-middle">
+                                        @table.DataTableName
+                                    </td>
+                                    <td class="align-middle">
+                                        @table.Connection.ConnectionName
+                                    </td>
+                                    <td class="align-middle">
+                                        @table.TargetSchemaName
+                                    </td>
+                                    <td class="align-middle">
+                                        @table.TargetTableName
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-row">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                            OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(table))">
+                                                @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                            </HxButton>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </div>
+                                    </td>
                                 </tr>
                             }
-                            else
-                            {
-                                @if (EditTable.DataTableId == Guid.Empty && EditTable.ConnectionId != Guid.Empty)
-                                {
-                                    <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-                                    <tr>
-                                        <td colspan="5" class="bg-light">
-                                            <div class="row my-3">
-                                                <div class="col">
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            <HxButtonToolbar>
-                                                                <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">
-                                                                    @MarkupHelper.FromFile("icons/feather/save.svg")
-                                                                    Save
-                                                                </HxSubmit>
-                                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
-                                                                    @MarkupHelper.FromFile("icons/feather/x.svg")
-                                                                    Cancel
-                                                                </HxButton>
-                                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
-                                                                        OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.ConnectionId))">
-                                                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                                                    Browse tables
-                                                                </HxButton>
-                                                            </HxButtonToolbar>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row mt-3">
-                                                        <div class="col">
-                                                            <div class="row">
-                                                                <div class="col">
-                                                                    <label class="form-label">Data table name</label>
-                                                                    <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mt-3">
-                                                                <div class="col">
-                                                                    <label class="form-label">Connection</label>
-                                                                    <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
-                                                                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                                                        {
-                                                                            <option value="@connection.ConnectionId">
-                                                                                @connection.ConnectionName
-                                                                            </option>
-                                                                        }
-                                                                    </InputSelect>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mt-3">
-                                                                <div class="col">
-                                                                    <label class="form-label">Target schema and table</label>
-                                                                    <div class="input-group input-group-sm">
-                                                                        <InputText class="form-control form-control-sm" placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
-                                                                        <InputText class="form-control form-control-sm" placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-md">
-                                                            <div class="row">
-                                                                <div class="col">
-                                                                    <label class="form-label">Description</label>
-                                                                    <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">
-                                                        @MarkupHelper.FromFile("icons/feather/search.svg")
-                                                        Add lookup
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            @foreach (var lookup in EditTable.Lookups)
-                                            {
-                                                <div class="row mt-2 align-items-end">
-                                                    <div class="col">
-                                                        <HxAutosuggest Label="Column"
-                                                           TItem="string"
-                                                           TValue="string"
-                                                           InputSize="InputSize.Small"
-                                                           @bind-Value="lookup.ColumnName"
-                                                           Delay="0"
-                                                           MinimumLength="0"
-                                                           DataProvider="ProvideColumnSuggestions">
-                                                        </HxAutosuggest>
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (!string.IsNullOrEmpty(lookup.ColumnName))
-                                                        {
-                                                            <HxAutosuggest Label="Lookup table"
-                                                           TItem="MasterDataTable"
-                                                           TValue="Guid"
-                                                           InputSize="InputSize.Small"
-                                                           Delay="0"
-                                                           MinimumLength="0"
-                                                           ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
-                                                           ValueChanged="guid => SetLookupTable(guid, lookup)"
-                                                           Value="lookup.LookupTableId"
-                                                           ValueExpression="() => lookup.LookupTableId"
-                                                           ValueSelector="table => table.DataTableId"
-                                                           TextSelector="table => table.DataTableName"
-                                                           DataProvider="ProvideLookupTableSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <HxAutosuggest Label="Lookup value"
-                                                           TItem="string"
-                                                           TValue="string"
-                                                           InputSize="InputSize.Small"
-                                                           @bind-Value="lookup.LookupValueColumn"
-                                                           Delay="0"
-                                                           MinimumLength="0"
-                                                           DataProvider="ProvideLookupColumnSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <HxAutosuggest Label="Lookup description"
-                                                           TItem="string"
-                                                           TValue="string"
-                                                           InputSize="InputSize.Small"
-                                                           @bind-Value="lookup.LookupDescriptionColumn"
-                                                           Delay="0"
-                                                           MinimumLength="0"
-                                                           DataProvider="ProvideLookupColumnSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <label class="form-label">Show</label>
-                                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
-                                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
-                                                                {
-                                                                    <option>@type</option>
-                                                                }
-                                                            </select>
-                                                        }
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
-                                                                OnClick="() => EditTable.Lookups.Remove(lookup)">
-                                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
-                                                        </HxButton>
-                                                    </div>
-                                                </div>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                                @foreach (var table in Tables)
-                                {
-                                    <tr>
-                                        @if (EditTable?.DataTableId == table.DataTableId)
-                                        {
-                                            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-                                            <td colspan="5" class="bg-light">
-                                                <div class="row my-3">
-                                                    <div class="col">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                <HxButtonToolbar>
-                                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">
-                                                                        @MarkupHelper.FromFile("icons/feather/save.svg")
-                                                                        Save
-                                                                    </HxSubmit>
-                                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
-                                                                        @MarkupHelper.FromFile("icons/feather/x.svg")
-                                                                        Cancel
-                                                                    </HxButton>
-                                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="ms-3"
-                                                                            OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.ConnectionId))">
-                                                                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
-                                                                        Browse tables
-                                                                    </HxButton>
-                                                                </HxButtonToolbar>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3">
-                                                            <div class="col">
-                                                                <div class="row">
-                                                                    <div class="col">
-                                                                        <label class="form-label">Data table name</label>
-                                                                        <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
-                                                                    </div>
-                                                                </div>
-                                                                <div class="row mt-3">
-                                                                    <div class="col">
-                                                                        <label class="form-label">Connection</label>
-                                                                        <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.ConnectionId">
-                                                                            @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                                                            {
-                                                                                <option value="@connection.ConnectionId">
-                                                                                    @connection.ConnectionName
-                                                                                </option>
-                                                                            }
-                                                                        </InputSelect>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="row mt-3">
-                                                                    <div class="col">
-                                                                        <label class="form-label">Target schema and table</label>
-                                                                        <div class="input-group input-group-sm">
-                                                                            <InputText class="form-control form-control-sm" placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
-                                                                            <InputText class="form-control form-control-sm" placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md">
-                                                                <div class="row">
-                                                                    <div class="col">
-                                                                        <label class="form-label">Description</label>
-                                                                        <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                <div class="col">
-                                                    <button type="button" class="btn btn-sm btn-light" @onclick="() => EditTable.Lookups.Add(new())">
-                                                            @MarkupHelper.FromFile("icons/feather/search.svg")
-                                                        Add lookup
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            @foreach (var lookup in EditTable.Lookups)
-                                            {
-                                                <div class="row mt-2 align-items-end">
-                                                    <div class="col">
-                                                        <HxAutosuggest
-                                                            Label="Column"
-                                                            TItem="string"
-                                                            TValue="string"
-                                                            InputSize="InputSize.Small"
-                                                            @bind-Value="lookup.ColumnName"
-                                                            Delay="0"
-                                                            MinimumLength="0"
-                                                            DataProvider="ProvideColumnSuggestions">
-                                                        </HxAutosuggest>
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (!string.IsNullOrEmpty(lookup.ColumnName))
-                                                        {
-                                                            <HxAutosuggest Label="Lookup table"
-                                                               TItem="MasterDataTable"
-                                                               TValue="Guid"
-                                                               InputSize="InputSize.Small"
-                                                               Delay="0"
-                                                               MinimumLength="0"
-                                                               ItemFromValueResolver="guid => Task.FromResult(Tables.First(t => t.DataTableId == guid))"
-                                                               ValueChanged="guid => SetLookupTable(guid, lookup)"
-                                                               Value="lookup.LookupTableId"
-                                                               ValueExpression="() => lookup.LookupTableId"
-                                                               ValueSelector="table => table.DataTableId"
-                                                               TextSelector="table => table.DataTableName"
-                                                               DataProvider="ProvideLookupTableSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <HxAutosuggest Label="Lookup value"
-                                                               TItem="string"
-                                                               TValue="string"
-                                                               InputSize="InputSize.Small"
-                                                               @bind-Value="lookup.LookupValueColumn"
-                                                               Delay="0"
-                                                               MinimumLength="0"
-                                                               DataProvider="ProvideLookupColumnSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <HxAutosuggest Label="Lookup description"
-                                                               TItem="string"
-                                                               TValue="string"
-                                                               InputSize="InputSize.Small"
-                                                               @bind-Value="lookup.LookupDescriptionColumn"
-                                                               Delay="0"
-                                                               MinimumLength="0"
-                                                               DataProvider="ProvideLookupColumnSuggestions">
-                                                            </HxAutosuggest>
-                                                        }
-                                                    </div>
-                                                    <div class="col">
-                                                        @if (lookup.LookupTableId != Guid.Empty)
-                                                        {
-                                                            <label class="form-label">Show</label>
-                                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
-                                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
-                                                                {
-                                                                    <option>@type</option>
-                                                                }
-                                                            </select>       
-                                                        }
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
-                                                            OnClick="() => EditTable.Lookups.Remove(lookup)">
-                                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
-                                                        </HxButton>
-                                                    </div>
-                                                </div>
-                                            }
-                                            </td>
-                                        }
-                                        else
-                                        {
-                                            <td class="align-middle">
-                                                @table.DataTableName
-                                            </td>
-                                            <td class="align-middle">
-                                                @table.Connection.ConnectionName
-                                            </td>
-                                            <td class="align-middle">
-                                                @table.TargetSchemaName
-                                            </td>
-                                            <td class="align-middle">
-                                                @table.TargetTableName
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-row">
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" OnClick="async () => await SetEditContextAsync(table)">
-                                                        @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                                    </HxButton>
-                                                    <HxDropdownButtonGroup>
-                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
-                                                        </HxDropdownToggleButton>
-                                                        <HxDropdownMenu>
-                                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                            <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
-                                                        </HxDropdownMenu>
-                                                    </HxDropdownButtonGroup>
-                                                </div>
-                                            </td>
-                                        }
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </EditForm>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<DatabaseTableSelectOffcanvas @ref="Offcanvas" OnTableSelected="OnTableSelected" />
+<DataTableEditModal @ref="EditModal" OnTableSubmitted="OnTableSubmitted" />
 
 @code {
     [Parameter] public List<MasterDataTable>? Tables { get; set; }
 
     [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
 
-    private MasterDataTable EditTable { get; set; } = new() { Lookups = new List<MasterDataTableLookup>() };
+    private DataTableEditModal? EditModal { get; set; }
 
-    private BiflowContext? EditContext { get; set; }
+    private void OnTableSubmitted(MasterDataTable table)
+    {
+        var toRemove = Tables?.FirstOrDefault(t => t.DataTableId == table.DataTableId);
+        if (toRemove is not null)
+        {
+            Tables?.Remove(toRemove);
+        }
+        Tables?.Add(table);
+        Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
 
-    private DatabaseTableSelectOffcanvas? Offcanvas { get; set; }
-
-    private IEnumerable<string>? Columns { get; set; }
-    private IEnumerable<string>? LookupColumns { get; set; }
+        foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
+        {
+            if (lookup.LookupTableId == table.DataTableId)
+            {
+                lookup.LookupTable = table;
+            }
+        }
+    }
 
     private async Task DeleteTableAsync(MasterDataTable table)
     {
@@ -431,166 +116,4 @@
         }
     }
 
-    private async Task SetEditContextAsync(MasterDataTable? table = null)
-    {
-        EditContext?.Dispose();
-        EditContext = DbContextFactory.CreateDbContext();
-        Connections = await EditContext.SqlConnections.OrderBy(c => c.ConnectionName).ToListAsync();
-        if (table is null)
-        {
-            // New table
-            EditTable.ConnectionId = Connections!.First().ConnectionId;
-        }
-        else
-        {
-            EditTable = await EditContext.MasterDataTables
-                .Include(t => t.Connection)
-                .Include(t => t.Lookups)
-                .ThenInclude(l => l.LookupTable)
-                .FirstAsync(t => t.DataTableId == table.DataTableId);
-        }
-        StateHasChanged();
-    }
-
-    private async void SetLookupTable(Guid guid, MasterDataTableLookup lookup)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(Tables);
-            var dataTable = Tables.FirstOrDefault(t => t.DataTableId == guid);
-            lookup.LookupValueColumn = "";
-            lookup.LookupDescriptionColumn = "";
-            if (dataTable is null)
-            {
-                lookup.LookupTableId = Guid.Empty;
-                LookupColumns = null;
-                return;
-            }
-            lookup.LookupTableId = guid;
-            LookupColumns = await dataTable.GetColumnNamesAsync();
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error selecting lookup table", ex.Message);   
-        }
-    }
-
-    private async Task<AutosuggestDataProviderResult<string>> ProvideColumnSuggestions(AutosuggestDataProviderRequest request)
-    {
-        try
-        {
-            Columns ??= await EditTable.GetColumnNamesAsync();
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error fetching table columns", ex.Message);
-            return new AutosuggestDataProviderResult<string> { Data = Enumerable.Empty<string>() };   
-        }
-        return new AutosuggestDataProviderResult<string>
-            {
-                Data = Columns.Where(c => c.ContainsIgnoreCase(request.UserInput))
-            };
-    }
-
-    private async Task<AutosuggestDataProviderResult<string>> ProvideLookupColumnSuggestions(AutosuggestDataProviderRequest request)
-    {
-        await Task.Delay(100);
-        ArgumentNullException.ThrowIfNull(LookupColumns);
-        return new AutosuggestDataProviderResult<string>
-            {
-                Data = LookupColumns.Where(c => c.ContainsIgnoreCase(request.UserInput))
-            };
-    }
-
-    private async Task<AutosuggestDataProviderResult<MasterDataTable>> ProvideLookupTableSuggestions(AutosuggestDataProviderRequest request)
-    {
-        await Task.Delay(100);
-        ArgumentNullException.ThrowIfNull(Tables);
-        return new AutosuggestDataProviderResult<MasterDataTable>
-            {
-                Data = Tables.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput))
-            };
-    }
-
-    private void EndEditContext()
-    {
-        EditContext?.Dispose();
-        EditTable = new() { Lookups = new List<MasterDataTableLookup>() };
-        Columns = null;
-        LookupColumns = null;
-        StateHasChanged();
-    }
-
-    private void OnTableSelected((string Schema, string Table) table)
-    {
-        EditTable.TargetSchemaName = table.Schema;
-        EditTable.TargetTableName = table.Table;
-    }
-
-    private async Task SubmitEditTableAsync()
-    {
-        if (EditContext is null)
-        {
-            return;
-        }
-
-        if (EditTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != EditTable.ConnectionId))
-        {
-            Messenger.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
-            return;
-        }
-
-        try
-        {
-            if (EditTable.DataTableId == Guid.Empty)
-            {
-                EditContext.MasterDataTables.Add(EditTable);
-            }
-            await EditContext.SaveChangesAsync();
-            EditContext.Dispose();
-
-            var toRemove = Tables?.FirstOrDefault(t => t.DataTableId == EditTable.DataTableId);
-            if (toRemove is not null)
-            {
-                Tables?.Remove(toRemove);
-            }
-            Tables?.Add(EditTable);
-            Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
-
-            foreach (var lookup in EditTable.Lookups)
-            {
-                var lookupTable = Tables?.FirstOrDefault(t => t.DataTableId == lookup.LookupTableId);
-                if (lookupTable is not null) lookup.LookupTable = lookupTable;
-            }
-
-            foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
-            {
-                if (lookup.LookupTableId == EditTable.DataTableId)
-                {
-                    lookup.LookupTable = EditTable;
-                }
-            }
-
-            EditTable = new();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            Messenger.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error updating data table", ex.Message);
-        }
-    }
-
-    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
-    {
-        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
-        if (!confirmed)
-        {
-            context.PreventNavigation();
-        }
-    }
-
-    public void Dispose() => EditContext?.Dispose();
 }

@@ -1,0 +1,379 @@
+﻿@using System.Runtime.CompilerServices;
+
+@implements IDisposable
+
+@inject MarkupHelperService MarkupHelper
+@inject IHxMessageBoxService MessageBox
+@inject IHxMessengerService Messenger
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+@{
+    var title = EditTable switch
+    {
+        not null => EditTable.DataTableId != Guid.Empty ? $"Edit {EditTable.DataTableName}" : "New data table",
+        null => ""
+    };
+}
+
+<HxModal @ref="Modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title">
+    <BodyTemplate>
+        @if (EditTable is not null)
+        {
+            <EditForm id="table_edit_form" Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
+                <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+                <div class="row my-3">
+                    <div class="col">
+                        <ObjectGraphDataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="row">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col">
+                                        <label class="form-label">Data table name</label>
+                                        <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                    </div>
+                                </div>
+                                <div class="row mt-3 align-items-end">
+                                    <div class="col">
+                                        <label class="form-label">Connection</label>
+                                        <select class="form-select form-select-sm" @onchange="ConnectionChanged">
+                                            @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                            {
+                                                <option value="@connection.ConnectionId"
+                                                        selected="@(connection.ConnectionId == EditTable.Connection.ConnectionId)">
+                                                    @connection.ConnectionName
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-auto">
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                              OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
+                                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                            Browse tables
+                                        </HxButton>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label class="form-label">Target schema and table</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                            <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md">
+                                <div class="row">
+                                    <div class="col">
+                                        <label class="form-label">Description</label>
+                                        <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <button type="button" class="btn btn-sm btn-light @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
+                        @onclick="() => EditTable.Lookups.Add(new())">
+                            @MarkupHelper.FromFile("icons/feather/search.svg")
+                            Add lookup
+                        </button>
+                    </div>
+                </div>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Lookup table</th>
+                            <th>Lookup value</th>
+                            <th>Lookup description</th>
+                            <th>Show</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!EditTable.Lookups.Any())
+                        {
+                            <tr>
+                                <td colspan="6">No lookups</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var lookup in EditTable.Lookups)
+                            {
+                                <tr>
+                                    <td>
+                                        <HxAutosuggest TItem="string"
+                                           TValue="string"
+                                           DataProvider="GetColumnSuggestions"
+                                           @bind-Value="lookup.ColumnName"
+                                           MinimumLength="0"
+                                           ValidationMessageMode="ValidationMessageMode.None"
+                                           InputSize="InputSize.Small" />
+                                    </td>
+                                    <td>
+                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) ? "d-none" : null)"
+                                           TItem="MasterDataTable"
+                                           TValue="MasterDataTable"
+                                           DataProvider="GetLookupTableSuggestions"
+                                           ValueChanged="table => SetLookupTable(table, lookup)"
+                                           Value="lookup.LookupTable"
+                                           ValueExpression="() => lookup.LookupTable"
+                                           TextSelector="table => table.DataTableName"
+                                           MinimumLength="0"
+                                           ValidationMessageMode="ValidationMessageMode.None"
+                                           InputSize="InputSize.Small" />
+                                    </td>
+                                    <td>
+                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
+                                           TItem="string"
+                                           TValue="string"
+                                           DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
+                                           @bind-Value="lookup.LookupValueColumn"
+                                           MinimumLength="0"
+                                           ValidationMessageMode="ValidationMessageMode.None"
+                                           InputSize="InputSize.Small" />
+                                    </td>
+                                    <td>
+                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
+                                            TItem="string"
+                                            TValue="string"
+                                            DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
+                                            @bind-Value="lookup.LookupDescriptionColumn"
+                                            MinimumLength="0"
+                                            ValidationMessageMode="ValidationMessageMode.None"
+                                            InputSize="InputSize.Small" />
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(lookup.ColumnName) && lookup.LookupTableId != Guid.Empty)
+                                        {
+                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
+                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
+                                                {
+                                                    <option>@type</option>
+                                                }
+                                            </select>
+                                        }
+                                    </td>
+                                    <td>
+                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
+                                                OnClick="() => { EditTable.Lookups.Remove(lookup); StateHasChanged(); }">
+                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                        </HxButton>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </EditForm>
+
+            <DatabaseTableSelectOffcanvas @ref="Offcanvas" OnTableSelected="OnTableSelected" />
+        }
+        else
+        {
+            <div class="row my-3">
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                </div>
+            </div>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
+            @MarkupHelper.FromFile("icons/feather/x.svg")
+            Cancel
+        </HxButton>
+        <HxSubmit FormId="table_edit_form" Color="ThemeColor.Success">
+            @MarkupHelper.FromFile("icons/feather/save.svg")
+            Save
+        </HxSubmit>
+    </FooterTemplate>
+</HxModal>
+
+
+@code {
+    [Parameter] public EventCallback<MasterDataTable> OnTableSubmitted { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private DatabaseTableSelectOffcanvas? Offcanvas { get; set; }
+
+    private BiflowContext? EditContext { get; set; }
+
+    private MasterDataTable? EditTable { get; set; }
+
+    private IEnumerable<MasterDataTable>? Tables { get; set; }
+    private IEnumerable<SqlConnectionInfo>? Connections { get; set; }
+    private IEnumerable<string>? Columns { get; set; }
+    private ConditionalWeakTable<MasterDataTableLookup, IEnumerable<string>> LookupColumns = new();
+
+    public async Task SetEditContextAsync(MasterDataTable? table = null)
+    {
+        await Modal.LetAsync(x => x.ShowAsync());
+        EditContext?.Dispose();
+        EditContext = DbContextFactory.CreateDbContext();
+        Connections = await EditContext.SqlConnections
+            .OrderBy(c => c.ConnectionName)
+            .ToListAsync();
+        if (table is null)
+        {
+            // New table
+            EditTable = new()
+            {
+                Connection = Connections.First(),
+                Lookups = new List<MasterDataTableLookup>()
+            };
+            Tables = await EditContext.MasterDataTables
+                .Include(t => t.Connection)
+                .OrderBy(t => t.DataTableName)
+                .ToListAsync();
+            EditTable.ConnectionId = Connections!.First().ConnectionId;
+        }
+        else
+        {
+            Tables = await EditContext.MasterDataTables
+                .Include(t => t.Connection)
+                .Where(t => t.DataTableId != table.DataTableId)
+                .OrderBy(t => t.DataTableName)
+                .ToListAsync();
+            EditTable = await EditContext.MasterDataTables
+                .Include(t => t.Connection)
+                .Include(t => t.Lookups)
+                .ThenInclude(l => l.LookupTable)
+                .FirstAsync(t => t.DataTableId == table.DataTableId);
+            Columns = await EditTable.GetColumnNamesAsync();
+            foreach (var lookup in EditTable.Lookups)
+            {
+                LookupColumns.AddOrUpdate(lookup, await lookup.LookupTable.GetColumnNamesAsync());
+            }
+        }
+        StateHasChanged();
+    }
+
+    private void ConnectionChanged(ChangeEventArgs args)
+    {
+        var guid = Guid.Parse(args.Value!.ToString()!);
+        var connection = Connections!.First(c => c.ConnectionId == guid);
+        EditTable!.ConnectionId = guid;
+        EditTable!.Connection = connection;
+    }
+
+    private async void SetLookupTable(MasterDataTable? dataTable, MasterDataTableLookup lookup)
+    {
+        try
+        {
+            lookup.LookupValueColumn = "";
+            lookup.LookupDescriptionColumn = "";
+            if (dataTable is null)
+            {
+                lookup.LookupTable = null!;
+                lookup.LookupTableId = Guid.Empty;
+                LookupColumns.Remove(lookup);
+                return;
+            }
+            lookup.LookupTableId = dataTable.DataTableId;
+            lookup.LookupTable = dataTable;
+            LookupColumns.AddOrUpdate(lookup, await lookup.LookupTable.GetColumnNamesAsync());
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error selecting lookup table", ex.Message);   
+        }
+    }
+
+    private async Task EndEditContext()
+    {
+        await Modal.LetAsync(x => x.HideAsync());
+        EditContext?.Dispose();
+        await Task.Delay(500);
+        EditTable = null;
+        Columns = null;
+        StateHasChanged();
+    }
+
+    private async Task<AutosuggestDataProviderResult<string>> GetColumnSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(150);
+        return new AutosuggestDataProviderResult<string>
+        {
+            Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+        };
+    }
+
+    private async Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(150);
+        return new AutosuggestDataProviderResult<MasterDataTable>
+            {
+                Data = Tables?.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<MasterDataTable>()
+            };
+    }
+
+    private async Task<AutosuggestDataProviderResult<string>> GetLookupColumnSuggestions(AutosuggestDataProviderRequest request, MasterDataTableLookup lookup)
+    {
+        await Task.Delay(150);
+        return new AutosuggestDataProviderResult<string>
+        {
+            Data = LookupColumns.GetValueOrDefault(lookup)?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+        };
+    }
+
+    private async Task SubmitEditTableAsync()
+    {
+        if (EditContext is null || EditTable is null)
+        {
+            return;
+        }
+
+        if (EditTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != EditTable.ConnectionId))
+        {
+            Messenger.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
+            return;
+        }
+
+        try
+        {
+            if (EditTable.DataTableId == Guid.Empty)
+            {
+                EditContext.MasterDataTables.Add(EditTable);
+            }
+            await EditContext.SaveChangesAsync();
+            await OnTableSubmitted.InvokeAsync(EditTable);
+            await EndEditContext();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating data table", ex.Message);
+        }
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+
+    private async Task OnTableSelected(DatabaseTableSelectedResult table)
+    {
+        if (EditTable is null) return;
+        (EditTable.TargetSchemaName, EditTable.TargetTableName) = table;
+        Columns = await EditTable.GetColumnNamesAsync();
+        EditTable.Lookups.Clear();
+    }
+
+    public void Dispose() => EditContext?.Dispose();
+}

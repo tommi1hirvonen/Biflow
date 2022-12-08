@@ -31,6 +31,7 @@ public class MasterDataTable
 
     public ICollection<User> Users { get; set; } = null!;
 
+    [ValidateComplexType]
     public ICollection<MasterDataTableLookup> Lookups { get; set; } = null!;
 
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;

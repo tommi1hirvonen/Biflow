@@ -18,10 +18,12 @@ public class MasterDataTableLookup
     public Guid LookupTableId { get; set; }
 
     [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string LookupValueColumn { get; set; } = "";
 
     [Required]
+    [MinLength(1)]
     [MaxLength(128)]
     public string LookupDescriptionColumn { get; set; } = "";
 
