@@ -185,14 +185,14 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
-            @MarkupHelper.FromFile("icons/feather/x.svg")
-            Cancel
-        </HxButton>
         <HxSubmit FormId="table_edit_form" Color="ThemeColor.Success">
             @MarkupHelper.FromFile("icons/feather/save.svg")
             Save
         </HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" OnClick="EndEditContext">
+            @MarkupHelper.FromFile("icons/feather/x.svg")
+            Cancel
+        </HxButton>
     </FooterTemplate>
 </HxModal>
 

@@ -10,6 +10,15 @@
     <BodyTemplate>
         @if (User is not null)
         {
+            var roleInfo = User.Role switch
+            {
+                "Admin" => "Admins have full edit and execute rights to all jobs and access to global settings including users.",
+                "Editor" => "Editors have full edit and execute rights to all jobs.",
+                "Operator" => "Operators have execute access to jobs the user has been authorized to execute and view.",
+                "Viewer" => "Viewers can view executions and details related to jobs they have been authorized to view.",
+                _ => null
+            };
+
             <EditForm Model="User" id="user_edit_form" OnValidSubmit="SubmitUser">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
@@ -37,6 +46,7 @@
                                     <option>Admin</option>
                                 </InputSelect>
                             </div>
+                            <div class="form-text">@roleInfo</div>
                         </div>
                         <div class="mt-3">
                             <label class="form-label">Email</label>
