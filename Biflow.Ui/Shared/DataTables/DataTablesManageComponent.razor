@@ -4,9 +4,19 @@
 @inject IHxMessageBoxService MessageBox
 @inject IJSRuntime JSRuntime
 
-<HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(null))">
-    Add table
-</HxButton>
+<div class="row justify-content-between">
+    <div class="col">
+        <HxButton Color="ThemeColor.Success" Enabled="Connections?.Any() ?? false" OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(null))">
+            Add table
+        </HxButton>
+    </div>
+    <div class="col text-end">
+        <HxButton Color="ThemeColor.Light" OnClick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
+            @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+        </HxButton>
+    </div>
+</div>
+
 
 <div class="row my-4">
     <div class="col">
@@ -75,12 +85,16 @@
 
 <DataTableEditModal @ref="EditModal" OnTableSubmitted="OnTableSubmitted" />
 
+<DataTableHelpOffcanvas @ref="HelpOffcanvas" />
+
 @code {
     [Parameter] public List<MasterDataTable>? Tables { get; set; }
 
     [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
 
     private DataTableEditModal? EditModal { get; set; }
+
+    private DataTableHelpOffcanvas? HelpOffcanvas { get; set; }
 
     private void OnTableSubmitted(MasterDataTable table)
     {

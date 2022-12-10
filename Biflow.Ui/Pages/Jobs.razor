@@ -21,40 +21,54 @@
 
 <h4>Jobs</h4>
 
-<div class="btn-toolbar mt-3">
-    <AuthorizeView Roles="Admin, Editor">
-        @*Dropdown to create new jobs*@
-        <HxDropdownButtonGroup CssClass="me-3">
-            <HxDropdownToggleButton Color="ThemeColor.Success">Add job</HxDropdownToggleButton>
-            <HxDropdownContent CssClass="p-4">
-                <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
-                    <div class="row">
-                        <div class="col">
-                            <label class="form-label">Job name</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                </span>
-                                <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
+<div class="row justify-content-between mt-3">
+    <div class="col">
+        <div class="btn-toolbar">
+            <AuthorizeView Roles="Admin, Editor">
+                @*Dropdown to create new jobs*@
+                <HxDropdownButtonGroup CssClass="me-3">
+                    <HxDropdownToggleButton Color="ThemeColor.Success">Add job</HxDropdownToggleButton>
+                    <HxDropdownContent CssClass="p-4">
+                        <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">Job name</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">
+                                            @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                        </span>
+                                        <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null">Add</HxSubmit>
-                        </div>
-                    </div>
-                </EditForm>
-            </HxDropdownContent>
-        </HxDropdownButtonGroup>
-    </AuthorizeView>
-    <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
-        @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-        Refresh
-    </HxButton>
+                            <div class="row">
+                                <div class="col">
+                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null">Add</HxSubmit>
+                                </div>
+                            </div>
+                        </EditForm>
+                    </HxDropdownContent>
+                </HxDropdownButtonGroup>
+            </AuthorizeView>
+            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                Refresh
+            </HxButton>
+        </div>
+    </div>
+    <div class="col-auto text-end">
+        <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Focus"
+                   Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
+                   Html>
+            <HxButton Color="ThemeColor.Light">
+                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+            </HxButton>
+        </HxPopover>
+    </div>
 </div>
+
 
 
 <div class="card shadow-sm pt-2 my-4">

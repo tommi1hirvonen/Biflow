@@ -1,0 +1,41 @@
+﻿<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Data Tables">
+    <BodyTemplate>
+        <p>
+            Manage tables whose data can be edited in the Biflow UI. Users can be granted access to individual tables to edit their content.
+        </p>
+        <p>
+            Only tables with a primary key are supported. Tables that have an identity column are supported.
+        </p>
+        <p>
+            Columns using datatypes listed in the table below can be edited using the table editor.
+        </p>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>SQL datatype</th>
+                    <th>C# datatype</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var (sqlDatatype, datatype) in TableEditorExtensions.DatatypeMapping)
+                {
+                    <tr>
+                        <td>@sqlDatatype</td>
+                        <td>@datatype</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private HxOffcanvas? Offcanvas { get; set; }
+
+    public Task ShowAsync() => Offcanvas.LetAsync(x => x.ShowAsync());
+}

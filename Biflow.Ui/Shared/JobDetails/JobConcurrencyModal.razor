@@ -6,19 +6,24 @@
 
 <HxModal @ref="Modal" Size="ModalSize.Regular" OnClosed="OnClosed" Title="Edit job concurrency">
     <BodyTemplate>
+        <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Hover"
+                   Content="@("<p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p><p>You can fine-tune the level of concurrency by defining maximum parallel steps for each step type. The main max parallel steps setting is always respected, however. This means that step type based limits only apply when they are lower than the main value.</p>")"
+                   Html>
+            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small">
+                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+            </HxButton>
+        </HxPopover>
         @if (Job is not null)
         {
-            <EditForm id="job_concurrency_form" Model="Job" OnValidSubmit="OnSubmit" class="">
+            <EditForm id="job_concurrency_form" Model="Job" OnValidSubmit="OnSubmit" class="mt-3">
                 
                 <ObjectGraphDataAnnotationsValidator />
                 <ValidationSummary />
                 
-                <div class="mb-4">
+                <div>
                     <label class="form-label">Max parallel steps (0 = use default)</label>
                     <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="Job.MaxParallelSteps"></InputNumber>
                 </div>
-
-                <small class="text-secondary">Define the number of max parallel steps allowed for each step type to fine-tune the level of concurrency.</small>
 
                 <table id="concurrency_table" class="table table-sm mt-3">
                     <thead>

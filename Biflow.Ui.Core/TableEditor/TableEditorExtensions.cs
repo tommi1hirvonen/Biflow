@@ -189,7 +189,7 @@ public static class TableEditorExtensions
             """,
             new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName });
 
-    internal static readonly Dictionary<string, Type> DatatypeMapping = new()
+    public static readonly Dictionary<string, Type> DatatypeMapping = new()
     {
         { "char", typeof(string) },
         { "varchar", typeof(string) },

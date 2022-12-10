@@ -5,12 +5,18 @@
 @inject IHxMessengerService Messenger
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters">
-
     <BodyTemplate>
+        <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
+                   Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
+            Html>
+            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small">
+                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+            </HxButton>
+        </HxPopover>
         @if (Job is not null)
         {
             <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
-                <table id="parameters_table" class="table table-sm">
+                <table id="parameters_table" class="table table-sm mt-3">
                     <thead>
                         <tr>
                             <th>Name</th>

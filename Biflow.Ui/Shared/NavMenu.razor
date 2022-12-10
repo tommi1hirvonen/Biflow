@@ -1,5 +1,6 @@
 ﻿@inject MarkupHelperService MarkupHelper
 @inject AuthenticationMethodResolver AuthenticationResolver
+@inject NavigationManager NavigationManager
 
 <nav class="sidebar @ClassString" style="z-index: 1040;">
     <ul class="nav flex-column pt-3">
@@ -48,10 +49,10 @@
             </li>
         </AuthorizeView>
         <li class="nav-item">
-            <NavLink class="nav-link" href="datatables/edit" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
+            <a class="nav-link @(GetActiveByPrefix("datatables") ? "active" : null)" href="datatables/edit"  @onclick="NavLinkClick">
                 @MarkupHelper.FromFile("icons/feather/table.svg")
                 Data Tables
-            </NavLink>
+            </a>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
@@ -104,6 +105,12 @@
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private bool GetActiveByPrefix(string prefix)
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLower();
+        return relativePath.StartsWith(prefix.ToLower());
+    }
 
     private void ToggleNavMenu()
     {
