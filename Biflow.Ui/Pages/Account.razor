@@ -10,11 +10,24 @@
 <PageTitle>Account | Biflow</PageTitle>
 
 <h4>Account</h4>
-<p></p>
-<h5>
-    @MarkupHelper.FromFile("icons/feather/user.svg")
-    @Username
-</h5>
+
+<div class="row mt-4">
+    <div class="col-auto">
+        <h5>Username:</h5>
+    </div>
+    <div class="col-auto">
+        <h5>@Username</h5>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-auto">
+        <h6>Role:</h6>
+    </div>
+    <div class="col-auto">
+        <h6>@User?.Role</h6>
+    </div>
+</div>
+
 
 <div class="row mt-3">
     <div class="col-lg-6">
@@ -112,7 +125,7 @@
 @code {
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
 
-    private User User { get; set; } = null!;
+    private User? User { get; set; }
 
     private PasswordModel PasswordModel_ { get; set; } = new();
 
@@ -127,6 +140,7 @@
 
     private async Task SubmitEmail()
     {
+        if (User is null) return;
         try
         {
             using var context = DbFactory.CreateDbContext();
