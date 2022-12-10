@@ -46,9 +46,9 @@
     <div class="col-xl-2 col-lg-3 col-5">
         <div class="form-group">
             <label class="form-label">Depth backwards</label>
-            <HxPopover Trigger="PopoverTrigger.Focus" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+            <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
-                    <span class="vismaicon vismaicon-sm vismaicon-dynamic vismaicon-filled vismaicon-help"></span>
+                    <span style="cursor: pointer;">@MarkupHelper.FromFile("icons/feather/help-circle.svg")</span>
                 </ChildContent>
             </HxPopover>
             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(StepFilter is null) />
@@ -57,9 +57,9 @@
     <div class="col-xl-2 col-lg-3 col-5">
         <div class="form-group">
             <label class="form-label">Depth forwards</label>
-            <HxPopover Trigger="PopoverTrigger.Focus" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+            <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
-                    <span class="vismaicon vismaicon-sm vismaicon-dynamic vismaicon-filled vismaicon-help"></span>
+                    <span style="cursor: pointer;">@MarkupHelper.FromFile("icons/feather/help-circle.svg")</span>
                 </ChildContent>
             </HxPopover>
             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(StepFilter is null) />
