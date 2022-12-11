@@ -80,26 +80,6 @@ tr.disabled {
 
 
 /*
-    Job status icons
-*/
-.status-icon svg {
-    width: 20px;
-    height: 20px;
-}
-
-.status-icon.failed svg {
-    color: var(--color-danger);
-}
-
-.status-icon.running svg {
-    color: var(--color-success);
-}
-
-.status-icon.warning svg {
-    color: var(--color-warning);
-}
-
-/*
     Execution Gantt graph
 */
 .progress-bar.running {

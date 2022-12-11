@@ -51,18 +51,26 @@
             </HxDropdownButtonGroup>
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
-            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobParametersModal?.Show() ?? Task.CompletedTask)">
-                @MarkupHelper.FromFile("icons/feather/at-sign.svg")
-                Parameters
-            </HxButton>
-            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (JobConcurrencyModal?.Show() ?? Task.CompletedTask)">
-                @MarkupHelper.FromFile("icons/feather/cpu.svg")
-                Concurrency
-            </HxButton>
-            <HxButton CssClass="me-3" Color="ThemeColor.Secondary" @onclick="async () => await (SynchronizeDependenciesModal?.ShowAsync() ?? Task.CompletedTask)">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-                Sync dependencies
-            </HxButton>
+            <HxDropdownButtonGroup CssClass="me-3">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                    @MarkupHelper.FromFile("icons/feather/settings.svg")
+                    Settings
+                </HxDropdownToggleButton>
+                <HxDropdownMenu>
+                    <HxDropdownItem @onclick="async () => await JobParametersModal.LetAsync(x => x.Show())">
+                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                        Parameters
+                    </HxDropdownItem>
+                    <HxDropdownItem @onclick="async () => await JobConcurrencyModal.LetAsync(x => x.Show())">
+                        @MarkupHelper.FromFile("icons/feather/cpu.svg")
+                        Concurrency
+                    </HxDropdownItem>
+                    <HxDropdownItem @onclick="async () => await SynchronizeDependenciesModal.LetAsync(x => x.ShowAsync())">
+                        @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                        Sync dependencies
+                    </HxDropdownItem>
+                </HxDropdownMenu>
+            </HxDropdownButtonGroup>
             <HxButton Color="ThemeColor.Primary" @onclick="async () => await ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
                 @MarkupHelper.FromFile("icons/feather/play.svg")
                 Execute

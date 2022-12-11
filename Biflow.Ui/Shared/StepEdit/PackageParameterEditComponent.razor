@@ -74,6 +74,7 @@
     var level = ParameterLevel.Package; var type = ParameterValueType.String;
     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
         @MarkupHelper.FromFile("icons/feather/plus.svg")
+        Add parameter
     </HxButton>
 }
 

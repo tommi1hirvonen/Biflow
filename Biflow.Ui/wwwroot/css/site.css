@@ -66,25 +66,6 @@ a:hover {
     color: var(--color-primary-super-dark);
 }
 
-/*
-    Messenger customization
-*/
-.hx-messenger-information .hx-icon {
-    color: var(--color-primary);
-}
-
-.hx-messenger-warning .hx-icon {
-    color: var(--color-warning);
-}
-
-.hx-messenger-error .hx-icon {
-    color: var(--color-danger);
-}
-
-.hover-primary:hover {
-    color: var(--color-primary);
-}
-
 
 /*
     Primary button customization
@@ -320,18 +301,22 @@ tr.disabled {
 }
 
 /*
-    Badge
+    Badge, toast etc.
 */
-.badge.bg-primary {
-    background-color: var(--color-primary)!important;
+.bg-primary {
+    background-color: var(--color-primary) !important;
 }
 
-.badge.bg-success {
+.bg-success {
     background-color: var(--color-success) !important;
 }
 
-.badge.bg-danger {
+.bg-danger {
     background-color: var(--color-danger) !important;
+}
+
+.bg-warning {
+    background-color: var(--color-warning-light) !important;
 }
 
 
@@ -351,22 +336,7 @@ tr.disabled {
     color: var(--color-danger);
 }
 
-/*
-    Job status icons
-*/
-.status-icon svg {
-    width: 20px;
-    height: 20px;
-}
-.status-icon.failed svg {
-    color: var(--color-danger);
-}
-.status-icon.running svg {
-    color: var(--color-success);
-}
-.status-icon.warning svg {
-    color: var(--color-warning);
-}
+
 
 /*
     Alert
