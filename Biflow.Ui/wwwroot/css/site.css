@@ -520,8 +520,8 @@ tr.disabled {
     width: 200px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
-    background-color: #fff;
-    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.1), 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+    background-color: #35353a;
+    box-shadow: 0 0.3rem .5rem rgb(0 0 0 / 50%)
 }
 
 /*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
@@ -533,8 +533,8 @@ tr.disabled {
 
 @media (min-width: 992px) {
     .main {
-        padding-right: 10px !important;
-        padding-left: 210px !important; /* (sidebar width) + (padding right) */
+        padding-right: 15px !important;
+        padding-left: 215px !important; /* (sidebar width) + (padding right) */
     }
 }
 
@@ -557,22 +557,31 @@ tr.disabled {
 
 .sidebar .nav-link {
     font-size: 16px;
-    font-weight: 500;
-    color: #444;
+    color: #ccc;
+    border-radius: .5rem;
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
 }
 
     .sidebar .nav-link .feather {
         margin-right: 4px;
-        color: #999;
+        color: #ddd;
     }
 
     .sidebar .nav-link.active {
-        color: var(--color-primary);
+        font-weight: 500;
+        color: #fff;
+        background-color: rgba(255, 255, 255, .10);
     }
 
-        .sidebar .nav-link:hover .feather,
-        .sidebar .nav-link.active .feather {
-            color: inherit;
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, .10);
         }
 
 .sidebar-heading {
@@ -589,9 +598,12 @@ tr.disabled {
  * Navbar
  */
 
+.bg-gradient-primary {
+    background-image: linear-gradient(90deg, #727CF5 0%, #8F75DA 100%);
+}
+
 .navbar-custom {
     /*background-color: #313A46;*/
-    background-image: linear-gradient(90deg, #727CF5 0%, #8F75DA 100%);
     z-index: 1050;
 }
 

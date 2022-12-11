@@ -19,13 +19,21 @@
     <Authorized>
         <HxMessenger Position="ToastContainerPosition.TopCenter" />
         <HxMessageBoxHost />
+        <SchedulerStatusComponent OnStatusMessageResolved="message => SchedulerServiceErrorMessage = message" />
         <header>
-            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : null)">
+            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : "bg-gradient-primary")">
                 <text class="navbar-brand navbar-brand-bg me-0 px-3">Biflow</text>
                 <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <SchedulerStatusComponent />
+                @if (SchedulerServiceErrorMessage is not null)
+                {
+                    <ul class="navbar-nav">
+                        <li>
+                            <strong class="navbar-text px-3">@SchedulerServiceErrorMessage</strong>
+                        </li>
+                    </ul>
+                }
                 <ul class="navbar-nav ms-auto">
                     <li>
                         <strong class="navbar-text px-3">
@@ -38,7 +46,7 @@
         <div class="container-fluid">
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
-                <main class="main px-md-4 pt-4 flex-grow-1">
+                <main class="main pt-4 flex-grow-1">
                     @Body
                 </main>
             </div>
