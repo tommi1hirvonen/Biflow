@@ -2,6 +2,7 @@
 for details on configuring this project to bundle and minify static web assets. */
 
 :root {
+    --color-primary: #0d6efd;
     --color-primary-super-dark: #004085;
     --color-primary-super-light: #CCE5FF;
     --color-success: #28a745;
@@ -182,6 +183,7 @@ tr.disabled {
             stroke: #ddd;
             stroke-width: 3px;
         }
+
         .dependency-graph .node.skipped > g.label {
             fill: #999;
         }
@@ -218,12 +220,12 @@ tr.disabled {
 
     .dependency-graph .edgePath.oncompleted path {
         stroke: var(--color-primary);
-        fill: var(--color-success);
+        fill: var(--color-primary);
     }
 
     .dependency-graph .edgePath.onfailed path {
         stroke: var(--color-danger);
-        fill: var(--color-success);
+        fill: var(--color-danger);
     }
 
 
@@ -371,20 +373,13 @@ tr.disabled {
 }
 
 #blazor-error-ui {
-    background: lightyellow;
     bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
     display: none;
     left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
-    width: 100%;
-    z-index: 1060;
+    width: 96vw;
+    z-index: 1050;
+    margin-bottom: 2rem;
+    margin-left: 2vw;
+    margin-right: 2vw;
 }
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
