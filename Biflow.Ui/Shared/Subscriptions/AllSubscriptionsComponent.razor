@@ -3,15 +3,42 @@
 @inject SubscriptionsHelperService SubscriptionHelper
 @inject IHxMessengerService Messenger
 
-<div class="row mt-3">
-    <div class="col">
-        <div class="input-group input-group-sm me-3" style="max-width: 30rem;">
-            <div class="input-group-text">
-                @MarkupHelper.FromFile("icons/feather/filter.svg")
-            </div>
-            <input type="search" class="form-control" @bind-value="UsernameFilter" @bind-value:event="oninput" placeholder="Filter by user" />
-            <input type="search" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by job" />
-        </div>
+<div class="row mt-3 align-items-center">
+    <div class="col-auto">
+        @MarkupHelper.FromFile("icons/feather/filter.svg")
+        Filter
+    </div>
+    <div class="col-auto">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <FilterDropdown TItem="User"
+                            FilterSet="UserFilter"
+                            Items="Users ?? Enumerable.Empty<User>()"
+                            IdSelector="u => u.Username"
+                            OnChange="StateHasChanged"
+                            TextSelector="u => u.Username">
+                <ItemTemplate>
+                    @context.Username
+                </ItemTemplate>
+                <TitleTemplate>
+                    @MarkupHelper.FromFile("icons/feather/user.svg")
+                    Users
+                </TitleTemplate>
+            </FilterDropdown>
+            <FilterDropdown TItem="Job"
+                            FilterSet="JobFilter"
+                            Items="Jobs ?? Enumerable.Empty<Job>()"
+                            IdSelector="j => j.JobId.ToString()"
+                            OnChange="StateHasChanged"
+                            TextSelector="j => j.JobName">
+                <ItemTemplate>
+                    @context.JobName
+                </ItemTemplate>
+                <TitleTemplate>
+                    @MarkupHelper.FromFile("icons/feather/loader.svg")
+                    Jobs
+                </TitleTemplate>
+            </FilterDropdown>
+        </HxButtonGroup>
     </div>
 </div>
 
@@ -43,62 +70,60 @@
                         }
                         else
                         {
-                            @foreach (var user in Users
-                                .Where(u => !UsernameFilter.Any() || (u.Username?.ContainsIgnoreCase(UsernameFilter) ?? false))
-                                .OrderBy(u => u.Username))
-                            {
-                                foreach (var job in Jobs
-                                    .Where(j => !JobNameFilter.Any() || (j.JobName?.ContainsIgnoreCase(JobNameFilter) ?? false))
-                                    .OrderBy(j => j.JobName))
-                                {
+                            var users = Users.Where(u => !UserFilter.Any() || UserFilter.Any(f => f.Username == u.Username)).ToList();
+                            var jobs = Jobs.Where(j => !JobFilter.Any() || JobFilter.Any(f => f.JobId == j.JobId)).ToList();
+                            var items = users.SelectMany(u => jobs.Select(j => (u, j))).ToList();
+                            <Virtualize Items="items" SpacerElement="tr" Context="item">
+                                @{
+                                    var (user, job) = item;
                                     var sub = user.Subscriptions.FirstOrDefault(s => s.JobId == job.JobId);
-                                    <tr>
-                                        <td>
-                                            <HighlightableText Text="@user.Username" PartToHighlight="@UsernameFilter" />
-                                        </td>
-                                        <td>
-                                            @user.Email
-                                        </td>
-                                        <td>
-                                            <HighlightableText Text="@job.JobName" PartToHighlight="@JobNameFilter" />
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <div class="form-check form-check-inline">
-                                                    <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}none")"
-                                                           checked=@(sub is null)
-                                                           @onchange="() => RemoveSubscription(user, job)">
-                                                    <label class="form-check-label" for="@($"{user.Username}{job.JobId}none")">None</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}failure")"
-                                                           checked=@(sub?.SubscriptionType == SubscriptionType.OnFailure)
-                                                           @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnFailure)">
-                                                    <label class="form-check-label" for="@($"{user.Username}{job.JobId}failure")">On failure</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}success")"
-                                                           checked=@(sub?.SubscriptionType == SubscriptionType.OnSuccess)
-                                                           @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnSuccess)">
-                                                    <label class="form-check-label" for="@($"{user.Username}{job.JobId}success")">On success</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}completion")"
-                                                           checked=@(sub?.SubscriptionType == SubscriptionType.OnCompletion)
-                                                           @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnCompletion)">
-                                                    <label class="form-check-label" for="@($"{user.Username}{job.JobId}completion")">On completion</label>
-                                                </div>
-                                                <div class="form-check form-check-inline">
-                                                    <input type="checkbox" class="form-check-input" id="@($"{user.Username}{job.JobId}overtime")"
-                                                           checked=@(sub?.NotifyOnOvertime == true)
-                                                           @onchange="args => ToggleSubscription(user, job, (bool)args.Value!)">
-                                                    <label class="form-check-label" for="@($"{user.Username}{job.JobId}overtime")">On overtime</label>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
                                 }
-                            }
+                                <tr>
+                                    <td>
+                                        @user.Username
+                                    </td>
+                                    <td>
+                                        @user.Email
+                                    </td>
+                                    <td>
+                                        @job.JobName
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}none")"
+                                                   checked=@(sub is null)
+                                                   @onchange="() => RemoveSubscription(user, job)">
+                                                <label class="form-check-label" for="@($"{user.Username}{job.JobId}none")">None</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}failure")"
+                                                   checked=@(sub?.SubscriptionType == SubscriptionType.OnFailure)
+                                                   @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnFailure)">
+                                                <label class="form-check-label" for="@($"{user.Username}{job.JobId}failure")">On failure</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}success")"
+                                                   checked=@(sub?.SubscriptionType == SubscriptionType.OnSuccess)
+                                                   @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnSuccess)">
+                                                <label class="form-check-label" for="@($"{user.Username}{job.JobId}success")">On success</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input" id="@($"{user.Username}{job.JobId}completion")"
+                                                   checked=@(sub?.SubscriptionType == SubscriptionType.OnCompletion)
+                                                   @onchange="() => ToggleSubscription(user, job, SubscriptionType.OnCompletion)">
+                                                <label class="form-check-label" for="@($"{user.Username}{job.JobId}completion")">On completion</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" class="form-check-input" id="@($"{user.Username}{job.JobId}overtime")"
+                                                   checked=@(sub?.NotifyOnOvertime == true)
+                                                   @onchange="args => ToggleSubscription(user, job, (bool)args.Value!)">
+                                                <label class="form-check-label" for="@($"{user.Username}{job.JobId}overtime")">On overtime</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </Virtualize>
                         }
                     </tbody>
                 </table>
@@ -113,9 +138,9 @@
 
     private IEnumerable<User>? Users { get; set; }
 
-    private string UsernameFilter { get; set; } = string.Empty;
+    private HashSet<User> UserFilter { get; set; } = new();
 
-    private string JobNameFilter { get; set; } = string.Empty;
+    private HashSet<Job> JobFilter { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,9 +148,11 @@
         Users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(u => u.Subscriptions)
+            .OrderBy(u => u.Username)
             .ToListAsync();
         Jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
+            .OrderBy(j => j.JobName)
             .ToListAsync();
     }
 
