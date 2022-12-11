@@ -570,7 +570,7 @@ tr.disabled {
 }
 
     .sidebar .nav-link .feather {
-        margin-right: 4px;
+        margin-right: 5px;
         color: #ddd;
     }
 
@@ -579,6 +579,10 @@ tr.disabled {
         color: #fff;
         background-color: rgba(255, 255, 255, .10);
     }
+
+        .sidebar .nav-link.active .feather {
+            color: #fff;
+        }
 
         .sidebar .nav-link:hover {
             background-color: rgba(255, 255, 255, .10);

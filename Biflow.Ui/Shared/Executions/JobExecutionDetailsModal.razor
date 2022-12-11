@@ -12,17 +12,17 @@
             <HxButtonGroup CssClass="ms-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Table ? "active" : null)"
                           @onclick="() => ShowReport = Report.Table">
-                    @MarkupHelper.FromFile("icons/bootstrap/table.svg")
+                    @MarkupHelper.FromFile("icons/feather/table.svg")
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Gantt ? "active" : null)"
                           @onclick="() => ShowReport = Report.Gantt">
-                    @MarkupHelper.FromFile("icons/bootstrap/bar-chart-steps.svg")
+                    @MarkupHelper.FromFile("icons/feather/gantt.svg")
                     Gantt
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Dependencies ? "active" : null)"
                           @onclick="() => { ShowReport = Report.Dependencies; }">
-                    @MarkupHelper.FromFile("icons/bootstrap/diagram-3-fill.svg")
+                    @MarkupHelper.FromFile("icons/feather/dependency.svg")
                     Dependencies
                 </HxButton>
             </HxButtonGroup>

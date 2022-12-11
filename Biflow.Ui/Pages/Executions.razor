@@ -35,13 +35,13 @@
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = false"
                 CssClass="@(!ShowGraph ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/bootstrap/table.svg")
+                    @MarkupHelper.FromFile("icons/feather/table.svg")
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = true"
                 CssClass="@(ShowGraph ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/bootstrap/bar-chart-steps.svg")
+                    @MarkupHelper.FromFile("icons/feather/gantt.svg")
                     Graph
                 </HxButton>
             </HxButtonGroup>
