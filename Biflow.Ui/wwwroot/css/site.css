@@ -253,12 +253,14 @@ a:hover {
     Class used for buttons which are placed inside a table row
 */
 
-.btn-row .btn-light {
+.btn-row .btn-light,
+.btn-row.btn-light {
     background-color: transparent;
     border-color: transparent;
 }
 
-    .btn-row .btn-light:hover {
+    .btn-row .btn-light:hover,
+    .btn-row.btn-light:hover {
         background-color: #e2e6ea;
         border-color: #dae0e5;
     }

@@ -147,7 +147,7 @@
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                     }
-                    <table class="table">
+                    <table class="table table-sm">
                         <thead>
                             <tr>
                                 @foreach (var column in TableData.Columns.Where(c => IsColumnSelected(c.Name)))
@@ -331,7 +331,7 @@
                                     @if (TableData.IsEditable && EditModeEnabled)
                                     {
                                         <td>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="row.Delete">
+                                            <button class="btn btn-sm btn-light btn-row text-danger" @onclick="row.Delete">
                                                 @MarkupHelper.FromFile("icons/feather/delete.svg")
                                             </button>
                                         </td>

@@ -10,7 +10,7 @@
 <AuthorizeView Roles="Admin, Editor">
     <ul class="nav nav-pills mt-3 mb-4" role="tablist">
         <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="datatables/edit" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="datatables/edit" Match="NavLinkMatch.Prefix">
                 @MarkupHelper.FromFile("icons/feather/table.svg")
                 Edit data
             </NavLink>
