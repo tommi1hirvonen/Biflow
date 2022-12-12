@@ -127,7 +127,11 @@
                                            TextSelector="table => table.DataTableName"
                                            MinimumLength="0"
                                            ValidationMessageMode="ValidationMessageMode.None"
-                                           InputSize="InputSize.Small" />
+                                           InputSize="InputSize.Small">
+                                           <ItemTemplate Context="item">
+                                               <small>@item.DataTableName</small>
+                                           </ItemTemplate>
+                                       </HxAutosuggest>
                                     </td>
                                     <td>
                                         <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
@@ -239,7 +243,6 @@
         {
             Tables = await EditContext.MasterDataTables
                 .Include(t => t.Connection)
-                .Where(t => t.DataTableId != table.DataTableId)
                 .OrderBy(t => t.DataTableName)
                 .ToListAsync();
             EditTable = await EditContext.MasterDataTables
