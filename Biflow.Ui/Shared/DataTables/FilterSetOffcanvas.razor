@@ -275,15 +275,15 @@
                 <div class="row mt-3">
                     <div class="col">
                         <div class="row">
-                            <div class="col-auto">
+                            <div class="col">
                                 <div class="form-check form-switch">
                                     <input type="checkbox" class="form-check-input" id="value_1_enabled_@column"
                                         checked=@Filters.Filters[column].Enabled1 @bind-value="Filters.Filters[column].Enabled1">
-                                    <label class="form-check-label" for="value_1_enabled_@column"></label>
+                                    <label class="form-check-label" for="value_1_enabled_@column">
+                                        &nbsp;
+                                        @column
+                                    </label>
                                 </div>
-                            </div>
-                            <div class="col">
-                                <h6>@column</h6>
                             </div>
                         </div>
                         @if (Filters.Filters[column].Enabled1)

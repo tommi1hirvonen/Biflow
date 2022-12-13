@@ -9,7 +9,10 @@
                         <div class="form-check form-check-inline">
                             <input type="checkbox" class="form-check-input" id="column_select_@column"
                                     checked=@ColumnSelections[column] @onchange="args => SelectionChanged(args, column)">
-                            <label class="form-check-label" for="column_select_@column">@column</label>
+                            <label class="form-check-label" for="column_select_@column">
+                                &nbsp;
+                                @column
+                            </label>
                         </div>
                     </div>
                 </div>
