@@ -48,6 +48,7 @@ public class BiflowContext : DbContext
     public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
     public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
+    public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -438,11 +439,12 @@ public class BiflowContext : DbContext
             e.ToTable("DataTable");
             
             e.HasMany(t => t.Lookups).WithOne(l => l.Table);
-            
+
+            e.HasOne(t => t.Category).WithMany(c => c.Tables).HasForeignKey(p => p.CategoryId);
+
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)
             .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
-            
             x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
             x => x.HasOne<MasterDataTable>().WithMany().HasForeignKey("DataTableId"));
 

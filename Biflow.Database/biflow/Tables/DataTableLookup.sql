@@ -7,5 +7,8 @@
 	[LookupDescriptionColumn] NVARCHAR(128) NOT NULL,
 	[LookupDisplayType] VARCHAR(20) NOT NULL,
 	CONSTRAINT [PK_DataTableLookup] PRIMARY KEY CLUSTERED ([DataTableId], [ColumnName]),
-	CONSTRAINT [CK_DataTableLookup] CHECK ([LookupDisplayType] IN ('Value', 'Description', 'ValueAndDescription'))
+	CONSTRAINT [CK_DataTableLookup] CHECK (
+		[LookupDisplayType] = 'Value' OR
+		[LookupDisplayType] = 'Description' OR
+		[LookupDisplayType] = 'ValueAndDescription')
 )

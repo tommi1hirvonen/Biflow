@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
@@ -28,6 +29,11 @@ public class MasterDataTable
     public Guid ConnectionId { get; set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    [Column("DataTableCategoryId")]
+    public Guid? CategoryId { get; set; }
+
+    public MasterDataTableCategory? Category { get; set; }
 
     public ICollection<User> Users { get; set; } = null!;
 
