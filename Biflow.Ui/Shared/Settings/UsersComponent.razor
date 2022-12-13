@@ -10,111 +10,99 @@
     Add user
 </HxButton>
 
-<div class="card shadow-sm pt-2 my-4">
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>
-                    Username
-                </th>
-                <th>
-                </th>
-                <th>
-                    Email
-                </th>
-                <th>
-                    Role
-                </th>
-                <th>
-                    Created
-                </th>
-            </tr>
-        </thead>
-        <tbody>
+<div class="row my-4">
+    <div class="col">
+        <ul class="list-group shadow-sm">
             @if (Users is null)
             {
-                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <li class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></li>
             }
             else if (Users.Count == 0)
             {
-                <tr><td colspan="5">No users</td></tr>
+                <li class="list-group-item">No users</li>
             }
             else
             {
-                @foreach (var user in Users)
+                foreach (var users in Users.GroupBy(u => u.Role).OrderBy(g => g.Key))
                 {
-                    <tr>
-                        <td class="align-middle">
-                            @user.Username
-                        </td>
-                        <td>
-                            <HxButtonGroup CssClass="btn-row">
-                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
-                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
-                                </HxButton>
+                    if (users.Any())
+                    {
+                        <li class="list-group-item fw-bold" style="background-color: #f7f7f7">@users.Key</li>
+                        @foreach (var user in users)
+                        {
+                            <li class="list-group-item user-list-group-item">
+                                <div class="row">
+                                    <div class="col">
+                                        @user.Username
+                                    </div>
+                                    <div class="col-auto">
+                                        <HxButtonGroup CssClass="btn-row">
+                                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
+                                                @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                            </HxButton>
 
-                                @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
-                                {
-                                    <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
-                                            @MarkupHelper.FromFile("icons/feather/key.svg")
-                                        </HxDropdownToggleButton>
-                                        <HxDropdownContent CssClass="p-4">
-                                            <div style="min-width: 25rem;">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
-                                                            <InputGroupStartTemplate>
-                                                                <div class="input-group-text">
-                                                                    @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                            @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                                            {
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
+                                                        @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownContent CssClass="p-4">
+                                                        <div style="min-width: 25rem;">
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
+                                                                        <InputGroupStartTemplate>
+                                                                            <div class="input-group-text">
+                                                                                @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                                                            </div>
+                                                                        </InputGroupStartTemplate>
+                                                                    </HxInputText>
                                                                 </div>
-                                                            </InputGroupStartTemplate>
-                                                        </HxInputText>
-                                                    </div>
-                                                </div>
-                                                <div class="row mt-3">
-                                                    <div class="col">
-                                                        <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
-                                                            <InputGroupStartTemplate>
-                                                                <div class="input-group-text">
-                                                                    @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                            </div>
+                                                            <div class="row mt-3">
+                                                                <div class="col">
+                                                                    <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
+                                                                        <InputGroupStartTemplate>
+                                                                            <div class="input-group-text">
+                                                                                @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                                            </div>
+                                                                        </InputGroupStartTemplate>
+                                                                    </HxInputText>
                                                                 </div>
-                                                            </InputGroupStartTemplate>
-                                                        </HxInputText>
-                                                    </div>
-                                                </div>
-                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
-                                            </div>
+                                                            </div>
+                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
+                                                        </div>
 
-                                        </HxDropdownContent>
-                                    </HxDropdownButtonGroup>
-                                }
+                                                    </HxDropdownContent>
+                                                </HxDropdownButtonGroup>
+                                            }
 
-                                <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
-                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
-                                    </HxDropdownToggleButton>
-                                    <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
-                                    </HxDropdownMenu>
-                                </HxDropdownButtonGroup>
-                            </HxButtonGroup>
-                        </td>
-                        <td class="align-middle">
-                            @user.Email
-                        </td>
-                        <td class="align-middle">
-                            @user.Role
-                        </td>
-                        <td class="align-middle">
-                            @user.CreatedDateTime.LocalDateTime
-                        </td>
-                    </tr>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
+                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </HxButtonGroup>
+                                    </div>
+                                    <div class="col">
+                                        @user.Email
+                                    </div>
+                                    <div class="col">
+                                        Created on @user.CreatedDateTime.LocalDateTime
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    }
                 }
             }
-        </tbody>
-    </table>
+        </ul>
+    </div>
 </div>
 
 <UserEditModal @ref="UserEditModal" OnUserSubmit="OnUserSubmit" />
