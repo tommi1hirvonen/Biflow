@@ -1,0 +1,124 @@
+﻿@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<h4>Data Tables</h4>
+
+<AuthorizeView Roles="Admin, Editor">
+    <div class="row mt-3">
+        <div class="col">
+            <HxButton Color="ThemeColor.Success"
+                      Enabled="Connections?.Any() ?? false"
+                      OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(null))"
+                      Spinner="false">
+                Add table
+            </HxButton>
+        </div>
+        <div class="col text-end">
+            <HxButton Color="ThemeColor.Light" OnClick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
+                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+            </HxButton>
+        </div>
+    </div>
+</AuthorizeView>
+
+<ul class="list-group mt-3">
+    @if (Tables is null)
+    {
+        <li class="list-group-item text-center">
+            <HxSpinner Color="ThemeColor.Secondary" />
+        </li>
+    }
+    else if (!Tables.Any())
+    {
+        <li class="list-group-item">
+            No tables
+        </li>
+    }
+    else
+    {
+        foreach (var table in Tables)
+        {
+            <li class="list-group-item list-group-item-table">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <a href="datatables/edit/@table.DataTableId" class="text-dark">
+                            @table.DataTableName
+                        </a>
+                    </div>
+                    <div class="col">
+                        @table.TargetSchemaName.@table.TargetTableName
+                    </div>
+                    <AuthorizeView Roles="Admin, Editor">
+                        <div class="col-auto btn-row">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                      OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(table))">
+                                @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                            </HxButton>
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                    <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                        </div>
+                    </AuthorizeView>
+                </div>
+                
+            </li>
+        }
+    }
+</ul>
+
+<AuthorizeView Roles="Admin, Editor">
+    <DataTableEditModal @ref="EditModal" OnTableSubmitted="OnTableSubmitted" />
+
+    <DataTableHelpOffcanvas @ref="HelpOffcanvas" />
+</AuthorizeView>
+
+@code {
+    [Parameter] public List<MasterDataTable>? Tables { get; set; }
+
+    [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
+
+    private DataTableHelpOffcanvas? HelpOffcanvas { get; set; }
+
+    private DataTableEditModal? EditModal { get; set; }
+
+    private void OnTableSubmitted(MasterDataTable table)
+    {
+        var toRemove = Tables?.FirstOrDefault(t => t.DataTableId == table.DataTableId);
+        if (toRemove is not null)
+        {
+            Tables?.Remove(toRemove);
+        }
+        Tables?.Add(table);
+        Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
+
+        foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
+        {
+            if (lookup.LookupTableId == table.DataTableId)
+            {
+                lookup.LookupTable = table;
+            }
+        }
+    }
+
+    private async Task DeleteTableAsync(MasterDataTable table)
+    {
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            context.MasterDataTables.Remove(table);
+            await context.SaveChangesAsync();
+            Tables?.Remove(table);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting data table", ex.Message);
+        }
+    }
+}

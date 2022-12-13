@@ -1,80 +1,41 @@
 ﻿
 <div class="row">
     <div class="col">
-        <HxDropdownButtonGroup>
-            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="Tables?.Any() ?? false" Spinner="Tables is null">
-                @if (SelectedTable is not null)
-                {
-                    @SelectedTable.DataTableName
-                }
-                else if (Tables is null)
-                {
-                    <text>Loading</text>
-                }
-                else if (Tables.Any())
-                {
-                    <text>Select table</text>
-                }
-                else
-                {
-                    <text>No tables</text>
-                }
-            </HxDropdownToggleButton>
-            <HxDropdownMenu>
-                @foreach (var table in Tables ?? Enumerable.Empty<MasterDataTable>())
-                {
-                    <NavLink class="btn dropdown-item" href="@($"datatables/edit/{table.DataTableId}")">@table.DataTableName</NavLink>
-                }
-            </HxDropdownMenu>
-        </HxDropdownButtonGroup>
+        <div>
+            <a href="datatables">
+                All data tables
+            </a>
+            <span>&nbsp;/</span>
+            <strong>@Table?.DataTableName</strong>
+        </div>
     </div>
 </div>
+
+@if (Table is null) return;
 
 <div class="row mt-3">
     <div class="col-auto">
         <HxButtonToolbar>
-
-            <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
-                      Enabled="TableData is not null && TableData.IsEditable"
-                      OnClick="SaveChangesAsync">
-                @MarkupHelper.FromFile("icons/feather/save.svg")
-                Save changes
-            </HxButton>
-
-            <HxButton CssClass="ms-3" Color="ThemeColor.Success" Size="ButtonSize.Small"
-                      Enabled="TableData is not null && TableData.IsEditable"
-                      OnClick="() => TableData?.AddRow()">
-                @MarkupHelper.FromFile("icons/feather/plus.svg")
-                Add record
-            </HxButton>
-
-            <HxButtonGroup CssClass="ms-3" Size="ButtonGroupSize.Small">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
 
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                    Enabled="SelectedTable is not null"
-                    OnClick="async () => await ReloadDataAsync()">
-                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
-                    Reload
-                </HxButton>
-
-                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                    Enabled="FilterSet is not null"
-                    CssClass="@(FilterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold" : null)"
-                    OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
+                          Enabled="FilterSet is not null"
+                          CssClass="@(FilterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold" : null)"
+                          OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
                     @MarkupHelper.FromFile("icons/feather/filter.svg")
                     Filters
                 </HxButton>
 
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                    Enabled="ColumnSelections is not null"
-                    CssClass="@(ColumnSelections?.Values.Any(b => !b) ?? false ? "fw-bold" : null)"
-                    OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
+                          Enabled="ColumnSelections is not null"
+                          CssClass="@(ColumnSelections?.Values.Any(b => !b) ?? false ? "fw-bold" : null)"
+                          OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
                     @MarkupHelper.FromFile("icons/feather/columns.svg")
                     Columns
                 </HxButton>
 
                 <HxDropdownButtonGroup>
-                    <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="SelectedTable is not null && !Exporting">
+                    <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!Exporting">
                         @MarkupHelper.FromFile("icons/feather/download.svg")
                         Export
                     </HxDropdownToggleButton>
@@ -91,13 +52,13 @@
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
 
-                <a class="btn btn-sm btn-secondary @(SelectedTable is null || TableData?.IsEditable == false ? "disabled" : null)" href="/datatables/import/@SelectedTable?.DataTableId">
+                <a class="btn btn-sm btn-secondary @(TableData?.IsEditable == false ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
                     @MarkupHelper.FromFile("icons/feather/upload.svg")
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                          Enabled="!string.IsNullOrEmpty(SelectedTable?.DataTableDescription)"
+                          Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await TableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
                     @MarkupHelper.FromFile("icons/feather/info.svg")
                     Table info
@@ -109,29 +70,57 @@
 </div>
 
 <div class="row mt-3">
-    <div class="col-auto d-inline-flex align-items-center">
-        <label>Limit rows</label>
-        <input class="form-control form-control-sm ms-3" type="number" @bind-value="TopRows" style="max-width: 100px;" />
+    <div class="col-auto">
+        <HxButtonToolbar>
+            <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
+                      OnClick="async () => await ReloadDataAsync()">
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                Reload
+            </HxButton>
+
+            <HxButton Color="ThemeColor.Success" Size="ButtonSize.Small"
+                      CssClass="ms-3"
+                      Enabled="TableData is not null && TableData.IsEditable"
+                      OnClick="SaveChangesAsync">
+                @MarkupHelper.FromFile("icons/feather/save.svg")
+                Save changes
+            </HxButton>
+
+            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                      Enabled="TableData is not null && TableData.IsEditable"
+                      OnClick="() => TableData?.AddRow()">
+                @MarkupHelper.FromFile("icons/feather/plus.svg")
+                Add record
+            </HxButton>
+        </HxButtonToolbar>
     </div>
-    <div class="col-auto align-items-center">
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="editmode_radio"
-                    disabled="@(!TableData?.IsEditable ?? true)"
-                    checked="@(EditModeEnabled)"
-                    @onchange="() => { EditModeEnabled = true; }">
-            <label class="form-check-label" for="editmode_radio">Edit mode</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="viewmode_radio"
-                    disabled="@(!TableData?.IsEditable ?? true)"
-                    checked="@(!EditModeEnabled)"
-                    @onchange="() => { EditModeEnabled = false; }">
-            <label class="form-check-label" for="viewmode_radio">View mode</label>
+    <div class="col-xl mt-xl-0 mt-3">
+        <div class="row">
+            <div class="col-auto d-inline-flex align-items-center">
+                <label>Limit rows</label>
+                <input class="form-control form-control-sm ms-3" type="number" @bind-value="TopRows" style="max-width: 100px;" />
+            </div>
+            <div class="col-auto align-items-center">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="editmode_radio"
+                           disabled="@(!TableData?.IsEditable ?? true)"
+                           checked="@(EditModeEnabled)"
+                           @onchange="() => { EditModeEnabled = true; }">
+                    <label class="form-check-label" for="editmode_radio">Edit mode</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="viewmode_radio"
+                           disabled="@(!TableData?.IsEditable ?? true)"
+                           checked="@(!EditModeEnabled)"
+                           @onchange="() => { EditModeEnabled = false; }">
+                    <label class="form-check-label" for="viewmode_radio">View mode</label>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row my-4">
+<div class="row my-3">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
@@ -346,31 +335,19 @@
                         </tbody>
                     </table>
                 }
-                else if (SelectedTable is not null)
+                else if (Table is not null)
                 {
                     <p class="px-3">Loading data...</p>
-                }
-                else if (Tables is null)
-                {
-                    <p class="px-3">Loading tables...</p>
-                }
-                else if (Tables.Any())
-                {
-                    <p class="px-3">Select a table to edit data</p>
-                }
-                else
-                {
-                    <p class="px-3">No tables</p>
                 }
             </div>
         </div>
     </div>
 </div>
 
-<HxOffcanvas @ref="TableInfoOffcanvas" Title="@SelectedTable?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+<HxOffcanvas @ref="TableInfoOffcanvas" Title="@Table.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
     <BodyTemplate>
         <p>
-            @SelectedTable?.DataTableDescription
+            @Table?.DataTableDescription
         </p>
     </BodyTemplate>
 </HxOffcanvas>

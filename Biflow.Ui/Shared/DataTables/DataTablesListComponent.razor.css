@@ -1,0 +1,12 @@
+﻿.list-group-item-table:hover,
+.list-group-item-table:focus {
+    background-color: #ececec;
+}
+
+.list-group-item-table a {
+    text-decoration: none;
+}
+
+.list-group-item-table:hover a {
+    text-decoration: underline;
+}

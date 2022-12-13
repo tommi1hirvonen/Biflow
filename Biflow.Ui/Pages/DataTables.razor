@@ -5,34 +5,15 @@
 
 <PageTitle>Data Tables | Biflow</PageTitle>
 
-<h4>Data Tables</h4>
 
-<AuthorizeView Roles="Admin, Editor">
-    <ul class="nav nav-pills mt-3 mb-4" role="tablist">
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="datatables/edit" Match="NavLinkMatch.Prefix">
-                @MarkupHelper.FromFile("icons/feather/table.svg")
-                Edit data
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="datatables/manage">
-                @MarkupHelper.FromFile("icons/feather/settings.svg")
-                Manage tables
-            </NavLink>
-        </li>
-    </ul>
-</AuthorizeView>
 
-@if (Page == "edit")
+@if (Page is null)
 {
-    <DataTableEditorComponent Tables="Tables" TableId="TableId" />
+    <DataTablesListComponent Tables="Tables" Connections="Connections" />
 }
-else if (Page == "manage")
+else if (Page == "edit")
 {
-    <AuthorizeView Roles="Admin, Editor">
-        <DataTablesManageComponent Tables="Tables" Connections="Connections" />
-    </AuthorizeView>
+    <DataTableEditorComponent Table="Table" />
 }
 else if (Page == "import")
 {
@@ -47,6 +28,8 @@ else
     [Parameter] public string? Page { get; set; }
 
     [Parameter] public Guid? TableId { get; set; }
+
+    private MasterDataTable? Table { get; set; }
 
     private List<MasterDataTable>? Tables { get; set; }
 
@@ -64,5 +47,10 @@ else
         Connections = await context.SqlConnections
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        Table = Tables?.FirstOrDefault(t => t.DataTableId == TableId);
     }
 }

@@ -20,11 +20,7 @@ public partial class DataTableEditorComponent : ComponentBase
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
-    [Parameter] public List<MasterDataTable>? Tables { get; set; }
-
-    [Parameter] public Guid? TableId { get; set; }
-
-    private MasterDataTable? SelectedTable { get; set; }
+    [Parameter] public MasterDataTable? Table { get; set; }
 
     private TableData? TableData { get; set; }
 
@@ -56,13 +52,16 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private bool DiscardChanges { get; set; } = false; // used to prevent double confirmation when switching tables
 
-    protected override async Task OnParametersSetAsync()
+    private bool initialLoad;
+
+    protected override Task OnParametersSetAsync()
     {
-        if (TableId is not null && TableId != SelectedTable?.DataTableId)
+        if (Table is not null && !initialLoad)
         {
-            var table = Tables?.FirstOrDefault(t => t.DataTableId == TableId);
-            await ReloadDataAsync(table);
+            initialLoad = true;
+            return ReloadDataAsync();
         }
+        return Task.CompletedTask;
     }
 
     private List<Row>? GetOrderedRowRecords()
@@ -101,7 +100,7 @@ public partial class DataTableEditorComponent : ComponentBase
         }
     }
 
-    private async Task ReloadDataAsync(MasterDataTable? table = null)
+    private async Task ReloadDataAsync()
     {
         if (TableData?.HasChanges == true && !DiscardChanges)
         {
@@ -115,15 +114,7 @@ public partial class DataTableEditorComponent : ComponentBase
         TableData = null;
         StateHasChanged();
 
-        if (table is not null)
-        {
-            OrderBy.Clear();
-            FilterSet = null;
-            ColumnSelections = null;
-            SelectedTable = table;
-        }
-
-        if (SelectedTable is null)
+        if (Table is null)
         {
             Messenger.AddError("Error loading data", $"Selected table was null.");
             return;
@@ -131,7 +122,7 @@ public partial class DataTableEditorComponent : ComponentBase
 
         try
         {
-            TableData = await SelectedTable.LoadDataAsync(TopRows, FilterSet);
+            TableData = await Table.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= TableData.EmptyFilterSet;
             ColumnSelections ??= TableData.Columns.ToDictionary(x => x.Name, x => true);
         }
@@ -170,7 +161,7 @@ public partial class DataTableEditorComponent : ComponentBase
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             Messenger.AddInformation("Changes saved", message.ToString());
-            TableData = await SelectedTable.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? TableData;
+            TableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? TableData;
         }
         catch (Exception ex)
         {
@@ -183,14 +174,14 @@ public partial class DataTableEditorComponent : ComponentBase
         Exporting = true;
         try
         {
-            ArgumentNullException.ThrowIfNull(SelectedTable);
+            ArgumentNullException.ThrowIfNull(Table);
             var filterSet = filtered ? FilterSet : null;
-            var dataset = await SelectedTable.LoadDataAsync(top: int.MaxValue, filters: filterSet);
+            var dataset = await Table.LoadDataAsync(top: int.MaxValue, filters: filterSet);
             using var stream = dataset.GetExcelExportStream();
 
             var regexSearch = new string(Path.GetInvalidFileNameChars());
             var regex = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
-            var tableName = SelectedTable is not null ? regex.Replace(SelectedTable.DataTableName, "") : "export";
+            var tableName = Table is not null ? regex.Replace(Table.DataTableName, "") : "export";
             var fileName = $"{tableName}.xlsx";
             using var streamRef = new DotNetStreamReference(stream: stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);

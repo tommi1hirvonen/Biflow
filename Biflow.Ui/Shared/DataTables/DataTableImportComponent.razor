@@ -3,7 +3,21 @@
 @inject IHxMessengerService Messenger
 @inject MarkupHelperService MarkupHelper
 
-<h4>Import data – @Table?.DataTableName</h4>
+<div class="row">
+    <div class="col">
+        <div>
+            <a href="datatables">
+                All data tables
+            </a>
+            <span>&nbsp;/</span>
+            <a href="datatables/edit/@Table?.DataTableId">
+                @Table?.DataTableName
+            </a>
+            <span>&nbsp;/</span>
+            <strong>Import data</strong>
+        </div>
+    </div>
+</div>
 
 <div class="row mt-3">
     <div class="col" style="max-width: 40rem;">
