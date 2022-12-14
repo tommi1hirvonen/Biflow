@@ -178,7 +178,7 @@ internal class PackageStepExecutor : StepExecutorBase
         commandBuilder.Append("""
             EXEC [SSISDB].[catalog].[start_execution] @execution_id
 
-            SELECT @execution_id"
+            SELECT @execution_id
             """);
 
         string commandString = commandBuilder.ToString();
