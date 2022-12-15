@@ -38,8 +38,7 @@
         }
         else
         {
-            @foreach (var item in Executions)
-            {
+            <Virtualize TItem="Execution" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
                 <tr style="cursor: pointer;" @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)">
                     <td>
                         @item.JobName
@@ -66,7 +65,7 @@
                         <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
                     </td>
                 </tr>
-            }
+            </Virtualize>
         }
     </tbody>
 </table>

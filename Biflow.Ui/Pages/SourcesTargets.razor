@@ -72,14 +72,11 @@
                             }
                             else
                             {
-                                foreach (var obj in FilteredObjects
-                                    .OrderBy(o => o.ServerName)
-                                    .ThenBy(o => o.DatabaseName)
-                                    .ThenBy(o => o.SchemaName)
-                                    .ThenBy(o => o.ObjectName))
-                                {
-                                    var sources = obj.Sources.Count;
-                                    var targets = obj.Targets.Count;
+                                <Virtualize TItem="SourceTargetObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
+                                    @{
+                                        var sources = obj.Sources.Count;
+                                        var targets = obj.Targets.Count;
+                                    }
                                     <tr>
                                         @if (obj.ObjectId == EditObject?.ObjectId)
                                         {
@@ -133,7 +130,9 @@
                                                 </div>
                                             </td>
                                             <td class="align-middle">
-                                                @{ var sourcesTitle = $"{obj.ObjectName} source steps"; }
+                                                @{
+                                                    var sourcesTitle = $"{obj.ObjectName} source steps";
+                                                }
                                                 <a class="text-dark" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
@@ -147,7 +146,9 @@
                                                 </a>
                                             </td>
                                             <td class="align-middle">
-                                                @{ var targetsTitle = $"{obj.ObjectName} target steps"; }
+                                                @{
+                                                    var targetsTitle = $"{obj.ObjectName} target steps";
+                                                }
                                                 <a class="text-dark" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
@@ -162,7 +163,7 @@
                                             </td>
                                         }
                                     </tr>
-                                }
+                                </Virtualize>
                             }
                         </tbody>
                     </table>
@@ -268,6 +269,10 @@
         .Where(o => !DatabaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(DatabaseFilter))
         .Where(o => !SchemaFilter.Any() || o.SchemaName.ContainsIgnoreCase(SchemaFilter))
         .Where(o => !ObjectFilter.Any() || o.ObjectName.ContainsIgnoreCase(ObjectFilter))
+        .OrderBy(o => o.ServerName)
+        .ThenBy(o => o.DatabaseName)
+        .ThenBy(o => o.SchemaName)
+        .ThenBy(o => o.ObjectName)
         ?? Enumerable.Empty<SourceTargetObject>();
 
     private IEnumerable<SourceTargetObject> UnusedObjects =>
