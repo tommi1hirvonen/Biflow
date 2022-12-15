@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("DataTable")]
 public class MasterDataTable
 {
     [Key]

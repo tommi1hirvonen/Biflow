@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("Connection")]
 public abstract class ConnectionInfoBase : IComparable
 {
     public ConnectionInfoBase(ConnectionType connectionType, string connectionName, string connectionString)

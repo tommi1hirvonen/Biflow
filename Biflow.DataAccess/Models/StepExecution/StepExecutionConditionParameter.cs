@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("ExecutionStepConditionParameter")]
+[PrimaryKey("ExecutionId", "ParameterId")]
 public class StepExecutionConditionParameter
 {
     public StepExecutionConditionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)

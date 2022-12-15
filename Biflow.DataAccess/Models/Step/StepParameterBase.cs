@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("StepParameter")]
 public abstract class StepParameterBase : ParameterBase
 {
     public StepParameterBase(ParameterType parameterType)

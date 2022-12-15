@@ -1,5 +1,10 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace Biflow.DataAccess.Models;
+
+[Table("ExecutionSourceTargetObject")]
+[PrimaryKey("ExecutionId", "ObjectId")]
 public class ExecutionSourceTargetObject
 {
     public Guid ExecutionId { get; set; }

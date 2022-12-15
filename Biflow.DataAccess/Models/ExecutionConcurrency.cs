@@ -1,7 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("ExecutionConcurrency")]
+[PrimaryKey("ExecutionId", "StepType")]
 public class ExecutionConcurrency
 {
     public Guid ExecutionId { get; set; }

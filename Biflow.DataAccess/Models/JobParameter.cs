@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("JobParameter")]
 public class JobParameter : ParameterBase
 {
     [Display(Name = "Job")]

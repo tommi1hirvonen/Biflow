@@ -1,5 +1,10 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
+namespace Biflow.DataAccess.Models;
+
+[Table("AccessToken")]
+[PrimaryKey("AppRegistrationId", "ResourceUrl")]
 public class AccessToken
 {
     public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)

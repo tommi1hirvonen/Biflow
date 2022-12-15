@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("SourceTargetObject")]
 public class SourceTargetObject
 {
     [Key]

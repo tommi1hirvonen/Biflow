@@ -1,10 +1,12 @@
 ﻿using Azure.Core;
 using Azure.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("FunctionApp")]
 public class FunctionApp
 {
     [Required]

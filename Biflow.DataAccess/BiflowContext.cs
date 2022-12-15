@@ -54,26 +54,9 @@ public class BiflowContext : DbContext
     {
         modelBuilder.HasDefaultSchema("biflow");
 
-        var executionStatusConverter = new EnumToStringConverter<ExecutionStatus>();
-        var subscriptionTypeConverter = new EnumToStringConverter<SubscriptionType>();
-        var stepTypeConverter = new EnumToStringConverter<StepType>();
-        var parameterValueTypeConverter = new EnumToStringConverter<ParameterValueType>();
-        var stepExecutionStatusConverter = new EnumToStringConverter<StepExecutionStatus>();
-        var dependencyTypeConverter = new EnumToStringConverter<DependencyType>();
-        var tagColorConverter = new EnumToStringConverter<TagColor>();
-        var parameterLevelConverter = new EnumToStringConverter<ParameterLevel>();
-        var parameterTypeConverter = new EnumToStringConverter<ParameterType>();
-        var connectionTypeConverter = new EnumToStringConverter<ConnectionType>();
-        var pipelineClientTypeConverter = new EnumToStringConverter<PipelineClientType>();
-        var lookupDisplayTypeConverter = new EnumToStringConverter<LookupDisplayType>();
-
         modelBuilder.Entity<Execution>(e =>
         {
-            e.ToTable("Execution")
-            .Property(e => e.ExecutionStatus)
-            .HasConversion(executionStatusConverter);
-            e.Property(p => p.NotifyCaller).HasConversion(subscriptionTypeConverter);
-
+            e.ToTable(t => t.HasTrigger("Trigger_Execution"));
             if (_httpContextAccessor is not null)
             {
                 e.HasQueryFilter(exec =>
@@ -87,32 +70,9 @@ public class BiflowContext : DbContext
             }
         });
 
-        modelBuilder.Entity<ExecutionConcurrency>(e =>
-        {
-            e.ToTable("ExecutionConcurrency")
-            .HasOne(c => c.Execution)
-            .WithMany(ex => ex.ExecutionConcurrencies);
-            e.HasKey("ExecutionId", "StepType");
-            e.Property(p => p.StepType).HasConversion(stepTypeConverter);
-        });
-
-        modelBuilder.Entity<ExecutionParameter>(e =>
-        {
-            e.ToTable("ExecutionParameter")
-            .HasKey(p => new { p.ExecutionId, p.ParameterId });
-            e.HasOne(p => p.Execution)
-            .WithMany(e => e.ExecutionParameters);
-            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
-        });
-
         modelBuilder.Entity<StepExecution>(e =>
         {
-            e.ToTable("ExecutionStep")
-            .HasKey(step => new { step.ExecutionId, step.StepId });
-            e.Property(e => e.StepType)
-            .HasConversion(stepTypeConverter);
-            e.HasOne(step => step.Execution)
-            .WithMany(e => e.StepExecutions);
+            e.ToTable(t => t.HasTrigger("Trigger_ExecutionStep"));
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecution>(StepType.Dataset)
             .HasValue<ExeStepExecution>(StepType.Exe)
@@ -128,14 +88,6 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<StepExecutionAttempt>(e =>
         {
-            e.ToTable("ExecutionStepAttempt")
-            .HasKey(sea => new { sea.ExecutionId, sea.StepId, sea.RetryAttemptIndex });
-            e.Property(sea => sea.StepType)
-            .HasConversion(stepTypeConverter);
-            e.Property(sea => sea.ExecutionStatus)
-            .HasConversion(stepExecutionStatusConverter);
-            e.HasOne(sea => sea.StepExecution)
-            .WithMany(step => step.StepExecutionAttempts);
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
             .HasValue<ExeStepExecutionAttempt>(StepType.Exe)
@@ -151,41 +103,23 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<Dependency>(e =>
         {
-            e.ToTable("Dependency")
-            .HasOne(dependency => dependency.Step)
+            e.HasOne(dependency => dependency.Step)
             .WithMany(step => step.Dependencies);
-            e.HasKey(d => new { d.StepId, d.DependantOnStepId });
-            e.Property(d => d.DependencyType).HasConversion(dependencyTypeConverter);
         });
 
         modelBuilder.Entity<ExecutionDependency>(e =>
         {
-            e.ToTable("ExecutionDependency")
-            .HasOne(d => d.StepExecution)
+            e.HasOne(d => d.StepExecution)
             .WithMany(e => e.ExecutionDependencies)
             .HasForeignKey(d => new { d.ExecutionId, d.StepId });
             e.HasOne(d => d.DependantOnStepExecution)
             .WithMany(e => e.DependantExecutions)
             .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId });
-            e.HasKey(d => new { d.ExecutionId, d.StepId, d.DependantOnStepId });
-            e.Property(d => d.DependencyType).HasConversion(dependencyTypeConverter);
         });
 
         modelBuilder.Entity<Job>(e =>
         {
-            e.ToTable("Job")
-            .HasMany(job => job.Steps)
-            .WithOne(step => step.Job!);
-            e.HasMany(job => job.Schedules)
-            .WithOne(schedule => schedule.Job);
-            e.HasMany(job => job.Subscriptions)
-            .WithOne(subscription => subscription.Job);
-            e.HasMany(j => j.Executions)
-            .WithOne(e => e.Job!)
-            .IsRequired(false);
-            e.HasMany(job => job.JobParameters)
-            .WithOne(param => param.Job);
-
+            e.ToTable(t => t.HasTrigger("Trigger_Job"));
             e.HasMany(t => t.Users)
             .WithMany(s => s.Jobs)
             .UsingEntity<Dictionary<string, object>>("JobAuthorization",
@@ -206,29 +140,13 @@ public class BiflowContext : DbContext
             }
         });
 
-        modelBuilder.Entity<JobConcurrency>(e =>
-        {
-            e.ToTable("JobConcurrency")
-            .HasOne(c => c.Job)
-            .WithMany(j => j.JobConcurrencies);
-            e.HasKey("JobId", "StepType");
-            e.Property(p => p.StepType).HasConversion(stepTypeConverter);
-        });
-
-        modelBuilder.Entity<JobParameter>()
-            .ToTable("JobParameter")
-            .Property(p => p.ParameterValueType)
-            .HasConversion(parameterValueTypeConverter);
-
         modelBuilder.Entity<Step>(e =>
         {
-            e.ToTable("Step")
-            .HasOne(step => step.Job!)
+            e.ToTable(t => t.HasTrigger("Trigger_Step"));
+            e.HasOne(step => step.Job!)
             .WithMany(job => job.Steps)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
-            e.Property(s => s.StepType)
-            .HasConversion(stepTypeConverter);
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
             .HasValue<ExeStep>(StepType.Exe)
@@ -241,8 +159,7 @@ public class BiflowContext : DbContext
             .HasValue<TabularStep>(StepType.Tabular)
             .HasValue<EmailStep>(StepType.Email);
             e.HasMany(s => s.StepExecutions)
-            .WithOne(e => e.Step!)
-            .IsRequired(false);
+            .WithOne(e => e.Step!);
         });
 
         modelBuilder.Entity<JobStep>()
@@ -252,8 +169,7 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<Tag>(e =>
         {
-            e.ToTable("Tag")
-            .HasMany(t => t.Steps)
+            e.HasMany(t => t.Steps)
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>("StepTag",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
@@ -264,13 +180,10 @@ public class BiflowContext : DbContext
             .UsingEntity<Dictionary<string, object>>("ScheduleTag",
             x => x.HasOne<Schedule>().WithMany().HasForeignKey("ScheduleId"),
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
-
-            e.Property(p => p.Color).HasConversion(tagColorConverter);
         });
 
         modelBuilder.Entity<SourceTargetObject>(e =>
         {
-            e.ToTable("SourceTargetObject");
             e.HasMany(o => o.Sources)
             .WithMany(s => s.Sources)
             .UsingEntity<Dictionary<string, object>>("StepSource",
@@ -286,8 +199,6 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<ExecutionSourceTargetObject>(e =>
         {
-            e.ToTable("ExecutionSourceTargetObject")
-            .HasKey(o => new { o.ExecutionId, o.ObjectId });
             e.HasMany(o => o.Sources)
             .WithMany(s => s.Sources)
             .UsingEntity<Dictionary<string, object>>("ExecutionStepSource",
@@ -302,48 +213,27 @@ public class BiflowContext : DbContext
         });
 
         modelBuilder.Entity<Schedule>()
-            .ToTable("Schedule")
             .HasOne(schedule => schedule.Job)
             .WithMany(job => job.Schedules)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<PackageStepParameter>(e =>
-        {
-            e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
-        });
+        modelBuilder.Entity<ExecutionParameter>()
+            .ToTable(t => t.HasTrigger("Trigger_ExecutionParameter"));
 
         modelBuilder.Entity<StepParameterBase>(e =>
         {
-            e.ToTable("StepParameter")
-            .HasOne(parameter => parameter.Step)
+            e.HasOne(parameter => parameter.Step)
             .WithMany(step => step.StepParameters)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepParameter>(ParameterType.Base)
             .HasValue<PackageStepParameter>(ParameterType.Package);
-            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
-            e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
-        });
-
-        modelBuilder.Entity<ExecutionConditionParameter>(e =>
-        {
-            e.ToTable("StepConditionParameter")
-            .HasOne(p => p.Step)
-            .WithMany(s => s.ExecutionConditionParameters);
-            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
-        });
-
-        modelBuilder.Entity<PackageStepExecutionParameter>(e =>
-        {
-            e.Property(p => p.ParameterLevel).HasConversion(parameterLevelConverter);
         });
 
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
         {
-            e.ToTable("ExecutionStepParameter")
-            .HasKey(param => new { param.ExecutionId, param.ParameterId });
             e.HasOne(param => param.StepExecution)
             .WithMany(e => e.StepExecutionParameters)
             .HasForeignKey("ExecutionId", "StepId")
@@ -356,18 +246,13 @@ public class BiflowContext : DbContext
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepExecutionParameter>(ParameterType.Base)
             .HasValue<PackageStepExecutionParameter>(ParameterType.Package);
-            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
-            e.Property(p => p.ParameterType).HasConversion(parameterTypeConverter);
         });
 
         modelBuilder.Entity<StepExecutionConditionParameter>(e =>
         {
-            e.ToTable("ExecutionStepConditionParameter")
-            .HasKey(p => new { p.ExecutionId, p.ParameterId });
             e.HasOne(p => p.StepExecution)
             .WithMany(e => e.ExecutionConditionParameters)
             .HasForeignKey("ExecutionId", "StepId");
-            e.Property(p => p.ParameterValueType).HasConversion(parameterValueTypeConverter);
             e.HasOne(p => p.ExecutionParameter)
             .WithMany(e => e.ExecutionConditionParameters)
             .HasForeignKey("ExecutionId", "ExecutionParameterId");
@@ -375,8 +260,7 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<Subscription>(e =>
         {
-            e.ToTable("Subscription")
-            .HasOne(subscription => subscription.Job)
+            e.HasOne(subscription => subscription.Job)
             .WithMany(job => job.Subscriptions)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
@@ -384,29 +268,14 @@ public class BiflowContext : DbContext
             .WithMany(user => user.Subscriptions)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
-            e.Property(s => s.SubscriptionType)
-            .HasConversion(subscriptionTypeConverter);
-            e.HasKey(s => new { s.JobId, s.Username });
         });
 
         modelBuilder.Entity<User>()
-            .ToTable("User")
             .HasMany(user => user.Subscriptions)
             .WithOne(subscription => subscription.User);
 
-        modelBuilder.Entity<AppRegistration>()
-            .ToTable("AppRegistration");
-
-        modelBuilder.Entity<AccessToken>()
-            .ToTable("AccessToken");
-        modelBuilder.Entity<AccessToken>()
-            .HasKey(at => new { at.AppRegistrationId, at.ResourceUrl });
-
         modelBuilder.Entity<PipelineClient>(e =>
         {
-            e.ToTable("PipelineClient");
-            e.Property(p => p.PipelineClientType)
-            .HasConversion(pipelineClientTypeConverter);
             e.HasDiscriminator<PipelineClientType>("PipelineClientType")
             .HasValue<DataFactory>(PipelineClientType.DataFactory)
             .HasValue<Synapse>(PipelineClientType.Synapse);
@@ -414,30 +283,20 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<ConnectionInfoBase>(e =>
         {
-            e.ToTable("Connection");
-            e.Property(p => p.ConnectionType)
-            .HasConversion(connectionTypeConverter);
             e.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
             .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
         });
 
-        modelBuilder.Entity<FunctionApp>()
-            .ToTable("FunctionApp");
-
         modelBuilder.Entity<MasterDataTableLookup>(e =>
         {
-            e.ToTable("DataTableLookup");
             e.HasOne(l => l.Table).WithMany(t => t.Lookups);
             e.HasOne(l => l.LookupTable).WithMany(t => t.DependentLookups).OnDelete(DeleteBehavior.Restrict);
             e.HasKey(p => new { p.TableId, p.ColumnName });
-            e.Property(p => p.LookupDisplayType).HasConversion(lookupDisplayTypeConverter);
         });
 
         modelBuilder.Entity<MasterDataTable>(e =>
-        {
-            e.ToTable("DataTable");
-            
+        {            
             e.HasMany(t => t.Lookups).WithOne(l => l.Table);
 
             e.HasOne(t => t.Category).WithMany(c => c.Tables).HasForeignKey(p => p.CategoryId);
@@ -463,6 +322,21 @@ public class BiflowContext : DbContext
         });
     }
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<ExecutionStatus>().HaveConversion<EnumToStringConverter<ExecutionStatus>>();
+        configurationBuilder.Properties<StepExecutionStatus>().HaveConversion<EnumToStringConverter<StepExecutionStatus>>();
+        configurationBuilder.Properties<SubscriptionType>().HaveConversion<EnumToStringConverter<SubscriptionType>>();
+        configurationBuilder.Properties<StepType>().HaveConversion<EnumToStringConverter<StepType>>();
+        configurationBuilder.Properties<ParameterValueType>().HaveConversion<EnumToStringConverter<ParameterValueType>>();
+        configurationBuilder.Properties<DependencyType>().HaveConversion<EnumToStringConverter<DependencyType>>();
+        configurationBuilder.Properties<TagColor>().HaveConversion<EnumToStringConverter<TagColor>>();
+        configurationBuilder.Properties<ParameterLevel>().HaveConversion<EnumToStringConverter<ParameterLevel>>();
+        configurationBuilder.Properties<ParameterType>().HaveConversion<EnumToStringConverter<ParameterType>>();
+        configurationBuilder.Properties<ConnectionType>().HaveConversion<EnumToStringConverter<ConnectionType>>();
+        configurationBuilder.Properties<PipelineClientType>().HaveConversion<EnumToStringConverter<PipelineClientType>>();
+        configurationBuilder.Properties<LookupDisplayType>().HaveConversion<EnumToStringConverter<LookupDisplayType>>();
+    }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {

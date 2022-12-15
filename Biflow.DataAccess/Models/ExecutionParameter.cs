@@ -1,7 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("ExecutionParameter")]
+[PrimaryKey("ExecutionId", "ParameterId")]
 public class ExecutionParameter
 {
     public ExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)

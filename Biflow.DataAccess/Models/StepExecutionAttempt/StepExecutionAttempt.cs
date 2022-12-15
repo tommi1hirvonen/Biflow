@@ -1,8 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("ExecutionStepAttempt")]
+[PrimaryKey("ExecutionId", "StepId", "RetryAttemptIndex")]
 public abstract record StepExecutionAttempt
 {
     public StepExecutionAttempt(StepExecutionStatus executionStatus, StepType stepType)

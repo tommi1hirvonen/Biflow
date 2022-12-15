@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("StepConditionParameter")]
 public class ExecutionConditionParameter : ParameterBase
 {
     [Display(Name = "Step id")]

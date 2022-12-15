@@ -1,11 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+[Table("Job")]
 public class Job
 {
     [Key]
-    [Required]
     public Guid JobId { get; set; }
 
     [Required]
