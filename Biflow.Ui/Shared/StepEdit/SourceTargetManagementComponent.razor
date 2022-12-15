@@ -280,51 +280,58 @@
 
     private async Task GetDatabaseObjectsAsync()
     {
-        var proc = SqlStatement?.ParseStoredProcedureFromSqlStatement();
-        var schema = proc?.Schema;
-        var name = proc?.ProcedureName;
-        if (name is null) return;
-
-        AllObjects ??= await LoadAllDatabaseObjects();
-
-        Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-        var dependencies = await LoadDatabaseObjectDependencies(connectionId, schema, name);
-
-        // Add new database objects for the step if they are not present.
-        foreach (var dependency in dependencies)
+        try
         {
-            // Check if the same object exists in the comparison list. Skip this object if it does.
-            // This way we do not accidentally add objects that might be a target as sources,
-            // thus creating a self reference.
-            var comparison = ComparisonObjects.FirstOrDefault(o => o.Equals(dependency));
-            if (comparison is not null)
-                continue;
+            var proc = SqlStatement?.ParseStoredProcedureFromSqlStatement();
+            var schema = proc?.Schema;
+            var name = proc?.ProcedureName;
+            if (name is null) return;
 
-            var dbObject = AllObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
-                new SourceTargetObject
-                {
-                    ServerName = dependency.ServerName,
-                    DatabaseName = dependency.DatabaseName,
-                    SchemaName = dependency.SchemaName,
-                    ObjectName = dependency.ObjectName
-                };
+            AllObjects ??= await LoadAllDatabaseObjects();
 
-            if (!SourceTargetObjects.Any(s => s.Equals(dbObject)))
+            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
+            var dependencies = await LoadDatabaseObjectDependencies(connectionId, schema, name);
+
+            // Add new database objects for the step if they are not present.
+            foreach (var dependency in dependencies)
             {
-                GetMappingResult(dbObject).IsNewAddition = true;
-                GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
-                SourceTargetObjects.Add(dbObject);    
+                // Check if the same object exists in the comparison list. Skip this object if it does.
+                // This way we do not accidentally add objects that might be a target as sources,
+                // thus creating a self reference.
+                var comparison = ComparisonObjects.FirstOrDefault(o => o.Equals(dependency));
+                if (comparison is not null)
+                    continue;
+
+                var dbObject = AllObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
+                    new SourceTargetObject
+                        {
+                            ServerName = dependency.ServerName,
+                            DatabaseName = dependency.DatabaseName,
+                            SchemaName = dependency.SchemaName,
+                            ObjectName = dependency.ObjectName
+                        };
+
+                if (!SourceTargetObjects.Any(s => s.Equals(dbObject)))
+                {
+                    GetMappingResult(dbObject).IsNewAddition = true;
+                    GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
+                    SourceTargetObjects.Add(dbObject);
+                }
+            }
+
+            foreach (var dbObject in SourceTargetObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
+
+            // Check if there are objects in the list that are not mentioned in the dependencies.
+            // Flag them as candidates for removal.
+            var candidatesForRemoval = SourceTargetObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
+            foreach (var candidate in candidatesForRemoval)
+            {
+                GetMappingResult(candidate).IsCandidateForRemoval = true;
             }
         }
-
-        foreach (var dbObject in SourceTargetObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
-
-        // Check if there are objects in the list that are not mentioned in the dependencies.
-        // Flag them as candidates for removal.
-        var candidatesForRemoval = SourceTargetObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
-        foreach (var candidate in candidatesForRemoval)
+        catch (Exception ex)
         {
-            GetMappingResult(candidate).IsCandidateForRemoval = true;
+            Messenger.AddError("Error getting object dependencies", ex.Message);
         }
     }
 
