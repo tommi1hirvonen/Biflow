@@ -187,6 +187,10 @@ a:hover {
     Checkbox, radio and other form customizations
 */
 
+.invalid {
+    outline: 1px solid var(--color-danger);
+}
+
 .form-switch input,
 .form-switch label {
     cursor: pointer;
