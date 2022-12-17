@@ -42,6 +42,7 @@ else
         using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
         Tables = await context.MasterDataTables
             .AsNoTrackingWithIdentityResolution()
+            .Include(t => t.Category)
             .Include(t => t.Connection)
             .Include(t => t.Lookups)
             .ThenInclude(t => t.LookupTable)

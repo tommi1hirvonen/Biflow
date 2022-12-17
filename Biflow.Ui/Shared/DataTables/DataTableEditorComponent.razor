@@ -5,7 +5,11 @@
             <a href="datatables">
                 All data tables
             </a>
-            <span>&nbsp;/</span>
+            <span>&nbsp;/&nbsp;</span>
+            @if (Table?.Category is not null)
+            {
+                <span>@Table.Category.CategoryName /&nbsp;</span>
+            }
             <strong>@Table?.DataTableName</strong>
         </div>
     </div>

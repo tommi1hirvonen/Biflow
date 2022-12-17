@@ -9,7 +9,11 @@
             <a href="datatables">
                 All data tables
             </a>
-            <span>&nbsp;/</span>
+            <span>&nbsp;/&nbsp;</span>
+            @if (Table?.Category is not null)
+            {
+                <span>@Table.Category.CategoryName /&nbsp;</span>
+            }
             <a href="datatables/edit/@Table?.DataTableId">
                 @Table?.DataTableName
             </a>
@@ -122,6 +126,7 @@
     {
         using var context = await DbContextFactory.CreateDbContextAsync();
         Table = await context.MasterDataTables
+            .Include(t => t.Category)
             .Include(t => t.Connection)
             .FirstAsync(t => t.DataTableId == TableId);
         Builder = await UploadBuilder.FromTableAsync(Table);
