@@ -5,28 +5,6 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract class ParameterizedStepEditModal<TStep> : StepEditModalBase<TStep> where TStep : ParameterizedStep
 {
-    protected override void ResetDeletedEntities(EntityEntry entity)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        base.ResetDeletedEntities(entity);
-        if (entity.Entity is StepParameter param)
-        {
-            if (!Step.StepParameters.Contains(param))
-                Step.StepParameters.Add(param);
-        }
-    }
-
-    protected override void ResetAddedEntities(EntityEntry entity)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        base.ResetAddedEntities(entity);
-        if (entity.Entity is StepParameter param)
-        {
-            if (Step.StepParameters.Contains(param))
-                Step.StepParameters.Remove(param);
-        }
-    }
-
     protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
         (var paramResultBase, var paramMessageBase) = base.StepValidityCheck(step);

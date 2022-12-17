@@ -344,7 +344,7 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="TableInfoOffcanvas" Title="@Table.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+<HxOffcanvas @ref="TableInfoOffcanvas" Title="@Table?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
     <BodyTemplate>
         <p>
             @Table?.DataTableDescription

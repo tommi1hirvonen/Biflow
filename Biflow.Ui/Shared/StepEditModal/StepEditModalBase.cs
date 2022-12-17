@@ -64,36 +64,6 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         return SourceTargetObjects;
     }
 
-    /// <summary>
-    /// Called if the edits made by the user are canceled.
-    /// If there were entities added to the Step's navigation properties, for example, they should be removed.
-    /// </summary>
-    /// <param name="entityEntry"></param>
-    protected virtual void ResetAddedEntities(EntityEntry entityEntry)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        if (entityEntry.Entity is ExecutionConditionParameter param)
-        {
-            if (Step.ExecutionConditionParameters.Contains(param))
-                Step.ExecutionConditionParameters.Remove(param);
-        }
-    }
-
-    /// <summary>
-    /// Called if the edits made by the user are canceled.
-    /// If there were entities removed from the Step's navigation properties, for example, they should be added back.
-    /// </summary>
-    /// <param name="entityEntry"></param>
-    protected virtual void ResetDeletedEntities(EntityEntry entityEntry)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        if (entityEntry.Entity is ExecutionConditionParameter param)
-        {
-            if (!Step.ExecutionConditionParameters.Contains(param))
-                Step.ExecutionConditionParameters.Add(param);
-        }
-    }
-
     protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
         ArgumentNullException.ThrowIfNull(Step);

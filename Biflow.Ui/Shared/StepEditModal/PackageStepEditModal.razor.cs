@@ -44,28 +44,6 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    protected override void ResetDeletedEntities(EntityEntry entity)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        base.ResetDeletedEntities(entity);
-        if (entity.Entity is PackageStepParameter packageParam)
-        {
-            if (!Step.StepParameters.Contains(packageParam))
-                Step.StepParameters.Add(packageParam);
-        }
-    }
-
-    protected override void ResetAddedEntities(EntityEntry entity)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        base.ResetAddedEntities(entity);
-        if (entity.Entity is PackageStepParameter packageParam)
-        {
-            if (Step.StepParameters.Contains(packageParam))
-                Step.StepParameters.Remove(packageParam);
-        }
-    }
-
     protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
         (var paramResultBase, var paramMessageBase) = base.StepValidityCheck(step);
