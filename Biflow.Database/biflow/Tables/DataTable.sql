@@ -7,6 +7,6 @@
 	[TargetTableName] VARCHAR(128) NOT NULL,
 	[ConnectionId] UNIQUEIDENTIFIER CONSTRAINT [FK_DataTable_Connection] FOREIGN KEY REFERENCES [biflow].[Connection] ([ConnectionId]) NOT NULL,
 	[DataTableCategoryId] UNIQUEIDENTIFIER CONSTRAINT [FK_DataTable_Category] FOREIGN KEY REFERENCES [biflow].[DataTableCategory] ([DataTableCategoryId]) ON DELETE SET NULL,
-	CONSTRAINT [PK_DataTable] PRIMARY KEY CLUSTERED ([DataTableId])
-
+	[Timestamp] ROWVERSION NOT NULL,
+    CONSTRAINT [PK_DataTable] PRIMARY KEY CLUSTERED ([DataTableId])
 )

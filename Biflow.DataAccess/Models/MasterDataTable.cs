@@ -42,4 +42,7 @@ public class MasterDataTable
     public ICollection<MasterDataTableLookup> Lookups { get; set; } = null!;
 
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
+
+    [Timestamp]
+    public byte[]? Timestamp { get; set; }
 }
