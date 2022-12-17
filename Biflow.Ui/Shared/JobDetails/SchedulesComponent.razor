@@ -112,11 +112,15 @@
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
-                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete" CssClass="btn-row" @onclick="() => DeleteSchedule(item)">
-                                        @MarkupHelper.FromFile("icons/feather/delete.svg")
-                                    </HxButton>
-                                </HxButtonGroup>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row">
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteSchedule(item)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
                             </AuthorizeView>
                         </td>
                     </tr>
