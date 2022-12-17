@@ -4,11 +4,13 @@
 @inject MarkupHelperService MarkupHelper
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(Connection?.ConnectionId == Guid.Empty ? "New Analysis Services connection" : "Edit " + Connection?.ConnectionName)">
     <BodyTemplate>
         @if (Connection is not null)
         {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm Model="Connection" id="as_connection_edit_form" OnValidSubmit="SubmitConnection">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
@@ -125,4 +127,12 @@
         TestingConnection = false;
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 }

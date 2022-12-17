@@ -1,72 +1,74 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(AppRegistration?.AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + AppRegistration?.AppRegistrationName)">
     <BodyTemplate>
         @if (AppRegistration is not null)
         {
-        <EditForm Model="AppRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
-            <div class="row">
-                <div class="col mx-3">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+            <EditForm Model="AppRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
 
-                    <div class="row">
-                        <div class="col">
-                            <label class="form-label">App registration name</label>
-                            <InputText class="form-control" @bind-Value="AppRegistration.AppRegistrationName"></InputText>
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">App registration name</label>
+                                <InputText class="form-control" @bind-Value="AppRegistration.AppRegistrationName"></InputText>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label class="form-label">Tenant id</label>
-                            <InputText class="form-control" @bind-Value="AppRegistration.TenantId"></InputText>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Tenant id</label>
+                                <InputText class="form-control" @bind-Value="AppRegistration.TenantId"></InputText>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row mt-3">
-                        <div class="col">
-                            <label class="form-label">Client id</label>
-                            <InputText class="form-control" @bind-Value="AppRegistration.ClientId"></InputText>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Client id</label>
+                                <InputText class="form-control" @bind-Value="AppRegistration.ClientId"></InputText>
+                            </div>
+                            <div class="col-lg">
+                                <label class="form-label">Client secret</label>
+                                <InputText class="form-control" @bind-Value="AppRegistration.ClientSecret"></InputText>
+                            </div>
                         </div>
-                        <div class="col-lg">
-                            <label class="form-label">Client secret</label>
-                            <InputText class="form-control" @bind-Value="AppRegistration.ClientSecret"></InputText>
-                        </div>
-                    </div>
 
-                    <div class="row mt-3">
-                        <div class="col">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
-                                Test connection
-                            </HxButton>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="row mt-3">
-                        <div class="col">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestPowerBIAccess" Enabled="!TestingConnection">
-                                Test Power BI access
-                            </HxButton>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestPowerBIAccess" Enabled="!TestingConnection">
+                                    Test Power BI access
+                                </HxButton>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col">
-                            @if (ConnectionTestSuccess == true)
-                            {
-                                <span class="badge bg-success">Success</span>
-                            }
-                            else if (ConnectionTestSuccess == false)
-                            {
-                                <span class="badge bg-danger">Failed</span>
-                            }
+                        <div class="row mt-2">
+                            <div class="col">
+                                @if (ConnectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (ConnectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </EditForm>
+            </EditForm>
         }
     </BodyTemplate>
     <FooterTemplate>
@@ -158,6 +160,15 @@
                 PipelineClients = new List<PipelineClient>(),
                 FunctionApps = new List<FunctionApp>()
             };
+        }
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
         }
     }
 

@@ -4,12 +4,14 @@
 @inject MarkupHelperService MarkupHelper
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(FunctionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + FunctionApp?.FunctionAppName)">
     
     <BodyTemplate>
         @if (FunctionApp is not null)
         {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm Model="FunctionApp" id="function_app_edit_form" OnValidSubmit="SubmitFunctionApp">
                 <div class="row">
                     <div class="col mx-3">
@@ -189,4 +191,12 @@
         }
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 }

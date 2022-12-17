@@ -3,14 +3,19 @@ using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class SynchronizeDependenciesModal : ComponentBase
 {
-    [Inject] public IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
-    [Inject] public MarkupHelperService MarkupHelper { get; set; } = null!;
+    [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
+    
+    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
+
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public Job? Job { get; set; }
 
@@ -134,6 +139,15 @@ public partial class SynchronizeDependenciesModal : ComponentBase
         DependenciesToAdd = null;
         DependenciesToRemove = null;
         OnModalClosed?.Invoke();
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
     }
 
     public Task ShowAsync() => Modal.LetAsync(x => x.ShowAsync());

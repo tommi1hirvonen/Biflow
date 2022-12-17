@@ -2,6 +2,7 @@
 
 @inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelper
+@inject IJSRuntime JS
 
 @*Set pt-0 for modal body (BodyCssClass). The DependenciesEditComponent has a sticky-top element that should be placed at the top without any padding*@
 <HxModal @ref="Modal.Modal"
@@ -17,7 +18,7 @@
             <div class="row mt-3">
                 <div class="col mx-3">
                     <EditForm id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="Modal.SubmitStep">
-
+                        <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                         <div class="row">
                             <div class="col">
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -260,4 +261,13 @@
         PackageStep package => package.ConnectionId,
         _ => null
     };
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 }

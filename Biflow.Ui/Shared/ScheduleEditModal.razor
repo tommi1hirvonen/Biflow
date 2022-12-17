@@ -4,9 +4,11 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject ISchedulerService SchedulerService
 @inject MarkupHelperService MarkupHelper
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
+        <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
         <EditForm id="schedule_form" Model="Schedule" OnValidSubmit="SubmitSchedule" Context="_context">
             <div class="row">
                 <div class="col">
@@ -229,4 +231,12 @@
         await Modal.LetAsync(x => x.ShowAsync());
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 }

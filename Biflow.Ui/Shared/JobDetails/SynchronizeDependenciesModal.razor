@@ -41,6 +41,7 @@
                         }
                         else
                         {
+                            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                             @foreach (var dep in DependenciesToAdd)
                             {
                                 var addCheckId = $"strict_{dep.StepId}_{dep.DependantOnStepId}";

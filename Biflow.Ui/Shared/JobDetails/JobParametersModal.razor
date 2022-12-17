@@ -3,6 +3,7 @@
 @inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters">
     <BodyTemplate>
@@ -15,6 +16,7 @@
         </HxPopover>
         @if (Job is not null)
         {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
                 <table id="parameters_table" class="table table-sm mt-3">
                     <thead>
@@ -206,6 +208,14 @@
         Context.Attach(Job);
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 
     public void Dispose() => Context?.Dispose();
 }

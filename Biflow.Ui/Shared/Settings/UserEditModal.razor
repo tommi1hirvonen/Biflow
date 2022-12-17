@@ -5,6 +5,7 @@
 @inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject IHxMessengerService Messenger
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Title="@(IsNewUser ? "New user" : $"Edit {PreviousUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     <BodyTemplate>
@@ -19,6 +20,7 @@
                 _ => null
             };
 
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm Model="User" id="user_edit_form" OnValidSubmit="SubmitUser">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
@@ -366,6 +368,14 @@
         DataTables = await Context.MasterDataTables.OrderBy(t => t.DataTableName).ToListAsync();
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 
     public void Dispose() => Context?.Dispose();
 

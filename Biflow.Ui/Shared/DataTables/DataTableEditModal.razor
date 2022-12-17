@@ -3,9 +3,9 @@
 @implements IDisposable
 
 @inject MarkupHelperService MarkupHelper
-@inject IHxMessageBoxService MessageBox
 @inject IHxMessengerService Messenger
 @inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IJSRuntime JS
 
 @{
     var title = EditTable switch
@@ -377,7 +377,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

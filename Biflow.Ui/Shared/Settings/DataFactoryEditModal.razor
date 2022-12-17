@@ -3,11 +3,13 @@
 @inject IDbContextFactory<BiflowContext> DbFactory
 @inject IConfiguration configuration
 @inject IHxMessengerService Messenger
+@inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(DataFactory?.PipelineClientId == Guid.Empty ? "New Data Factory" : "Edit " + DataFactory?.PipelineClientName)">
     <BodyTemplate>
         @if (DataFactory is not null)
         {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm Model="DataFactory" id="df_edit_form" OnValidSubmit="SubmitDataFactory">
                 <div class="row">
                     <div class="col mx-3">
@@ -152,4 +154,12 @@
         TestingConnection = false;
     }
 
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
 }
