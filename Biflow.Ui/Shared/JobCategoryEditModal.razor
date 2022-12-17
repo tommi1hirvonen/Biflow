@@ -1,0 +1,71 @@
+﻿@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+@{
+    var title = Category.CategoryId == Guid.Empty ? "New category" : $"Edit {Category.CategoryName}";
+}
+
+<HxModal @ref="Modal" Title="@title" Size="ModalSize.Regular">
+    <BodyTemplate>
+        <EditForm id="category_edit_form" Model="Category" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div>
+                <label class="form-label">Category name</label>
+                <InputText class="form-control" @bind-Value="Category.CategoryName"></InputText>
+            </div>
+        </EditForm>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit FormId="category_edit_form" Color="ThemeColor.Success">
+            Save
+        </HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())" Spinner="false">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public EventCallback<JobCategory> OnCategorySubmitted { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private JobCategory Category { get; set; } = new();
+
+    public async Task ShowAsync(JobCategory? category = null)
+    {
+        if (category is null)
+        {
+            Category = new();
+            await Modal.LetAsync(x => x.ShowAsync());
+            return;
+        }
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        Category = await context.JobCategories.FirstAsync(c => c.CategoryId == category.CategoryId);
+        await Modal.LetAsync(x => x.ShowAsync());
+    }
+
+    public async Task SubmitAsync()
+    {
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            if (Category.CategoryId == Guid.Empty)
+            {
+                context.JobCategories.Add(Category);
+            }
+            else
+            {
+                context.Attach(Category).State = EntityState.Modified;
+            }
+            await context.SaveChangesAsync();
+            await OnCategorySubmitted.InvokeAsync(Category);
+            await Modal.LetAsync(x => x.HideAsync());
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving category", ex.Message);
+        }
+    }
+}

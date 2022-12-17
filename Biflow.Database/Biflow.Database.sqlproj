@@ -115,6 +115,7 @@
     <Build Include="biflow\Tables\ExecutionStepConditionParameter.sql" />
     <Build Include="biflow\Tables\DataTableLookup.sql" />
     <Build Include="biflow\Tables\DataTableCategory.sql" />
+    <Build Include="biflow\Tables\JobCategory.sql" />
   </ItemGroup>
   <Import Condition="'$(NetCoreBuild)' == 'true'" Project="$(NETCoreTargetsPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>

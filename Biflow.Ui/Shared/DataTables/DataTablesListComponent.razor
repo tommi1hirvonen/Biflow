@@ -31,7 +31,7 @@
     </div>
 </AuthorizeView>
 
-<ul class="list-group mt-3">
+<ul class="list-group shadow-sm mt-3">
     @if (Tables is null || Categories is null)
     {
         <li class="list-group-item text-center">
@@ -180,6 +180,10 @@
             context.MasterDataTableCategories.Remove(category);
             await context.SaveChangesAsync();
             Categories?.Remove(category);
+            foreach (var table in Tables?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<MasterDataTable>())
+            {
+                table.CategoryId = null;
+            }
         }
         catch (Exception ex)
         {

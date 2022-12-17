@@ -1,0 +1,96 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<HxModal @ref="Modal">
+    <BodyTemplate>
+        @if (Categories is not null)
+        {
+            <EditForm Model="Job" OnValidSubmit="OnSubmit" id="job_edit_form">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="row">
+                    <div class="col">
+                        <label class="form-label">Name</label>
+                        <InputText @bind-Value="Job.JobName" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label class="form-label">Category</label>
+                        <InputSelect class="form-select" @bind-Value="Job.CategoryId">
+                            <option value="">No category</option>
+                            @foreach (var cat in Categories)
+                            {
+                                <option value="@cat.CategoryId">@cat.CategoryName</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+        <HxSubmit Color="ThemeColor.Success" FormId="job_edit_form">
+            Save
+        </HxSubmit>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public EventCallback<Job> OnJobSubmitted { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private BiflowContext? EditContext { get; set; }
+
+    private Job Job { get; set; } = new() { IsEnabled = true };
+
+    private IEnumerable<JobCategory>? Categories { get; set; }
+
+    private async Task OnSubmit()
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(EditContext);
+            if (Job.JobId == Guid.Empty)
+            {
+                EditContext.Jobs.Add(Job);
+            }
+            await EditContext.SaveChangesAsync();
+            await Modal.LetAsync(x => x.HideAsync());
+            await OnJobSubmitted.InvokeAsync(Job);
+            Job = new() { IsEnabled = true };
+            EditContext.Dispose();
+            EditContext = null;
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error submitting job", ex.Message);
+        }
+    }
+
+    public async Task ShowAsync(Job? job = null)
+    {
+        try
+        {
+            EditContext = await DbContextFactory.CreateDbContextAsync();
+            Categories = await EditContext.JobCategories.OrderBy(c => c.CategoryName).ToListAsync();
+            if (job is not null)
+            {
+                Job = await EditContext.Jobs.FirstAsync(j => j.JobId == job.JobId);
+            }
+            await Modal.LetAsync(x => x.ShowAsync());
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error loading job", ex.Message);
+        }
+    }
+
+    public void Dispose() => EditContext?.Dispose();
+}

@@ -21,7 +21,8 @@ INSERT INTO biflow.Job (
 	OvertimeNotificationLimitMinutes,
 	MaxParallelSteps,
 	IsEnabled,
-	CreatedBy
+	CreatedBy,
+	JobCategoryId
 )
 SELECT @JobIdNew,
 	JobName + ' - Copy',
@@ -33,7 +34,8 @@ SELECT @JobIdNew,
 	OvertimeNotificationLimitMinutes,
 	MaxParallelSteps,
 	IsEnabled,
-	@Username
+	@Username,
+	JobCategoryId
 FROM biflow.Job
 WHERE JobId = @JobId
 

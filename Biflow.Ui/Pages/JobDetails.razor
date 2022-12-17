@@ -17,7 +17,11 @@
             <a href="jobs">
                 All jobs
             </a>
-            <span>&nbsp;/</span>
+            <span>&nbsp;/&nbsp;</span>
+            @if (Job.Category is not null)
+            {
+                <span>@Job.Category.CategoryName /&nbsp;</span>
+            }
             <strong>@Job.JobName</strong>
         </div>
     </div>

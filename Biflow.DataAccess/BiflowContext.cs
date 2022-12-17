@@ -49,6 +49,7 @@ public class BiflowContext : DbContext
     public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
+    public DbSet<JobCategory> JobCategories => Set<JobCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -12,7 +12,7 @@ public class Job
     [Required]
     [MaxLength(250)]
     [Display(Name = "Job name")]
-    public string? JobName { get; set; }
+    public string JobName { get; set; } = "";
 
     [Display(Name = "Description")]
     public string? JobDescription
@@ -54,6 +54,11 @@ public class Job
     [Required]
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; }
+
+    [Column("JobCategoryId")]
+    public Guid? CategoryId { get; set; }
+
+    public JobCategory? Category { get; set; }
 
     public ICollection<Step> Steps { get; set; } = null!;
     

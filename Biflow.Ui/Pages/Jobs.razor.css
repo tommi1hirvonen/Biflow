@@ -1,0 +1,11 @@
+﻿tr.job-row:hover {
+    background-color: #ececec;
+}
+
+tr a {
+    text-decoration: none;
+}
+
+tr:hover a {
+    text-decoration: underline;
+}

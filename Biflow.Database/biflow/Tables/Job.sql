@@ -12,6 +12,7 @@
     [CreatedBy]                         NVARCHAR(250)    NULL,
     [LastModifiedBy]                    NVARCHAR(250)    NULL,
     [Timestamp]                         ROWVERSION       NOT NULL,
+    [JobCategoryId] UNIQUEIDENTIFIER CONSTRAINT [FK_Job_Category] FOREIGN KEY REFERENCES [biflow].[JobCategory] ([JobCategoryId]) ON DELETE SET NULL,
     CONSTRAINT [PK_Job] PRIMARY KEY CLUSTERED ([JobId] ASC)
 );
 

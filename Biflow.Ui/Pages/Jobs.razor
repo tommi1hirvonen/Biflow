@@ -7,16 +7,6 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IHxMessengerService Messenger
 
-<style>
-    tr a {
-        text-decoration: none;
-    }
-
-        tr:hover a {
-            text-decoration: underline;
-        }
-</style>
-
 <PageTitle>Jobs | Biflow</PageTitle>
 
 <h4>Jobs</h4>
@@ -25,32 +15,17 @@
     <div class="col">
         <div class="btn-toolbar">
             <AuthorizeView Roles="Admin, Editor">
-                @*Dropdown to create new jobs*@
-                <HxDropdownButtonGroup CssClass="me-3">
-                    <HxDropdownToggleButton Color="ThemeColor.Success">Add job</HxDropdownToggleButton>
-                    <HxDropdownContent CssClass="p-4">
-                        <EditForm Model="NewJob" OnValidSubmit="AddJob" Context="_context" style="min-width: 25rem;">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary />
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label">Job name</label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text">
-                                            @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                        </span>
-                                        <InputText class="form-control" @bind-Value="NewJob.JobName" autocomplete="off"></InputText>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" Enabled="jobs is not null">Add</HxSubmit>
-                                </div>
-                            </div>
-                        </EditForm>
-                    </HxDropdownContent>
-                </HxDropdownButtonGroup>
+                <HxButton Color="ThemeColor.Success" CssClass="me-3" OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())" Spinner="false">
+                    Add job
+                </HxButton>
+
+                <HxButton Color="ThemeColor.Secondary"
+                          CssClass="me-3"
+                          Enabled="Categories is not null"
+                          OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync())"
+                          Spinner="false">
+                    Add category
+                </HxButton>
             </AuthorizeView>
             <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
                 @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
@@ -69,148 +44,171 @@
     </div>
 </div>
 
-
-
-<div class="card shadow-sm pt-2 my-4">
-    <table class="table table-hover">
+<div class="card shadow-sm mt-4">
+    <table class="table mb-0">
         <thead>
             <tr>
-                <th>
-                    Job name
-                </th>
                 <th></th>
-                <th>
-                    Last execution
-                </th>
-                <th>
-                    Status
-                </th>
-                <th>
-                    Next execution
-                </th>
+                <th>Last execution</th>
+                <th>Status</th>
+                <th>Next execution</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @if (jobs is null)
+            @if (Jobs_ is null || Categories is null)
             {
-                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <HxSpinner Color="ThemeColor.Secondary" />
+                    </td>
+                </tr>
             }
-            else if (jobs.Count == 0)
+            else if (!Jobs_.Any() && !Categories.Any())
             {
-                <tr><td colspan="7">No jobs</td></tr>
+                <tr>
+                    <td colspan="5">
+                        No jobs
+                    </td>
+                </tr>
             }
             else
             {
-                @foreach (var item in jobs)
+                foreach (var category in Categories.Append(null))
                 {
-                    var lastExecution = GetLastExecution(item);
-                    <tr class="@(item.IsEnabled ? null : "disabled")">
-                        <td class="align-middle">
-                            <a class="text-dark" href="@($"jobs/{item.JobId}/steps")">@item.JobName</a>
-                        </td>
-                        <td>
-                            <div class="d-inline-flex align-items-center">
-                                <AuthorizeView Roles="Admin, Editor">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="form-check-label" for="enabled_@item.JobId"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="Operator, Viewer">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="form-check-label" for="enabled_@item.JobId"></label>
-                                    </div>
-                                </AuthorizeView>
+                    var jobs = Jobs_.Where(j => j.CategoryId == category?.CategoryId);
 
+                    /* Show all categories even if they do not have jobs in them. Show "No category" only if it has jobs */
+                    if (category is not null || jobs.Any())
+                    {
+                        <tr style="background-color: #f7f7f7">
+                            <td colspan="4" class="align-middle fw-bold">
+                                @(category?.CategoryName ?? "No category")
+                            </td>
+                            <td colspan="1" class="text-end">
                                 <AuthorizeView Roles="Admin, Editor">
-                                    <HxButtonGroup CssClass="ms-2 btn-row" Size="ButtonGroupSize.Small">
-
-                                        @*Dropdown to edit the job's name*@
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => EditJob.JobName = item.JobName">
+                                    @if (category is not null)
+                                    {
+                                        <div class="col-auto btn-row">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" Spinner="false"
+                                                OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
                                                 @MarkupHelper.FromFile("icons/feather/edit-2.svg")
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownContent CssClass="p-4">
-                                                <EditForm Model="EditJob" OnValidSubmit="() => UpdateJobName(item)" Context="_context" style="min-width: 25rem;">
-                                                    <DataAnnotationsValidator />
-                                                    <ValidationSummary />
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            <label class="form-label">New name</label>
-                                                            <InputText class="form-control form-control-sm" @bind-Value="EditJob.JobName" autocomplete="off"></InputText>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success">Save</HxSubmit>
-                                                        </div>
-                                                    </div>
-                                                </EditForm>
-                                            </HxDropdownContent>
-                                        </HxDropdownButtonGroup>
-
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @MarkupHelper.FromFile("icons/feather/copy.svg")
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu>
-                                                <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu>
-                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => DeleteJob(item)">Confirm</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-
-                                    </HxButtonGroup>
+                                            </HxButton>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </div>
+                                    }
                                 </AuthorizeView>
-                            </div>
-                        </td>
-                        <td class="align-middle">
-                            @if (lastExecution is not null)
-                            {
-                                <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime?.LocalDateTime</a>
-                            }
-                        </td>
-                        <td class="align-middle">
-                            @if (lastExecution is not null)
-                            {
-                                <JobExecutionStatusBadgeComponent ExecutionStatus_="lastExecution.ExecutionStatus" />
-                            }
-                        </td>
-                        @{ var nextStartTime = GetNextStartTime(item); }
-                        <td style="@(!item.IsEnabled ? "color: #ccc;" : null)">
-                            @nextStartTime
-                            @(!item.IsEnabled && nextStartTime is not null ? "(Job disabled)" : null) 
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                        @foreach (var item in jobs)
+                        {
+                            var lastExecution = GetLastExecution(item);
+                            var nextStartTime = GetNextStartTime(item);
+                            <tr class="job-row @(item.IsEnabled ? null : "disabled")">
+                                <td class="align-middle">
+                                    <a class="text-dark" href="@($"jobs/{item.JobId}/steps")">@item.JobName</a>
+                                </td>
+                                <td class="align-middle">
+                                    @if (lastExecution is not null)
+                                    {
+                                        <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime?.LocalDateTime</a>
+                                    }
+                                </td>
+                                <td class="align-middle">
+                                    @if (lastExecution is not null)
+                                    {
+                                        <JobExecutionStatusBadgeComponent ExecutionStatus_="lastExecution.ExecutionStatus" />
+                                    }
+                                </td>
+                                <td class="align-middle" style="@(!item.IsEnabled ? "color: #ccc;" : null)">
+                                    @if (nextStartTime is not null)
+                                    {
+                                        @nextStartTime
+                                        @(!item.IsEnabled ? "(Job disabled)" : null)
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex align-items-center">
+                                        <AuthorizeView Roles="Admin, Editor">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                                <label class="form-check-label" for="enabled_@item.JobId"></label>
+                                            </div>
+                                        </AuthorizeView>
+                                        <AuthorizeView Roles="Operator, Viewer">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                                <label class="form-check-label" for="enabled_@item.JobId"></label>
+                                            </div>
+                                        </AuthorizeView>
+
+                                        <AuthorizeView Roles="Admin, Editor">
+                                            <HxButtonGroup CssClass="ms-2 btn-row" Size="ButtonGroupSize.Small">
+
+                                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))" Spinner="false">
+                                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                                </HxButton>
+
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                        @MarkupHelper.FromFile("icons/feather/copy.svg")
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                        <HxDropdownItem @onclick="() => DeleteJob(item)">Confirm</HxDropdownItem>
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+
+                                            </HxButtonGroup>
+                                        </AuthorizeView>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
                 }
             }
         </tbody>
     </table>
 </div>
 
+<AuthorizeView Roles="Admin, Editor">
+    <JobEditModal @ref="JobEditModal" OnJobSubmitted="OnJobSubmitted" />
+
+    <JobCategoryEditModal @ref="CategoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
+</AuthorizeView>
 
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
-
 @code {
-    private List<Job> jobs { get; set; } = null!;
-    private Dictionary<Guid, Execution> LastExecutions { get; set; } = null!;
-    private Job NewJob { get; set; } = new() { IsEnabled = true };
-    private Job EditJob { get; set; } = new();
+    private List<Job>? Jobs_ { get; set; }
+    private List<JobCategory>? Categories { get; set; }
+    private Dictionary<Guid, Execution>? LastExecutions { get; set; }
 
     private bool IsLoading { get; set; } = false;
 
     private JobExecutionDetailsModal? JobExecutionModal { get; set; }
     private Guid SelectedJobExecutionId { get; set; }
+
+    private JobCategoryEditModal? CategoryEditModal { get; set; }
+    private JobEditModal? JobEditModal { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -221,10 +219,14 @@
     {
         IsLoading = true;
         using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
-        jobs = await context.Jobs
+        Jobs_ = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)
             .OrderBy(job => job.JobName)
+            .ToListAsync();
+        Categories = await context.JobCategories
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(c => c.CategoryName)
             .ToListAsync();
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
@@ -233,10 +235,11 @@
 
     private async Task LoadLastExecutions(BiflowContext context)
     {
+        ArgumentNullException.ThrowIfNull(Jobs_);
         // Get each job's last execution.
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
+            .Where(execution => Jobs_.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
@@ -280,44 +283,6 @@
         }
     }
 
-    private async Task UpdateJobName(Job job)
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            job.JobName = EditJob.JobName;
-            context.Attach(job).State = EntityState.Modified;
-            await context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            Messenger.AddError("Concurrency error", "The job was modified outside of this session. Reload the page to view the most recent values.");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error updating job", ex.Message);
-        }
-    }
-
-    private async Task AddJob()
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            context.Jobs.Add(NewJob);
-            await context.SaveChangesAsync();
-            NewJob.Steps = new List<Step>();
-            NewJob.Schedules = new List<Schedule>();
-            jobs.Add(NewJob);
-            jobs.Sort((job1, job2) => job1.JobName?.CompareTo(job2.JobName) ?? 0);
-            NewJob = new() { IsEnabled = true };
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error adding job", ex.Message);
-        }
-    }
-
     private async Task CopyJob(Job job)
     {
         try
@@ -330,25 +295,25 @@
             .Include(job_ => job_.Steps)
             .Include(job_ => job_.Schedules)
             .FirstAsync(job_ => job_.JobId == createdJobId);
-            jobs.Add(createdJob);
-            jobs = jobs.OrderBy(job_ => job_.JobName).ToList();
+            Jobs_?.Add(createdJob);
+            Jobs_ = Jobs_?.OrderBy(job_ => job_.JobName).ToList();
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error copying job", ex.Message);
         }
-
     }
 
     private async Task DeleteJob(Job job)
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Jobs.Remove(job);
-            await context.SaveChangesAsync();
+            using var context = await DbFactory.CreateDbContextAsync();
+            await context.Jobs
+                .Where(j => j.JobId == job.JobId)
+                .ExecuteDeleteAsync();
             await SchedulerService.DeleteJobAsync(job);
-            jobs.Remove(job);
+            Jobs_?.Remove(job);
         }
         catch (Exception ex)
         {
@@ -360,5 +325,51 @@
     {
         SelectedJobExecutionId = executionId;
         await JobExecutionModal.LetAsync(x => x.ShowAsync());
+    }
+
+    private void OnJobSubmitted(Job job)
+    {
+        var remove = Jobs_?.FirstOrDefault(j => j.JobId == job.JobId);
+        if (remove is not null)
+        {
+            job.Schedules = remove.Schedules;
+            Jobs_?.Remove(remove);
+        }
+        else
+        {
+            job.Schedules = new List<Schedule>();
+        }
+        Jobs_?.Add(job);
+        Jobs_?.Sort((j1, j2) => j1.JobName.CompareTo(j2.JobName));
+    }
+
+    private void OnCategorySubmitted(JobCategory category)
+    {
+        var remove = Categories?.FirstOrDefault(c => c.CategoryId == category.CategoryId);
+        if (remove is not null)
+        {
+            Categories?.Remove(remove);
+        }
+        Categories?.Add(category);
+        Categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
+    }
+
+    private async Task DeleteCategoryAsync(JobCategory category)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.JobCategories.Remove(category);
+            await context.SaveChangesAsync();
+            Categories?.Remove(category);
+            foreach (var job in Jobs_?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
+            {
+                job.CategoryId = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting category", ex.Message);
+        }
     }
 }
