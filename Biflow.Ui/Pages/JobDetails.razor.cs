@@ -20,13 +20,11 @@ public partial class JobDetails : ComponentBase
 
     [Parameter] public Guid Id { get; set; }
 
-    private Guid PrevId { get; set; }
+    private Job Job { get; set; } = new();
 
-    private Job CurrentJob { get; set; } = null!;
+    private List<Job> Jobs { get; set; } = new();
 
-    private List<Job> Jobs { get; set; } = null!;
-
-    private List<Step> Steps { get; set; } = null!;
+    private List<Step> Steps { get; set; } = new();
 
     private Job EditJob { get; set; } = new();
 
@@ -41,17 +39,6 @@ public partial class JobDetails : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Jobs = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .Include(job => job.Subscriptions)
-            .Include(job => job.JobParameters)
-            .Include(job => job.JobConcurrencies)
-            .OrderBy(job => job.JobName)
-            .ToListAsync();
-        foreach (var job in Jobs)
-        {
-            job.JobParameters = job.JobParameters.OrderBy(p => p.ParameterName).ToList();
-        }
         SqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
@@ -72,25 +59,16 @@ public partial class JobDetails : ComponentBase
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
             .ToListAsync();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Id != PrevId)
-        {
-            PrevId = Id;
-            await LoadData();
-        }
-    }
-
-    private async Task LoadData()
-    {
-        CurrentJob = Jobs.First(job => job.JobId == Id);
-        EditJob.JobName = CurrentJob.JobName;
-        EditJob.JobDescription = CurrentJob.JobDescription;
-        EditJob.OvertimeNotificationLimitMinutes = CurrentJob.OvertimeNotificationLimitMinutes;
-
-        using var context = DbFactory.CreateDbContext();
+        Job = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .Include(job => job.Subscriptions)
+            .Include(job => job.JobParameters)
+            .Include(job => job.JobConcurrencies)
+            .FirstAsync(job => job.JobId == Id);
+        Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();
+        EditJob.JobName = Job.JobName;
+        EditJob.JobDescription = Job.JobDescription;
+        EditJob.OvertimeNotificationLimitMinutes = Job.OvertimeNotificationLimitMinutes;
         Steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Include(step => step.Dependencies)
@@ -99,16 +77,17 @@ public partial class JobDetails : ComponentBase
             .Include(step => step.Tags)
             .Include(step => (step as ParameterizedStep)!.StepParameters)
             .Include(step => step.ExecutionConditionParameters)
-            .Where(step => step.JobId == CurrentJob.JobId)
+            .Where(step => step.JobId == Job.JobId)
             .ToListAsync();
         SortSteps();
+        Jobs = await context.Jobs.OrderBy(j => j.JobName).ToListAsync();
     }
 
     private void SortSteps()
     {
         try
         {
-            if (CurrentJob.UseDependencyMode)
+            if (Job.UseDependencyMode)
             {
                 var comparer = new TopologicalStepComparer(Steps);
                 Steps.Sort(comparer);
@@ -129,10 +108,10 @@ public partial class JobDetails : ComponentBase
         try
         {
             using var context = DbFactory.CreateDbContext();
-            CurrentJob.JobName = EditJob.JobName;
-            CurrentJob.JobDescription = EditJob.JobDescription;
-            CurrentJob.OvertimeNotificationLimitMinutes = EditJob.OvertimeNotificationLimitMinutes;
-            context.Attach(CurrentJob).State = EntityState.Modified;
+            Job.JobName = EditJob.JobName;
+            Job.JobDescription = EditJob.JobDescription;
+            Job.OvertimeNotificationLimitMinutes = EditJob.OvertimeNotificationLimitMinutes;
+            context.Attach(Job).State = EntityState.Modified;
             await context.SaveChangesAsync();
             Messenger.AddInformation("Job settings saved successfully");
         }
@@ -151,9 +130,9 @@ public partial class JobDetails : ComponentBase
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Jobs.Remove(CurrentJob);
+            context.Jobs.Remove(Job);
             await context.SaveChangesAsync();
-            await SchedulerService.DeleteJobAsync(CurrentJob);
+            await SchedulerService.DeleteJobAsync(Job);
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
@@ -167,8 +146,8 @@ public partial class JobDetails : ComponentBase
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Attach(CurrentJob);
-            CurrentJob.IsEnabled = !CurrentJob.IsEnabled;
+            context.Attach(Job);
+            Job.IsEnabled = !Job.IsEnabled;
             await context.SaveChangesAsync();
         }
         catch (Exception ex)
@@ -182,8 +161,8 @@ public partial class JobDetails : ComponentBase
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Attach(CurrentJob);
-            CurrentJob.UseDependencyMode = value;
+            context.Attach(Job);
+            Job.UseDependencyMode = value;
             await context.SaveChangesAsync();
             SortSteps();
         }
@@ -198,8 +177,8 @@ public partial class JobDetails : ComponentBase
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Attach(CurrentJob);
-            CurrentJob.StopOnFirstError = !CurrentJob.StopOnFirstError;
+            context.Attach(Job);
+            Job.StopOnFirstError = !Job.StopOnFirstError;
             await context.SaveChangesAsync();
         }
         catch (Exception ex)

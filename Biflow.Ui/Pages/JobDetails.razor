@@ -1,4 +1,4 @@
-﻿@page "/jobs/{DetailsPage}/{Id:guid}"
+﻿@page "/jobs/{Id:guid}/{DetailsPage}"
 
 @*Increase dropdown menu z-index so that it is displayed over the sticky-top div in StepsComponent.*@
 <style>
@@ -8,32 +8,38 @@
 </style>
 
 <div class="row">
-    <div class="col-auto">
-        <HxButtonGroup>
-            <HxDropdownButtonGroup>
-                <HxDropdownToggleButton Color="ThemeColor.Secondary" Spinner="CurrentJob is null">
-                    @MarkupHelper.FromFile("icons/feather/loader.svg")
-                    @(CurrentJob?.JobName ?? "Loading...")
-                </HxDropdownToggleButton>
-                <HxDropdownMenu>
-                    <HxDropdownHeader>Show</HxDropdownHeader>
-                    @if (Jobs is not null)
-                    {
-                        @foreach (var job in Jobs)
-                        {
-                            <NavLink class="btn dropdown-item" href="@("jobs/" + DetailsPage + "/" + job.JobId)">@job.JobName</NavLink>
-                        }
-                    }
-                </HxDropdownMenu>
-            </HxDropdownButtonGroup>
-            <HxButton Color="ThemeColor.Secondary"
-                      @onclick="() => DescriptionOpen = !DescriptionOpen"
-                      CssClass="@(string.IsNullOrWhiteSpace(CurrentJob?.JobDescription) ? "disabled" : DescriptionOpen ? "active" : null)">
-                @MarkupHelper.FromFile("icons/feather/info.svg")
-            </HxButton>
-        </HxButtonGroup>
+    
+</div>
 
+<div class="row align-items-center">
+    <div class="col-auto">
+        <div>
+            <a href="jobs">
+                All jobs
+            </a>
+            <span>&nbsp;/</span>
+            <strong>@Job.JobName</strong>
+        </div>
     </div>
+    @if (!string.IsNullOrWhiteSpace(Job.JobDescription))
+    {
+        <div class="col-auto">
+            <HxButton Color="ThemeColor.Light"
+                      Size="ButtonSize.Small"
+                      @onclick="() => DescriptionOpen = !DescriptionOpen">
+                @MarkupHelper.FromFile("icons/feather/info.svg")
+                &nbsp;
+                @if (DescriptionOpen)
+                {
+                    <span>Hide description</span>
+                }
+                else
+                {
+                    <span>Show description</span>
+                }
+            </HxButton>
+        </div>
+    }
 
     <div class="col-xl d-flex flex-row flex-xl-row-reverse justify-content-xl-start mt-4 mt-xl-0 align-items-center">
         <AuthorizeView Roles="Admin, Editor">
@@ -86,25 +92,25 @@
 
         <AuthorizeView Roles="Admin, Editor">
             <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
+                <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
         </AuthorizeView>
 
         <AuthorizeView Roles="Operator, Viewer">
             <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(CurrentJob?.IsEnabled ?? false ? "checked" : null)">
+                <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
         </AuthorizeView>
     </div>
 </div>
 
-@if (DescriptionOpen && !string.IsNullOrWhiteSpace(CurrentJob?.JobDescription))
+@if (DescriptionOpen && !string.IsNullOrWhiteSpace(Job?.JobDescription))
 {
     <div class="row mt-3">
-        <div class="col">
-            <text class="fst-italic text-secondary" style="white-space: pre-line;">@CurrentJob?.JobDescription</text>
+        <div class="col-auto border rounded" style="max-height: 110px; overflow-y: auto;">
+            <small class="text-secondary" style="white-space: pre-line;">@Job?.JobDescription</small>
         </div>
     </div>
 }
@@ -114,25 +120,25 @@
     <div class="col-xxl">
         <ul class="nav nav-pills mt-4 mb-4" role="tablist">
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@("jobs/steps/" + CurrentJob?.JobId)">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/steps")">
                     @MarkupHelper.FromFile("icons/feather/list.svg")
                     Steps
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@("jobs/dependencies/" + CurrentJob?.JobId)">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/dependencies")">
                     @MarkupHelper.FromFile("icons/feather/dependency.svg")
                     Dependencies
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@("jobs/schedules/" + CurrentJob?.JobId)">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/schedules")">
                     @MarkupHelper.FromFile("icons/feather/calendar.svg")
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@("jobs/jobhistory/" + CurrentJob?.JobId)">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/history")">
                     @MarkupHelper.FromFile("icons/feather/activity.svg")
                     History
                 </NavLink>
@@ -145,7 +151,7 @@
             <div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_execution_phase_mode"
-                           checked="@(!CurrentJob?.UseDependencyMode ?? false ? "checked" : null)"
+                           checked="@(!Job?.UseDependencyMode ?? false ? "checked" : null)"
                            @onchange="() => ToggleDependencyMode(false)">
                     <label class="form-check-label" for="radio_execution_phase_mode">Execution phase mode</label>
                 </div>
@@ -159,7 +165,7 @@
                 </HxPopover>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_dependency_mode"
-                           checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)"
+                           checked="@(Job?.UseDependencyMode ?? false ? "checked" : null)"
                            @onchange="() => ToggleDependencyMode(true)">
                     <label class="form-check-label" for="radio_dependency_mode">Dependency mode</label>
                 </div>
@@ -173,11 +179,11 @@
                 </HxPopover>
             </div>
             @*Only show StopOnFirstError setting if job uses execution phase mode.*@
-            @if (CurrentJob?.UseDependencyMode == false)
+            @if (Job?.UseDependencyMode == false)
             {
                 <div class="form-check ms-4 ms-xxl-0 me-xxl-4">
                     <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle"
-                           checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)"
+                           checked="@(Job?.StopOnFirstError ?? false ? "checked" : null)"
                            @onchange="ToggleStopOnFirstError">
                     <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                 </div>
@@ -195,19 +201,19 @@
             <div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" disabled id="radio_execution_phase_mode"
-                           checked="@(!CurrentJob?.UseDependencyMode ?? false ? "checked" : null)" />
+                           checked="@(!Job?.UseDependencyMode ?? false ? "checked" : null)" />
                     <label class="form-check-label" for="radio_execution_phase_mode">Execution phase mode</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" disabled id="radio_dependency_mode"
-                           checked="@(CurrentJob?.UseDependencyMode ?? false ? "checked" : null)" />
+                           checked="@(Job?.UseDependencyMode ?? false ? "checked" : null)" />
                     <label class="form-check-label" for="radio_dependency_mode">Dependency mode</label>
                 </div>
             </div>
-            @if (CurrentJob?.UseDependencyMode == false)
+            @if (Job?.UseDependencyMode == false)
             {
                 <div class="form-check ms-4 ms-xxl-0 me-xxl-4">
-                    <input type="checkbox" class="form-check-input" disabled id="stop_on_first_error_toggle" checked="@(CurrentJob?.StopOnFirstError ?? false ? "checked" : null)">
+                    <input type="checkbox" class="form-check-input" disabled id="stop_on_first_error_toggle" checked="@(Job?.StopOnFirstError ?? false ? "checked" : null)">
                     <label class="form-check-label" for="stop_on_first_error_toggle">Stop on first error</label>
                 </div>
             }
@@ -218,7 +224,7 @@
 
 @if (DetailsPage == "steps")
 {
-    <StepsComponent Job="CurrentJob"
+    <StepsComponent Job="Job"
                     Jobs="Jobs"
                     Steps="Steps"
                     SqlConnections="SqlConnections"
@@ -227,14 +233,14 @@
                     AppRegistrations="AppRegistrations"
                     FunctionApps="FunctionApps" />
 }
-else if (DetailsPage == "jobhistory")
+else if (DetailsPage == "history")
 {
-    <JobHistoryComponent Id="Id" Job="CurrentJob" />
+    <JobHistoryComponent Id="Id" Job="Job" />
 }
 else if (DetailsPage == "dependencies")
 {
     <DependenciesComponent Jobs="Jobs"
-                           Job="CurrentJob"
+                           Job="Job"
                            Steps="Steps"
                            SqlConnections="SqlConnections"
                            AsConnections="AsConnections"
@@ -244,7 +250,7 @@ else if (DetailsPage == "dependencies")
 }
 else if (DetailsPage == "schedules")
 {
-    <SchedulesComponent Job="CurrentJob" />
+    <SchedulesComponent Job="Job" />
 }
 else
 {
