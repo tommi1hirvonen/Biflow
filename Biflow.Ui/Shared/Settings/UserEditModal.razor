@@ -116,23 +116,32 @@
                                         }
                                         else
                                         {
-                                            foreach (var job in Jobs)
+                                            foreach (var category in Jobs
+                                                .GroupBy(t => t.Category?.CategoryName ?? "No category")
+                                                .OrderBy(g => g.Key.Equals("No category"))
+                                                .ThenBy(g => g.Key))
                                             {
-                                                <div class="list-group-item">
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            @job.JobName
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <div class="form-check form-check-inline">
-                                                                <input type="checkbox" class="form-check-input" id="authorize_@job.JobId"
-                                                                       checked=@User.Jobs.Any(j => j.JobId == job.JobId)
-                                                                       @onchange="args => ToggleJobAuthorization(args, job)">
-                                                                <label class="form-check-label" for="authorize_@job.JobId"></label>
+                                                <div class="list-group-item fw-bold" style="background-color: #f7f7f7">
+                                                    @category.Key
+                                                </div>
+                                                @foreach (var job in category.OrderBy(t => t.JobName))
+                                                {
+                                                    <div class="list-group-item">
+                                                        <div class="row">
+                                                            <div class="col">
+                                                                @job.JobName
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <div class="form-check form-check-inline">
+                                                                    <input type="checkbox" class="form-check-input" id="authorize_@job.JobId"
+                                                                           checked=@User.Jobs.Any(j => j.JobId == job.JobId)
+                                                                           @onchange="args => ToggleJobAuthorization(args, job)">
+                                                                    <label class="form-check-label" for="authorize_@job.JobId"></label>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                }
                                             }
                                         }
                                     </div>

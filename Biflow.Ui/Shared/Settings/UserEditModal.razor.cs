@@ -186,6 +186,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
                 .FirstAsync(user => user.Username == username);
         }
         Jobs = await Context.Jobs
+            .Include(j => j.Category)
             .OrderBy(j => j.JobName)
             .ToListAsync();
         DataTables = await Context.MasterDataTables
