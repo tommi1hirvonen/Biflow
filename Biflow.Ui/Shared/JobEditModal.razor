@@ -3,7 +3,11 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-<HxModal @ref="Modal">
+@{
+    var title = Job.JobId == Guid.Empty ? "New job" : $"Edit {Job.JobName}";
+}
+
+<HxModal @ref="Modal" Title="@title">
     <BodyTemplate>
         @if (Categories is not null)
         {
@@ -83,6 +87,10 @@
             if (job is not null)
             {
                 Job = await EditContext.Jobs.FirstAsync(j => j.JobId == job.JobId);
+            }
+            else
+            {
+                Job = new() { IsEnabled = true };
             }
             await Modal.LetAsync(x => x.ShowAsync());
         }
