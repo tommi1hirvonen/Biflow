@@ -146,8 +146,6 @@
     [Parameter]
     public Job? Job { get; set; }
 
-    private Job? PrevJob { get; set; }
-
     [Parameter]
     public List<Step> Steps { get; set; } = null!;
 
@@ -165,8 +163,6 @@
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
     private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
-
-    private bool GrapShouldRender { get; set; }
 
     private Step? StepFilter { get; set; }
 
@@ -195,26 +191,16 @@
         ObjectReference = DotNetObjectReference.Create(helper);
     }
 
-    protected override void OnParametersSet()
-    {
-        if (Job != PrevJob)
-        {
-            PrevJob = Job;
-            StepFilter = null;
-            StateHasChanged();
-            GrapShouldRender = true;
-        }
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GrapShouldRender)
+        if (firstRender)
+        {
             await LoadGraph();
+        }
     }
 
     private async Task LoadGraph()
     {
-        GrapShouldRender = false;
         string? stepsJson = null;
         string? dependenciesJson = null;
 
@@ -336,7 +322,6 @@
     private async Task LimitGraph(Step step)
     {
         StepFilter = step;
-        GrapShouldRender = true;
         await LoadGraph();
     }
 
@@ -358,7 +343,6 @@
         }
         Steps.Add(step);
         SortSteps();
-        GrapShouldRender = true;
         await LoadGraph();
         StateHasChanged();
     }

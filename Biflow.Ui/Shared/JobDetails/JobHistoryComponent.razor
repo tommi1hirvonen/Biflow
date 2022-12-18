@@ -113,13 +113,7 @@
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
-    [Parameter]
-    public Guid Id { get; set; }
-
-    [Parameter]
-    public Job? Job { get; set; }
-
-    private Guid PrevId { get; set; }
+    [Parameter] public Job? Job { get; set; }
 
     public IList<Execution>? Executions { get; set; }
 
@@ -134,15 +128,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != PrevId)
+        if (Executions is null && Job is not null)
         {
-            PrevId = Id;
             using var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(execution => execution.StepExecutionAttempts)
-                .Where(execution => execution.JobId == Id)
+                .Where(execution => execution.JobId == Job.JobId)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .Take(MaxExecutions)
                 .ToListAsync();

@@ -62,7 +62,6 @@ public partial class JobDetails : ComponentBase
         Job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
-            .Include(job => job.Subscriptions)
             .Include(job => job.JobParameters)
             .Include(job => job.JobConcurrencies)
             .FirstAsync(job => job.JobId == Id);

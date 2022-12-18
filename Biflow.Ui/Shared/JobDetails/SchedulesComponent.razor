@@ -135,10 +135,7 @@
 </AuthorizeView>
 
 @code {
-    [Parameter]
-    public Job? Job { get; set; }
-
-    private Guid PrevId { get; set; }
+    [Parameter] public Job? Job { get; set; }
 
     private List<Schedule>? Schedules { get; set; }
 
@@ -146,9 +143,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Job is not null && Job.JobId != PrevId)
+        if (Schedules is null && Job is not null)
         {
-            PrevId = Job.JobId;
             using var context = DbFactory.CreateDbContext();
             Schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
