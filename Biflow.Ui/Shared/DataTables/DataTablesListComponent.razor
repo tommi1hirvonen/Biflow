@@ -6,7 +6,7 @@
 
 <AuthorizeView Roles="Admin, Editor">
     <div class="row mt-3">
-        <div class="col">
+        <div class="col-auto">
             <HxButtonToolbar>
                 <HxButton Color="ThemeColor.Success"
                           Enabled="Connections?.Any() ?? false"
@@ -31,6 +31,32 @@
     </div>
 </AuthorizeView>
 
+<div class="row mt-3">
+    <div class="col-xxl-5 col-xl-7 col-md-8 col-sm-9">
+        <div class="input-group input-group-sm me-3">
+            <div class="input-group-text">
+                @MarkupHelper.FromFile("icons/feather/filter.svg")
+                Filter by
+            </div>
+            <input type="search" class="form-control" @bind-value="TableNameFilter" @bind-value:event="oninput" placeholder="Name" />
+            <input type="search" class="form-control" @bind-value="TargetTableNameFilter" @bind-value:event="oninput" placeholder="Target table" />
+        </div>
+    </div>
+        
+    <div class="col-sm-3 mt-3 mt-sm-0">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+                {
+                    TargetTableNameFilter = string.Empty;
+                    TableNameFilter = string.Empty;
+                }">
+                @MarkupHelper.FromFile("icons/feather/x.svg")
+                Clear
+            </HxButton>
+        </HxButtonGroup>
+    </div>  
+</div>
+
 <ul class="list-group shadow-sm mt-3">
     @if (Tables is null || Categories is null)
     {
@@ -48,70 +74,78 @@
     {
         foreach (var category in Categories.Append(null))
         {
-            var tables = Tables.Where(t => t.CategoryId == category?.CategoryId);
-
-            /* Show all categories even if they do not have tables in them. Show "No category" only if it has tables */
-            if (category is not null || tables.Any())
+            var tables = Tables
+                .Where(t => t.CategoryId == category?.CategoryId)
+                .Where(t => t.DataTableName.ContainsIgnoreCase(TableNameFilter))
+                .Where(t => $"{t.TargetSchemaName}.{t.TargetTableName}".ContainsIgnoreCase(TargetTableNameFilter));
+            
+            var filtersApplied = TableNameFilter.Any() || TargetTableNameFilter.Any();
+            /*
+            Show all categories even if they do not have tables in them. But hide them, if filters are applied.
+            Show "No category" only if it has tables
+            */
+            if ((category is null || filtersApplied) && !tables.Any())
             {
-                <li class="list-group-item fw-bold" style="background-color: #f7f7f7">
-                    <div class="row">
+                continue;
+            }
+            <li class="list-group-item fw-bold" style="background-color: #f7f7f7">
+                <div class="row">
+                    <div class="col">
+                        @(category?.CategoryName ?? "No category")
+                    </div>
+                    <AuthorizeView Roles="Admin, Editor">
+                        @if (category is not null)
+                        {
+                            <div class="col-auto btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                        OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
+                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </div>
+                        }                      
+                    </AuthorizeView>
+                </div>
+            </li>
+            @foreach (var table in tables)
+            {
+                <li class="list-group-item list-group-item-table">
+                    <div class="row align-items-center">
                         <div class="col">
-                            @(category?.CategoryName ?? "No category")
+                            <a href="datatables/edit/@table.DataTableId" class="text-dark">
+                                <HighlightableText PartToHighlight="@TableNameFilter" Text="@table.DataTableName" />
+                            </a>
+                        </div>
+                        <div class="col">
+                            <HighlightableText PartToHighlight="@TargetTableNameFilter" Text="@($"{table.TargetSchemaName}.{table.TargetTableName}")" />
                         </div>
                         <AuthorizeView Roles="Admin, Editor">
-                            @if (category is not null)
-                            {
-                                <div class="col-auto btn-row">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
-                                            OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                        @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                    </HxButton>
-                                    <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
-                                        </HxDropdownToggleButton>
-                                        <HxDropdownMenu>
-                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                            <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
-                                        </HxDropdownMenu>
-                                    </HxDropdownButtonGroup>
-                                </div>
-                            }                      
+                            <div class="col-auto btn-row">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                            OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(table))">
+                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </div>
                         </AuthorizeView>
                     </div>
                 </li>
-                @foreach (var table in tables)
-                {
-                    <li class="list-group-item list-group-item-table">
-                        <div class="row align-items-center">
-                            <div class="col">
-                                <a href="datatables/edit/@table.DataTableId" class="text-dark">
-                                    @table.DataTableName
-                                </a>
-                            </div>
-                            <div class="col">
-                                @table.TargetSchemaName.@table.TargetTableName
-                            </div>
-                            <AuthorizeView Roles="Admin, Editor">
-                                <div class="col-auto btn-row">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
-                                              OnClick="async () => await EditModal.LetAsync(x => x.SetEditContextAsync(table))">
-                                        @MarkupHelper.FromFile("icons/feather/edit-3.svg")
-                                    </HxButton>
-                                    <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
-                                        </HxDropdownToggleButton>
-                                        <HxDropdownMenu>
-                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                            <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
-                                        </HxDropdownMenu>
-                                    </HxDropdownButtonGroup>
-                                </div>
-                            </AuthorizeView>
-                        </div>
-                    </li>
-                }
             }
         }
     }
@@ -137,6 +171,9 @@
     private DataTableEditModal? EditModal { get; set; }
 
     private CategoryEditModal? CategoryEditModal { get; set; }
+
+    private string TableNameFilter { get; set; } = "";
+    private string TargetTableNameFilter { get; set; } = "";
 
     private void OnTableSubmitted(MasterDataTable table)
     {
