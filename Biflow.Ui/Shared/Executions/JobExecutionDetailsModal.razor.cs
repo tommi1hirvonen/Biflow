@@ -41,7 +41,7 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
 
     private Report ShowReport { get; set; } = Report.Table;
 
-    private enum Report { Table, Gantt, Dependencies }
+    private enum Report { Table, Gantt, Dependencies, Rerun }
 
     private bool Loading { get; set; } = false;
 
@@ -198,6 +198,14 @@ public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
         {
             Messenger.AddError("Error stopping execution", ex.Message);
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
+        }
+    }
+
+    private void OnClosed()
+    {
+        if (ShowReport == Report.Rerun)
+        {
+            ShowReport = Report.Table;
         }
     }
 
