@@ -20,6 +20,11 @@
                 @MarkupHelper.FromFile("icons/feather/cpu.svg")
                 Concurrency
             </button>
+            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.SyncDependencies ? "active" : null)"
+                    @onclick="() => ActiveTab = SettingsTab.SyncDependencies">
+                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                Sync dependencies
+            </button>
         </div>
     </div>
     <div class="col">
@@ -36,6 +41,9 @@
                     case SettingsTab.Concurrency:
                         <ConcurrencySettingsComponent />
                         break;
+                    case SettingsTab.SyncDependencies:
+                        <SynchronizeDependenciesComponent />
+                        break;
                     default:
                         <span>No component to display</span>
                         break;
@@ -50,5 +58,5 @@
 
     private SettingsTab ActiveTab { get; set; } = SettingsTab.General;
 
-    private enum SettingsTab { General, Execution, Concurrency }
+    private enum SettingsTab { General, Execution, Concurrency, SyncDependencies }
 }

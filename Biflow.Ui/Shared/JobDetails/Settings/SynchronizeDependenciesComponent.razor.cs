@@ -1,21 +1,24 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
+using Biflow.DataAccess;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using Havit.Blazor.Components.Web;
 
-namespace Biflow.Ui.Shared.JobDetails;
+namespace Biflow.Ui.Shared.JobDetails.Settings;
 
-public partial class SynchronizeDependenciesModal : ComponentBase
+public partial class SynchronizeDependenciesComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
-    
+
     [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -23,9 +26,8 @@ public partial class SynchronizeDependenciesModal : ComponentBase
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private HxModal? Modal { get; set; }
-
     private List<Dependency>? DependenciesToAdd { get; set; }
+    
     private List<Dependency>? DependenciesToRemove { get; set; }
 
     private async Task CalculateChangesAsync()
@@ -72,15 +74,25 @@ public partial class SynchronizeDependenciesModal : ComponentBase
 
     private async Task CommitAllAsync()
     {
-        while (DependenciesToAdd?.Any() ?? false)
+        try
         {
-            await AddDependencyAsync(DependenciesToAdd.First());
+            while (DependenciesToAdd?.Any() ?? false)
+            {
+                await AddDependencyAsync(DependenciesToAdd.First());
+            }
+            while (DependenciesToRemove?.Any() ?? false)
+            {
+                await RemoveDependencyAsync(DependenciesToRemove.First());
+            }
+            DependenciesToAdd = null;
+            DependenciesToRemove = null;
+            SortSteps?.Invoke();
+            Messenger.AddInformation("Changes saved successfully");
         }
-        while (DependenciesToRemove?.Any() ?? false)
+        catch (Exception ex)
         {
-            await RemoveDependencyAsync(DependenciesToRemove.First());
+            Messenger.AddError("Error saving changes", ex.Message);
         }
-        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task AddDependencyAsync(Dependency dependency)
@@ -134,13 +146,6 @@ public partial class SynchronizeDependenciesModal : ComponentBase
         DependenciesToRemove?.Remove(dependency);
     }
 
-    private void OnClosed()
-    {
-        DependenciesToAdd = null;
-        DependenciesToRemove = null;
-        SortSteps?.Invoke();
-    }
-
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
         var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
@@ -149,6 +154,4 @@ public partial class SynchronizeDependenciesModal : ComponentBase
             context.PreventNavigation();
         }
     }
-
-    public Task ShowAsync() => Modal.LetAsync(x => x.ShowAsync());
 }

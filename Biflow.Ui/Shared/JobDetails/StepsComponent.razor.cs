@@ -63,7 +63,6 @@ public partial class StepsComponent : ComponentBase
     private HashSet<Step> SelectedSteps { get; set; } = new();
 
     private JobParametersModal? JobParametersModal { get; set; }
-    private SynchronizeDependenciesModal? SynchronizeDependenciesModal { get; set; }
 
     private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
 
