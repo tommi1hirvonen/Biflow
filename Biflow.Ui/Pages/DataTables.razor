@@ -2,6 +2,7 @@
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject MarkupHelperService MarkupHelper
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Data Tables | Biflow</PageTitle>
 
@@ -48,10 +49,26 @@ else
             .ThenInclude(t => t.LookupTable)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
-        Categories = await context.MasterDataTableCategories
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(c => c.CategoryName)
-            .ToListAsync();
+        
+        // For admins and editors, show all available table categories.
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.IsInRole("Admin") || authState.User.IsInRole("Editor"))
+        {
+            Categories = await context.MasterDataTableCategories
+                .AsNoTrackingWithIdentityResolution()
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+        }
+        // For other users, only show categories for jobs they are authorized to see.
+        else
+        {
+            Categories = Tables
+                .Select(j => j.Category)
+                .Where(c => c is not null)
+                .Cast<MasterDataTableCategory>()
+                .DistinctBy(c => c.CategoryId)
+                .ToList();
+        }
         Connections = await context.SqlConnections
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(c => c.ConnectionName)
