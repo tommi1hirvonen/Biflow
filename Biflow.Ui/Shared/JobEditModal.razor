@@ -23,7 +23,7 @@
                 <div class="row">
                     <div class="col">
                         <label class="form-label">Category</label>
-                        <InputSelect class="form-select" @bind-Value="Job.CategoryId">
+                        <InputSelect class="form-select" @bind-Value="Job.CategoryId" @bind-Value:after="SetCategory">
                             <option value="">No category</option>
                             @foreach (var cat in Categories)
                             {
@@ -78,15 +78,26 @@
         }
     }
 
+    private void SetCategory()
+    {
+        Job.Category = Job.CategoryId is not null
+            ? Categories?.First(c => c.CategoryId == Job.CategoryId)
+            : null;
+    }
+
     public async Task ShowAsync(Job? job = null)
     {
         try
         {
             EditContext = await DbContextFactory.CreateDbContextAsync();
-            Categories = await EditContext.JobCategories.OrderBy(c => c.CategoryName).ToListAsync();
+            Categories = await EditContext.JobCategories
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
             if (job is not null)
             {
-                Job = await EditContext.Jobs.FirstAsync(j => j.JobId == job.JobId);
+                Job = await EditContext.Jobs
+                    .Include(j => j.Category)
+                    .FirstAsync(j => j.JobId == job.JobId);
             }
             else
             {

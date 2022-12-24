@@ -6,6 +6,7 @@
 @inject DbHelperService DbHelperService
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IHxMessengerService Messenger
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Jobs | Biflow</PageTitle>
 
@@ -222,12 +223,30 @@
         Jobs_ = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)
+            .Include(job => job.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync();
-        Categories = await context.JobCategories
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(c => c.CategoryName)
-            .ToListAsync();
+
+        // For admins and editors, show all available job categories.
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.IsInRole("Admin") || authState.User.IsInRole("Editor"))
+        {
+            Categories = await context.JobCategories
+                .AsNoTrackingWithIdentityResolution()
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+        }
+        // For other users, only show categories for jobs they are authorized to see.
+        else
+        {
+            Categories = Jobs_
+                .Select(j => j.Category)
+                .Where(c => c is not null)
+                .Cast<JobCategory>()
+                .DistinctBy(c => c.CategoryId)
+                .ToList();
+        }
+
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
         IsLoading = false;
@@ -292,9 +311,9 @@
             using var context = DbFactory.CreateDbContext();
             Guid createdJobId = await DbHelperService.JobCopyAsync(job.JobId, user);
             var createdJob = await context.Jobs
-            .Include(job_ => job_.Steps)
-            .Include(job_ => job_.Schedules)
-            .FirstAsync(job_ => job_.JobId == createdJobId);
+            .Include(j => j.Schedules)
+            .Include(j => j.Category)
+            .FirstAsync(j => j.JobId == createdJobId);
             Jobs_?.Add(createdJob);
             Jobs_ = Jobs_?.OrderBy(job_ => job_.JobName).ToList();
         }
@@ -365,6 +384,7 @@
             foreach (var job in Jobs_?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
             {
                 job.CategoryId = null;
+                job.Category = null;
             }
         }
         catch (Exception ex)
