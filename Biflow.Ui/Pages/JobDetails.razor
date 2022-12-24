@@ -61,6 +61,20 @@
                 </HxDropdownButtonGroup>
             </div>
         </AuthorizeView>
+
+        <AuthorizeView Roles="Admin, Editor">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
+                <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
+            </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Operator, Viewer">
+            <div class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)">
+                <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
+            </div>
+        </AuthorizeView>
     </div>
 </div>
 

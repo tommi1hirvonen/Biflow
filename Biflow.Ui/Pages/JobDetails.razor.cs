@@ -130,4 +130,23 @@ public partial class JobDetails : ComponentBase
         }
     }
 
+    private async Task ToggleJobEnabled(ChangeEventArgs args)
+    {
+        try
+        {
+            var enabled = (bool)args.Value!;
+            ArgumentNullException.ThrowIfNull(Job);
+            using var context = DbFactory.CreateDbContext();
+            Job.IsEnabled = enabled;
+            await context.Jobs
+                .Where(j => j.JobId == Job.JobId)
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.IsEnabled, Job.IsEnabled));
+            var message = Job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
+            Messenger.AddInformation(message);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling job", ex.Message);
+        }
+    }
 }
