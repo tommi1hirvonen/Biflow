@@ -1,29 +1,26 @@
-﻿@{
-    switch (ExecutionStatus)
+﻿@inject MarkupHelperService Markup
+
+@{
+    var (textClass, borderClass, svgPath) = ExecutionStatus switch
     {
-        case StepExecutionStatus.Succeeded:
-            <span class="badge bg-success">@ExecutionStatus</span>
-            break;
-        case StepExecutionStatus.Failed:
-            <span class="badge bg-danger">@ExecutionStatus</span>
-            break;
-        case StepExecutionStatus.Stopped:
-        case StepExecutionStatus.Duplicate:
-        case StepExecutionStatus.AwaitRetry:
-            <span class="badge bg-warning">@ExecutionStatus</span>
-            break;
-        case StepExecutionStatus.Running:
-            <span class="badge bg-primary">@ExecutionStatus</span>
-            break;
-        case StepExecutionStatus.Skipped:
-        case StepExecutionStatus.NotStarted:
-        default:
-            <span class="badge bg-secondary">@ExecutionStatus</span>
-            break;
-    }
+        StepExecutionStatus.Succeeded => ("text-success", "border-success", "icons/feather/check-circle.svg"),
+        StepExecutionStatus.Failed => ("text-danger", "border-danger", "icons/feather/alert-octagon.svg"),
+        StepExecutionStatus.Stopped => ("text-warning", "border-warning", "icons/feather/x-octagon.svg"),
+        StepExecutionStatus.Duplicate => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
+        StepExecutionStatus.AwaitRetry => ("text-warning", "border-warning", "icons/feather/repeat.svg"),
+        StepExecutionStatus.Running => ("text-primary", "border-primary", "icons/feather/play.svg"),
+        StepExecutionStatus.Skipped => ("", "border-dark", "icons/feather/skip-forward.svg"),
+        StepExecutionStatus.NotStarted => ("", "border-dark", "icons/feather/clock.svg"),
+        _ => ("", "", "icons/feather/help-circle.svg")
+    };
 }
 
+<span class="rounded border d-inline-block fw-semibold @textClass @borderClass"
+      style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem;">
+    @Markup.FromFile(svgPath)
+    @ExecutionStatus
+</span>
+
 @code {
-    [Parameter]
-    public StepExecutionStatus? ExecutionStatus { get; set; }
+    [Parameter] public StepExecutionStatus? ExecutionStatus { get; set; }
 } 

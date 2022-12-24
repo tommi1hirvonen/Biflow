@@ -1,27 +1,25 @@
-﻿@{
-    switch (ExecutionStatus_)
+﻿@inject MarkupHelperService Markup
+
+@{
+    var (textClass, borderClass, svgPath) = ExecutionStatus_ switch
     {
-        case ExecutionStatus.Succeeded:
-            <span class="badge bg-success">@ExecutionStatus_</span>
-            break;
-        case ExecutionStatus.Failed:
-            <span class="badge bg-danger">@ExecutionStatus_</span>
-            break;
-        case ExecutionStatus.Warning:
-        case ExecutionStatus.Stopped:
-        case ExecutionStatus.Suspended:
-            <span class="badge bg-warning">@ExecutionStatus_</span>
-            break;
-        case ExecutionStatus.Running:
-            <span class="badge bg-primary">@ExecutionStatus_</span>
-            break;
-        default:
-            <span class="badge bg-secondary">@ExecutionStatus_</span>
-            break;
-    }
+        ExecutionStatus.Succeeded => ("text-success", "border-success", "icons/feather/check-circle.svg"),
+        ExecutionStatus.Failed => ("text-danger", "border-danger", "icons/feather/alert-octagon.svg"),
+        ExecutionStatus.Warning => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
+        ExecutionStatus.Stopped => ("text-warning", "border-warning", "icons/feather/x-octagon.svg"),
+        ExecutionStatus.Suspended => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
+        ExecutionStatus.Running => ("text-primary", "border-primary", "icons/feather/play.svg"),
+        ExecutionStatus.NotStarted => ("", "border-dark", "icons/feather/clock.svg"),
+        _ => ("", "", "icons/feather/help-circle.svg")
+    };
 }
 
+<span class="rounded border d-inline-block fw-semibold @textClass @borderClass"
+      style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem;">
+    @Markup.FromFile(svgPath)
+    @ExecutionStatus_
+</span>
+
 @code {
-    [Parameter]
-    public ExecutionStatus? ExecutionStatus_ { get; set; }
+    [Parameter] public ExecutionStatus? ExecutionStatus_ { get; set; }
 }
