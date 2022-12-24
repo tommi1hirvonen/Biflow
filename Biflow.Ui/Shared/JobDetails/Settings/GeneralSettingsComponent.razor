@@ -47,7 +47,7 @@
 @code {
     [CascadingParameter] Job? Job { get; set; }
 
-    [Parameter] public EventCallback<Job> OnJobUpdated { get; set; }
+    [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
     private BiflowContext? Context { get; set; }
 
@@ -86,9 +86,10 @@
         try
         {
             ArgumentNullException.ThrowIfNull(Context);
+            ArgumentNullException.ThrowIfNull(EditJob);
             await Context.SaveChangesAsync();
             Messenger.AddInformation("Job settings saved successfully");
-            await OnJobUpdated.InvokeAsync(EditJob);
+            OnJobUpdated?.Invoke(EditJob);
         }
         catch (DbUpdateConcurrencyException)
         {

@@ -17,11 +17,11 @@ public partial class SynchronizeDependenciesModal : ComponentBase
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
-    [Parameter] public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter] public IEnumerable<Step>? Steps { get; set; }
+    [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
-    [Parameter] public Action? OnModalClosed { get; set; }
+    [CascadingParameter] public List<Step>? Steps { get; set; }
 
     private HxModal? Modal { get; set; }
 
@@ -138,7 +138,7 @@ public partial class SynchronizeDependenciesModal : ComponentBase
     {
         DependenciesToAdd = null;
         DependenciesToRemove = null;
-        OnModalClosed?.Invoke();
+        SortSteps?.Invoke();
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

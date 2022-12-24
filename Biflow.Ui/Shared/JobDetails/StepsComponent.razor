@@ -23,7 +23,7 @@
 
 @if (Job is not null)
 {
-    <JobParametersModal @ref="JobParametersModal" Job="Job" Steps="Steps" />
+    <JobParametersModal @ref="JobParametersModal" />
 }
 
 
@@ -456,69 +456,50 @@
 
 <AuthorizeView Roles="Admin, Editor">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         OnStepSubmit="OnStepSubmit" />
     <EmailStepEditModal @ref="StepEditModals[StepType.Email]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         AppRegistrations="AppRegistrations"
         OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="StepEditModals[StepType.Exe]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="StepEditModals[StepType.Job]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         Jobs="Jobs"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
-        Job="Job" Steps="Steps"
         Connections="SqlConnections"
         FunctionApps="FunctionApps"
         OnStepSubmit="OnStepSubmit" />
     <PackageStepEditModal @ref="StepEditModals[StepType.Package]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />   
 </AuthorizeView>
 
-<SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" Job="Job" Steps="Steps"  OnModalClosed="OnSynchronizeDependenciesModalClosed" />
+<SynchronizeDependenciesModal @ref="SynchronizeDependenciesModal" />
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStep?.StepId.ToString()" />
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <ExecuteModal @ref="ExecuteModal" Steps="Steps" Job="Job" OnExecutionStarted="OnExecutionStarted" />
+    <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
 </AuthorizeView>
 
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />

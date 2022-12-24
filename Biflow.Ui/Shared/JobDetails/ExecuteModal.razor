@@ -230,15 +230,11 @@
 </HxModal>
 
 @code {
+    [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter]
-    public Job? Job { get; set; }
+    [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    [Parameter]
-    public List<Step>? Steps { get; set; }
-
-    [Parameter]
-    public EventCallback<Guid> OnExecutionStarted { get; set; }
+    [Parameter] public EventCallback<Guid> OnExecutionStarted { get; set; }
 
     private IEnumerable<Tag> Tags => Steps?
     .SelectMany(step => step.Tags)

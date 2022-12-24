@@ -83,82 +83,58 @@
 
 <AuthorizeView Roles="Admin, Editor">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]"
-        Job="Job"
-        Steps="Steps" 
         Connections="SqlConnections"
         AsConnections="AsConnections"
         OnStepSubmit="OnStepSubmit" />
     <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         AppRegistrations="AppRegistrations"
         OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="StepEditModals[StepType.Exe]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="StepEditModals[StepType.Job]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         Jobs="Jobs"
         OnStepSubmit="OnStepSubmit" />
     <PackageStepEditModal @ref="StepEditModals[StepType.Package]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         FunctionApps="FunctionApps"
         OnStepSubmit="OnStepSubmit" />
     <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
     <EmailStepEditModal @ref="StepEditModals[StepType.Email]"
-        Job="Job"
-        Steps="Steps"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @code {
-    [Parameter]
-    public List<Job> Jobs { get; set; } = null!;
+    [Parameter] public List<Job> Jobs { get; set; } = null!;
 
-    [CascadingParameter]
-    public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter]
-    public List<Step> Steps { get; set; } = null!;
+    [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    [Parameter]
-    public List<SqlConnectionInfo>? SqlConnections { get; set; }
-    [Parameter]
-    public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
-    [Parameter]
-    public List<PipelineClient>? PipelineClients { get; set; }
-    [Parameter]
-    public List<AppRegistration>? AppRegistrations { get; set; }
-    [Parameter]
-    public List<FunctionApp>? FunctionApps { get; set; }
+    [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
+
+    [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+
+    [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
+
+    [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
+
+    [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
@@ -203,6 +179,8 @@
     {
         string? stepsJson = null;
         string? dependenciesJson = null;
+
+        ArgumentNullException.ThrowIfNull(Steps);
 
         if (StepFilter is null)
         {
@@ -262,6 +240,8 @@
 
     private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps, int depth)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
+
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
         if (processedSteps.Any(s => s.StepId == step.StepId))
@@ -293,6 +273,7 @@
 
     private List<Step> RecurseDependenciesForward(Step step, List<Step> processedSteps, int depth)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
             return processedSteps;
@@ -328,6 +309,7 @@
     // Step edit modals can be opened from JS using JSInterop by calling this method. See site.js => drawDependencyGraph().
     private async void OpenStepEditModal(string id)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
         var stepId = Guid.Parse(id);
         var step = Steps.First(s => s.StepId == stepId);
         StateHasChanged();
@@ -336,6 +318,7 @@
 
     private async Task OnStepSubmit(Step step)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
         var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (existingStep is not null)
         {
@@ -370,6 +353,7 @@
 
     private async Task<AutosuggestDataProviderResult<Step>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
         await Task.Delay(100);
         var filteredModules = Steps.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
         return new AutosuggestDataProviderResult<Step>
@@ -384,6 +368,7 @@
 
     private Task<Step> ResolveAutosuggestItemFromValue(Step step)
     {
+        ArgumentNullException.ThrowIfNull(Steps);
         var step_ = Task.FromResult(Steps.First(s => s.StepId == step.StepId));
         return step_;
     }

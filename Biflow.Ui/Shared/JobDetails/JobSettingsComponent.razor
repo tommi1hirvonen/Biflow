@@ -1,6 +1,5 @@
 ﻿@inject MarkupHelperService MarkupHelper
 
-
 <PageTitle>@Job?.JobName | Settings | Biflow</PageTitle>
 
 <div class="row">
@@ -29,10 +28,10 @@
                 @switch (ActiveTab)
                 {
                     case SettingsTab.General:
-                        <GeneralSettingsComponent OnJobUpdated="OnJobUpdated" />
+                        <GeneralSettingsComponent />
                         break;
                     case SettingsTab.Execution:
-                        <ExecutionSettingsComponent OnExecutionModeChanged="OnExecutionModeChanged" />
+                        <ExecutionSettingsComponent />
                         break;
                     case SettingsTab.Concurrency:
                         <ConcurrencySettingsComponent />
@@ -48,10 +47,6 @@
 
 @code {
     [CascadingParameter] public Job? Job { get; set; }
-
-    [Parameter] public EventCallback OnExecutionModeChanged { get; set; }
-
-    [Parameter] public EventCallback<Job> OnJobUpdated { get; set; }
 
     private SettingsTab ActiveTab { get; set; } = SettingsTab.General;
 

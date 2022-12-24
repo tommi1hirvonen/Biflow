@@ -13,17 +13,31 @@ namespace Biflow.Ui.Shared.JobDetails;
 public partial class StepsComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    
     [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
+    
     [Inject] private DbHelperService DbHelperService { get; set; } = null!;
+    
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    
     [CascadingParameter] public Job? Job { get; set; }
+    
+    [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
+
+    [CascadingParameter] public List<Step>? Steps { get; set; }
+    
     [Parameter] public IList<Job>? Jobs { get; set; }
-    [Parameter] public List<Step>? Steps { get; set; }
+    
     [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
+    
     [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
+    
     [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
+    
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     private IEnumerable<Step> FilteredSteps => Steps?
@@ -203,7 +217,7 @@ public partial class StepsComponent : ComponentBase
                     .Include(step => (step as ParameterizedStep)!.StepParameters)
                     .FirstAsync(step_ => step_.StepId == createdStepId);
                 Steps?.Add(createdStep);
-                SortSteps();
+                SortSteps?.Invoke();
             }
         }
         catch (Exception ex)
@@ -235,7 +249,7 @@ public partial class StepsComponent : ComponentBase
                         .Include(step => (step as ParameterizedStep)!.StepParameters)
                         .FirstAsync(step_ => step_.StepId == createdStepId);
                     Steps?.Add(createdStep);
-                    SortSteps();
+                    SortSteps?.Invoke();
                 }
             }
         }
@@ -253,34 +267,7 @@ public partial class StepsComponent : ComponentBase
             Steps?.Remove(existingStep);
         }
         Steps?.Add(step);
-        SortSteps();
-    }
-
-    private void SortSteps()
-    {
-        if (Job is null || Steps is null) return;
-        try
-        {
-            if (Job.UseDependencyMode)
-            {
-                var comparer = new TopologicalStepComparer(Steps);
-                Steps.Sort(comparer);
-            }
-            else
-            {
-                Steps.Sort();
-            }
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error sorting steps", ex.Message);
-        }
-    }
-
-    private void OnSynchronizeDependenciesModalClosed()
-    {
-        SortSteps();
-        StateHasChanged();
+        SortSteps?.Invoke();
     }
 
     private async Task ShowStepDetailsModal(Step step)

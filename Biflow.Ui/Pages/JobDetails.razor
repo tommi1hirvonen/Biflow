@@ -18,14 +18,14 @@
                 All jobs
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (Job.Category is not null)
+            @if (Job?.Category is not null)
             {
                 <span>@Job.Category.CategoryName /&nbsp;</span>
             }
-            <strong>@Job.JobName</strong>
+            <strong>@Job?.JobName</strong>
         </div>
     </div>
-    @if (!string.IsNullOrWhiteSpace(Job.JobDescription))
+    @if (!string.IsNullOrWhiteSpace(Job?.JobDescription))
     {
         <div class="col-auto">
             <HxButton Color="ThemeColor.Light"
@@ -114,42 +114,46 @@
 </div>
 
 <CascadingValue Value="Job">
-    @if (DetailsPage == "steps")
-    {
-        <StepsComponent Jobs="Jobs"
-                        Steps="Steps"
-                        SqlConnections="SqlConnections"
-                        AsConnections="AsConnections"
-                        PipelineClients="PipelineClients"
-                        AppRegistrations="AppRegistrations"
-                        FunctionApps="FunctionApps" />
-    }
-    else if (DetailsPage == "history")
-    {
-        <JobHistoryComponent />
-    }
-    else if (DetailsPage == "dependencies")
-    {
-        <DependenciesComponent Jobs="Jobs"
-                               Steps="Steps"
-                               SqlConnections="SqlConnections"
-                               AsConnections="AsConnections"
-                               PipelineClients="PipelineClients"
-                               AppRegistrations="AppRegistrations"
-                               FunctionApps="FunctionApps" />
-    }
-    else if (DetailsPage == "schedules")
-    {
-        <SchedulesComponent />
-    }
-    else if (DetailsPage == "settings")
-    {
-        <AuthorizeView Roles="Admin, Editor">
-            <JobSettingsComponent OnExecutionModeChanged="SortSteps" OnJobUpdated="OnJobUpdated" />
-        </AuthorizeView>
-    }
-    else
-    {
-        <p>No component to show.</p>
-    }
+    <CascadingValue Value="Steps">
+        <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated">
+            <CascadingValue Value="SortSteps" Name="SortSteps">
+                @if (DetailsPage == "steps")
+                {
+                    <StepsComponent Jobs="Jobs"
+                                    SqlConnections="SqlConnections"
+                                    AsConnections="AsConnections"
+                                    PipelineClients="PipelineClients"
+                                    AppRegistrations="AppRegistrations"
+                                    FunctionApps="FunctionApps" />
+                }
+                else if (DetailsPage == "history")
+                {
+                    <JobHistoryComponent />
+                }
+                else if (DetailsPage == "dependencies")
+                {
+                    <DependenciesComponent Jobs="Jobs"
+                                           SqlConnections="SqlConnections"
+                                           AsConnections="AsConnections"
+                                           PipelineClients="PipelineClients"
+                                           AppRegistrations="AppRegistrations"
+                                           FunctionApps="FunctionApps" />
+                }
+                else if (DetailsPage == "schedules")
+                {
+                    <SchedulesComponent />
+                }
+                else if (DetailsPage == "settings")
+                {
+                    <AuthorizeView Roles="Admin, Editor">
+                        <JobSettingsComponent />
+                    </AuthorizeView>
+                }
+                else
+                {
+                    <p>No component to show.</p>
+                }
+            </CascadingValue>
+        </CascadingValue>
+    </CascadingValue>
 </CascadingValue>

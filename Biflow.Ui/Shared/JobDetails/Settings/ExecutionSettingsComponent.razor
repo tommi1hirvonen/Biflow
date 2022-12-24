@@ -46,7 +46,7 @@
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter] public EventCallback OnExecutionModeChanged { get; set; }
+    [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
     private async Task ToggleJobEnabled(ChangeEventArgs args)
     {
@@ -78,7 +78,7 @@
             await context.Jobs
                 .Where(j => j.JobId == Job.JobId)
                 .ExecuteUpdateAsync(j => j.SetProperty(p => p.UseDependencyMode, Job.UseDependencyMode));
-            await OnExecutionModeChanged.InvokeAsync();
+            SortSteps?.Invoke();
             var message = Job.UseDependencyMode ? "Dependency mode toggled successfully" : "Execution phase mode toggled successfully";
             Messenger.AddInformation(message);
         }

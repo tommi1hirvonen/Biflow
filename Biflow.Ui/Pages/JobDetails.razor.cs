@@ -20,7 +20,7 @@ public partial class JobDetails : ComponentBase
 
     [Parameter] public Guid Id { get; set; }
 
-    private Job Job { get; set; } = new();
+    private Job? Job { get; set; }
 
     private List<Job> Jobs { get; set; } = new();
 
@@ -36,7 +36,7 @@ public partial class JobDetails : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = await DbFactory.CreateDbContextAsync();
         SqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
@@ -73,12 +73,16 @@ public partial class JobDetails : ComponentBase
             .Include(step => step.ExecutionConditionParameters)
             .Where(step => step.JobId == Job.JobId)
             .ToListAsync();
-        SortSteps();
         Jobs = await context.Jobs.OrderBy(j => j.JobName).ToListAsync();
+        SortSteps();
     }
 
     private void SortSteps()
     {
+        if (Job is null)
+        {
+            return;
+        }
         try
         {
             if (Job.UseDependencyMode)
@@ -90,6 +94,7 @@ public partial class JobDetails : ComponentBase
             {
                 Steps.Sort();
             }
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -99,6 +104,10 @@ public partial class JobDetails : ComponentBase
 
     private void OnJobUpdated(Job job)
     {
+        if (Job is null)
+        {
+            return;
+        }
         job.JobParameters = Job.JobParameters;
         Job = job;
         StateHasChanged();
@@ -108,6 +117,7 @@ public partial class JobDetails : ComponentBase
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(Job);
             using var context = DbFactory.CreateDbContext();
             context.Jobs.Remove(Job);
             await context.SaveChangesAsync();

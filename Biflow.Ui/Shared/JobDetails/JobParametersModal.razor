@@ -14,7 +14,7 @@
                 @MarkupHelper.FromFile("icons/feather/help-circle.svg")
             </HxButton>
         </HxPopover>
-        @if (Job is not null)
+        @if (Job is not null && Steps is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
@@ -95,11 +95,9 @@
 
     private HxModal? Modal { get; set; }
 
-    [Parameter]
-    [EditorRequired]
-    public Job Job { get; set; } = null!;
+    [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter, EditorRequired] public IEnumerable<Step> Steps { get; set; } = null!;
+    [CascadingParameter] public List<Step>? Steps { get; set; }
 
     private BiflowContext Context { get; set; } = null!;
 
@@ -204,6 +202,7 @@
 
     public async Task Show()
     {
+        ArgumentNullException.ThrowIfNull(Job);
         await Modal.LetAsync(x => x.ShowAsync());
         Context.Attach(Job);
     }

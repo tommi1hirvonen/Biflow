@@ -17,9 +17,9 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
 
     [Inject] public IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
 
-    [Parameter] public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
 
-    [Parameter] public IEnumerable<Step>? Steps { get; set; }
+    [CascadingParameter] public List<Step>? Steps { get; set; }
 
     [Parameter] public Action? OnModalClosed { get; set; }
 
