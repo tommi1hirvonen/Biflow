@@ -45,6 +45,42 @@
     </div>
 </div>
 
+<div class="row mt-3">
+    <div class="col-xxl-4 col-xl-5 col-md-6 col-sm-7">
+        <div class="input-group input-group-sm me-3">
+            <div class="input-group-text">
+                @MarkupHelper.FromFile("icons/feather/filter.svg")
+            </div>
+            <input type="search" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+        </div>
+    </div>
+        
+    <div class="col-sm-5 mt-3 mt-sm-0">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <FilterDropdown TItem="ExecutionStatus"
+                            FilterSet="StatusFilter"
+                            Items="LastExecutions?.Values.Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                    Status
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    <JobExecutionStatusBadgeComponent ExecutionStatus_="item" />
+                </ItemTemplate>
+            </FilterDropdown>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+                {
+                    StatusFilter.Clear();
+                    JobNameFilter = string.Empty;
+                }">
+                @MarkupHelper.FromFile("icons/feather/x.svg")
+                Clear
+            </HxButton>
+        </HxButtonGroup>
+    </div>  
+</div>
+
 <div class="card shadow-sm mt-4">
     <table class="table mb-0">
         <thead>
@@ -77,7 +113,9 @@
             {
                 foreach (var category in Categories.Append(null))
                 {
-                    var jobs = Jobs_.Where(j => j.CategoryId == category?.CategoryId);
+                    var jobs = Jobs_
+                        .Where(j => j.CategoryId == category?.CategoryId)
+                        .Where(j => j.JobName.ContainsIgnoreCase(JobNameFilter));
 
                     /* Show all categories even if they do not have jobs in them. Show "No category" only if it has jobs */
                     if (category is not null || jobs.Any())
@@ -112,10 +150,16 @@
                         @foreach (var item in jobs)
                         {
                             var lastExecution = GetLastExecution(item);
+                            if (StatusFilter.Any() && (lastExecution is null || !StatusFilter.Contains(lastExecution.ExecutionStatus)))
+                            {
+                                continue;
+                            }
                             var nextStartTime = GetNextStartTime(item);
                             <tr class="job-row @(item.IsEnabled ? null : "disabled")">
                                 <td class="align-middle">
-                                    <a class="text-dark" href="@($"jobs/{item.JobId}/steps")">@item.JobName</a>
+                                    <a class="text-dark" href="@($"jobs/{item.JobId}/steps")">
+                                        <HighlightableText PartToHighlight="@JobNameFilter" Text="@item.JobName" />
+                                    </a>
                                 </td>
                                 <td class="align-middle">
                                     @if (lastExecution is not null)
@@ -210,6 +254,9 @@
 
     private JobCategoryEditModal? CategoryEditModal { get; set; }
     private JobEditModal? JobEditModal { get; set; }
+
+    private string JobNameFilter { get; set; } = "";
+    private HashSet<ExecutionStatus> StatusFilter { get; } = new();
 
     protected override async Task OnInitializedAsync()
     {
