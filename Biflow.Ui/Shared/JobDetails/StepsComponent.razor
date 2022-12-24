@@ -24,8 +24,6 @@
 @if (Job is not null)
 {
     <JobParametersModal @ref="JobParametersModal" Job="Job" Steps="Steps" />
-
-    <JobConcurrencyModal @ref="JobConcurrencyModal" Job="Job" />
 }
 
 
@@ -60,10 +58,6 @@
                     <HxDropdownItem @onclick="async () => await JobParametersModal.LetAsync(x => x.Show())">
                         @MarkupHelper.FromFile("icons/feather/at-sign.svg")
                         Parameters
-                    </HxDropdownItem>
-                    <HxDropdownItem @onclick="async () => await JobConcurrencyModal.LetAsync(x => x.Show())">
-                        @MarkupHelper.FromFile("icons/feather/cpu.svg")
-                        Concurrency
                     </HxDropdownItem>
                     <HxDropdownItem @onclick="async () => await SynchronizeDependenciesModal.LetAsync(x => x.ShowAsync())">
                         @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")

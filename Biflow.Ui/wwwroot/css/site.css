@@ -326,10 +326,15 @@ tr.disabled {
 }
 
 
+.list-group-item.active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+
 /*
     Text
 */
-
 .text-primary {
     color: var(--color-primary)!important;
 }

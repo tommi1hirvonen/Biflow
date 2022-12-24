@@ -1,0 +1,110 @@
+﻿@inject MarkupHelperService MarkupHelper
+@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IHxMessengerService Messenger
+
+<div class="form-check form-switch">
+    <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
+    <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
+</div>
+
+<div>
+    <div class="form-check mt-4">
+        <input type="radio" class="form-check-input" id="radio_execution_phase_mode"
+               checked="@(!Job?.UseDependencyMode ?? false ? "checked" : null)"
+               @onchange="() => ToggleDependencyMode(false)">
+        <label class="form-check-label" for="radio_execution_phase_mode">
+            <span class="fw-bold">Execution phase mode</span>
+            <br>
+            <span>Steps are executed in order based on their execution phase. Steps in the same execution phase can be started at the same time. Execution phases are started from the lowest value up.</span>
+        </label>
+    </div>
+    <div class="form-check mt-3">
+        <input type="radio" class="form-check-input" id="radio_dependency_mode"
+               checked="@(Job?.UseDependencyMode ?? false ? "checked" : null)"
+               @onchange="() => ToggleDependencyMode(true)">
+        <label class="form-check-label" for="radio_dependency_mode">
+            <span class="fw-bold">Dependency mode</span>
+            <br>
+            <span>Steps are executed in order based on their dependencies. Steps that have no dependencies are started first. Steps that have no dependencies between them can be executed at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria is met.</span>
+        </label>
+    </div>
+</div>
+
+
+<div class="form-check mt-4">
+    <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle"
+        checked="@(Job?.StopOnFirstError ?? false ? "checked" : null)"
+        disabled=@(Job?.UseDependencyMode ?? false)
+        @onchange="ToggleStopOnFirstError">
+    <label class="form-check-label" for="stop_on_first_error_toggle">
+        <span class="fw-bold">Stop on first error</span>
+        <br>
+        <span>Stop the entire execution if a step fails. The steps that have been started will run to completion. Available only in execution phase mode.</span>
+    </label>
+</div>
+
+@code {
+    [CascadingParameter] public Job? Job { get; set; }
+
+    [Parameter] public EventCallback OnExecutionModeChanged { get; set; }
+
+    private async Task ToggleJobEnabled(ChangeEventArgs args)
+    {
+        try
+        {
+            var enabled = (bool)args.Value!;
+            ArgumentNullException.ThrowIfNull(Job);
+            using var context = DbFactory.CreateDbContext();
+            Job.IsEnabled = enabled;
+            await context.Jobs
+                .Where(j => j.JobId == Job.JobId)
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.IsEnabled, Job.IsEnabled));
+            var message = Job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
+            Messenger.AddInformation(message);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling job", ex.Message);
+        }
+    }
+
+    private async Task ToggleDependencyMode(bool value)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Job);
+            using var context = DbFactory.CreateDbContext();
+            Job.UseDependencyMode = value;
+            await context.Jobs
+                .Where(j => j.JobId == Job.JobId)
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.UseDependencyMode, Job.UseDependencyMode));
+            await OnExecutionModeChanged.InvokeAsync();
+            var message = Job.UseDependencyMode ? "Dependency mode toggled successfully" : "Execution phase mode toggled successfully";
+            Messenger.AddInformation(message);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling mode", ex.Message);
+        }
+    }
+
+    private async Task ToggleStopOnFirstError(ChangeEventArgs args)
+    {
+        try
+        {
+            var stopOnFirstError = (bool)args.Value!;
+            ArgumentNullException.ThrowIfNull(Job);
+            using var context = DbFactory.CreateDbContext();
+            Job.StopOnFirstError = stopOnFirstError;
+            await context.Jobs
+                .Where(j => j.JobId == Job.JobId)
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.StopOnFirstError, Job.StopOnFirstError));
+            var message = Job.StopOnFirstError ? "Stop on first error enabled successfully" : "Stop on first error disabled successfully";
+            Messenger.AddInformation(message);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling setting", ex.Message);
+        }
+    }
+}

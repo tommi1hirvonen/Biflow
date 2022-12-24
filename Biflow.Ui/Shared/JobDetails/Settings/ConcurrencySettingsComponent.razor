@@ -1,0 +1,150 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
+
+@if (EditJob is not null)
+{
+    <EditForm id="job_concurrency_form" Model="EditJob" OnValidSubmit="OnSubmit">
+
+        <ObjectGraphDataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="text-secondary">
+            <p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p>
+            <p>You can fine-tune the level of concurrency by defining maximum parallel steps for each step type. The main max parallel steps setting is always respected, however. This means that step type based limits only apply when they are lower than the main value.</p>
+        </div>
+
+        <div>
+            <label class="form-label">Max parallel steps (0 = use default)</label>
+            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col">
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small">
+                        @MarkupHelper.FromFile("icons/feather/plus.svg")
+                        Add step type
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownHeader>
+                            Step type
+                        </HxDropdownHeader>
+                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !EditJob.JobConcurrencies.Any(c => c.StepType == type)))
+                        {
+                            <HxDropdownItem @onclick="() => EditJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                                <StepTypeIconComponent StepType_="stepType" />
+                                @stepType
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+            </div>
+        </div>
+
+        <table id="concurrency_table" class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Step type</th>
+                    <th>Max parallel steps</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var concur in EditJob.JobConcurrencies.OrderBy(c => c.StepType))
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <StepTypeIconComponent StepType_="concur.StepType" />
+                            @concur.StepType
+                        </td>
+                        <td>
+                            <input class="form-control form-control-sm" style="max-width: 10rem;" @bind="concur.MaxParallelSteps" />
+                        </td>
+                        <td>
+                            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
+                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => EditJob.JobConcurrencies.Remove(concur)">
+                                    @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                </HxButton>
+                            </HxButtonGroup>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <p class="text-danger">@ErrorMessage</p>
+        }
+
+        <div class="row">
+            <div class="col">
+                <HxSubmit Color="ThemeColor.Success">
+                    @MarkupHelper.FromFile("icons/feather/save.svg")
+                    Save
+                </HxSubmit>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [CascadingParameter] Job? Job { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private Job? EditJob { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Job is null || Context is not null)
+        {
+            return;
+        }
+
+        Context = DbContextFactory.CreateDbContext();
+        EditJob = await Context.Jobs
+            .Include(j => j.JobConcurrencies)
+            .FirstAsync(j => j.JobId == Job.JobId);
+    }
+
+    private async Task OnSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(EditJob);
+        var count = EditJob.JobConcurrencies.Count();
+        var distinct = EditJob.JobConcurrencies.Select(c => c.StepType).Distinct().Count();
+        if (count != distinct)
+        {
+            ErrorMessage = "Duplicate step types detected";
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Context);
+            await Context.SaveChangesAsync();
+            Messenger.AddInformation("Concurrency settings saved successfully");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving concurrency settings", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+
+    }
+
+    public void Dispose()
+    {
+        Context?.Dispose();
+    }
+}

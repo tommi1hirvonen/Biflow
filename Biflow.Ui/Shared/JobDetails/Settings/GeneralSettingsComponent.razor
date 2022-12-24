@@ -1,0 +1,107 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+@inject MarkupHelperService MarkupHelper
+
+@if (EditJob is not null && Categories is not null)
+{
+    <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div>
+            <label class="form-label">Name</label>
+            <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
+        </div>
+        <div>
+            <label class="form-label">Category</label>
+            <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="EditJob.CategoryId" @bind-Value:after="SetCategory">
+                <option value="">No category</option>
+                @foreach (var cat in Categories)
+                {
+                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                }
+            </InputSelect>
+        </div>
+        <div>
+            <label class="form-label">Description</label>
+            <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
+        </div>
+        <div>
+            <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
+            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
+            <div class="form-text">If the job's execution exceeds the overtime limit, an email is automatically sent to users who have subscribed to this job's overtime notifications.</div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <HxSubmit Color="ThemeColor.Success">
+                    @MarkupHelper.FromFile("icons/feather/save.svg")
+                    Save
+                </HxSubmit>
+            </div>
+        </div>
+    </EditForm>
+}
+
+
+@code {
+    [CascadingParameter] Job? Job { get; set; }
+
+    [Parameter] public EventCallback<Job> OnJobUpdated { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private Job? EditJob { get; set; }
+
+    private IEnumerable<JobCategory>? Categories { get; set; }
+
+    protected override async void OnParametersSet()
+    {
+        if (Job is null || Job.JobId == Guid.Empty || Context is not null)
+        {
+            return;
+        }
+
+        Context = await DbContextFactory.CreateDbContextAsync();
+        EditJob = await Context.Jobs
+            .Include(j => j.Category)
+            .FirstAsync(j => j.JobId == Job.JobId);
+        Categories = await Context.JobCategories
+            .OrderBy(c => c.CategoryName)
+            .ToListAsync();
+        StateHasChanged();
+    }
+
+    private void SetCategory()
+    {
+        ArgumentNullException.ThrowIfNull(EditJob);
+        ArgumentNullException.ThrowIfNull(Categories);
+        EditJob.Category = EditJob.CategoryId is not null
+            ? Categories.First(c => c.CategoryId == EditJob.CategoryId)
+            : null;
+    }
+
+    private async Task UpdateJob()
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Context);
+            await Context.SaveChangesAsync();
+            Messenger.AddInformation("Job settings saved successfully");
+            await OnJobUpdated.InvokeAsync(EditJob);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The job was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating job", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        Context?.Dispose();
+    }
+}

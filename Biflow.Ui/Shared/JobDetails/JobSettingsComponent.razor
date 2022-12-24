@@ -1,0 +1,59 @@
+﻿@inject MarkupHelperService MarkupHelper
+
+
+<PageTitle>@Job?.JobName | Settings | Biflow</PageTitle>
+
+<div class="row">
+    <div class="col-auto">
+        <div class="list-group shadow-sm">
+            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.General ? "active" : null)"
+                    @onclick="() => ActiveTab = SettingsTab.General">
+                @MarkupHelper.FromFile("icons/feather/sliders.svg")
+                General
+            </button>
+            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Execution ? "active" : null)"
+                    @onclick="() => ActiveTab = SettingsTab.Execution">
+                @MarkupHelper.FromFile("icons/feather/tool.svg")
+                Execution mode
+            </button>
+            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Concurrency ? "active" : null)"
+                    @onclick="() => ActiveTab = SettingsTab.Concurrency">
+                @MarkupHelper.FromFile("icons/feather/cpu.svg")
+                Concurrency
+            </button>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                @switch (ActiveTab)
+                {
+                    case SettingsTab.General:
+                        <GeneralSettingsComponent OnJobUpdated="OnJobUpdated" />
+                        break;
+                    case SettingsTab.Execution:
+                        <ExecutionSettingsComponent OnExecutionModeChanged="OnExecutionModeChanged" />
+                        break;
+                    case SettingsTab.Concurrency:
+                        <ConcurrencySettingsComponent />
+                        break;
+                    default:
+                        <span>No component to display</span>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] public Job? Job { get; set; }
+
+    [Parameter] public EventCallback OnExecutionModeChanged { get; set; }
+
+    [Parameter] public EventCallback<Job> OnJobUpdated { get; set; }
+
+    private SettingsTab ActiveTab { get; set; } = SettingsTab.General;
+
+    private enum SettingsTab { General, Execution, Concurrency }
+}

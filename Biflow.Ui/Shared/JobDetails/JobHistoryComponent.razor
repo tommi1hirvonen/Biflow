@@ -113,7 +113,7 @@
 <JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
-    [Parameter] public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
 
     public IList<Execution>? Executions { get; set; }
 

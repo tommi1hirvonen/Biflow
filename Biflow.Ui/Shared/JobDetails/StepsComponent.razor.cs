@@ -17,7 +17,7 @@ public partial class StepsComponent : ComponentBase
     [Inject] private DbHelperService DbHelperService { get; set; } = null!;
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    [Parameter] public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
     [Parameter] public IList<Job>? Jobs { get; set; }
     [Parameter] public List<Step>? Steps { get; set; }
     [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
@@ -49,7 +49,6 @@ public partial class StepsComponent : ComponentBase
     private HashSet<Step> SelectedSteps { get; set; } = new();
 
     private JobParametersModal? JobParametersModal { get; set; }
-    private JobConcurrencyModal? JobConcurrencyModal { get; set; }
     private SynchronizeDependenciesModal? SynchronizeDependenciesModal { get; set; }
 
     private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();

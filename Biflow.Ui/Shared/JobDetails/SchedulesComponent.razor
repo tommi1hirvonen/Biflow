@@ -135,7 +135,7 @@
 </AuthorizeView>
 
 @code {
-    [Parameter] public Job? Job { get; set; }
+    [CascadingParameter] public Job? Job { get; set; }
 
     private List<Schedule>? Schedules { get; set; }
 

@@ -26,8 +26,6 @@ public partial class JobDetails : ComponentBase
 
     private List<Step> Steps { get; set; } = new();
 
-    private Job EditJob { get; set; } = new();
-
     private List<SqlConnectionInfo>? SqlConnections { get; set; }
     private List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
     private List<PipelineClient>? PipelineClients { get; set; }
@@ -63,12 +61,8 @@ public partial class JobDetails : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
             .Include(job => job.JobParameters)
-            .Include(job => job.JobConcurrencies)
             .FirstAsync(job => job.JobId == Id);
         Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();
-        EditJob.JobName = Job.JobName;
-        EditJob.JobDescription = Job.JobDescription;
-        EditJob.OvertimeNotificationLimitMinutes = Job.OvertimeNotificationLimitMinutes;
         Steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Include(step => step.Dependencies)
@@ -103,26 +97,11 @@ public partial class JobDetails : ComponentBase
         }
     }
 
-    private async Task UpdateJob()
+    private void OnJobUpdated(Job job)
     {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            Job.JobName = EditJob.JobName;
-            Job.JobDescription = EditJob.JobDescription;
-            Job.OvertimeNotificationLimitMinutes = EditJob.OvertimeNotificationLimitMinutes;
-            context.Attach(Job).State = EntityState.Modified;
-            await context.SaveChangesAsync();
-            Messenger.AddInformation("Job settings saved successfully");
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            Messenger.AddError("Concurrency error", "The job was modified outside of this session. Reload the page to view the most recent values.");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error updating job", ex.Message);
-        }
+        job.JobParameters = Job.JobParameters;
+        Job = job;
+        StateHasChanged();
     }
 
     private async Task DeleteJob()
@@ -138,52 +117,6 @@ public partial class JobDetails : ComponentBase
         catch (Exception ex)
         {
             Messenger.AddError("Error deleting job", ex.Message);
-        }
-    }
-
-    private async Task ToggleJobEnabled(ChangeEventArgs args)
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(Job);
-            Job.IsEnabled = !Job.IsEnabled;
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error toggling job", ex.Message);
-        }
-    }
-
-    private async Task ToggleDependencyMode(bool value)
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(Job);
-            Job.UseDependencyMode = value;
-            await context.SaveChangesAsync();
-            SortSteps();
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error toggling mode", ex.Message);
-        }
-    }
-
-    private async Task ToggleStopOnFirstError(ChangeEventArgs args)
-    {
-        try
-        {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(Job);
-            Job.StopOnFirstError = !Job.StopOnFirstError;
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error toggling setting", ex.Message);
         }
     }
 
