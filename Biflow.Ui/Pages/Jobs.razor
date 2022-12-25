@@ -1,5 +1,7 @@
 ﻿@page "/jobs"
 
+@using System.Runtime.CompilerServices;
+
 @inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbFactory
 @inject ISchedulerService SchedulerService
@@ -85,7 +87,14 @@
     <table class="table mb-0">
         <thead>
             <tr>
-                <th></th>
+                <th>
+                    <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
+                        @MarkupHelper.FromFile("icons/feather/chevrons-up.svg")
+                    </span>
+                    <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
+                        @MarkupHelper.FromFile("icons/feather/chevrons-down.svg")
+                    </span>
+                </th>
                 <th>Last execution</th>
                 <th>Status</th>
                 <th>Next execution</th>
@@ -113,6 +122,7 @@
             {
                 foreach (var category in Categories.Append(null))
                 {
+                    var state = category is not null ? CategoryExpandStatuses.GetOrCreateValue(category) : NoCategoryExpanded;
                     var jobs = Jobs_
                         .Where(j => j.CategoryId == category?.CategoryId)
                         .Where(j => j.JobName.ContainsIgnoreCase(JobNameFilter));
@@ -125,7 +135,20 @@
                     }
                     <tr style="background-color: #f7f7f7">
                         <td colspan="4" class="align-middle fw-bold">
-                            @(category?.CategoryName ?? "No category")
+                            @if (state.IsExpanded)
+                            {
+                                <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
+                                    @MarkupHelper.FromFile("icons/feather/chevron-down.svg")
+                                    @(category?.CategoryName ?? "No category")
+                                </span>
+                            }
+                            else
+                            {
+                                <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
+                                    @MarkupHelper.FromFile("icons/feather/chevron-right.svg")
+                                    @(category?.CategoryName ?? "No category")
+                                </span>
+                            }
                         </td>
                         <td colspan="1" class="text-end">
                             <AuthorizeView Roles="Admin, Editor">
@@ -150,7 +173,11 @@
                             </AuthorizeView>
                         </td>
                     </tr>
-                    @foreach (var item in jobs)
+                    @if (!state.IsExpanded && !filtersApplied)
+                    {
+                        continue;
+                    }
+                    foreach (var item in jobs)
                     {
                         var lastExecution = GetLastExecution(item);
                         if (StatusFilter.Any() && (lastExecution is null || !StatusFilter.Contains(lastExecution.ExecutionStatus)))
@@ -259,6 +286,9 @@
 
     private string JobNameFilter { get; set; } = "";
     private HashSet<ExecutionStatus> StatusFilter { get; } = new();
+
+    private ConditionalWeakTable<JobCategory, ExpandStatus> CategoryExpandStatuses { get; } = new();
+    private ExpandStatus NoCategoryExpanded { get; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -441,4 +471,26 @@
             Messenger.AddError("Error deleting category", ex.Message);
         }
     }
+
+    private void ExpandAll()
+    {
+        foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
+        {
+            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            state.IsExpanded = true;
+        }
+        NoCategoryExpanded.IsExpanded = true;
+    }
+
+    private void CollapseAll()
+    {
+        foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
+        {
+            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            state.IsExpanded = false;
+        }
+        NoCategoryExpanded.IsExpanded = false;
+    }
+
+    private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
 }
