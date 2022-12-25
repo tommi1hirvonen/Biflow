@@ -32,11 +32,13 @@
                 Refresh
             </HxButton>
 
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-auto" : "ms-auto")"
-                      @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
-                @MarkupHelper.FromFile("icons/feather/repeat.svg")
-                Rerun
-            </HxButton>
+            <AuthorizeView Roles="Admin, Editor, Operator">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-auto" : "ms-auto")"
+                          @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
+                    @MarkupHelper.FromFile("icons/feather/repeat.svg")
+                    Rerun
+                </HxButton>
+            </AuthorizeView>
 
         </HxButtonToolbar>
 
@@ -316,7 +318,9 @@
         }
         else if (ShowReport == Report.Rerun)
         {
-            <RerunComponent Execution="Execution" />
+            <AuthorizeView Roles="Admin, Editor, Operator">
+                <RerunComponent Execution="Execution" />
+            </AuthorizeView>
         }
 
         <div class="border mt-3" hidden=@(ShowReport != Report.Dependencies) style="resize: both; overflow: hidden;">
