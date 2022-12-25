@@ -42,8 +42,8 @@ public class AppRegistration
 
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
-    private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api";
-    private const string AzureResourceUrl = "https://management.azure.com/";
+    private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
+    private const string AzureResourceUrl = "https://management.azure.com//.default";
 
     private async Task<PowerBIClient> GetClientAsync(ITokenService tokenService)
     {

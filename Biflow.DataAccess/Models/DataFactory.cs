@@ -30,7 +30,7 @@ public class DataFactory : PipelineClient
     [Display(Name = "Resource name")]
     public string? ResourceName { get; set; }
 
-    private const string ResourceUrl = "https://management.azure.com/";
+    private const string ResourceUrl = "https://management.azure.com//.default";
 
     private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
     {

@@ -8,7 +8,7 @@ internal class SynapseTokenCredential : TokenCredential
     private readonly ITokenService _tokenService;
     private readonly AppRegistration _appRegistration;
 
-    private const string ResourceUrl = "https://dev.azuresynapse.net/";
+    private const string ResourceUrl = "https://dev.azuresynapse.net//.default";
 
     public SynapseTokenCredential(ITokenService tokenService, AppRegistration appRegistration)
     {

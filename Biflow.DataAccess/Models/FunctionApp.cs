@@ -48,7 +48,7 @@ public class FunctionApp
 
     public IList<FunctionStep> Steps { get; set; } = null!;
 
-    private const string ResourceUrl = "https://management.azure.com/";
+    private const string ResourceUrl = "https://management.azure.com//.default";
 
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
     {
