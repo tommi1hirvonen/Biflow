@@ -267,6 +267,13 @@ public partial class StepsComponent : ComponentBase
         }
         Steps?.Add(step);
         SortSteps?.Invoke();
+
+        var selectedStep = SelectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
+        if (selectedStep is not null)
+        {
+            SelectedSteps.Remove(selectedStep);
+            SelectedSteps.Add(step);
+        }
     }
 
     private async Task ShowStepDetailsModal(Step step)
