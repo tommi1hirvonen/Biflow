@@ -313,7 +313,9 @@
         var stepId = Guid.Parse(id);
         var step = Steps.First(s => s.StepId == stepId);
         StateHasChanged();
-        await StepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
+        // For users other than admins and editors the StepEditModals Dictionary might be empty.
+        // Handle that scenario with GetValueOrDefault().
+        await StepEditModals.GetValueOrDefault(step.StepType).LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
     }
 
     private async Task OnStepSubmit(Step step)
