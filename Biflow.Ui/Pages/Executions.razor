@@ -46,7 +46,7 @@
                 </HxButton>
             </HxButtonGroup>
             <HxDropdownButtonGroup CssClass="ms-3">
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary">
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!Loading">
                     @MarkupHelper.FromFile("icons/feather/bookmark.svg")
                     Presets
                 </HxDropdownToggleButton>
@@ -392,6 +392,7 @@
     private async Task LoadData()
     {
         Loading = true;
+        StateHasChanged();
         using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
 
         var query = context.Executions
