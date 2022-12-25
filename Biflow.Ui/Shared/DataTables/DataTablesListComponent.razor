@@ -1,4 +1,5 @@
-﻿@inject MarkupHelperService MarkupHelper
+﻿@using System.Runtime.CompilerServices;
+@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
@@ -72,8 +73,17 @@
     }
     else
     {
+        <li class="list-group-item" style="background-color: #f7f7f7">
+            <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
+                @MarkupHelper.FromFile("icons/feather/chevrons-up.svg")
+            </span>
+            <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
+                @MarkupHelper.FromFile("icons/feather/chevrons-down.svg")
+            </span>
+        </li>
         foreach (var category in Categories.Append(null))
         {
+            var state = category is not null ? CategoryExpandStatuses.GetOrCreateValue(category) : NoCategoryExpanded;
             var tables = Tables
                 .Where(t => t.CategoryId == category?.CategoryId)
                 .Where(t => t.DataTableName.ContainsIgnoreCase(TableNameFilter))
@@ -91,7 +101,20 @@
             <li class="list-group-item fw-bold" style="background-color: #f7f7f7">
                 <div class="row">
                     <div class="col">
-                        @(category?.CategoryName ?? "No category")
+                        @if (state.IsExpanded)
+                        {
+                            <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
+                                @MarkupHelper.FromFile("icons/feather/chevron-down.svg")
+                                @(category?.CategoryName ?? "No category")
+                            </span>
+                        }
+                        else
+                        {
+                            <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
+                                @MarkupHelper.FromFile("icons/feather/chevron-right.svg")
+                                @(category?.CategoryName ?? "No category")
+                            </span>
+                        }
                     </div>
                     <AuthorizeView Roles="Admin, Editor">
                         @if (category is not null)
@@ -115,7 +138,11 @@
                     </AuthorizeView>
                 </div>
             </li>
-            @foreach (var table in tables)
+            @if (!state.IsExpanded && !filtersApplied)
+            {
+                continue;
+            }
+            foreach (var table in tables)
             {
                 <li class="list-group-item list-group-item-table">
                     <div class="row align-items-center">
@@ -174,6 +201,9 @@
 
     private string TableNameFilter { get; set; } = "";
     private string TargetTableNameFilter { get; set; } = "";
+
+    private ConditionalWeakTable<MasterDataTableCategory, ExpandStatus> CategoryExpandStatuses { get; } = new();
+    private ExpandStatus NoCategoryExpanded { get; } = new();
 
     private void OnTableSubmitted(MasterDataTable table)
     {
@@ -238,4 +268,26 @@
         Categories?.Add(category);
         Categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
     }
+
+    private void ExpandAll()
+    {
+        foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
+        {
+            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            state.IsExpanded = true;
+        }
+        NoCategoryExpanded.IsExpanded = true;
+    }
+
+    private void CollapseAll()
+    {
+        foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
+        {
+            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            state.IsExpanded = false;
+        }
+        NoCategoryExpanded.IsExpanded = false;
+    }
+
+    private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
 }
