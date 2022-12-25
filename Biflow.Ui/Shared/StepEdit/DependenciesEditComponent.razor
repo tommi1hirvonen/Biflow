@@ -85,7 +85,7 @@
                 </td>
                 <td class="align-middle">
                     <div class="form-check form-check-inline">
-                        <input type="checkbox" class="form-check-input" id="dependency_@step.StepId"
+                        <input @key="step" type="checkbox" class="form-check-input" id="dependency_@step.StepId"
                                checked=@(dependency is not null)
                                @onchange="eventArgs => ToggleDependency(step, eventArgs.Value!)">
                         <label class="form-check-label" for="dependency_@step.StepId"></label>
