@@ -31,7 +31,7 @@
                 </HxButton>
             </AuthorizeView>
             <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
         </div>

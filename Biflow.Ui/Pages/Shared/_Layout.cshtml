@@ -9,6 +9,11 @@
     <title>@ViewData["Title"] | Biflow</title>
     <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    
+    @*Added in order to prerender and integrate ASP.NET Core Razor components*@
+    <base href="~/" />
+    <component type="typeof(Microsoft.AspNetCore.Components.Web.HeadOutlet)"
+               render-mode="ServerPrerendered" />
 </head>
 <body class="bg-light">
     <header>
@@ -31,6 +36,7 @@
     </div>
     
     <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="_framework/blazor.server.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

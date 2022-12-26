@@ -2,7 +2,6 @@
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject AuthenticationMethodResolver AuthenticationResolver
-@inject MarkupHelperService Markup
 @inject IHttpContextAccessor HttpContextAccessor
 @using System.Security.Claims
 @using System.Security.Principal
@@ -64,7 +63,7 @@
                                 <strong>@HttpContextAccessor.HttpContext?.User?.Identity?.Name</strong>
                                 <div class="d-grid mt-4 mb-3">
                                     <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
-                                        @Markup.FromFile("icons/feather/log-out.svg")
+                                        <CxIcon Icon="FeatherIcon.LogOut" />
                                         &nbsp;
                                         Sign out
                                     </a>

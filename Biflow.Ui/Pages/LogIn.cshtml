@@ -2,6 +2,7 @@
 @model Biflow.Ui.Pages.LogInModel
 @using Biflow.Ui
 @using Biflow.Ui.Core
+@using Biflow.Ui.Components
 @inject MarkupHelperService MarkupHelper
 
 @{
@@ -27,7 +28,7 @@
                                 <label class="visually-hidden" asp-for="Login.Username"></label>
                                 <div class="input-group">
                                     <span class="input-group-text">
-                                        @Html.Raw(MarkupHelper.FromFile("icons/feather/user.svg"))
+                                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.User" />
                                     </span>
                                     <input id="username" asp-for="Login.Username" class="form-control" placeholder="Username" />
                                 </div>
@@ -37,7 +38,7 @@
                                 <label class="visually-hidden" asp-for="Login.Password"></label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        @Html.Raw(@MarkupHelper.FromFile("icons/feather/key.svg"))
+                                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Key" />
                                     </div>
                                     <input type="password" asp-for="Login.Password" class="form-control" placeholder="Password" />
                                 </div>
@@ -45,7 +46,7 @@
                             </div>
                             <div class="d-grid mt-4 mb-3">
                                 <button id="button_login" asp-page-handler="LogIn" class="btn btn-primary">
-                                    @Html.Raw(@MarkupHelper.FromFile("icons/feather/log-in.svg"))
+                                    <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.LogIn" />
                                     &nbsp;
                                     Log in
                                 </button>
