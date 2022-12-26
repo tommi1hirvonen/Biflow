@@ -21,7 +21,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         IStepExecutorFactory stepExecutorFactory,
         IDbContextFactory<BiflowContext> dbContextFactory,
         Execution execution)
-        : base(logger, executionConfiguration, stepExecutorFactory, execution)
+        : base(logger, executionConfiguration, stepExecutorFactory, dbContextFactory, execution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

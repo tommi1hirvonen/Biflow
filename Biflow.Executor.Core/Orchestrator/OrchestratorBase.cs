@@ -1,7 +1,10 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.StepExecutor;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.PowerBI.Api.Models;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
@@ -10,6 +13,7 @@ internal abstract class OrchestratorBase
     private readonly ILogger<OrchestratorBase> _logger;
     private readonly IExecutionConfiguration _executionConfig;
     private readonly IStepExecutorFactory _stepExecutorFactory;
+    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
     private readonly Dictionary<ExecutionSourceTargetObject, SemaphoreSlim> _targetSemaphores;
@@ -36,11 +40,13 @@ internal abstract class OrchestratorBase
         ILogger<OrchestratorBase> logger,
         IExecutionConfiguration executionConfiguration,
         IStepExecutorFactory stepExecutorFactory,
+        IDbContextFactory<BiflowContext> dbContextFactory,
         Execution execution)
     {
         _logger = logger;
         _executionConfig = executionConfiguration;
         _stepExecutorFactory = stepExecutorFactory;
+        _dbContextFactory = dbContextFactory;
         Execution = execution;
 
         CancellationTokenSources = Execution.StepExecutions
@@ -109,14 +115,30 @@ internal abstract class OrchestratorBase
 
         // Create a new step worker and start it asynchronously.
         var executor = _stepExecutorFactory.Create(step);
-        var task = executor.RunAsync(CancellationTokenSources[step]);
         
         _logger.LogInformation("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
         bool result = false;
         try
         {
             // Wait for the step to finish.
-            result = await task;
+            result = await executor.RunAsync(CancellationTokenSources[step]);
+        }
+        catch (Exception ex)
+        {
+            // Handle errors here that might not have been handled in the base executor.
+            try
+            {
+                var attempt = step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
+                if (attempt is null) return; // return is allowed here because the finally block is executed anyway.
+                using var context = _dbContextFactory.CreateDbContext();
+                attempt.ExecutionStatus = StepExecutionStatus.Failed;
+                attempt.StartDateTime ??= DateTimeOffset.Now;
+                attempt.EndDateTime = DateTimeOffset.Now;
+                attempt.ErrorMessage = $"Unhandled error caught in base orchestrator:\n\n{ex.Message}\n\n{ex.StackTrace}\n\n{attempt.ErrorMessage}";
+                context.Attach(attempt).State = EntityState.Modified;
+                await context.SaveChangesAsync();
+            }
+            catch { }
         }
         finally
         {

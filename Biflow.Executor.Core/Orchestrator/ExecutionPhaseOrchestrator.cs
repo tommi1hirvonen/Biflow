@@ -17,7 +17,7 @@ internal class ExecutionPhaseOrchestrator : OrchestratorBase
         IStepExecutorFactory stepExecutorFactory,
         IDbContextFactory<BiflowContext> dbContextFactory,
         Execution execution)
-        : base(logger, executionConfiguration, stepExecutorFactory, execution)
+        : base(logger, executionConfiguration, stepExecutorFactory, dbContextFactory, execution)
     {
         _dbContextFactory = dbContextFactory;
     }

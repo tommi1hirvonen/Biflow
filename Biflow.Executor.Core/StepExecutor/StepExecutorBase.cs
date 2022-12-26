@@ -98,9 +98,8 @@ internal abstract class StepExecutorBase
         }
 
         // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
-        try
+        using (var context = _dbContextFactory.CreateDbContext())
         {
-            using var context = _dbContextFactory.CreateDbContext();
             var duplicateExecution = await context.StepExecutionAttempts
                 .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == StepExecutionStatus.Running && e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
                 .AnyAsync();
@@ -111,11 +110,6 @@ internal abstract class StepExecutorBase
                 _logger.LogWarning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
                 return false;
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error marking step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
-            return false;
         }
 
         // Loop until there are no retry attempts left.
@@ -136,7 +130,7 @@ internal abstract class StepExecutorBase
             }
             catch (Exception ex)
             {
-                result = Result.Failure("Error during step execution: " + ex.Message);
+                result = Result.Failure($"Unhandled error caught in base executor:\n\n{ex.Message}\n\n{ex.StackTrace}");
             }
 
             if (result is Failure failure)
@@ -155,14 +149,7 @@ internal abstract class StepExecutorBase
                     catch (OperationCanceledException)
                     {
                         _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
-                        try
-                        {
-                            await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "{ExecutionId} {Step} Error copying step execution details for retry attempt", StepExecution.ExecutionId, StepExecution);
-                        }
+                        await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
                         return false;
                     }
                 }
@@ -201,37 +188,23 @@ internal abstract class StepExecutorBase
         var status = attempt.RetryAttemptIndex >= StepExecution.RetryAttempts || disregardRetryAttemps
             ? StepExecutionStatus.Failed
             : StepExecutionStatus.AwaitRetry;
-        try
-        {
-            using var context = _dbContextFactory.CreateDbContext();
-            attempt.ExecutionStatus = status;
-            attempt.EndDateTime = DateTimeOffset.Now;
-            attempt.ErrorMessage = failure.ErrorMessage;
-            attempt.InfoMessage = failure.InfoMessage;
-            context.Attach(attempt).State = EntityState.Modified;
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating step status to {status}", StepExecution.ExecutionId, StepExecution, status);
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        attempt.ExecutionStatus = status;
+        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.ErrorMessage = failure.ErrorMessage;
+        attempt.InfoMessage = failure.InfoMessage;
+        context.Attach(attempt).State = EntityState.Modified;
+        await context.SaveChangesAsync();
     }
 
     private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt, Result executionResult)
     {
-        try
-        {
-            using var context = _dbContextFactory.CreateDbContext();
-            attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
-            attempt.EndDateTime = DateTimeOffset.Now;
-            attempt.InfoMessage = executionResult.InfoMessage;
-            context.Attach(attempt).State = EntityState.Modified;
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating step status to SUCCEEDED", StepExecution.ExecutionId, StepExecution);
-        }
+        using var context = _dbContextFactory.CreateDbContext();
+        attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
+        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.InfoMessage = executionResult.InfoMessage;
+        context.Attach(attempt).State = EntityState.Modified;
+        await context.SaveChangesAsync();
     }
 
     private async Task UpdateExecutionStoppedAsync(string username)
