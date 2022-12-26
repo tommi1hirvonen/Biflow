@@ -4,6 +4,17 @@
     @if (Step is not null)
     {
         <div class="row">
+            <div class="col-lg-6">
+                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
             <div class="col">
                 <label class="form-label">File path</label>
                 <div class="input-group input-group-sm">
