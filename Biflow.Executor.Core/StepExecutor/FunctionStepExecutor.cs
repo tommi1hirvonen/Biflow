@@ -146,7 +146,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
+            var attempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
             if (attempt is not null && attempt is FunctionStepExecutionAttempt function)
             {
                 function.FunctionInstanceId = startResponse.Id;

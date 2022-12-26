@@ -63,7 +63,7 @@ internal class PackageStepExecutor : StepExecutorBase
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = Step.StepExecutionAttempts.FirstOrDefault(e => e.RetryAttemptIndex == RetryAttemptCounter);
+            var attempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
             if (attempt is not null && attempt is PackageStepExecutionAttempt package)
             {
                 package.PackageOperationId = packageOperationId;
