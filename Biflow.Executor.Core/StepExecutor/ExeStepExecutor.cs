@@ -58,7 +58,7 @@ internal class ExeStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return Result.Failure("Error starting process: " + ex.Message);
+            return Result.Failure($"Error starting process:\n{ex.Message}");
         }
 
         try
@@ -105,7 +105,7 @@ internal class ExeStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return Result.Failure("Error while executing exe: " + ex.Message);
+            return Result.Failure($"Error while executing exe:\n{ex.Message}");
         }
     }
 

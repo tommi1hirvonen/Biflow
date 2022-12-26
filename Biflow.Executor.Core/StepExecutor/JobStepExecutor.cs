@@ -58,7 +58,7 @@ internal class JobStepExecutor : StepExecutorBase
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-                return Result.Failure("Error initializing job execution: " + ex.Message);
+                return Result.Failure($"Error initializing job execution:\n{ex.Message}");
             }
             
             try
@@ -68,7 +68,7 @@ internal class JobStepExecutor : StepExecutorBase
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                return Result.Failure("Error starting executor process: " + ex.Message);
+                return Result.Failure($"Error starting executor process:\n{ex.Message}");
             }
 
         }

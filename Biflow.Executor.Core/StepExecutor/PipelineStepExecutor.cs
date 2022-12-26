@@ -49,7 +49,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
-            return Result.Failure("Error reading pipeline parameters: " + ex.Message);
+            return Result.Failure($"Error reading pipeline parameters:\n{ex.Message}");
         }
 
         string runId;

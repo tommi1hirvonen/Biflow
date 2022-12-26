@@ -43,7 +43,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error starting agent job: {ex.Message}");
+            return Result.Failure($"Error starting agent job:\n{ex.Message}");
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0

@@ -51,7 +51,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-            return Result.Failure("Error executing package: " + ex.Message);
+            return Result.Failure($"Error starting package execution:\n{ex.Message}");
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -105,7 +105,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-            return Result.Failure("Error monitoring package execution status: " + ex.Message);
+            return Result.Failure($"Error monitoring package execution status:\n{ex.Message}");
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -119,7 +119,7 @@ internal class PackageStepExecutor : StepExecutorBase
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                return Result.Failure("Error getting package error messages: " + ex.Message);
+                return Result.Failure($"Error getting package error messages:\n{ex.Message}");
             }
         }
 
