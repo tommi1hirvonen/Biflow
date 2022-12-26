@@ -25,5 +25,5 @@ public class SqlStepExecution : ParameterizedStepExecution
     public object? ResultCaptureJobParameterValue { get; set; }
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 }

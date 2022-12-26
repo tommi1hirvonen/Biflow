@@ -26,5 +26,5 @@ public class FunctionStepExecution : ParameterizedStepExecution
     public bool FunctionIsDurable { get; set; }
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 }

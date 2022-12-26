@@ -47,7 +47,7 @@ internal class SqlStepExecutor : StepExecutorBase
             // command timeout = 0 => wait indefinitely
             var command = new CommandDefinition(
                 Step.SqlStatement,
-                commandTimeout: Step.TimeoutMinutes * 60,
+                commandTimeout: Convert.ToInt32(Step.TimeoutMinutes) * 60,
                 parameters: dynamicParams,
                 cancellationToken: cancellationToken);
 

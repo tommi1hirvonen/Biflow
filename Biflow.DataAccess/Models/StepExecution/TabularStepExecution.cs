@@ -28,7 +28,7 @@ public class TabularStepExecution : StepExecution
     public string? TabularPartitionName { get; set; }
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 
     [Column("ConnectionId")]
     [Required]

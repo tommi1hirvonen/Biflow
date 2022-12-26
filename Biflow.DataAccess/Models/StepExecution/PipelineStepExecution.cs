@@ -19,5 +19,5 @@ public class PipelineStepExecution : ParameterizedStepExecution
     public PipelineClient PipelineClient { get; set; } = null!;
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 }

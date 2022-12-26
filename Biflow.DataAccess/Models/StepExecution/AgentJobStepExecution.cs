@@ -17,7 +17,7 @@ public class AgentJobStepExecution : StepExecution
     public string AgentJobName { get; set; }
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 
     [Column("ConnectionId")]
     [Required]

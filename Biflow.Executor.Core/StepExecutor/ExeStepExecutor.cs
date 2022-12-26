@@ -66,8 +66,9 @@ internal class ExeStepExecutor : StepExecutorBase
             var processTask = process.WaitForExitAsync(cancellationToken);
 
             // Convert timeout minutes to milliseconds if provided, otherwise -1 to wait indefinitely.
-            var timeoutMs = Step.TimeoutMinutes > 0 ? Step.TimeoutMinutes * 60 * 1000 : -1;
-            var timeoutTask = Task.Delay(timeoutMs, cancellationToken);
+            var timeoutTask = Step.TimeoutMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                : Task.Delay(-1, cancellationToken);
 
             // Wait for either the process to finish or for timeout.
             await Task.WhenAny(processTask, timeoutTask);

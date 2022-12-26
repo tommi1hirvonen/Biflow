@@ -30,7 +30,7 @@ public abstract class StepExecution
 
     public int RetryAttempts { get; set; }
 
-    public int RetryIntervalMinutes { get; set; }
+    public double RetryIntervalMinutes { get; set; }
 
     [Display(Name = "Execution condition")]
     public string? ExecutionConditionExpression { get; set; }

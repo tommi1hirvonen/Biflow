@@ -23,5 +23,5 @@ public class ExeStepExecution : StepExecution
     public int? ExeSuccessExitCode { get; set; }
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 }

@@ -36,7 +36,7 @@ public class PackageStepExecution : ParameterizedStepExecution
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [Column("TimeoutMinutes")]
-    public int TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; set; }
 
     [NotMapped]
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
