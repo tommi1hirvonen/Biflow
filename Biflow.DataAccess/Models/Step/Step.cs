@@ -40,7 +40,7 @@ public abstract class Step : IComparable
 
     [Required]
     [Display(Name = "Step type")]
-    public StepType StepType { get; private init; }
+    public StepType StepType { get; }
 
     [Required]
     [DataType(DataType.DateTime)]

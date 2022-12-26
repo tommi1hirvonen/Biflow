@@ -12,7 +12,7 @@ internal class ExeStepExecutor : StepExecutorBase
 {
     private readonly ILogger<ExeStepExecutor> _logger;
 
-    private ExeStepExecution Step { get; init; }
+    private ExeStepExecution Step { get; }
 
     private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
     private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();

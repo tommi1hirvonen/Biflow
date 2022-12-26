@@ -16,7 +16,7 @@ public abstract class StepParameterBase : ParameterBase
     public Guid StepId { get; set; }
 
     [Required]
-    public ParameterType ParameterType { get; private init; }
+    public ParameterType ParameterType { get; }
 
     public ParameterizedStep Step { get; set; } = null!;
 

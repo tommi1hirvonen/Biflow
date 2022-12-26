@@ -12,7 +12,7 @@ internal class DatasetStepExecutor : StepExecutorBase
     private readonly ITokenService _tokenService;
     private readonly IExecutionConfiguration _executionConfiguration;
 
-    private DatasetStepExecution Step { get; init; }
+    private DatasetStepExecution Step { get; }
 
     public DatasetStepExecutor(
         ILogger<DatasetStepExecutor> logger,

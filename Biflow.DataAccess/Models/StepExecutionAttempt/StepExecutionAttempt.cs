@@ -26,7 +26,7 @@ public abstract record StepExecutionAttempt
 
     public StepExecutionStatus ExecutionStatus { get; set; }
 
-    public StepType StepType { get; private init; }
+    public StepType StepType { get; }
 
     [Display(Name = "Error message")]
     public string? ErrorMessage { get; set; }

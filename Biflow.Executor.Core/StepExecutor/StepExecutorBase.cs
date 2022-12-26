@@ -11,9 +11,10 @@ internal abstract class StepExecutorBase
 {
     private readonly ILogger<StepExecutorBase> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    
+    private StepExecution StepExecution { get; }
 
-    protected int RetryAttemptCounter { get; set; }
-    private StepExecution StepExecution { get; init; }
+    protected int RetryAttemptCounter { get; private set; }
 
     protected StepExecutorBase(ILogger<StepExecutorBase> logger, IDbContextFactory<BiflowContext> dbContextFactory, StepExecution stepExecution)
     {

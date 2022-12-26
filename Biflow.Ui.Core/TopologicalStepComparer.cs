@@ -4,7 +4,7 @@ namespace Biflow.Ui.Core;
 
 public class TopologicalStepComparer : IComparer<Step>
 {
-    private Guid[] TopologicalList { get; init; }
+    private Guid[] TopologicalList { get; }
 
     public TopologicalStepComparer(IEnumerable<Step> steps)
     {

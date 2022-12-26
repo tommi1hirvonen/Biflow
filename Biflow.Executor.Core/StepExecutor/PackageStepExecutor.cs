@@ -15,7 +15,7 @@ internal class PackageStepExecutor : StepExecutorBase
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
-    private PackageStepExecution Step { get; init; }
+    private PackageStepExecution Step { get; }
 
     private const int MaxRefreshRetries = 3;
 

@@ -10,7 +10,8 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class EmailStepExecutor : StepExecutorBase
 {
     private readonly INotificationService _notificationService;
-    private readonly EmailStepExecution _stepExecution;
+    
+    private EmailStepExecution Step { get; }
 
     public EmailStepExecutor(
         ILogger<EmailStepExecutor> logger,
@@ -20,7 +21,7 @@ internal class EmailStepExecutor : StepExecutorBase
         : base(logger, dbContextFactory, stepExecution)
     {
         _notificationService = notificationService;
-        _stepExecution = stepExecution;
+        Step = stepExecution;
     }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
@@ -28,14 +29,14 @@ internal class EmailStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipients = _stepExecution.GetRecipientsAsList();
+        var recipients = Step.GetRecipientsAsList();
 
-        var subject = _stepExecution.Subject;
-        var body = _stepExecution.Body;
+        var subject = Step.Subject;
+        var body = Step.Body;
 
         // Iterate parameters and replace parameter names with corresponding values.
         // Do this for both the subject and body.
-        foreach (var param in _stepExecution.StepExecutionParameters)
+        foreach (var param in Step.StepExecutionParameters)
         {
             var value = param.ParameterValue switch
             {

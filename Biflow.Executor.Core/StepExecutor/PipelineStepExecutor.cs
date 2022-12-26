@@ -13,7 +13,8 @@ internal class PipelineStepExecutor : StepExecutorBase
     private readonly ITokenService _tokenService;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
-    private PipelineStepExecution Step { get; init; }
+    private PipelineStepExecution Step { get; }
+    
     private PipelineClient PipelineClient => Step.PipelineClient;
 
     private const int MaxRefreshRetries = 3;

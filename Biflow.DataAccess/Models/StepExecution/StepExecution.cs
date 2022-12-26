@@ -24,7 +24,7 @@ public abstract class StepExecution
     public string StepName { get; set; }
 
     [Display(Name = "Step type")]
-    public StepType StepType { get; private init; }
+    public StepType StepType { get; }
 
     public int ExecutionPhase { get; set; }
 

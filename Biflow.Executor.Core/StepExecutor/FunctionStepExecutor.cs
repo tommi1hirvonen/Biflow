@@ -14,7 +14,7 @@ internal class FunctionStepExecutor : StepExecutorBase
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    private FunctionStepExecution Step { get; init; }
+    private FunctionStepExecution Step { get; }
 
     private const int MaxRefreshRetries = 3;
 

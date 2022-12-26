@@ -15,7 +15,8 @@ internal class SqlStepExecutor : StepExecutorBase
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
     private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
-    private SqlStepExecution Step { get; init; }
+    
+    private SqlStepExecution Step { get; }
 
     public SqlStepExecutor(
         ILogger<SqlStepExecutor> logger,
