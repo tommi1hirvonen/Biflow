@@ -77,11 +77,29 @@
         }
 
         <dt class="col-sm-3">
-                Execution condition
-            </dt>
-            <dd class="col-sm-9">
-                @StepExecutionAttempt.StepExecution.ExecutionConditionExpression
-            </dd>
+            Retry attempts
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.RetryAttempts
+        </dd>
+        <dt class="col-sm-3">
+            Retry interval (min)
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.RetryIntervalMinutes
+        </dd>
+        <dt class="col-sm-3">
+            Retry attempt index
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.RetryAttemptIndex
+        </dd>
+        <dt class="col-sm-3">
+            Execution condition
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.ExecutionConditionExpression
+        </dd>
 
         @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
         {
