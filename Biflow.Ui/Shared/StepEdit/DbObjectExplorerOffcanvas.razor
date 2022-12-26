@@ -8,7 +8,7 @@
             <div class="col-sm-5">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        <CxIcon Icon="FeatherIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
@@ -20,7 +20,7 @@
             </div>
             <div class="col-sm-5 mt-3 mt-sm-0">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync" Enabled="QueryTask?.IsCompleted ?? true">
-                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    <CxIcon Icon="FeatherIcon.RefreshCw" />
                     Get objects
                 </HxButton>
                 @if (!QueryTask?.IsCompleted ?? false)
@@ -38,7 +38,7 @@
             <div class="col-sm-8">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                        <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
                     <input type="search" class="form-control" @bind-value="ObjectFilter" @bind-value:event="oninput" placeholder="Object" />

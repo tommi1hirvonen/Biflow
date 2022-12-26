@@ -5,37 +5,37 @@
         <HxButtonToolbar>
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen">
-                @MarkupHelper.FromFile("icons/feather/info.svg")
+                <CxIcon Icon="FeatherIcon.Info" />
                 Job details
             </HxButton>
 
             <HxButtonGroup CssClass="ms-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Table ? "active" : null)"
                           @onclick="() => ShowReport = Report.Table">
-                    @MarkupHelper.FromFile("icons/feather/table.svg")
+                    <CxIcon Icon="FeatherIcon.Table" />
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Gantt ? "active" : null)"
                           @onclick="() => ShowReport = Report.Gantt">
-                    @MarkupHelper.FromFile("icons/feather/gantt.svg")
+                    <CxIcon Icon="FeatherIcon.Gantt" />
                     Gantt
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Dependencies ? "active" : null)"
                           @onclick="() => ShowReport = Report.Dependencies">
-                    @MarkupHelper.FromFile("icons/feather/dependency.svg")
+                    <CxIcon Icon="FeatherIcon.Dependency" />
                     Dependencies
                 </HxButton>
             </HxButtonGroup>
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading" CssClass="ms-3">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
 
             <AuthorizeView Roles="Admin, Editor, Operator">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-auto" : "ms-auto")"
                           @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
-                    @MarkupHelper.FromFile("icons/feather/repeat.svg")
+                    <CxIcon Icon="FeatherIcon.Repeat" />
                     Rerun
                 </HxButton>
             </AuthorizeView>
@@ -48,7 +48,7 @@
                 <HxButtonToolbar CssClass="mt-3">
                     <HxDropdownButtonGroup>
                         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
-                            @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                            <CxIcon Icon="FeatherIcon.XOctagon" />
                             Stop
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
@@ -166,7 +166,7 @@
         {
             <div class="row mt-1">
                 <div class="col d-inline">
-                    @MarkupHelper.FromFile("icons/feather/filter.svg")
+                    <CxIcon Icon="FeatherIcon.Filter" />
                     <span class="me-3">Filter</span>
 
                     <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -183,7 +183,7 @@
                                         OnChange="StateHasChanged"
                                         IsSearchable="true">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/list.svg")
+                                <CxIcon Icon="FeatherIcon.List" />
                                 Step
                             </TitleTemplate>
                         </FilterDropdown>
@@ -199,7 +199,7 @@
                                 .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/tool.svg")
+                                <CxIcon Icon="FeatherIcon.Tool" />
                                 Step type
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -219,7 +219,7 @@
                                 .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
+                                <CxIcon Icon="FeatherIcon.AlertCircle" />
                                 Status
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -238,13 +238,13 @@
                                 .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/tag.svg")
+                                <CxIcon Icon="FeatherIcon.Tag" />
                                 Tag
                             </TitleTemplate>
                         </FilterDropdown>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                   @onclick="() => { StepStatusFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
-                            @MarkupHelper.FromFile("icons/feather/x.svg")
+                            <CxIcon Icon="FeatherIcon.X" />
                             Reset
                         </HxButton>
                     </HxButtonGroup>
@@ -252,7 +252,7 @@
             </div>
             <div class="row mt-3">
                 <div class="col d-inline">
-                    @MarkupHelper.FromFile("icons/feather/list.svg")
+                    <CxIcon Icon="FeatherIcon.List" />
                     <span class="me-3">Sort</span>
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_started_asc"

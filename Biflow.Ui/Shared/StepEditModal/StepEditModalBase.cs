@@ -5,14 +5,11 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
-{
-    [Inject] public MarkupHelperService MarkupHelper { get; set; } = null!;
-    
+{    
     [Inject] public IHxMessengerService Messenger { get; set; } = null!;
 
     [Inject] public IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;

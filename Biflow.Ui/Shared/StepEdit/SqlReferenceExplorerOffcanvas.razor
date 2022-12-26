@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject SqlServerHelperService SqlServerHelper
+﻿@inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL references">
@@ -11,7 +10,7 @@
             <div class="col-auto">
                 <div class="input-group">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        <CxIcon Icon="FeatherIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
@@ -23,11 +22,11 @@
             </div>
             <div class="col-auto">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync">
-                    @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                    <CxIcon Icon="FeatherIcon.RefreshCw" />
                     Run query
                 </HxButton>
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" CssClass="ms-3" OnClick="ClearFilters">
-                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                    <CxIcon Icon="FeatherIcon.X" />
                     Clear filters
                 </HxButton>
             </div>

@@ -2,7 +2,6 @@
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
-@inject MarkupHelperService MarkupHelper
 
 @if (EditJob is not null && Categories is not null)
 {
@@ -35,7 +34,7 @@
         <div class="row">
             <div class="col">
                 <HxSubmit Color="ThemeColor.Success">
-                    @MarkupHelper.FromFile("icons/feather/save.svg")
+                    <CxIcon Icon="FeatherIcon.Save" />
                     Save
                 </HxSubmit>
             </div>

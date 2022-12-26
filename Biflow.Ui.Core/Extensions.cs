@@ -129,7 +129,6 @@ public static partial class Extensions
 
         services.AddSingleton<DbHelperService>();
         services.AddSingleton<SqlServerHelperService>();
-        services.AddSingleton<MarkupHelperService>();
         services.AddSingleton<SubscriptionsHelperService>();
 
         return services;

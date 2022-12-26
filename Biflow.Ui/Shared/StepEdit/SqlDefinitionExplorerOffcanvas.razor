@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject SqlServerHelperService SqlServerHelper
+﻿@inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
@@ -12,7 +11,7 @@
             <div class="col-9">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        <CxIcon Icon="FeatherIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())

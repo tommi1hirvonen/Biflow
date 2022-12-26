@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-
+﻿
 @if (Step is not null)
 {
     <p />
@@ -10,7 +9,7 @@
                     Content="@("<div><p>Use parameters to dynamically pass values to the step during execution.</p><p>Parameters are matched using their names. Let's say you have defined a parameter named <code>@MyStringParam</code> with a value of <code>Hello World!</code>. Using the parameter's name in the step's supported properties will replace the name with the parameter value during execution. For example, a SQL statement like <code>exec MyProcedure @MyStringParam</code> will become <code>exec MyProcedure 'Hello World!'</code></p></div>")">
             <ChildContent>
                 <span style="cursor: pointer;">
-                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                    <CxIcon Icon="FeatherIcon.Info" />
                 </span>
             </ChildContent>
         </HxPopover>
@@ -68,7 +67,7 @@
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
-                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -79,7 +78,7 @@
     </table>
     var type = ParameterValueType.String;
     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterValueType = type, ParameterValue = string.Empty })">
-        @MarkupHelper.FromFile("icons/feather/plus.svg")
+        <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>
 }

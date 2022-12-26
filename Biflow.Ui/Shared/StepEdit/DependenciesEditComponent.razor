@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-
+﻿
 <div class="row">
     <div class="col">
         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="InferDependenciesFromDatabaseObjects">
@@ -10,7 +9,7 @@
 
 <div class="row mt-3">
     <div class="col">
-        @MarkupHelper.FromFile("icons/feather/tag.svg")
+        <CxIcon Icon="FeatherIcon.Tag" />
         <span class="me-3">Tags</span>
         @{
             var tags = Steps?
@@ -37,7 +36,7 @@
 <div class="row py-3 align-items-center sticky-top" style="background-color: rgba(255, 255, 255, 0.9);">
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
-            @MarkupHelper.FromFile("icons/feather/search.svg")
+            <CxIcon Icon="FeatherIcon.Search" />
         </div>
         <input type="search" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>
@@ -47,7 +46,7 @@
                         Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                         OnChange="StateHasChanged">
             <TitleTemplate>
-                @MarkupHelper.FromFile("icons/feather/tool.svg")
+                <CxIcon Icon="FeatherIcon.Tool" />
                 Step type
             </TitleTemplate>
             <ItemTemplate Context="item">

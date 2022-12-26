@@ -2,7 +2,6 @@
 
 @implements IDisposable
 
-@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IJSRuntime JS
@@ -59,7 +58,7 @@
                                     <div class="col-auto">
                                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                               OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
-                                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                            <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                             Browse tables
                                         </HxButton>
                                     </div>
@@ -89,7 +88,7 @@
                     <div class="col">
                         <button type="button" class="btn btn-sm btn-light @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
                         @onclick="() => EditTable.Lookups.Add(new())">
-                            @MarkupHelper.FromFile("icons/feather/search.svg")
+                            <CxIcon Icon="FeatherIcon.Search" />
                             Add lookup
                         </button>
                     </div>
@@ -177,7 +176,7 @@
                                     <td>
                                         <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
                                                 OnClick="() => { EditTable.Lookups.Remove(lookup); StateHasChanged(); }">
-                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                            <CxIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
                                     </td>
                                 </tr>
@@ -200,11 +199,11 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="table_edit_form" Color="ThemeColor.Success">
-            @MarkupHelper.FromFile("icons/feather/save.svg")
+            <CxIcon Icon="FeatherIcon.Save" />
             Save
         </HxSubmit>
         <HxButton Color="ThemeColor.Secondary" OnClick="EndEditContext" Spinner="false">
-            @MarkupHelper.FromFile("icons/feather/x.svg")
+            <CxIcon Icon="FeatherIcon.X" />
             Cancel
         </HxButton>
     </FooterTemplate>

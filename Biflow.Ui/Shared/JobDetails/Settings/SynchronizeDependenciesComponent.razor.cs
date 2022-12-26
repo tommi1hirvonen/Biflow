@@ -1,20 +1,17 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.DataAccess;
-using Biflow.Ui.Core;
+﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
+using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
-using Havit.Blazor.Components.Web;
 
 namespace Biflow.Ui.Shared.JobDetails.Settings;
 
 public partial class SynchronizeDependenciesComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
-
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 

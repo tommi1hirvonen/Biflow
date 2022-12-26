@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
 
 @using CodingSeb.ExpressionEvaluator
 
@@ -10,12 +9,12 @@
             Execution condition expression
             &nbsp;
             <span style="cursor: pointer;" @onclick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
-                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+                <CxIcon Icon="FeatherIcon.HelpCircle" />
             </span>
         </label>
         <div class="input-group input-group-sm">
             <div class="input-group-text">
-                @MarkupHelper.FromFile("icons/feather/check-square.svg")
+                <CxIcon Icon="FeatherIcon.CheckSquare" />
             </div>
             <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExecutionConditionExpression" style="font-family: monospace;" rows="3"></InputTextArea>
         </div>
@@ -24,7 +23,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton OnClick="TestEvaluate" Color="ThemeColor.Light" Size="ButtonSize.Small">
-                @MarkupHelper.FromFile("icons/feather/check.svg")
+                <CxIcon Icon="FeatherIcon.Check" />
                 Test evaluate / validate
             </HxButton>
         </div>
@@ -83,7 +82,7 @@
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
-                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -94,7 +93,7 @@
     </table>
     var type = ParameterValueType.String;
     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter { ParameterValueType = type, ParameterValue = string.Empty })">
-        @MarkupHelper.FromFile("icons/feather/plus.svg")
+        <CxIcon Icon="FeatherIcon.Plus" />
     </HxButton>
 }
 

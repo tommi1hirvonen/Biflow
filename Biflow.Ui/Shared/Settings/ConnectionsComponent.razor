@@ -1,6 +1,4 @@
-﻿@inject IConfiguration Configuration
-@inject IDbContextFactory<BiflowContext> DbFactory
-@inject MarkupHelperService MarkupHelper
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
 
 <style>
     tr a {
@@ -86,11 +84,11 @@
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(connection)">
-                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
-                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -105,11 +103,11 @@
                                             @onclick="() => ShowConnectionString[connection.ConnectionId] = !ShowConnectionString[connection.ConnectionId]">
                                     @if (ShowConnectionString[connection.ConnectionId])
                                     {
-                                        @MarkupHelper.FromFile("icons/feather/eye-off.svg")
+                                        <CxIcon Icon="FeatherIcon.EyeOff" />
                                     }
                                     else
                                     {
-                                        @MarkupHelper.FromFile("icons/feather/eye.svg")
+                                        <CxIcon Icon="FeatherIcon.Eye" />
                                     }
                                 </HxButton>
                             </HxButtonGroup>

@@ -7,7 +7,7 @@
 <div class="row mt-3">
     <div class="col">
         <HxButton Size="ButtonSize.Regular" Color="ThemeColor.Primary" OnClick="CalculateChangesAsync">
-            @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+            <CxIcon Icon="FeatherIcon.RefreshCw" />
             Calculate changes
         </HxButton>
     </div>
@@ -68,12 +68,12 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                         title="Commit this modification"
                                         CssClass="btn-row text-success" OnClick="async () => await AddDependencyAsync(dep)">
-                                        @MarkupHelper.FromFile("icons/feather/check.svg")
+                                        <CxIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                         title="Discard this modification"
                                         CssClass="btn-row text-danger" OnClick="() => DependenciesToAdd.Remove(dep)">
-                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                        <CxIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
                             </td>
@@ -102,12 +102,12 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                         title="Commit this modification"
                                         CssClass="btn-row text-success" OnClick="async () => await RemoveDependencyAsync(dep)">
-                                        @MarkupHelper.FromFile("icons/feather/check.svg")
+                                        <CxIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                         title="Discard this modification"
                                         CssClass="btn-row text-danger" OnClick="() => DependenciesToRemove.Remove(dep)">
-                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                        <CxIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
                             </td>
@@ -131,7 +131,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Color="ThemeColor.Success" OnClick="CommitAllAsync">
-                @MarkupHelper.FromFile("icons/feather/check.svg")
+                <CxIcon Icon="FeatherIcon.Check" />
                 Commit all
             </HxButton>
         </div>

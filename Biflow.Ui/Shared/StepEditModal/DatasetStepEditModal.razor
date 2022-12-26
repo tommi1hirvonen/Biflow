@@ -8,7 +8,7 @@
                 <label class="form-label">App registration</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/globe.svg")
+                        <CxIcon Icon="FeatherIcon.Globe" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
                         @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
@@ -24,7 +24,7 @@
                 <label class="form-label">Group id</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/folder.svg")
+                        <CxIcon Icon="FeatherIcon.Folder" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
                 </div>
@@ -35,7 +35,7 @@
                 <label class="form-label">Dataset id</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/file.svg")
+                        <CxIcon Icon="FeatherIcon.File" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
                 </div>
@@ -44,7 +44,7 @@
         <div class="row mt-3">
             <div class="col">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenDatasetSelectOffcanvas">
-                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                     Browse datasets
                 </HxButton>
             </div>

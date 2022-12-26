@@ -15,9 +15,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-    
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
-    
+        
     [Inject] private DbHelperService DbHelperService { get; set; } = null!;
     
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;

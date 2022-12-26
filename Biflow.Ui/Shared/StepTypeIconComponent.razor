@@ -1,39 +1,38 @@
-﻿@inject MarkupHelperService MarkupHelper
-
+﻿
 @switch (StepType_)
 {
     case StepType.Sql:
-        @MarkupHelper.FromFile("icons/feather/code.svg")
+        <CxIcon Icon="FeatherIcon.Code" />
         break;
     case StepType.Package:
-        @MarkupHelper.FromFile("icons/feather/package.svg")
+        <CxIcon Icon="FeatherIcon.Package" />
         break;
     case StepType.Pipeline:
-        @MarkupHelper.FromFile("icons/feather/pipeline.svg")
+        <CxIcon Icon="FeatherIcon.Pipeline" />
         break;
     case StepType.Job:
-        @MarkupHelper.FromFile("icons/feather/loader.svg")
+        <CxIcon Icon="FeatherIcon.Loader" />
         break;
     case StepType.Exe:
-        @MarkupHelper.FromFile("icons/feather/terminal.svg")
+        <CxIcon Icon="FeatherIcon.Terminal" />
         break;
     case StepType.Dataset:
-        @MarkupHelper.FromFile("icons/feather/bar-chart-2.svg")
+        <CxIcon Icon="FeatherIcon.BarChart2" />
         break;
     case StepType.Function:
-        @MarkupHelper.FromFile("icons/feather/zap.svg")
+        <CxIcon Icon="FeatherIcon.Zap" />
         break;
     case StepType.AgentJob:
-        @MarkupHelper.FromFile("icons/feather/server.svg")
+        <CxIcon Icon="FeatherIcon.Server" />
         break;
     case StepType.Tabular:
-        @MarkupHelper.FromFile("icons/feather/box.svg")
+        <CxIcon Icon="FeatherIcon.Box" />
         break;
     case StepType.Email:
-        @MarkupHelper.FromFile("icons/feather/mail.svg")
+        <CxIcon Icon="FeatherIcon.Mail" />
         break;
     default:
-        @MarkupHelper.FromFile("icons/feather/x-circle.svg")
+        <CxIcon Icon="FeatherIcon.XCircle" />
         break;
 }
 

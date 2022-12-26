@@ -3,7 +3,6 @@
 @inject IHxMessengerService Messenger
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject ISchedulerService SchedulerService
-@inject MarkupHelperService MarkupHelper
 @inject IJSRuntime JS
 
 <HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
@@ -18,7 +17,7 @@
                         <label class="form-label">Job</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                @MarkupHelper.FromFile("icons/feather/loader.svg")
+                                <CxIcon Icon="FeatherIcon.Loader" />
                             </div>
                             <InputSelect class="form-select" @bind-Value="Schedule.JobId" disabled=@(Schedule.ScheduleId != Guid.Empty || Job is not null)>
                                 @if (Job is not null)
@@ -39,7 +38,7 @@
                         <label class="form-label">Name</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                <CxIcon Icon="FeatherIcon.Edit3" />
                             </div>
                             <input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.ScheduleName"></input>
                         </div>
@@ -48,7 +47,7 @@
                         <label class="form-label">Cron expression</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                @MarkupHelper.FromFile("icons/feather/calendar.svg")
+                                <CxIcon Icon="FeatherIcon.Calendar" />
                             </div>
                             <input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty)></input>
                         </div>

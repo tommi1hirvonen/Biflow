@@ -10,8 +10,6 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
 {
     [Inject] public IHxMessengerService Messenger { get; set; } = null!;
 
-    [Inject] public MarkupHelperService MarkupHelper { get; set; } = null!;
-
     [Inject] public SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();

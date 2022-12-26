@@ -1,74 +1,73 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject AuthenticationMethodResolver AuthenticationResolver
+﻿@inject AuthenticationMethodResolver AuthenticationResolver
 
 <nav class="sidebar @ClassString" style="z-index: 1040;">
     <ul class="nav flex-column pt-3">
         <li class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/home.svg")
+                <CxIcon Icon="FeatherIcon.Home" />
                 Home
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/loader.svg")
+                <CxIcon Icon="FeatherIcon.Loader" />
                 Jobs
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="schedules" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/calendar.svg")
+                <CxIcon Icon="FeatherIcon.Calendar" />
                 Schedules
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="executions" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/activity.svg")
+                <CxIcon Icon="FeatherIcon.Activity" />
                 Executions
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="dashboard" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/bar-chart-2.svg")
+                <CxIcon Icon="FeatherIcon.BarChart2" />
                 Dashboard
             </NavLink>
         </li>
         <AuthorizeView Roles="Admin,Editor">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick">
-                    @MarkupHelper.FromFile("icons/feather/tag.svg")
+                    <CxIcon Icon="FeatherIcon.Tag" />
                     Tags
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="sourcestargets" @onclick="NavLinkClick">
-                    @MarkupHelper.FromFile("icons/feather/columns.svg")
+                    <CxIcon Icon="FeatherIcon.Columns" />
                     Sources & Targets
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="datatables" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/table.svg")
+                <CxIcon Icon="FeatherIcon.Table" />
                 Data Tables
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/user.svg")
+                <CxIcon Icon="FeatherIcon.User" />
                 Account
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                @MarkupHelper.FromFile("icons/feather/mail.svg")
+                <CxIcon Icon="FeatherIcon.Mail" />
                 Subscriptions
             </NavLink>
         </li>
         <AuthorizeView Roles="Admin">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    @MarkupHelper.FromFile("icons/feather/settings.svg")
+                    <CxIcon Icon="FeatherIcon.Settings" />
                     Settings
                 </NavLink>
             </li>
@@ -77,7 +76,7 @@
         {
             <li class="nav-item mt-3">
                 <NavLink class="nav-link" href="logout?returnUrl=/">
-                    @MarkupHelper.FromFile("icons/feather/log-out.svg")
+                    <CxIcon Icon="FeatherIcon.LogOut" />
                     Log out
                 </NavLink>
             </li>
@@ -86,7 +85,7 @@
         {
             <li class="nav-item mt-3">
                 <a class="nav-link" href="MicrosoftIdentity/Account/SignOut">
-                    @MarkupHelper.FromFile("icons/feather/log-out.svg")
+                    <CxIcon Icon="FeatherIcon.LogOut" />
                     Log out
                 </a>
             </li>

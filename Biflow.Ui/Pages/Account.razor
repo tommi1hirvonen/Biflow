@@ -1,6 +1,5 @@
 ﻿@page "/account"
 
-@inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<BiflowContext> DbFactory
 @inject DbHelperService DbHelperService
@@ -33,7 +32,7 @@
     <div class="col-lg-6">
         <div class="card shadow-sm">
             <h6 class="card-header">
-                @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                <CxIcon Icon="FeatherIcon.AtSign" />
                 Email
             </h6>
             <div class="card-body">
@@ -53,14 +52,14 @@
                         <div>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                                    <CxIcon Icon="FeatherIcon.AtSign" />
                                 </div>
                                 <InputText class="form-control" type="email" @bind-Value="User.Email" placeholder="Email"></InputText>
                             </div>
                         </div>
                         <div>
                             <HxSubmit Color="ThemeColor.Success">
-                                @MarkupHelper.FromFile("icons/feather/save.svg")
+                                <CxIcon Icon="FeatherIcon.Save" />
                                 Save
                             </HxSubmit>
                         </div>
@@ -74,7 +73,7 @@
         <div class="col-lg-6 mt-4 mt-lg-0">
             <div class="card shadow-sm">
                 <h6 class="card-header">
-                    @MarkupHelper.FromFile("icons/feather/key.svg")
+                    <CxIcon Icon="FeatherIcon.Key" />
                     Password
                 </h6>
                 <div class="card-body">
@@ -93,7 +92,7 @@
                                 <label class="form-label">New password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                        <CxIcon Icon="FeatherIcon.Lock" />
                                     </div>
                                     <InputText class="form-control" type="password" @bind-Value="PasswordModel_.Password"></InputText>
                                 </div>
@@ -102,14 +101,14 @@
                                 <label class="form-label">Confirm new password</label>
                                 <div class="input-group">
                                     <div class="input-group-text rounded-left">
-                                        @MarkupHelper.FromFile("icons/feather/key.svg")
+                                        <CxIcon Icon="FeatherIcon.Key" />
                                     </div>
                                     <InputText class="form-control" type="password" @bind-Value="PasswordModel_.ConfirmPassword"></InputText>
                                 </div>
                             </div>
                             <div>
                                 <HxSubmit Color="ThemeColor.Success">
-                                    @MarkupHelper.FromFile("icons/feather/save.svg")
+                                    <CxIcon Icon="FeatherIcon.Save" />
                                     Save
                                 </HxSubmit>
                             </div>

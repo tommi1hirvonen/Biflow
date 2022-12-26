@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-
+﻿
 @if (Step is not null)
 {
     <p />
@@ -63,7 +62,7 @@
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
-                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -73,7 +72,7 @@
     </table>
     var level = ParameterLevel.Package; var type = ParameterValueType.String;
     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
-        @MarkupHelper.FromFile("icons/feather/plus.svg")
+        <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>
 }

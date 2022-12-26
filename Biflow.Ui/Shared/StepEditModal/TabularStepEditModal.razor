@@ -8,7 +8,7 @@
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
@@ -17,7 +17,7 @@
                 <label class="form-label">Connection</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        <CxIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                         @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
@@ -33,7 +33,7 @@
                 <label class="form-label">Model name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/box.svg")
+                        <CxIcon Icon="FeatherIcon.Box" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" @oninput="ResetStepError" />
                 </div>
@@ -45,7 +45,7 @@
                 <label class="form-label">Table name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/columns.svg")
+                        <CxIcon Icon="FeatherIcon.Table" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" @oninput="ResetStepError" />
                 </div>
@@ -57,7 +57,7 @@
                 <label class="form-label">Partition name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
+                        <CxIcon Icon="FeatherIcon.PieChart" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" @oninput="ResetStepError" />
                 </div>
@@ -67,7 +67,7 @@
         <div class="row mt-3">
             <div class="col">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await Offcanvas.LetAsync(x => x.ShowAsync())">
-                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                     Browse objects
                 </HxButton>
             </div>

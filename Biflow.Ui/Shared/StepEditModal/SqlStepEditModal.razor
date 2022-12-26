@@ -8,7 +8,7 @@
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
@@ -17,7 +17,7 @@
                 <label class="form-label">Connection</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/database.svg")
+                        <CxIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
@@ -32,7 +32,7 @@
             <label class="form-label">SQL statement</label>
             <div class="input-group input-group-sm">
                 <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/code.svg")
+                    <CxIcon Icon="FeatherIcon.Code" />
                 </div>
                 <InputTextArea class="form-control form-control-sm" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
             </div>
@@ -42,11 +42,11 @@
             <div class="col">
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenStoredProcedureSelectModal">
-                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse stored procedures
                     </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="ImportParametersAsync">
-                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                        <CxIcon Icon="FeatherIcon.AtSign" />
                         Import parameters
                     </HxButton>
                 </HxButtonGroup>

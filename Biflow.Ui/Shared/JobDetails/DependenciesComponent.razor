@@ -1,7 +1,6 @@
 ﻿@implements IDisposable
 
 @inject IJSRuntime JS
-@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
@@ -48,7 +47,9 @@
             <label class="form-label">Depth backwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
-                    <span style="cursor: pointer;">@MarkupHelper.FromFile("icons/feather/info.svg")</span>
+                    <span style="cursor: pointer;">
+                        <CxIcon Icon="FeatherIcon.Info" />
+                    </span>
                 </ChildContent>
             </HxPopover>
             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(StepFilter is null) />
@@ -59,7 +60,9 @@
             <label class="form-label">Depth forwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
-                    <span style="cursor: pointer;">@MarkupHelper.FromFile("icons/feather/info.svg")</span>
+                    <span style="cursor: pointer;">
+                        <CxIcon Icon="FeatherIcon.Info" />
+                    </span>
                 </ChildContent>
             </HxPopover>
             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(StepFilter is null) />

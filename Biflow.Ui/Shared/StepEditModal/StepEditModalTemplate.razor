@@ -1,6 +1,5 @@
 ﻿@typeparam TStep where TStep : Step 
 
-@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelper
 @inject IJSRuntime JS
 
@@ -25,31 +24,31 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Settings ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Settings">
-                                        @MarkupHelper.FromFile("icons/feather/settings.svg")
+                                        <CxIcon Icon="FeatherIcon.Settings" />
                                         Settings
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Targets">
-                                        @MarkupHelper.FromFile("icons/feather/download.svg")
+                                        <CxIcon Icon="FeatherIcon.Download" />
                                         Targets
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
-                                        @MarkupHelper.FromFile("icons/feather/share.svg")
+                                        <CxIcon Icon="FeatherIcon.Share" />
                                         Sources
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Dependencies ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Dependencies">
-                                        @MarkupHelper.FromFile("icons/feather/dependency.svg")
+                                        <CxIcon Icon="FeatherIcon.Dependency" />
                                         Dependencies
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               CssClass="@(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
-                                        @MarkupHelper.FromFile("icons/feather/check-square.svg")
+                                        <CxIcon Icon="FeatherIcon.CheckSquare" />
                                         Condition
                                     </HxButton>
                                 </HxButtonGroup>
@@ -59,12 +58,12 @@
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                       @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Definition explorer
                                 </HxButton>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                             @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                    @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Reference explorer
                                 </HxButton>
                             </div>
@@ -101,7 +100,7 @@
                                             <label class="form-label">Step name</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text">
-                                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                                    <CxIcon Icon="FeatherIcon.Edit3" />
                                                 </div>
                                                 <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
                                             </div>
@@ -112,7 +111,7 @@
                                             <label class="form-label">Description</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text">
-                                                    @MarkupHelper.FromFile("icons/feather/book-open.svg")
+                                                    <CxIcon Icon="FeatherIcon.BookOpen" />
                                                 </div>
                                                 <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
                                             </div>
@@ -129,7 +128,7 @@
                                             <label class="form-label">Execution phase</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text">
-                                                    @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                                    <CxIcon Icon="FeatherIcon.Layers" />
                                                 </div>
                                                 <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase"></InputNumber>
                                             </div>
@@ -138,7 +137,7 @@
                                             <label class="form-label">Retry attempts</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text">
-                                                    @MarkupHelper.FromFile("icons/feather/repeat.svg")
+                                                    <CxIcon Icon="FeatherIcon.Repeat" />
                                                 </div>
                                                 <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts"></InputNumber>
                                             </div>
@@ -147,7 +146,7 @@
                                             <label class="form-label">Retry interval (min)</label>
                                             <div class="input-group input-group-sm">
                                                 <div class="input-group-text">
-                                                    @MarkupHelper.FromFile("icons/feather/clock.svg")
+                                                    <CxIcon Icon="FeatherIcon.Clock" />
                                                 </div>
                                                 <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes"></InputNumber>
                                             </div>
@@ -217,11 +216,11 @@
         <HxButton Color="ThemeColor.Secondary" @onclick="ToggleFullscreen" CssClass="me-auto">
             @if (Fullscreen)
             {
-                @MarkupHelper.FromFile("icons/feather/minimize-2.svg")
+                <CxIcon Icon="FeatherIcon.Minimize2" />
             }
             else
             {
-                @MarkupHelper.FromFile("icons/feather/maximize-2.svg")
+                <CxIcon Icon="FeatherIcon.Maximize2" />
             }
         </HxButton>
         

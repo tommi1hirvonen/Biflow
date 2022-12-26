@@ -1,5 +1,4 @@
 ﻿@inject IHxMessengerService Messenger
-@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
@@ -10,7 +9,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/box.svg")
+                                <CxIcon Icon="FeatherIcon.Box" />
                                 Models
                             </th>
                         </tr>
@@ -45,7 +44,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/columns.svg")
+                                <CxIcon Icon="FeatherIcon.Table" />
                                 Tables
                             </th>
                         </tr>
@@ -84,7 +83,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/pie-chart.svg")
+                                <CxIcon Icon="FeatherIcon.PieChart" />
                                 Partitions
                             </th>
                         </tr>

@@ -2,7 +2,6 @@
 
 @using System.Runtime.CompilerServices;
 
-@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbFactory
 @inject ISchedulerService SchedulerService
 @inject DbHelperService DbHelperService
@@ -41,7 +40,7 @@
                    Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
                    Html>
             <HxButton Color="ThemeColor.Light">
-                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+                <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>
     </div>
@@ -51,7 +50,7 @@
     <div class="col-xxl-4 col-xl-5 col-md-6 col-sm-7">
         <div class="input-group input-group-sm me-3">
             <div class="input-group-text">
-                @MarkupHelper.FromFile("icons/feather/filter.svg")
+                <CxIcon Icon="FeatherIcon.Filter" />
             </div>
             <input type="search" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
         </div>
@@ -64,7 +63,7 @@
                             Items="LastExecutions?.Values.Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                    <CxIcon Icon="FeatherIcon.Info" />
                     Status
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -76,7 +75,7 @@
                     StatusFilter.Clear();
                     JobNameFilter = string.Empty;
                 }">
-                @MarkupHelper.FromFile("icons/feather/x.svg")
+                <CxIcon Icon="FeatherIcon.X" />
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -89,10 +88,10 @@
             <tr>
                 <th>
                     <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
-                        @MarkupHelper.FromFile("icons/feather/chevrons-up.svg")
+                        <CxIcon Icon="FeatherIcon.ChevronsUp" />
                     </span>
                     <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
-                        @MarkupHelper.FromFile("icons/feather/chevrons-down.svg")
+                        <CxIcon Icon="FeatherIcon.ChevronsDown" />
                     </span>
                 </th>
                 <th>Last execution</th>
@@ -138,14 +137,14 @@
                             @if (state.IsExpanded)
                             {
                                 <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
-                                    @MarkupHelper.FromFile("icons/feather/chevron-down.svg")
+                                    <CxIcon Icon="FeatherIcon.ChevronDown" />
                                     @(category?.CategoryName ?? "No category")
                                 </span>
                             }
                             else
                             {
                                 <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
-                                    @MarkupHelper.FromFile("icons/feather/chevron-right.svg")
+                                    <CxIcon Icon="FeatherIcon.ChevronRight" />
                                     @(category?.CategoryName ?? "No category")
                                 </span>
                             }
@@ -157,11 +156,11 @@
                                     <div class="col-auto btn-row">
                                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" Spinner="false"
                                             OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                            @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                            <CxIcon Icon="FeatherIcon.Edit2" />
                                         </HxButton>
                                         <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                <CxIcon Icon="FeatherIcon.Trash2" />
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -229,12 +228,12 @@
                                         <HxButtonGroup CssClass="ms-2 btn-row" Size="ButtonGroupSize.Small">
 
                                             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))" Spinner="false">
-                                                @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                                <CxIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
 
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                    @MarkupHelper.FromFile("icons/feather/copy.svg")
+                                                    <CxIcon Icon="FeatherIcon.Copy" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownItem @onclick="() => CopyJob(item)">Copy</HxDropdownItem>
@@ -243,7 +242,7 @@
 
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>

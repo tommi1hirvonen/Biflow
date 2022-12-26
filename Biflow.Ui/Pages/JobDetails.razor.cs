@@ -11,7 +11,6 @@ namespace Biflow.Ui.Pages;
 public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;

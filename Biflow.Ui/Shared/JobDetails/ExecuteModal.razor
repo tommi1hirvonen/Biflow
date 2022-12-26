@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject DbHelperService DbHelperService
 
@@ -17,7 +16,7 @@
             <div class="row py-3">
                 <div class="row">
                     <div class="col">
-                        @MarkupHelper.FromFile("icons/feather/tag.svg")
+                        <CxIcon Icon="FeatherIcon.Tag" />
                         <span class="me-3">Tags</span>
                         @if (!Tags.Any())
                         {
@@ -38,7 +37,7 @@
                          <div class="row">
                              <div class="col input-group input-group-sm">
                                 <div class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/filter.svg")
+                                    <CxIcon Icon="FeatherIcon.Filter" />
                                 </div>
                                 <input type="search" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
                                        placeholder="Filter by name" autocomplete="off" />
@@ -49,7 +48,7 @@
                                                 Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                                 OnChange="StateHasChanged">
                                     <TitleTemplate>
-                                        @MarkupHelper.FromFile("icons/feather/tool.svg")
+                                        <CxIcon Icon="FeatherIcon.Tool" />
                                         Step type
                                     </TitleTemplate>
                                     <ItemTemplate Context="item">
@@ -61,7 +60,7 @@
                             <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                 @onclick="() => { ExecuteTagsFilterSet.Clear(); StepTypeFilter.Clear(); ExecuteFilterText = string.Empty; }">
-                                    @MarkupHelper.FromFile("icons/feather/x.svg")
+                                    <CxIcon Icon="FeatherIcon.X" />
                                     Clear
                                 </HxButton>
                             </div>
@@ -72,17 +71,17 @@
                         @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                   @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute.Where(step => step.IsEnabled))">
-                            @MarkupHelper.FromFile("icons/feather/chevron-right.svg")
+                            <CxIcon Icon="FeatherIcon.ChevronRight" />
                             Select enabled
                         </HxButton>
                         @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                   @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute)">
-                            @MarkupHelper.FromFile("icons/feather/chevrons-right.svg")
+                            <CxIcon Icon="FeatherIcon.ChevronsRight" />
                             Select all
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => StepsToExecute.Clear()">
-                            @MarkupHelper.FromFile("icons/feather/chevrons-left.svg")
+                            <CxIcon Icon="FeatherIcon.ChevronsLeft" />
                             Deselect all
                         </HxButton>
                     </HxButtonGroup>
@@ -108,7 +107,7 @@
                                             style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
-                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                            <CxIcon Icon="FeatherIcon.Layers" />
                                         </td>
                                         @if (Job?.UseDependencyMode == true)
                                         {
@@ -116,7 +115,7 @@
                                                 @if (step.Dependencies?.Count > 0)
                                                 {
                                                     <div class="hover-primary" title="Include dependencies (only enabled steps)" @onclick="() => SelectStepAndDependencies(step)">
-                                                        @MarkupHelper.FromFile("icons/feather/dependency.svg")
+                                                        <CxIcon Icon="FeatherIcon.Dependency" />
                                                     </div>
                                                 }
                                             </td>
@@ -156,7 +155,7 @@
                                             style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
-                                            @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                            <CxIcon Icon="FeatherIcon.Layers" />
                                         </td>
                                     </tr>
                                 }
@@ -173,7 +172,7 @@
         <div class="col mr-auto">
             <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
                 <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                    @MarkupHelper.FromFile("icons/feather/bell.svg")
+                    <CxIcon Icon="FeatherIcon.Bell" />
                     Notifications
                 </HxDropdownToggleButton>
                 <HxDropdownContent>
@@ -222,7 +221,7 @@
             </HxDropdownButtonGroup>
         </div>
         <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute">
-            @MarkupHelper.FromFile("icons/feather/play.svg")
+            <CxIcon Icon="FeatherIcon.Play" />
             Execute
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>

@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutorService ExecutorService
 
@@ -52,7 +51,7 @@
                         <div class="col">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
-                                    @MarkupHelper.FromFile("icons/feather/activity.svg")
+                                    <CxIcon Icon="FeatherIcon.Activity" />
                                     History
                                 </HxButton>
                                 <AuthorizeView Roles="Admin, Editor, Operator">
@@ -61,7 +60,7 @@
                                     {
                                         <HxDropdownButtonGroup CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">
-                                                @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                                                <CxIcon Icon="FeatherIcon.XOctagon" />
                                                 Stop
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>

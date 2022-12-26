@@ -3,7 +3,6 @@
 @attribute [Authorize(Roles = "Admin, Editor")]
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
-@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 <style>
@@ -23,7 +22,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+            <CxIcon Icon="FeatherIcon.Trash2" />
             Delete unused
         </button>
     </div>
@@ -72,7 +71,7 @@
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => TemplateTag.TagName = tag.TagName">
-                                                    @MarkupHelper.FromFile("icons/feather/edit-3.svg")
+                                                    <CxIcon Icon="FeatherIcon.Edit3" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
                                                     <EditForm Model="TemplateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
@@ -88,7 +87,7 @@
                                             </HxDropdownButtonGroup>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
-                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -185,7 +184,7 @@
                                 <td class="align-middle">
                                     <div class="btn-group btn-row">
                                         <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepTag(step)">
-                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                            <CxIcon Icon="FeatherIcon.Delete" />
                                         </button>
                                     </div>
                                 </td>

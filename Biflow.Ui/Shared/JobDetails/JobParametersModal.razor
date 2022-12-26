@@ -1,6 +1,5 @@
 ﻿@implements IDisposable
 
-@inject MarkupHelperService MarkupHelper
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
@@ -11,7 +10,7 @@
                    Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
             Html>
             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small">
-                @MarkupHelper.FromFile("icons/feather/help-circle.svg")
+                <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>
         @if (Job is not null && Steps is not null)
@@ -63,7 +62,7 @@
                                 <td>
                                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                                         <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
-                                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                            <CxIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
                                     </HxButtonGroup>
                                 </td>
@@ -75,7 +74,7 @@
                 <div class="row">
                     <div class="col">
                         <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
-                            @MarkupHelper.FromFile("icons/feather/plus.svg")
+                            <CxIcon Icon="FeatherIcon.Plus" />
                             Add parameter
                         </HxButton>
                     </div>

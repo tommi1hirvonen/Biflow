@@ -1,6 +1,5 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject ISchedulerService SchedulerService
-@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 <style>
@@ -75,7 +74,7 @@
                                 &nbsp;&nbsp;
                                 <HxTooltip Placement="TooltipPlacement.Auto"
                                            Text="@item.GetScheduleDescription()">
-                                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                                    <CxIcon Icon="FeatherIcon.Info" />
                                 </HxTooltip>
                             </div>
                         </td>
@@ -88,7 +87,7 @@
                                 <HxTooltip Placement="TooltipPlacement.Auto"
                                            Text="@("Next execution(s) (first 10):\n" + string.Join("\n", item.GetNextFireTimes(15)))"
                                            CssClass="white-space-pre">
-                                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                                    <CxIcon Icon="FeatherIcon.Info" />
                                 </HxTooltip>
                             </div>
                         </td>
@@ -97,7 +96,7 @@
                                 <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                                     <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row"
                                               @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                        @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
                                 </HxButtonGroup>
                             </AuthorizeView>
@@ -114,7 +113,7 @@
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row">
-                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>

@@ -1,22 +1,21 @@
-﻿@inject MarkupHelperService Markup
-
+﻿
 @{
-    var (textClass, borderClass, svgPath) = ExecutionStatus_ switch
+    var (textClass, borderClass, icon) = ExecutionStatus_ switch
     {
-        ExecutionStatus.Succeeded => ("text-success", "border-success", "icons/feather/check-circle.svg"),
-        ExecutionStatus.Failed => ("text-danger", "border-danger", "icons/feather/alert-octagon.svg"),
-        ExecutionStatus.Warning => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
-        ExecutionStatus.Stopped => ("text-warning", "border-warning", "icons/feather/x-octagon.svg"),
-        ExecutionStatus.Suspended => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
-        ExecutionStatus.Running => ("text-primary", "border-primary", "icons/feather/play.svg"),
-        ExecutionStatus.NotStarted => ("", "border-dark", "icons/feather/clock.svg"),
-        _ => ("", "", "icons/feather/help-circle.svg")
+        ExecutionStatus.Succeeded => ("text-success", "border-success", FeatherIcon.CheckCircle),
+        ExecutionStatus.Failed => ("text-danger", "border-danger", FeatherIcon.AlertOctagon),
+        ExecutionStatus.Warning => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
+        ExecutionStatus.Stopped => ("text-warning", "border-warning", FeatherIcon.XOctagon),
+        ExecutionStatus.Suspended => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
+        ExecutionStatus.Running => ("text-primary", "border-primary", FeatherIcon.Play),
+        ExecutionStatus.NotStarted => ("", "border-dark", FeatherIcon.Clock),
+        _ => ("", "", FeatherIcon.HelpCircle)
     };
 }
 
 <span class="rounded border d-inline-block fw-semibold @textClass @borderClass"
       style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
-    @Markup.FromFile(svgPath)
+    <CxIcon Icon="icon" />
     @ExecutionStatus_
 </span>
 

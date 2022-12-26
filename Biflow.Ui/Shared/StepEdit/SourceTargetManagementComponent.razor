@@ -1,5 +1,4 @@
 ﻿
-@inject MarkupHelperService MarkupHelper
 @inject IHxMessengerService Messenger
 
 
@@ -14,7 +13,9 @@
                 var content = $"Read {ListName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {ListName}s after mapping.";
             }
             <HxPopover Trigger="PopoverTrigger.Focus" Content="@content">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link">@MarkupHelper.FromFile("icons/feather/info.svg")</HxButton>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link">
+                    <CxIcon Icon="FeatherIcon.Info" />
+                </HxButton>
             </HxPopover>
         </div>
     </div>
@@ -83,7 +84,7 @@
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => SourceTargetObjects.Remove(obj)">
-                            @MarkupHelper.FromFile("icons/feather/delete.svg")
+                            <CxIcon Icon="FeatherIcon.Delete" />
                         </HxButton>
                     </HxButtonGroup>
                 </td>
@@ -119,14 +120,14 @@
                 <td>
                     <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="SubmitNewObject">
-                            @MarkupHelper.FromFile("icons/feather/check.svg")
+                            <CxIcon Icon="FeatherIcon.Check" />
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewObject = null">
-                            @MarkupHelper.FromFile("icons/feather/x.svg")
+                            <CxIcon Icon="FeatherIcon.X" />
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
                               OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
-                            @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                            <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         </HxButton>
                     </HxButtonGroup>
                 </td>
@@ -204,7 +205,7 @@
     </tbody>
 </table>
 <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
-    @MarkupHelper.FromFile("icons/feather/plus.svg")
+    <CxIcon Icon="FeatherIcon.Plus" />
 </HxButton>
 
 <DbObjectExplorerOffcanvas @ref="DbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />

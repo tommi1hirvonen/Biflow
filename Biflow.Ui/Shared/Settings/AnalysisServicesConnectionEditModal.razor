@@ -1,8 +1,6 @@
 ﻿@implements IConnectionEditModal
 
 @inject IDbContextFactory<BiflowContext> DbFactory
-@inject MarkupHelperService MarkupHelper
-@inject IConfiguration configuration
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
@@ -20,7 +18,7 @@
                             <label class="form-label">Connection name</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionName"></InputText>
                             </div>
@@ -29,7 +27,7 @@
                             <label class="form-label">Connection string</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/database.svg")
+                                    <CxIcon Icon="FeatherIcon.Database" />
                                 </div>
                                 <InputText class="form-control" @bind-Value="Connection.ConnectionString" style="font-family:monospace;"></InputText>
                             </div>

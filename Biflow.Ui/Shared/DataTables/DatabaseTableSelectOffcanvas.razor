@@ -1,6 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
-@inject MarkupHelperService MarkupHelper
 
 <HxOffcanvas @ref="Offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
     <BodyTemplate>
@@ -11,7 +10,7 @@
             <div class="col-10">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                        <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
                     <input type="search" class="form-control" @bind-value="TableFilter" @bind-value:event="oninput" placeholder="Table" />

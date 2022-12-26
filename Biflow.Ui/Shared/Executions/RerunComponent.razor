@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+﻿@inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject DbHelperService DbHelperService
@@ -26,7 +25,7 @@ else if (Job is null || Steps is null)
 <div class="row">
     <div class="row">
         <div class="col">
-            @MarkupHelper.FromFile("icons/feather/tag.svg")
+            <CxIcon Icon="FeatherIcon.Tag" />
             <span class="me-3">Tags</span>
             @if (!Tags.Any())
             {
@@ -47,7 +46,7 @@ else if (Job is null || Steps is null)
             <div class="row">
                 <div class="col input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                        <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -59,7 +58,7 @@ else if (Job is null || Steps is null)
                                         Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/tool.svg")
+                                <CxIcon Icon="FeatherIcon.Tool" />
                                 Step type
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -72,7 +71,7 @@ else if (Job is null || Steps is null)
                                         Items="Statuses"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
-                                @MarkupHelper.FromFile("icons/feather/info.svg")
+                                <CxIcon Icon="FeatherIcon.Info" />
                                 Status
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -81,7 +80,7 @@ else if (Job is null || Steps is null)
                         </FilterDropdown>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                                   @onclick="() => { TagFilter.Clear(); StepTypeFilter.Clear(); StatusFilter.Clear(); StepNameFilter = string.Empty; }">
-                            @MarkupHelper.FromFile("icons/feather/x.svg")
+                            <CxIcon Icon="FeatherIcon.X" />
                             Clear
                         </HxButton>
                     </HxButtonGroup>
@@ -94,24 +93,24 @@ else if (Job is null || Steps is null)
                     @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                 @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute.Where(step => step.IsEnabled))">
-                        @MarkupHelper.FromFile("icons/feather/chevron-right.svg")
+                        <CxIcon Icon="FeatherIcon.ChevronRight" />
                         Select enabled
                     </HxButton>
                     @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                 @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute)">
-                        @MarkupHelper.FromFile("icons/feather/chevrons-right.svg")
+                        <CxIcon Icon="FeatherIcon.ChevronsRight" />
                         Select all
                     </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => StepsToExecute.Clear()">
-                        @MarkupHelper.FromFile("icons/feather/chevrons-left.svg")
+                        <CxIcon Icon="FeatherIcon.ChevronsLeft" />
                         Deselect all
                     </HxButton>
                 </HxButtonGroup>
 
                 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
                         <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small">
-                            @MarkupHelper.FromFile("icons/feather/bell.svg")
+                            <CxIcon Icon="FeatherIcon.Bell" />
                             Notifications
                         </HxDropdownToggleButton>
                         <HxDropdownContent>
@@ -160,7 +159,7 @@ else if (Job is null || Steps is null)
                     </HxDropdownButtonGroup>
 
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" CssClass="ms-3" @onclick="Execute">
-                    @MarkupHelper.FromFile("icons/feather/play.svg")
+                    <CxIcon Icon="FeatherIcon.Play" />
                     Execute
                 </HxButton>
             </HxButtonToolbar>
@@ -190,7 +189,7 @@ else if (Job is null || Steps is null)
                             style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
                                 @step.ExecutionPhase
                                 &nbsp;
-                                @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                <CxIcon Icon="FeatherIcon.Layers" />
                             </td>
                         </tr>
                     }
@@ -227,7 +226,7 @@ else if (Job is null || Steps is null)
                             style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
                                 @step.ExecutionPhase
                                 &nbsp;
-                                @MarkupHelper.FromFile("icons/feather/layers.svg")
+                                <CxIcon Icon="FeatherIcon.Layers" />
                             </td>
                         </tr>
                     }

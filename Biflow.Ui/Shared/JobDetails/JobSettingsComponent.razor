@@ -1,5 +1,4 @@
-﻿@inject MarkupHelperService MarkupHelper
-
+﻿
 <PageTitle>@Job?.JobName | Settings | Biflow</PageTitle>
 
 <div class="row">
@@ -7,22 +6,22 @@
         <div class="list-group shadow-sm">
             <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.General ? "active" : null)"
                     @onclick="() => ActiveTab = SettingsTab.General">
-                @MarkupHelper.FromFile("icons/feather/sliders.svg")
+                <CxIcon Icon="FeatherIcon.Sliders" />
                 General
             </button>
             <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Execution ? "active" : null)"
                     @onclick="() => ActiveTab = SettingsTab.Execution">
-                @MarkupHelper.FromFile("icons/feather/tool.svg")
+                <CxIcon Icon="FeatherIcon.Tool" />
                 Execution mode
             </button>
             <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Concurrency ? "active" : null)"
                     @onclick="() => ActiveTab = SettingsTab.Concurrency">
-                @MarkupHelper.FromFile("icons/feather/cpu.svg")
+                <CxIcon Icon="FeatherIcon.Cpu" />
                 Concurrency
             </button>
             <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.SyncDependencies ? "active" : null)"
                     @onclick="() => ActiveTab = SettingsTab.SyncDependencies">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Sync dependencies
             </button>
         </div>

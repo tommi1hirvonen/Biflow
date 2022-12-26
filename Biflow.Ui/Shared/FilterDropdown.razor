@@ -1,7 +1,5 @@
 ﻿@typeparam TItem
 
-@inject MarkupHelperService MarkupHelper
-
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="@(FilterSet.Any() ? "fw-bold" : null)">
         @TitleTemplate
@@ -25,7 +23,7 @@
                         <div class="col">
                             <div class="input-group input-group-sm">
                                 <div class="input-group-text">
-                                    @MarkupHelper.FromFile("icons/feather/search.svg")
+                                    <CxIcon Icon="FeatherIcon.Search" />
                                 </div>
                                 <input type="search" class="form-control" @bind-value="SearchText" @bind-value:event="oninput" placeholder="Search" />
                             </div>

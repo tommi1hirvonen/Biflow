@@ -1,5 +1,4 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
-@inject MarkupHelperService MarkupHelper
 @inject DbHelperService DbHelperService
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
@@ -38,14 +37,14 @@
                                     <div class="col-auto">
                                         <HxButtonGroup CssClass="btn-row">
                                             <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
-                                                @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                                <CxIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
 
                                             @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                             {
                                                 <HxDropdownButtonGroup>
                                                     <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
-                                                        @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                        <CxIcon Icon="FeatherIcon.Key" />
                                                     </HxDropdownToggleButton>
                                                     <HxDropdownContent CssClass="p-4">
                                                         <div style="min-width: 25rem;">
@@ -54,7 +53,7 @@
                                                                     <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
                                                                         <InputGroupStartTemplate>
                                                                             <div class="input-group-text">
-                                                                                @MarkupHelper.FromFile("icons/feather/lock.svg")
+                                                                                <CxIcon Icon="FeatherIcon.Lock" />
                                                                             </div>
                                                                         </InputGroupStartTemplate>
                                                                     </HxInputText>
@@ -65,7 +64,7 @@
                                                                     <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
                                                                         <InputGroupStartTemplate>
                                                                             <div class="input-group-text">
-                                                                                @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                                                <CxIcon Icon="FeatherIcon.Key" />
                                                                             </div>
                                                                         </InputGroupStartTemplate>
                                                                     </HxInputText>
@@ -80,7 +79,7 @@
 
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
-                                                    @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>

@@ -1,7 +1,6 @@
 ﻿@using System.Data;
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
-@inject MarkupHelperService MarkupHelper
 
 <div class="row">
     <div class="col">
@@ -35,7 +34,7 @@
 <div class="row align-items-center mt-3">
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="Upload is not null">
-            @MarkupHelper.FromFile("icons/feather/save.svg")
+            <CxIcon Icon="FeatherIcon.Save" />
             Save
         </HxButton>
     </div>

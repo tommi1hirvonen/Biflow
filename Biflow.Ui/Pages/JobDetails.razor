@@ -31,7 +31,7 @@
             <HxButton Color="ThemeColor.Light"
                       Size="ButtonSize.Small"
                       @onclick="() => DescriptionOpen = !DescriptionOpen">
-                @MarkupHelper.FromFile("icons/feather/info.svg")
+                <CxIcon Icon="FeatherIcon.Info" />
                 &nbsp;
                 @if (DescriptionOpen)
                 {
@@ -51,7 +51,7 @@
                 @*Dropdown to delete the current job*@
                 <HxDropdownButtonGroup CssClass="ms-3">
                     <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                        <CxIcon Icon="FeatherIcon.Trash2" />
                         Delete
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
@@ -93,32 +93,32 @@
         <ul class="nav nav-pills" role="tablist">
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/steps")">
-                    @MarkupHelper.FromFile("icons/feather/list.svg")
+                    <CxIcon Icon="FeatherIcon.List" />
                     Steps
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/dependencies")">
-                    @MarkupHelper.FromFile("icons/feather/dependency.svg")
+                    <CxIcon Icon="FeatherIcon.Dependency" />
                     Dependencies
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/schedules")">
-                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
+                    <CxIcon Icon="FeatherIcon.Calendar" />
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/history")">
-                    @MarkupHelper.FromFile("icons/feather/activity.svg")
+                    <CxIcon Icon="FeatherIcon.Activity" />
                     History
                 </NavLink>
             </li>
             <AuthorizeView Roles="Admin, Editor">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings")">
-                        @MarkupHelper.FromFile("icons/feather/settings.svg")
+                        <CxIcon Icon="FeatherIcon.Settings" />
                         Settings
                     </NavLink>
                 </li>

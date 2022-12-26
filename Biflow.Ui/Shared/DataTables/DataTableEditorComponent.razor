@@ -26,7 +26,7 @@
                           Enabled="FilterSet is not null"
                           CssClass="@(FilterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold" : null)"
                           OnClick="async () => await FilterSetOffcanvas.LetAsync(x => x.ShowAsync())">
-                    @MarkupHelper.FromFile("icons/feather/filter.svg")
+                    <CxIcon Icon="FeatherIcon.Filter" />
                     Filters
                 </HxButton>
 
@@ -34,13 +34,13 @@
                           Enabled="ColumnSelections is not null"
                           CssClass="@(ColumnSelections?.Values.Any(b => !b) ?? false ? "fw-bold" : null)"
                           OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
-                    @MarkupHelper.FromFile("icons/feather/columns.svg")
+                    <CxIcon Icon="FeatherIcon.Columns" />
                     Columns
                 </HxButton>
 
                 <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!Exporting">
-                        @MarkupHelper.FromFile("icons/feather/download.svg")
+                        <CxIcon Icon="FeatherIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
                     <HxDropdownMenu>
@@ -57,14 +57,14 @@
                 </HxDropdownButtonGroup>
 
                 <a class="btn btn-sm btn-secondary @(TableData?.IsEditable == false ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
-                    @MarkupHelper.FromFile("icons/feather/upload.svg")
+                    <CxIcon Icon="FeatherIcon.Upload" />
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await TableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
-                    @MarkupHelper.FromFile("icons/feather/info.svg")
+                    <CxIcon Icon="FeatherIcon.Info" />
                     Table info
                 </HxButton>
 
@@ -78,7 +78,7 @@
         <HxButtonToolbar>
             <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
                       OnClick="async () => await ReloadDataAsync()">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Reload
             </HxButton>
 
@@ -86,14 +86,14 @@
                       CssClass="ms-3"
                       Enabled="TableData is not null && TableData.IsEditable"
                       OnClick="SaveChangesAsync">
-                @MarkupHelper.FromFile("icons/feather/save.svg")
+                <CxIcon Icon="FeatherIcon.Save" />
                 Save changes
             </HxButton>
 
             <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="TableData is not null && TableData.IsEditable"
                       OnClick="() => TableData?.AddRow()">
-                @MarkupHelper.FromFile("icons/feather/plus.svg")
+                <CxIcon Icon="FeatherIcon.Plus" />
                 Add record
             </HxButton>
         </HxButtonToolbar>
@@ -156,13 +156,13 @@
                                         @if (column.IsPrimaryKey)
                                         {
                                             <span class="ms-2" title="Primary key column">
-                                                @MarkupHelper.FromFile("icons/feather/key.svg")
+                                                <CxIcon Icon="FeatherIcon.Key" />
                                             </span>
                                         }
                                         @if (column.IsComputed)
                                         {
                                             <span class="ms-2" title="Computed column">
-                                                @MarkupHelper.FromFile("icons/feather/code.svg")
+                                                <CxIcon Icon="FeatherIcon.Code" />
                                             </span>
                                         }
                                         @if (orderBy.Column is not null)
@@ -170,11 +170,11 @@
                                             <span class="ms-2"> 
                                                 @if (orderBy.Descending)
                                                 {
-                                                    @MarkupHelper.FromFile("icons/feather/arrow-up.svg")
+                                                    <CxIcon Icon="FeatherIcon.ArrowUp" />
                                                 }
                                                 else
                                                 {
-                                                    @MarkupHelper.FromFile("icons/feather/arrow-down.svg")
+                                                    <CxIcon Icon="FeatherIcon.ArrowDown" />
                                                 }
                                             </span>
                                         }
@@ -330,7 +330,7 @@
                                     {
                                         <td>
                                             <button class="btn btn-sm btn-light btn-row text-danger" @onclick="row.Delete">
-                                                @MarkupHelper.FromFile("icons/feather/delete.svg")
+                                                <CxIcon Icon="FeatherIcon.Delete" />
                                             </button>
                                         </td>
                                     }

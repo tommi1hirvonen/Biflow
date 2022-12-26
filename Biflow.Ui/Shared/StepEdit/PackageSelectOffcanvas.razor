@@ -1,5 +1,4 @@
 ﻿@inject IHxMessengerService Messenger
-@inject MarkupHelperService MarkupHelper
 @inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select package">
@@ -10,7 +9,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/folder.svg")
+                                <CxIcon Icon="FeatherIcon.Folder" />
                                 Folders
                             </th>
                         </tr>
@@ -43,7 +42,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/briefcase.svg")
+                                <CxIcon Icon="FeatherIcon.Briefcase" />
                                 Projects
                             </th>
                         </tr>
@@ -74,7 +73,7 @@
             <div class="col">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/filter.svg")
+                        <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
@@ -87,7 +86,7 @@
                     <thead>
                         <tr>
                             <th>
-                                @MarkupHelper.FromFile("icons/feather/package.svg")
+                                <CxIcon Icon="FeatherIcon.Package" />
                                 Packages
                             </th>
                         </tr>

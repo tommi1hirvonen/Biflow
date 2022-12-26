@@ -16,8 +16,6 @@ public partial class DataTableEditorComponent : ComponentBase
     
     [Inject] private IHxMessageBoxService MessageBox { get; set; } = null!;
 
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
-
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public MasterDataTable? Table { get; set; }

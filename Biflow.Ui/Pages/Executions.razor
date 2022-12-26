@@ -3,7 +3,6 @@
 @implements IAsyncDisposable
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
-@inject MarkupHelperService MarkupHelper
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JS
 @inject IHxMessengerService Messenger
@@ -21,13 +20,13 @@
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowSteps = false"
                 CssClass="@(!ShowSteps ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/feather/loader.svg")
+                    <CxIcon Icon="FeatherIcon.Loader" />
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowSteps = true"
                 CssClass="@(ShowSteps ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/feather/list.svg")
+                    <CxIcon Icon="FeatherIcon.List" />
                     Steps
                 </HxButton>
             </HxButtonGroup>
@@ -35,19 +34,19 @@
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = false"
                 CssClass="@(!ShowGraph ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/feather/table.svg")
+                    <CxIcon Icon="FeatherIcon.Table" />
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = true"
                 CssClass="@(ShowGraph ? "active" : null)">
-                    @MarkupHelper.FromFile("icons/feather/gantt.svg")
+                    <CxIcon Icon="FeatherIcon.Gantt" />
                     Graph
                 </HxButton>
             </HxButtonGroup>
             <HxDropdownButtonGroup CssClass="ms-3">
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!Loading">
-                    @MarkupHelper.FromFile("icons/feather/bookmark.svg")
+                    <CxIcon Icon="FeatherIcon.Bookmark" />
                     Presets
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
@@ -89,7 +88,7 @@
             </HxDropdownButtonGroup>
 
             <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="Loading" Enabled="!Loading" CssClass="ms-3">
-                @MarkupHelper.FromFile("icons/feather/refresh-cw.svg")
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxSubmit>
         </HxButtonToolbar>
@@ -102,14 +101,14 @@
             <label class="me-3">From</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
+                    <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
                 <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
             </div>
             <label class="mx-3">To</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    @MarkupHelper.FromFile("icons/feather/calendar.svg")
+                    <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
                 <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
             </div>
@@ -142,7 +141,7 @@
 
 <div class="row mt-3">
     <div class="col d-inline">
-        @MarkupHelper.FromFile("icons/feather/filter.svg")
+        <CxIcon Icon="FeatherIcon.Filter" />
         <span class="me-3">Filters</span>
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -162,7 +161,7 @@
                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    @MarkupHelper.FromFile("icons/feather/loader.svg")
+                    <CxIcon Icon="FeatherIcon.Loader" />
                     Job
                 </TitleTemplate>
             </FilterDropdown>
@@ -187,7 +186,7 @@
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <TitleTemplate>
-                        @MarkupHelper.FromFile("icons/feather/list.svg")
+                        <CxIcon Icon="FeatherIcon.List" />
                         Step
                     </TitleTemplate>
                 </FilterDropdown>
@@ -208,7 +207,7 @@
                                    .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        @MarkupHelper.FromFile("icons/feather/tool.svg")
+                        <CxIcon Icon="FeatherIcon.Tool" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -232,7 +231,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
+                        <CxIcon Icon="FeatherIcon.AlertCircle" />
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -259,7 +258,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        @MarkupHelper.FromFile("icons/feather/alert-circle.svg")
+                        <CxIcon Icon="FeatherIcon.AlertCircle" />
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -283,7 +282,7 @@
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        @MarkupHelper.FromFile("icons/feather/tag.svg")
+                        <CxIcon Icon="FeatherIcon.Tag" />
                         Tag
                     </TitleTemplate>
                 </FilterDropdown>
@@ -291,7 +290,7 @@
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
                       @onclick="() => { JobStatusFilter.Clear(); StepStatusFilter.Clear(); JobFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
-                @MarkupHelper.FromFile("icons/feather/x.svg")
+                <CxIcon Icon="FeatherIcon.X" />
                 Reset
             </HxButton>
         </HxButtonGroup>

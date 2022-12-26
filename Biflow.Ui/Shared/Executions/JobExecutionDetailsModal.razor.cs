@@ -13,7 +13,6 @@ namespace Biflow.Ui.Shared.Executions;
 
 public partial class JobExecutionDetailsModal : ComponentBase, IDisposable
 {
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;

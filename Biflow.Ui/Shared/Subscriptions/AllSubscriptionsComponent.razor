@@ -1,11 +1,10 @@
-﻿@inject MarkupHelperService MarkupHelper
-@inject IDbContextFactory<BiflowContext> DbFactory
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject SubscriptionsHelperService SubscriptionHelper
 @inject IHxMessengerService Messenger
 
 <div class="row mt-3 align-items-center">
     <div class="col-auto">
-        @MarkupHelper.FromFile("icons/feather/filter.svg")
+        <CxIcon Icon="FeatherIcon.Filter" />
         Filter
     </div>
     <div class="col-auto">
@@ -20,7 +19,7 @@
                     @context.Username
                 </ItemTemplate>
                 <TitleTemplate>
-                    @MarkupHelper.FromFile("icons/feather/user.svg")
+                    <CxIcon Icon="FeatherIcon.User" />
                     Users
                 </TitleTemplate>
             </FilterDropdown>
@@ -34,7 +33,7 @@
                     @context.JobName
                 </ItemTemplate>
                 <TitleTemplate>
-                    @MarkupHelper.FromFile("icons/feather/loader.svg")
+                    <CxIcon Icon="FeatherIcon.Loader" />
                     Jobs
                 </TitleTemplate>
             </FilterDropdown>

@@ -13,9 +13,7 @@ namespace Biflow.Ui.Shared.JobDetails;
 public partial class StepsComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-    
-    [Inject] private MarkupHelperService MarkupHelper { get; set; } = null!;
-    
+        
     [Inject] private DbHelperService DbHelperService { get; set; } = null!;
     
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;

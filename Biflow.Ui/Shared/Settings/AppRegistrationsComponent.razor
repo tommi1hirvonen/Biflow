@@ -1,6 +1,4 @@
-﻿@inject IConfiguration configuration
-@inject IDbContextFactory<BiflowContext> DbFactory
-@inject MarkupHelperService MarkupHelper
+﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject ITokenService TokenService
 
 <style>
@@ -60,11 +58,11 @@
                         <td class="align-middle">
                             <HxButtonGroup CssClass="btn-row">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
-                                    @MarkupHelper.FromFile("icons/feather/edit-2.svg")
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
-                                        @MarkupHelper.FromFile("icons/feather/trash-2.svg")
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -73,7 +71,7 @@
                                 </HxDropdownButtonGroup>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="clear tokens">
-                                        @MarkupHelper.FromFile("icons/feather/x.svg")
+                                        <CxIcon Icon="FeatherIcon.X" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Clear access tokens?</HxDropdownHeader>

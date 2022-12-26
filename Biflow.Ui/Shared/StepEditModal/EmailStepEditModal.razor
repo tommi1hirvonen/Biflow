@@ -8,7 +8,7 @@
                 <label class="form-label">Recipients</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/users.svg")
+                        <CxIcon Icon="FeatherIcon.Users" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.Recipients" @oninput="ResetStepError" />
                 </div>
@@ -20,7 +20,7 @@
                 <label class="form-label">Subject</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/type.svg")
+                        <CxIcon Icon="FeatherIcon.Type" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.Subject" @oninput="ResetStepError" />
                 </div>

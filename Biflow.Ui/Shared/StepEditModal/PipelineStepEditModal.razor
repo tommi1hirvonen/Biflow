@@ -8,7 +8,7 @@
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/x-octagon.svg")
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
                 </div>
@@ -20,7 +20,7 @@
                 <label class="form-label">Pipeline client</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/factory.svg")
+                        <CxIcon Icon="FeatherIcon.Factory" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
                         @foreach (var client in PipelineClients ?? Enumerable.Empty<PipelineClient>())
@@ -34,7 +34,7 @@
                 <label class="form-label">Pipeline name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        @MarkupHelper.FromFile("icons/feather/pipeline.svg")
+                        <CxIcon Icon="FeatherIcon.Pipeline" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName" @oninput="ResetStepError"></InputText>
                 </div>
@@ -44,11 +44,11 @@
             <div class="col">
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="OpenPipelineSelectOffcanvas">
-                        @MarkupHelper.FromFile("icons/feather/more-horizontal.svg")
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse pipelines
                     </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="ImportParametersAsync">
-                        @MarkupHelper.FromFile("icons/feather/at-sign.svg")
+                        <CxIcon Icon="FeatherIcon.AtSign" />
                         Import parameters
                     </HxButton>
                 </HxButtonGroup>

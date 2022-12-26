@@ -1,23 +1,22 @@
-﻿@inject MarkupHelperService Markup
-
+﻿
 @{
-    var (textClass, borderClass, svgPath) = ExecutionStatus switch
+    var (textClass, borderClass, icon) = ExecutionStatus switch
     {
-        StepExecutionStatus.Succeeded => ("text-success", "border-success", "icons/feather/check-circle.svg"),
-        StepExecutionStatus.Failed => ("text-danger", "border-danger", "icons/feather/alert-octagon.svg"),
-        StepExecutionStatus.Stopped => ("text-warning", "border-warning", "icons/feather/x-octagon.svg"),
-        StepExecutionStatus.Duplicate => ("text-warning", "border-warning", "icons/feather/alert-triangle.svg"),
-        StepExecutionStatus.AwaitRetry => ("text-warning", "border-warning", "icons/feather/repeat.svg"),
-        StepExecutionStatus.Running => ("text-primary", "border-primary", "icons/feather/play.svg"),
-        StepExecutionStatus.Skipped => ("", "border-dark", "icons/feather/skip-forward.svg"),
-        StepExecutionStatus.NotStarted => ("", "border-dark", "icons/feather/clock.svg"),
-        _ => ("", "", "icons/feather/help-circle.svg")
+        StepExecutionStatus.Succeeded => ("text-success", "border-success", FeatherIcon.CheckCircle),
+        StepExecutionStatus.Failed => ("text-danger", "border-danger", FeatherIcon.AlertOctagon),
+        StepExecutionStatus.Stopped => ("text-warning", "border-warning", FeatherIcon.XOctagon),
+        StepExecutionStatus.Duplicate => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
+        StepExecutionStatus.AwaitRetry => ("text-warning", "border-warning", FeatherIcon.Repeat),
+        StepExecutionStatus.Running => ("text-primary", "border-primary", FeatherIcon.Play),
+        StepExecutionStatus.Skipped => ("", "border-dark", FeatherIcon.SkipForward),
+        StepExecutionStatus.NotStarted => ("", "border-dark", FeatherIcon.Clock),
+        _ => ("", "", FeatherIcon.HelpCircle)
     };
 }
 
 <span class="rounded border d-inline-block fw-semibold @textClass @borderClass"
       style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
-    @Markup.FromFile(svgPath)
+    <CxIcon Icon="icon" />
     @ExecutionStatus
 </span>
 
