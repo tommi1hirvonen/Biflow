@@ -87,7 +87,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+        if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn
+        || AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.Ldap)
         {
             AuthenticationState authenticationState = await (AuthStat ?? throw new InvalidOperationException("Failed to get authentication state"));
             ClaimsPrincipal user = authenticationState.User;

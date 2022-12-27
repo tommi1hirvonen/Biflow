@@ -37,6 +37,7 @@ public static partial class Extensions
         AuthenticationMethod method;
         if (authentication == "BuiltIn")
         {
+            services.AddSingleton<IAuthHandler, BuiltInAuthHandler>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             method = AuthenticationMethod.BuiltIn;
         }
@@ -66,6 +67,12 @@ public static partial class Extensions
             });
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.AzureAd;
+        }
+        else if (authentication == "Ldap")
+        {
+            services.AddSingleton<IAuthHandler, LdapAuthHandler>();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            method = AuthenticationMethod.Ldap;
         }
         else
         {

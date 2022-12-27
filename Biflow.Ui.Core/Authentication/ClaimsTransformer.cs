@@ -4,22 +4,19 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
 
 internal class ClaimsTransformer : IClaimsTransformation
 {
-    private readonly string _connectionString;
     private readonly IMemoryCache _memoryCache;
+    private readonly DbHelperService _dbHelper;
 
-    public ClaimsTransformer(IConfiguration configuration, IMemoryCache memoryCache)
+    public ClaimsTransformer(IMemoryCache memoryCache, DbHelperService dbHelper)
     {
         _memoryCache = memoryCache;
-        var connectionString = configuration.GetConnectionString("BiflowContext");
-        ArgumentNullException.ThrowIfNull(connectionString);
-        _connectionString = connectionString;
+        _dbHelper = dbHelper;
     }
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -33,18 +30,12 @@ internal class ClaimsTransformer : IClaimsTransformation
         {
             return principal;
         }
-        using var connection = new SqlConnection(_connectionString);
-        await connection.OpenAsync();
         // Claims might be transformed multiple times when a user is authorized.
         // Utilize IMemoryCache to store the role for a short period of time.
         var role = await _memoryCache.GetOrCreateAsync($"{username}_Role", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return connection.ExecuteScalarAsync<string?>("""
-            SELECT TOP 1 [Role]
-            FROM [biflow].[User]
-            WHERE [Username] = @Username
-            """, new { Username = username });
+            return _dbHelper.GetUserRoleAsync(username);
         });
         if (role is null)
         {

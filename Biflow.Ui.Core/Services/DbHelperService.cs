@@ -111,12 +111,22 @@ public class DbHelperService
         else return false;
     }
 
-    public AuthenticationResult AuthenticateUser(string username, string password)
+    public async Task<string?> AuthenticateUserAsync(string username, string password)
     {
         using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
-        var role = sqlConnection.ExecuteScalar<string?>(
+        var role = await sqlConnection.ExecuteScalarAsync<string?>(
             "EXEC [biflow].[UserAuthenticate] @Username = @Username_, @Password = @Password_",
             new { Username_ = username, Password_ = password });
-        return new AuthenticationResult(role);
+        return role;
+    }
+
+    public async Task<string?> GetUserRoleAsync(string username)
+    {
+        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        return await sqlConnection.ExecuteScalarAsync<string?>("""
+            SELECT TOP 1 [Role]
+            FROM [biflow].[User]
+            WHERE [Username] = @Username
+            """, new { Username = username });
     }
 }

@@ -4,17 +4,18 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Authentication;
 using System.Security.Claims;
 
 namespace Biflow.Ui.Pages;
 
 public class LogInModel : PageModel
 {
-    private readonly DbHelperService _dbHelperService;
+    private readonly IAuthHandler _authHandler;
 
-    public LogInModel(DbHelperService dbHelperService)
+    public LogInModel(IAuthHandler authHandler)
     {
-        _dbHelperService = dbHelperService;
+        _authHandler = authHandler;
     }
 
     [BindProperty]
@@ -34,23 +35,26 @@ public class LogInModel : PageModel
 
     public async Task<IActionResult> OnPostLogIn()
     {
+        if (!ModelState.IsValid || Login.Username is null || Login.Password is null)
+        {
+            return Page();
+        }
+
         try
         {
-            if (ModelState.IsValid && Login.Username is not null && Login.Password is not null)
-            {
-                AuthenticationResult result = _dbHelperService.AuthenticateUser(Login.Username, Login.Password);
-                if (result.AuthenticationSuccessful && result.Role is not null)
-                {
-                    await SignInUser(Login.Username, result.Role, false);
-                    return LocalRedirect(Url.Content("~/"));
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid username or password.");
-                }
-            }
+            var role = await _authHandler.AuthenticateUserAsync(Login.Username, Login.Password);
+            await SignInUser(Login.Username, role, false);
+            return LocalRedirect(Url.Content("~/"));
         }
-        catch (Exception)
+        catch (InvalidCredentialException)
+        {
+            ModelState.AddModelError(string.Empty, "Invalid username or password");
+        }
+        catch (AuthenticationException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+        }
+        catch
         {
             ModelState.AddModelError(string.Empty, "Login error");
         }
@@ -60,20 +64,18 @@ public class LogInModel : PageModel
 
     private async Task SignInUser(string username, string role, bool isPersistent)
     {
-        var claims = new List<Claim>();
-        try
+        var claims = new List<Claim>
         {
-            claims.Add(new Claim(ClaimTypes.Name, username));
-            claims.Add(new Claim(ClaimTypes.Role, role));
-            var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimPrincipal = new ClaimsPrincipal(claimIdentity);
-            var authenticationProperties = new AuthenticationProperties() { IsPersistent = isPersistent, ExpiresUtc = DateTime.UtcNow.AddMinutes(30) };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, authenticationProperties);
-        }
-        catch (Exception)
+            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Role, role)
+        };
+        var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var claimPrincipal = new ClaimsPrincipal(claimIdentity);
+        var authenticationProperties = new AuthenticationProperties()
         {
-            throw;
-        }
+            IsPersistent = isPersistent,
+            ExpiresUtc = DateTime.UtcNow.AddMinutes(30)
+        };
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, authenticationProperties);
     }
 }

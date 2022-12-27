@@ -17,6 +17,8 @@ if (builder.Configuration.GetSection("Serilog").Exists())
     builder.Logging.AddSerilog(logger, dispose: true);
 }
 
+// Adds all necessary core Biflow UI services.
+builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);
 
 builder.Services.AddRazorPages();
@@ -26,9 +28,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHxServices();
 builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();
-
-// Adds all necessary core Biflow UI services.
-builder.Services.AddUiCoreServices(builder.Configuration);
 
 var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("Type");
 

@@ -4,5 +4,6 @@ public enum AuthenticationMethod
 {
     BuiltIn,
     Windows,
-    AzureAd
+    AzureAd,
+    Ldap
 }
