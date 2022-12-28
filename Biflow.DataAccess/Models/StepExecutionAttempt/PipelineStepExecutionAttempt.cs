@@ -8,11 +8,6 @@ public record PipelineStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    [IncludeInReset]
     public string? PipelineRunId { get; set; }
-
-    public override void Reset()
-    {
-        base.Reset();
-        PipelineRunId = null;
-    }
 }

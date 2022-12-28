@@ -4,6 +4,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
+/// <summary>
+/// All inheriting classes should mark properties that need to be reset
+/// when copying the execution attempt for retry with the IncludeInReset attribute.
+/// </summary>
 [Table("ExecutionStepAttempt")]
 [PrimaryKey("ExecutionId", "StepId", "RetryAttemptIndex")]
 public abstract record StepExecutionAttempt
@@ -20,18 +24,23 @@ public abstract record StepExecutionAttempt
 
     public int RetryAttemptIndex { get; set; }
 
+    [IncludeInReset]
     public DateTimeOffset? StartDateTime { get; set; }
 
+    [IncludeInReset]
     public DateTimeOffset? EndDateTime { get; set; }
 
+    [IncludeInReset]
     public StepExecutionStatus ExecutionStatus { get; set; }
 
     public StepType StepType { get; }
 
     [Display(Name = "Error message")]
+    [IncludeInReset]
     public string? ErrorMessage { get; set; }
 
     [Display(Name = "Info message")]
+    [IncludeInReset]
     public string? InfoMessage { get; set; }
 
     [Display(Name = "Stopped by")]
@@ -45,10 +54,16 @@ public abstract record StepExecutionAttempt
     [NotMapped]
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 
-    public virtual void Reset()
+    /// <summary>
+    /// Iterates through all properties marked with the [IncludeInReset] attribute and sets them to their default value.
+    /// </summary>
+    public StepExecutionAttempt Reset()
     {
-        ErrorMessage = null;
-        InfoMessage = null;
+        var properties = GetType().GetProperties().Where(p => Attribute.IsDefined(p, typeof(IncludeInReset)));
+        foreach (var prop in properties)
+        {
+            prop.SetValue(this, null);
+        }
+        return this;
     }
-
 }

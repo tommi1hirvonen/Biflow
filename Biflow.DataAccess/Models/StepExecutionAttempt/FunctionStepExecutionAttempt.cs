@@ -10,13 +10,7 @@ public record FunctionStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    [IncludeInReset]
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
-
-    public override void Reset()
-    {
-        base.Reset();
-        FunctionInstanceId = null;
-    }
-
 }

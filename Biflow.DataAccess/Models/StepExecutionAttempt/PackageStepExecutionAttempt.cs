@@ -8,11 +8,6 @@ public record PackageStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    [IncludeInReset]
     public long? PackageOperationId { get; set; }
-
-    public override void Reset()
-    {
-        base.Reset();
-        PackageOperationId = null;
-    }
 }
