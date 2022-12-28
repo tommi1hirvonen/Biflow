@@ -8,6 +8,10 @@ public record PackageStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    [IncludeInReset]
     public long? PackageOperationId { get; set; }
+
+    protected override void ResetInstanceMembers()
+    {
+        PackageOperationId = null;
+    }
 }

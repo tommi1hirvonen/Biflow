@@ -6,4 +6,9 @@ public record TabularStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.Tabular)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }

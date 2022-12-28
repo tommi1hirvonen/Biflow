@@ -6,4 +6,9 @@ public record DatasetStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.Dataset)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }

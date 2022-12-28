@@ -250,10 +250,11 @@ internal abstract class StepExecutorBase
 
     private async Task<StepExecutionAttempt> AddAndGetIncrementedExecutionAttemptAsync(StepExecutionAttempt previousAttempt)
     {
-        var executionAttempt = (previousAttempt with
+        var executionAttempt = previousAttempt with
         {
             RetryAttemptIndex = previousAttempt.RetryAttemptIndex + 1,
-        }).Reset();
+        };
+        executionAttempt.Reset();
         StepExecution.StepExecutionAttempts.Add(executionAttempt);
         using var context = _dbContextFactory.CreateDbContext();
         context.Attach(executionAttempt).State = EntityState.Added;

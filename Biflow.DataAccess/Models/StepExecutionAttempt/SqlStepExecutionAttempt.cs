@@ -6,4 +6,9 @@ public record SqlStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.Sql)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }

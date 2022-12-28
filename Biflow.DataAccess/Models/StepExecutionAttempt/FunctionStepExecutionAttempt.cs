@@ -10,7 +10,11 @@ public record FunctionStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    [IncludeInReset]
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
+
+    protected override void ResetInstanceMembers()
+    {
+        FunctionInstanceId = null;
+    }
 }

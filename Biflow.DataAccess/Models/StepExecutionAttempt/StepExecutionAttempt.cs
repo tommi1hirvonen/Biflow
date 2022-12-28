@@ -4,10 +4,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-/// <summary>
-/// All inheriting classes should mark properties that need to be reset
-/// when copying the execution attempt for retry with the IncludeInReset attribute.
-/// </summary>
 [Table("ExecutionStepAttempt")]
 [PrimaryKey("ExecutionId", "StepId", "RetryAttemptIndex")]
 public abstract record StepExecutionAttempt
@@ -24,23 +20,18 @@ public abstract record StepExecutionAttempt
 
     public int RetryAttemptIndex { get; set; }
 
-    [IncludeInReset]
     public DateTimeOffset? StartDateTime { get; set; }
 
-    [IncludeInReset]
     public DateTimeOffset? EndDateTime { get; set; }
 
-    [IncludeInReset]
     public StepExecutionStatus ExecutionStatus { get; set; }
 
     public StepType StepType { get; }
 
     [Display(Name = "Error message")]
-    [IncludeInReset]
     public string? ErrorMessage { get; set; }
 
     [Display(Name = "Info message")]
-    [IncludeInReset]
     public string? InfoMessage { get; set; }
 
     [Display(Name = "Stopped by")]
@@ -55,15 +46,20 @@ public abstract record StepExecutionAttempt
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 
     /// <summary>
-    /// Iterates through all properties marked with the [IncludeInReset] attribute and sets them to their default value.
+    /// Used when the step execution attempt is copied and its execution attempt specific variables should be reset.
     /// </summary>
-    public StepExecutionAttempt Reset()
+    public void Reset()
     {
-        var properties = GetType().GetProperties().Where(p => Attribute.IsDefined(p, typeof(IncludeInReset)));
-        foreach (var prop in properties)
-        {
-            prop.SetValue(this, null);
-        }
-        return this;
+        StartDateTime = null;
+        EndDateTime = null;
+        ExecutionStatus = StepExecutionStatus.NotStarted;
+        ErrorMessage = null;
+        InfoMessage = null;
+        ResetInstanceMembers();
     }
+
+    /// <summary>
+    /// Resets execution attempt specific variables to their default values.
+    /// </summary>
+    protected abstract void ResetInstanceMembers();
 }

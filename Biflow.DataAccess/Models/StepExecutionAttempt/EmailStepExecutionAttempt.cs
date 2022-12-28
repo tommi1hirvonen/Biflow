@@ -6,4 +6,9 @@ public record EmailStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.Email)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }

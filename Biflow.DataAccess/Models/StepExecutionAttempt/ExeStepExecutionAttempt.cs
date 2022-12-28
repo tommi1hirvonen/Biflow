@@ -6,4 +6,9 @@ public record ExeStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.Exe)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }

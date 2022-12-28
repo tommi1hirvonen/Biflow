@@ -6,4 +6,9 @@ public record AgentJobStepExecutionAttempt : StepExecutionAttempt
         : base(executionStatus, StepType.AgentJob)
     {
     }
+
+    protected override void ResetInstanceMembers()
+    {
+        
+    }
 }
