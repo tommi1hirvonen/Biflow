@@ -59,7 +59,7 @@ public partial class Jobs : ComponentBase
     private async Task LoadData()
     {
         IsLoading = true;
-        using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
+        using var context = await Task.Run(DbFactory.CreateDbContext);
         Jobs_ = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)

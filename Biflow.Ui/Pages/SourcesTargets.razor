@@ -298,7 +298,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
+        using var context = await Task.Run(DbContextFactory.CreateDbContext);
         Objects = await context.SourceTargetObjects
             .Include(o => o.Sources)
             .ThenInclude(s => s.Job)

@@ -90,7 +90,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
+        using var context = await Task.Run(DbFactory.CreateDbContext);
         User = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)

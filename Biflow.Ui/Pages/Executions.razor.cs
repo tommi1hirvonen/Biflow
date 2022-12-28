@@ -102,7 +102,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     {
         Loading = true;
         StateHasChanged();
-        using var context = await Task.Run<BiflowContext>(DbContextFactory.CreateDbContext);
+        using var context = await Task.Run(DbContextFactory.CreateDbContext);
 
         var query = context.Executions
             // Index optimized way of querying executions without having to scan the entire table.
