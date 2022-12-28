@@ -12,7 +12,7 @@ public interface IAuthHandler
     /// <returns>The role of the authenticated user</returns>
     /// <exception cref="InvalidCredentialException">If the provided credentials were not authroized</exception>
     /// <exception cref="AuthenticationException">If the resulting user role is unrecognized</exception>
-    public virtual async Task<string> AuthenticateUserAsync(string username, string password)
+    public async Task<string> AuthenticateUserAsync(string username, string password)
     {
         var role = await AuthenticateUserInternalAsync(username, password);
         if (role is null)
