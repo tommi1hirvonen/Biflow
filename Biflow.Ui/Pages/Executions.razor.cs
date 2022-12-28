@@ -10,6 +10,7 @@ using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
 
+[Route("/executions")]
 public partial class Executions : ComponentBase, IAsyncDisposable
 {
     [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;

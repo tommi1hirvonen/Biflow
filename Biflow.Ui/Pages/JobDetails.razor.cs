@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Pages;
 
+[Route("/jobs/{Id:guid}/{DetailsPage}")]
 public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;

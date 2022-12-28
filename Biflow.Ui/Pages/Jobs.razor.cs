@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 
 namespace Biflow.Ui.Pages;
 
+[Route("/jobs")]
 public partial class Jobs : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
