@@ -78,7 +78,7 @@
                                 StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                 StartTypeFilter == StartType.Manual && e.ScheduleId is null))
                 {
-                    <tr style="cursor: pointer;" @onclick="() => OpenJobExecutionModal(item.ExecutionId)">
+                    <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                         <td>
                             @item.CreatedDateTime.LocalDateTime
                         </td>
@@ -110,8 +110,6 @@
     </div>
 </div>
 
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
-
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -122,8 +120,6 @@
     public decimal AverageSuccessRate { get; set; }
     public double AverageDurationInSeconds { get; set; }
 
-    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
-    private Guid SelectedJobExecutionId { get; set; }
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
     protected override async Task OnParametersSetAsync()
@@ -153,10 +149,9 @@
         }
     }
 
-    private async Task OpenJobExecutionModal(Guid executionId)
+    private void GoToExecutionDetails(Guid executionId)
     {
-        SelectedJobExecutionId = executionId;
-        await JobExecutionModal.LetAsync(x => x.ShowAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}");
     }
 
 }

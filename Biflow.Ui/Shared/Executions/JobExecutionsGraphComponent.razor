@@ -1,4 +1,6 @@
-﻿<div class="row mx-1 my-2">
+﻿@inject NavigationManager NavigationManager
+
+<div class="row mx-1 my-2">
     <div class="col">
         <div class="row" style="height: 40px;">
             <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
@@ -23,7 +25,7 @@
                 @{
                     (var offset, var width) = item.GetGanttGraphDimensions(Executions);
                 }
-                <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)">
+                <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                         <small title="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
                             @item.JobName
@@ -43,8 +45,6 @@
         }
     </div>
 </div>
-
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
 
 @code {
     [Parameter]
@@ -75,12 +75,8 @@
         return time.ToString("d");
     }
 
-    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
-    private Guid SelectedJobExecutionId { get; set; }
-
-    private async Task OpenJobExecutionModal(Guid executionId)
+    private void GoToExecutionDetails(Guid executionId)
     {
-        SelectedJobExecutionId = executionId;
-        await JobExecutionModal.LetAsync(x => x.ShowAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}");
     }
 }

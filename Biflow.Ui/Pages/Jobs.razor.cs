@@ -2,7 +2,6 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared;
-using Biflow.Ui.Shared.Executions;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -27,6 +26,8 @@ public partial class Jobs : ComponentBase
     
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
 
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
     private List<Job>? Jobs_ { get; set; }
     
     private List<JobCategory>? Categories { get; set; }
@@ -34,11 +35,7 @@ public partial class Jobs : ComponentBase
     private Dictionary<Guid, Execution>? LastExecutions { get; set; }
 
     private bool IsLoading { get; set; } = false;
-
-    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
     
-    private Guid SelectedJobExecutionId { get; set; }
-
     private JobCategoryEditModal? CategoryEditModal { get; set; }
     
     private JobEditModal? JobEditModal { get; set; }
@@ -180,10 +177,9 @@ public partial class Jobs : ComponentBase
         }
     }
 
-    private async Task OpenJobExecutionModal(Guid executionId)
+    private void GoToExecutionDetails(Guid executionId)
     {
-        SelectedJobExecutionId = executionId;
-        await JobExecutionModal.LetAsync(x => x.ShowAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}");
     }
 
     private void OnJobSubmitted(Job job)

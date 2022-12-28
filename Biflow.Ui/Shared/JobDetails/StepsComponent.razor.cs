@@ -72,8 +72,6 @@ public partial class StepsComponent : ComponentBase
 
     private ExecuteModal? ExecuteModal { get; set; }
 
-    private bool ShowExecutionAlert { get; set; } = false;
-
     private string StepNameFilter { get; set; } = string.Empty;
     private string StepDescriptionFilter { get; set; } = string.Empty;
     private string SqlStatementFilter { get; set; } = string.Empty;
@@ -81,8 +79,7 @@ public partial class StepsComponent : ComponentBase
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private HashSet<SqlConnectionInfo> ConnectionFilter { get; set;} = new();
 
-    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
-    private Guid SelectedJobExecutionId { get; set; }
+    private Guid? LastStartedExecutionId { get; set; }
 
     private bool ShowDetails { get; set; } = false;
 
@@ -291,9 +288,7 @@ public partial class StepsComponent : ComponentBase
 
     private void OnExecutionStarted(Guid executionId)
     {
-        SelectedJobExecutionId = executionId;
-        ShowExecutionAlert = true;
+        LastStartedExecutionId = executionId;
     }
 
-    private async Task OpenJobExecutionModal() => await JobExecutionModal.LetAsync(x => x.ShowAsync());
 }

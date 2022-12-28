@@ -5,7 +5,9 @@
             Execution id
         </dt>
         <dd class="col-sm-9">
-            @StepExecutionAttempt.ExecutionId
+            <a href="executions/@StepExecutionAttempt.ExecutionId">
+                @StepExecutionAttempt.ExecutionId
+            </a>
         </dd>
         <dt class="col-sm-3">
             Step id
@@ -336,7 +338,9 @@
                     Child execution id
                 </dt>
                 <dd class="col-sm-9">
-                    @job_.ChildJobExecutionId
+                    <a href="executions/@job_.ChildJobExecutionId">
+                        @job_.ChildJobExecutionId
+                    </a>
                 </dd>
             }
         }

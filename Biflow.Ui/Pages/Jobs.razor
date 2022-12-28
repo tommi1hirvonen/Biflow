@@ -183,7 +183,9 @@
                             <td class="align-middle">
                                 @if (lastExecution is not null)
                                 {
-                                    <a class="text-dark" href="javascript:void(0)" @onclick="() => OpenJobExecutionModal(lastExecution.ExecutionId)">@lastExecution.StartDateTime?.LocalDateTime</a>
+                                    <a class="text-dark" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
+                                        @lastExecution.StartDateTime?.LocalDateTime
+                                    </a>
                                 }
                             </td>
                             <td class="align-middle">
@@ -257,5 +259,3 @@
 
     <JobCategoryEditModal @ref="CategoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
 </AuthorizeView>
-
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />

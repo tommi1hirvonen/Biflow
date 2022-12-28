@@ -167,74 +167,75 @@ else if (Job is null || Steps is null)
     </div>
 </div>
 
-<div class="row mt-3">
-    <div class="col">
-        <h6>Available steps</h6>
-        <div style="overflow-y: scroll; height: calc(100vh - 360px);">
-            <table class="table table-hover table-sm">
-                <tbody>
-                    @foreach (var step in StepsAvailableToExecute)
-                    {
-                        var status = GetStepExecutionStatus(step);
-                        <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
-                            <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
-                                <StepTypeIconComponent StepType_="@step.StepType" />
-                                &nbsp;
-                                <HighlightableText Text="@step.StepName" PartToHighlight="@StepNameFilter" />
-                            </td>
-                            <td>
-                                <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
-                            </td>
-                            <td class="text-end"
-                            style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
-                                @step.ExecutionPhase
-                                &nbsp;
-                                <CxIcon Icon="FeatherIcon.Layers" />
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+<div class="card shadow-sm mt-3 pt-1">
+    <div class="row g-0">
+        <div class="col">
+            <h6 class="mx-2">Available steps</h6>
+            <div style="overflow-y: scroll; height: calc(100vh - 320px);">
+                <table class="table table-hover table-sm">
+                    <tbody>
+                        @foreach (var step in StepsAvailableToExecute)
+                        {
+                            var status = GetStepExecutionStatus(step);
+                            <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
+                                <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                    <StepTypeIconComponent StepType_="@step.StepType" />
+                                    &nbsp;
+                                    <HighlightableText Text="@step.StepName" PartToHighlight="@StepNameFilter" />
+                                </td>
+                                <td>
+                                    <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
+                                </td>
+                                <td class="text-end"
+                                style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                    @step.ExecutionPhase
+                                    &nbsp;
+                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="col">
+            <h6 class="mx-2">Selected steps</h6>
+            <div style="overflow-y: scroll; height: calc(100vh - 320px);">
+                <table class="table table-hover table-sm">
+                    <tbody>
+                        @{
+                            if (Job.UseDependencyMode == true)
+                            {
+                                var comparer = new TopologicalStepComparer(StepsToExecute);
+                                StepsToExecute.Sort(comparer);
+                            }
+                            else
+                            {
+                                StepsToExecute.Sort();
+                            }
+                        }
+                        @foreach (var step in StepsToExecute)
+                        {
+                            <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
+                                <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                    <StepTypeIconComponent StepType_="@step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                                <td class="text-end"
+                                style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                    @step.ExecutionPhase
+                                    &nbsp;
+                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
-    <div class="col">
-        <h6>Selected steps</h6>
-        <div style="overflow-y: scroll; height: calc(100vh - 360px);">
-            <table class="table table-hover table-sm">
-                <tbody>
-                    @{
-                        if (Job.UseDependencyMode == true)
-                        {
-                            var comparer = new TopologicalStepComparer(StepsToExecute);
-                            StepsToExecute.Sort(comparer);
-                        }
-                        else
-                        {
-                            StepsToExecute.Sort();
-                        }
-                    }
-                    @foreach (var step in StepsToExecute)
-                    {
-                        <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
-                            <td class="@(step.IsEnabled ? null : "text-secondary")">
-                                <StepTypeIconComponent StepType_="@step.StepType" />
-                                &nbsp;
-                                @step.StepName
-                            </td>
-                            <td class="text-end"
-                            style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
-                                @step.ExecutionPhase
-                                &nbsp;
-                                <CxIcon Icon="FeatherIcon.Layers" />
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 
 @code {

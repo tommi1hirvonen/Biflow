@@ -1,4 +1,6 @@
-﻿<table class="table table-sm table-hover">
+﻿@inject NavigationManager NavigationManager
+
+<table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
@@ -39,7 +41,7 @@
         else
         {
             <Virtualize TItem="Execution" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
-                <tr style="cursor: pointer;" @onclick="async () => await OpenJobExecutionModal(item.ExecutionId)">
+                <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
                         @item.JobName
                     </td>
@@ -70,18 +72,11 @@
     </tbody>
 </table>
 
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
-
 @code {
-    [Parameter]
-    public IEnumerable<Execution>? Executions { get; set; }
+    [Parameter] public IEnumerable<Execution>? Executions { get; set; }
 
-    private JobExecutionDetailsModal? JobExecutionModal { get; set; }
-    private Guid SelectedJobExecutionId { get; set; }
-
-    private async Task OpenJobExecutionModal(Guid executionId)
+    private void GoToExecutionDetails(Guid executionId)
     {
-        SelectedJobExecutionId = executionId;
-        await JobExecutionModal.LetAsync(x => x.ShowAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}");
     }
 }

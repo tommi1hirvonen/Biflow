@@ -62,12 +62,12 @@
         </AuthorizeView>
     </div>
 
-    @if (ShowExecutionAlert)
+    @if (LastStartedExecutionId is not null)
     {
         <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
             <CxIcon Icon="FeatherIcon.CheckCircle" />
-            Execution started successfully – <a href="javascript:void(0)" class="alert-link" @onclick="OpenJobExecutionModal">monitor execution</a>
-            <button type="button" class="btn-close" @onclick="() => ShowExecutionAlert = false"></button>
+            Execution started successfully – <a href="executions/@LastStartedExecutionId" class="alert-link">view execution</a>
+            <button type="button" class="btn-close" @onclick="() => LastStartedExecutionId = null"></button>
         </div>
     }
 
@@ -489,5 +489,3 @@
 <AuthorizeView Roles="Admin, Editor, Operator">
     <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
 </AuthorizeView>
-
-<JobExecutionDetailsModal @ref="JobExecutionModal" ExecutionId_="@SelectedJobExecutionId.ToString()" />
