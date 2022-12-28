@@ -7,8 +7,10 @@ public record JobStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public Guid? ChildJobExecutionId { get; set; }
+
     protected override void ResetInstanceMembers()
     {
-        
+        ChildJobExecutionId = null;
     }
 }

@@ -38,39 +38,55 @@ internal class JobStepExecutor : StepExecutorBase
         cancellationToken.ThrowIfCancellationRequested();
 
         Guid jobExecutionId;
-
-        using (var sqlConnection = new SqlConnection(_executionConfiguration.ConnectionString))
+        try
         {
-            await sqlConnection.OpenAsync(CancellationToken.None);
+            using var connection = new SqlConnection(_executionConfiguration.ConnectionString);
+            await connection.OpenAsync(CancellationToken.None);
+            jobExecutionId = await connection.ExecuteScalarAsync<Guid>(
+                "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
+                new
+                {
+                    JobId_ = Step.JobToExecuteId,
+                    Notify_ = Step.Execution.Notify,
+                    NotifyCaller_ = Step.Execution.NotifyCaller,
+                    NotifyCallerOvertime_ = Step.Execution.NotifyCallerOvertime
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
+            return Result.Failure($"Error initializing job execution:\n{ex.Message}");
+        }
 
-            try
+        try
+        {
+            var executionAttempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
+            if (executionAttempt is JobStepExecutionAttempt job)
             {
-                jobExecutionId = await sqlConnection.ExecuteScalarAsync<Guid>(
-                    "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
-                    new
-                    {
-                        JobId_ = Step.JobToExecuteId,
-                        Notify_ = Step.Execution.Notify,
-                        NotifyCaller_ = Step.Execution.NotifyCaller,
-                        NotifyCallerOvertime_ = Step.Execution.NotifyCallerOvertime
-                    });
+                using var context = _dbContextFactory.CreateDbContext();
+                job.ChildJobExecutionId = jobExecutionId;
+                context.Attach(job);
+                context.Entry(job).Property(p => p.ChildJobExecutionId).IsModified = true;
+                await context.SaveChangesAsync(CancellationToken.None);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-                return Result.Failure($"Error initializing job execution:\n{ex.Message}");
+                throw new InvalidOperationException("Could not find JobStepExecutionAttempt from StepExecution");
             }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
+        }
             
-            try
-            {
-                await _executorLauncher.StartExecutorAsync(jobExecutionId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                return Result.Failure($"Error starting executor process:\n{ex.Message}");
-            }
-
+        try
+        {
+            await _executorLauncher.StartExecutorAsync(jobExecutionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
+            return Result.Failure($"Error starting executor process:\n{ex.Message}");
         }
 
         if (Step.JobExecuteSynchronized)

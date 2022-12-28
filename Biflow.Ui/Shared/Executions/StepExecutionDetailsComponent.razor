@@ -313,6 +313,24 @@
                 @email.Body
             </dd>
         }
+        else if (StepExecutionAttempt.StepExecution is JobStepExecution job)
+        {
+            <dt class="col-sm-3">
+                Synchronized
+            </dt>
+            <dd class="col-sm-9">
+                @job.JobExecuteSynchronized
+            </dd>
+            @if (StepExecutionAttempt is JobStepExecutionAttempt job_)
+            {
+                <dt class="col-sm-3">
+                    Child execution id
+                </dt>
+                <dd class="col-sm-9">
+                    @job_.ChildJobExecutionId
+                </dd>
+            }
+        }
         <dt class="col-sm-3">
             Info message / output
         </dt>
