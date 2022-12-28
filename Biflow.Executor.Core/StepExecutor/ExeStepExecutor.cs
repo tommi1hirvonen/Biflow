@@ -11,6 +11,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class ExeStepExecutor : StepExecutorBase
 {
     private readonly ILogger<ExeStepExecutor> _logger;
+    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
     private ExeStepExecution Step { get; }
 
@@ -21,6 +22,7 @@ internal class ExeStepExecutor : StepExecutorBase
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
+        _dbContextFactory = dbContextFactory;
         Step = step;
     }
 
@@ -59,6 +61,27 @@ internal class ExeStepExecutor : StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
             return Result.Failure($"Error starting process:\n{ex.Message}");
+        }
+
+        try
+        {
+            var executionAttempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
+            if (executionAttempt is ExeStepExecutionAttempt exe)
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                exe.ExeProcessId = process.Id;
+                context.Attach(exe);
+                context.Entry(exe).Property(p => p.ExeProcessId).IsModified = true;
+                await context.SaveChangesAsync(CancellationToken.None);
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find ExeStepExecutionAttempt from StepExecution");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", Step.ExecutionId, Step);
         }
 
         try

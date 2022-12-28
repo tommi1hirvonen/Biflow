@@ -204,6 +204,15 @@
             <dd class="col-sm-9">
                 @exe.ExeSuccessExitCode
             </dd>
+            @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
+            {
+                <dt class="col-sm-3">
+                    Process id
+                </dt>
+                <dd class="col-sm-9">
+                    @exe_.ExeProcessId
+                </dd>
+            }
         }
         else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
         {

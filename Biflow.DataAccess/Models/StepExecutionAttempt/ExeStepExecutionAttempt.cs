@@ -7,8 +7,10 @@ public record ExeStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public int? ExeProcessId { get; set; }
+
     protected override void ResetInstanceMembers()
     {
-        
+        ExeProcessId = null;
     }
 }

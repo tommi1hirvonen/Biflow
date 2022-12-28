@@ -10,6 +10,7 @@
     [PipelineRunId]             NVARCHAR(250)       NULL,
     [FunctionInstanceId]        VARCHAR(250)        NULL,
     [ChildJobExecutionId]       UNIQUEIDENTIFIER    NULL,
+    [ExeProcessId]              INT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [StoppedBy]                 NVARCHAR(250)       NULL,
