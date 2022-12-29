@@ -22,6 +22,7 @@ internal class StepExecutorFactory : IStepExecutorFactory
             PipelineStepExecution pipeline => ActivatorUtilities.CreateInstance<PipelineStepExecutor>(_serviceProvider, pipeline),
             ExeStepExecution exe => ActivatorUtilities.CreateInstance<ExeStepExecutor>(_serviceProvider, exe),
             DatasetStepExecution dataset => ActivatorUtilities.CreateInstance<DatasetStepExecutor>(_serviceProvider, dataset),
+            FunctionStepExecution durable and { FunctionIsDurable: true } => ActivatorUtilities.CreateInstance<DurableFunctionStepExecutor>(_serviceProvider, durable),
             FunctionStepExecution function => ActivatorUtilities.CreateInstance<FunctionStepExecutor>(_serviceProvider, function),
             AgentJobStepExecution agent => ActivatorUtilities.CreateInstance<AgentJobStepExecutor>(_serviceProvider, agent),
             TabularStepExecution tabular => ActivatorUtilities.CreateInstance<TabularStepExecutor>(_serviceProvider, tabular),
