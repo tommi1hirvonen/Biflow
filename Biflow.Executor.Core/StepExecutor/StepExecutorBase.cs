@@ -55,7 +55,7 @@ internal abstract class StepExecutorBase
                 _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
                 StepExecution.ExecutionId, StepExecution);
                 var failure = Result.Failure("Error updating execution parameter values to inheriting step parameters");
-                await UpdateExecutionFailedAsync(executionAttempt, failure, true);
+                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                 return false;
             }
         }
@@ -76,7 +76,7 @@ internal abstract class StepExecutorBase
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step execution condition parameters",
                 StepExecution.ExecutionId, StepExecution);
             var failure = Result.Failure("Error updating execution parameter values to inheriting execution condition parameters");
-            await UpdateExecutionFailedAsync(executionAttempt, failure, true);
+            await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
 
@@ -93,7 +93,7 @@ internal abstract class StepExecutorBase
         catch (Exception ex)
         {
             var failure = Result.Failure($"Error evaluating execution condition:\n{ex.Message}");
-            await UpdateExecutionFailedAsync(executionAttempt, failure, true);
+            await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
 
@@ -136,36 +136,36 @@ internal abstract class StepExecutorBase
             if (result is Failure failure)
             {
                 _logger.LogWarning("{ExecutionId} {Step} Error executing step: {ErrorMessage}", StepExecution.ExecutionId, StepExecution, failure.ErrorMessage);
-                await UpdateExecutionFailedAsync(executionAttempt, failure);
 
-                // There are attempts left => increase counter and wait for the retry interval.
-                if (executionAttempt.RetryAttemptIndex < StepExecution.RetryAttempts)
+                // No attempts left => break the loof and end this execution.
+                if (executionAttempt.RetryAttemptIndex >= StepExecution.RetryAttempts)
                 {
-                    executionAttempt = await AddAndGetIncrementedExecutionAttemptAsync(executionAttempt);
-                    try
-                    {
-                        await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationToken);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
-                        await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
-                        return false;
-                    }
-                }
-                // Otherwise break the loop and end this execution.
-                else
-                {
+                    await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                     return false;
                 }
+
+                // There are attempts left => update execution with status AwaitRetry,
+                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.AwaitRetry);
+                // Copy the execution attempt, increase counter and wait for the retry interval.
+                executionAttempt = await AddAndGetIncrementedExecutionAttemptAsync(executionAttempt);
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
+                    await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
+                    return false;
+                }
+
+                continue;
             }
-            else
-            {
-                _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
-                // The step execution was successful. Update the execution accordingly.
-                await UpdateExecutionSucceededAsync(executionAttempt, result);
-                return true; // Break the loop to end this execution.
-            }
+
+            _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
+            // The step execution was successful. Update the execution accordingly.
+            await UpdateExecutionSucceededAsync(executionAttempt, result);
+            return true; // Break the loop to end this execution.
         }
 
         return false; // Execution should not arrive here in normal conditions. Return false.
@@ -182,12 +182,8 @@ internal abstract class StepExecutorBase
         await context.SaveChangesAsync();
     }
 
-    private async Task UpdateExecutionFailedAsync(StepExecutionAttempt attempt, Failure failure, bool disregardRetryAttemps = false)
+    private async Task UpdateExecutionFailedAsync(StepExecutionAttempt attempt, Failure failure, StepExecutionStatus status)
     {
-        // If there are attempts left, set the status to AWAIT RETRY. Otherwise set the status to FAILED.
-        var status = attempt.RetryAttemptIndex >= StepExecution.RetryAttempts || disregardRetryAttemps
-            ? StepExecutionStatus.Failed
-            : StepExecutionStatus.AwaitRetry;
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
