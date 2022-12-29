@@ -1,4 +1,5 @@
 ﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
@@ -47,5 +48,41 @@ public static class Extensions
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddTransient<IJobExecutor, JobExecutor.JobExecutor>();
         services.AddTransient<IExecutorLauncher, TExecutorLauncher>();
+    }
+
+    /// <summary>
+    /// Replace sections of a string based on multiple rules.
+    /// The method makes sure not to replace the same section twice.
+    /// </summary>
+    /// <param name="input">The string to which the replacement rules are applied</param>
+    /// <param name="replacementRules">Replacement rules where the key is the substring to search for and the value is the replacement.</param>
+    /// <returns></returns>
+    internal static string Replace(this string input, IDictionary<string, string?> replacementRules)
+    {
+        var matches = replacementRules.Where(rule => input.Contains(rule.Key));
+        if (!matches.Any())
+        {
+            return input;
+        }
+
+        var match = matches.First();
+        int startIndex = input.IndexOf(match.Key);
+        int endIndex = startIndex + match.Key.Length;
+
+        var before = input[..startIndex].Replace(replacementRules);
+        var replaced = match.Value;
+        var after = input[endIndex..].Replace(replacementRules);
+
+        return before + replaced + after;
+    }
+
+    internal static Dictionary<string, string?> ToStringDictionary(this IEnumerable<StepExecutionParameterBase> parameters)
+    {
+        return parameters.Select(p => p.ParameterValue switch
+        {
+            DateTime dt => (Name: p.ParameterName, Value: dt.ToString("o")),
+            _ => (Name: p.ParameterName, Value: p.ParameterValue.ToString())
+        })
+        .ToDictionary(key => key.Name, value => value.Value);
     }
 }

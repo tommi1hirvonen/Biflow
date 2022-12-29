@@ -42,10 +42,15 @@ internal class ExeStepExecutor : StepExecutorBase
         };
 
         if (!string.IsNullOrWhiteSpace(Step.ExeArguments))
-            startInfo.Arguments = Step.ExeArguments;
+        {
+            var parameters = Step.StepExecutionParameters.ToStringDictionary();
+            startInfo.Arguments = Step.ExeArguments.Replace(parameters);
+        }
 
         if (!string.IsNullOrWhiteSpace(Step.ExeWorkingDirectory))
+        {
             startInfo.WorkingDirectory = Step.ExeWorkingDirectory;
+        }
 
         var process = new Process() { StartInfo = startInfo };
         process.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);

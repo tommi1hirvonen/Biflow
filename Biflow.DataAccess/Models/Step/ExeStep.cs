@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class ExeStep : Step
+public class ExeStep : ParameterizedStep
 {
     public ExeStep() : base(StepType.Exe) { }
 

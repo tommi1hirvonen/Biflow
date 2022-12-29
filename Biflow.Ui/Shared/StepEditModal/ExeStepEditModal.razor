@@ -1,4 +1,4 @@
-﻿@inherits StepEditModalBase<ExeStep>
+﻿@inherits ParameterizedStepEditModal<ExeStep>
 
 <StepEditModalTemplate Modal="this" TStep="ExeStep">
     @if (Step is not null)
@@ -34,6 +34,9 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.ExeArguments" @oninput="ResetStepError"></InputText>
                 </div>
+                <div class="form-text">
+                    Arguments can be set dynamically during step execution using step parameters.
+                </div>
             </div>
         </div>
         <div class="row mt-2">
@@ -58,5 +61,6 @@
                 </div>
             </div>
         </div>
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
     }
 </StepEditModalTemplate>

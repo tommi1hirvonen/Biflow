@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class ExeStepEditModal : StepEditModalBase<ExeStep>
+public partial class ExeStepEditModal : ParameterizedStepEditModal<ExeStep>
 {
     internal override string FormId => "exe_step_edit_form";
 
@@ -19,11 +19,14 @@ public partial class ExeStepEditModal : StepEditModalBase<ExeStep>
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
             Targets = new List<SourceTargetObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
+            StepParameters = new List<StepParameterBase>()
         };
 
     protected override Task<ExeStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.ExeSteps
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.JobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
