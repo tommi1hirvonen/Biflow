@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public record FunctionStepExecutionAttempt : StepExecutionAttempt
+public class FunctionStepExecutionAttempt : StepExecutionAttempt
 {
 
     public FunctionStepExecutionAttempt(StepExecutionStatus executionStatus)
@@ -10,11 +10,12 @@ public record FunctionStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    protected FunctionStepExecutionAttempt(FunctionStepExecutionAttempt other) : base(other)
+    {
+    }
+
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
 
-    protected override void ResetInstanceMembers()
-    {
-        FunctionInstanceId = null;
-    }
+    public override StepExecutionAttempt Clone() => new FunctionStepExecutionAttempt(this);
 }

@@ -1,6 +1,6 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record PackageStepExecutionAttempt : StepExecutionAttempt
+public class PackageStepExecutionAttempt : StepExecutionAttempt
 {
 
     public PackageStepExecutionAttempt(StepExecutionStatus executionStatus)
@@ -8,10 +8,11 @@ public record PackageStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    protected PackageStepExecutionAttempt(PackageStepExecutionAttempt other) : base(other)
+    {
+    }
+
     public long? PackageOperationId { get; set; }
 
-    protected override void ResetInstanceMembers()
-    {
-        PackageOperationId = null;
-    }
+    public override StepExecutionAttempt Clone() => new PackageStepExecutionAttempt(this);
 }

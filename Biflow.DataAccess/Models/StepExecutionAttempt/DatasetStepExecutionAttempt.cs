@@ -1,14 +1,15 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record DatasetStepExecutionAttempt : StepExecutionAttempt
+public class DatasetStepExecutionAttempt : StepExecutionAttempt
 {
     public DatasetStepExecutionAttempt(StepExecutionStatus executionStatus)
         : base(executionStatus, StepType.Dataset)
     {
     }
 
-    protected override void ResetInstanceMembers()
+    protected DatasetStepExecutionAttempt(DatasetStepExecutionAttempt other) : base(other)
     {
-        
     }
+
+    public override StepExecutionAttempt Clone() => new DatasetStepExecutionAttempt(this);
 }

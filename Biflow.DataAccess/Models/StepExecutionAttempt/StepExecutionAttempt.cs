@@ -6,12 +6,22 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepAttempt")]
 [PrimaryKey("ExecutionId", "StepId", "RetryAttemptIndex")]
-public abstract record StepExecutionAttempt
+public abstract class StepExecutionAttempt
 {
     public StepExecutionAttempt(StepExecutionStatus executionStatus, StepType stepType)
     {
         ExecutionStatus = executionStatus;
         StepType = stepType;
+    }
+
+    protected StepExecutionAttempt(StepExecutionAttempt other)
+    {
+        ExecutionId = other.ExecutionId;
+        StepId = other.StepId;
+        RetryAttemptIndex = other.RetryAttemptIndex;
+        ExecutionStatus = other.ExecutionStatus;
+        StepType = other.StepType;
+        StepExecution = other.StepExecution;
     }
 
     public Guid ExecutionId { get; set; }
@@ -49,20 +59,9 @@ public abstract record StepExecutionAttempt
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 
     /// <summary>
-    /// Used when the step execution attempt is copied and its execution attempt specific variables should be reset.
+    /// Creates a new instance where the execution attempt specific properties have not yet been set.
+    /// The returned new instance can act as a placeholder for a new execution attempt.
     /// </summary>
-    public void Reset()
-    {
-        StartDateTime = null;
-        EndDateTime = null;
-        ExecutionStatus = StepExecutionStatus.NotStarted;
-        ErrorMessage = null;
-        InfoMessage = null;
-        ResetInstanceMembers();
-    }
-
-    /// <summary>
-    /// Resets execution attempt specific variables to their default values.
-    /// </summary>
-    protected abstract void ResetInstanceMembers();
+    /// <returns>New instance where non-attempt specific properties have been copied from this instance.</returns>
+    public abstract StepExecutionAttempt Clone();
 }

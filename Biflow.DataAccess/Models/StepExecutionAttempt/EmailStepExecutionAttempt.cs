@@ -1,14 +1,15 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record EmailStepExecutionAttempt : StepExecutionAttempt
+public class EmailStepExecutionAttempt : StepExecutionAttempt
 {
     public EmailStepExecutionAttempt(StepExecutionStatus executionStatus)
         : base(executionStatus, StepType.Email)
     {
     }
 
-    protected override void ResetInstanceMembers()
+    protected EmailStepExecutionAttempt(EmailStepExecutionAttempt other) : base(other)
     {
-        
     }
+
+    public override StepExecutionAttempt Clone() => new EmailStepExecutionAttempt(this);
 }

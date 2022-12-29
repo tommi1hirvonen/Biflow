@@ -1,6 +1,6 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record PipelineStepExecutionAttempt : StepExecutionAttempt
+public class PipelineStepExecutionAttempt : StepExecutionAttempt
 {
 
     public PipelineStepExecutionAttempt(StepExecutionStatus executionStatus)
@@ -8,10 +8,11 @@ public record PipelineStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    protected PipelineStepExecutionAttempt(PipelineStepExecutionAttempt other) : base(other)
+    {
+    }
+
     public string? PipelineRunId { get; set; }
 
-    protected override void ResetInstanceMembers()
-    {
-        PipelineRunId = null;
-    }
+    public override StepExecutionAttempt Clone() => new PipelineStepExecutionAttempt(this);
 }

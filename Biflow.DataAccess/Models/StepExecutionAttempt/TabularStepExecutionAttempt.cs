@@ -1,14 +1,15 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record TabularStepExecutionAttempt : StepExecutionAttempt
+public class TabularStepExecutionAttempt : StepExecutionAttempt
 {
     public TabularStepExecutionAttempt(StepExecutionStatus executionStatus)
         : base(executionStatus, StepType.Tabular)
     {
     }
 
-    protected override void ResetInstanceMembers()
+    protected TabularStepExecutionAttempt(TabularStepExecutionAttempt other) : base(other)
     {
-        
     }
+
+    public override StepExecutionAttempt Clone() => new TabularStepExecutionAttempt(this);
 }

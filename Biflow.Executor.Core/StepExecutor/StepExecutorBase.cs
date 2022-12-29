@@ -146,8 +146,18 @@ internal abstract class StepExecutorBase
 
                 // There are attempts left => update execution with status AwaitRetry,
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.AwaitRetry);
+                
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                executionAttempt = await AddAndGetIncrementedExecutionAttemptAsync(executionAttempt);
+                executionAttempt = executionAttempt.Clone();
+                executionAttempt.RetryAttemptIndex++;
+                executionAttempt.ExecutionStatus = StepExecutionStatus.NotStarted;
+                StepExecution.StepExecutionAttempts.Add(executionAttempt);
+                using (var context = _dbContextFactory.CreateDbContext())
+                {
+                    context.Attach(executionAttempt).State = EntityState.Added;
+                    await context.SaveChangesAsync();
+                }
+                
                 try
                 {
                     await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationToken);
@@ -247,20 +257,6 @@ internal abstract class StepExecutorBase
             return await Task.Run(() => evaluator.Evaluate<bool>(StepExecution.ExecutionConditionExpression));
         }
         return true;
-    }
-
-    private async Task<StepExecutionAttempt> AddAndGetIncrementedExecutionAttemptAsync(StepExecutionAttempt previousAttempt)
-    {
-        var executionAttempt = previousAttempt with
-        {
-            RetryAttemptIndex = previousAttempt.RetryAttemptIndex + 1,
-        };
-        executionAttempt.Reset();
-        StepExecution.StepExecutionAttempts.Add(executionAttempt);
-        using var context = _dbContextFactory.CreateDbContext();
-        context.Attach(executionAttempt).State = EntityState.Added;
-        await context.SaveChangesAsync();
-        return executionAttempt;
     }
 
     private async Task UpdateExecutionSkipped(string infoMessage)

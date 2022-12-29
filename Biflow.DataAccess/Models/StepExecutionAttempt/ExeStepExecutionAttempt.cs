@@ -1,16 +1,17 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record ExeStepExecutionAttempt : StepExecutionAttempt
+public class ExeStepExecutionAttempt : StepExecutionAttempt
 {
     public ExeStepExecutionAttempt(StepExecutionStatus executionStatus)
         : base(executionStatus, StepType.Exe)
     {
     }
 
+    protected ExeStepExecutionAttempt(ExeStepExecutionAttempt other) : base(other)
+    {
+    }
+
     public int? ExeProcessId { get; set; }
 
-    protected override void ResetInstanceMembers()
-    {
-        ExeProcessId = null;
-    }
+    public override StepExecutionAttempt Clone() => new ExeStepExecutionAttempt(this);
 }

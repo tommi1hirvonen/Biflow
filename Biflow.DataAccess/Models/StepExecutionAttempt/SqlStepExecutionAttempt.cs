@@ -1,14 +1,15 @@
 ﻿namespace Biflow.DataAccess.Models;
 
-public record SqlStepExecutionAttempt : StepExecutionAttempt
+public class SqlStepExecutionAttempt : StepExecutionAttempt
 {
     public SqlStepExecutionAttempt(StepExecutionStatus executionStatus)
         : base(executionStatus, StepType.Sql)
     {
     }
 
-    protected override void ResetInstanceMembers()
+    protected SqlStepExecutionAttempt(SqlStepExecutionAttempt other) : base(other)
     {
-        
     }
+
+    public override StepExecutionAttempt Clone() => new SqlStepExecutionAttempt(this);
 }
