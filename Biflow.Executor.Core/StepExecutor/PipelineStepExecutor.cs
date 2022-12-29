@@ -68,11 +68,6 @@ internal class PipelineStepExecutor : StepExecutorBase
             return Result.Failure($"Error starting pipeline run:\n{ex.Message}", Warning.ToString());
         }
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-                    ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-                    : new CancellationTokenSource();
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
@@ -94,6 +89,11 @@ internal class PipelineStepExecutor : StepExecutorBase
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Step.ExecutionId, Step);
             Warning.AppendLine($"Error updating pipeline run id {runId}\n{ex.Message}");
         }
+
+        using var timeoutCts = Step.TimeoutMinutes > 0
+                    ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                    : new CancellationTokenSource();
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         string status;
         string message;

@@ -107,9 +107,12 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (OperationCanceledException)
         {
-            return timeoutCts.IsCancellationRequested
-                ? Result.Failure("Step execution timed out.", Warning.ToString())
-                : Result.Failure("Step was canceled.", Warning.ToString());
+            if (timeoutCts.IsCancellationRequested)
+            {
+                return Result.Failure("Step execution timed out.", Warning.ToString()); // Report failure => allow possible retries
+            }
+
+            throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
@@ -123,6 +126,10 @@ internal class FunctionStepExecutor : StepExecutorBase
                 ? await HandleDurableFunctionPolling(client, content, cancellationToken)
                 : Result.Success(content, Warning.ToString());
             return executionResult;
+        }
+        catch (OperationCanceledException)
+        {
+            throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {

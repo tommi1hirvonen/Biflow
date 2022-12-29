@@ -58,11 +58,6 @@ internal class PackageStepExecutor : StepExecutorBase
             return Result.Failure($"Error starting package execution:\n{ex.Message}", Warning.ToString());
         }
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-            : new CancellationTokenSource();
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
         // Update the SSISDB operation id for the target package execution.
         try
         {
@@ -85,6 +80,11 @@ internal class PackageStepExecutor : StepExecutorBase
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", Step.ExecutionId, Step, packageOperationId);
             Warning.AppendLine($"Error updating target package operation id {packageOperationId}\n{ex.Message}");
         }
+
+        using var timeoutCts = Step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+            : new CancellationTokenSource();
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         // Monitor the package's execution.
         bool completed = false, success = false;

@@ -91,25 +91,18 @@ internal class ExeStepExecutor : StepExecutorBase
             Warning.AppendLine($"Error logging child process id:\n{ex.Message}");
         }
 
+        using var timeoutCts = Step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+            : new CancellationTokenSource();
+        
         try
         {
-            var processTask = process.WaitForExitAsync(cancellationToken);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            // Convert timeout minutes to milliseconds if provided, otherwise -1 to wait indefinitely.
-            var timeoutTask = Step.TimeoutMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-                : Task.Delay(-1, cancellationToken);
+            await process.WaitForExitAsync(linkedCts.Token);
 
-            // Wait for either the process to finish or for timeout.
-            await Task.WhenAny(processTask, timeoutTask);
-
-            // If the process has not finished, throw OperationCanceledException to begin cleanup.
-            if (!process.HasExited)
-            {
-                throw new OperationCanceledException();
-            }
             // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
-            else if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
+            if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
             {
                 return Result.Success(Output.ToString(), Warning.ToString());
             }
@@ -132,7 +125,12 @@ internal class ExeStepExecutor : StepExecutorBase
                 Warning.AppendLine($"Error killing process after timeout:\n{ex.Message}");
             }
 
-            throw;
+            if (timeoutCts.IsCancellationRequested)
+            {
+                return Result.Failure($"Executing exe timed out", Warning.ToString(), Output.ToString()); // Report failure => allow possible retries
+            }
+
+            throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
