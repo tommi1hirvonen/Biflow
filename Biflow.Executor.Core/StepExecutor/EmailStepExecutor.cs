@@ -29,24 +29,11 @@ internal class EmailStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var recipients = Step.GetRecipientsAsList();
+        var parameters = Step.StepExecutionParameters.ToStringDictionary();
 
-        var subject = Step.Subject;
-        var body = Step.Body;
-
-        // Iterate parameters and replace parameter names with corresponding values.
-        // Do this for both the subject and body.
-        foreach (var param in Step.StepExecutionParameters)
-        {
-            var value = param.ParameterValue switch
-            {
-                DateTime dt => dt.ToString("o"),
-                _ => param.ParameterValue.ToString()
-            };
-            recipients = recipients.Select(r => r.Replace(param.ParameterName, value)).ToList();
-            subject = subject.Replace(param.ParameterName, value);
-            body = body.Replace(param.ParameterName, value);
-        }
+        var recipients = Step.GetRecipientsAsList().Select(r => r.Replace(parameters));
+        var subject = Step.Subject.Replace(parameters);
+        var body = Step.Body.Replace(parameters);
 
         await _notificationService.SendNotification(recipients, subject, body, cancellationToken);
 

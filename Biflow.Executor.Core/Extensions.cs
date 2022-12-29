@@ -76,6 +76,11 @@ public static class Extensions
         return before + replaced + after;
     }
 
+    /// <summary>
+    /// Maps step execution parameters to a Dictionary
+    /// </summary>
+    /// <param name="parameters">Step execution parameters to map</param>
+    /// <returns>Dictionary where the parameter name is the key and the parameter value is the value</returns>
     internal static Dictionary<string, string?> ToStringDictionary(this IEnumerable<StepExecutionParameterBase> parameters)
     {
         return parameters.Select(p => p.ParameterValue switch
