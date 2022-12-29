@@ -159,7 +159,8 @@ internal class JobExecutor : IJobExecutor
         // Get job execution status based on step execution statuses.
         var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
         ExecutionStatus status;
-        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded || step.ExecutionStatus == StepExecutionStatus.Skipped))
+        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
+            || step.ExecutionStatus == StepExecutionStatus.Skipped))
         {
             status = ExecutionStatus.Succeeded;
         }
@@ -167,7 +168,9 @@ internal class JobExecutor : IJobExecutor
         {
             status = ExecutionStatus.Failed;
         }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.AwaitRetry || step.ExecutionStatus == StepExecutionStatus.Duplicate))
+        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.AwaitRetry
+            || step.ExecutionStatus == StepExecutionStatus.Duplicate
+            || step.ExecutionStatus == StepExecutionStatus.Warning))
         {
             status = ExecutionStatus.Warning;
         }

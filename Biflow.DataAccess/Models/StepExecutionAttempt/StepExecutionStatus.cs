@@ -5,6 +5,7 @@ public enum StepExecutionStatus
     NotStarted,
     Running,
     Succeeded,
+    Warning,
     Failed,
     Stopped,
     Skipped,

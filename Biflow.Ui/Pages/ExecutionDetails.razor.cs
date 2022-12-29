@@ -125,13 +125,13 @@ public partial class ExecutionDetails : ComponentBase
         var steps = Execution?.StepExecutions
             .Select(step =>
             {
-                var status = step.GetExecutionStatus().ToString().ToLower();
+                var status = step.GetExecutionStatus().ToString() ?? "";
                 return new
                 {
                     Id = step.StepId,
                     Name = step.StepName,
-                    ClassName = $"enabled {status}",
-                    Tooltip = $"{step.StepType}, {step.GetExecutionStatus()}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
+                    ClassName = $"enabled {status.ToLower()}",
+                    Tooltip = $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
                 };
             });
         var dependencies = Execution?.StepExecutions

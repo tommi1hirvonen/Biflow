@@ -3,6 +3,7 @@
     var (textClass, borderClass, icon) = ExecutionStatus switch
     {
         StepExecutionStatus.Succeeded => ("text-success", "border-success", FeatherIcon.CheckCircle),
+        StepExecutionStatus.Warning => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
         StepExecutionStatus.Failed => ("text-danger", "border-danger", FeatherIcon.AlertOctagon),
         StepExecutionStatus.Stopped => ("text-warning", "border-warning", FeatherIcon.XOctagon),
         StepExecutionStatus.Duplicate => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),

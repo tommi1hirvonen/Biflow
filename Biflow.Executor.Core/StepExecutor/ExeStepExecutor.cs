@@ -15,8 +15,9 @@ internal class ExeStepExecutor : StepExecutorBase
 
     private ExeStepExecution Step { get; }
 
-    private StringBuilder ErrorMessageBuilder { get; } = new StringBuilder();
-    private StringBuilder OutputMessageBuilder { get; } = new StringBuilder();
+    private StringBuilder Warning { get; } = new StringBuilder();
+    private StringBuilder Error { get; } = new StringBuilder();
+    private StringBuilder Output { get; } = new StringBuilder();
 
     public ExeStepExecutor(ILogger<ExeStepExecutor> logger, IDbContextFactory<BiflowContext> dbContextFactory, ExeStepExecution step)
         : base(logger, dbContextFactory, step)
@@ -87,6 +88,7 @@ internal class ExeStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", Step.ExecutionId, Step);
+            Warning.AppendLine($"Error logging child process id:\n{ex.Message}");
         }
 
         try
@@ -109,12 +111,12 @@ internal class ExeStepExecutor : StepExecutorBase
             // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
             else if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
             {
-                return Result.Success(OutputMessageBuilder.ToString());
+                return Result.Success(Output.ToString(), Warning.ToString());
             }
             else
             {
-                var errorMessage = $"{ErrorMessageBuilder}\n\nProcess finished with exit code {process.ExitCode}";
-                return Result.Failure(errorMessage, OutputMessageBuilder.ToString());
+                var errorMessage = $"{Error}\n\nProcess finished with exit code {process.ExitCode}";
+                return Result.Failure(errorMessage, Warning.ToString(), Output.ToString());
             }
         }
         catch (OperationCanceledException)
@@ -127,6 +129,7 @@ internal class ExeStepExecutor : StepExecutorBase
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", Step.ExecutionId, Step);
+                Warning.AppendLine($"Error killing process after timeout:\n{ex.Message}");
             }
 
             throw;
@@ -134,18 +137,18 @@ internal class ExeStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return Result.Failure($"Error while executing exe:\n{ex.Message}");
+            return Result.Failure($"Error while executing exe:\n{ex.Message}", Warning.ToString(), Output.ToString());
         }
     }
 
     private void ErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        ErrorMessageBuilder.AppendLine(e.Data);
+        Error.AppendLine(e.Data);
     }
 
     private void OutputDataReceived(object sender, DataReceivedEventArgs e)
     {
-        OutputMessageBuilder.AppendLine(e.Data);
+        Output.AppendLine(e.Data);
     }
 
 }

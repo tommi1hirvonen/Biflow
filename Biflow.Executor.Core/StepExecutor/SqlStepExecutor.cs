@@ -83,17 +83,10 @@ internal class SqlStepExecutor : StepExecutorBase
             _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
             var errors = ex.Errors.Cast<SqlError>();
             var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-            return Result.Failure(errorMessage, GetInfoMessage());
+            return Result.Failure(errorMessage, null, InfoMessageBuilder.ToString());
         }
 
-        return Result.Success(GetInfoMessage());
-    }
-
-    private string? GetInfoMessage()
-    {
-        var infoMessage = InfoMessageBuilder.ToString();
-        infoMessage = string.IsNullOrEmpty(infoMessage) ? null : infoMessage;
-        return infoMessage;
+        return Result.Success(InfoMessageBuilder.ToString());
     }
 
     private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)

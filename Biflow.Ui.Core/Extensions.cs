@@ -247,7 +247,10 @@ public static partial class Extensions
 
     public static decimal GetSuccessPercent(this Execution execution)
     {
-        var successCount = execution.StepExecutions?.Count(step => step.StepExecutionAttempts?.Any(attempt => attempt.ExecutionStatus == StepExecutionStatus.Succeeded) ?? false) ?? 0;
+        var successCount = execution.StepExecutions
+            ?.Count(step =>
+                step.StepExecutionAttempts?.Any(attempt =>
+                    attempt.ExecutionStatus == StepExecutionStatus.Succeeded || attempt.ExecutionStatus == StepExecutionStatus.Warning) ?? false) ?? 0;
         var allCount = execution.StepExecutions?.Count ?? 0;
         return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
     }
@@ -258,6 +261,7 @@ public static partial class Extensions
         var completedCount = execution.StepExecutions?.Count(step =>
             step.StepExecutionAttempts?.Any(att =>
                 att.ExecutionStatus == StepExecutionStatus.Succeeded ||
+                att.ExecutionStatus == StepExecutionStatus.Warning ||
                 att.ExecutionStatus == StepExecutionStatus.Failed ||
                 att.ExecutionStatus == StepExecutionStatus.Stopped ||
                 att.ExecutionStatus == StepExecutionStatus.Skipped ||

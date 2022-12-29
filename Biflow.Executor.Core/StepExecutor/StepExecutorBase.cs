@@ -192,17 +192,22 @@ internal abstract class StepExecutorBase
         attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
         attempt.ErrorMessage = failure.ErrorMessage;
+        attempt.WarningMessage = failure.WarningMessage;
         attempt.InfoMessage = failure.InfoMessage;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
 
-    private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt, Result executionResult)
+    private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt, Result result)
     {
+        var status = string.IsNullOrWhiteSpace(result.WarningMessage)
+            ? StepExecutionStatus.Succeeded
+            : StepExecutionStatus.Warning;
         using var context = _dbContextFactory.CreateDbContext();
-        attempt.ExecutionStatus = StepExecutionStatus.Succeeded;
+        attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
-        attempt.InfoMessage = executionResult.InfoMessage;
+        attempt.WarningMessage = result.WarningMessage;
+        attempt.InfoMessage = result.InfoMessage;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }

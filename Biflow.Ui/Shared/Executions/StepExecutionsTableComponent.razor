@@ -83,7 +83,7 @@
                                     History
                                 </HxButton>
                                 <AuthorizeView Roles="Admin, Editor, Operator">
-                                    @if (item.ExecutionStatus == StepExecutionStatus.Running)
+                                    @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry)
                                     {
                                         <HxDropdownButtonGroup CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">

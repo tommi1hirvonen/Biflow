@@ -19,6 +19,8 @@ internal class PackageStepExecutor : StepExecutorBase
 
     private const int MaxRefreshRetries = 3;
 
+    private StringBuilder Warning { get; } = new StringBuilder();
+
     public PackageStepExecutor(
         ILogger<PackageStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
@@ -51,7 +53,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-            return Result.Failure($"Error starting package execution:\n{ex.Message}");
+            return Result.Failure($"Error starting package execution:\n{ex.Message}", Warning.ToString());
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -79,6 +81,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", Step.ExecutionId, Step, packageOperationId);
+            Warning.AppendLine($"Error updating target package operation id {packageOperationId}\n{ex.Message}");
         }
 
         // Monitor the package's execution.
@@ -98,14 +101,14 @@ internal class PackageStepExecutor : StepExecutorBase
             if (timeoutCts.IsCancellationRequested)
             {
                 _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
+                return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
             }
             throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-            return Result.Failure($"Error monitoring package execution status:\n{ex.Message}");
+            return Result.Failure($"Error monitoring package execution status:\n{ex.Message}", Warning.ToString());
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -114,16 +117,16 @@ internal class PackageStepExecutor : StepExecutorBase
             try
             {
                 List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
-                return Result.Failure(string.Join("\n\n", errors));
+                return Result.Failure(string.Join("\n\n", errors), Warning.ToString());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                return Result.Failure($"Error getting package error messages:\n{ex.Message}");
+                return Result.Failure($"Error getting package error messages:\n{ex.Message}", Warning.ToString());
             }
         }
 
-        return Result.Success();
+        return Result.Success(null, Warning.ToString());
     }
 
     private async Task<long> StartExecutionAsync(string connectionString)
@@ -272,6 +275,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
+            Warning.AppendLine($"Error stopping package operation for id {packageOperationId}\n{ex.Message}");
         }
     }
 }

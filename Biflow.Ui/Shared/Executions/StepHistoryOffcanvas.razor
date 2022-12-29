@@ -72,7 +72,11 @@
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
-    private double AverageDurationInSeconds => (int)(Executions?.Where(e => e.ExecutionStatus == StepExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
+    private double AverageDurationInSeconds =>
+        (int)(Executions
+            ?.Where(e => e.ExecutionStatus == StepExecutionStatus.Succeeded || e.ExecutionStatus == StepExecutionStatus.Warning)
+            .Average(e => e.ExecutionInSeconds)
+            ?? 0);
 
     protected override async Task OnParametersSetAsync()
     {

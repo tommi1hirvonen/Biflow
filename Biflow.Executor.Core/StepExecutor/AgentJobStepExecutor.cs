@@ -134,7 +134,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
             }
             else
             {
-                return Result.Failure($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+                return Result.Failure($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}", null, messageString);
             }
         }
         catch (Exception ex)

@@ -4,20 +4,25 @@ public abstract class Result
 {
     public string? InfoMessage { get; }
 
-    protected Result(string? infoMessage)
+    public string? WarningMessage { get; }
+
+    protected Result(string? infoMessage, string? warningMessage)
     {
-        InfoMessage = infoMessage;
+        InfoMessage = string.IsNullOrWhiteSpace(infoMessage) ? null : infoMessage;
+        WarningMessage = string.IsNullOrWhiteSpace(warningMessage) ? null : warningMessage;
     }
 
-    public static Success Success(string? infoMessage = null) => new(infoMessage);
+    public static Success Success(string? infoMessage = null, string? warningMessage = null) =>
+        new(infoMessage, warningMessage);
 
-    public static Failure Failure(string errorMessage, string? infoMessage = null) => new(errorMessage, infoMessage);
+    public static Failure Failure(string errorMessage, string? warningMessage = null, string? infoMessage = null) =>
+        new(errorMessage, warningMessage, infoMessage);
 
 }
 
 public class Success : Result
 {
-    internal Success(string? infoMessage = null) : base(infoMessage)
+    internal Success(string? infoMessage, string? warningMessage) : base(infoMessage, warningMessage)
     {
     }
 }
@@ -26,7 +31,7 @@ public class Failure : Result
 {
     public string ErrorMessage { get; }
 
-    internal Failure(string errorMessage, string? infoMessage) : base(infoMessage)
+    internal Failure(string errorMessage, string? warningMessage, string? infoMessage) : base(infoMessage, warningMessage)
     {
         ErrorMessage = errorMessage;
     }

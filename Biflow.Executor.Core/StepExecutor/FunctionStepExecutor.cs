@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text;
 using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
@@ -17,6 +18,8 @@ internal class FunctionStepExecutor : StepExecutorBase
     private FunctionStepExecution Step { get; }
 
     private const int MaxRefreshRetries = 3;
+
+    private StringBuilder Warning { get; } = new StringBuilder();
 
     private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -52,6 +55,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
+            Warning.AppendLine($"Error reading function key from database\n{ex.Message}");
         }
 
         var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);
@@ -102,11 +106,13 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
         catch (OperationCanceledException)
         {
-            return timeoutCts.IsCancellationRequested ? Result.Failure("Step execution timed out.") : Result.Failure("Step was canceled.");
+            return timeoutCts.IsCancellationRequested
+                ? Result.Failure("Step execution timed out.", Warning.ToString())
+                : Result.Failure("Step was canceled.", Warning.ToString());
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error sending POST request to invoke function:\n{ex.Message}");
+            return Result.Failure($"Error sending POST request to invoke function:\n{ex.Message}", Warning.ToString());
         }
 
         try
@@ -114,12 +120,12 @@ internal class FunctionStepExecutor : StepExecutorBase
             response.EnsureSuccessStatusCode();
             var executionResult = Step.FunctionIsDurable
                 ? await HandleDurableFunctionPolling(client, content, cancellationToken)
-                : Result.Success(content);
+                : Result.Success(content, Warning.ToString());
             return executionResult;
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex.Message, content);
+            return Result.Failure(ex.Message, Warning.ToString(), content);
         }
     }
 
@@ -177,7 +183,7 @@ internal class FunctionStepExecutor : StepExecutorBase
                 if (timeoutCts.IsCancellationRequested)
                 {
                     _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                    return Result.Failure("Step execution timed out"); // Report failure => allow possible retries
+                    return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
             }
@@ -185,15 +191,15 @@ internal class FunctionStepExecutor : StepExecutorBase
 
         if (status.RuntimeStatus == "Completed")
         {
-            return Result.Success(status.Output.ToString());
+            return Result.Success(status.Output.ToString(), Warning.ToString());
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return Result.Failure("Function was terminated", status.Output.ToString());
+            return Result.Failure("Function was terminated", Warning.ToString(), status.Output.ToString());
         }
         else
         {
-            return Result.Failure("Function failed", status.Output.ToString());
+            return Result.Failure("Function failed", Warning.ToString(), status.Output.ToString());
         }
     }
 
@@ -208,6 +214,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
+            Warning.AppendLine($"Error stopping function\n{ex.Message}");
         }
     }
 

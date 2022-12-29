@@ -12,6 +12,7 @@
     [ChildJobExecutionId]       UNIQUEIDENTIFIER    NULL,
     [ExeProcessId]              INT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
+    [WarningMessage]            NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [StoppedBy]                 NVARCHAR(250)       NULL,
     CONSTRAINT [PK_ExecutionStepAttempt] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
@@ -33,6 +34,7 @@
         [ExecutionStatus] = 'NotStarted'
         OR [ExecutionStatus] = 'Running'
         OR [ExecutionStatus] = 'Succeeded'
+        OR [ExecutionStatus] = 'Warning'
         OR [ExecutionStatus] = 'Failed'
         OR [ExecutionStatus] = 'Stopped'
         OR [ExecutionStatus] = 'Skipped'
