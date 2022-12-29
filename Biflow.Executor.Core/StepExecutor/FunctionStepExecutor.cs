@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly;
 using System.Text;
 using System.Text.Json;
 
@@ -159,6 +160,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
+            Warning.Append($"Error updating function instance id {startResponse.Id}\n{ex.Message}");
         }
 
         StatusResponse status;
@@ -166,7 +168,7 @@ internal class FunctionStepExecutor : StepExecutorBase
         {
             try
             {
-                status = await TryGetStatusAsync(client, startResponse.StatusQueryGetUri, linkedCts.Token);
+                status = await GetStatusWithRetriesAsync(client, startResponse.StatusQueryGetUri, linkedCts.Token);
                 if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
                 {
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
@@ -186,6 +188,10 @@ internal class FunctionStepExecutor : StepExecutorBase
                     return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure($"Error getting function status\n{ex.Message}", Warning.ToString());
             }
         }
 
@@ -218,27 +224,24 @@ internal class FunctionStepExecutor : StepExecutorBase
         }
     }
 
-    private async Task<StatusResponse> TryGetStatusAsync(HttpClient client, string statusUrl, CancellationToken cancellationToken)
+    private async Task<StatusResponse> GetStatusWithRetriesAsync(HttpClient client, string statusUrl, CancellationToken cancellationToken)
     {
-        int refreshRetries = 0;
-        while (refreshRetries < MaxRefreshRetries)
+        var policy = Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            onRetry: (ex, waitDuration) =>
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step));
+
+        return await policy.ExecuteAsync(async (cancellationToken) =>
         {
-            try
-            {
-                var response = await client.GetAsync(statusUrl, CancellationToken.None);
-                var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-                var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, JsonSerializerOptions)
-                    ?? throw new InvalidOperationException("Status response was null");
-                return statusResponse;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step);
-                refreshRetries++;
-                await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
-            }
-        }
-        throw new TimeoutException("The maximum number of function instance status refresh attempts was reached.");
+            var response = await client.GetAsync(statusUrl, cancellationToken);
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, JsonSerializerOptions)
+                ?? throw new InvalidOperationException("Status response was null");
+            return statusResponse;
+        }, cancellationToken);
     }
 
     private record StartResponse(string Id, string StatusQueryGetUri, string SendEventPostUri, string TerminatePostUri, string PurgeHistoryDeleteUri);

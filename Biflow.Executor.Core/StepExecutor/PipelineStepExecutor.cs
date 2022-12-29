@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly;
 using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
@@ -100,7 +101,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         {
             try
             {
-                (status, message) = await TryGetPipelineRunAsync(runId, linkedCts.Token);
+                (status, message) = await GetPipelineRunWithRetriesAsync(runId, linkedCts.Token);
                 if (status == "InProgress" || status == "Queued")
                 {
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
@@ -120,6 +121,10 @@ internal class PipelineStepExecutor : StepExecutorBase
                 }
                 throw; // Step was canceled => pass the exception => no retries
             }
+            catch (Exception ex)
+            {
+                return Result.Failure($"Error getting pipeline run status\n{ex.Message}", Warning.ToString());
+            }
         }
 
         if (status == "Succeeded")
@@ -132,23 +137,18 @@ internal class PipelineStepExecutor : StepExecutorBase
         }
     }
 
-    private async Task<(string Status, string Message)> TryGetPipelineRunAsync(string runId, CancellationToken cancellationToken)
+    private async Task<(string Status, string Message)> GetPipelineRunWithRetriesAsync(string runId, CancellationToken cancellationToken)
     {
-        int refreshRetries = 0;
-        while (refreshRetries < MaxRefreshRetries)
-        {
-            try
-            {
-                return await PipelineClient!.GetPipelineRunAsync(_tokenService, runId, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Step.ExecutionId, Step, runId);
-                refreshRetries++;
-                await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
-            }
-        }
-        throw new TimeoutException("The maximum number of pipeline run status refresh attempts was reached.");
+        var policy = Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            onRetry: (ex, waitDuration) =>
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Step.ExecutionId, Step, runId));
+
+        return await policy.ExecuteAsync((cancellationToken) =>
+            PipelineClient.GetPipelineRunAsync(_tokenService, runId, cancellationToken), cancellationToken);
     }
 
     private async Task CancelAsync(string runId)
@@ -156,7 +156,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", Step.ExecutionId, Step, runId);
         try
         {
-            await PipelineClient!.CancelPipelineRunAsync(_tokenService, runId);
+            await PipelineClient.CancelPipelineRunAsync(_tokenService, runId);
         }
         catch (Exception ex)
         {

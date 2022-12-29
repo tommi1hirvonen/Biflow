@@ -6,6 +6,8 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Polly;
+using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -90,7 +92,7 @@ internal class PackageStepExecutor : StepExecutorBase
         {
             while (!completed)
             {
-                (completed, success) = await TryRefreshStatusAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
+                (completed, success) = await GetStatusWithRetriesAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
                 if (!completed)
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
             }
@@ -202,39 +204,35 @@ internal class PackageStepExecutor : StepExecutorBase
         return packageOperationId;
     }
 
-    private async Task<(bool Completed, bool Success)> TryRefreshStatusAsync(string connectionString, long packageOperationId, CancellationToken cancellationToken)
+    private async Task<(bool Completed, bool Success)> GetStatusWithRetriesAsync(string connectionString, long packageOperationId, CancellationToken cancellationToken)
     {
-        int refreshRetries = 0;
-        // Try to refresh the operation status until the maximum number of attempts is reached.
-        while (refreshRetries < MaxRefreshRetries)
-        {
-            try
-            {
-                using var sqlConnection = new SqlConnection(connectionString);
-                var status = await sqlConnection.ExecuteScalarAsync<int>(
-                    "SELECT status from SSISDB.catalog.operations where operation_id = @OperationId",
-                    new { OperationId = packageOperationId });
-                // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
-                if (status == 3 || status == 4 || status == 6 || status == 9)
-                {
-                    return (true, false); // failed
-                }
-                else if (status == 7)
-                {
-                    return (true, true); // success
-                }
+        var policy = Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            onRetry: (ex, waitDuration) =>
+                _logger.LogWarning(ex, "Error getting package operation status for operation id {operationId}", packageOperationId));
 
-                return (false, false); // running
-            }
-            catch (Exception ex)
+        return await policy.ExecuteAsync(async (cancellationToken) =>
+        {
+            using var sqlConnection = new SqlConnection(connectionString);
+            var command = new CommandDefinition("SELECT status from SSISDB.catalog.operations where operation_id = @OperationId",
+                new { OperationId = packageOperationId },
+                cancellationToken: cancellationToken);
+            var status = await sqlConnection.ExecuteScalarAsync<int>(command);
+            // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
+            if (status == 3 || status == 4 || status == 6 || status == 9)
             {
-                _logger.LogError(ex, "Error refreshing package operation status for operation id {operationId}", packageOperationId);
-                refreshRetries++;
-                await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+                return (true, false); // failed
             }
-        }
-        // The maximum number of attempts was reached. Notify caller with exception.
-        throw new TimeoutException("The maximum number of package operation status refresh attempts was reached.");
+            else if (status == 7)
+            {
+                return (true, true); // success
+            }
+
+            return (false, false); // running
+        }, cancellationToken);
     }
 
     private static async Task<List<string?>> GetErrorMessagesAsync(string connectionString, long packageOperationId)
