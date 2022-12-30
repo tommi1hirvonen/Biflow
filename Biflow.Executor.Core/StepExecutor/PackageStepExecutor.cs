@@ -55,6 +55,12 @@ internal class PackageStepExecutor : StepExecutorBase
             return Result.Failure(ex, "Error starting package execution");
         }
 
+        // Initialize timeout cancellation token source already here
+        // so that we can start the countdown immediately after the package was started.
+        using var timeoutCts = Step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+            : new CancellationTokenSource();
+
         // Update the SSISDB operation id for the target package execution.
         try
         {
@@ -78,15 +84,11 @@ internal class PackageStepExecutor : StepExecutorBase
             AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-            : new CancellationTokenSource();
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
         // Monitor the package's execution.
         bool completed = false, success = false;
         try
         {
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (!completed)
             {
                 (completed, success) = await GetStatusWithRetriesAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);

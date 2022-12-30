@@ -65,6 +65,12 @@ internal class PipelineStepExecutor : StepExecutorBase
             return Result.Failure(ex, "Error starting pipeline run");
         }
 
+        // Initialize timeout cancellation token source already here
+        // so that we can start the countdown immediately after the pipeline was started.
+        using var timeoutCts = Step.TimeoutMinutes > 0
+                    ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+                    : new CancellationTokenSource();
+
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
@@ -87,16 +93,11 @@ internal class PipelineStepExecutor : StepExecutorBase
             AddWarning(ex, $"Error updating pipeline run id {runId}");
         }
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-                    ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-                    : new CancellationTokenSource();
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-        string status;
-        string message;
-        while (true)
+        string status, message;
+        try
         {
-            try
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+            while (true)
             {
                 (status, message) = await GetPipelineRunWithRetriesAsync(runId, linkedCts.Token);
                 if (status == "InProgress" || status == "Queued")
@@ -108,20 +109,20 @@ internal class PipelineStepExecutor : StepExecutorBase
                     break;
                 }
             }
-            catch (OperationCanceledException ex)
+        }
+        catch (OperationCanceledException ex)
+        {
+            await CancelAsync(runId);
+            if (timeoutCts.IsCancellationRequested)
             {
-                await CancelAsync(runId);
-                if (timeoutCts.IsCancellationRequested)
-                {
-                    _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                    return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-                }
-                throw; // Step was canceled => pass the exception => no retries
+                _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
+                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
             }
-            catch (Exception ex)
-            {
-                return Result.Failure(ex, "Error getting pipeline run status");
-            }
+            throw; // Step was canceled => pass the exception => no retries
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ex, "Error getting pipeline run status");
         }
 
         if (status == "Succeeded")
