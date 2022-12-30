@@ -77,6 +77,11 @@ public partial class ExecutionDetails : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
+        if (ShowReport == Report.Rerun)
+        {
+            ShowReport = Report.Table;
+            StateHasChanged();
+        }
         await LoadData();
     }
 

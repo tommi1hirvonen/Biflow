@@ -22,6 +22,15 @@ else if (Job is null || Steps is null)
     return;
 }
 
+@if (LastStartedExecutionId is not null)
+{
+    <div class="alert alert-success show alert-dismissible col-xl-6" role="alert">
+        <CxIcon Icon="FeatherIcon.CheckCircle" />
+        Execution started successfully – <a href="executions/@LastStartedExecutionId" class="alert-link">view execution</a>
+        <button type="button" class="btn-close" @onclick="() => LastStartedExecutionId = null"></button>
+    </div>
+}
+
 <div class="row">
     <div class="row">
         <div class="col">
@@ -158,7 +167,8 @@ else if (Job is null || Steps is null)
                         </HxDropdownContent>
                     </HxDropdownButtonGroup>
 
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" CssClass="ms-3" @onclick="Execute">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" CssClass="ms-3" @onclick="Execute"
+                          Enabled="!StartingExecution" Spinner="StartingExecution">
                     <CxIcon Icon="FeatherIcon.Play" />
                     Execute
                 </HxButton>
@@ -258,10 +268,14 @@ else if (Job is null || Steps is null)
     private bool Loading { get; set; } = true;
 
     private bool Notify { get; set; } = false;
-    
+
     private SubscriptionType? NotifyMe { get; set; } = null;
-    
+
     private bool NotifyMeOvertime { get; set; } = false;
+
+    private bool StartingExecution { get; set; } = false;
+
+    private Guid? LastStartedExecutionId { get; set; }
 
     private IEnumerable<StepExecutionStatus> Statuses => Execution?.StepExecutions
         .Select(e => e.StepExecutionAttempts)
@@ -326,22 +340,26 @@ else if (Job is null || Steps is null)
             return;
         }
 
+        StartingExecution = true;
+        StateHasChanged();
+
         string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
         try
         {
             var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            await DbHelperService.StartExecutionAsync(
+            LastStartedExecutionId = await DbHelperService.StartExecutionAsync(
                 job: Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
                 username: user,
                 stepIds: stepIds,
                 notify: Notify,
                 notifyMe: NotifyMe,
                 notifyMeOvertime: NotifyMeOvertime);
-            Messenger.AddInformation("Execution started successfully");
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error starting execution", ex.Message);
         }
+
+        StartingExecution = false;
     }
 }
