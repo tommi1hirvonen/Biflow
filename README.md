@@ -74,8 +74,10 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 |Executor.WebApp|Web App front-end project for the executor application|
 |Scheduler.Core|Core library for the scheduler service|
 |Scheduler.WebApp|Web App front-end project for the scheduler service|
-|Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
 |Ui.Core|Common UI services that can be shared between different UI versions/editions|
+|Ui.Components|Razor component library for the UI project|
+|Ui.SourceGeneration|Source generators for the component library project|
+|Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
 |Utilities|Common utilities library project|
 
 ## Execution statuses
