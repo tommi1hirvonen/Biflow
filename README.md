@@ -230,10 +230,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |-|-|
 |EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
 |ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication|`[ BuiltIn \| Windows \| AzureAd ]`|
+|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
 ||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
-||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management.|
-||`AzureAd`: Authentication is done using Azure Active Directory.  User roles and access are defined in the Biflow users management.|
+||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
+||`AzureAd`: Authentication is done using Azure Active Directory. User roles and access are defined in the Biflow users management.|
+||`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
 |AzureAd|This section needs to be defined only if `Authentication` is set to `AzureAd`|
 |AzureAd:Instance|`https://login.microsoftonline.com/`|
 |AzureAd:Domain|Your organization domain, e.g. `contoso.com`|
@@ -241,6 +242,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |AzureAd:ClientId|The application (client) ID of the application that you registered in the Azure portal.|
 |AzureAd:ClientSecret|The client secret for the app registration.|
 |AzureAd:CallbackPath|`/signin-oidc`|
+|Ldap|This section needs to be defined only if `Authentication` is set to `Ldap`|
+|Ldap:Server|The LDAP server to connect to for authentication|
+|Ldap:Port|The port to use for the LDAP server connection |
+|Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
+|Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
 |Executor:Type|`[ ConsoleApp \| WebApp \| SelfHosted ]`|
 ||Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
@@ -249,7 +255,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Scheduler:Type|`[ WebApp \| SelfHosted ]`|
 ||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
-|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only on-premise installations.|
+|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
 |Serilog:WriteTo:Args:path|Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`|
 
 4. Open the Windows command terminal in **administrator mode**.
@@ -314,6 +320,15 @@ exec biflow.UserAdd
 ```
 #### Azure AD authentication
 With Azure AD authentication, no password is required. Authentication happens using Microsoft Identity.
+```
+exec biflow.UserAdd
+    @Username = 'admin@mycompany.com',
+    @Password = null,
+    @Role = 'Admin',
+    @Email = 'admin@mycompany.com'
+```
+#### LDAP authentication
+With LDAP authentication, no password is required. Authentication happens using the LDAP server. The `userPrincipalName` name attribute should be used to add users to Biflow user management.
 ```
 exec biflow.UserAdd
     @Username = 'admin@mycompany.com',
