@@ -15,30 +15,6 @@
         <dd class="col-sm-9">
             @StepExecutionAttempt.StepId
         </dd>
-        <dt class="col-sm-3">
-            Executor PID
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecutionAttempt.StepExecution.Execution.ExecutorProcessId
-        </dd>
-        <dt class="col-sm-3">
-            Job
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecutionAttempt.StepExecution.Execution.JobName
-        </dd>
-        <dt class="col-sm-3">
-            Created by
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecutionAttempt.StepExecution.Execution.CreatedBy
-        </dd>
-        <dt class="col-sm-3">
-            Created
-        </dt>
-        <dd class="col-sm-9">
-            @StepExecutionAttempt.StepExecution.Execution.CreatedDateTime.LocalDateTime
-        </dd>
 
         @if (ShowExtraDetails)
         {
@@ -106,6 +82,12 @@
         @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
         {
             <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @sql.TimeoutMinutes
+            </dd>
+            <dt class="col-sm-3">
                 SQL statement
             </dt>
             <dd class="col-sm-9">
@@ -128,6 +110,12 @@
         }
         else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
         {
+            <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @package.TimeoutMinutes
+            </dd>
             <dt class="col-sm-3">
                 Package path
             </dt>
@@ -159,6 +147,12 @@
         else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
         {
             <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @pipeline.TimeoutMinutes
+            </dd>
+            <dt class="col-sm-3">
                 Pipeline name
             </dt>
             <dd class="col-sm-9">
@@ -182,6 +176,12 @@
         }
         else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
         {
+            <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @exe.TimeoutMinutes
+            </dd>
             <dt class="col-sm-3">
                 File path
             </dt>
@@ -240,6 +240,12 @@
         else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
         {
             <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @function.TimeoutMinutes
+            </dd>
+            <dt class="col-sm-3">
                 Function url
             </dt>
             <dd class="col-sm-9">
@@ -276,6 +282,12 @@
         else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
         {
             <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @agent.TimeoutMinutes
+            </dd>
+            <dt class="col-sm-3">
                 Agent job name
             </dt>
             <dd class="col-sm-9">
@@ -284,6 +296,12 @@
         }
         else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
         {
+            <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TimeoutMinutes
+            </dd>
             <dt class="col-sm-3">
                 Model name
             </dt>
