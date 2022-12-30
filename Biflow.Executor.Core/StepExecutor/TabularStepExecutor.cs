@@ -24,16 +24,11 @@ internal class TabularStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
-            : new CancellationTokenSource();
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
+        using var server = new Server();
         try
         {
-            await Task.Run(() =>
-            {
-                using var server = new Server();
+            var refreshTask = Task.Run(() =>
+            {       
                 server.Connect(Step.Connection.ConnectionString);
 
                 var database = server.Databases[Step.TabularModelName];
@@ -57,8 +52,32 @@ internal class TabularStepExecutor : StepExecutorBase
                     model.RequestRefresh(RefreshType.Full);
                 }
                 
-                model.SaveChanges();
-            }, linkedCts.Token);
+                model.SaveChanges(); // This is a long running operation. RequestRefresh() returns immediately.
+            });
+            
+            var timeoutTask = Step.TimeoutMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(Step.TimeoutMinutes), cancellationToken)
+                : Task.Delay(-1, cancellationToken);
+
+            await Task.WhenAny(refreshTask, timeoutTask);
+
+            if (!refreshTask.IsCompleted)
+            {
+                // The timeout task completed before the refresh task => step timed out.
+                throw new OperationCanceledException();
+            }
+        }
+        catch (OperationCanceledException ex)
+        {
+            await Task.Run(server.CancelCommand); // Cancel the SaveChanges operation.
+            if (cancellationTokenSource.IsCancellationRequested)
+            {
+                // Step was canceled => pass exception => no retries
+                throw;
+            }
+            
+            // Step timed out => return failure result => allow for possible retries.
+            return Result.Failure(ex, "Step execution timed out");
         }
         catch (Exception ex)
         {
