@@ -101,6 +101,7 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 |NotStarted |The step has not been started but is awaiting execution. All dependencies may not have yet been completed or there may be too many steps running in parallel. Job executions that have been termiated unexpectedly may have steps left with this status.|
 |Running    |The step is currently executing|
 |Succeeded  |The step was completed successfully|
+|Warning    |The succeeded with warnings|
 |Failed     |The step encountered an exception and failed|
 |Skipped    |Some strict dependencies defined for the step failed or the step's execution condition was not met. Thus the step was skipped.|
 |AwaitRetry |The step has failed. A retry attempt will be made after the specified interval.|
