@@ -4,19 +4,30 @@
     @if (Step is not null)
     {
         <div class="row">
-            <div class="col-lg-6">
-                <label class="form-label">Job</label>
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Loader" />
-                    </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.JobToExecuteId">
-                        @foreach (var job in Jobs?.Where(job => job.JobId != Step.JobId) ?? Enumerable.Empty<Job>())
-                        {
-                            <option value="@job.JobId">@job.JobName</option>
-                        }
-                    </InputSelect>
-                </div>
+            <div class="col-lg-8">
+                <HxAutosuggest Label="Job"
+                               CssClass="input-group-sm"
+                               TItem="Job"
+                               TValue="Guid?"
+                               DataProvider="GetJobSuggestions"
+                               ValueChanged="id => Step.JobToExecuteId = id"
+                               Value="Step.JobToExecuteId"
+                               ValueExpression="() => Step.JobToExecuteId"
+                               TextSelector="job => job.JobName"
+                               ItemFromValueResolver="id => Task.FromResult(Jobs.First(j => j.JobId == id))"
+                               ValueSelector="job => job.JobId"
+                               MinimumLength="0"
+                               ValidationMessageMode="ValidationMessageMode.None"
+                               InputSize="InputSize.Small">
+                    <ItemTemplate Context="item">
+                        <small>@item.JobName</small><sup>@item.Category?.CategoryName</sup>
+                    </ItemTemplate>
+                    <InputGroupStartTemplate>
+                        <div class="input-group-text">
+                            <CxIcon Icon="FeatherIcon.Loader" />
+                        </div>
+                    </InputGroupStartTemplate>
+                </HxAutosuggest>
             </div>
         </div>
         <div class="row mt-2">

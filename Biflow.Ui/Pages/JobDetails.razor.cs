@@ -46,9 +46,9 @@ public partial class JobDetails : ComponentBase
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         PipelineClients = await context.PipelineClients
-        .AsNoTracking()
-        .OrderBy(df => df.PipelineClientName)
-        .ToListAsync();
+            .AsNoTracking()
+            .OrderBy(df => df.PipelineClientName)
+            .ToListAsync();
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(app => app.AppRegistrationName)
@@ -73,7 +73,11 @@ public partial class JobDetails : ComponentBase
             .Include(step => step.ExecutionConditionParameters)
             .Where(step => step.JobId == Job.JobId)
             .ToListAsync();
-        Jobs = await context.Jobs.OrderBy(j => j.JobName).ToListAsync();
+        Jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .Include(j => j.Category)
+            .OrderBy(j => j.JobName)
+            .ToListAsync();
         SortSteps();
     }
 

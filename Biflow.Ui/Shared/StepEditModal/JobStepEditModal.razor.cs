@@ -1,5 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
+using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +20,7 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
-            JobToExecuteId = Jobs.FirstOrDefault(job => job.JobId != Job?.JobId)?.JobId,
+            JobToExecuteId = null,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<SourceTargetObject>(),
@@ -34,4 +36,14 @@ public partial class JobStepEditModal : StepEditModalBase<JobStep>
         .Include(step => step.Targets)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
+
+    private async Task<AutosuggestDataProviderResult<Job>> GetJobSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(150);
+        return new AutosuggestDataProviderResult<Job>
+        {
+            Data = Jobs.Where(j => j.JobName.ContainsIgnoreCase(request.UserInput)
+                            || (j.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
+        };
+    }
 }
