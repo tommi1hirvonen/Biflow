@@ -12,6 +12,7 @@
     [ChildJobExecutionId]       UNIQUEIDENTIFIER    NULL,
     [ExeProcessId]              INT                 NULL,
     [ErrorMessage]              NVARCHAR(MAX)       NULL,
+    [ErrorStackTrace]           NVARCHAR(MAX)       NULL,
     [WarningMessage]            NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [StoppedBy]                 NVARCHAR(250)       NULL,

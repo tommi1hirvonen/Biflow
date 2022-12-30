@@ -41,6 +41,8 @@ public abstract class StepExecutionAttempt
     [Display(Name = "Error message")]
     public string? ErrorMessage { get; set; }
 
+    public string? ErrorStackTrace { get; set; }
+
     [Display(Name = "Warning message")]
     public string? WarningMessage { get; set; }
 

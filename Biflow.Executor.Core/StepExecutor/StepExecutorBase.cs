@@ -237,6 +237,7 @@ internal abstract class StepExecutorBase
         attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
         attempt.ErrorMessage = errorMessage;
+        attempt.ErrorStackTrace = failure.Exception?.StackTrace;
         attempt.WarningMessage = GetWarningMessage();
         attempt.InfoMessage = GetOutputMessage();
         context.Attach(attempt).State = EntityState.Modified;

@@ -373,6 +373,25 @@
         </dt>
         <dd class="col-sm-9">
             <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
+            <AuthorizeView Roles="Admin">
+                @if (!string.IsNullOrWhiteSpace(StepExecutionAttempt.ErrorStackTrace))
+                {
+                    if (!ShowErrorStackTrace)
+                    {
+                        <div class="mt-2">
+                            <small>
+                                <a class="text-secondary" href="javascript:void(0);" @onclick="() => ShowErrorStackTrace = true">
+                                    Stack trace available
+                                </a>
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <code class="text-dark" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorStackTrace</code>
+                    }
+                }
+            </AuthorizeView>
         </dd>
         <dt class="col-sm-3">
             Warning message
@@ -421,4 +440,6 @@
 
     [Parameter]
     public bool ShowExtraDetails { get; set; } = false;
+
+    private bool ShowErrorStackTrace { get; set; } = false;
 }
