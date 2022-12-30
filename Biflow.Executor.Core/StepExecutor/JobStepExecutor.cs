@@ -1,11 +1,10 @@
-﻿using Dapper;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -17,8 +16,6 @@ internal class JobStepExecutor : StepExecutorBase
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
     private JobStepExecution Step { get; }
-
-    private StringBuilder Warning { get; } = new StringBuilder();
 
     public JobStepExecutor(
         ILogger<JobStepExecutor> logger,
@@ -58,7 +55,7 @@ internal class JobStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-            return Result.Failure($"Error initializing job execution:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error initializing job execution");
         }
 
         try
@@ -80,7 +77,7 @@ internal class JobStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
-            Warning.AppendLine($"Error logging child job execution id\n{ex.Message}");
+            AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
         }
             
         try
@@ -90,7 +87,7 @@ internal class JobStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-            return Result.Failure($"Error starting executor process:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error starting executor process");
         }
 
         if (Step.JobExecuteSynchronized)
@@ -114,23 +111,23 @@ internal class JobStepExecutor : StepExecutorBase
                     .FirstAsync();
                 return status switch
                 {
-                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => Result.Success(null, Warning.ToString()),
-                    ExecutionStatus.Failed => Result.Failure("Sub-execution failed", Warning.ToString()),
-                    ExecutionStatus.Stopped => Result.Failure("Sub-execution was stopped", Warning.ToString()),
-                    ExecutionStatus.Suspended => Result.Failure("Sub-execution was suspended", Warning.ToString()),
-                    ExecutionStatus.NotStarted => Result.Failure("Sub-execution failed to start", Warning.ToString()),
-                    ExecutionStatus.Running => Result.Failure($"Sub-execution was finished but its status was reported as {status} after finishing", Warning.ToString()),
-                    _ => Result.Failure("Unhandled sub-execution status", Warning.ToString()),
+                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => Result.Success(),
+                    ExecutionStatus.Failed => Result.Failure("Sub-execution failed"),
+                    ExecutionStatus.Stopped => Result.Failure("Sub-execution was stopped"),
+                    ExecutionStatus.Suspended => Result.Failure("Sub-execution was suspended"),
+                    ExecutionStatus.NotStarted => Result.Failure("Sub-execution failed to start"),
+                    ExecutionStatus.Running => Result.Failure($"Sub-execution was finished but its status was reported as {status} after finishing"),
+                    _ => Result.Failure("Unhandled sub-execution status"),
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                return Result.Failure("Error getting sub-execution status", Warning.ToString());
+                return Result.Failure(ex, "Error getting sub-execution status");
             }
         }
 
-        return Result.Success(null, Warning.ToString());
+        return Result.Success();
     }
 
 }

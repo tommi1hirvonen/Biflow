@@ -51,6 +51,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             // A durable function will return immediately and run asynchronously.
             response = await client.SendAsync(request, cancellationToken);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+            AddOutput(content);
         }
         catch (OperationCanceledException)
         {
@@ -58,7 +59,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error sending POST request to invoke function:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error sending POST request to invoke function");
         }
 
         StartResponse startResponse;
@@ -70,7 +71,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex.Message, Warning.ToString(), content);
+            return Result.Failure(ex, "Error getting start response for durable function");
         }
 
         // Create timeout cancellation token source here
@@ -100,7 +101,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
-            Warning.Append($"Error updating function instance id {startResponse.Id}\n{ex.Message}");
+            AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
         }
 
         StatusResponse status;
@@ -118,34 +119,36 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
                     break;
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelAsync(client, startResponse.TerminatePostUri, reason);
                 if (timeoutCts.IsCancellationRequested)
                 {
                     _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                    return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
+                    return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error getting function status\n{ex.Message}", Warning.ToString());
+                return Result.Failure(ex, "Error getting function status");
             }
         }
-
+        
+        AddOutput(status.Output?.ToString());
+        
         if (status.RuntimeStatus == "Completed")
         {
-            return Result.Success(status.Output.ToString(), Warning.ToString());
+            return Result.Success();
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return Result.Failure("Function was terminated", Warning.ToString(), status.Output.ToString());
+            return Result.Failure("Function was terminated");
         }
         else
         {
-            return Result.Failure("Function failed", Warning.ToString(), status.Output.ToString());
+            return Result.Failure("Function failed");
         }
 
     }
@@ -161,7 +164,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
-            Warning.AppendLine($"Error stopping function\n{ex.Message}");
+            AddWarning(ex, "Error stopping function");
         }
     }
 

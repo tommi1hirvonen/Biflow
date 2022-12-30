@@ -44,29 +44,30 @@ internal class FunctionStepExecutor : FunctionStepExecutorBase
             // Send the request to the function url. This will start the function, if the request was successful.
             response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+            AddOutput(content);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
             if (timeoutCts.IsCancellationRequested)
             {
-                return Result.Failure("Step execution timed out.", Warning.ToString()); // Report failure => allow possible retries
+                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
             }
 
             throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
-            return Result.Failure($"Error sending POST request to invoke function:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error sending POST request to invoke function");
         }
 
         try
         {
             response.EnsureSuccessStatusCode();
-            return Result.Success(content, Warning.ToString());
+            return Result.Success();
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex.Message, Warning.ToString(), content);
+            return Result.Failure(ex, "Function execution failed");
         }
     }
 

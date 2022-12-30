@@ -1,13 +1,12 @@
-﻿using Dapper;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text;
 using Polly;
-using System.Text.Json;
+using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -20,8 +19,6 @@ internal class PackageStepExecutor : StepExecutorBase
     private PackageStepExecution Step { get; }
 
     private const int MaxRefreshRetries = 3;
-
-    private StringBuilder Warning { get; } = new StringBuilder();
 
     public PackageStepExecutor(
         ILogger<PackageStepExecutor> logger,
@@ -55,7 +52,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-            return Result.Failure($"Error starting package execution:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error starting package execution");
         }
 
         // Update the SSISDB operation id for the target package execution.
@@ -78,7 +75,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", Step.ExecutionId, Step, packageOperationId);
-            Warning.AppendLine($"Error updating target package operation id {packageOperationId}\n{ex.Message}");
+            AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -97,20 +94,20 @@ internal class PackageStepExecutor : StepExecutorBase
                     await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
             await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
             if (timeoutCts.IsCancellationRequested)
             {
                 _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
+                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
             }
             throw; // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-            return Result.Failure($"Error monitoring package execution status:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error monitoring package execution status");
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -119,16 +116,16 @@ internal class PackageStepExecutor : StepExecutorBase
             try
             {
                 List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
-                return Result.Failure(string.Join("\n\n", errors), Warning.ToString());
+                return Result.Failure(string.Join("\n\n", errors));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                return Result.Failure($"Error getting package error messages:\n{ex.Message}", Warning.ToString());
+                return Result.Failure(ex, "Error getting package error messages");
             }
         }
 
-        return Result.Success(null, Warning.ToString());
+        return Result.Success();
     }
 
     private async Task<long> StartExecutionAsync(string connectionString)
@@ -273,7 +270,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
-            Warning.AppendLine($"Error stopping package operation for id {packageOperationId}\n{ex.Message}");
+            AddWarning(ex, $"Error stopping package operation for id {packageOperationId}");
         }
     }
 }

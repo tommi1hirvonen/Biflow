@@ -1,11 +1,10 @@
-﻿using Dapper;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -13,8 +12,6 @@ internal class SqlStepExecutor : StepExecutorBase
 {
     private readonly ILogger<SqlStepExecutor> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
-
-    private StringBuilder InfoMessageBuilder { get; } = new StringBuilder();
     
     private SqlStepExecution Step { get; }
 
@@ -83,14 +80,11 @@ internal class SqlStepExecutor : StepExecutorBase
             _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
             var errors = ex.Errors.Cast<SqlError>();
             var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-            return Result.Failure(errorMessage, null, InfoMessageBuilder.ToString());
+            return Result.Failure(errorMessage);
         }
 
-        return Result.Success(InfoMessageBuilder.ToString());
+        return Result.Success();
     }
 
-    private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e)
-    {
-        InfoMessageBuilder.AppendLine(e.Message);
-    }
+    private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e) => AddOutput(e.Message);
 }

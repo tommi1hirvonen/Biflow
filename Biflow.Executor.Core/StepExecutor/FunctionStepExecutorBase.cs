@@ -2,7 +2,6 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -12,8 +11,6 @@ internal abstract class FunctionStepExecutorBase : StepExecutorBase
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
     protected FunctionStepExecution Step { get; }
-
-    protected StringBuilder Warning { get; } = new StringBuilder();
 
     public FunctionStepExecutorBase(
         ILogger<FunctionStepExecutorBase> logger,
@@ -42,7 +39,7 @@ internal abstract class FunctionStepExecutorBase : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
-            Warning.AppendLine($"Error reading function key from database\n{ex.Message}");
+            AddWarning(ex, "Error reading function key from database");
         }
 
         var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);

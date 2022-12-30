@@ -4,7 +4,6 @@ using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Polly;
-using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -20,8 +19,6 @@ internal class PipelineStepExecutor : StepExecutorBase
     private PipelineClient PipelineClient => Step.PipelineClient;
 
     private const int MaxRefreshRetries = 3;
-
-    private StringBuilder Warning { get; } = new StringBuilder();
 
     public PipelineStepExecutor(
         ILogger<PipelineStepExecutor> logger,
@@ -53,7 +50,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
-            return Result.Failure($"Error reading pipeline parameters:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error reading pipeline parameters");
         }
 
         string runId;
@@ -65,7 +62,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
                 Step.ExecutionId, Step, Step.PipelineClientId, Step.PipelineName);
-            return Result.Failure($"Error starting pipeline run:\n{ex.Message}", Warning.ToString());
+            return Result.Failure(ex, "Error starting pipeline run");
         }
 
         try
@@ -87,7 +84,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", Step.ExecutionId, Step);
-            Warning.AppendLine($"Error updating pipeline run id {runId}\n{ex.Message}");
+            AddWarning(ex, $"Error updating pipeline run id {runId}");
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -111,29 +108,30 @@ internal class PipelineStepExecutor : StepExecutorBase
                     break;
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
                 await CancelAsync(runId);
                 if (timeoutCts.IsCancellationRequested)
                 {
                     _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                    return Result.Failure("Step execution timed out", Warning.ToString()); // Report failure => allow possible retries
+                    return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
                 }
                 throw; // Step was canceled => pass the exception => no retries
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error getting pipeline run status\n{ex.Message}", Warning.ToString());
+                return Result.Failure(ex, "Error getting pipeline run status");
             }
         }
 
         if (status == "Succeeded")
         {
-            return Result.Success(null, Warning.ToString());
+            AddOutput(message);
+            return Result.Success();
         }
         else
         {
-            return Result.Failure(message, Warning.ToString());
+            return Result.Failure(message);
         }
     }
 
@@ -161,7 +159,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", Step.ExecutionId, Step, runId);
-            Warning.AppendLine($"Error stopping pipeline run {runId}\n{ex.Message}");
+            AddWarning(ex, $"Error stopping pipeline run {runId}");
         }
     }
 }

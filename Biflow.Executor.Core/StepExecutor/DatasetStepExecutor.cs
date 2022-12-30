@@ -46,7 +46,7 @@ internal class DatasetStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting dataset refresh");
-            return Result.Failure(ex.Message);
+            return Result.Failure(ex, "Error starting dataset refresh operation");
         }
 
         // Wait for 5 seconds before first attempting to get the dataset refresh status.
@@ -76,7 +76,7 @@ internal class DatasetStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                return Result.Failure(ex.Message);
+                return Result.Failure(ex, "Error getting dataset refresh status");
             }
         }
     }

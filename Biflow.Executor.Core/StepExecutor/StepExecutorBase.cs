@@ -14,6 +14,8 @@ internal abstract class StepExecutorBase
     
     private StepExecution StepExecution { get; }
 
+    private List<Message> ExecutionMessages { get; } = new();
+
     protected StepExecutorBase(ILogger<StepExecutorBase> logger, IDbContextFactory<BiflowContext> dbContextFactory, StepExecution stepExecution)
     {
         _logger = logger;
@@ -22,6 +24,16 @@ internal abstract class StepExecutorBase
     }
 
     protected abstract Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
+
+    protected void AddWarning(Exception exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
+
+    protected void AddOutput(string? message)
+    {
+        if (message is not null)
+        {
+            ExecutionMessages.Add(new Output(message));
+        }
+    }
 
     public async Task<bool> RunAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
@@ -54,7 +66,7 @@ internal abstract class StepExecutorBase
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
                 StepExecution.ExecutionId, StepExecution);
-                var failure = Result.Failure("Error updating execution parameter values to inheriting step parameters");
+                var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                 return false;
             }
@@ -75,7 +87,7 @@ internal abstract class StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step execution condition parameters",
                 StepExecution.ExecutionId, StepExecution);
-            var failure = Result.Failure("Error updating execution parameter values to inheriting execution condition parameters");
+            var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting execution condition parameters");
             await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
@@ -92,7 +104,7 @@ internal abstract class StepExecutorBase
         }
         catch (Exception ex)
         {
-            var failure = Result.Failure($"Error evaluating execution condition:\n{ex.Message}");
+            var failure = Result.Failure(ex, "Error evaluating execution condition");
             await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
@@ -115,6 +127,8 @@ internal abstract class StepExecutorBase
         // Loop until there are no retry attempts left.
         while (executionAttempt.RetryAttemptIndex <= StepExecution.RetryAttempts)
         {
+            ExecutionMessages.Clear(); // Clear messages before every execution attempt.
+
             await UpdateExecutionRunningAsync(executionAttempt);
 
             // Execute the step based on its step type.
@@ -130,7 +144,7 @@ internal abstract class StepExecutorBase
             }
             catch (Exception ex)
             {
-                result = Result.Failure($"Unhandled error caught in base executor:\n\n{ex.Message}\n\n{ex.StackTrace}");
+                result = Result.Failure(ex, "Unhandled error caught in base executor");
             }
 
             if (result is Failure failure)
@@ -174,11 +188,31 @@ internal abstract class StepExecutorBase
 
             _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
             // The step execution was successful. Update the execution accordingly.
-            await UpdateExecutionSucceededAsync(executionAttempt, result);
+            await UpdateExecutionSucceededAsync(executionAttempt);
             return true; // Break the loop to end this execution.
         }
 
         return false; // Execution should not arrive here in normal conditions. Return false.
+    }
+
+    private string? GetWarningMessage()
+    {
+        var warnings = ExecutionMessages
+            .Where(m => m is Warning)
+            .Cast<Warning>()
+            .Select(w => $"{w.Message}:\n{w.Exception.Message}");
+        var message = string.Join("\n\n", warnings);
+        return string.IsNullOrWhiteSpace(message) ? null : message;
+    }
+
+    private string? GetOutputMessage()
+    {
+        var outputs = ExecutionMessages
+            .Where(m => m is Output)
+            .Cast<Output>()
+            .Select(o => o.Message);
+        var message = string.Join("\n", outputs);
+        return string.IsNullOrWhiteSpace(message) ? null : message;
     }
 
     private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
@@ -194,26 +228,32 @@ internal abstract class StepExecutorBase
 
     private async Task UpdateExecutionFailedAsync(StepExecutionAttempt attempt, Failure failure, StepExecutionStatus status)
     {
+        var errorMessage = failure.Exception switch
+        {
+            not null => $"{failure.ErrorMessage}:\n{failure.Exception.Message}",
+            _ => failure.ErrorMessage
+        };
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
-        attempt.ErrorMessage = failure.ErrorMessage;
-        attempt.WarningMessage = failure.WarningMessage;
-        attempt.InfoMessage = failure.InfoMessage;
+        attempt.ErrorMessage = errorMessage;
+        attempt.WarningMessage = GetWarningMessage();
+        attempt.InfoMessage = GetOutputMessage();
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
 
-    private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt, Result result)
+    private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt)
     {
-        var status = string.IsNullOrWhiteSpace(result.WarningMessage)
+        var warning = GetWarningMessage();
+        var status = string.IsNullOrWhiteSpace(warning)
             ? StepExecutionStatus.Succeeded
             : StepExecutionStatus.Warning;
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
         attempt.EndDateTime = DateTimeOffset.Now;
-        attempt.WarningMessage = result.WarningMessage;
-        attempt.InfoMessage = result.InfoMessage;
+        attempt.WarningMessage = GetWarningMessage();
+        attempt.InfoMessage = GetOutputMessage();
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
