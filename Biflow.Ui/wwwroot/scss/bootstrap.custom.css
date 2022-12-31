@@ -10771,7 +10771,7 @@ textarea.form-control-lg {
 }
 form {
   display: grid;
-  flex-direction: unset;
+  flex-direction: unset !important;
 }
 
 .offcanvas {
@@ -10817,6 +10817,26 @@ form {
 
 tr.disabled {
   background-color: #f3f3f3;
+}
+
+/*
+    No-wrap buttons of btn-group in a table
+*/
+.table .btn-group {
+  white-space: nowrap;
+}
+
+.table .btn-group .btn {
+  display: inline-block;
+  float: none;
+}
+
+.table .btn-group .btn + .btn {
+  margin-left: -5px;
+}
+
+.table-hover > tbody > tr.no-hover:hover {
+  --bs-table-hover-bg: none;
 }
 
 /*
