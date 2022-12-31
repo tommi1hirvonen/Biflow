@@ -7,11 +7,6 @@ $warning: #dfa100;
 
 $navbar-gradient: #8F75DA;
 
-form {
-    display: grid;
-    flex-direction: unset !important;
-}
-
 .offcanvas {
     width: 600px !important;
 }
@@ -76,6 +71,10 @@ tr.disabled {
 
 .table-hover > tbody > tr.no-hover:hover {
     --bs-table-hover-bg: none;
+}
+
+.list-group-header {
+    background-color: $card-cap-bg;
 }
 
 /*

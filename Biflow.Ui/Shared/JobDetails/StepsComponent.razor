@@ -202,7 +202,7 @@
                 };
                 var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
                 var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
-                <li class="list-group-item" style="background-color: #f7f7f7">
+                <li class="list-group-item list-group-header">
                     <div class="row align-items-center" style="min-height: 31px;">
                         <AuthorizeView Roles="Admin, Editor, Operator">
                             <div class="col text-secondary d-flex align-items-center">

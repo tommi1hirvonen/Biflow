@@ -10769,11 +10769,6 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
-form {
-  display: grid;
-  flex-direction: unset !important;
-}
-
 .offcanvas {
   width: 600px !important;
 }
@@ -10837,6 +10832,10 @@ tr.disabled {
 
 .table-hover > tbody > tr.no-hover:hover {
   --bs-table-hover-bg: none;
+}
+
+.list-group-header {
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 /*
