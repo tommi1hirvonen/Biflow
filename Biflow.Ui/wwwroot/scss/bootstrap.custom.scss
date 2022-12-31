@@ -1,0 +1,394 @@
+﻿$primary: #727cf5;
+$success:#0acf97;
+$danger: #fa5c7c;
+$warning: #dfa100;
+
+@import "../lib/bootstrap/scss/bootstrap";
+
+$navbar-gradient: #8F75DA;
+
+form {
+    display: grid;
+    flex-direction: unset;
+}
+
+.offcanvas {
+    width: 600px !important;
+}
+
+.offcanvas.hx-offcanvas-lg {
+    width: 800px !important;
+}
+
+.offcanvas-backdrop {
+    z-index: 1050;
+}
+
+/*
+    Buttons
+*/
+.btn-primary, .btn-success, .btn-danger {
+    --bs-btn-color: var(--bs-white);
+    --bs-btn-hover-color: var(--bs-white);
+    --bs-btn-active-color: var(--bs-btn-hover-color);
+    --bs-btn-disabled-color: var(--bs-white);
+}
+
+/*
+    Class used for buttons which are placed inside a table row
+*/
+
+.btn-row .btn-light,
+.btn-row.btn-light {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+.btn-row .btn-light:hover,
+.btn-row.btn-light:hover {
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+.table th {
+    border-top: none;
+}
+
+tr.disabled {
+    background-color: #f3f3f3;
+}
+
+/*
+    Forms and inputs
+*/
+
+.validation-message {
+    color: $danger;
+}
+
+.invalid {
+    outline: 1px solid $danger;
+}
+
+.form-switch input,
+.form-switch label {
+    cursor: pointer;
+}
+
+.form-switch input:disabled,
+.form-switch input:disabled + label {
+    cursor: default;
+}
+
+/*
+    Execution Gantt graph
+*/
+.progress-bar.running {
+    background-color: $primary;
+}
+
+.progress-bar.succeeded {
+    background-color: $success;
+}
+
+.progress-bar.failed {
+    background-color: $danger;
+}
+
+.progress-bar.skipped {
+    background-color: #aaa;
+}
+
+.progress-bar.stopped {
+    background-color: $warning;
+}
+
+.progress-bar.duplicate {
+    background-color: $warning;
+}
+
+.progress-bar.awaitretry {
+    background-color: $warning;
+}
+
+.progress-bar.warning {
+    background-color: $warning;
+}
+
+.progress-bar.suspended {
+    background-color: $danger;
+}
+
+.gantt-row:hover {
+    background-color: rgba(0, 0, 0, 0.075);
+}
+
+
+/*
+    Dependency graph
+*/
+.dependency-graph {
+    width: 100%;
+    height: 100%;
+}
+
+.dependency-graph svg {
+    width: 100%;
+    height: 100%;
+    cursor: move;
+}
+
+.dependency-graph .node {
+    cursor: pointer;
+}
+
+.dependency-graph .node rect {
+    stroke-width: 2px;
+    stroke: #666;
+    fill: #fff;
+}
+
+.dependency-graph .node.disabled rect {
+    fill: #eee;
+}
+
+.dependency-graph .node.running rect {
+    stroke: $primary;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.succeeded rect {
+    stroke: $success;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.failed rect {
+    stroke: $danger;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.skipped rect {
+    stroke: #ddd;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.skipped > g.label {
+    fill: #999;
+}
+
+.dependency-graph .node.stopped rect {
+    stroke: $warning;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.duplicate rect {
+    stroke: $warning;
+    stroke-width: 3px;
+}
+
+.dependency-graph .node.awaitretry rect {
+    stroke: $warning;
+    stroke-width: 3px;
+}
+
+.dependency-graph .name {
+    margin-top: 4px;
+}
+
+.dependency-graph .edgePath path {
+    stroke: #888;
+    stroke-width: 2px;
+    fill: #888;
+}
+
+.dependency-graph .edgePath.onsucceeded path {
+    stroke: $success;
+    fill: $success;
+}
+
+.dependency-graph .edgePath.oncompleted path {
+    stroke: $primary;
+    fill: $primary;
+}
+
+.dependency-graph .edgePath.onfailed path {
+    stroke: $danger;
+    fill: $danger;
+}
+
+
+/*
+    Feather icons
+*/
+.feather {
+    width: 16px;
+    height: 16px;
+    vertical-align: text-bottom;
+}
+
+.tag-remove .feather {
+    width: 14px;
+    height: 14px;
+}
+
+.tag-remove:hover {
+    cursor: pointer;
+}
+
+
+/*
+    Sidebar
+ */
+.sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    z-index: 100; /* Behind the navbar */
+    padding: 55px 0 0; /* Height of navbar */
+    background-color: #35353a;
+    box-shadow: 0 0.3rem .5rem rgb(0 0 0 / 50%)
+}
+
+/*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
+@media (max-width: 992px) {
+    .sidebar {
+        padding: 135px 0 0;
+    }
+}
+
+@media (min-width: 992px) {
+    .main {
+        padding-right: 15px !important;
+        padding-left: 215px !important; /* (sidebar width) + (padding right) */
+    }
+}
+
+
+.sidebar-sticky {
+    position: relative;
+    top: 0;
+    height: calc(100vh - 48px);
+    /*padding-top: .5rem;*/
+    overflow-x: hidden;
+    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+}
+
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+    .sidebar-sticky {
+        position: -webkit-sticky;
+        position: sticky;
+    }
+}
+
+.sidebar .nav-link {
+    font-size: 16px;
+    color: #ccc;
+    border-radius: .5rem;
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.sidebar .nav-link .feather {
+    margin-right: 5px;
+    color: #ddd;
+}
+
+.sidebar .nav-link.active {
+    font-weight: 500;
+    color: #fff;
+    background-color: rgba(255, 255, 255, .10);
+}
+
+.sidebar .nav-link.active .feather {
+    color: #fff;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, .10);
+}
+
+.sidebar-heading {
+    font-size: .75rem;
+    text-transform: uppercase;
+}
+
+/*In front of the navbar*/
+.offcanvas {
+    z-index: 1060;
+}
+
+
+/*
+ * Navbar
+ */
+
+.bg-gradient-primary {
+    background-image: linear-gradient(90deg, $primary 0%, $navbar-gradient 100%);
+}
+
+.navbar-custom {
+    /*background-color: #313A46;*/
+    z-index: 1050;
+}
+
+/* change the brand and text color */
+.navbar-custom .navbar-brand,
+.navbar-custom .navbar-nav {
+    color: #fff;
+}
+
+.navbar-custom .navbar-text {
+    color: #eee;
+}
+
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    font-weight: bold;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .navbar-brand {
+        width: 200px;
+    }
+
+    /* Never collapse the sidebar for wide screens */
+    .sidebar.collapse {
+        display: block;
+    }
+}
+
+.navbar-brand-bg {
+    background-color: rgba(0, 0, 0, .2);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .2);
+}
+
+.navbar .navbar-toggler {
+    top: .25rem;
+    right: 1rem;
+}
+
+/*
+    Blazor error component
+*/
+
+#blazor-error-ui {
+    bottom: 0;
+    display: none;
+    left: 0;
+    position: fixed;
+    width: 96vw;
+    z-index: 1050;
+    margin-bottom: 2rem;
+    margin-left: 2vw;
+    margin-right: 2vw;
+}
