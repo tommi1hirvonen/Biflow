@@ -55,8 +55,7 @@
                                     History
                                 </HxButton>
                                 <AuthorizeView Roles="Admin, Editor, Operator">
-                                    @if (item.ExecutionStatus == StepExecutionStatus.Running || item.ExecutionStatus == StepExecutionStatus.AwaitRetry // Step is running or it is awaiting retry...
-                                   && !Executions.Any(e => e.StepId == item.StepId && e.RetryAttemptIndex > item.RetryAttemptIndex)) // ...and is the latest attempt.
+                                    @if (item.CanBeStopped)
                                     {
                                         <HxDropdownButtonGroup CssClass="ms-3">
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger">

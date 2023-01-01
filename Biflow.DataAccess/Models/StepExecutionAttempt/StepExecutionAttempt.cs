@@ -66,4 +66,9 @@ public abstract class StepExecutionAttempt
     /// </summary>
     /// <returns>New instance where non-attempt specific properties have been copied from this instance.</returns>
     public abstract StepExecutionAttempt Clone();
+
+    [NotMapped]
+    public bool CanBeStopped =>
+        ExecutionStatus == StepExecutionStatus.Running || StepExecution?.GetExecutionStatus() == StepExecutionStatus.Running;
+
 }
