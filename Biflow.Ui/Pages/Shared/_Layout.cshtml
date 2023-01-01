@@ -1,4 +1,6 @@
 ﻿@using Microsoft.Extensions.Configuration
+@using Biflow.Ui.Components
+
 @inject IConfiguration Configuration
 
 <!DOCTYPE html>
@@ -18,13 +20,40 @@
     <header>
         <nav class="navbar navbar-custom sticky-top flex-md-nowrap p-0 shadow bg-gradient-primary">
             <text class="navbar-brand mr-0 px-3">Biflow</text>
-            <ul class="navbar-nav ms-auto">
-                    <li>
-                        <strong class="navbar-text px-3">
-                            @(Configuration.GetValue<string>("EnvironmentName"))
-                        </strong>
+            <div class="ms-auto dropdown">
+                <button class="btn text-white dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_light">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Sun" />
+                    </span>
+                    <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_dark">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Moon" />
+                    </span>
+                    <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_auto">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Circle" />
+                    </span>
+                </button>
+                <ul class="dropdown-menu shadow">
+                    <li class="dropdown-item" role="button" data-bs-theme-value="light">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Sun" />
+                        Light
+                    </li>
+                    <li class="dropdown-item" role="button" data-bs-theme-value="dark">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Moon" />
+                        Dark
+                    </li>
+                    <li class="dropdown-item" role="button" data-bs-theme-value="auto">
+                        <component type="typeof(CxIcon)" render-mode="ServerPrerendered" param-Icon="FeatherIcon.Circle" />
+                        Auto
                     </li>
                 </ul>
+            </div>
+            <ul class="navbar-nav">
+                <li>
+                    <strong class="navbar-text px-3">
+                        @(Configuration.GetValue<string>("EnvironmentName"))
+                    </strong>
+                </li>
+            </ul>
         </nav>
     </header>
 
@@ -34,8 +63,14 @@
         </main>
     </div>
     
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/theme.js"></script>
     <script src="_framework/blazor.server.js"></script>
     @RenderSection("Scripts", required: false)
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            addThemeToggleListeners();
+        });
+    </script>
 </body>
 </html>
