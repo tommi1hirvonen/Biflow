@@ -11620,9 +11620,14 @@ textarea.form-control-lg {
   --sticky-top-bg: rgba(33, 37, 41, 0.9);
 }
 
-/*
-    Generate button, which automatically switches between light and dark depending on current theme.
-*/
+[data-bs-theme=light], [data-bs-theme=auto] {
+  --sticky-top-modal-bg: rgba(255, 255, 255, 0.9);
+}
+
+[data-bs-theme=dark] {
+  --sticky-top-modal-bg: rgba(33, 37, 41, 0.9);
+}
+
 [data-bs-theme=dark] .btn-auto {
   --bs-btn-color: #fff;
   --bs-btn-bg: rgba(0, 0, 0, 0);
@@ -11669,9 +11674,10 @@ textarea.form-control-lg {
   z-index: 1050;
 }
 
-/*
-    Buttons
-*/
+.offcanvas {
+  z-index: 1060;
+}
+
 .btn-primary, .btn-success, .btn-danger {
   --bs-btn-color: var(--bs-white);
   --bs-btn-hover-color: var(--bs-white);
@@ -11679,16 +11685,10 @@ textarea.form-control-lg {
   --bs-btn-disabled-color: var(--bs-white);
 }
 
-/*
-    Table
-*/
 .table th {
   border-top: none;
 }
 
-/*
-    No-wrap buttons of btn-group in a table
-*/
 .table .btn-group {
   white-space: nowrap;
 }
@@ -11710,9 +11710,6 @@ textarea.form-control-lg {
   background-color: rgba(var(--bs-body-color-rgb), 0.03);
 }
 
-/*
-    Forms and inputs
-*/
 .validation-message {
   color: #fa5c7c;
 }
@@ -11731,9 +11728,6 @@ textarea.form-control-lg {
   cursor: default;
 }
 
-/*
-    Execution Gantt graph
-*/
 .progress-bar.running {
   background-color: #727cf5;
 }
@@ -11774,9 +11768,6 @@ textarea.form-control-lg {
   background-color: rgba(0, 0, 0, 0.075);
 }
 
-/*
-    Dependency graph
-*/
 .dependency-graph {
   width: 100%;
   height: 100%;
@@ -11866,9 +11857,6 @@ textarea.form-control-lg {
   fill: #fa5c7c;
 }
 
-/*
-    Feather icons
-*/
 .feather {
   width: 16px;
   height: 16px;
@@ -11884,9 +11872,6 @@ textarea.form-control-lg {
   cursor: pointer;
 }
 
-/*
-    Sidebar
- */
 .sidebar {
   position: fixed;
   top: 0;
@@ -11899,7 +11884,6 @@ textarea.form-control-lg {
   box-shadow: 0 0.3rem 0.5rem rgba(0, 0, 0, 0.5);
 }
 
-/*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
 @media (max-width: 992px) {
   .sidebar {
     padding: 135px 0 0;
@@ -11908,7 +11892,7 @@ textarea.form-control-lg {
 @media (min-width: 992px) {
   .main {
     padding-right: 15px !important;
-    padding-left: 215px !important; /* (sidebar width) + (padding right) */
+    padding-left: 215px !important;
   }
 }
 .sidebar-sticky {
@@ -11917,7 +11901,7 @@ textarea.form-control-lg {
   height: calc(100vh - 48px);
   /*padding-top: .5rem;*/
   overflow-x: hidden;
-  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+  overflow-y: auto;
 }
 
 @supports (position: -webkit-sticky) or (position: sticky) {
@@ -11964,14 +11948,6 @@ textarea.form-control-lg {
   text-transform: uppercase;
 }
 
-/*In front of the navbar*/
-.offcanvas {
-  z-index: 1060;
-}
-
-/*
- * Navbar
- */
 .bg-gradient-primary {
   background-image: linear-gradient(90deg, #727cf5 0%, #8F75DA 100%);
 }
@@ -11981,7 +11957,6 @@ textarea.form-control-lg {
   z-index: 1050;
 }
 
-/* change the brand and text color */
 .navbar-custom .navbar-brand,
 .navbar-custom .navbar-nav {
   color: #fff;
@@ -12002,7 +11977,6 @@ textarea.form-control-lg {
   .navbar-brand {
     width: 200px;
   }
-  /* Never collapse the sidebar for wide screens */
   .sidebar.collapse {
     display: block;
   }
@@ -12017,9 +11991,6 @@ textarea.form-control-lg {
   right: 1rem;
 }
 
-/*
-    Blazor error component
-*/
 #blazor-error-ui {
   bottom: 0;
   display: none;

@@ -5,13 +5,14 @@ $warning: #dfa100;
 
 @import "../lib/bootstrap/scss/bootstrap";
 
+// Change the light theme background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {
         background-color: $light !important;
     }
 }
 
-
+// Sticky top element in StepsComponent.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     --sticky-top-bg: #{rgba($light, $alpha: 0.9)};
 }
@@ -20,9 +21,16 @@ $warning: #dfa100;
     --sticky-top-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
 }
 
-/*
-    Generate button, which automatically switches between light and dark depending on current theme.
-*/
+// Sticky top element inside a modal.
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    --sticky-top-modal-bg: #{rgba($white, $alpha: 0.9)};
+}
+
+[data-bs-theme="dark"] {
+    --sticky-top-modal-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
+}
+
+// Generate button, which automatically switches between light and dark depending on current theme.
 [data-bs-theme="dark"] {
     .btn-auto {
         @include button-variant(
@@ -51,6 +59,7 @@ $warning: #dfa100;
 
 $navbar-gradient: #8F75DA;
 
+// Offcanvas customizations. Increase width from the default.
 .offcanvas {
     width: 600px !important;
 }
@@ -63,9 +72,12 @@ $navbar-gradient: #8F75DA;
     z-index: 1050;
 }
 
-/*
-    Buttons
-*/
+// In front of the navbar
+.offcanvas {
+    z-index: 1060;
+}
+
+// Buttons
 .btn-primary, .btn-success, .btn-danger {
     --bs-btn-color: var(--bs-white);
     --bs-btn-hover-color: var(--bs-white);
@@ -73,17 +85,12 @@ $navbar-gradient: #8F75DA;
     --bs-btn-disabled-color: var(--bs-white);
 }
 
-/*
-    Table
-*/
-
+// Table
 .table th {
     border-top: none;
 }
 
-/*
-    No-wrap buttons of btn-group in a table
-*/
+// No-wrap buttons of btn-group in a table
 .table .btn-group {
     white-space: nowrap;
 }
@@ -101,13 +108,12 @@ $navbar-gradient: #8F75DA;
     --bs-table-hover-bg: none;
 }
 
+// Custom list group header class with a slightly darker background.
 .list-group-header {
     background-color: $card-cap-bg;
 }
 
-/*
-    Forms and inputs
-*/
+// Forms and inputs
 
 .validation-message {
     color: $danger;
@@ -127,9 +133,8 @@ $navbar-gradient: #8F75DA;
     cursor: default;
 }
 
-/*
-    Execution Gantt graph
-*/
+// Execution Gantt graph
+
 .progress-bar.running {
     background-color: $primary;
 }
@@ -171,9 +176,7 @@ $navbar-gradient: #8F75DA;
 }
 
 
-/*
-    Dependency graph
-*/
+// Dependency graph
 .dependency-graph {
     width: 100%;
     height: 100%;
@@ -264,9 +267,7 @@ $navbar-gradient: #8F75DA;
 }
 
 
-/*
-    Feather icons
-*/
+// Feather icons
 .feather {
     width: 16px;
     height: 16px;
@@ -283,9 +284,7 @@ $navbar-gradient: #8F75DA;
 }
 
 
-/*
-    Sidebar
- */
+// Sidebar
 .sidebar {
     position: fixed;
     top: 0;
@@ -298,7 +297,7 @@ $navbar-gradient: #8F75DA;
     box-shadow: 0 0.3rem .5rem rgb(0 0 0 / 50%)
 }
 
-/*Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)*/
+// Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)
 @media (max-width: 992px) {
     .sidebar {
         padding: 135px 0 0;
@@ -308,7 +307,7 @@ $navbar-gradient: #8F75DA;
 @media (min-width: 992px) {
     .main {
         padding-right: 15px !important;
-        padding-left: 215px !important; /* (sidebar width) + (padding right) */
+        padding-left: 215px !important; // (sidebar width) + (padding right)
     }
 }
 
@@ -319,7 +318,7 @@ $navbar-gradient: #8F75DA;
     height: calc(100vh - 48px);
     /*padding-top: .5rem;*/
     overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+    overflow-y: auto; // Scrollable contents if viewport is shorter than content.
 }
 
 @supports ((position: -webkit-sticky) or (position: sticky)) {
@@ -367,15 +366,8 @@ $navbar-gradient: #8F75DA;
     text-transform: uppercase;
 }
 
-/*In front of the navbar*/
-.offcanvas {
-    z-index: 1060;
-}
 
-
-/*
- * Navbar
- */
+// Navbar
 
 .bg-gradient-primary {
     background-image: linear-gradient(90deg, $primary 0%, $navbar-gradient 100%);
@@ -386,7 +378,7 @@ $navbar-gradient: #8F75DA;
     z-index: 1050;
 }
 
-/* change the brand and text color */
+// Change the brand and text color
 .navbar-custom .navbar-brand,
 .navbar-custom .navbar-nav {
     color: #fff;
@@ -408,7 +400,7 @@ $navbar-gradient: #8F75DA;
         width: 200px;
     }
 
-    /* Never collapse the sidebar for wide screens */
+    // Never collapse the sidebar for wide screens
     .sidebar.collapse {
         display: block;
     }
@@ -424,10 +416,7 @@ $navbar-gradient: #8F75DA;
     right: 1rem;
 }
 
-/*
-    Blazor error component
-*/
-
+// Blazor error component
 #blazor-error-ui {
     bottom: 0;
     display: none;
