@@ -1,6 +1,6 @@
 ﻿@using System.Text.RegularExpressions
 
-@if (!string.IsNullOrEmpty(PartToHighlight) && (Text?.ContainsIgnoreCase(PartToHighlight) ?? false))
+@if (!string.IsNullOrEmpty(PartToHighlight) && (Text?.Contains(PartToHighlight, StringComparison.OrdinalIgnoreCase) ?? false))
 {
     @((MarkupString)Regex.Replace(Text, Regex.Escape(PartToHighlight), m => $"<mark>{m.Groups[0].Value}</mark>", RegexOptions.IgnoreCase))
 }
