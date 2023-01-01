@@ -1,6 +1,6 @@
-﻿$primary: #727cf5;
-$success:#0acf97;
-$danger: #fa5c7c;
+﻿$primary: #6a71de;
+$success: #1bbe8f;
+$danger: #e85875;
 $warning: #dfa100;
 
 @import "../lib/bootstrap/scss/bootstrap";
@@ -361,7 +361,7 @@ $navbar-gradient: #8F75DA;
 }
 
 .sidebar .nav-link {
-    font-size: 16px;
+    font-size: 15px;
     color: var(--bs-body-color);
     border-radius: .5rem;
     margin-left: 8px;
