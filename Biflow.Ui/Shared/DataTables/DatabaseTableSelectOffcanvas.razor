@@ -44,7 +44,7 @@
                         {
                             @foreach (var table in FilteredTables)
                             {
-                                var className = SelectedTable?.Equals(table) ?? false ? "fw-bold" : null;
+                                var className = SelectedTable?.Equals(table) ?? false ? "bg-body-tertiary fw-bold" : null;
                                 <tr class="@className" style="cursor: pointer;" @onclick="() => SelectedTable = table">
                                     <td><HighlightableText Text="@table.Schema" PartToHighlight="@SchemaFilter" /></td>
                                     <td><HighlightableText Text="@table.Table" PartToHighlight="@TableFilter" /></td>

@@ -47,7 +47,7 @@
                 </div>
                 @if (SelectedStepExecution == item)
                 {
-                    <div class="row bg-light">
+                    <div class="row bg-body-tertiary">
                         <div class="col">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">

@@ -28,7 +28,8 @@
                         {
                             foreach (var folder in Pipelines.Keys.OrderBy(folder => folder))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light fw-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)"
+                                    class="@(folder == SelectedFolder ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@folder</td>
                                 </tr>
                             }
@@ -64,7 +65,8 @@
                         {
                             foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.Name.ContainsIgnoreCase(FilterText)).OrderBy(p => p.Name))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline" class="@(pipeline == SelectedPipeline ? "bg-light fw-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline"
+                                class="@(pipeline == SelectedPipeline ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
                                     </td>
@@ -72,7 +74,7 @@
                                 @if (pipeline == SelectedPipeline && pipeline.Parameters?.Any() == true)
                                 {
                                     <tr class="no-hover">
-                                        <td colspan="2" class="bg-light">
+                                        <td colspan="2" class="bg-body-tertiary">
                                             <div class="row">
                                                 <div class="col">
                                                     <h6 class="mx-2">Parameters</h6>

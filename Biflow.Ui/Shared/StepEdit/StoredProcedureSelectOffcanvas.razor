@@ -41,7 +41,7 @@
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedProcedure = proc"
-                                    class="@(proc == SelectedProcedure ? "bg-light fw-bold" : null)">
+                                    class="@(proc == SelectedProcedure ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@FilterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@FilterTextName" />
                                     </td>
@@ -49,7 +49,7 @@
                                 @if (proc == SelectedProcedure && proc.Parameters.Any())
                                 {
                                     <tr class="no-hover">
-                                        <td colspan="2" class="bg-light">
+                                        <td colspan="2" class="bg-body-tertiary">
                                             <div class="row">
                                                 <div class="col">
                                                     <h6 class="mx-2">Parameters</h6>

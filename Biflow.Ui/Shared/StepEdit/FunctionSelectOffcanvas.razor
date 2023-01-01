@@ -51,7 +51,7 @@
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedFunctionUrl = function.FunctionUrl"
-                                    class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-light fw-bold" : null)">
+                                    class="@(function.FunctionUrl == SelectedFunctionUrl ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <small>
                                             <HighlightableText Text="@function.FunctionName" PartToHighlight="@FilterText" />

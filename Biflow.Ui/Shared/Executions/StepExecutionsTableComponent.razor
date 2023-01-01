@@ -43,7 +43,7 @@
         else
         {
             <Virtualize TItem="StepExecutionAttempt" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
-                <tr class="@(SelectedStepExecution == item ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                     @if (ShowDetailed)
                     {
                         <td>
@@ -55,7 +55,7 @@
                         &nbsp;
                         @item.StepExecution.StepName
                     </td>
-                    <td style="@(item.StepExecution.Execution.DependencyMode ? "color: #ccc;" : null)">
+                    <td class="@(item.StepExecution.Execution.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
                         @item.StepExecution.ExecutionPhase
                         &nbsp;
                         <CxIcon Icon="FeatherIcon.Layers" />
@@ -75,8 +75,8 @@
                 </tr>
                 @if (SelectedStepExecution == item)
                 {
-                    <tr class="table-borderless no-hover">
-                        <td colspan="7" class="bg-light">
+                    <tr class="table-borderless no-hover bg-body-tertiary">
+                        <td colspan="7">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
                                     <CxIcon Icon="FeatherIcon.Activity" />

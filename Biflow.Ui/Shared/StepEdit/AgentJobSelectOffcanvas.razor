@@ -48,7 +48,7 @@
                             {
                                 <tr style="cursor: pointer;"
                                     @onclick="() => SelectedAgentJob = job.AgentJobName"
-                                    class="@(job.AgentJobName == SelectedAgentJob ? "bg-light fw-bold" : null)">
+                                    class="@(job.AgentJobName == SelectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <HighlightableText Text="@job.AgentJobName" PartToHighlight="@FilterTextName" />
                                     </td>

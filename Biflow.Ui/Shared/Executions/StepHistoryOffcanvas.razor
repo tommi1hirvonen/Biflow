@@ -31,7 +31,7 @@
                 {
                     @foreach (var execution in Executions)
                     {
-                        <tr class="@(SelectedStepExecution == execution ? "bg-light" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                        <tr class="@(SelectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
                             <td>@execution.StartDateTime?.LocalDateTime</td>
                             <td>@execution.EndDateTime?.LocalDateTime</td>
                             <td>@execution.GetDurationInReadableFormat()</td>
@@ -39,8 +39,8 @@
                         </tr>
                         @if (SelectedStepExecution == execution)
                         {
-                            <tr class="table-borderless no-hover">
-                                <td colspan="4" class="bg-light">
+                            <tr class="table-borderless no-hover bg-body-tertiary">
+                                <td colspan="4">
                                     <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
                                 </td>
                             </tr>

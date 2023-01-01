@@ -28,7 +28,7 @@
                             foreach (var model in Models.OrderBy(m => m.ModelName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(model == SelectedModel ? "bg-light fw-bold" : null)"
+                                    class="@(model == SelectedModel ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectModel(model)">
                                     <td>@model.ModelName</td>
                                 </tr>
@@ -67,7 +67,7 @@
                             foreach (var table in SelectedModel.Tables.OrderBy(t => t.TableName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(table == SelectedTable ? "bg-light fw-bold" : null)"
+                                    class="@(table == SelectedTable ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectTable(table)">
                                     <td>@table.TableName</td>
                                 </tr>
@@ -106,7 +106,7 @@
                             foreach (var partition in SelectedTable.Partitions.OrderBy(p => p.PartitionName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(partition == SelectedPartition ? "bg-light fw-bold" : null)"
+                                    class="@(partition == SelectedPartition ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectPartition(partition)">
                                     <td>@partition.PartitionName</td>
                                 </tr>

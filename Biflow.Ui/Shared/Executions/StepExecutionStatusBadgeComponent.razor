@@ -9,8 +9,8 @@
         StepExecutionStatus.Duplicate => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
         StepExecutionStatus.AwaitRetry => ("text-warning", "border-warning", FeatherIcon.Repeat),
         StepExecutionStatus.Running => ("text-primary", "border-primary", FeatherIcon.Play),
-        StepExecutionStatus.Skipped => ("", "border-dark", FeatherIcon.SkipForward),
-        StepExecutionStatus.NotStarted => ("", "border-dark", FeatherIcon.Clock),
+        StepExecutionStatus.Skipped => ("text-secondary", "border-secondary", FeatherIcon.SkipForward),
+        StepExecutionStatus.NotStarted => ("text-secondary", "border-secondary", FeatherIcon.Clock),
         _ => ("", "", FeatherIcon.HelpCircle)
     };
 }

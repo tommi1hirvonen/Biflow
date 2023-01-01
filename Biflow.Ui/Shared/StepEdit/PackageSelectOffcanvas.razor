@@ -27,7 +27,8 @@
                         {
                             foreach (var folder in Catalog.Folders.Values)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)" class="@(folder == SelectedFolder ? "bg-light fw-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)"
+                                    class="@(folder == SelectedFolder ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@folder.FolderName</td>
                                 </tr>
                             }
@@ -59,7 +60,8 @@
                             {
                                 foreach (var project in projects)
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)" class="@(project == SelectedProject ? "bg-light fw-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)"
+                                        class="@(project == SelectedProject ? "bg-body-tertiary fw-bold" : null)">
                                         <td>@project.ProjectName</td>
                                     </tr>
                                 }
@@ -103,7 +105,8 @@
                             {
                                 foreach (var package in packages.Where(p => p.PackageName.ContainsIgnoreCase(FilterText)).OrderBy(p => p.PackageName))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package" class="@(package == SelectedPackage ? "bg-light fw-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package"
+                                        class="@(package == SelectedPackage ? "bg-body-tertiary fw-bold" : null)">
                                         <td>
                                             <HighlightableText Text="@package.PackageName" PartToHighlight="@FilterText" />
                                         </td>
@@ -111,7 +114,7 @@
                                     @if (package == SelectedPackage && package.Parameters.Any())
                                     {
                                         <tr class="no-hover">
-                                            <td colspan="2" class="bg-light">
+                                            <td colspan="2" class="bg-body-tertiary">
                                                 <div class="row">
                                                     <div class="col">
                                                         <h6 class="mx-2">Parameters</h6>
