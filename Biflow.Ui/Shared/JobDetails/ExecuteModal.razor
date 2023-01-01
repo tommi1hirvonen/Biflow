@@ -103,8 +103,7 @@
                                             &nbsp;
                                             <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                         </td>
-                                        <td class="text-end"
-                                            style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
                                             <CxIcon Icon="FeatherIcon.Layers" />
@@ -151,8 +150,7 @@
                                             &nbsp;
                                             @step.StepName
                                         </td>
-                                        <td class="text-end"
-                                            style="@(Job?.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
                                             <CxIcon Icon="FeatherIcon.Layers" />

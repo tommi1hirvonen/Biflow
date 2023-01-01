@@ -194,7 +194,7 @@
                                     <JobExecutionStatusBadgeComponent ExecutionStatus_="lastExecution.ExecutionStatus" />
                                 }
                             </td>
-                            <td class="align-middle" style="@(!item.IsEnabled ? "color: #ccc;" : null)">
+                            <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">
                                 @if (nextStartTime is not null)
                                 {
                                     @nextStartTime

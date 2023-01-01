@@ -196,8 +196,7 @@ else if (Job is null || Steps is null)
                                 <td>
                                     <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
                                 </td>
-                                <td class="text-end"
-                                style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                <td class="text-end @(Job.UseDependencyMode == true ? "text-body-tertiary" : null)">
                                     @step.ExecutionPhase
                                     &nbsp;
                                     <CxIcon Icon="FeatherIcon.Layers" />
@@ -233,8 +232,7 @@ else if (Job is null || Steps is null)
                                     &nbsp;
                                     @step.StepName
                                 </td>
-                                <td class="text-end"
-                                style="@(Job.UseDependencyMode == true ? "color: #ccc;" : null)">
+                                <td class="text-end @(Job.UseDependencyMode == true ? "text-body-tertiary" : null)">
                                     @step.ExecutionPhase
                                     &nbsp;
                                     <CxIcon Icon="FeatherIcon.Layers" />

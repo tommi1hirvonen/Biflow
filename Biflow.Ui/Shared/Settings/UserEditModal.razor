@@ -121,7 +121,7 @@
                                                 .OrderBy(g => g.Key.Equals("No category"))
                                                 .ThenBy(g => g.Key))
                                             {
-                                                <div class="list-group-item fw-bold" style="background-color: #f7f7f7">
+                                                <div class="list-group-item fw-bold list-group-header">
                                                     @category.Key
                                                 </div>
                                                 @foreach (var job in category.OrderBy(t => t.JobName))
@@ -175,7 +175,7 @@
                                                 .OrderBy(g => g.Key.Equals("No category"))
                                                 .ThenBy(g => g.Key))
                                             {
-                                                <div class="list-group-item fw-bold" style="background-color: #f7f7f7">
+                                                <div class="list-group-item fw-bold list-group-header">
                                                     @category.Key
                                                 </div>
                                                 @foreach (var table in category.OrderBy(t => t.DataTableName))

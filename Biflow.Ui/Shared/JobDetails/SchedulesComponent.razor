@@ -79,7 +79,7 @@
                             </div>
                         </td>
                         <td>
-                            <div class="d-inline-flex" style="@(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "color: #ccc;" : null)">
+                            <div class="d-inline-flex @(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "text-body-tertiary" : null)">
                                 @item.GetNextFireTime()
                                 @(!item.IsEnabled ? "(Schedule disabled)" : null)
                                 @(!Job?.IsEnabled ?? false ? "(Job disabled)" : null)
