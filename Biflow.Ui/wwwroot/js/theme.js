@@ -20,13 +20,19 @@ function setTheme(theme) {
 })();
 
 function showActiveTheme(theme) {
+    // Activate the correct theme toggle dropdown item.
     const btnToActive = document.querySelector(`[data-bs-theme-value="${theme}"]`);
-
     document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
         element.classList.remove('active');
-    })
-
+    });
     btnToActive.classList.add('active');
+
+    // Show the correct dropdown button icon.
+    const iconToShow = document.getElementById(`theme_dropdown_icon_${theme}`);
+    document.querySelectorAll('.theme-toggle-dropdown-icon').forEach(element => {
+        element.classList.add('d-none');
+    });
+    iconToShow.classList.remove('d-none');
 }
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {

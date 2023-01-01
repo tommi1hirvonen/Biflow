@@ -1,12 +1,13 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Security.Claims
+@using System.Security.Principal
+
+@inherits LayoutComponentBase
+
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject AuthenticationMethodResolver AuthenticationResolver
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime JS
-
-@using System.Security.Claims
-@using System.Security.Principal
 
 @*Toast container for HxMessenger service*@
 <style>
@@ -37,17 +38,29 @@
                 }
                 <ul class="navbar-nav ms-auto">
                     <HxDropdownButtonGroup>
-                        <HxDropdownToggleButton Color="ThemeColor.Link" CssClass="text-white">
+                        <HxDropdownToggleButton Color="ThemeColor.Link" CssClass="text-white" style="text-decoration: none;">
+                            <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_light">
+                                <CxIcon Icon="FeatherIcon.Sun" />
+                            </span>
+                            <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_dark">
+                                <CxIcon Icon="FeatherIcon.Moon" />
+                            </span>
+                            <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_auto">
+                                <CxIcon Icon="FeatherIcon.Circle" />
+                            </span>
                             Theme
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
                             <li class="dropdown-item" role="button" data-bs-theme-value="light">
+                                <CxIcon Icon="FeatherIcon.Sun" />
                                 Light
                             </li>
                             <li class="dropdown-item" role="button" data-bs-theme-value="dark">
+                                <CxIcon Icon="FeatherIcon.Moon" />
                                 Dark
                             </li>
                             <li class="dropdown-item" role="button" data-bs-theme-value="auto">
+                                <CxIcon Icon="FeatherIcon.Circle" />
                                 Auto
                             </li>
                         </HxDropdownMenu>
@@ -138,6 +151,6 @@
         if (firstRender)
         {
             await JS.InvokeVoidAsync("addThemeToggleListeners");
-        }
+    }
     }
 }
