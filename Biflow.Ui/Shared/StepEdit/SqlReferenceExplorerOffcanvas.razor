@@ -124,7 +124,7 @@
                             var referenced = $"{referencedDb}[{reference.ReferencedSchema}].[{reference.ReferencedName}]";
                             <tr>
                                 <td>
-                                    <a class="text-dark"
+                                    <a class="text-body"
                                        href="javascript:void(0)"
                                        title="@reference.ReferencingType"
                                        @onclick="async () => await NavigateReferencingObjectAsync(reference)">
@@ -132,7 +132,7 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <a class="text-dark"
+                                    <a class="text-body"
                                        href="javascript:void(0)"
                                        title="@reference.ReferencedType"
                                        @onclick="async () => await NavigateReferencedObjectAsync(reference)">
