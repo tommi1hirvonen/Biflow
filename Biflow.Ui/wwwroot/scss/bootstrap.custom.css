@@ -11785,12 +11785,21 @@ textarea.form-control-lg {
 
 .dependency-graph .node rect {
   stroke-width: 2px;
-  stroke: #666;
-  fill: #fff;
+  stroke: var(--bs-body-color);
+  fill: var(--bs-body-bg);
+}
+
+.dependency-graph .node > g.label {
+  fill: var(--bs-body-color);
 }
 
 .dependency-graph .node.disabled rect {
-  fill: #eee;
+  fill: var(--bs-secondary-bg);
+  stroke: var(--bs-secondary);
+}
+
+.dependency-graph .node.disabled > g.label {
+  fill: var(--bs-secondary);
 }
 
 .dependency-graph .node.running rect {
@@ -11809,12 +11818,12 @@ textarea.form-control-lg {
 }
 
 .dependency-graph .node.skipped rect {
-  stroke: #ddd;
+  stroke: var(--bs-secondary);
   stroke-width: 3px;
 }
 
 .dependency-graph .node.skipped > g.label {
-  fill: #999;
+  fill: var(--bs-secondary-color);
 }
 
 .dependency-graph .node.stopped rect {
