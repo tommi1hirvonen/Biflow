@@ -57,6 +57,12 @@ $warning: #dfa100;
     }
 }
 
+// HxAutosuggest and HxInputTags
+[data-bs-theme="dark"] {
+    --hx-autosuggest-item-highlighted-background-color: #{$gray-800};
+    --hx-input-tags-dropdown-item-highlighted-background-color: #{$gray-800};
+}
+
 $navbar-gradient: #8F75DA;
 
 // Offcanvas customizations. Increase width from the default.

@@ -120,7 +120,11 @@
                                     <div class="row mt-2">
                                         <div class="col">
                                             <label class="form-label">Tags</label>
-                                            <HxInputTags @bind-Value="Modal.Tags" DataProvider="Modal.GetTagSuggestions" SuggestMinimumLength="0" SuggestDelay="0" />
+                                            <HxInputTags @bind-Value="Modal.Tags"
+                                                         DataProvider="Modal.GetTagSuggestions"
+                                                         SuggestMinimumLength="0"
+                                                         SuggestDelay="0"
+                                                         TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
                                         </div>
                                     </div>
                                     <div class="row mt-3">
