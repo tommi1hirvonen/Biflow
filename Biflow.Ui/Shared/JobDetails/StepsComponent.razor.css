@@ -1,0 +1,12 @@
+﻿
+.list-group-item-action.step-item-disabled {
+    background-color: var(--bs-list-group-action-hover-bg);
+}
+
+.list-group-item-action a {
+    text-decoration: none;
+}
+
+.list-group-item-action:hover a {
+    text-decoration: underline;
+}

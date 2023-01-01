@@ -2,6 +2,10 @@
     background-color: var(--bs-table-hover-bg);
 }
 
+tr.job-row.disabled {
+    background-color: var(--bs-table-hover-bg);
+}
+
 tr a {
     text-decoration: none;
 }

@@ -1,24 +1,4 @@
-﻿<style>
-    .step-row:hover,
-    .step-row:focus,
-    .step-row.step-row-disabled:hover,
-    .step-row.step-row-disabled:focus {
-        background-color: #ececec;
-    }
-
-    .step-row-disabled {
-        background-color: #f3f3f3;
-    }
-
-    .step-row a {
-        text-decoration: none;
-    }
-
-        .step-row:hover a {
-            text-decoration: underline;
-        }
-</style>
-
+﻿
 <PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
 
 @if (Job is not null)
@@ -27,7 +7,7 @@
 }
 
 
-<div class="sticky-top pt-2 pb-3" style="background-color: rgba(248, 249, 250, 0.9);">
+<div class="sticky-top pt-2 pb-3" style="background-color: var(--sticky-top-bg);">
     @*Same as bg-light but with slight transparency*@
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
@@ -152,7 +132,7 @@
                         Connection
                     </TitleTemplate>
                 </FilterDropdown>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
                     {
                         TagsFilterSet.Clear();
                         StepTypeFilter.Clear();
@@ -181,7 +161,7 @@
         <ol class="list-group shadow-sm">
             @if (Steps is null || Jobs is null || Job is null)
             {
-                <li class="list-group-item" style="background-color: #f7f7f7">
+                <li class="list-group-item list-group-header">
                     <div class="row">
                         <div class="col text-center">
                             <HxSpinner Color="ThemeColor.Secondary" />
@@ -257,7 +237,7 @@
                 </li>
                 @foreach (var item in FilteredSteps)
                 {
-                    <li class="list-group-item step-row py-2 @(item.IsEnabled ? null : "step-row-disabled")">
+                    <li class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
                         <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
                                 <AuthorizeView Roles="Admin, Editor, Operator">
@@ -269,7 +249,7 @@
                                     </div>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="Admin, Editor">
-                                    <a class="text-dark" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
+                                    <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         &nbsp;
                                         <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
@@ -287,7 +267,7 @@
                                     ||item is ParameterizedStep parameterizedStep && parameterizedStep.StepParameters.Any(p => p.JobParameterId is not null)
                                     || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
-                                    <div title="Step uses job parameters">
+                                    <div title="Step uses job parameters" class="text-body">
                                         <CxIcon Icon="FeatherIcon.AtSign" />
                                     </div>
                                 }
@@ -297,7 +277,7 @@
                                 }
                                 @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression))
                                 {
-                                    <div title="Execution condition enabled">
+                                    <div title="Execution condition enabled" class="text-body">
                                         <CxIcon Icon="FeatherIcon.CheckSquare" />
                                     </div>
                                 }
@@ -305,7 +285,7 @@
                                 {
                                     <div></div>
                                 }
-                                <div class="justify-content-end" style="@(Job.UseDependencyMode ? "color: #ccc;" : null)">
+                                <div class="justify-content-end @(Job.UseDependencyMode ? "text-body-tertiary" : "text-body")">
                                     @item.ExecutionPhase
                                     &nbsp;
                                     <CxIcon Icon="FeatherIcon.Layers" />

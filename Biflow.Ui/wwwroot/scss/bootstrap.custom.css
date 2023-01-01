@@ -11612,6 +11612,14 @@ textarea.form-control-lg {
   background-color: #f8f9fa !important;
 }
 
+[data-bs-theme=light], [data-bs-theme=auto] {
+  --sticky-top-bg: rgba(248, 249, 250, 0.9);
+}
+
+[data-bs-theme=dark] {
+  --sticky-top-bg: rgba(33, 37, 41, 0.9);
+}
+
 /*
     Generate button, which automatically switches between light and dark depending on current theme.
 */

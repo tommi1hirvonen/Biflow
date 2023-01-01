@@ -23,7 +23,8 @@
     @if (!string.IsNullOrWhiteSpace(Job?.JobDescription))
     {
         <div class="col-auto">
-            <HxButton Color="ThemeColor.Light"
+            <HxButton Color="ThemeColor.None"
+                      CssClass="btn-auto"
                       Size="ButtonSize.Small"
                       @onclick="() => DescriptionOpen = !DescriptionOpen">
                 <CxIcon Icon="FeatherIcon.Info" />

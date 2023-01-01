@@ -11,6 +11,15 @@ $warning: #dfa100;
     }
 }
 
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    --sticky-top-bg: #{rgba($light, $alpha: 0.9)};
+}
+
+[data-bs-theme="dark"] {
+    --sticky-top-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
+}
+
 /*
     Generate button, which automatically switches between light and dark depending on current theme.
 */
