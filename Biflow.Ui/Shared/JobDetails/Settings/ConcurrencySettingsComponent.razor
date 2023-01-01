@@ -63,8 +63,8 @@
                             <input class="form-control form-control-sm" style="max-width: 10rem;" @bind="concur.MaxParallelSteps" />
                         </td>
                         <td>
-                            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => EditJob.JobConcurrencies.Remove(concur)">
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => EditJob.JobConcurrencies.Remove(concur)">
                                     <CxIcon Icon="FeatherIcon.Delete" />
                                 </HxButton>
                             </HxButtonGroup>

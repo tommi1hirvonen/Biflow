@@ -60,8 +60,8 @@
                         <ParameterTypeValueEditComponent Parameter="param" />
                     }
                     <td>
-                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.StepParameters.Remove(param)">
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Step.StepParameters.Remove(param)">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -71,7 +71,7 @@
         </tbody>
     </table>
     var level = ParameterLevel.Package; var type = ParameterValueType.String;
-    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
         <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>

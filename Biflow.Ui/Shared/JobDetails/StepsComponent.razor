@@ -196,7 +196,7 @@
                             <div class="col">
                                 @if (SelectedSteps.Any())
                                 {
-                                    <div class="btn-group btn-row">
+                                    <div class="btn-group">
                                         <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Color="ThemeColor.Link" Size="ButtonSize.Small">
                                                 <CxIcon Icon="FeatherIcon.Trash2" />
@@ -304,18 +304,18 @@
                                         <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
                                     </div>
                                 </AuthorizeView>
-                                <div class="btn-group btn-row ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepHistoryOffcanvas(item)">
+                                <div class="btn-group ms-2">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ShowStepHistoryOffcanvas(item)">
                                         <CxIcon Icon="FeatherIcon.Activity" />
                                     </HxButton>
 
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => ShowStepDetailsModal(item)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ShowStepDetailsModal(item)">
                                         <CxIcon Icon="FeatherIcon.Info" />
                                     </HxButton>
 
                                     <AuthorizeView Roles="Admin, Editor">
                                         <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                 <CxIcon Icon="FeatherIcon.Copy" />
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
@@ -330,7 +330,7 @@
                                         </HxDropdownButtonGroup>
 
                                         <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                 <CxIcon Icon="FeatherIcon.Trash2" />
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">

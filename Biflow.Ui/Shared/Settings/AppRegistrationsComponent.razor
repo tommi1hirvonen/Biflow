@@ -56,12 +56,12 @@
                             @app.AppRegistrationName
                         </td>
                         <td class="align-middle">
-                            <HxButtonGroup CssClass="btn-row">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
+                            <HxButtonGroup>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
                                     <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="delete">
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
                                         <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
@@ -70,7 +70,7 @@
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                                 <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" aria-label="clear tokens">
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="clear tokens">
                                         <CxIcon Icon="FeatherIcon.X" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>

@@ -87,7 +87,7 @@ else if (Job is null || Steps is null)
                                 <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
                             </ItemTemplate>
                         </FilterDropdown>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                   @onclick="() => { TagFilter.Clear(); StepTypeFilter.Clear(); StatusFilter.Clear(); StepNameFilter = string.Empty; }">
                             <CxIcon Icon="FeatherIcon.X" />
                             Clear

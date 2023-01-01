@@ -95,11 +95,11 @@
                                                 <InputNumber class="form-control form-control-sm" @bind-Value="EditObject.MaxConcurrentWrites" />
                                             </td>
                                             <td colspan="3">
-                                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success">
+                                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success">
                                                         <CxIcon Icon="FeatherIcon.Check" />
                                                     </HxSubmit>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="EndEditContext">
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="EndEditContext">
                                                         <CxIcon Icon="FeatherIcon.X" />
                                                     </HxButton>
                                                 </HxButtonGroup>
@@ -113,12 +113,12 @@
                                             <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@ObjectFilter" /></td>
                                             <td class="align-middle">@obj.MaxConcurrentWrites</td>
                                             <td>
-                                                <div class="btn-group btn-row">
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" OnClick="async () => await SetEditContextAsync(obj)">
+                                                <div class="btn-group">
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await SetEditContextAsync(obj)">
                                                         <CxIcon Icon="FeatherIcon.Edit3" />
                                                     </HxButton>
                                                     <HxDropdownButtonGroup>
-                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                             <CxIcon Icon="FeatherIcon.Trash2" />
                                                         </HxDropdownToggleButton>
                                                         <HxDropdownMenu>
@@ -240,8 +240,8 @@
                                         @step.StepName
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-row">
-                                            <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepDatabaseObjectLinkAsync(step)">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteStepDatabaseObjectLinkAsync(step)">
                                                 <CxIcon Icon="FeatherIcon.Delete" />
                                             </button>
                                         </div>

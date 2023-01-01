@@ -82,8 +82,8 @@
                     @obj.ObjectName
                 </td>
                 <td>
-                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row" OnClick="() => SourceTargetObjects.Remove(obj)">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SourceTargetObjects.Remove(obj)">
                             <CxIcon Icon="FeatherIcon.Delete" />
                         </HxButton>
                     </HxButtonGroup>
@@ -118,14 +118,14 @@
                             @onfocusin="() => SuggestType = DatabaseObjectType.Object" />
                 </td>
                 <td>
-                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-success" OnClick="SubmitNewObject">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject">
                             <CxIcon Icon="FeatherIcon.Check" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row text-danger" OnClick="() => NewObject = null">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => NewObject = null">
                             <CxIcon Icon="FeatherIcon.X" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row"
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                               OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
                             <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         </HxButton>
@@ -204,7 +204,7 @@
         }
     </tbody>
 </table>
-<HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
+<HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
     <CxIcon Icon="FeatherIcon.Plus" />
 </HxButton>
 

@@ -26,8 +26,8 @@ $warning: #dfa100;
 [data-bs-theme="dark"] {
     .btn-auto {
         @include button-variant(
-            $dark,
-            $dark,
+            rgba(0, 0, 0, 0),
+            rgba(0, 0, 0, 0),
             $hover-background: shade-color($dark, $btn-hover-bg-shade-amount),
             $hover-border: shade-color($dark, $btn-hover-border-shade-amount),
             $active-background: shade-color($dark, $btn-active-bg-shade-amount),
@@ -39,8 +39,8 @@ $warning: #dfa100;
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .btn-auto {
         @include button-variant(
-            $light,
-            $light,
+            rgba(255, 255, 255, 0),
+            rgba(255, 255, 255, 0),
             $hover-background: shade-color($light, $btn-hover-bg-shade-amount),
             $hover-border: shade-color($light, $btn-hover-border-shade-amount),
             $active-background: shade-color($light, $btn-active-bg-shade-amount),
@@ -74,27 +74,11 @@ $navbar-gradient: #8F75DA;
 }
 
 /*
-    Class used for buttons which are placed inside a table row
+    Table
 */
-
-.btn-row .btn-light,
-.btn-row.btn-light {
-    background-color: transparent;
-    border-color: transparent;
-}
-
-.btn-row .btn-light:hover,
-.btn-row.btn-light:hover {
-    background-color: #e2e6ea;
-    border-color: #dae0e5;
-}
 
 .table th {
     border-top: none;
-}
-
-tr.disabled {
-    background-color: #f3f3f3;
 }
 
 /*

@@ -67,10 +67,10 @@
                                         <TagComponent Tag="tag" />
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-row">
+                                        <div class="btn-group">
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() => TemplateTag.TagName = tag.TagName">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => TemplateTag.TagName = tag.TagName">
                                                     <CxIcon Icon="FeatherIcon.Edit3" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
@@ -86,7 +86,7 @@
                                                 </HxDropdownContent>
                                             </HxDropdownButtonGroup>
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                     <CxIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
@@ -95,7 +95,7 @@
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                     @tag.Color
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
@@ -182,8 +182,8 @@
                                     @step.StepName
                                 </td>
                                 <td class="align-middle">
-                                    <div class="btn-group btn-row">
-                                        <button class="btn btn-sm btn-light" @onclick="async () => await DeleteStepTag(step)">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteStepTag(step)">
                                             <CxIcon Icon="FeatherIcon.Delete" />
                                         </button>
                                     </div>

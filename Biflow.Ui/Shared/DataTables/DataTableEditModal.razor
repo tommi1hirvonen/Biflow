@@ -56,7 +56,7 @@
                                         </select>
                                     </div>
                                     <div class="col-auto">
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                               OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
                                             <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                             Browse tables
@@ -86,7 +86,7 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <button type="button" class="btn btn-sm btn-light @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
+                        <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
                         @onclick="() => EditTable.Lookups.Add(new())">
                             <CxIcon Icon="FeatherIcon.Search" />
                             Add lookup

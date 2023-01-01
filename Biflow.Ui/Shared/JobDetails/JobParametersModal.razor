@@ -9,7 +9,7 @@
         <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
                    Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
             Html>
-            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small">
+            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>
@@ -60,8 +60,8 @@
                                     }
                                 </td>
                                 <td>
-                                    <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Job?.JobParameters.Remove(param)">
+                                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Job?.JobParameters.Remove(param)">
                                             <CxIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
                                     </HxButtonGroup>
@@ -73,7 +73,7 @@
                 @{ var type = ParameterValueType.String; }
                 <div class="row">
                     <div class="col">
-                        <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
+                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
                             <CxIcon Icon="FeatherIcon.Plus" />
                             Add parameter
                         </HxButton>

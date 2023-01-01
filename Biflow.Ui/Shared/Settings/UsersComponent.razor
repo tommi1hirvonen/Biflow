@@ -35,15 +35,15 @@
                                         @user.Username
                                     </div>
                                     <div class="col-auto">
-                                        <HxButtonGroup CssClass="btn-row">
-                                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
+                                        <HxButtonGroup>
+                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
                                                 <CxIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
 
                                             @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                             {
                                                 <HxDropdownButtonGroup>
-                                                    <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
+                                                    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
                                                         <CxIcon Icon="FeatherIcon.Key" />
                                                     </HxDropdownToggleButton>
                                                     <HxDropdownContent CssClass="p-4">
@@ -78,7 +78,7 @@
                                             }
 
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Color="ThemeColor.Light" Size="ButtonSize.Small" aria-label="delete">
+                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete">
                                                     <CxIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>

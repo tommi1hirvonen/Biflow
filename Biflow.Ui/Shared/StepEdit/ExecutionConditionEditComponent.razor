@@ -22,7 +22,7 @@
     </div>
     <div class="row mt-3">
         <div class="col">
-            <HxButton OnClick="TestEvaluate" Color="ThemeColor.Light" Size="ButtonSize.Small">
+            <HxButton OnClick="TestEvaluate" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
                 <CxIcon Icon="FeatherIcon.Check" />
                 Test evaluate / validate
             </HxButton>
@@ -80,8 +80,8 @@
                         <ParameterTypeValueEditComponent Parameter="param" />
                     }
                     <td>
-                        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                            <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row" @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -92,7 +92,7 @@
         </tbody>
     </table>
     var type = ParameterValueType.String;
-    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter { ParameterValueType = type, ParameterValue = string.Empty })">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter { ParameterValueType = type, ParameterValue = string.Empty })">
         <CxIcon Icon="FeatherIcon.Plus" />
     </HxButton>
 }

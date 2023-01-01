@@ -11625,36 +11625,36 @@ textarea.form-control-lg {
 */
 [data-bs-theme=dark] .btn-auto {
   --bs-btn-color: #fff;
-  --bs-btn-bg: #212529;
-  --bs-btn-border-color: #212529;
+  --bs-btn-bg: rgba(0, 0, 0, 0);
+  --bs-btn-border-color: rgba(0, 0, 0, 0);
   --bs-btn-hover-color: #fff;
   --bs-btn-hover-bg: #1c1f23;
   --bs-btn-hover-border-color: #1a1e21;
-  --bs-btn-focus-shadow-rgb: 66, 70, 73;
+  --bs-btn-focus-shadow-rgb: 255, 255, 255;
   --bs-btn-active-color: #fff;
   --bs-btn-active-bg: #1a1e21;
   --bs-btn-active-border-color: #191c1f;
   --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
   --bs-btn-disabled-color: #fff;
-  --bs-btn-disabled-bg: #212529;
-  --bs-btn-disabled-border-color: #212529;
+  --bs-btn-disabled-bg: rgba(0, 0, 0, 0);
+  --bs-btn-disabled-border-color: rgba(0, 0, 0, 0);
 }
 
 [data-bs-theme=light] .btn-auto, [data-bs-theme=auto] .btn-auto {
   --bs-btn-color: #000;
-  --bs-btn-bg: #f8f9fa;
-  --bs-btn-border-color: #f8f9fa;
+  --bs-btn-bg: rgba(255, 255, 255, 0);
+  --bs-btn-border-color: rgba(255, 255, 255, 0);
   --bs-btn-hover-color: #000;
   --bs-btn-hover-bg: #d3d4d5;
   --bs-btn-hover-border-color: #c6c7c8;
-  --bs-btn-focus-shadow-rgb: 211, 212, 213;
+  --bs-btn-focus-shadow-rgb: 0, 0, 0;
   --bs-btn-active-color: #000;
   --bs-btn-active-bg: #c6c7c8;
   --bs-btn-active-border-color: #babbbc;
   --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
   --bs-btn-disabled-color: #000;
-  --bs-btn-disabled-bg: #f8f9fa;
-  --bs-btn-disabled-border-color: #f8f9fa;
+  --bs-btn-disabled-bg: rgba(255, 255, 255, 0);
+  --bs-btn-disabled-border-color: rgba(255, 255, 255, 0);
 }
 
 .offcanvas {
@@ -11680,26 +11680,10 @@ textarea.form-control-lg {
 }
 
 /*
-    Class used for buttons which are placed inside a table row
+    Table
 */
-.btn-row .btn-light,
-.btn-row.btn-light {
-  background-color: transparent;
-  border-color: transparent;
-}
-
-.btn-row .btn-light:hover,
-.btn-row.btn-light:hover {
-  background-color: #e2e6ea;
-  border-color: #dae0e5;
-}
-
 .table th {
   border-top: none;
-}
-
-tr.disabled {
-  background-color: #f3f3f3;
 }
 
 /*

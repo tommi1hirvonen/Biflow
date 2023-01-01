@@ -37,7 +37,7 @@
             </HxButton>
         </div>
         <div class="col text-end">
-            <HxButton Color="ThemeColor.Light" OnClick="async () => await HelpModal.LetAsync(x => x.ShowAsync())">
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await HelpModal.LetAsync(x => x.ShowAsync())">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </div>
@@ -130,8 +130,8 @@
                         </td>
                         <td>
                             <AuthorizeView Roles="Admin, Editor, Operator">
-                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                    <HxButton Color="ThemeColor.Light" Size="ButtonSize.Small" CssClass="btn-row"
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
                                               @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
@@ -149,7 +149,7 @@
                         <td align="center">
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="btn-row">
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                         <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>

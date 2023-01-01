@@ -64,15 +64,15 @@
                                 Add
                             </td>
                             <td>
-                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                         title="Commit this modification"
-                                        CssClass="btn-row text-success" OnClick="async () => await AddDependencyAsync(dep)">
+                                        CssClass="btn-auto text-success" OnClick="async () => await AddDependencyAsync(dep)">
                                         <CxIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                         title="Discard this modification"
-                                        CssClass="btn-row text-danger" OnClick="() => DependenciesToAdd.Remove(dep)">
+                                        CssClass="btn-auto text-danger" OnClick="() => DependenciesToAdd.Remove(dep)">
                                         <CxIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
@@ -98,15 +98,15 @@
                                 Remove
                             </td>
                             <td>
-                                <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="btn-row">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                         title="Commit this modification"
-                                        CssClass="btn-row text-success" OnClick="async () => await RemoveDependencyAsync(dep)">
+                                        CssClass="btn-auto text-success" OnClick="async () => await RemoveDependencyAsync(dep)">
                                         <CxIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light"
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                         title="Discard this modification"
-                                        CssClass="btn-row text-danger" OnClick="() => DependenciesToRemove.Remove(dep)">
+                                        CssClass="btn-auto text-danger" OnClick="() => DependenciesToRemove.Remove(dep)">
                                         <CxIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
