@@ -36,8 +36,6 @@
         <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <script src="_framework/blazor.server.js"></script>
-
     <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
 
     @*Used to draw the dependencies between different steps.*@
@@ -54,5 +52,8 @@
 
     <script src="/js/site.js"></script>
     <script src="/js/theme.js"></script>
+
+    @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
+    <script src="_framework/blazor.server.js"></script>
 </body>
 </html>
