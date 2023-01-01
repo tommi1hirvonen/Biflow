@@ -1,5 +1,5 @@
 ﻿tr.job-row:hover {
-    background-color: #ececec;
+    background-color: var(--bs-table-hover-bg);
 }
 
 tr a {

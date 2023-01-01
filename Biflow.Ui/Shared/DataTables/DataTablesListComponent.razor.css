@@ -1,12 +1,7 @@
-﻿.list-group-item-table:hover,
-.list-group-item-table:focus {
-    background-color: #ececec;
-}
-
-.list-group-item-table a {
+﻿.list-group-item-action a {
     text-decoration: none;
 }
 
-.list-group-item-table:hover a {
+.list-group-item-action:hover a {
     text-decoration: underline;
 }

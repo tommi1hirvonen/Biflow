@@ -29,7 +29,7 @@
         <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Focus"
                    Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
                    Html>
-            <HxButton Color="ThemeColor.Light">
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>
@@ -60,7 +60,7 @@
                     <JobExecutionStatusBadgeComponent ExecutionStatus_="item" />
                 </ItemTemplate>
             </FilterDropdown>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Light" @onclick="() =>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
                 {
                     StatusFilter.Clear();
                     JobNameFilter = string.Empty;
@@ -176,14 +176,14 @@
                         var nextStartTime = GetNextStartTime(item);
                         <tr class="job-row @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
-                                <a class="text-dark" href="@($"jobs/{item.JobId}/steps")">
+                                <a class="text-body" href="@($"jobs/{item.JobId}/steps")">
                                     <HighlightableText PartToHighlight="@JobNameFilter" Text="@item.JobName" />
                                 </a>
                             </td>
                             <td class="align-middle">
                                 @if (lastExecution is not null)
                                 {
-                                    <a class="text-dark" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
+                                    <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
                                         @lastExecution.StartDateTime?.LocalDateTime
                                     </a>
                                 }
