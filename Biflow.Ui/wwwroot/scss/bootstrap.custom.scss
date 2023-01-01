@@ -5,6 +5,41 @@ $warning: #dfa100;
 
 @import "../lib/bootstrap/scss/bootstrap";
 
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .bg-body {
+        background-color: $light !important;
+    }
+}
+
+/*
+    Generate button, which automatically switches between light and dark depending on current theme.
+*/
+[data-bs-theme="dark"] {
+    .btn-auto {
+        @include button-variant(
+            $dark,
+            $dark,
+            $hover-background: shade-color($dark, $btn-hover-bg-shade-amount),
+            $hover-border: shade-color($dark, $btn-hover-border-shade-amount),
+            $active-background: shade-color($dark, $btn-active-bg-shade-amount),
+            $active-border: shade-color($dark, $btn-active-border-shade-amount)
+        );
+    }
+}
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .btn-auto {
+        @include button-variant(
+            $light,
+            $light,
+            $hover-background: shade-color($light, $btn-hover-bg-shade-amount),
+            $hover-border: shade-color($light, $btn-hover-border-shade-amount),
+            $active-background: shade-color($light, $btn-active-bg-shade-amount),
+            $active-border: shade-color($light, $btn-active-border-shade-amount)
+        );
+    }
+}
+
 $navbar-gradient: #8F75DA;
 
 .offcanvas {

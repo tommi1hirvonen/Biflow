@@ -1,7 +1,12 @@
 ﻿@typeparam TItem
 
+@{
+    var fontWeigth = FilterSet.Any() ? "fw-bold" : null;
+    var cssClass = $"btn-auto {fontWeigth}";
+}
+
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Light" CssClass="@(FilterSet.Any() ? "fw-bold" : null)">
+    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="@cssClass">
         @TitleTemplate
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">
