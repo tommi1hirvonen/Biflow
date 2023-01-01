@@ -56,10 +56,10 @@
                                         </select>
                                     </div>
                                     <div class="col-auto">
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                               OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
                                             <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                            Browse tables
+                                            Select table
                                         </HxButton>
                                     </div>
                                 </div>
@@ -87,7 +87,7 @@
                 <div class="row">
                     <div class="col">
                         <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
-                        @onclick="() => EditTable.Lookups.Add(new())">
+                                @onclick="() => EditTable.Lookups.Add(new())">
                             <CxIcon Icon="FeatherIcon.Search" />
                             Add lookup
                         </button>
@@ -174,7 +174,7 @@
                                         }
                                     </td>
                                     <td>
-                                        <HxButton Size="ButtonSize.Small" Outline="true" Color="ThemeColor.Secondary"
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Delete lookup"
                                                 OnClick="() => { EditTable.Lookups.Remove(lookup); StateHasChanged(); }">
                                             <CxIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
