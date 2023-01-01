@@ -5,10 +5,19 @@ $warning: #dfa100;
 
 @import "../lib/bootstrap/scss/bootstrap";
 
-// Change the light theme background to be slightly darker than the default.
+$body-bg-dark-custom: shade-color($dark, 15%);
+
+// Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {
         background-color: $light !important;
+    }
+}
+
+// Change the dark theme body background to be slightly darker than the default
+[data-bs-theme="dark"] {
+    .bg-body {
+        background-color: $body-bg-dark-custom !important;
     }
 }
 
@@ -18,7 +27,7 @@ $warning: #dfa100;
 }
 
 [data-bs-theme="dark"] {
-    --sticky-top-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
+    --sticky-top-bg: #{rgba($body-bg-dark-custom, $alpha: 0.9)};
 }
 
 // Sticky top element inside a modal.
@@ -27,7 +36,7 @@ $warning: #dfa100;
 }
 
 [data-bs-theme="dark"] {
-    --sticky-top-modal-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
+    --sticky-top-modal-bg: #{rgba($body-bg-dark-custom, $alpha: 0.9)};
 }
 
 // Generate button, which automatically switches between light and dark depending on current theme.
@@ -36,10 +45,10 @@ $warning: #dfa100;
         @include button-variant(
             rgba(0, 0, 0, 0),
             rgba(0, 0, 0, 0),
-            $hover-background: shade-color($dark, $btn-hover-bg-shade-amount),
-            $hover-border: shade-color($dark, $btn-hover-border-shade-amount),
-            $active-background: shade-color($dark, $btn-active-bg-shade-amount),
-            $active-border: shade-color($dark, $btn-active-border-shade-amount)
+            $hover-background: shade-color($dark, 35%),
+            $hover-border: shade-color($dark, 40%),
+            $active-background: shade-color($dark, 40%),
+            $active-border: shade-color($dark, 45%)
         );
     }
 }
@@ -64,6 +73,10 @@ $warning: #dfa100;
     
     .hx-input-tags-control input {
         color: var(--bs-body-color);
+    }
+
+    .toast.bg-warning {
+        color: $white;
     }
 }
 
@@ -213,7 +226,7 @@ $navbar-gradient: #8F75DA;
 }
 
 .dependency-graph .node.disabled rect {
-    fill: var(--bs-secondary-bg);
+    fill: var(--bs-tertiary-bg);
     stroke: var(--bs-secondary);
 }
 
@@ -312,7 +325,7 @@ $navbar-gradient: #8F75DA;
     width: 200px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
-    background-color: #35353a;
+    background-color: var(--bs-body-bg);
     box-shadow: 0 0.3rem .5rem rgb(0 0 0 / 50%)
 }
 
@@ -349,35 +362,56 @@ $navbar-gradient: #8F75DA;
 
 .sidebar .nav-link {
     font-size: 16px;
-    color: #ccc;
+    color: var(--bs-body-color);
     border-radius: .5rem;
     margin-left: 8px;
     margin-right: 8px;
-    margin-top: 2px;
-    margin-bottom: 2px;
+    margin-top: 3px;
+    margin-bottom: 3px;
     padding-left: 8px;
     padding-right: 8px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .sidebar .nav-link .feather {
     margin-right: 5px;
-    color: #ddd;
+    color: var(--bs-secondary-color);
 }
 
 .sidebar .nav-link.active {
     font-weight: 500;
-    color: #fff;
-    background-color: rgba(255, 255, 255, .10);
+    color: var(--bs-emphasis-color);
 }
 
-.sidebar .nav-link.active .feather {
-    color: #fff;
+.sidebar .nav-link.active .feather,
+.sidebar .nav-link:hover .feather {
+    color: var(--bs-emphasis-color);
 }
 
-.sidebar .nav-link:hover {
-    background-color: rgba(255, 255, 255, .10);
+// The background highlight for active and hovered items is different for light and dark theme.
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+
+    .sidebar .nav-link.active {
+        background-color: tint-color($primary, 75%);
+    }
+
+    .sidebar .nav-link:hover {
+        background-color: tint-color($primary, 75%);
+        color: var(--bs-emphasis-color);
+    }
+}
+
+[data-bs-theme="dark"] {
+
+    .sidebar .nav-link.active {
+        background-color: shade-color($primary, 55%);
+    }
+
+    .sidebar .nav-link:hover {
+        background-color: shade-color($primary, 55%);
+        color: var(--bs-emphasis-color);
+    }
 }
 
 .sidebar-heading {
