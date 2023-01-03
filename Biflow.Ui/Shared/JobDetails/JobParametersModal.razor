@@ -4,7 +4,7 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters" Scrollable="true">
     <BodyTemplate>
         <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
                    Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
