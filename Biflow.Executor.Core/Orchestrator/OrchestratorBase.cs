@@ -100,6 +100,23 @@ internal abstract class OrchestratorBase
 
     protected async Task StartNewStepWorkerAsync(StepExecution step)
     {
+        // Update the step's status to Queued.
+        try
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            foreach (var attempt in step.StepExecutionAttempts)
+            {
+                attempt.ExecutionStatus = StepExecutionStatus.Queued;
+                context.Attach(attempt);
+                context.Entry(attempt).Property(p => p.ExecutionStatus).IsModified = true;
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {step} Error updating step execution's status to Queued", Execution.ExecutionId, step);
+        }
+
         // Wait until the semaphores can be entered and the step can be started.
         // Start from the most detailed semaphores and move towards the main semaphore.
         foreach (var target in step.Targets)

@@ -33,6 +33,7 @@
         OR [StepType]='Email'),
     CONSTRAINT [CK_ExecutionStepAttempt_ExecutionStatus] CHECK (
         [ExecutionStatus] = 'NotStarted'
+        OR [ExecutionStatus] = 'Queued'
         OR [ExecutionStatus] = 'Running'
         OR [ExecutionStatus] = 'Succeeded'
         OR [ExecutionStatus] = 'Warning'

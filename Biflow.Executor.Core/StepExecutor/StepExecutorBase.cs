@@ -98,7 +98,7 @@ internal abstract class StepExecutorBase
             var result = await EvaluateExecutionConditionAsync();
             if (!result)
             {
-                await UpdateExecutionSkipped("Execution condition evaluated as false");
+                await UpdateExecutionSkippedAsync("Execution condition evaluated as false");
                 return false;
             }
         }
@@ -300,7 +300,7 @@ internal abstract class StepExecutorBase
         return true;
     }
 
-    private async Task UpdateExecutionSkipped(string infoMessage)
+    private async Task UpdateExecutionSkippedAsync(string infoMessage)
     {
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in StepExecution.StepExecutionAttempts)

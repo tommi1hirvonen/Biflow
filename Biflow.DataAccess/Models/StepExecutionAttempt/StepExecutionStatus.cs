@@ -3,6 +3,7 @@
 public enum StepExecutionStatus
 {
     NotStarted,
+    Queued,
     Running,
     Succeeded,
     Warning,
