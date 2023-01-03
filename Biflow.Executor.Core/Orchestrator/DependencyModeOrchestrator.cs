@@ -69,7 +69,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         }
 
         // Loop as long as there are steps that haven't yet been started.
-        while (StepStatuses.Any(step => step.Value == ExecutionStatus.NotStarted))
+        while (StepStatuses.Any(step => step.Value == OrchestrationStatus.NotStarted))
         {
             // Start steps that can be started and skip those that should be skipped.
             await DoRoundAsync();
@@ -91,7 +91,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
     private async Task DoRoundAsync()
     {
         var unstartedSteps = StepStatuses
-            .Where(status => status.Value == ExecutionStatus.NotStarted)
+            .Where(status => status.Value == OrchestrationStatus.NotStarted)
             .Select(status => status.Key);
         foreach (var step in unstartedSteps)
         {
@@ -99,12 +99,12 @@ internal class DependencyModeOrchestrator : OrchestratorBase
             switch (stepAction)
             {
                 case StepAction.Execute:
-                    StepStatuses[step] = ExecutionStatus.Running;
+                    StepStatuses[step] = OrchestrationStatus.Running;
                     StepWorkers.Add(StartNewStepWorkerAsync(step));
                     break;
 
                 case StepAction.Skip:
-                    StepStatuses[step] = ExecutionStatus.Failed;
+                    StepStatuses[step] = OrchestrationStatus.Failed;
                     try
                     {
                         await UpdateStepDependenciesFailedAsync(step);
@@ -144,14 +144,14 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         // If there are any on-success dependencies, which have been marked as failed
         // OR
         // if there are any on-failed dependencies, which have been marked as succeeded, skip this step.
-        if (onSucceeded.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Failed && status.Key == d)) ||
-            onFailed.Any(d => StepStatuses.Any(status => status.Value == ExecutionStatus.Succeeded && status.Key == d)))
+        if (onSucceeded.Any(d => StepStatuses.Any(status => status.Value == OrchestrationStatus.Failed && status.Key == d)) ||
+            onFailed.Any(d => StepStatuses.Any(status => status.Value == OrchestrationStatus.Succeeded && status.Key == d)))
         {
             return StepAction.Skip;
         }
         // No reason to skip this step.
         // If all the step's dependencies have been completed (success or failure), the step can be executed.
-        else if (allDependencies.All(dep => StepStatuses[dep] == ExecutionStatus.Succeeded || StepStatuses[dep] == ExecutionStatus.Failed))
+        else if (allDependencies.All(dep => StepStatuses[dep] == OrchestrationStatus.Succeeded || StepStatuses[dep] == OrchestrationStatus.Failed))
         {
             return StepAction.Execute;
         }

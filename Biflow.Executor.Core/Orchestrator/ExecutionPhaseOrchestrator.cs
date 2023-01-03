@@ -40,7 +40,7 @@ internal class ExecutionPhaseOrchestrator : OrchestratorBase
 
             // If StopOnFirstError was set to true and there are any errors,
             // mark remaining steps as skipped and stop orchestration.
-            if (Execution.StopOnFirstError && StepStatuses.Any(s => s.Value == ExecutionStatus.Failed))
+            if (Execution.StopOnFirstError && StepStatuses.Any(s => s.Value == OrchestrationStatus.Failed))
             {
                 await MarkUnstartedStepsAsSkipped("Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
                 break;
@@ -52,7 +52,7 @@ internal class ExecutionPhaseOrchestrator : OrchestratorBase
     {
         using var context = _dbContextFactory.CreateDbContext();
         var unstartedAttempts = StepStatuses
-            .Where(s => s.Value == ExecutionStatus.NotStarted)
+            .Where(s => s.Value == OrchestrationStatus.NotStarted)
             .Select(s => s.Key)
             .SelectMany(s => s.StepExecutionAttempts);
         foreach (var attempt in unstartedAttempts)

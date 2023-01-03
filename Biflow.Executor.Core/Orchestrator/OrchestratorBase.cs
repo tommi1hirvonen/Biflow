@@ -25,7 +25,7 @@ internal abstract class OrchestratorBase
     /// Internal enum used by the orchestrator to group step execution statuses on a less detailed level.
     /// The level of the internal enum is sufficient to keep track of when and if to execute steps.
     /// </summary>
-    protected enum ExecutionStatus
+    protected enum OrchestrationStatus
     {
         NotStarted,
         Running,
@@ -33,7 +33,7 @@ internal abstract class OrchestratorBase
         Failed
     };
 
-    protected Dictionary<StepExecution, ExecutionStatus> StepStatuses { get; }
+    protected Dictionary<StepExecution, OrchestrationStatus> StepStatuses { get; }
 
     public OrchestratorBase(
         ILogger<OrchestratorBase> logger,
@@ -51,7 +51,7 @@ internal abstract class OrchestratorBase
         CancellationTokenSources = Execution.StepExecutions
             .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
         StepStatuses = Execution.StepExecutions
-            .ToDictionary(e => e, _ => ExecutionStatus.NotStarted);
+            .ToDictionary(e => e, _ => OrchestrationStatus.NotStarted);
 
         // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
         var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
@@ -174,7 +174,7 @@ internal abstract class OrchestratorBase
         finally
         {
             // Update the status.
-            StepStatuses[step] = result ? ExecutionStatus.Succeeded : ExecutionStatus.Failed;
+            StepStatuses[step] = result ? OrchestrationStatus.Succeeded : OrchestrationStatus.Failed;
 
             // Release the semaphores once to make room for new parallel executions.
             foreach (var semaphore in enteredSemaphores)
