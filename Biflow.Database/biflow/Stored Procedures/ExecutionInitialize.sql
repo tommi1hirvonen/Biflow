@@ -11,30 +11,63 @@ BEGIN
 
 SET NOCOUNT ON
 
--- Create an execution id for Biflow.
+-- Create an execution id.
 DECLARE @BiflowExecutionId UNIQUEIDENTIFIER = NEWID()
 
--- Split the list of step ids to be executed into a temporary table.
-DECLARE @Delimiter CHAR(1) = ',';
-
-WITH Split AS(
-	-- Calculate delimiter positions...
-    SELECT
-		0 AS StartPos,
-		CHARINDEX(@Delimiter, @StepIds) AS EndPos
-	WHERE @StepIds IS NOT NULL
-    UNION ALL
-    SELECT
-		CONVERT(INT, EndPos + 1),
-		CHARINDEX(@Delimiter, @StepIds, EndPos + 1)
-    FROM Split
-    WHERE EndPos > 0
+-- Create a temporary table to hold a list of step ids to include in this execution.
+CREATE TABLE #StepIds (
+	StepId UNIQUEIDENTIFIER NOT NULL PRIMARY KEY
 )
--- ...and use them to split the @StepIds comma delimited list of steps.
-SELECT StepId = CONVERT(UNIQUEIDENTIFIER, SUBSTRING(@StepIds, StartPos, ISNULL(NULLIF(EndPos, 0), LEN(@StepIds) + 1) - StartPos))
-INTO #StepIds
-FROM Split
-OPTION (MAXRECURSION 10000) -- max 10000 steps
+
+-- If an explicit list of step ids was given as a parameter.
+IF @StepIds IS NOT NULL
+BEGIN
+
+	-- Split the list of step ids to be executed into a temporary table.
+	DECLARE @Delimiter CHAR(1) = ',';
+
+	WITH Split AS(
+		-- Calculate delimiter positions...
+		SELECT
+			0 AS StartPos,
+			CHARINDEX(@Delimiter, @StepIds) AS EndPos
+		WHERE @StepIds IS NOT NULL
+		UNION ALL
+		SELECT
+			CONVERT(INT, EndPos + 1),
+			CHARINDEX(@Delimiter, @StepIds, EndPos + 1)
+		FROM Split
+		WHERE EndPos > 0
+	)
+	INSERT INTO #StepIds (StepId)
+	-- ...and use them to split the @StepIds comma delimited list of steps.
+	SELECT StepId = CONVERT(UNIQUEIDENTIFIER, SUBSTRING(@StepIds, StartPos, ISNULL(NULLIF(EndPos, 0), LEN(@StepIds) + 1) - StartPos))
+	FROM Split
+	OPTION (MAXRECURSION 10000) -- max 10000 steps
+
+END
+-- The execution should be based on a specific schedule definition.
+ELSE IF @ScheduleId IS NOT NULl
+BEGIN
+
+	INSERT INTO #StepIds (StepId)
+	SELECT step.StepId
+	FROM biflow.Step AS step
+		INNER JOIN biflow.Schedule AS sched ON step.JobId = sched.JobId AND sched.ScheduleId = @ScheduleId
+	WHERE step.IsEnabled = 1 AND ( -- For schedules, always check IsEnabled.
+		NOT EXISTS ( -- Schedule has no tags
+			SELECT *
+			FROM biflow.ScheduleTag AS schedtag
+			WHERE sched.ScheduleId = schedtag.ScheduleId
+		) OR EXISTS ( -- Schedule has tags and the step has at least one matching tag.
+			SELECT *
+			FROM biflow.ScheduleTag AS schedtag
+				INNER JOIN biflow.StepTag AS steptag ON schedtag.TagId = steptag.TagId
+			WHERE sched.ScheduleId = schedtag.ScheduleId AND step.StepId = steptag.StepId
+		)
+	)
+
+END
 
 
 SELECT

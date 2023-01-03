@@ -18,12 +18,12 @@ public class ExecuteTest
     [TestMethod]
     public async Task TestExecute()
     {
-        var connectionString = "Server=localhost;Database=Biflow;Integrated Security=true;MultipleActiveResultSets=true";
+        var connectionString = "Server=localhost;Database=Biflow;Integrated Security=true;MultipleActiveResultSets=true;TrustServerCertificate=true;";
 
         var settings = new Dictionary<string, string?>
         {
             { "ConnectionStrings:BiflowContext", connectionString },
-            { "EtlManagerExecutorPath", @"C:\EtlManager\EtlManagerExecutor\EtlManagerExecutor.exe" }
+            { "Executor:ConsoleApp:BiflowExecutorPath", @"C:\Program Files\Biflow\BiflowExecutor\BiflowExecutor.exe" }
         };
 
         var configuration = new ConfigurationBuilder()
@@ -41,8 +41,8 @@ public class ExecuteTest
 
         var executionJob = services.GetService<ConsoleAppExecutionJob>();
 
-        var jobId = Guid.Parse("6DE8C387-A5DB-4CC0-E489-08D98A13D18F");
-        var scheduleId = Guid.Parse("59B417EE-22E6-46D9-D055-08D9A6B72D90");
+        var jobId = Guid.Parse("9e337948-1cd4-4096-06c6-08da43c469bd");
+        var scheduleId = Guid.Parse("b4581c87-3d92-4841-2809-08daed9b68ee");
         var jobContext = new MockJobContext(jobId, scheduleId);
 
         ArgumentNullException.ThrowIfNull(executionJob);
