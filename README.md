@@ -111,6 +111,12 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 |AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
 |Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
 
+<br>
+
+The flowchart below describes the lifecycle and states of a step execution. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
+
+![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution*
+
 ## User Roles
 
 - Viewer
