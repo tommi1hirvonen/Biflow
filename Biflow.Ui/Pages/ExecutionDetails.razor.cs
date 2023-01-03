@@ -130,7 +130,7 @@ public partial class ExecutionDetails : ComponentBase
         var steps = Execution?.StepExecutions
             .Select(step =>
             {
-                var status = step.GetExecutionStatus().ToString() ?? "";
+                var status = step.ExecutionStatus.ToString() ?? "";
                 return new
                 {
                     Id = step.StepId,

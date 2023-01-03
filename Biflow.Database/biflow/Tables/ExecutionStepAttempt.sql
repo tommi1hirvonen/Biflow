@@ -38,6 +38,7 @@
         OR [ExecutionStatus] = 'Succeeded'
         OR [ExecutionStatus] = 'Warning'
         OR [ExecutionStatus] = 'Failed'
+        OR [ExecutionStatus] = 'Retry'
         OR [ExecutionStatus] = 'Stopped'
         OR [ExecutionStatus] = 'Skipped'
         OR [ExecutionStatus] = 'DependenciesFailed'

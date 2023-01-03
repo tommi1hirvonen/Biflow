@@ -54,25 +54,9 @@ public abstract class StepExecution
     public override string ToString() =>
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";
 
-    public StepExecutionStatus? GetExecutionStatus()
-    {
-        var lastStatus = StepExecutionAttempts
-            .MaxBy(e => e.RetryAttemptIndex)
+    public StepExecutionStatus? ExecutionStatus => StepExecutionAttempts
+            ?.MaxBy(e => e.RetryAttemptIndex)
             ?.ExecutionStatus;
-        var secondToLastStatus = StepExecutionAttempts
-            .OrderByDescending(e => e.RetryAttemptIndex)
-            .Skip(1)
-            .FirstOrDefault()
-            ?.ExecutionStatus;
-        // If the step is awaiting for retry, the second to last execution has a status of AwaitRetry
-        // and the last execution a status of NotStarted. The last execution is an unstarted placeholder
-        // until the retry interval has passed.
-        return (lastStatus, secondToLastStatus) switch
-        {
-            (StepExecutionStatus.NotStarted, StepExecutionStatus.AwaitRetry) => StepExecutionStatus.Running,
-            _ => lastStatus
-        };
-    }
 
     public double GetDurationInSeconds()
     {

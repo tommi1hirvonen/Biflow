@@ -151,20 +151,20 @@ internal abstract class StepExecutorBase
             {
                 _logger.LogWarning("{ExecutionId} {Step} Error executing step: {ErrorMessage}", StepExecution.ExecutionId, StepExecution, failure.ErrorMessage);
 
-                // No attempts left => break the loof and end this execution.
+                // No attempts left => break the loop and end this execution.
                 if (executionAttempt.RetryAttemptIndex >= StepExecution.RetryAttempts)
                 {
                     await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                     return false;
                 }
 
-                // There are attempts left => update execution with status AwaitRetry,
-                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.AwaitRetry);
+                // There are attempts left => update execution with status Retry,
+                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Retry);
                 
                 // Copy the execution attempt, increase counter and wait for the retry interval.
                 executionAttempt = executionAttempt.Clone();
                 executionAttempt.RetryAttemptIndex++;
-                executionAttempt.ExecutionStatus = StepExecutionStatus.NotStarted;
+                executionAttempt.ExecutionStatus = StepExecutionStatus.AwaitRetry;
                 StepExecution.StepExecutionAttempts.Add(executionAttempt);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {

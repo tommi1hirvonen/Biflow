@@ -169,7 +169,7 @@ internal class JobExecutor : IJobExecutor
         {
             status = ExecutionStatus.Failed;
         }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.AwaitRetry
+        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Retry
             || step.ExecutionStatus == StepExecutionStatus.Duplicate
             || step.ExecutionStatus == StepExecutionStatus.Warning))
         {
@@ -180,7 +180,8 @@ internal class JobExecutor : IJobExecutor
             status = ExecutionStatus.Stopped;
         }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted
-            || step.ExecutionStatus == StepExecutionStatus.Queued))
+            || step.ExecutionStatus == StepExecutionStatus.Queued
+            || step.ExecutionStatus == StepExecutionStatus.AwaitRetry))
         {
             status = ExecutionStatus.Suspended;
         }

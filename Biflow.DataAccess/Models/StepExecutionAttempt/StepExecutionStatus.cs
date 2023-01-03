@@ -8,6 +8,7 @@ public enum StepExecutionStatus
     Succeeded,
     Warning,
     Failed,
+    Retry,
     Stopped,
     Skipped,
     DependenciesFailed,
