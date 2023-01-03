@@ -97,7 +97,7 @@ internal class EmailService : INotificationService
             .SelectMany(e => e.StepExecutionAttempts)
             .Where(e => e.ExecutionStatus != StepExecutionStatus.Succeeded
                     && e.ExecutionStatus != StepExecutionStatus.Warning
-                    && e.ExecutionStatus != StepExecutionStatus.AwaitRetry)
+                    && e.ExecutionStatus != StepExecutionStatus.AwaitingRetry)
             .Select(e => $"""
             <tr>
                 <td>{e.StepExecution.StepName}</td>

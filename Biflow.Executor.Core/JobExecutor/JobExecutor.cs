@@ -181,7 +181,7 @@ internal class JobExecutor : IJobExecutor
         }
         else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted
             || step.ExecutionStatus == StepExecutionStatus.Queued
-            || step.ExecutionStatus == StepExecutionStatus.AwaitRetry))
+            || step.ExecutionStatus == StepExecutionStatus.AwaitingRetry))
         {
             status = ExecutionStatus.Suspended;
         }
