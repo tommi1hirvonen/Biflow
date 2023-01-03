@@ -11756,21 +11756,13 @@ textarea.form-control-lg {
 }
 
 .progress-bar.skipped {
-  background-color: #aaa;
+  background-color: #6c757d;
 }
 
-.progress-bar.stopped {
-  background-color: #dfa100;
-}
-
-.progress-bar.duplicate {
-  background-color: #dfa100;
-}
-
-.progress-bar.awaitretry {
-  background-color: #dfa100;
-}
-
+.progress-bar.duplicate,
+.progress-bar.stopped,
+.progress-bar.retry,
+.progress-bar.dependenciesfailed,
 .progress-bar.warning {
   background-color: #dfa100;
 }
@@ -11841,18 +11833,17 @@ textarea.form-control-lg {
   fill: var(--bs-secondary-color);
 }
 
-.dependency-graph .node.stopped rect {
+.dependency-graph .node.stopped rect,
+.dependency-graph .node.retry rect,
+.dependency-graph .node.duplicate rect,
+.dependency-graph .node.dependenciesfailed rect {
   stroke: #dfa100;
   stroke-width: 3px;
 }
 
-.dependency-graph .node.duplicate rect {
-  stroke: #dfa100;
-  stroke-width: 3px;
-}
-
-.dependency-graph .node.awaitretry rect {
-  stroke: #dfa100;
+.dependency-graph .node.awaitingretry rect,
+.dependency-graph .node.queued rect {
+  stroke: var(--bs-secondary);
   stroke-width: 3px;
 }
 

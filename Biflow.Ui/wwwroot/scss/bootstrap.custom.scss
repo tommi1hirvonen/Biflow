@@ -171,21 +171,13 @@ $navbar-gradient: #8F75DA;
 }
 
 .progress-bar.skipped {
-    background-color: #aaa;
+    background-color: $secondary;
 }
 
-.progress-bar.stopped {
-    background-color: $warning;
-}
-
-.progress-bar.duplicate {
-    background-color: $warning;
-}
-
-.progress-bar.awaitretry {
-    background-color: $warning;
-}
-
+.progress-bar.duplicate,
+.progress-bar.stopped,
+.progress-bar.retry,
+.progress-bar.dependenciesfailed,
 .progress-bar.warning {
     background-color: $warning;
 }
@@ -258,18 +250,17 @@ $navbar-gradient: #8F75DA;
     fill: var(--bs-secondary-color);
 }
 
-.dependency-graph .node.stopped rect {
+.dependency-graph .node.stopped rect,
+.dependency-graph .node.retry rect,
+.dependency-graph .node.duplicate rect,
+.dependency-graph .node.dependenciesfailed rect {
     stroke: $warning;
     stroke-width: 3px;
 }
 
-.dependency-graph .node.duplicate rect {
-    stroke: $warning;
-    stroke-width: 3px;
-}
-
-.dependency-graph .node.awaitretry rect {
-    stroke: $warning;
+.dependency-graph .node.awaitingretry rect,
+.dependency-graph .node.queued rect {
+    stroke: var(--bs-secondary);
     stroke-width: 3px;
 }
 
