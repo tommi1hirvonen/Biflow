@@ -69,6 +69,9 @@ public abstract class StepExecutionAttempt
 
     [NotMapped]
     public bool CanBeStopped =>
-        ExecutionStatus == StepExecutionStatus.Running || ExecutionStatus == StepExecutionStatus.AwaitingRetry;
+        ExecutionStatus == StepExecutionStatus.Running
+        || ExecutionStatus == StepExecutionStatus.AwaitingRetry
+        || ExecutionStatus == StepExecutionStatus.Queued
+        || ExecutionStatus == StepExecutionStatus.NotStarted && StepExecution.Execution.ExecutionStatus == Models.ExecutionStatus.Running;
 
 }

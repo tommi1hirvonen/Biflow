@@ -4,7 +4,6 @@ using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.StepExecutor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.PowerBI.Api.Models;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
@@ -117,32 +116,47 @@ internal abstract class OrchestratorBase
             _logger.LogError(ex, "{ExecutionId} {step} Error updating step execution's status to Queued", Execution.ExecutionId, step);
         }
 
-        // Wait until the semaphores can be entered and the step can be started.
-        // Start from the most detailed semaphores and move towards the main semaphore.
-        foreach (var target in step.Targets)
-        {
-            // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
-            if (_targetSemaphores.TryGetValue(target, out var semaphore))
-            {
-                await semaphore.WaitAsync();
-            }
-        }
-        await _stepTypeSemaphores[step.StepType].WaitAsync();
-        await _mainSemaphore.WaitAsync();
-
-        // Create a new step worker and start it asynchronously.
-        var executor = _stepExecutorFactory.Create(step);
-        
-        _logger.LogInformation("{ExecutionId} {step} Started step execution", Execution.ExecutionId, step);
+        var cancellationTokenSource = CancellationTokenSources[step];
+        var enteredSemaphores = new List<SemaphoreSlim>();
         bool result = false;
         try
         {
-            // Wait for the step to finish.
-            result = await executor.RunAsync(CancellationTokenSources[step]);
+            var cancellationToken = cancellationTokenSource.Token;
+
+            // Wait until the semaphores can be entered and the step can be started.
+            // Start from the most detailed semaphores and move towards the main semaphore.
+            // Keep track of semaphores that have been entered. If the step is stopped/canceled
+            // while waiting to enter one of the semaphores, they can be released afterwards.
+            foreach (var target in step.Targets)
+            {
+                // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
+                if (_targetSemaphores.TryGetValue(target, out var semaphore))
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    enteredSemaphores.Add(semaphore);
+                }
+            }
+            var stepTypeSemaphore = _stepTypeSemaphores[step.StepType];
+            await stepTypeSemaphore.WaitAsync(cancellationToken);
+            enteredSemaphores.Add(stepTypeSemaphore);
+            await _mainSemaphore.WaitAsync(cancellationToken);
+            enteredSemaphores.Add(_mainSemaphore);
+
+            // Create a new step worker.
+            var executor = _stepExecutorFactory.Create(step);
+            // Execute the worker and capture the result.
+            result = await executor.RunAsync(cancellationTokenSource);
+        }
+        catch (OperationCanceledException)
+        {
+            // We should only arrive here if the step was canceled while it was Queued.
+            // If the step was canceled once its execution had started,
+            // then the step's executor should handle the cancellation and the result is returned normally from RunAsync().
+            await UpdateExecutionCancelledAsync(step, cancellationTokenSource.Username);
         }
         catch (Exception ex)
         {
-            // Handle errors here that might not have been handled in the base executor.
+            // Handle errors here that might not have been handled in the base step executor.
             try
             {
                 var attempt = step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
@@ -161,20 +175,29 @@ internal abstract class OrchestratorBase
         {
             // Update the status.
             StepStatuses[step] = result ? ExecutionStatus.Succeeded : ExecutionStatus.Failed;
-            
+
             // Release the semaphores once to make room for new parallel executions.
-            _mainSemaphore.Release();
-            _stepTypeSemaphores[step.StepType].Release();
-            foreach (var target in step.Targets)
+            foreach (var semaphore in enteredSemaphores)
             {
-                if (_targetSemaphores.TryGetValue(target, out var semaphore))
-                {
-                    semaphore.Release();
-                }
+                semaphore.Release();
             }
 
             _logger.LogInformation("{ExecutionId} {step} Finished step execution", Execution.ExecutionId, step);
         }
+    }
+
+    private async Task UpdateExecutionCancelledAsync(StepExecution stepExecution, string username)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        foreach (var attempt in stepExecution.StepExecutionAttempts)
+        { 
+            attempt.StartDateTime ??= DateTimeOffset.Now;
+            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StoppedBy = username;
+            attempt.ExecutionStatus = StepExecutionStatus.Stopped;
+            context.Attach(attempt).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
     }
 
 }
