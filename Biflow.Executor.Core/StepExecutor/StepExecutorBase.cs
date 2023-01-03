@@ -113,7 +113,9 @@ internal abstract class StepExecutorBase
         using (var context = _dbContextFactory.CreateDbContext())
         {
             var duplicateExecution = await context.StepExecutionAttempts
-                .Where(e => e.StepId == StepExecution.StepId && e.ExecutionStatus == StepExecutionStatus.Running && e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
+                .Where(e => e.StepId == StepExecution.StepId
+                            && (e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
+                            && e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
                 .AnyAsync();
             // This step execution should be marked as duplicate.
             if (duplicateExecution)
