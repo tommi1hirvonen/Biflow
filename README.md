@@ -98,15 +98,18 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 
 |Status|Description|
 |-|-|
-|NotStarted |The step has not been started but is awaiting execution. All dependencies may not have yet been completed or there may be too many steps running in parallel. Job executions that have been termiated unexpectedly may have steps left with this status.|
-|Running    |The step is currently executing|
-|Succeeded  |The step was completed successfully|
-|Warning    |The step succeeded with warnings|
-|Failed     |The step encountered an exception and failed|
-|Skipped    |Some strict dependencies defined for the step failed or the step's execution condition was not met. Thus the step was skipped.|
-|AwaitRetry |The step has failed. A retry attempt will be made after the specified interval.|
-|Stopped    |User has manually stopped the execution of the entire job or of this specific step.|
-|Duplicate  |A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.|
+|NotStarted |This is the initial status of all steps after the execution has been created. The step has not been started but is awaiting evaluation or execution. All dependencies may not have yet been completed. Job executions that have been termiated unexpectedly may have steps left with this status.|
+|DependenciesFailed|One or more of the step's strict dependencies failed and the step's execution was skipped.|
+|Queued|The step's dependencies succeeded and the step is waiting for a parallel execution slot to open up.|
+|Skipped|The step's execution condition was not met and the step was skipped.|
+|Duplicate|A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.|
+|Running|The step is currently executing|
+|Succeeded|The step was completed successfully|
+|Warning|The step succeeded with warnings|
+|Failed|The step encountered an exception and failed|
+|Retry|The step failed but has retry attempts left|
+|AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
+|Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
 
 ## User Roles
 
