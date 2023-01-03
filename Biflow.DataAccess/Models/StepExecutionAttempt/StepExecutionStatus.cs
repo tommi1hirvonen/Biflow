@@ -10,6 +10,7 @@ public enum StepExecutionStatus
     Failed,
     Stopped,
     Skipped,
+    DependenciesFailed,
     AwaitRetry,
     Duplicate
 }

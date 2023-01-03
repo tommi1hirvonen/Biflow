@@ -40,6 +40,7 @@
         OR [ExecutionStatus] = 'Failed'
         OR [ExecutionStatus] = 'Stopped'
         OR [ExecutionStatus] = 'Skipped'
+        OR [ExecutionStatus] = 'DependenciesFailed'
         OR [ExecutionStatus] = 'AwaitRetry'
         OR [ExecutionStatus] = 'Duplicate')
 );

@@ -107,12 +107,12 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                     StepStatuses[step] = ExecutionStatus.Failed;
                     try
                     {
-                        await UpdateStepAsSkipped(step);
-                        _logger.LogWarning("{ExecutionId} {step} Marked step as SKIPPED", Execution.ExecutionId, step);
+                        await UpdateStepDependenciesFailedAsync(step);
+                        _logger.LogWarning("{ExecutionId} {step} Marked step as DependenciesFailed", Execution.ExecutionId, step);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "{ExecutionId} {step} Error marking step as SKIPPED", Execution.ExecutionId, step);
+                        _logger.LogError(ex, "{ExecutionId} {step} Error marking step as DependenciesFailed", Execution.ExecutionId, step);
                     }
                     break;
 
@@ -160,12 +160,12 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         return StepAction.Wait;
     }
 
-    private async Task UpdateStepAsSkipped(StepExecution step)
+    private async Task UpdateStepDependenciesFailedAsync(StepExecution step)
     {
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
         {
-            attempt.ExecutionStatus = StepExecutionStatus.Skipped;
+            attempt.ExecutionStatus = StepExecutionStatus.DependenciesFailed;
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
             context.Attach(attempt).State = EntityState.Modified;

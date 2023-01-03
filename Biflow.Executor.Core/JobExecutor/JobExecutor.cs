@@ -160,7 +160,8 @@ internal class JobExecutor : IJobExecutor
         var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
         ExecutionStatus status;
         if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
-            || step.ExecutionStatus == StepExecutionStatus.Skipped))
+            || step.ExecutionStatus == StepExecutionStatus.Skipped
+            || step.ExecutionStatus == StepExecutionStatus.DependenciesFailed))
         {
             status = ExecutionStatus.Succeeded;
         }
@@ -178,7 +179,8 @@ internal class JobExecutor : IJobExecutor
         {
             status = ExecutionStatus.Stopped;
         }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted))
+        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted
+            || step.ExecutionStatus == StepExecutionStatus.Queued))
         {
             status = ExecutionStatus.Suspended;
         }

@@ -10,6 +10,7 @@
         StepExecutionStatus.AwaitRetry => ("text-warning", "border-warning", FeatherIcon.Repeat),
         StepExecutionStatus.Running => ("text-primary", "border-primary", FeatherIcon.Play),
         StepExecutionStatus.Skipped => ("text-secondary", "border-secondary", FeatherIcon.SkipForward),
+        StepExecutionStatus.DependenciesFailed => ("text-warning", "border-warning", FeatherIcon.AlertCircle),
         StepExecutionStatus.Queued => ("text-secondary", "border-secondary", FeatherIcon.Clock),
         StepExecutionStatus.NotStarted => ("text-secondary", "border-secondary", FeatherIcon.Info),
         _ => ("", "", FeatherIcon.HelpCircle)
