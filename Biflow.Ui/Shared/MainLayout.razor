@@ -23,19 +23,11 @@
         <HxMessageBoxHost />
         <SchedulerStatusComponent OnStatusMessageResolved="message => SchedulerServiceErrorMessage = message" />
         <header>
-            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow @(SchedulerServiceErrorMessage is not null ? "bg-danger" : "bg-gradient-primary")">
+            <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
                 <text class="navbar-brand navbar-brand-bg me-0 px-3">Biflow</text>
                 <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                @if (SchedulerServiceErrorMessage is not null)
-                {
-                    <ul class="navbar-nav">
-                        <li>
-                            <strong class="navbar-text px-3">@SchedulerServiceErrorMessage</strong>
-                        </li>
-                    </ul>
-                }
                 <HxDropdownButtonGroup CssClass="ms-auto">
                     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="text-white" style="text-decoration: none;">
                         <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_light">
@@ -76,6 +68,12 @@
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
                 <main class="main pt-4 flex-grow-1">
+                    @if (SchedulerServiceErrorMessage is not null)
+                    {
+                        <HxAlert Color="ThemeColor.Warning">
+                            @SchedulerServiceErrorMessage
+                        </HxAlert>
+                    }
                     @Body
                 </main>
             </div>
