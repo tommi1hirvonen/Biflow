@@ -206,6 +206,7 @@
 </table>
 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
     <CxIcon Icon="FeatherIcon.Plus" />
+    @AddButtonText
 </HxButton>
 
 <DbObjectExplorerOffcanvas @ref="DbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
@@ -230,6 +231,8 @@
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
     [Parameter] public Func<DataObject, DataObjectMappingResult> GetMappingResult { get; set; } = null!;
+
+    [Parameter] public string AddButtonText { get; set; } = "";
 
     private IEnumerable<DataObject>? AllObjects { get; set; }
 

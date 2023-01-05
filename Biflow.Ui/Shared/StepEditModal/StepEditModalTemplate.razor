@@ -176,7 +176,8 @@
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.SourceMappingResult"
                                     LoadDataObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
-                                    LoadAllDataObjects="Modal.GetDataObjectsAsync" />
+                                    LoadAllDataObjects="Modal.GetDataObjectsAsync"
+                                    AddButtonText="Add source" />
                                 </div>
                             </div>
                             
@@ -195,7 +196,8 @@
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.TargetMappingResult"
                                     LoadDataObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
-                                    LoadAllDataObjects="Modal.GetDataObjectsAsync" />
+                                    LoadAllDataObjects="Modal.GetDataObjectsAsync"
+                                    AddButtonText="Add target" />
                                 </div>
                             </div>
                         }
