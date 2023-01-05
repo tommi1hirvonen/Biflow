@@ -27,7 +27,7 @@ public class BiflowContext : DbContext
     public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
     public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
-    public DbSet<SourceTargetObject> SourceTargetObjects => Set<SourceTargetObject>();
+    public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
     public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
@@ -183,34 +183,34 @@ public class BiflowContext : DbContext
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
         });
 
-        modelBuilder.Entity<SourceTargetObject>(e =>
+        modelBuilder.Entity<DataObject>(e =>
         {
-            e.HasMany(o => o.Sources)
+            e.HasMany(o => o.Readers)
             .WithMany(s => s.Sources)
             .UsingEntity<Dictionary<string, object>>("StepSource",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<SourceTargetObject>().WithMany().HasForeignKey("ObjectId"));
+            x => x.HasOne<DataObject>().WithMany().HasForeignKey("ObjectId"));
 
-            e.HasMany(o => o.Targets)
+            e.HasMany(o => o.Writers)
             .WithMany(t => t.Targets)
             .UsingEntity<Dictionary<string, object>>("StepTarget",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<SourceTargetObject>().WithMany().HasForeignKey("ObjectId"));
+            x => x.HasOne<DataObject>().WithMany().HasForeignKey("ObjectId"));
         });
 
-        modelBuilder.Entity<ExecutionSourceTargetObject>(e =>
+        modelBuilder.Entity<ExecutionDataObject>(e =>
         {
             e.HasMany(o => o.Sources)
             .WithMany(s => s.Sources)
             .UsingEntity<Dictionary<string, object>>("ExecutionStepSource",
             x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
-            x => x.HasOne<ExecutionSourceTargetObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
+            x => x.HasOne<ExecutionDataObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
 
             e.HasMany(o => o.Targets)
             .WithMany(t => t.Targets)
             .UsingEntity<Dictionary<string, object>>("ExecutionStepTarget",
             x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
-            x => x.HasOne<ExecutionSourceTargetObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
+            x => x.HasOne<ExecutionDataObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
         });
 
         modelBuilder.Entity<Schedule>()

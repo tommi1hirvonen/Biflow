@@ -367,7 +367,7 @@ FROM biflow.Dependency AS a
 
 
 -- Store and historize sources and targets
-INSERT INTO biflow.ExecutionSourceTargetObject (
+INSERT INTO biflow.ExecutionDataObject (
 	ExecutionId,
 	ObjectId,
 	ServerName,
@@ -384,7 +384,7 @@ SELECT
 	SchemaName,
 	ObjectName,
 	MaxConcurrentWrites
-FROM biflow.SourceTargetObject AS a
+FROM biflow.DataObject AS a
 WHERE EXISTS (
 	SELECT *
 	FROM #Steps AS x

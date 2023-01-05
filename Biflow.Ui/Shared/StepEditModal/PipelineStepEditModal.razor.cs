@@ -29,8 +29,8 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
             StepParameters = new List<StepParameterBase>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>(),
+            Sources = new List<DataObject>(),
+            Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 

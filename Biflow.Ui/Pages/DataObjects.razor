@@ -1,4 +1,4 @@
-﻿@page "/sourcestargets"
+﻿@page "/dataobjects"
 
 @attribute [Authorize(Roles = "Admin, Editor")]
 
@@ -7,9 +7,9 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-<PageTitle>Sources & Targets | Biflow</PageTitle>
+<PageTitle>Data Objects | Biflow</PageTitle>
 
-<h4>Sources & Targets</h4>
+<h4>Data Objects</h4>
 
 <div class="row mt-3">
     <div class="col">
@@ -71,10 +71,10 @@
                             }
                             else
                             {
-                                <Virtualize TItem="SourceTargetObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
+                                <Virtualize TItem="DataObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
                                     @{
-                                        var sources = obj.Sources.Count;
-                                        var targets = obj.Targets.Count;
+                                        var readers = obj.Readers.Count;
+                                        var writers = obj.Writers.Count;
                                     }
                                     <tr>
                                         @if (obj.ObjectId == EditObject?.ObjectId)
@@ -130,34 +130,34 @@
                                             </td>
                                             <td class="align-middle">
                                                 @{
-                                                    var sourcesTitle = $"{obj.ObjectName} source steps";
+                                                    var readersTitle = $"Steps reading from '{obj.ObjectName}'";
                                                 }
                                                 <a class="text-body" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
-                                                        SourcesTargetsModalObject = obj;
-                                                        SourcesTargetsModalGetSteps = o => o.Sources;
-                                                        SourcesTargetsModalGetStepsExpression = o => o.Sources;
-                                                        SourcesTargetsModalTitle = sourcesTitle;
-                                                        await SourcesTargetsModal.LetAsync(x => x.ShowAsync());
+                                                        StepssModalDataObject = obj;
+                                                        StepsModalGetSteps = o => o.Readers;
+                                                        StepsModalGetStepsExpression = o => o.Readers;
+                                                        StepsModalTitle = readersTitle;
+                                                        await StepsModal.LetAsync(x => x.ShowAsync());
                                                     }">
-                                                    @(sources > 0 ? $"{sources} source(s)" : null)
+                                                    @(readers > 0 ? $"{readers} reader(s)" : null)
                                                 </a>
                                             </td>
                                             <td class="align-middle">
                                                 @{
-                                                    var targetsTitle = $"{obj.ObjectName} target steps";
+                                                    var writersTitle = $"Steps writing to '{obj.ObjectName}'";
                                                 }
                                                 <a class="text-body" href="javascript:void(0)"
                                                     @onclick="async () =>
                                                     {
-                                                        SourcesTargetsModalObject = obj;
-                                                        SourcesTargetsModalGetSteps = o => o.Targets;
-                                                        SourcesTargetsModalGetStepsExpression = o => o.Targets;
-                                                        SourcesTargetsModalTitle = targetsTitle;
-                                                        await SourcesTargetsModal.LetAsync(x => x.ShowAsync());
+                                                        StepssModalDataObject = obj;
+                                                        StepsModalGetSteps = o => o.Writers;
+                                                        StepsModalGetStepsExpression = o => o.Writers;
+                                                        StepsModalTitle = writersTitle;
+                                                        await StepsModal.LetAsync(x => x.ShowAsync());
                                                     }">
-                                                    @(targets > 0 ? $"{targets} target(s)" : null)
+                                                    @(writers > 0 ? $"{writers} writer(s)" : null)
                                                 </a>
                                             </td>
                                         }
@@ -211,7 +211,7 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="SourcesTargetsModal" Size="ModalSize.Large" Title="@SourcesTargetsModalTitle" Scrollable="true">
+<HxModal @ref="StepsModal" Size="ModalSize.Large" Title="@StepsModalTitle" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -224,9 +224,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (SourcesTargetsModalObject is not null)
+                        @if (StepssModalDataObject is not null)
                         {
-                            @foreach (var step in SourcesTargetsModalGetSteps?.Invoke(SourcesTargetsModalObject)
+                            @foreach (var step in StepsModalGetSteps?.Invoke(StepssModalDataObject)
                                 .OrderBy(s => s.Job.JobName)
                                 .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                             {
@@ -255,14 +255,14 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await SourcesTargetsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private IList<SourceTargetObject>? Objects { get; set; }
+    private IList<DataObject>? Objects { get; set; }
 
-    private IEnumerable<SourceTargetObject> FilteredObjects =>
+    private IEnumerable<DataObject> FilteredObjects =>
         Objects?
         .Where(o => !ServerFilter.Any() || o.ServerName.ContainsIgnoreCase(ServerFilter))
         .Where(o => !DatabaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(DatabaseFilter))
@@ -272,24 +272,24 @@
         .ThenBy(o => o.DatabaseName)
         .ThenBy(o => o.SchemaName)
         .ThenBy(o => o.ObjectName)
-        ?? Enumerable.Empty<SourceTargetObject>();
+        ?? Enumerable.Empty<DataObject>();
 
-    private IEnumerable<SourceTargetObject> UnusedObjects =>
+    private IEnumerable<DataObject> UnusedObjects =>
         Objects?
-        .Where(t => !t.Sources.Any() && !t.Targets.Any())
-        ?? Enumerable.Empty<SourceTargetObject>();
+        .Where(t => !t.Readers.Any() && !t.Writers.Any())
+        ?? Enumerable.Empty<DataObject>();
 
     private HxModal? ConfirmDeleteModal { get; set; }
 
-    private SourceTargetObject EditObject { get; set; } = new();
+    private DataObject EditObject { get; set; } = new();
 
     private BiflowContext? EditContext { get; set; }
 
-    private HxModal? SourcesTargetsModal { get; set; }
-    private string SourcesTargetsModalTitle { get; set; } = string.Empty;
-    private SourceTargetObject? SourcesTargetsModalObject { get; set; }
-    private Func<SourceTargetObject, IList<Step>>? SourcesTargetsModalGetSteps { get; set; }
-    System.Linq.Expressions.Expression<Func<SourceTargetObject, IList<Step>>>? SourcesTargetsModalGetStepsExpression { get; set; }
+    private HxModal? StepsModal { get; set; }
+    private string StepsModalTitle { get; set; } = string.Empty;
+    private DataObject? StepssModalDataObject { get; set; }
+    private Func<DataObject, IList<Step>>? StepsModalGetSteps { get; set; }
+    System.Linq.Expressions.Expression<Func<DataObject, IList<Step>>>? StepsModalGetStepsExpression { get; set; }
 
     private string ServerFilter { get; set; } = string.Empty;
     private string DatabaseFilter { get; set; } = string.Empty;
@@ -299,10 +299,10 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        Objects = await context.SourceTargetObjects
-            .Include(o => o.Sources)
+        Objects = await context.DataObjects
+            .Include(o => o.Readers)
             .ThenInclude(s => s.Job)
-            .Include(o => o.Targets)
+            .Include(o => o.Writers)
             .ThenInclude(s => s.Job)
             .ToListAsync();
     }
@@ -323,35 +323,35 @@
         using var context = DbContextFactory.CreateDbContext();
         foreach (var obj in UnusedObjects.ToList())
         {
-            context.SourceTargetObjects.Remove(obj);
+            context.DataObjects.Remove(obj);
             Objects?.Remove(obj);
         }
         await context.SaveChangesAsync();
         await ConfirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
-    private async Task DeleteDatabaseObject(SourceTargetObject obj)
+    private async Task DeleteDatabaseObject(DataObject obj)
     {
         using var context = DbContextFactory.CreateDbContext();
-        context.SourceTargetObjects.Remove(obj);
+        context.DataObjects.Remove(obj);
         await context.SaveChangesAsync();
         Objects?.Remove(obj);
     }
 
     private async Task DeleteStepDatabaseObjectLinkAsync(Step step)
     {
-        if (SourcesTargetsModalObject is null
-            || SourcesTargetsModalGetSteps is null
-            || SourcesTargetsModalGetStepsExpression is null) return;
+        if (StepssModalDataObject is null
+            || StepsModalGetSteps is null
+            || StepsModalGetStepsExpression is null) return;
 
         using var context = DbContextFactory.CreateDbContext();
-        var obj = await context.SourceTargetObjects
-            .Include(SourcesTargetsModalGetStepsExpression)
-            .FirstOrDefaultAsync(o => o.ObjectId == SourcesTargetsModalObject.ObjectId);
+        var obj = await context.DataObjects
+            .Include(StepsModalGetStepsExpression)
+            .FirstOrDefaultAsync(o => o.ObjectId == StepssModalDataObject.ObjectId);
 
         if (obj is null) return;
 
-        var steps = SourcesTargetsModalGetSteps(obj);
+        var steps = StepsModalGetSteps(obj);
         var stepToRemove = steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (stepToRemove is not null)
         {
@@ -359,17 +359,17 @@
             await context.SaveChangesAsync();
         }
 
-        SourcesTargetsModalGetSteps(SourcesTargetsModalObject).Remove(step);
+        StepsModalGetSteps(StepssModalDataObject).Remove(step);
     }
 
-    private async Task SetEditContextAsync(SourceTargetObject obj)
+    private async Task SetEditContextAsync(DataObject obj)
     {
         EditContext?.Dispose();
         EditContext = DbContextFactory.CreateDbContext();
-        EditObject = await EditContext.SourceTargetObjects
-            .Include(o => o.Sources)
+        EditObject = await EditContext.DataObjects
+            .Include(o => o.Readers)
             .ThenInclude(s => s.Job)
-            .Include(o => o.Targets)
+            .Include(o => o.Writers)
             .ThenInclude(s => s.Job)
             .FirstAsync(o => o.ObjectId == obj.ObjectId);
         StateHasChanged();

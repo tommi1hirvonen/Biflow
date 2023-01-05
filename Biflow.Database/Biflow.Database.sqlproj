@@ -102,10 +102,10 @@
     <Build Include="biflow\Tables\ScheduleTag.sql" />
     <Build Include="biflow\Tables\JobConcurrency.sql" />
     <Build Include="biflow\Tables\ExecutionConcurrency.sql" />
-    <Build Include="biflow\Tables\SourceTargetObject.sql" />
+    <Build Include="biflow\Tables\DataObject.sql" />
     <Build Include="biflow\Tables\StepSource.sql" />
     <Build Include="biflow\Tables\StepTarget.sql" />
-    <Build Include="biflow\Tables\ExecutionSourceTargetObject.sql" />
+    <Build Include="biflow\Tables\ExecutionDataObject.sql" />
     <Build Include="biflow\Tables\ExecutionStepSource.sql" />
     <Build Include="biflow\Tables\ExecutionStepTarget.sql" />
     <Build Include="biflow\Tables\JobAuthorization.sql" />

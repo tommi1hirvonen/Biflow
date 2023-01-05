@@ -43,8 +43,8 @@ public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
             AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            Sources = new List<SourceTargetObject>(),
-            Targets = new List<SourceTargetObject>(),
+            Sources = new List<DataObject>(),
+            Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 }

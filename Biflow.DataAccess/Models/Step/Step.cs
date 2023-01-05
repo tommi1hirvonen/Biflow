@@ -85,9 +85,9 @@ public abstract class Step : IComparable
 
     public IList<Dependency> Dependencies { get; set; } = null!;
 
-    public IList<SourceTargetObject> Sources { get; set; } = null!;
+    public IList<DataObject> Sources { get; set; } = null!;
 
-    public IList<SourceTargetObject> Targets { get; set; } = null!;
+    public IList<DataObject> Targets { get; set; } = null!;
 
     public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 

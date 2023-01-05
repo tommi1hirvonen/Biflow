@@ -166,17 +166,17 @@
                         {
                             <div class="row">
                                 <div class="col">
-                                    <SourceTargetManagementComponent
+                                    <DataObjectManagementComponent
                                     ListName="source"
                                     StepType="Modal.Step.StepType"
-                                    SourceTargetObjects="Modal.Step.Sources"
+                                    DataObjects="Modal.Step.Sources"
                                     ComparisonObjects="Modal.Step.Targets"
                                     ConnectionId="ConnectionId"
                                     Connections="Modal.Connections"
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.SourceMappingResult"
-                                    LoadDatabaseObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
-                                    LoadAllDatabaseObjects="Modal.GetSourceTargetObjectsAsync" />
+                                    LoadDataObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
+                                    LoadAllDataObjects="Modal.GetDataObjectsAsync" />
                                 </div>
                             </div>
                             
@@ -185,17 +185,17 @@
                         {
                             <div class="row">
                                 <div class="col">
-                                    <SourceTargetManagementComponent
+                                    <DataObjectManagementComponent
                                     ListName="target"
                                     StepType="Modal.Step.StepType"
-                                    SourceTargetObjects="Modal.Step.Targets"
+                                    DataObjects="Modal.Step.Targets"
                                     ComparisonObjects="Modal.Step.Sources"
                                     ConnectionId="ConnectionId"
                                     Connections="Modal.Connections"
                                     SqlStatement="@SqlStatement"
                                     GetMappingResult="dbObject => dbObject.TargetMappingResult"
-                                    LoadDatabaseObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
-                                    LoadAllDatabaseObjects="Modal.GetSourceTargetObjectsAsync" />
+                                    LoadDataObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
+                                    LoadAllDataObjects="Modal.GetDataObjectsAsync" />
                                 </div>
                             </div>
                         }

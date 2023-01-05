@@ -47,9 +47,9 @@ public abstract class StepExecution
 
     public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
-    public IList<ExecutionSourceTargetObject> Sources { get; set; } = null!;
+    public IList<ExecutionDataObject> Sources { get; set; } = null!;
 
-    public IList<ExecutionSourceTargetObject> Targets { get; set; } = null!;
+    public IList<ExecutionDataObject> Targets { get; set; } = null!;
 
     public override string ToString() =>
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";

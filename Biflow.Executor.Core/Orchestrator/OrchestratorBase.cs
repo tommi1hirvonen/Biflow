@@ -15,7 +15,7 @@ internal abstract class OrchestratorBase
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
-    private readonly Dictionary<ExecutionSourceTargetObject, SemaphoreSlim> _targetSemaphores;
+    private readonly Dictionary<ExecutionDataObject, SemaphoreSlim> _targetSemaphores;
 
     protected Execution Execution { get; }
 

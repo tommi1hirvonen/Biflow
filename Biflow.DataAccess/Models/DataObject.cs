@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-[Table("SourceTargetObject")]
-public class SourceTargetObject
+[Table("DataObject")]
+public class DataObject
 {
     [Key]
     public Guid ObjectId { get; set; }
@@ -33,16 +33,16 @@ public class SourceTargetObject
     [Range(0, 100)]
     public int MaxConcurrentWrites { get; set; } = 1;
 
-    [NotMapped] public SourceTargetMappingResult SourceMappingResult { get; set; } = new();
-    [NotMapped] public SourceTargetMappingResult TargetMappingResult { get; set; } = new();
+    [NotMapped] public DataObjectMappingResult SourceMappingResult { get; set; } = new();
+    [NotMapped] public DataObjectMappingResult TargetMappingResult { get; set; } = new();
 
-    public IList<Step> Targets { get; set; } = null!;
+    public IList<Step> Writers { get; set; } = null!;
 
-    public IList<Step> Sources { get; set; } = null!;
+    public IList<Step> Readers { get; set; } = null!;
 
     public override bool Equals(object? obj)
     {
-        if (obj is SourceTargetObject dbo)
+        if (obj is DataObject dbo)
         {
             return ServerName.EqualsIgnoreCase(dbo.ServerName)
                 && DatabaseName.EqualsIgnoreCase(dbo.DatabaseName)
@@ -89,7 +89,7 @@ public class SourceTargetObject
             ObjectName.ToLower());
 }
 
-public class SourceTargetMappingResult
+public class DataObjectMappingResult
 {
     public bool IsNewAddition { get; set; } = false;
 

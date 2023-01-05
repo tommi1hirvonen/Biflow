@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-[Table("ExecutionSourceTargetObject")]
+[Table("ExecutionDataObject")]
 [PrimaryKey("ExecutionId", "ObjectId")]
-public class ExecutionSourceTargetObject
+public class ExecutionDataObject
 {
     public Guid ExecutionId { get; set; }
 
