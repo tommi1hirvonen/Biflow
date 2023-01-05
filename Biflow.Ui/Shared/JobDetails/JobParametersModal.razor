@@ -4,20 +4,36 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters" Scrollable="true">
+<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters" Scrollable="true" BodyCssClass="pt-0">
     <BodyTemplate>
-        <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
-                   Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
-            Html>
-            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
-                <CxIcon Icon="FeatherIcon.HelpCircle" />
-            </HxButton>
-        </HxPopover>
+        
         @if (Job is not null && Steps is not null)
         {
+            var type = ParameterValueType.String;
+            <div class="row py-3 mt-0 sticky-top" style="background-color: var(--sticky-top-modal-bg);">
+                <div class="col">
+                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
+                        <CxIcon Icon="FeatherIcon.Plus" />
+                        Add parameter
+                    </HxButton>
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <p class="text-danger mt-1">@ErrorMessage</p>
+                    }
+                </div>
+                <div class="col text-end">
+                    <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
+                                Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
+                        Html>
+                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
+                            <CxIcon Icon="FeatherIcon.HelpCircle" />
+                        </HxButton>
+                    </HxPopover>
+                </div>
+            </div>
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
             <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
-                <table id="parameters_table" class="table table-sm mt-3">
+                <table id="parameters_table" class="table table-sm">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -70,16 +86,6 @@
                         }
                     </tbody>
                 </table>
-                @{ var type = ParameterValueType.String; }
-                <div class="row">
-                    <div class="col">
-                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
-                            <CxIcon Icon="FeatherIcon.Plus" />
-                            Add parameter
-                        </HxButton>
-                    </div>
-                </div>
-                <p class="text-danger">@ErrorMessage</p>
             </EditForm>
         }
     </BodyTemplate>
@@ -109,6 +115,7 @@
 
     private async Task SubmitParameters()
     {
+        ErrorMessage = null;
         var (paramResult, paramMessage) = ParametersCheck();
         if (!paramResult)
         {
