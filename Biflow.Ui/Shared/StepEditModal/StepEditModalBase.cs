@@ -135,8 +135,8 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
             return;
         }
 
-        // Check source and target database objects.
-        var (result2, message2) = await CheckSourcesAndTargetsAsync();
+        // Check data objects.
+        var (result2, message2) = await CheckDataObjectsAsync();
         if (!result2)
         {
             StepError = message2 ?? string.Empty;
@@ -181,7 +181,7 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
         }
     }
 
-    private async Task<(bool Result, string? Message)> CheckSourcesAndTargetsAsync()
+    private async Task<(bool Result, string? Message)> CheckDataObjectsAsync()
     {
         if (Step is null)
         {

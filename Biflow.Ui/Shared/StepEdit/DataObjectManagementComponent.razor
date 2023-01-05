@@ -36,6 +36,14 @@
         </div>
     </div>
 </div>
+@{
+    var colspan = (ShowServer, ShowDatabase) switch
+    {
+        (true, true) => 5,
+        (false, true) or (true, false) => 4,
+        _ => 3
+    };
+}
 <table class="table table-sm table-hover small">
     <thead>
         <tr>
@@ -53,42 +61,57 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var obj in DataObjects
-        .OrderBy(x => x.ServerName)
-        .ThenBy(x => x.DatabaseName)
-        .ThenBy(x => x.SchemaName)
-        .ThenBy(x => x.ObjectName))
+        @if (DataObjects is null)
         {
-            var mappingResult = GetMappingResult(obj);
-            var className = mappingResult.IsCandidateForRemoval ? "text-danger" : mappingResult.IsUnreliableMapping ? "text-warning" : mappingResult.IsNewAddition ? "text-primary" : null;
-            var title = mappingResult.IsCandidateForRemoval ? "Object not found in latest mapping result" : mappingResult.IsUnreliableMapping ? "Unreliable mapping" : mappingResult.IsNewAddition ? "New object" : null;
-            <tr class="@className" title="@title">
-                @if (ShowServer || NewObject is not null)
-                {
-                    <td class="align-middle">
-                        @obj.ServerName
-                    </td>
-                }
-                @if (ShowDatabase || NewObject is not null)
-                {
-                    <td class="align-middle">
-                        @obj.DatabaseName
-                    </td>
-                }
-                <td class="align-middle">
-                    @obj.SchemaName
-                </td>
-                <td class="align-middle">
-                    @obj.ObjectName
-                </td>
-                <td>
-                    <HxButtonGroup Size="ButtonGroupSize.Small">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => DataObjects.Remove(obj)">
-                            <CxIcon Icon="FeatherIcon.Delete" />
-                        </HxButton>
-                    </HxButtonGroup>
-                </td>
+            <tr>
+                <td colspan="@colspan">Loading...</td>
             </tr>
+        }
+        else if (DataObjects.Any())
+        {
+            <tr>
+                <td colspan="@colspan">@NoDataObjectsText</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var obj in DataObjects
+           .OrderBy(x => x.ServerName)
+           .ThenBy(x => x.DatabaseName)
+           .ThenBy(x => x.SchemaName)
+           .ThenBy(x => x.ObjectName))
+            {
+                var mappingResult = GetMappingResult(obj);
+                var className = mappingResult.IsCandidateForRemoval ? "text-danger" : mappingResult.IsUnreliableMapping ? "text-warning" : mappingResult.IsNewAddition ? "text-primary" : null;
+                var title = mappingResult.IsCandidateForRemoval ? "Object not found in latest mapping result" : mappingResult.IsUnreliableMapping ? "Unreliable mapping" : mappingResult.IsNewAddition ? "New object" : null;
+                <tr class="@className" title="@title">
+                    @if (ShowServer || NewObject is not null)
+                    {
+                        <td class="align-middle">
+                            @obj.ServerName
+                        </td>
+                    }
+                    @if (ShowDatabase || NewObject is not null)
+                    {
+                        <td class="align-middle">
+                            @obj.DatabaseName
+                        </td>
+                    }
+                    <td class="align-middle">
+                        @obj.SchemaName
+                    </td>
+                    <td class="align-middle">
+                        @obj.ObjectName
+                    </td>
+                    <td>
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => DataObjects.Remove(obj)">
+                                <CxIcon Icon="FeatherIcon.Delete" />
+                            </HxButton>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+            }
         }
         @if (NewObject is not null)
         {
@@ -216,7 +239,7 @@
 
     [Parameter] public StepType StepType { get; set; }
 
-    [Parameter] public IList<DataObject> DataObjects { get; set; } = null!;
+    [Parameter] public IList<DataObject>? DataObjects { get; set; }
 
     [Parameter] public IList<DataObject> ComparisonObjects { get; set; } = null!;
 
@@ -233,6 +256,8 @@
     [Parameter] public Func<DataObject, DataObjectMappingResult> GetMappingResult { get; set; } = null!;
 
     [Parameter] public string AddButtonText { get; set; } = "";
+
+    [Parameter] public string NoDataObjectsText { get; set; } = "";
 
     private IEnumerable<DataObject>? AllObjects { get; set; }
 
@@ -259,7 +284,8 @@
 
     private void SubmitNewObject()
     {
-        if (NewObject is null) return;
+        ArgumentNullException.ThrowIfNull(NewObject);
+        ArgumentNullException.ThrowIfNull(DataObjects);
 
         if (DataObjects.Any(o => o.Equals(NewObject)))
         {
@@ -286,6 +312,8 @@
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(DataObjects);
+
             var proc = SqlStatement?.ParseStoredProcedureFromSqlStatement();
             var schema = proc?.Schema;
             var name = proc?.ProcedureName;
@@ -296,7 +324,7 @@
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             var dependencies = await LoadDataObjectDependencies(connectionId, schema, name);
 
-            // Add new database objects for the step if they are not present.
+            // Add new data objects for the step if they are not present.
             foreach (var dependency in dependencies)
             {
                 // Check if the same object exists in the comparison list. Skip this object if it does.

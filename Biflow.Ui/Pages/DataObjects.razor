@@ -66,7 +66,7 @@
                             else if (!Objects.Any())
                             {
                                 <tr>
-                                    <td colspan="8" class="px-3">No database objects</td>
+                                    <td colspan="8" class="px-3">No data objects</td>
                                 </tr>
                             }
                             else
@@ -172,11 +172,11 @@
     </div>
 </div>
 
-<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete database objects">
+<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                Delete these unused database objects?
+                Delete these unused data objects?
             </div>
         </div>
         <div class="row mt-3">
@@ -401,11 +401,11 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error", "The source/target object was modified outside of this session. Reload the page to view the most recent values.");
+            Messenger.AddError("Concurrency error", "The data object was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating database object", ex.Message);
+            Messenger.AddError("Error updating data object", ex.Message);
         }
     }
 
