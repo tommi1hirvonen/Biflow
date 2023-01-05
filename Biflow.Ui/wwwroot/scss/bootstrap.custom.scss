@@ -36,7 +36,7 @@ $body-bg-dark-custom: shade-color($dark, 15%);
 }
 
 [data-bs-theme="dark"] {
-    --sticky-top-modal-bg: #{rgba($body-bg-dark-custom, $alpha: 0.9)};
+    --sticky-top-modal-bg: #{rgba($body-bg-dark, $alpha: 0.9)};
 }
 
 // Generate button, which automatically switches between light and dark depending on current theme.

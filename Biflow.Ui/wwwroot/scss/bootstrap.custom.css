@@ -11629,7 +11629,7 @@ textarea.form-control-lg {
 }
 
 [data-bs-theme=dark] {
-  --sticky-top-modal-bg: rgba(28, 31, 35, 0.9);
+  --sticky-top-modal-bg: rgba(33, 37, 41, 0.9);
 }
 
 [data-bs-theme=dark] .btn-auto {
