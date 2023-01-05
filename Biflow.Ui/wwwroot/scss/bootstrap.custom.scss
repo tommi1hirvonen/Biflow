@@ -294,7 +294,6 @@ $navbar-gradient: #8F75DA;
 .feather {
     width: 16px;
     height: 16px;
-    vertical-align: text-bottom;
 }
 
 .tag-remove .feather {
@@ -306,6 +305,17 @@ $navbar-gradient: #8F75DA;
     cursor: pointer;
 }
 
+// Lucide icons
+.lucide {
+    width: 16px;
+    height: 16px;
+}
+
+.btn {
+    .feather, .lucide {
+        vertical-align: text-bottom;
+    }
+}
 
 // Sidebar
 .sidebar {

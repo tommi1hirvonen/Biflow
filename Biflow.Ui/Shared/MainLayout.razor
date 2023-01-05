@@ -30,14 +30,14 @@
                 </button>
                 <HxDropdownButtonGroup CssClass="ms-auto">
                     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="text-white" style="text-decoration: none;">
-                        <span class="theme-toggle-dropdown-icon d-none me-1" id="theme_dropdown_icon_light">
+                        <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_auto">
+                            <CxIcon Icon="LucideIcon.Contrast" />
+                        </span>
+                        <span class="theme-toggle-dropdown-icon d-none" id="theme_dropdown_icon_light">
                             <CxIcon Icon="FeatherIcon.Sun" />
                         </span>
                         <span class="theme-toggle-dropdown-icon d-none me-1" id="theme_dropdown_icon_dark">
                             <CxIcon Icon="FeatherIcon.Moon" />
-                        </span>
-                        <span class="theme-toggle-dropdown-icon d-none me-1" id="theme_dropdown_icon_auto">
-                            <CxIcon Icon="FeatherIcon.Circle" />
                         </span>
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="shadow">
@@ -53,7 +53,7 @@
                             Dark
                         </li>
                         <li class="dropdown-item" role="button" data-bs-theme-value="auto">
-                            <CxIcon Icon="FeatherIcon.Circle" />
+                            <CxIcon Icon="LucideIcon.Contrast" />
                             Auto
                         </li>
                     </HxDropdownMenu>

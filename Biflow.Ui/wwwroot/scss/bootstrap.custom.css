@@ -11875,7 +11875,6 @@ textarea.form-control-lg {
 .feather {
   width: 16px;
   height: 16px;
-  vertical-align: text-bottom;
 }
 
 .tag-remove .feather {
@@ -11885,6 +11884,15 @@ textarea.form-control-lg {
 
 .tag-remove:hover {
   cursor: pointer;
+}
+
+.lucide {
+  width: 16px;
+  height: 16px;
+}
+
+.btn .feather, .btn .lucide {
+  vertical-align: text-bottom;
 }
 
 .sidebar {

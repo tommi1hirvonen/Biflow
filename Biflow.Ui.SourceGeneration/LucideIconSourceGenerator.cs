@@ -5,7 +5,7 @@ using System.Text;
 namespace Biflow.Ui.SourceGeneration
 {
     [Generator]
-    internal class FeatherIconSourceGenerator : ISourceGenerator
+    internal class LucideIconSourceGenerator : ISourceGenerator
     {
         public void Execute(GeneratorExecutionContext context)
         {
@@ -20,25 +20,26 @@ namespace Biflow.Ui.SourceGeneration
 using System;
 namespace Biflow.Ui.Components
 {
-    public class FeatherIcon : IconBase
+    public class LucideIcon : IconBase
     {
-        private FeatherIcon(string svgText)
+        private LucideIcon(string svgText)
         {
             SvgText = svgText;
         }
 ");
 
-                var iconsDirectory = Path.Combine(Path.GetDirectoryName(tree.FilePath), "wwwroot", "icons", "feather");
+                var iconsDirectory = Path.Combine(Path.GetDirectoryName(tree.FilePath), "wwwroot", "icons", "lucide");
                 var svgFiles = Directory.GetFiles(iconsDirectory, "*.svg");
 
                 foreach (var file in svgFiles)
                 {
                     var svgText = File.ReadAllText(file);
+                    svgText = svgText.Replace(@"<svg", @"<svg class=""lucide""");
                     var iconName = Path.GetFileNameWithoutExtension(file);
                     var propertyName = iconName.GetPropertyNameFromIconName();
 
                     sourceBuilder.AppendLine($@"
-public static FeatherIcon {propertyName} => new FeatherIcon(""""""
+public static LucideIcon {propertyName} => new LucideIcon(""""""
 {svgText}
 """""");");
                 }
@@ -47,7 +48,7 @@ public static FeatherIcon {propertyName} => new FeatherIcon(""""""
     }
 }");
 
-                context.AddSource("FeatherIcon.g.cs", sourceBuilder.ToString());
+                context.AddSource("LucideIcon.g.cs", sourceBuilder.ToString());
 
             }
 
