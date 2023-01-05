@@ -12,13 +12,13 @@
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowSteps = false"
                 CssClass="@(!ShowSteps ? "active" : null)">
-                    <CxIcon Icon="FeatherIcon.Loader" />
+                    <CxIcon Icon="LucideIcon.ClipboardList" />
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowSteps = true"
                 CssClass="@(ShowSteps ? "active" : null)">
-                    <CxIcon Icon="FeatherIcon.List" />
+                    <CxIcon Icon="LucideIcon.ListChecks" />
                     Steps
                 </HxButton>
             </HxButtonGroup>
@@ -153,7 +153,7 @@
                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <CxIcon Icon="FeatherIcon.Loader" />
+                    <CxIcon Icon="LucideIcon.ClipboardList" />
                     Job
                 </TitleTemplate>
             </FilterDropdown>
@@ -178,7 +178,7 @@
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <TitleTemplate>
-                        <CxIcon Icon="FeatherIcon.List" />
+                        <CxIcon Icon="LucideIcon.ListChecks" />
                         Step
                     </TitleTemplate>
                 </FilterDropdown>

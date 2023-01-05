@@ -375,7 +375,7 @@ $navbar-gradient: #8F75DA;
     padding-bottom: 5px;
 }
 
-.sidebar .nav-link .feather {
+.sidebar .nav-link svg {
     margin-right: 5px;
     color: var(--bs-secondary-color);
 }
@@ -385,8 +385,8 @@ $navbar-gradient: #8F75DA;
     color: var(--bs-emphasis-color);
 }
 
-.sidebar .nav-link.active .feather,
-.sidebar .nav-link:hover .feather {
+.sidebar .nav-link.active svg,
+.sidebar .nav-link:hover svg {
     color: var(--bs-emphasis-color);
 }
 

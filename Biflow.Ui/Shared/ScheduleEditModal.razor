@@ -17,7 +17,7 @@
                         <label class="form-label">Job</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Loader" />
+                                <CxIcon Icon="LucideIcon.ClipboardList" />
                             </div>
                             <InputSelect class="form-select" @bind-Value="Schedule.JobId" disabled=@(Schedule.ScheduleId != Guid.Empty || Job is not null)>
                                 @if (Job is not null)
