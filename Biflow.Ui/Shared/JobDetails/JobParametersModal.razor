@@ -4,15 +4,15 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="OnClosed" Title="Edit job parameters" Scrollable="true" BodyCssClass="pt-0">
+<HxModal @ref="Modal" Size="ModalSize.Large" Title="Edit job parameters" Scrollable="true" BodyCssClass="pt-0">
     <BodyTemplate>
         
-        @if (Job is not null && Steps is not null)
+        @if (EditJob is not null && Steps is not null)
         {
             var type = ParameterValueType.String;
             <div class="row py-3 mt-0 sticky-top" style="background-color: var(--sticky-top-modal-bg);">
                 <div class="col">
-                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Job?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
+                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => EditJob?.JobParameters.Add(new JobParameter { ParameterValueType = type })">
                         <CxIcon Icon="FeatherIcon.Plus" />
                         Add parameter
                     </HxButton>
@@ -32,7 +32,7 @@
                 </div>
             </div>
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm id="job_parameter_form" Model="Job" OnValidSubmit="SubmitParameters">
+            <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
                 <table id="parameters_table" class="table table-sm">
                     <thead>
                         <tr>
@@ -44,11 +44,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (!Job?.JobParameters?.Any() ?? true)
+                        @if (!EditJob?.JobParameters?.Any() ?? true)
                         {
                             <tr><td colspan="5">No parameters</td></tr>
                         }
-                        @foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                        @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
                             var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.JobParameterId == param.ParameterId) ?? false);
                             <tr>
@@ -77,7 +77,7 @@
                                 </td>
                                 <td>
                                     <HxButtonGroup Size="ButtonGroupSize.Small">
-                                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Job?.JobParameters.Remove(param)">
+                                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => EditJob?.JobParameters.Remove(param)">
                                             <CxIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
                                     </HxButtonGroup>
@@ -97,21 +97,17 @@
 </HxModal>
 
 @code {
+    [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    [Parameter] public Action<ICollection<JobParameter>>? OnJobParametersSet { get; set; }
+
+    private Job? EditJob { get; set; }
 
     private HxModal? Modal { get; set; }
 
-    [CascadingParameter] public Job? Job { get; set; }
-
-    [CascadingParameter] public List<Step>? Steps { get; set; }
-
-    private BiflowContext Context { get; set; } = null!;
+    private BiflowContext? Context { get; set; }
 
     private string? ErrorMessage { get; set; }
-
-    protected override void OnInitialized()
-    {
-        Context = DbContextFactory.CreateDbContext();
-    }
 
     private async Task SubmitParameters()
     {
@@ -123,19 +119,23 @@
             return;
         }
 
-        foreach (var param in Job?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
         {
             param.SetParameterValue();
         }
 
         try
         {
+            ArgumentNullException.ThrowIfNull(Context);
             await Context.SaveChangesAsync();
             await Modal.LetAsync(x => x.HideAsync());
-            if (Job is not null)
+            if (EditJob is not null)
             {
-                Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();    
+                OnJobParametersSet?.Invoke(EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList());
             }
+            Context?.Dispose();
+            Context = null;
+            EditJob = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -151,7 +151,7 @@
 
     private (bool Result, string? Message) ParametersCheck()
     {
-        var parameters = Job?.JobParameters
+        var parameters = EditJob?.JobParameters
             .OrderBy(param => param.ParameterName)
             .ToList() ?? Enumerable.Empty<JobParameter>().ToList();
         foreach (var param in parameters)
@@ -172,45 +172,14 @@
         return (true, null);
     }
 
-    public void OnClosed()
+    public async Task ShowAsync(Guid jobId)
     {
-        // Reset added entities.
-        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Added).ToList())
-        {
-            if (entity.Entity is JobParameter param)
-            {
-                if (Job?.JobParameters.Contains(param) == true)
-                    Job?.JobParameters.Remove(param);
-            }
-
-            entity.State = EntityState.Detached;
-        }
-
-        // Reset deleted entities.
-        foreach (var entity in Context.ChangeTracker.Entries().Where(e => e.Entity is not null && e.State == EntityState.Deleted).ToList())
-        {
-            if (entity.Entity is JobParameter param)
-            {
-                if (Job?.JobParameters.Contains(param) == false)
-                    Job?.JobParameters.Add(param);
-            }
-
-            entity.State = EntityState.Unchanged;
-        }
-
-        // Reset changed entities.
-        Context.ChangeTracker
-            .Entries()
-            .Where(e => e.Entity is not null)
-            .ToList()
-            .ForEach(e => e.State = EntityState.Detached);
-    }
-
-    public async Task Show()
-    {
-        ArgumentNullException.ThrowIfNull(Job);
         await Modal.LetAsync(x => x.ShowAsync());
-        Context.Attach(Job);
+        Context?.Dispose();
+        Context = DbContextFactory.CreateDbContext();
+        EditJob = await Context.Jobs
+            .Include(j => j.JobParameters)
+            .FirstAsync(j => j.JobId == jobId);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

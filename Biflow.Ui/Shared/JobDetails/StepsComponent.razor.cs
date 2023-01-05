@@ -271,6 +271,20 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
+    private async Task ShowJobParametersModalAsync()
+    {
+        if (Job is null || JobParametersModal is null) return;
+
+        await JobParametersModal.ShowAsync(Job.JobId);
+    }
+
+    private void OnJobParametersSet(ICollection<JobParameter> parameters)
+    {
+        if (Job is null) return;
+
+        Job.JobParameters = parameters;
+    }
+
     private async Task ShowStepDetailsModal(Step step)
     {
         DetailsModalStep = step;
