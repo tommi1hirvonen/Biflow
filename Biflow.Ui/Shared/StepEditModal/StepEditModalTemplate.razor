@@ -221,14 +221,14 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" @onclick="ToggleFullscreen" CssClass="me-auto">
+        <HxButton Color="ThemeColor.Secondary" @onclick="ToggleFullscreen" CssClass="me-auto" title="@(Fullscreen ? "Windowed" : "Fullscreen")">
             @if (Fullscreen)
             {
-                <CxIcon Icon="FeatherIcon.Minimize2" />
+                <CxIcon Icon="FeatherIcon.Minimize" />
             }
             else
             {
-                <CxIcon Icon="FeatherIcon.Maximize2" />
+                <CxIcon Icon="FeatherIcon.Maximize" />
             }
         </HxButton>
         
