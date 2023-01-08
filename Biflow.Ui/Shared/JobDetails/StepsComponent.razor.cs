@@ -53,8 +53,7 @@ public partial class StepsComponent : ComponentBase
 
     private IEnumerable<Tag> Tags => Steps?
         .SelectMany(step => step.Tags)
-        .Select(tag => tag with { Steps = null! })
-        .Distinct()
+        .DistinctBy(t => t.TagName)
         .OrderBy(t => t.TagName)
         ?? Enumerable.Empty<Tag>();
 

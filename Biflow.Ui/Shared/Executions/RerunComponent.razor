@@ -285,8 +285,7 @@ else if (Job is null || Steps is null)
 
     private IEnumerable<Tag> Tags => Steps?
         .SelectMany(step => step.Tags)
-        .Select(tag => tag with { Steps = null! })
-        .Distinct()
+        .DistinctBy(t => t.TagName)
         .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
 
     private IEnumerable<Step> StepsAvailableToExecute => Steps?
