@@ -240,9 +240,9 @@ public class BiflowContext : DbContext
             .HasForeignKey("ExecutionId", "StepId")
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(p => p.ExecutionParameter)
+            e.HasOne(p => p.InheritFromExecutionParameter)
             .WithMany(p => p!.StepExecutionParameters)
-            .HasForeignKey(p => new { p.ExecutionId, p.ExecutionParameterId })
+            .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })
             .IsRequired(false);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepExecutionParameter>(ParameterType.Base)

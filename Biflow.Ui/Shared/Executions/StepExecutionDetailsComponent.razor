@@ -427,7 +427,7 @@
                 </dt>
                 <dd class="col-sm-9">
                     @($"{param.ParameterValue} ({param.ParameterValueType})")
-                    @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.ExecutionParameter?.ParameterName})" : null)
+                    @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.InheritFromExecutionParameter?.ParameterName})" : null)
                 </dd>
             }
         </dl>

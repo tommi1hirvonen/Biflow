@@ -36,16 +36,16 @@
                     <td class="align-middle">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="inherit_@(param.ParameterId)"
-                                   checked=@(param.JobParameterId is not null)
+                                   checked=@(param.InheritFromJobParameterId is not null)
                                    disabled=@(!JobParameters.Any())
                                    @onchange="args => SetJobParameter((bool)args.Value!, param)">
                             <label class="form-check-label" for="inherit_@(param.ParameterId)"></label>
                         </div>
                     </td>
-                    @if (param.JobParameterId is not null)
+                    @if (param.InheritFromJobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
                                 @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
                                             {
                                     <option value="@jobParam.ParameterId">
@@ -88,11 +88,11 @@
     {
         if (inheritFromJob)
         {
-            param.JobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+            param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
         }
         else
         {
-            param.JobParameterId = null;
+            param.InheritFromJobParameterId = null;
         }
     }
 }

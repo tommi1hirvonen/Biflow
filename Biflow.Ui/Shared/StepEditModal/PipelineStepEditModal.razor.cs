@@ -37,7 +37,7 @@ public partial class PipelineStepEditModal : ParameterizedStepEditModal<Pipeline
     protected override Task<PipelineStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.PipelineSteps
         .Include(step => step.StepParameters)
-        .ThenInclude(p => p.JobParameter)
+        .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

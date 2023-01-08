@@ -36,7 +36,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
     protected override Task<PackageStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.PackageSteps
         .Include(step => step.StepParameters)
-        .ThenInclude(p => p.JobParameter)
+        .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

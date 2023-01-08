@@ -36,18 +36,18 @@ public abstract class StepExecutionParameterBase
 
     public ParameterValueType ParameterValueType
     {
-        get => ExecutionParameter?.ParameterValueType ?? _parameterValueType;
+        get => InheritFromExecutionParameter?.ParameterValueType ?? _parameterValueType;
         set => _parameterValueType = value;
     }
 
     private ParameterValueType _parameterValueType = ParameterValueType.String;
 
-    public Guid? ExecutionParameterId { get; set; }
+    public Guid? InheritFromExecutionParameterId { get; set; }
 
     [Column(TypeName = "sql_variant")]
     public object? ExecutionParameterValue { get; set; }
 
-    public ExecutionParameter? ExecutionParameter { get; set; }
+    public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
     public ParameterizedStepExecution StepExecution { get; set; } = null!;
 }

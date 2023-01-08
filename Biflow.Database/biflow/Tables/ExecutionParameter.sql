@@ -38,11 +38,11 @@ CREATE TRIGGER [biflow].[Trigger_ExecutionParameter]
         )
 
         UPDATE biflow.ExecutionStepParameter
-        SET ExecutionParameterId = NULL
+        SET InheritFromExecutionParameterId = NULL
         WHERE EXISTS (
             SELECT *
             FROM deleted
-            WHERE ExecutionStepParameter.ExecutionId = deleted.ExecutionId AND ExecutionStepParameter.ExecutionParameterId = deleted.ParameterId
+            WHERE ExecutionStepParameter.ExecutionId = deleted.ExecutionId AND ExecutionStepParameter.InheritFromExecutionParameterId = deleted.ParameterId
         )
 
         UPDATE biflow.ExecutionStepConditionParameter

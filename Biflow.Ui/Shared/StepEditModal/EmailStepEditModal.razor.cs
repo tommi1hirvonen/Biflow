@@ -11,7 +11,7 @@ public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
     protected override Task<EmailStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.EmailSteps
         .Include(step => step.StepParameters)
-        .ThenInclude(p => p.JobParameter)
+        .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

@@ -26,7 +26,7 @@ public partial class ExeStepEditModal : ParameterizedStepEditModal<ExeStep>
     protected override Task<ExeStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.ExeSteps
         .Include(step => step.StepParameters)
-        .ThenInclude(p => p.JobParameter)
+        .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

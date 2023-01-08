@@ -311,7 +311,7 @@ INSERT INTO biflow.ExecutionStepParameter (
 	ParameterName,
 	ParameterValue,
 	ParameterValueType,
-	ExecutionParameterId
+	InheritFromExecutionParameterId
 )
 SELECT
 	a.ExecutionId,
@@ -322,7 +322,7 @@ SELECT
 	b.ParameterName,
 	b.ParameterValue,
 	b.ParameterValueType,
-	b.JobParameterId
+	b.InheritFromJobParameterId
 FROM biflow.ExecutionStep AS a
 	JOIN biflow.StepParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @BiflowExecutionId

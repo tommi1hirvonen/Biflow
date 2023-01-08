@@ -55,10 +55,10 @@ internal abstract class StepExecutorBase
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
-                foreach (var param in parameterized.StepExecutionParameters.Where(p => p.ExecutionParameter is not null))
+                foreach (var param in parameterized.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
                     context.Attach(param);
-                    param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
+                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
                 }
                 await context.SaveChangesAsync();
             }

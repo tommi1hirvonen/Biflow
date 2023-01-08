@@ -50,7 +50,7 @@
                         }
                         @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
-                            var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.JobParameterId == param.ParameterId) ?? false);
+                            var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.InheritFromJobParameterId == param.ParameterId) ?? false);
                             <tr>
                                 <td>
                                     <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
@@ -60,7 +60,7 @@
                                     @if (count > 0)
                                     {
                                         <HxPopover Title="@($"Steps using {param.ParameterName}")"
-                                                Content="@string.Join(", ", Steps.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.JobParameterId == param.ParameterId)).Select(s => s.StepName))"
+                                                Content="@string.Join(", ", Steps.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.InheritFromJobParameterId == param.ParameterId)).Select(s => s.StepName))"
                                                 Trigger="PopoverTrigger.Focus">
                                             <ChildContent>
                                                 <a href="javascript:void(0)">

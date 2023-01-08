@@ -19,7 +19,7 @@ public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
     protected override Task<SqlStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.SqlSteps
         .Include(step => step.StepParameters)
-        .ThenInclude(p => p.JobParameter)
+        .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

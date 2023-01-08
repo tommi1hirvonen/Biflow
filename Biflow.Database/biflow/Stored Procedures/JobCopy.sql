@@ -239,7 +239,7 @@ INSERT INTO biflow.StepParameter (
 	ParameterType,
 	ParameterValueType,
 	ParameterValue,
-	JobParameterId
+	InheritFromJobParameterId
 )
 SELECT NEWID(),
 	B.StepIdNew,
