@@ -136,19 +136,18 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             }
         }
         
-        AddOutput(status.Output?.ToString());
-        
         if (status.RuntimeStatus == "Completed")
         {
+            AddOutput(status.Output?.ToString());
             return Result.Success();
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return Result.Failure("Function was terminated");
+            return Result.Failure(status.Output?.ToString() ?? "Function was terminated");
         }
         else
         {
-            return Result.Failure("Function failed");
+            return Result.Failure(status.Output?.ToString() ?? "Function failed");
         }
 
     }
