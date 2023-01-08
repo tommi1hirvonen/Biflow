@@ -130,7 +130,7 @@ The flowchart below describes the lifecycle and states of a step execution. Duri
     - In addition to the same rights as the Viewer role
         - Can manage schedules
         - Can execute jobs manually
-        - Can edit job parameters and concurrency
+        - Can edit job parameters
 
 - Editor
     - In addition to the same rights as the Operator role
@@ -139,6 +139,7 @@ The flowchart below describes the lifecycle and states of a step execution. Duri
     - In addition to the same rights as the Editor role
         - Can manage users and global settings
         - Can manage other users' subscriptions
+        - Can view stack traces of failed steps (when available)
 
 ## Encryption
 
