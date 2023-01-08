@@ -213,7 +213,7 @@ internal abstract class StepExecutorBase
             .Where(m => m is Output)
             .Cast<Output>()
             .Select(o => o.Message);
-        var message = string.Join("\n", outputs);
+        var message = string.Join("\n\n", outputs);
         return string.IsNullOrWhiteSpace(message) ? null : message;
     }
 
