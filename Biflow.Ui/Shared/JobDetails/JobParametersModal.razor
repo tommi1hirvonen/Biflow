@@ -39,7 +39,8 @@
                             <th>Name</th>
                             <th>Type</th>
                             <th>Value</th>
-                            <th>Steps</th>
+                            <th>Inheriting steps</th>
+                            <th>Assigning steps</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -50,29 +51,48 @@
                         }
                         @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                         {
-                            var count = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.InheritFromJobParameterId == param.ParameterId) ?? false);
+                            var inheritingStepCount = Steps.Select(s => s as ParameterizedStep).Count(s => s?.StepParameters.Any(p => p.InheritFromJobParameterId == param.ParameterId) ?? false);
                             <tr>
                                 <td>
                                     <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                 </td>
                                 <ParameterTypeValueEditComponent Parameter="param" />
                                 <td>
-                                    @if (count > 0)
+                                    @if (inheritingStepCount > 0)
                                     {
-                                        <HxPopover Title="@($"Steps using {param.ParameterName}")"
+                                        <HxPopover Title="@($"Steps inheriting {param.ParameterName}")"
                                                 Content="@string.Join(", ", Steps.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.InheritFromJobParameterId == param.ParameterId)).Select(s => s.StepName))"
                                                 Trigger="PopoverTrigger.Focus">
                                             <ChildContent>
                                                 <a href="javascript:void(0)">
-                                                    @count
-                                                    step(s)
+                                                    @inheritingStepCount
+                                                    inheriting step(s)
                                                 </a>
                                             </ChildContent>
                                         </HxPopover>
                                     }
                                     else
                                     {
-                                        <span>0 steps</span>   
+                                        <span>0 inheriting steps</span>   
+                                    }
+                                </td>
+                                <td>
+                                    @if (param.AssigningStepParameters.Count > 0)
+                                    {
+                                        <HxPopover Title="@($"Steps assigning {param.ParameterName}")"
+                                       Content="@string.Join(", ", param.AssigningStepParameters.Select(p => p.Step.StepName))"
+                                       Trigger="PopoverTrigger.Focus">
+                                            <ChildContent>
+                                                <a href="javascript:void(0)">
+                                                    @param.AssigningStepParameters.Count
+                                                    assigning step(s)
+                                                </a>
+                                            </ChildContent>
+                                        </HxPopover>
+                                    }
+                                    else
+                                    {
+                                        <span>0 assigning steps</span>
                                     }
                                 </td>
                                 <td>
@@ -122,6 +142,12 @@
         foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
         {
             param.SetParameterValue();
+
+            // Update the referencing job step parameter names to match the possibly changed new name.
+            foreach (var referencingJobStepParam in param.AssigningStepParameters)
+            {
+                referencingJobStepParam.ParameterName = param.ParameterName;
+            }
         }
 
         try
@@ -179,6 +205,8 @@
         Context = DbContextFactory.CreateDbContext();
         EditJob = await Context.Jobs
             .Include(j => j.JobParameters)
+            .ThenInclude(p => p.AssigningStepParameters)
+            .ThenInclude(p => p.Step)
             .FirstAsync(j => j.JobId == jobId);
     }
 

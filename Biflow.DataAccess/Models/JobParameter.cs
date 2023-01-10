@@ -11,4 +11,8 @@ public class JobParameter : ParameterBase
     public Guid JobId { get; set; }
 
     public Job Job { get; set; } = null!;
+
+    public ICollection<StepParameterBase> InheritingStepParameters { get; set; } = null!;
+
+    public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
 }

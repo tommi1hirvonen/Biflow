@@ -228,10 +228,16 @@ public class BiflowContext : DbContext
             .WithMany(step => step.StepParameters)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(p => p.InheritFromJobParameter).WithMany(p => p.InheritingStepParameters);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepParameter>(ParameterType.Base)
             .HasValue<PackageStepParameter>(ParameterType.Package)
             .HasValue<JobStepParameter>(ParameterType.Job);
+        });
+
+        modelBuilder.Entity<JobStepParameter>(e =>
+        {
+            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters);
         });
 
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
