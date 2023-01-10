@@ -230,7 +230,8 @@ public class BiflowContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepParameter>(ParameterType.Base)
-            .HasValue<PackageStepParameter>(ParameterType.Package);
+            .HasValue<PackageStepParameter>(ParameterType.Package)
+            .HasValue<JobStepParameter>(ParameterType.Job);
         });
 
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
@@ -246,7 +247,8 @@ public class BiflowContext : DbContext
             .IsRequired(false);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<StepExecutionParameter>(ParameterType.Base)
-            .HasValue<PackageStepExecutionParameter>(ParameterType.Package);
+            .HasValue<PackageStepExecutionParameter>(ParameterType.Package)
+            .HasValue<JobStepExecutionParameter>(ParameterType.Job);
         });
 
         modelBuilder.Entity<StepExecutionConditionParameter>(e =>

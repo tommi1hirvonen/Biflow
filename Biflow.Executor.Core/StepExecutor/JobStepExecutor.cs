@@ -79,6 +79,34 @@ internal class JobStepExecutor : StepExecutorBase
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
             AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
         }
+
+        // Assign step parameter values to the initialized execution.
+        if (Step.StepExecutionParameters.Any())
+        {
+            try
+            {
+                using var context = _dbContextFactory.CreateDbContext();
+                var execution = await context.Executions
+                    .Include(e => e.ExecutionParameters)
+                    .FirstAsync(e => e.ExecutionId == jobExecutionId);
+                var parameters = Step.StepExecutionParameters
+                    .Cast<JobStepExecutionParameter>()
+                    .Join(execution.ExecutionParameters,
+                    stepParam => stepParam.AssignToJobParameterId,
+                    jobParam => jobParam.ParameterId,
+                    (stepParam, jobParam) => (stepParam, jobParam));
+                foreach (var (stepParam, jobParam) in parameters)
+                {
+                    jobParam.ParameterValueType = stepParam.ParameterValueType;
+                    jobParam.ParameterValue = stepParam.ParameterValue;
+                }
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure(ex, $"Error assigning step parameter values to initialized execution's parameters for execution id {jobExecutionId}");
+            }
+        }
             
         try
         {

@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class JobStepExecution : StepExecution
+public class JobStepExecution : ParameterizedStepExecution
 {
     public JobStepExecution(string stepName) : base(stepName, StepType.Job)
     {

@@ -29,4 +29,5 @@ CREATE TRIGGER [biflow].[Trigger_Job]
         -- https://support.microsoft.com/en-us/help/321843/error-message-1785-occurs-when-you-create-a-foreign-key-constraint-tha
         DELETE FROM biflow.Step WHERE JobId IN (SELECT JobId FROM deleted) OR JobToExecuteId IN (SELECT JobId FROM deleted)
         DELETE FROM biflow.Job WHERE JobId IN (SELECT JobId FROM deleted)
+        DELETE FROM biflow.JobParameter WHERE JobId IN (SELECT JobId FROM deleted)
     END

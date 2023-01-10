@@ -1,4 +1,4 @@
-﻿@inherits StepEditModalBase<JobStep>
+﻿@inherits ParameterizedStepEditModal<JobStep>
 
 <StepEditModalTemplate Modal="this" TStep="JobStep">
     @if (Step is not null)
@@ -10,7 +10,7 @@
                                TItem="Job"
                                TValue="Guid?"
                                DataProvider="GetJobSuggestions"
-                               ValueChanged="id => Step.JobToExecuteId = id"
+                               ValueChanged="id => SetJobToExecute(id)"
                                Value="Step.JobToExecuteId"
                                ValueExpression="() => Step.JobToExecuteId"
                                TextSelector="job => job.JobName"
@@ -40,5 +40,6 @@
                 </div>
             </div>
         </div>
+        <JobStepParameterEditComponent @ref="ParameterEdit" Step="Step" JobParameters="Job?.JobParameters" TargetJobId="Step.JobToExecuteId" />
     }
 </StepEditModalTemplate>

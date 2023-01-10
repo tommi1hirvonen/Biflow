@@ -3,5 +3,6 @@
 public enum ParameterType
 {
     Package,
+    Job,
     Base
 }

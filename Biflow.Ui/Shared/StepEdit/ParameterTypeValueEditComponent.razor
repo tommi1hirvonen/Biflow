@@ -11,46 +11,11 @@
     </div>
     </td>
     <td>
-        @switch (Parameter?.ParameterValueType)
-        {
-            case ParameterValueType.Boolean:
-                <div class="input-group">
-                    <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ValueBoolean">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                    </InputSelectBoolean>
-                </div>
-                break;
-            case ParameterValueType.DateTime:
-                <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss"  type="datetime-local">
-                break;
-            case ParameterValueType.Decimal:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDecimal" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.Double:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDouble" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.Int16:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt16" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.Int32:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt32" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.Int64:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt64" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.Single:
-                <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueSingle" placeholder="Value"></InputNumber>
-                break;
-            case ParameterValueType.String:
-                <InputText class="form-control form-control-sm" @bind-Value="Parameter.ValueString" placeholder="Value" />
-                break;
-        }
+        <ParameterValueEditComponent Parameter="Parameter" />
     </td>
     
 }
 
 @code {
-    [Parameter]
-    public ParameterBase? Parameter { get; set; }
+    [Parameter] public ParameterBase? Parameter { get; set; }
 }

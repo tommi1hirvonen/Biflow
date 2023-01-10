@@ -117,7 +117,8 @@ INSERT INTO biflow.StepParameter (
 	ParameterType,
 	ParameterValueType,
 	ParameterValue,
-	InheritFromJobParameterId
+	InheritFromJobParameterId,
+	AssignToJobParameterId
 )
 SELECT NEWID(),
 	@StepIdNew,
@@ -126,7 +127,8 @@ SELECT NEWID(),
 	a.ParameterType,
 	a.ParameterValueType,
 	a.ParameterValue,
-	JobParameterId = CASE WHEN b.JobId = @TargetJobId THEN a.InheritFromJobParameterId END
+	JobParameterId = CASE WHEN b.JobId = @TargetJobId THEN a.InheritFromJobParameterId END,
+	a.AssignToJobParameterId
 FROM biflow.StepParameter AS a
 	INNER JOIN biflow.Step AS b ON a.StepId = b.StepId
 WHERE a.StepId = @StepId
