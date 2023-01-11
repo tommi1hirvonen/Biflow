@@ -222,6 +222,9 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<ExecutionParameter>()
             .ToTable(t => t.HasTrigger("Trigger_ExecutionParameter"));
 
+        modelBuilder.Entity<JobParameter>()
+            .ToTable(t => t.HasTrigger("Trigger_JobParameter"));
+
         modelBuilder.Entity<StepParameterBase>(e =>
         {
             e.HasOne(parameter => parameter.Step)
