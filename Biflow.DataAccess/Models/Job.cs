@@ -70,7 +70,7 @@ public class Job
     
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
     
-    public ICollection<JobParameter> JobParameters { get; set; } = null!;
+    public IList<JobParameter> JobParameters { get; set; } = null!;
 
     [ValidateComplexType]
     public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;

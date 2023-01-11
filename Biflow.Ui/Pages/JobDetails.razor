@@ -93,6 +93,14 @@
                     Steps
                 </NavLink>
             </li>
+            <AuthorizeView Roles="Admin, Editor, Operator">
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/parameters")">
+                        <CxIcon Icon="FeatherIcon.AtSign" />
+                        Parameters
+                    </NavLink>
+                </li>
+            </AuthorizeView>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/dependencies")">
                     <CxIcon Icon="LucideIcon.Network" />
@@ -135,6 +143,12 @@
                                     PipelineClients="PipelineClients"
                                     AppRegistrations="AppRegistrations"
                                     FunctionApps="FunctionApps" />
+                }
+                else if (DetailsPage == "parameters")
+                {
+                    <AuthorizeView Roles="Admin, Editor, Operator">
+                        <JobParametersComponent OnJobParametersSet="OnJobParametersSet" />
+                    </AuthorizeView>
                 }
                 else if (DetailsPage == "history")
                 {

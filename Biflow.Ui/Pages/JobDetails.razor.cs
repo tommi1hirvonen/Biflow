@@ -117,6 +117,13 @@ public partial class JobDetails : ComponentBase
         StateHasChanged();
     }
 
+    private void OnJobParametersSet(IList<JobParameter> parameters)
+    {
+        if (Job is null) return;
+
+        Job.JobParameters = parameters;
+    }
+
     private async Task DeleteJob()
     {
         try

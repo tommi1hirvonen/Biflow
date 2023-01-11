@@ -59,8 +59,6 @@ public partial class StepsComponent : ComponentBase
 
     private HashSet<Step> SelectedSteps { get; set; } = new();
 
-    private JobParametersModal? JobParametersModal { get; set; }
-
     private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
 
     private StepDetailsModal? StepDetailsModal { get; set; }
@@ -268,20 +266,6 @@ public partial class StepsComponent : ComponentBase
             SelectedSteps.Remove(selectedStep);
             SelectedSteps.Add(step);
         }
-    }
-
-    private async Task ShowJobParametersModalAsync()
-    {
-        if (Job is null || JobParametersModal is null) return;
-
-        await JobParametersModal.ShowAsync(Job.JobId);
-    }
-
-    private void OnJobParametersSet(ICollection<JobParameter> parameters)
-    {
-        if (Job is null) return;
-
-        Job.JobParameters = parameters;
     }
 
     private async Task ShowStepDetailsModal(Step step)

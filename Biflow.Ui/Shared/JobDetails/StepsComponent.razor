@@ -1,8 +1,6 @@
 ﻿
 <PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
 
-<JobParametersModal @ref="JobParametersModal" OnJobParametersSet="OnJobParametersSet" />
-
 <div class="sticky-top pt-2 pb-3" style="background-color: var(--sticky-top-bg);">
     <div class="btn-toolbar">
         <AuthorizeView Roles="Admin, Editor">
@@ -24,12 +22,6 @@
             </HxDropdownButtonGroup>
         </AuthorizeView>
         <AuthorizeView Roles="Admin, Editor, Operator">
-            <HxButton Color="ThemeColor.Secondary"
-                      CssClass="me-3"
-                      @onclick="ShowJobParametersModalAsync">
-                <CxIcon Icon="FeatherIcon.AtSign" />
-                Parameters
-            </HxButton>
             <HxButton Color="ThemeColor.Primary" @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
                 <CxIcon Icon="FeatherIcon.Play" />
                 Execute

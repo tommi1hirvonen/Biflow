@@ -1,0 +1,251 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+@inject IJSRuntime JS
+
+
+@if (EditJob is null || Steps is null)
+{
+    <div class="row mt-3">
+        <div class="col text-center">
+            <HxSpinner Color="ThemeColor.Secondary" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col">
+            <HxButtonToolbar>
+                <HxSubmit form="job_parameter_form" Color="ThemeColor.Success">
+                    <CxIcon Icon="FeatherIcon.Save" />
+                    Save
+                </HxSubmit>
+                <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" @onclick="AddParameter">
+                    <CxIcon Icon="FeatherIcon.Plus" />
+                    Add parameter
+                </HxButton>
+            </HxButtonToolbar>
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <p class="text-danger mt-1">@ErrorMessage</p>
+            }
+        </div>
+        <div class="col text-end">
+            <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
+                        Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
+                Html>
+                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
+                    <CxIcon Icon="FeatherIcon.HelpCircle" />
+                </HxButton>
+            </HxPopover>
+        </div>
+    </div>
+    @if (Context?.ChangeTracker.HasChanges() ?? false)
+    {
+        <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+    }
+    <div class="row my-4">
+        <div class="col">
+            <div class="card shadow-sm">
+                <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
+                    <table id="parameters_table" class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Value</th>
+                                <th>Inheriting steps</th>
+                                <th>Assigning steps</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!EditJob?.JobParameters?.Any() ?? true)
+                            {
+                                <tr><td colspan="6">No parameters</td></tr>
+                            }
+                            @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                            {
+                                var inheritingSteps = GetInheritingSteps(param).ToList();
+                                var assigningSteps = GetAssigningSteps(param).ToList();
+                                <tr>
+                                    <td>
+                                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
+                                    </td>
+                                    <ParameterTypeValueEditComponent Parameter="param" />
+                                    <td>
+                                        @if (inheritingSteps.Count > 0)
+                                        {
+                                            <HxPopover Title="@($"Steps inheriting {param.ParameterName}")"
+                                                       Content="@string.Join(", ", inheritingSteps.Select(s => s.StepName))"
+                                                       Trigger="PopoverTrigger.Focus">
+                                                <ChildContent>
+                                                    <a href="javascript:void(0)">
+                                                        @inheritingSteps.Count
+                                                        step(s)
+                                                    </a>
+                                                </ChildContent>
+                                            </HxPopover>
+                                        }
+                                        else
+                                        {
+                                            <span>0 steps</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (assigningSteps.Count > 0)
+                                        {
+                                            <HxPopover Title="@($"Steps assigning {param.ParameterName}")"
+                                                       Content="@string.Join(", ", assigningSteps.Select(s => s.StepName))"
+                                                       Trigger="PopoverTrigger.Focus">
+                                                <ChildContent>
+                                                    <a href="javascript:void(0)">
+                                                        @assigningSteps.Count
+                                                        step(s)
+                                                    </a>
+                                                </ChildContent>
+                                            </HxPopover>
+                                        }
+                                        else
+                                        {
+                                            <span>0 steps</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => EditJob?.JobParameters.Remove(param)">
+                                                <CxIcon Icon="FeatherIcon.Delete" />
+                                            </HxButton>
+                                        </HxButtonGroup>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] public Job? Job { get; set; }
+
+    [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    [Parameter] public Action<IList<JobParameter>>? OnJobParametersSet { get; set; }
+
+    private Job? EditJob { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private bool Loading { get; set; } = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Job is null || Loading || Job.JobId == EditJob?.JobId)
+        {
+            return;
+        }
+        Loading = true;
+        Context?.Dispose();
+        Context = DbContextFactory.CreateDbContext();
+        EditJob = await Context.Jobs
+            .Include(j => j.JobParameters)
+            .ThenInclude(j => j.AssigningStepParameters) // needed in SubmitParameters()
+            .FirstAsync(j => j.JobId == Job.JobId);
+        Loading = false;
+    }
+
+    private void AddParameter() => EditJob?.JobParameters
+        .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String, AssigningStepParameters = new List<JobStepParameter>() });
+
+    private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) =>
+        Steps?.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId))
+        ?? Enumerable.Empty<Step>();
+
+    private IEnumerable<Step> GetAssigningSteps(JobParameter parameter) =>
+        Steps?.Where(s => s is JobStep js && js.StepParameters.Cast<JobStepParameter>().Any(p => p.AssignToJobParameterId == parameter.ParameterId))
+        ?? Enumerable.Empty<Step>();
+
+    private async Task SubmitParameters()
+    {
+        ErrorMessage = null;
+        var (paramResult, paramMessage) = ParametersCheck();
+        if (!paramResult)
+        {
+            ErrorMessage = paramMessage;
+            return;
+        }
+
+        foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        {
+            param.SetParameterValue();
+
+            // Update the referencing job step parameter names to match the possibly changed new name.
+            foreach (var referencingJobStepParam in param.AssigningStepParameters)
+            {
+                referencingJobStepParam.ParameterName = param.ParameterName;
+            }
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Context);
+            await Context.SaveChangesAsync();
+            if (EditJob is not null)
+            {
+                OnJobParametersSet?.Invoke(EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList());
+            }
+            Messenger.AddInformation("Job parameters updated successfully");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+
+    }
+
+    private (bool Result, string? Message) ParametersCheck()
+    {
+        var parameters = EditJob?.JobParameters
+            .OrderBy(param => param.ParameterName)
+            .ToList() ?? Enumerable.Empty<JobParameter>().ToList();
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName))
+            {
+                return (false, "Parameter name cannot be empty");
+            }
+        }
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                return (false, "Duplicate parameter names");
+            }
+        }
+
+        return (true, null);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+
+    public void Dispose() => Context?.Dispose();
+}
