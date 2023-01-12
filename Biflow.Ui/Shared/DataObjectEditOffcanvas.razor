@@ -1,0 +1,121 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Large">
+    <BodyTemplate>
+        @if (EditObject is not null)
+        {
+            <EditForm id="data_object_edit" Model="EditObject" OnValidSubmit="SubmitDataObjectAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="row">
+                    <div class="col">
+                        <label class="form-label">Server</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Server" />
+                            </div>
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ServerName" />
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Database</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Database" />
+                            </div>
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.DatabaseName" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        <label class="form-label">Schema</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Folder" />
+                            </div>
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.SchemaName" />
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        <label class="form-label">Object</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Table" />
+                            </div>
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ObjectName" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <label class="form-label">Max concurrent writes</label>
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Sliders" />
+                            </div>
+                            <InputNumber style="max-width: 10rem;" class="form-control form-control-sm" @bind-Value="EditObject.MaxConcurrentWrites" />
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit FormId="data_object_edit" Color="ThemeColor.Success">
+            Save
+        </HxSubmit>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public EventCallback<DataObject> OnDataObjectSubmitted { get; set; }
+
+    private HxOffcanvas? Offcanvas { get; set; }
+
+    private DataObject? EditObject { get; set; }
+
+    private BiflowContext? EditContext { get; set; }
+
+    private async Task SubmitDataObjectAsync()
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(EditContext);
+            await EditContext.SaveChangesAsync();
+            await Offcanvas.LetAsync(x => x.HideAsync());
+            await OnDataObjectSubmitted.InvokeAsync(EditObject);
+            EditObject = null;
+            EditContext.Dispose();
+            EditContext = null;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error", "The data object was modified outside of this session. Reload the page to view the most recent values.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating data object", ex.Message);
+        }
+    }
+
+    public async Task ShowAsync(Guid dataObjectId)
+    {
+        EditContext = await DbContextFactory.CreateDbContextAsync();
+        EditObject = await EditContext.DataObjects
+            .Include(o => o.Readers)
+            .ThenInclude(s => s.Job)
+            .Include(o => o.Writers)
+            .ThenInclude(s => s.Job)
+            .FirstAsync(o => o.ObjectId == dataObjectId);
+        await Offcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    public void Dispose() => EditContext?.Dispose();
+}

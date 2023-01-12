@@ -2,8 +2,6 @@
 
 @attribute [Authorize(Roles = "Admin, Editor")]
 
-@implements IDisposable
-
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
@@ -40,137 +38,105 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                <EditForm Model="EditObject" OnValidSubmit="SubmitEditObjectAsync">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
-                    <table class="table table-sm table-hover small">
-                        <thead>
+                <table class="table table-sm table-hover small">
+                    <thead>
+                        <tr>
+                            <th>Server</th>
+                            <th>Database</th>
+                            <th>Schema</th>
+                            <th>Object</th>
+                            <th>Max conc. writes</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Objects is null)
+                        {
                             <tr>
-                                <th>Server</th>
-                                <th>Database</th>
-                                <th>Schema</th>
-                                <th>Object</th>
-                                <th>Max conc. writes</th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
+                                <td colspan="8" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @if (Objects is null)
-                            {
+                        }
+                        else if (!Objects.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="px-3">No data objects</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            <Virtualize TItem="DataObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
+                                @{
+                                    var readers = obj.Readers.Count;
+                                    var writers = obj.Writers.Count;
+                                }
                                 <tr>
-                                    <td colspan="8" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
-                                </tr>
-                            }
-                            else if (!Objects.Any())
-                            {
-                                <tr>
-                                    <td colspan="8" class="px-3">No data objects</td>
-                                </tr>
-                            }
-                            else
-                            {
-                                <Virtualize TItem="DataObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
-                                    @{
-                                        var readers = obj.Readers.Count;
-                                        var writers = obj.Writers.Count;
-                                    }
-                                    <tr>
-                                        @if (obj.ObjectId == EditObject?.ObjectId)
-                                        {
-                                            <td>
-                                                <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ServerName" />
-                                            </td>
-                                            <td>
-                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.DatabaseName" />
-                                            </td>
-                                            <td>
-                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.SchemaName" />
-                                            </td>
-                                            <td>
-                                                <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ObjectName" />
-                                            </td>
-                                            <td>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="EditObject.MaxConcurrentWrites" />
-                                            </td>
-                                            <td colspan="3">
-                                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                                    <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success">
-                                                        <CxIcon Icon="FeatherIcon.Check" />
-                                                    </HxSubmit>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="EndEditContext">
-                                                        <CxIcon Icon="FeatherIcon.X" />
-                                                    </HxButton>
-                                                </HxButtonGroup>
-                                            </td>
+                                    
+                                    <td class="align-middle"><HighlightableText Text="@obj.ServerName" PartToHighlight="@ServerFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.DatabaseName" PartToHighlight="@DatabaseFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.SchemaName" PartToHighlight="@SchemaFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@ObjectFilter" /></td>
+                                    <td class="align-middle">@obj.MaxConcurrentWrites</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => EditOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
+                                                <CxIcon Icon="FeatherIcon.Edit2" />
+                                            </HxButton>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="async () => await DeleteDatabaseObject(obj)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        @{
+                                            var readersTitle = $"Steps reading from '{obj.ObjectName}'";
                                         }
-                                        else
-                                        {
-                                            <td class="align-middle"><HighlightableText Text="@obj.ServerName" PartToHighlight="@ServerFilter" /></td>
-                                            <td class="align-middle"><HighlightableText Text="@obj.DatabaseName" PartToHighlight="@DatabaseFilter" /></td>
-                                            <td class="align-middle"><HighlightableText Text="@obj.SchemaName" PartToHighlight="@SchemaFilter" /></td>
-                                            <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@ObjectFilter" /></td>
-                                            <td class="align-middle">@obj.MaxConcurrentWrites</td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await SetEditContextAsync(obj)">
-                                                        <CxIcon Icon="FeatherIcon.Edit3" />
-                                                    </HxButton>
-                                                    <HxDropdownButtonGroup>
-                                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                            <CxIcon Icon="FeatherIcon.Trash2" />
-                                                        </HxDropdownToggleButton>
-                                                        <HxDropdownMenu>
-                                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                            <HxDropdownItem @onclick="async () => await DeleteDatabaseObject(obj)">Confirm</HxDropdownItem>
-                                                        </HxDropdownMenu>
-                                                    </HxDropdownButtonGroup>
-                                                </div>
-                                            </td>
-                                            <td class="align-middle">
-                                                @{
-                                                    var readersTitle = $"Steps reading from '{obj.ObjectName}'";
-                                                }
-                                                <a class="text-body" href="javascript:void(0)"
-                                                    @onclick="async () =>
-                                                    {
-                                                        StepssModalDataObject = obj;
-                                                        StepsModalGetSteps = o => o.Readers;
-                                                        StepsModalGetStepsExpression = o => o.Readers;
-                                                        StepsModalTitle = readersTitle;
-                                                        await StepsModal.LetAsync(x => x.ShowAsync());
-                                                    }">
-                                                    @(readers > 0 ? $"{readers} reader(s)" : null)
-                                                </a>
-                                            </td>
-                                            <td class="align-middle">
-                                                @{
-                                                    var writersTitle = $"Steps writing to '{obj.ObjectName}'";
-                                                }
-                                                <a class="text-body" href="javascript:void(0)"
-                                                    @onclick="async () =>
-                                                    {
-                                                        StepssModalDataObject = obj;
-                                                        StepsModalGetSteps = o => o.Writers;
-                                                        StepsModalGetStepsExpression = o => o.Writers;
-                                                        StepsModalTitle = writersTitle;
-                                                        await StepsModal.LetAsync(x => x.ShowAsync());
-                                                    }">
-                                                    @(writers > 0 ? $"{writers} writer(s)" : null)
-                                                </a>
-                                            </td>
+                                        <a class="text-body" href="javascript:void(0)"
+                                            @onclick="async () =>
+                                            {
+                                                StepssModalDataObject = obj;
+                                                StepsModalGetSteps = o => o.Readers;
+                                                StepsModalGetStepsExpression = o => o.Readers;
+                                                StepsModalTitle = readersTitle;
+                                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                            }">
+                                            @(readers > 0 ? $"{readers} reader(s)" : null)
+                                        </a>
+                                    </td>
+                                    <td class="align-middle">
+                                        @{
+                                            var writersTitle = $"Steps writing to '{obj.ObjectName}'";
                                         }
-                                    </tr>
-                                </Virtualize>
-                            }
-                        </tbody>
-                    </table>
-                </EditForm>
+                                        <a class="text-body" href="javascript:void(0)"
+                                            @onclick="async () =>
+                                            {
+                                                StepssModalDataObject = obj;
+                                                StepsModalGetSteps = o => o.Writers;
+                                                StepsModalGetStepsExpression = o => o.Writers;
+                                                StepsModalTitle = writersTitle;
+                                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                            }">
+                                            @(writers > 0 ? $"{writers} writer(s)" : null)
+                                        </a>
+                                    </td>
+                                </tr>
+                            </Virtualize>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<DataObjectEditOffcanvas @ref="EditOffcanvas" OnDataObjectSubmitted="OnDataObjectSubmitted" />
 
 <HxModal @ref="ConfirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
     <BodyTemplate>
@@ -279,11 +245,9 @@
         .Where(t => !t.Readers.Any() && !t.Writers.Any())
         ?? Enumerable.Empty<DataObject>();
 
+    private DataObjectEditOffcanvas? EditOffcanvas { get; set; }
+
     private HxModal? ConfirmDeleteModal { get; set; }
-
-    private DataObject EditObject { get; set; } = new();
-
-    private BiflowContext? EditContext { get; set; }
 
     private HxModal? StepsModal { get; set; }
     private string StepsModalTitle { get; set; } = string.Empty;
@@ -362,52 +326,14 @@
         StepsModalGetSteps(StepssModalDataObject).Remove(step);
     }
 
-    private async Task SetEditContextAsync(DataObject obj)
+    private void OnDataObjectSubmitted(DataObject dataObject)
     {
-        EditContext?.Dispose();
-        EditContext = DbContextFactory.CreateDbContext();
-        EditObject = await EditContext.DataObjects
-            .Include(o => o.Readers)
-            .ThenInclude(s => s.Job)
-            .Include(o => o.Writers)
-            .ThenInclude(s => s.Job)
-            .FirstAsync(o => o.ObjectId == obj.ObjectId);
-        StateHasChanged();
-    }
-
-    private void EndEditContext()
-    {
-        EditContext?.Dispose();
-        EditObject = new();
-        StateHasChanged();
-    }
-
-    private async Task SubmitEditObjectAsync()
-    {
-        if (EditContext is null) return;
-        try
+        var toRemove = Objects?.First(o => o.ObjectId == dataObject.ObjectId);
+        if (toRemove is not null)
         {
-            await EditContext.SaveChangesAsync();
-            EditContext.Dispose();
-
-            var toRemove = Objects?.First(o => o.ObjectId == EditObject.ObjectId);
-            if (toRemove is not null)
-            {
-                Objects?.Remove(toRemove);
-                Objects?.Add(EditObject);
-            }
-
-            EditObject = new();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            Messenger.AddError("Concurrency error", "The data object was modified outside of this session. Reload the page to view the most recent values.");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error updating data object", ex.Message);
+            Objects?.Remove(toRemove);
+            Objects?.Add(dataObject);
         }
     }
 
-    public void Dispose() => EditContext?.Dispose();
 }
