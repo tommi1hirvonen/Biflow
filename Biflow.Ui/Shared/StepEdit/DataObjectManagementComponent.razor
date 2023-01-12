@@ -67,7 +67,7 @@
                 <td colspan="@colspan">Loading...</td>
             </tr>
         }
-        else if (DataObjects.Any())
+        else if (!DataObjects.Any())
         {
             <tr>
                 <td colspan="@colspan">@NoDataObjectsText</td>
