@@ -5,7 +5,7 @@
     var title = Category.CategoryId == Guid.Empty ? "New category" : $"Edit {Category.CategoryName}";
 }
 
-<HxModal @ref="Modal" Title="@title" Size="ModalSize.Regular">
+<HxOffcanvas @ref="Offcanvas" Title="@title" Size="OffcanvasSize.Regular" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <EditForm id="category_edit_form" Model="Category" OnValidSubmit="SubmitAsync">
             <DataAnnotationsValidator />
@@ -20,16 +20,16 @@
         <HxSubmit FormId="category_edit_form" Color="ThemeColor.Success">
             Save
         </HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Cancel
         </HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
     [Parameter] public EventCallback<JobCategory> OnCategorySubmitted { get; set; }
 
-    private HxModal? Modal { get; set; }
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private JobCategory Category { get; set; } = new();
 
@@ -38,12 +38,12 @@
         if (category is null)
         {
             Category = new();
-            await Modal.LetAsync(x => x.ShowAsync());
+            await Offcanvas.LetAsync(x => x.ShowAsync());
             return;
         }
         using var context = await DbContextFactory.CreateDbContextAsync();
         Category = await context.JobCategories.FirstAsync(c => c.CategoryId == category.CategoryId);
-        await Modal.LetAsync(x => x.ShowAsync());
+        await Offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     public async Task SubmitAsync()
@@ -61,7 +61,7 @@
             }
             await context.SaveChangesAsync();
             await OnCategorySubmitted.InvokeAsync(Category);
-            await Modal.LetAsync(x => x.HideAsync());
+            await Offcanvas.LetAsync(x => x.HideAsync());
         }
         catch (Exception ex)
         {

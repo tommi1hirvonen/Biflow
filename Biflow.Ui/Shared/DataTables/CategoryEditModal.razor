@@ -5,7 +5,7 @@
     var title = Category.CategoryId == Guid.Empty ? "New category" : $"Edit {Category.CategoryName}";
 }
 
-<HxModal @ref="Modal" Title="@title" Size="ModalSize.Regular">
+<HxOffcanvas @ref="Modal" Title="@title" Size="OffcanvasSize.Regular" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <EditForm id="category_edit_form" Model="Category" OnValidSubmit="SubmitAsync">
             <DataAnnotationsValidator />
@@ -20,16 +20,16 @@
         <HxSubmit FormId="category_edit_form" Color="ThemeColor.Success">
             Save
         </HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())" Spinner="false">
             Cancel
         </HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
     [Parameter] public EventCallback<MasterDataTableCategory> OnCategorySubmitted { get; set; }
 
-    private HxModal? Modal { get; set; }
+    private HxOffcanvas? Modal { get; set; }
 
     private MasterDataTableCategory Category { get; set; } = new();
 

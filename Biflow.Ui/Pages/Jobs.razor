@@ -7,7 +7,11 @@
     <div class="col">
         <div class="btn-toolbar">
             <AuthorizeView Roles="Admin, Editor">
-                <HxButton Color="ThemeColor.Success" CssClass="me-3" OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())" Spinner="false">
+                <HxButton Color="ThemeColor.Success"
+                          CssClass="me-3"
+                          OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())"
+                          Spinner="false"
+                          Enabled="Jobs_ is not null">
                     Add job
                 </HxButton>
 

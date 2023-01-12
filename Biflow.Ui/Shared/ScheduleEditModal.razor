@@ -5,7 +5,7 @@
 @inject ISchedulerService SchedulerService
 @inject IJSRuntime JS
 
-<HxModal @ref="Modal" Size="ModalSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Backdrop="OffcanvasBackdrop.False" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
         <EditForm id="schedule_form" Model="Schedule" OnValidSubmit="SubmitSchedule" Context="_context">
@@ -95,9 +95,9 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="schedule_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
     // Optional - new schedules will be locked to this job if provided
@@ -109,7 +109,7 @@
 
     private Schedule Schedule { get; set; } = new() { Tags = new List<Tag>() };
 
-    private HxModal? Modal { get; set; }
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private List<string> Tags { get; set; } = new();
     public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
@@ -164,7 +164,7 @@
                     ?? throw new InvalidOperationException("Job cannot be null");
 
                 await OnSubmit.InvokeAsync(Schedule);
-                await Modal.LetAsync(x => x.HideAsync());
+                await Offcanvas.LetAsync(x => x.HideAsync());
                 Tags.Clear();
             }
             catch (Exception ex)
@@ -196,7 +196,7 @@
                 await context.SaveChangesAsync();
 
                 await OnSubmit.InvokeAsync(Schedule);
-                await Modal.LetAsync(x => x.HideAsync());
+                await Offcanvas.LetAsync(x => x.HideAsync());
                 Tags.Clear();
             }
             catch (Exception ex)
@@ -232,7 +232,7 @@
                 .OrderBy(t => t)
                 .ToList();
 
-        await Modal.LetAsync(x => x.ShowAsync());
+        await Offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

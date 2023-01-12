@@ -7,7 +7,7 @@
     var title = Job.JobId == Guid.Empty ? "New job" : $"Edit {Job.JobName}";
 }
 
-<HxModal @ref="Modal" Title="@title">
+<HxOffcanvas @ref="Offcanvas" Title="@title" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         @if (Categories is not null)
         {
@@ -36,19 +36,19 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => Modal.LetAsync(x => x.HideAsync())">
-            Cancel
-        </HxButton>
         <HxSubmit Color="ThemeColor.Success" FormId="job_edit_form">
             Save
         </HxSubmit>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
     </FooterTemplate>
-</HxModal>
+</HxOffcanvas>
 
 @code {
     [Parameter] public EventCallback<Job> OnJobSubmitted { get; set; }
 
-    private HxModal? Modal { get; set; }
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private BiflowContext? EditContext { get; set; }
 
@@ -66,7 +66,7 @@
                 EditContext.Jobs.Add(Job);
             }
             await EditContext.SaveChangesAsync();
-            await Modal.LetAsync(x => x.HideAsync());
+            await Offcanvas.LetAsync(x => x.HideAsync());
             await OnJobSubmitted.InvokeAsync(Job);
             Job = new() { IsEnabled = true };
             EditContext.Dispose();
@@ -103,7 +103,7 @@
             {
                 Job = new() { IsEnabled = true };
             }
-            await Modal.LetAsync(x => x.ShowAsync());
+            await Offcanvas.LetAsync(x => x.ShowAsync());
         }
         catch (Exception ex)
         {
