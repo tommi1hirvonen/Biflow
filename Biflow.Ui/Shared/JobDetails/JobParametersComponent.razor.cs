@@ -1,0 +1,164 @@
+﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
+using Havit.Blazor.Components.Web;
+using Havit.Blazor.Components.Web.Bootstrap;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
+
+namespace Biflow.Ui.Shared.JobDetails;
+
+public partial class JobParametersComponent : ComponentBase, IDisposable
+{
+    [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
+    
+    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    [CascadingParameter] public Job? Job { get; set; }
+
+    [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    [Parameter] public Action<IList<JobParameter>>? OnJobParametersSet { get; set; }
+
+    private Job? EditJob { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private string? ErrorMessage { get; set; }
+
+    private bool Loading { get; set; } = false;
+
+    private HxOffcanvas? InheritingStepsOffcanvas { get; set; }
+    
+    private (JobParameter Parameter, IEnumerable<Step> ReferencingSteps) InheritingSteps { get; set; } = (new(), Enumerable.Empty<Step>());
+
+    private HxOffcanvas? AssigningStepsOffcanvas { get; set; }
+
+    private (JobParameter Parameter, IEnumerable<Step> ReferencingSteps) AssigningSteps { get; set; } = (new(), Enumerable.Empty<Step>());
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Job is null || Loading || Job.JobId == EditJob?.JobId)
+        {
+            return;
+        }
+        Loading = true;
+        Context?.Dispose();
+        Context = DbContextFactory.CreateDbContext();
+        EditJob = await Context.Jobs
+            .Include(j => j.JobParameters)
+            .ThenInclude(j => j.AssigningStepParameters)
+            .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
+            .ThenInclude(s => s.Job)
+            .FirstAsync(j => j.JobId == Job.JobId);
+        Loading = false;
+    }
+
+    private void AddParameter() => EditJob?.JobParameters
+        .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String, AssigningStepParameters = new List<JobStepParameter>() });
+
+    private async Task SubmitParameters()
+    {
+        ErrorMessage = null;
+        var (paramResult, paramMessage) = ParametersCheck();
+        if (!paramResult)
+        {
+            ErrorMessage = paramMessage;
+            return;
+        }
+
+        foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        {
+            param.SetParameterValue();
+
+            // Update the referencing job step parameter names to match the possibly changed new name.
+            foreach (var referencingJobStepParam in param.AssigningStepParameters)
+            {
+                referencingJobStepParam.ParameterName = param.ParameterName;
+            }
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Context);
+            await Context.SaveChangesAsync();
+            if (EditJob is not null)
+            {
+                OnJobParametersSet?.Invoke(EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList());
+            }
+            Messenger.AddInformation("Job parameters updated successfully");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+
+    }
+
+    private (bool Result, string? Message) ParametersCheck()
+    {
+        var parameters = EditJob?.JobParameters
+            .OrderBy(param => param.ParameterName)
+            .ToList() ?? Enumerable.Empty<JobParameter>().ToList();
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName))
+            {
+                return (false, "Parameter name cannot be empty");
+            }
+        }
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                return (false, "Duplicate parameter names");
+            }
+        }
+
+        return (true, null);
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+
+    private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) => Steps
+        ?.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId))
+        .OrderBy(s => s.StepName)
+        ?? Enumerable.Empty<Step>();
+
+    private static IEnumerable<Step> GetAssigningSteps(JobParameter parameter) => parameter.AssigningStepParameters
+        .Select(p => p.Step)
+        .OrderBy(s => s.Job.JobName)
+        .ThenBy(s => s.StepName)
+        ?? Enumerable.Empty<Step>();
+
+    private async Task ShowInheritingStepsOffcanvasAsync(JobParameter param)
+    {
+        InheritingSteps = (param, GetInheritingSteps(param));
+        await InheritingStepsOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task ShowAssigningStepsOffcanvasAsync(JobParameter param)
+    {
+        AssigningSteps = (param, GetAssigningSteps(param));
+        await AssigningStepsOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    public void Dispose() => Context?.Dispose();
+
+}
