@@ -12,10 +12,8 @@
             @{
                 var content = $"Read {ListName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {ListName}s after mapping.";
             }
-            <HxPopover Trigger="PopoverTrigger.Focus" Content="@content">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link">
-                    <CxIcon Icon="FeatherIcon.Info" />
-                </HxButton>
+            <HxPopover Trigger="PopoverTrigger.Hover" Content="@content">
+                <CxIcon Icon="FeatherIcon.Info" />
             </HxPopover>
         </div>
     </div>
