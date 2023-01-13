@@ -32,13 +32,9 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private bool Loading { get; set; } = false;
 
-    private HxOffcanvas? InheritingStepsOffcanvas { get; set; }
+    private HxOffcanvas? ReferencingStepsOffcanvas { get; set; }
     
-    private (JobParameter Parameter, IEnumerable<Step> ReferencingSteps) InheritingSteps { get; set; } = (new(), Enumerable.Empty<Step>());
-
-    private HxOffcanvas? AssigningStepsOffcanvas { get; set; }
-
-    private (JobParameter Parameter, IEnumerable<Step> ReferencingSteps) AssigningSteps { get; set; } = (new(), Enumerable.Empty<Step>());
+    private ReferencingStepsModel ReferencingSteps { get; set; } = new(new(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>());
 
     protected override async Task OnParametersSetAsync()
     {
@@ -136,8 +132,19 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         }
     }
 
+    private async Task ShowReferencingStepsAsync(JobParameter param)
+    {
+        ReferencingSteps = new(param, GetInheritingSteps(param), GetCapturingSteps(param), GetAssigningSteps(param));
+        await ReferencingStepsOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+
     private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) => Steps
         ?.Where(s => s is ParameterizedStep ps && ps.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId))
+        .OrderBy(s => s.StepName)
+        ?? Enumerable.Empty<Step>();
+
+    private IEnumerable<Step> GetCapturingSteps(JobParameter parameter) => Steps
+        ?.Where(s => s is SqlStep sql && sql.ResultCaptureJobParameterId == parameter.ParameterId)
         .OrderBy(s => s.StepName)
         ?? Enumerable.Empty<Step>();
 
@@ -147,18 +154,12 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         .ThenBy(s => s.StepName)
         ?? Enumerable.Empty<Step>();
 
-    private async Task ShowInheritingStepsOffcanvasAsync(JobParameter param)
-    {
-        InheritingSteps = (param, GetInheritingSteps(param));
-        await InheritingStepsOffcanvas.LetAsync(x => x.ShowAsync());
-    }
-
-    private async Task ShowAssigningStepsOffcanvasAsync(JobParameter param)
-    {
-        AssigningSteps = (param, GetAssigningSteps(param));
-        await AssigningStepsOffcanvas.LetAsync(x => x.ShowAsync());
-    }
-
     public void Dispose() => Context?.Dispose();
+
+    private record ReferencingStepsModel(
+        JobParameter Parameter,
+        IEnumerable<Step> InheritingSteps,
+        IEnumerable<Step> CapturingSteps,
+        IEnumerable<Step> AssigningSteps);
 
 }

@@ -43,7 +43,7 @@ else
         <div class="col">
             <div class="card shadow-sm">
                 <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
-                    <table id="parameters_table" class="table table-sm">
+                    <table id="parameters_table" class="table">
                         <thead>
                             <tr>
                                 <th>
@@ -56,19 +56,15 @@ else
                                     Value
                                 </th>
                                 <th>
-                                    Inheriting steps
-                                    <HxPopover Content="Inheriting steps are any steps in this job that are referencing the job's parameters"
-                                               Trigger="PopoverTrigger.Hover">
-                                        <CxIcon Icon="FeatherIcon.Info" />
-                                    </HxPopover>
+                                    Inherits
                                 </th>
                                 <th>
-                                    Assigning steps
-                                    <HxPopover Content="Assigning steps are steps in other jobs that are launching this job and assigning values to the job's parameters"
-                                               Trigger="PopoverTrigger.Hover">
-                                        <CxIcon Icon="FeatherIcon.Info" />
-                                    </HxPopover>
+                                    Captures
                                 </th>
+                                <th>
+                                    Assigns
+                                </th>
+                                <th></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -80,35 +76,26 @@ else
                             @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
                                 var inheritingSteps = GetInheritingSteps(param).ToList();
+                                var capturingSteps = GetCapturingSteps(param).ToList();
                                 var assigningSteps = GetAssigningSteps(param).ToList();
                                 <tr>
                                     <td>
                                         <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                     </td>
                                     <ParameterTypeValueEditComponent Parameter="param" />
-                                    <td>
-                                        @if (inheritingSteps.Count > 0)
-                                        {
-                                            <a href="javascript:void(0)" @onclick="() => ShowInheritingStepsOffcanvasAsync(param)">
-                                                @inheritingSteps.Count step(s)
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <span>0 steps</span>
-                                        }
+                                    <td class="@(inheritingSteps.Count == 0 ? "text-muted" : null)">
+                                        @inheritingSteps.Count step(s)
+                                    </td>
+                                    <td class="@(capturingSteps.Count == 0 ? "text-muted" : null)">
+                                        @capturingSteps.Count steps(s)
+                                    </td>
+                                    <td class="@(assigningSteps.Count == 0 ? "text-muted" : null)">
+                                        @assigningSteps.Count step(s)
                                     </td>
                                     <td>
-                                        @if (assigningSteps.Count > 0)
-                                        {
-                                            <a href="javascript:void(0)" @onclick="() => ShowAssigningStepsOffcanvasAsync(param)">
-                                                @assigningSteps.Count step(s)
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <span>0 steps</span>
-                                        }
+                                        <a class="text-body" href="javascript:void()" @onclick="() => ShowReferencingStepsAsync(param)">
+                                            Show references
+                                        </a>
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -127,8 +114,15 @@ else
     </div>
 }
 
-<HxOffcanvas @ref="InheritingStepsOffcanvas" Title="@($"Steps inheriting {InheritingSteps.Parameter.ParameterName}")">
+<HxOffcanvas @ref="ReferencingStepsOffcanvas" Title="@($"Steps referencing {ReferencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
+        <h6>
+            Inheriting steps
+            <HxPopover Content="Steps in this job that have parameters whose value is inheriting the job parameter value"
+                       Trigger="PopoverTrigger.Hover">
+                <CxIcon Icon="FeatherIcon.Info" />
+            </HxPopover>
+        </h6>
         <table class="table table-sm">
             <thead>
                 <tr>
@@ -138,27 +132,67 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var step in InheritingSteps.ReferencingSteps)
+                @if (!ReferencingSteps.InheritingSteps.Any())
                 {
-                    <tr>
-                        <td>
-                            <StepTypeIconComponent StepType_="step.StepType" />
-                            @step.StepName
-                        </td>
-                    </tr>
+                    <tr><td class="text-muted">No inheriting steps</td></tr>
+                }
+                else
+                {
+                    foreach (var step in ReferencingSteps.InheritingSteps)
+                    {
+                        <tr>
+                            <td>
+                                <StepTypeIconComponent StepType_="step.StepType" />
+                                @step.StepName
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
-    </BodyTemplate>
-    <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => InheritingStepsOffcanvas.LetAsync(x => x.HideAsync())">
-            Close
-        </HxButton>
-    </FooterTemplate>
-</HxOffcanvas>
 
-<HxOffcanvas @ref="AssigningStepsOffcanvas" Title="@($"Steps assigning {AssigningSteps.Parameter.ParameterName}")">
-    <BodyTemplate>
+        <h6 class="mt-5">
+            Capturing steps
+            <HxPopover Content="Steps in this job that are capturing their return value and saving it to the job parameter"
+                       Trigger="PopoverTrigger.Hover">
+                <CxIcon Icon="FeatherIcon.Info" />
+            </HxPopover>
+        </h6>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>
+                        Step
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!ReferencingSteps.CapturingSteps.Any())
+                {
+                    <tr><td class="text-muted">No capturing steps</td></tr>
+                }
+                else
+                {
+                    foreach (var step in ReferencingSteps.CapturingSteps)
+                    {
+                        <tr>
+                            <td>
+                                <StepTypeIconComponent StepType_="step.StepType" />
+                                @step.StepName
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <h6 class="mt-5">
+            Assigning steps
+            <HxPopover Content="Steps in other jobs that are launching this job and assigning values to the job parameter"
+                       Trigger="PopoverTrigger.Hover">
+                <CxIcon Icon="FeatherIcon.Info" />
+            </HxPopover>
+        </h6>
         <table class="table table-sm">
             <thead>
                 <tr>
@@ -171,23 +205,31 @@ else
                 </tr>
             </thead>
             <tbody>
-                @foreach (var step in AssigningSteps.ReferencingSteps)
+                @if (!ReferencingSteps.AssigningSteps.Any())
                 {
-                    <tr>
-                        <td>
-                            @step.Job.JobName
-                        </td>
-                        <td>
-                            <StepTypeIconComponent StepType_="step.StepType" />
-                            @step.StepName
-                        </td>
-                    </tr>
+                    <tr><td class="text-muted" colspan="2">No assigning steps</td></tr>
                 }
+                else
+                {
+                    foreach (var step in ReferencingSteps.AssigningSteps)
+                    {
+                        <tr>
+                            <td>
+                                @step.Job.JobName
+                            </td>
+                            <td>
+                                <StepTypeIconComponent StepType_="step.StepType" />
+                                @step.StepName
+                            </td>
+                        </tr>
+                    }
+                }
+                
             </tbody>
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => AssigningStepsOffcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => ReferencingStepsOffcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
