@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class JobStepExecution : ParameterizedStepExecution
+public class JobStepExecution : StepExecution
 {
     public JobStepExecution(string stepName) : base(stepName, StepType.Job)
     {
@@ -13,4 +13,6 @@ public class JobStepExecution : ParameterizedStepExecution
 
     [Display(Name = "Synchronized")]
     public bool JobExecuteSynchronized { get; set; }
+
+    public override bool SupportsParameterization => true;
 }

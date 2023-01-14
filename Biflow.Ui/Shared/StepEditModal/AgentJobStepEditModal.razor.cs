@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class AgentJobStepEditModal : StepEditModalBase<AgentJobStep>
+public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
 {
 
     private AgentJobSelectOffcanvas? AgentJobSelectOffcanvas { get; set; }

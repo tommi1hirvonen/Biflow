@@ -5,11 +5,10 @@ using Biflow.Ui.Shared.StepEdit;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageStep>
+public partial class PackageStepEditModal : StepEditModal<PackageStep>
 {
     [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
@@ -44,33 +43,7 @@ public partial class PackageStepEditModal : ParameterizedStepEditModal<PackageSt
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        (var paramResultBase, var paramMessageBase) = base.StepValidityCheck(step);
-        if (!paramResultBase)
-        {
-            return (false, paramMessageBase);
-        }
-        if (step is PackageStep package)
-        {
-            (var paramResult, var paramMessage) = ParametersCheck();
-            if (!paramResult)
-            {
-                return (false, paramMessage);
-            }
-            foreach (var param in package.StepParameters)
-            {
-                param.SetParameterValue();
-            }
-            return (true, null);
-        }
-        else
-        {
-            return (false, "Not PackageStep");
-        }
-    }
-
-    private (bool Result, string? Message) ParametersCheck()
+    protected override (bool Result, string? Message) ParametersCheck()
     {
         ArgumentNullException.ThrowIfNull(Step);
         var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();

@@ -49,5 +49,5 @@ public abstract class StepExecutionParameterBase
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
-    public ParameterizedStepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; set; } = null!;
 }

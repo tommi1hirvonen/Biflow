@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class ExeStep : ParameterizedStep
+public class ExeStep : Step
 {
     public ExeStep() : base(StepType.Exe) { }
 
@@ -30,4 +30,6 @@ public class ExeStep : ParameterizedStep
 
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }
+
+    public override bool SupportsParameterization => true;
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class PipelineStepEditModal : ParameterizedStepEditModal<PipelineStep>
+public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 {
     [Parameter] public IList<PipelineClient>? PipelineClients { get; set; }
 

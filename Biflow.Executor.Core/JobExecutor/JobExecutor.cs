@@ -57,7 +57,7 @@ internal class JobExecutor : IJobExecutor
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
                     .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                    .ThenInclude(e => e.StepExecutionParameters)
                     .ThenInclude(p => p.InheritFromExecutionParameter)
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as DatasetStepExecution)!.AppRegistration)

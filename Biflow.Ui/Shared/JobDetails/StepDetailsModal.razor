@@ -243,19 +243,16 @@
                     </dl>
                 }
             }
-            else if (Step is ParameterizedStep paramStep)
+            else if (Step.SupportsParameterization)
             {
                 <h6>Parameters</h6>
-                @if (paramStep.StepParameters is not null)
-                {
-                    <dl class="row">
-                        @foreach (var param in paramStep.StepParameters)
-                        {
-                            <dt class="col-sm-3">@param.ParameterName</dt>
-                            <dd class="col-sm-9">@param.ParameterValue</dd>
-                        }
-                    </dl>
-                }
+                <dl class="row">
+                    @foreach (var param in Step.StepParameters)
+                    {
+                        <dt class="col-sm-3">@param.ParameterName</dt>
+                        <dd class="col-sm-9">@param.ParameterValue</dd>
+                    }
+                </dl>
             }
         }
     </BodyTemplate>

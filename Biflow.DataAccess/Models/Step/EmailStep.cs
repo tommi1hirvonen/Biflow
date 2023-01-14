@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class EmailStep : ParameterizedStep
+public class EmailStep : Step
 {
     public EmailStep() : base(StepType.Email) { }
 
@@ -26,4 +26,6 @@ public class EmailStep : ParameterizedStep
         Recipients
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .ToList();
+
+    public override bool SupportsParameterization => true;
 }

@@ -47,6 +47,11 @@ public abstract class StepExecution
 
     public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
+    [NotMapped]
+    public abstract bool SupportsParameterization { get; }
+    
+    public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
+
     public IList<ExecutionDataObject> Sources { get; set; } = null!;
 
     public IList<ExecutionDataObject> Targets { get; set; } = null!;

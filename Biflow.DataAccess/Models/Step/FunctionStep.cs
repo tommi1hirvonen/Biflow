@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class FunctionStep : ParameterizedStep
+public class FunctionStep : Step
 {
     public FunctionStep() : base(StepType.Function) { }
 
@@ -28,6 +28,8 @@ public class FunctionStep : ParameterizedStep
 
     [Display(Name = "Function key")]
     public string? FunctionKey { get; set; }
+
+    public override bool SupportsParameterization => true;
 
     public FunctionApp FunctionApp { get; set; } = null!;
 }

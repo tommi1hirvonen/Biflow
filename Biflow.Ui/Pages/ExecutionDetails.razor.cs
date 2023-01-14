@@ -100,7 +100,7 @@ public partial class ExecutionDetails : ComponentBase
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionDependencies)
                 .Include(e => e.StepExecutions)
-                .ThenInclude(e => (e as ParameterizedStepExecution)!.StepExecutionParameters)
+                .ThenInclude(e => e.StepExecutionParameters)
                 .ThenInclude(p => p.InheritFromExecutionParameter)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionConditionParameters)

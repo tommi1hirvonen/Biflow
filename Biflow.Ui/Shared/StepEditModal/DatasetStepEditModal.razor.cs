@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class DatasetStepEditModal : StepEditModalBase<DatasetStep>
+public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
     [Parameter] public IList<AppRegistration>? AppRegistrations { get; set; }
 

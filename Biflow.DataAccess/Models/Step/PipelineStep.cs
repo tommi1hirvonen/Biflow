@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class PipelineStep : ParameterizedStep
+public class PipelineStep : Step
 {
     public PipelineStep() : base(StepType.Pipeline) { }
 
@@ -13,6 +13,8 @@ public class PipelineStep : ParameterizedStep
     [Display(Name = "Pipeline name")]
     [Required]
     public string? PipelineName { get; set; }
+
+    public override bool SupportsParameterization => true;
 
     public PipelineClient? PipelineClient { get; set; }
 }

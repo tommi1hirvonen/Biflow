@@ -91,6 +91,11 @@ public abstract class Step : IComparable
 
     public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
+    [NotMapped]
+    public abstract bool SupportsParameterization { get; }
+
+    public IList<StepParameterBase> StepParameters { get; set; } = null!;
+
     public IList<Tag> Tags { get; set; } = null!;
 
     public IList<StepExecution> StepExecutions { get; set; } = null!;

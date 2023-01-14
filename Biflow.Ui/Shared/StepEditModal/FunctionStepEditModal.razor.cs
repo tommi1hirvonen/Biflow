@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class FunctionStepEditModal : ParameterizedStepEditModal<FunctionStep>
+public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 {
     [Parameter] public IList<FunctionApp>? FunctionApps { get; set; }
 

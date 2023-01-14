@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class TabularStepEditModal : StepEditModalBase<TabularStep>
+public partial class TabularStepEditModal : StepEditModal<TabularStep>
 {
     [Parameter] public IList<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
 

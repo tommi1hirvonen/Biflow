@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class EmailStepEditModal : ParameterizedStepEditModal<EmailStep>
+public partial class EmailStepEditModal : StepEditModal<EmailStep>
 {
     internal override string FormId => "email_step_edit_form";
 

@@ -24,4 +24,6 @@ public class AgentJobStepExecution : StepExecution
     public Guid? ConnectionId { get; set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    public override bool SupportsParameterization => false;
 }

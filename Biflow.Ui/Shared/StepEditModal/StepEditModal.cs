@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
+public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
 {    
     [Inject] public IHxMessengerService Messenger { get; set; } = null!;
 
@@ -64,19 +64,50 @@ public abstract partial class StepEditModalBase<TStep> : ComponentBase, IDisposa
     protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (var paramResult, var paramMessage) = ExecutionConditionParametersCheck();
+        (var conditionParamResult, var conditionParamMessage) = ExecutionConditionParametersCheck();
+        if (!conditionParamResult)
+        {
+            return (false, conditionParamMessage);
+        }
+
+        foreach (var param in Step.ExecutionConditionParameters)
+        {
+            param.SetParameterValue();
+        }
+
+        (var paramResult, var paramMessage) = ParametersCheck();
         if (!paramResult)
         {
             return (false, paramMessage);
         }
-        else
+
+        foreach (var param in Step.StepParameters)
         {
-            foreach (var param in Step.ExecutionConditionParameters)
-            {
-                param.SetParameterValue();
-            }
-            return (true, null);
+            param.SetParameterValue();
         }
+        return (true, null);
+    }
+
+    protected virtual (bool Result, string? Message) ParametersCheck()
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
+        foreach (var param in parameters)
+        {
+            if (string.IsNullOrEmpty(param.ParameterName))
+            {
+                return (false, "Parameter name cannot be empty");
+            }
+        }
+        for (var i = 0; i < parameters.Count - 1; i++)
+        {
+            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
+            {
+                return (false, "Duplicate parameter names");
+            }
+        }
+
+        return (true, null);
     }
 
     /// <summary>

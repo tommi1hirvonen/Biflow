@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStepExecution : ParameterizedStepExecution
+public class PackageStepExecution : StepExecution
 {
     public PackageStepExecution(string stepName, string packageFolderName, string packageProjectName, string packageName) : base(stepName, StepType.Package)
     {
@@ -40,4 +40,6 @@ public class PackageStepExecution : ParameterizedStepExecution
 
     [NotMapped]
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
+
+    public override bool SupportsParameterization => true;
 }

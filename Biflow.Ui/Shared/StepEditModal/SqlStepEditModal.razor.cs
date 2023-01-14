@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class SqlStepEditModal : ParameterizedStepEditModal<SqlStep>
+public partial class SqlStepEditModal : StepEditModal<SqlStep>
 {
     [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 

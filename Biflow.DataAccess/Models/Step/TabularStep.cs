@@ -29,5 +29,7 @@ public class TabularStep : Step
     [Required]
     public Guid? ConnectionId { get; set; }
 
+    public override bool SupportsParameterization => false;
+
     public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
 }

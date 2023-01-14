@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlStepExecution : ParameterizedStepExecution
+public class SqlStepExecution : StepExecution
 {
     public SqlStepExecution(string stepName, string sqlStatement) : base(stepName, StepType.Sql)
     {
@@ -26,4 +26,6 @@ public class SqlStepExecution : ParameterizedStepExecution
 
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; set; }
+
+    public override bool SupportsParameterization => true;
 }

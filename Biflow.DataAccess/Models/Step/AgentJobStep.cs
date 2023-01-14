@@ -20,5 +20,7 @@ public class AgentJobStep : Step
     [Required]
     public Guid? ConnectionId { get; set; }
 
+    public override bool SupportsParameterization => false;
+
     public SqlConnectionInfo Connection { get; set; } = null!;
 }

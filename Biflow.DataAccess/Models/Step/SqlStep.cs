@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlStep : ParameterizedStep
+public class SqlStep : Step
 {
     public SqlStep() : base(StepType.Sql) { }
 
@@ -17,6 +17,8 @@ public class SqlStep : ParameterizedStep
 
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; set; }
+
+    public override bool SupportsParameterization => true;
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 }

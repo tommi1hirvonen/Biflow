@@ -48,28 +48,25 @@ internal abstract class StepExecutorBase
 
         var executionAttempt = StepExecution.StepExecutionAttempts.First();
 
-        // If the step execution is parameterized and it's using job parameters,
+        // If the step is using job parameters,
         // update the job parameter's current value for this execution.
-        if (StepExecution is ParameterizedStepExecution parameterized)
+        try
         {
-            try
+            using var context = _dbContextFactory.CreateDbContext();
+            foreach (var param in StepExecution.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
             {
-                using var context = _dbContextFactory.CreateDbContext();
-                foreach (var param in parameterized.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
-                {
-                    context.Attach(param);
-                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
-                }
-                await context.SaveChangesAsync();
+                context.Attach(param);
+                param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
-                StepExecution.ExecutionId, StepExecution);
-                var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
-                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
-                return false;
-            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
+            StepExecution.ExecutionId, StepExecution);
+            var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
+            await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
+            return false;
         }
 
         // Update current values of job parameters to execution condition parameters.

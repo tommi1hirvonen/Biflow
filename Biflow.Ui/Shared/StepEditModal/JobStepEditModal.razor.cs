@@ -1,18 +1,15 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
-using Biflow.Ui.Shared.StepEdit;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class JobStepEditModal : ParameterizedStepEditModal<JobStep>
+public partial class JobStepEditModal : StepEditModal<JobStep>
 {
     [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
-
-    private JobStepParameterEditComponent? ParameterEdit { get; set; }
 
     internal override string FormId => "job_step_edit_form";
 

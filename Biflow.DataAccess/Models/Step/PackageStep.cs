@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStep : ParameterizedStep
+public class PackageStep : Step
 {
     public PackageStep() : base(StepType.Package) { }
 
@@ -38,6 +38,8 @@ public class PackageStep : ParameterizedStep
     }
 
     private string? _executeAsLogin;
+
+    public override bool SupportsParameterization => true;
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 }

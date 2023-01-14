@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class ExeStepEditModal : ParameterizedStepEditModal<ExeStep>
+public partial class ExeStepEditModal : StepEditModal<ExeStep>
 {
     internal override string FormId => "exe_step_edit_form";
 
