@@ -89,7 +89,7 @@
     public Guid? AppRegistrationId { get; set; }
 
     [Parameter]
-    public EventCallback<(string GroupId, string DatasetId)> OnDatasetSelected { get; set; }
+    public EventCallback<DatasetSelectedResponse> OnDatasetSelected { get; set; }
 
     private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>? Datasets { get; set; }
 
@@ -111,7 +111,7 @@
         var datasetId = SelectedDataset?.DatasetId;
         if (groupId is not null && datasetId is not null)
         {
-            await OnDatasetSelected.InvokeAsync((groupId, datasetId));
+            await OnDatasetSelected.InvokeAsync(new(groupId, datasetId));
             await Offcanvas.LetAsync(x => x.HideAsync());
         }
     }

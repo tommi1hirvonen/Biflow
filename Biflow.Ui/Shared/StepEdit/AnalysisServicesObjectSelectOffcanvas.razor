@@ -132,7 +132,7 @@
     public Guid? ConnectionId { get; set; }
 
     [Parameter]
-    public EventCallback<(string ModelName, string? TableName, string? PartitionName)> OnObjectSelected { get; set; }
+    public EventCallback<AnalysisServicesObjectSelectedResponse> OnObjectSelected { get; set; }
 
     private HxOffcanvas? Offcanvas { get; set; }
 
@@ -169,19 +169,22 @@
     {
         if (SelectedPartition is not null)
         {
-            var obj = (SelectedPartition.Table.Model.ModelName, SelectedPartition.Table.TableName, SelectedPartition.PartitionName);
+            var obj = new AnalysisServicesObjectSelectedResponse(
+                SelectedPartition.Table.Model.ModelName,
+                SelectedPartition.Table.TableName,
+                SelectedPartition.PartitionName);
             await OnObjectSelected.InvokeAsync(obj);
             await Offcanvas.LetAsync(x => x.HideAsync());
         }
         else if (SelectedTable is not null)
         {
-            var obj = (SelectedTable.Model.ModelName, SelectedTable.TableName, (string?)null);
+            var obj = new AnalysisServicesObjectSelectedResponse(SelectedTable.Model.ModelName, SelectedTable.TableName);
             await OnObjectSelected.InvokeAsync(obj);
             await Offcanvas.LetAsync(x => x.HideAsync());
         }
         else if (SelectedModel is not null)
         {
-            var obj = (SelectedModel.ModelName, (string?)null, (string?)null);
+            var obj = new AnalysisServicesObjectSelectedResponse(SelectedModel.ModelName);
             await OnObjectSelected.InvokeAsync(obj);
             await Offcanvas.LetAsync(x => x.HideAsync());
         }

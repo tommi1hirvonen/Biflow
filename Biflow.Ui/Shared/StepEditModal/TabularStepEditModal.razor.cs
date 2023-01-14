@@ -38,12 +38,10 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    private void OnAnalysisServicesObjectSelected((string ModelName, string? TableName, string? PartitionName) obj)
+    private void OnAnalysisServicesObjectSelected(AnalysisServicesObjectSelectedResponse obj)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        Step.TabularModelName = obj.ModelName;
-        Step.TabularTableName = obj.TableName;
-        Step.TabularPartitionName = obj.PartitionName;
+        (Step.TabularModelName, Step.TabularTableName, Step.TabularPartitionName) = obj;
     }
 
     protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)

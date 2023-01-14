@@ -158,7 +158,7 @@
     public Guid? ConnectionId { get; set; }
 
     [Parameter]
-    public EventCallback<(string Folder, string Project, string Package)> OnPackageSelected { get; set; }
+    public EventCallback<PackageSelectedResponse> OnPackageSelected { get; set; }
 
     private SSISCatalog? Catalog { get; set; }
 
@@ -200,7 +200,7 @@
     {
         if (SelectedFolder is not null && SelectedProject is not null && SelectedPackage is not null)
         {
-            var package = (SelectedFolder.FolderName, SelectedProject.ProjectName, SelectedPackage.PackageName);
+            var package = new PackageSelectedResponse(SelectedFolder.FolderName, SelectedProject.ProjectName, SelectedPackage.PackageName);
             await OnPackageSelected.InvokeAsync(package);
             await Offcanvas.LetAsync(x => x.HideAsync());
         }

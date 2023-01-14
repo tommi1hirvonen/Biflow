@@ -17,11 +17,10 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 
     private Task OpenDatasetSelectOffcanvas() => DatasetSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
-    private void OnDatasetSelected((string GroupId, string DatasetId) dataset)
+    private void OnDatasetSelected(DatasetSelectedResponse dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        Step.DatasetGroupId = dataset.GroupId;
-        Step.DatasetId = dataset.DatasetId;
+        (Step.DatasetGroupId, Step.DatasetId) = dataset;
     }
 
     protected override Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
