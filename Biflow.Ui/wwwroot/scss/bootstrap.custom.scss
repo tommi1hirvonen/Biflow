@@ -49,11 +49,9 @@ $body-bg-dark-custom: shade-color($dark, 15%);
     .btn-auto {
         @include button-variant(
             rgba(0, 0, 0, 0),
-            rgba(0, 0, 0, 0),
+            tint-color($dark, 25%),
             $hover-background: shade-color($dark, 35%),
-            $hover-border: shade-color($dark, 40%),
-            $active-background: shade-color($dark, 40%),
-            $active-border: shade-color($dark, 45%)
+            $active-background: shade-color($dark, 40%)
         );
     }
 }
@@ -62,11 +60,9 @@ $body-bg-dark-custom: shade-color($dark, 15%);
     .btn-auto {
         @include button-variant(
             rgba(255, 255, 255, 0),
-            rgba(255, 255, 255, 0),
+            shade-color($light, 25%),
             $hover-background: shade-color($light, $btn-hover-bg-shade-amount),
-            $hover-border: shade-color($light, $btn-hover-border-shade-amount),
-            $active-background: shade-color($light, $btn-active-bg-shade-amount),
-            $active-border: shade-color($light, $btn-active-border-shade-amount)
+            $active-background: shade-color($light, $btn-active-bg-shade-amount)
         );
     }
 }
@@ -111,6 +107,10 @@ $navbar-gradient: #8F75DA;
     --bs-btn-hover-color: var(--bs-white);
     --bs-btn-active-color: var(--bs-btn-hover-color);
     --bs-btn-disabled-color: var(--bs-white);
+}
+
+tr .btn-auto, .list-group-item .btn-auto {
+    border: none;
 }
 
 // Nav links
