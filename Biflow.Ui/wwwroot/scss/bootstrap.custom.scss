@@ -3,6 +3,11 @@ $success: #1bbe8f;
 $danger: #e85875;
 $warning: #dfa100;
 
+$btn-padding-y: .3rem;
+$btn-border-radius: .5rem;
+$btn-border-radius-sm: .4rem;
+$btn-font-weight: 500;
+
 @import "../lib/bootstrap/scss/bootstrap";
 
 $body-bg-dark-custom: shade-color($dark, 15%);
@@ -106,6 +111,18 @@ $navbar-gradient: #8F75DA;
     --bs-btn-hover-color: var(--bs-white);
     --bs-btn-active-color: var(--bs-btn-hover-color);
     --bs-btn-disabled-color: var(--bs-white);
+}
+
+// Nav links
+.nav.nav-tabs .nav-item .nav-link {
+    border-radius: 0;
+    border: none;
+}
+
+.nav.nav-tabs .nav-item .nav-link.active {
+    font-weight: 500;
+    background-color: transparent;
+    border-bottom: 4px solid $primary;
 }
 
 // Table

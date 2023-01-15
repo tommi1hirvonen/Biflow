@@ -20,48 +20,53 @@
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                         <div class="row">
                             <div class="col">
-                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Settings ? "active" : null)"
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item">
+                                        <span class="nav-link @(Modal.CurrentView == StepEditModalView.Settings ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Settings">
-                                        <CxIcon Icon="FeatherIcon.Settings" />
-                                        Settings
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
+                                            <CxIcon Icon="FeatherIcon.Settings" />
+                                            Settings
+                                        </span>
+                                    </li>
+                                    <li class="nav-item">
+                                        <span class="nav-link @(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Targets">
-                                        <CxIcon Icon="FeatherIcon.Download" />
-                                        Targets
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
+                                            <CxIcon Icon="FeatherIcon.Download" />
+                                            Targets
+                                        </span>
+                                    </li>
+                                    <li class="nav-item">
+                                        <span class="nav-link @(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
-                                        <CxIcon Icon="FeatherIcon.Share" />
-                                        Sources
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Dependencies ? "active" : null)"
+                                            <CxIcon Icon="FeatherIcon.Share" />
+                                            Sources
+                                        </span>
+                                    </li>
+                                    <li class="nav-item">
+                                        <span class="nav-link @(Modal.CurrentView == StepEditModalView.Dependencies ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Dependencies">
-                                        <CxIcon Icon="LucideIcon.Network" />
-                                        Dependencies
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              CssClass="@(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
-                                              @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
-                                        <CxIcon Icon="FeatherIcon.CheckSquare" />
-                                        Condition
-                                    </HxButton>
-                                </HxButtonGroup>
+                                            <CxIcon Icon="LucideIcon.Network" />
+                                            Dependencies
+                                        </span>
+                                    </li>
+                                    <li class="nav-item">
+                                        <span class="nav-link @(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
+                                          @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
+                                            <CxIcon Icon="FeatherIcon.CheckSquare" />
+                                            Condition
+                                        </span>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
                                       @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                                     <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Definition explorer
                                 </HxButton>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                <HxButton CssClass="btn-auto ms-3" Size="ButtonSize.Small"
                                             @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                                     <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Reference explorer
