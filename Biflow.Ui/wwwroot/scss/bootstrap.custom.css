@@ -11693,6 +11693,12 @@ textarea.form-control-lg {
   z-index: 1060;
 }
 
+[data-bs-theme=light] .alert-secondary, [data-bs-theme=auto] .alert-secondary {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+}
+
 .btn-primary, .btn-success, .btn-danger {
   --bs-btn-color: var(--bs-white);
   --bs-btn-hover-color: var(--bs-white);

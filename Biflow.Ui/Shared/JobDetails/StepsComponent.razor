@@ -2,31 +2,60 @@
 <PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
 
 <div class="sticky-top pt-2 pb-3" style="background-color: var(--sticky-top-bg);">
-    <div class="btn-toolbar">
-        <AuthorizeView Roles="Admin, Editor">
-            <HxDropdownButtonGroup CssClass="me-3">
-                <HxDropdownToggleButton Color="ThemeColor.Success">
-                    Add step
-                </HxDropdownToggleButton>
-                <HxDropdownMenu>
-                    <HxDropdownHeader>Step type</HxDropdownHeader>
-                    @foreach (var stepType in Enum.GetValues<StepType>())
+    <div class="row justify-content-between gap-3">
+        <div class="col-auto">
+            <div class="btn-toolbar">
+                <AuthorizeView Roles="Admin, Editor">
+                    <HxDropdownButtonGroup CssClass="me-3">
+                        <HxDropdownToggleButton Color="ThemeColor.Success">
+                            Add step
+                        </HxDropdownToggleButton>
+                        <HxDropdownMenu>
+                            <HxDropdownHeader>Step type</HxDropdownHeader>
+                            @foreach (var stepType in Enum.GetValues<StepType>())
+                            {
+                                <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
+                                            Enabled="!IsStepTypeDisabled(stepType)">
+                                    <StepTypeIconComponent StepType_="stepType" />
+                                    @stepType
+                                </HxDropdownItem>
+                            }
+                        </HxDropdownMenu>
+                    </HxDropdownButtonGroup>
+                </AuthorizeView>
+                <AuthorizeView Roles="Admin, Editor, Operator">
+                    <HxButton Color="ThemeColor.Primary" @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
+                        <CxIcon Icon="FeatherIcon.Play" />
+                        Execute
+                    </HxButton>
+                </AuthorizeView>
+            </div>
+        </div>
+        <div class="col-auto">
+            @if (Job is not null)
+            {
+                <div class="alert alert-secondary mb-0 py-2" role="alert">
+                    @if (Job.UseDependencyMode)
                     {
-                        <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
-                                        Enabled="!IsStepTypeDisabled(stepType)">
-                            <StepTypeIconComponent StepType_="stepType" />
-                            @stepType
-                        </HxDropdownItem>
+                        <span>
+                            Execution mode:
+                            &nbsp;
+                            <CxIcon Icon="LucideIcon.Network" />
+                            Dependency mode
+                        </span>
                     }
-                </HxDropdownMenu>
-            </HxDropdownButtonGroup>
-        </AuthorizeView>
-        <AuthorizeView Roles="Admin, Editor, Operator">
-            <HxButton Color="ThemeColor.Primary" @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
-                <CxIcon Icon="FeatherIcon.Play" />
-                Execute
-            </HxButton>
-        </AuthorizeView>
+                    else
+                    {
+                        <span>
+                            Execution mode:
+                            &nbsp;
+                            <CxIcon Icon="FeatherIcon.Layers" />
+                            Execution phase
+                        </span>
+                    }
+                </div>
+            }
+        </div>
     </div>
 
     @if (LastStartedExecutionId is not null)

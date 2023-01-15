@@ -101,6 +101,15 @@ $navbar-gradient: #8F75DA;
     z-index: 1060;
 }
 
+// Alert
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .alert-secondary {
+        background-color: $gray-200;
+        border-color: $gray-500;
+        color: $gray-700;
+    }
+}
+
 // Buttons
 .btn-primary, .btn-success, .btn-danger {
     --bs-btn-color: var(--bs-white);
