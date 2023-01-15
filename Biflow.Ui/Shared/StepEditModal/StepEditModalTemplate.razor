@@ -61,16 +61,16 @@
                         </div>
                         <div class="row">
                             <div class="col">
-                                <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
-                                      @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                    Definition explorer
-                                </HxButton>
-                                <HxButton CssClass="btn-auto ms-3" Size="ButtonSize.Small"
-                                            @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                    Reference explorer
-                                </HxButton>
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
+                                          @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
+                                        Definition explorer
+                                    </HxButton>
+                                    <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
+                                          @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
+                                        Reference explorer
+                                    </HxButton>
+                                </HxButtonGroup>
                             </div>
                         </div>
 
