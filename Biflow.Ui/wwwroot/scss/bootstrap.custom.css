@@ -11961,15 +11961,10 @@ tr .btn-auto, .list-group-item .btn-auto {
 .sidebar .nav-link {
   font-size: 15px;
   color: var(--bs-body-color);
-  border-radius: 0.5rem;
-  margin-left: 8px;
-  margin-right: 8px;
-  margin-top: 3px;
-  margin-bottom: 3px;
-  padding-left: 8px;
-  padding-right: 8px;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-left: 15px;
+  padding-right: 10px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .sidebar .nav-link svg {
@@ -11979,7 +11974,6 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 .sidebar .nav-link.active {
   font-weight: 500;
-  color: var(--bs-emphasis-color);
 }
 
 .sidebar .nav-link.active svg,
@@ -11987,20 +11981,14 @@ tr .btn-auto, .list-group-item .btn-auto {
   color: var(--bs-emphasis-color);
 }
 
-[data-bs-theme=light] .sidebar .nav-link.active, [data-bs-theme=auto] .sidebar .nav-link.active {
-  background-color: #dadcf7;
-}
-[data-bs-theme=light] .sidebar .nav-link:hover, [data-bs-theme=auto] .sidebar .nav-link:hover {
-  background-color: #dadcf7;
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+  background-color: var(--bs-secondary-bg);
   color: var(--bs-emphasis-color);
 }
 
-[data-bs-theme=dark] .sidebar .nav-link.active {
-  background-color: #303364;
-}
-[data-bs-theme=dark] .sidebar .nav-link:hover {
-  background-color: #303364;
-  color: var(--bs-emphasis-color);
+.sidebar .nav-link.active {
+  border-left: 5px solid #6a71de;
+  padding-left: 10px;
 }
 
 .sidebar-heading {

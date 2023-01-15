@@ -394,15 +394,10 @@ tr .btn-auto, .list-group-item .btn-auto {
 .sidebar .nav-link {
     font-size: 15px;
     color: var(--bs-body-color);
-    border-radius: .5rem;
-    margin-left: 8px;
-    margin-right: 8px;
-    margin-top: 3px;
-    margin-bottom: 3px;
-    padding-left: 8px;
-    padding-right: 8px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-left: 15px;
+    padding-right: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
 }
 
 .sidebar .nav-link svg {
@@ -412,7 +407,6 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 .sidebar .nav-link.active {
     font-weight: 500;
-    color: var(--bs-emphasis-color);
 }
 
 .sidebar .nav-link.active svg,
@@ -420,29 +414,14 @@ tr .btn-auto, .list-group-item .btn-auto {
     color: var(--bs-emphasis-color);
 }
 
-// The background highlight for active and hovered items is different for light and dark theme.
-[data-bs-theme="light"], [data-bs-theme="auto"] {
-
-    .sidebar .nav-link.active {
-        background-color: tint-color($primary, 75%);
-    }
-
-    .sidebar .nav-link:hover {
-        background-color: tint-color($primary, 75%);
-        color: var(--bs-emphasis-color);
-    }
+.sidebar .nav-link.active, .sidebar .nav-link:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-emphasis-color);
 }
 
-[data-bs-theme="dark"] {
-
-    .sidebar .nav-link.active {
-        background-color: shade-color($primary, 55%);
-    }
-
-    .sidebar .nav-link:hover {
-        background-color: shade-color($primary, 55%);
-        color: var(--bs-emphasis-color);
-    }
+.sidebar .nav-link.active {
+    border-left: 5px solid $primary;
+    padding-left: 10px;
 }
 
 .sidebar-heading {
