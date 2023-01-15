@@ -482,3 +482,73 @@ $navbar-gradient: #8F75DA;
     margin-left: 2vw;
     margin-right: 2vw;
 }
+
+
+// highlight.js T-SQL extensions. Used to syntax highlight T-SQL code shown as HTML.
+.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: .5em;
+    color: var(--bs-secondary-color);
+}
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .hljs-keyword {
+        color: $blue;
+    }
+
+    .hljs-comment {
+        color: $green;
+    }
+
+    .hljs-type {
+        color: $green;
+    }
+
+    .hljs-function {
+        color: $red-800;
+    }
+
+    .hljs-built_in {
+        color: $pink;
+    }
+}
+
+[data-bs-theme="dark"] {
+    .hljs-keyword {
+        color: $blue-300;
+    }
+
+    .hljs-comment {
+        color: $teal;
+    }
+
+    .hljs-type {
+        color: $teal;
+    }
+
+    .hljs-function {
+        color: $red-600;
+    }
+
+    .hljs-built_in {
+        color: $pink-400;
+    }
+}
+
+.hljs-number {
+    color: var(--bs-emphasis-color);
+}
+
+.hljs-string {
+    color: $red;
+}
+
+.hljs-symbol {
+    color: var(--bs-emphasis-color);
+}
+
+.hljs-meta {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+}
