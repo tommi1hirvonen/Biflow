@@ -7,7 +7,7 @@
     var title = Job.JobId == Guid.Empty ? "New job" : $"Edit {Job.JobName}";
 }
 
-<HxOffcanvas @ref="Offcanvas" Title="@title" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="Offcanvas" Title="@title">
     <BodyTemplate>
         @if (Categories is not null)
         {

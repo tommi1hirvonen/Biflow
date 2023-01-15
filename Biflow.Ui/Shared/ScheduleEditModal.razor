@@ -5,7 +5,7 @@
 @inject ISchedulerService SchedulerService
 @inject IJSRuntime JS
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Backdrop="OffcanvasBackdrop.False" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
         <EditForm id="schedule_form" Model="Schedule" OnValidSubmit="SubmitSchedule" Context="_context">
