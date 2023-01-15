@@ -19,7 +19,7 @@
 
 <AuthorizeView Roles="Admin,Editor,Operator,Viewer">
     <Authorized>
-        <HxMessenger Position="ToastContainerPosition.TopCenter" />
+        <HxMessenger Position="ToastContainerPosition.BottomEnd" />
         <HxMessageBoxHost />
         <SchedulerStatusComponent OnStatusMessageResolved="message => SchedulerServiceErrorMessage = message" />
         <header>
