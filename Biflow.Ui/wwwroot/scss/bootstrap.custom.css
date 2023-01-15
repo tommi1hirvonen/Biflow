@@ -11758,6 +11758,10 @@ tr .btn-auto, .list-group-item .btn-auto {
   cursor: default;
 }
 
+.form-label, .form-check-label {
+  font-weight: 500;
+}
+
 .progress-bar.running {
   background-color: #6a71de;
 }
