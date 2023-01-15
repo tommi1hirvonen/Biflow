@@ -172,7 +172,7 @@
                 <li class="list-group-item list-group-header">
                     <div class="row align-items-center" style="min-height: 31px;">
                         <AuthorizeView Roles="Admin, Editor, Operator">
-                            <div class="col text-secondary d-flex align-items-center">
+                            <div class="col text-muted d-flex align-items-center">
                                 <TriStateCheckbox Checked="@(SelectedSteps.Count == count && Steps.Any() && count > 0)"
                                                   Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
                                                   CheckedChanged="ToggleAllStepsSelected" />
@@ -211,10 +211,10 @@
                                 }
                             </div>
                         </AuthorizeView>
-                        <div class="col text-secondary text-center fw-bold small">
+                        <div class="col text-muted text-center fw-bold small">
                              @countText
                         </div>
-                        <div class="col text-secondary text-end fw-bold small">
+                        <div class="col text-muted text-end fw-bold small">
                             @if (stateFilter == StateFilter.All)
                             {
                                 @disabledCountText
