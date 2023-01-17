@@ -94,7 +94,7 @@ public class TableData
             rowIndex++;
         }
         var firstCell = sheet.Cell(1, 1);
-        var lastCell = sheet.Cell(_rows.Count, Columns.Count);
+        var lastCell = sheet.Cell(_rows.Count + 1, Columns.Count); // Add 1 to row count to account for header row
         var range = sheet.Range(firstCell, lastCell);
         range.CreateTable();
         // Adjust column widths based on only the first 100 rows for much better performance.
