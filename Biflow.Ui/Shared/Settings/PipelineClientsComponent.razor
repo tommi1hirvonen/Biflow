@@ -106,9 +106,9 @@
                       AppRegistrations="AppRegistrations"
                       OnDataFactorySubmit="OnClientSubmit" />
 
-<SynapseEditModal @ref="ClientEditModals[PipelineClientType.Synapse]"
+<SynapseWorkspaceEditModal @ref="ClientEditModals[PipelineClientType.Synapse]"
                   AppRegistrations="AppRegistrations"
-                  OnSynapseSubmit="OnClientSubmit"/>
+                  OnSynapseWorkspaceSubmit="OnClientSubmit"/>
 
 <HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsClient?.PipelineClientName}")">
     <BodyTemplate>

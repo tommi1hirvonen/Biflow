@@ -5,9 +5,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class Synapse : PipelineClient
+public class SynapseWorkspace : PipelineClient
 {
-    public Synapse(string synapseWorkspaceUrl) : base(PipelineClientType.Synapse)
+    public SynapseWorkspace(string synapseWorkspaceUrl) : base(PipelineClientType.Synapse)
     {
         SynapseWorkspaceUrl = synapseWorkspaceUrl;
     }

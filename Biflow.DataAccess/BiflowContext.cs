@@ -37,7 +37,7 @@ public class BiflowContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<PipelineClient> PipelineClients => Set<PipelineClient>();
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();
-    public DbSet<Synapse> Synapses => Set<Synapse>();
+    public DbSet<SynapseWorkspace> SynapseWorkspaces => Set<SynapseWorkspace>();
     public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
@@ -290,7 +290,7 @@ public class BiflowContext : DbContext
         {
             e.HasDiscriminator<PipelineClientType>("PipelineClientType")
             .HasValue<DataFactory>(PipelineClientType.DataFactory)
-            .HasValue<Synapse>(PipelineClientType.Synapse);
+            .HasValue<SynapseWorkspace>(PipelineClientType.Synapse);
         });
 
         modelBuilder.Entity<ConnectionInfoBase>(e =>
