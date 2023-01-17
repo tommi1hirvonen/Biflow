@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStep : Step
+public class PackageStep : Step, IHasConnection<SqlConnectionInfo>
 {
     public PackageStep() : base(StepType.Package) { }
 

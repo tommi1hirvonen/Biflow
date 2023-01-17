@@ -45,10 +45,7 @@ public partial class StepsComponent : ComponentBase
         .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
         .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
         .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType))
-        .Where(step => !ConnectionFilter.Any()
-                        || step is SqlStep sql && ConnectionFilter.Any(f => f.ConnectionId == sql.ConnectionId)
-                        || step is PackageStep package && ConnectionFilter.Any(f => f.ConnectionId == package.ConnectionId)
-                        || step is AgentJobStep agent && ConnectionFilter.Any(f => f.ConnectionId == agent.ConnectionId))
+        .Where(step => !ConnectionFilter.Any() || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
         ?? Enumerable.Empty<Step>();
 
     private IEnumerable<Tag> Tags => Steps?
@@ -74,7 +71,7 @@ public partial class StepsComponent : ComponentBase
     private string SqlStatementFilter { get; set; } = string.Empty;
     private HashSet<Tag> TagsFilterSet { get; set; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
-    private HashSet<SqlConnectionInfo> ConnectionFilter { get; set;} = new();
+    private HashSet<ConnectionInfoBase> ConnectionFilter { get; set;} = new();
 
     private Guid? LastStartedExecutionId { get; set; }
 

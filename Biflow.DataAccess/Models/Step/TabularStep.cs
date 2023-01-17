@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class TabularStep : Step
+public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>
 {
     public TabularStep(string tabularModelName)
         : base(StepType.Tabular)

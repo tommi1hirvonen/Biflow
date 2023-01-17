@@ -133,15 +133,16 @@
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
-                <FilterDropdown TItem="SqlConnectionInfo"
+                <FilterDropdown TItem="ConnectionInfoBase"
                                 FilterSet="ConnectionFilter"
                                 IdSelector="c => c.ConnectionId.ToString()"
                                 TextSelector="c => c.ConnectionName"
-                                Items="SqlConnections?
-                                        .Where(c => Steps?.Any(s => s is SqlStep sql && sql.ConnectionId == c.ConnectionId
-                                                                || s is PackageStep package && package.ConnectionId == c.ConnectionId) == true)
+                                Items="SqlConnections
+                                        ?.Cast<ConnectionInfoBase>()
+                                        .Concat(AsConnections?.Cast<ConnectionInfoBase>() ?? Enumerable.Empty<ConnectionInfoBase>())
+                                        .Where(c => Steps?.Any(s => s is IHasConnection conn && conn.ConnectionId == c.ConnectionId) ?? false)
                                         .OrderBy(c => c.ConnectionName)
-                                        ?? Enumerable.Empty<SqlConnectionInfo>()"
+                                        ?? Enumerable.Empty<ConnectionInfoBase>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.Database" />

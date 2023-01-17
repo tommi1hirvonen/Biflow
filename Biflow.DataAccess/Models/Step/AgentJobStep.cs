@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class AgentJobStep : Step
+public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>
 {
     public AgentJobStep(string agentJobName) : base(StepType.AgentJob)
     {

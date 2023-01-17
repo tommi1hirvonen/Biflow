@@ -268,9 +268,7 @@
 
     private Guid? ConnectionId => Modal?.Step switch
     {
-        SqlStep sql => sql.ConnectionId,
-        AgentJobStep agent => agent.ConnectionId,
-        PackageStep package => package.ConnectionId,
+        IHasConnection<SqlConnectionInfo> sql => sql.ConnectionId,
         _ => null
     };
 
