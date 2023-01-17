@@ -78,15 +78,17 @@
         <dd class="col-sm-9">
             @StepExecutionAttempt.StepExecution.ExecutionConditionExpression
         </dd>
-
-        @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
+        @if (StepExecutionAttempt.StepExecution is IHasTimeout timeout)
         {
             <dt class="col-sm-3">
                 Timeout (min)
             </dt>
             <dd class="col-sm-9">
-                @sql.TimeoutMinutes
+                @timeout.TimeoutMinutes
             </dd>
+        }
+        @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
+        {
             <dt class="col-sm-3">
                 SQL statement
             </dt>
@@ -110,12 +112,6 @@
         }
         else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
         {
-            <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @package.TimeoutMinutes
-            </dd>
             <dt class="col-sm-3">
                 Package path
             </dt>
@@ -147,12 +143,6 @@
         else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
         {
             <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @pipeline.TimeoutMinutes
-            </dd>
-            <dt class="col-sm-3">
                 Pipeline name
             </dt>
             <dd class="col-sm-9">
@@ -176,12 +166,6 @@
         }
         else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
         {
-            <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @exe.TimeoutMinutes
-            </dd>
             <dt class="col-sm-3">
                 File path
             </dt>
@@ -240,12 +224,6 @@
         else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
         {
             <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @function.TimeoutMinutes
-            </dd>
-            <dt class="col-sm-3">
                 Function url
             </dt>
             <dd class="col-sm-9">
@@ -282,12 +260,6 @@
         else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
         {
             <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @agent.TimeoutMinutes
-            </dd>
-            <dt class="col-sm-3">
                 Agent job name
             </dt>
             <dd class="col-sm-9">
@@ -296,12 +268,6 @@
         }
         else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
         {
-            <dt class="col-sm-3">
-                Timeout (min)
-            </dt>
-            <dd class="col-sm-9">
-                @tabular.TimeoutMinutes
-            </dd>
             <dt class="col-sm-3">
                 Model name
             </dt>

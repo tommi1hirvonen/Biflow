@@ -3,12 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>
+public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
     public AgentJobStep(string agentJobName) : base(StepType.AgentJob)
     {
         AgentJobName = agentJobName;
     }
+
+    [Column("TimeoutMinutes")]
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Display(Name = "Agent job name")]
     [Required]

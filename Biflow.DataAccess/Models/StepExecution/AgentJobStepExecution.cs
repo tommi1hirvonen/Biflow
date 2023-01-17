@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class AgentJobStepExecution : StepExecution
+public class AgentJobStepExecution : StepExecution, IHasTimeout
 {
     public AgentJobStepExecution(string stepName, string agentJobName) : base(stepName, StepType.AgentJob)
     {

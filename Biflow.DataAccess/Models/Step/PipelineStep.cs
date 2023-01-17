@@ -1,10 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PipelineStep : Step
+public class PipelineStep : Step, IHasTimeout
 {
     public PipelineStep() : base(StepType.Pipeline) { }
+
+    [Column("TimeoutMinutes")]
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Required]
     public Guid? PipelineClientId { get; set; }

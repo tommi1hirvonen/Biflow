@@ -66,11 +66,6 @@ public abstract class Step : IComparable
     [Range(0, 1000)]
     public double RetryIntervalMinutes { get; set; }
 
-    [Required]
-    [Display(Name = "Timeout (min)")]
-    [Range(0, 2880)] // 48 hours
-    public double TimeoutMinutes { get; set; }
-
     [Display(Name = "Execution condition")]
     public string? ExecutionConditionExpression { get; set; }
 

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class FunctionStepExecution : StepExecution
+public class FunctionStepExecution : StepExecution, IHasTimeout
 {
     public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
     {

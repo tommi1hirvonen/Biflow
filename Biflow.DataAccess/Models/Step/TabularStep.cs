@@ -3,13 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>
+public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>, IHasTimeout
 {
     public TabularStep(string tabularModelName)
         : base(StepType.Tabular)
     {
         TabularModelName = tabularModelName;
     }
+
+    [Column("TimeoutMinutes")]
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Display(Name = "Tabular model name")]
     [Required]

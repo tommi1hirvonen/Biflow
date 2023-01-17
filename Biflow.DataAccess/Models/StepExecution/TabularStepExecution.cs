@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class TabularStepExecution : StepExecution
+public class TabularStepExecution : StepExecution, IHasTimeout
 {
     public TabularStepExecution(string stepName, string tabularModelName)
         : base(stepName, StepType.Tabular)

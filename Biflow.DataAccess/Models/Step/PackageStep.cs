@@ -3,9 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStep : Step, IHasConnection<SqlConnectionInfo>
+public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
     public PackageStep() : base(StepType.Package) { }
+
+    [Column("TimeoutMinutes")]
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Column("ConnectionId")]
     [Required]

@@ -1,10 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class ExeStep : Step
+public class ExeStep : Step, IHasTimeout
 {
     public ExeStep() : base(StepType.Exe) { }
+
+    [Column("TimeoutMinutes")]
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Required]
     [Display(Name = "File path")]

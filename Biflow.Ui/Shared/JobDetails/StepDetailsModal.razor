@@ -39,12 +39,15 @@
                 <dd class="col-sm-9">
                     @Step.RetryIntervalMinutes
                 </dd>
-                <dt class="col-sm-3">
-                    Timeout (min)
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.TimeoutMinutes
-                </dd>
+                @if (Step is IHasTimeout timeout)
+                {
+                    <dt class="col-sm-3">
+                        Timeout (min)
+                    </dt>
+                    <dd class="col-sm-9">
+                        @timeout.TimeoutMinutes
+                    </dd>
+                }
                 @if (Step is SqlStep sql)
                 {
                     <dt class="col-sm-3">
