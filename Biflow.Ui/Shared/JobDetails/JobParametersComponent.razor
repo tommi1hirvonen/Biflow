@@ -8,6 +8,8 @@
 }
 else
 {
+    <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+
     <div class="row">
         <div class="col">
             <HxButtonToolbar>
@@ -35,10 +37,7 @@ else
             </HxPopover>
         </div>
     </div>
-    @if (Context?.ChangeTracker.HasChanges() ?? false)
-    {
-        <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-    }
+    
     <div class="row my-4">
         <div class="col">
             <div class="card shadow-sm">

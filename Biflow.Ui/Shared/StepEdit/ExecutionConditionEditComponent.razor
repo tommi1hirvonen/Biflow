@@ -247,10 +247,9 @@
             evaluator.Namespaces.Remove("System.IO");
             foreach (var param in Step.ExecutionConditionParameters)
             {
-                param.SetParameterValue();
                 var value = param.JobParameterId is not null
-                ? JobParameters.First(p => p.ParameterId == param.JobParameterId).ParameterValue
-                : param.ParameterValue;
+                    ? JobParameters.First(p => p.ParameterId == param.JobParameterId).ParameterValue
+                    : param.ParameterValue;
                 evaluator.Variables[param.ParameterName] = value;
             }
             var result = evaluator.Evaluate(Step.ExecutionConditionExpression);

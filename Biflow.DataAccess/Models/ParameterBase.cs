@@ -20,92 +20,163 @@ public abstract class ParameterBase
     [Column(TypeName = "sql_variant")]
     public object? ParameterValue
     {
-        get
-        {
-            return parameterValueField;
-        }
+        get => _parameterValue;
         set
         {
             switch (value)
             {
                 case bool b:
-                    ValueBoolean = b;
+                    _valueBoolean = b;
                     break;
                 case DateTime b:
-                    ValueDateTime = b;
+                    _valueDateTime = b;
                     break;
                 case decimal b:
-                    ValueDecimal = b;
+                    _valueDecimal = b;
                     break;
                 case double b:
-                    ValueDouble = b;
+                    _valueDouble = b;
                     break;
                 case short b:
-                    ValueInt16 = b;
+                    _valueInt16 = b;
                     break;
                 case int b:
-                    ValueInt32 = b;
+                    _valueInt32 = b;
                     break;
                 case long b:
-                    ValueInt64 = b;
+                    _valueInt64 = b;
                     break;
                 case float b:
-                    ValueSingle = b;
+                    _valueSingle = b;
                     break;
                 case string b:
-                    ValueString = b;
+                    _valueString = b;
                     break;
             }
-            parameterValueField = value;
+            _parameterValue = value;
         }
     }
 
-    private object? parameterValueField;
+    private object? _parameterValue;
 
     [Required]
     public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
 
     [NotMapped]
-    public bool ValueBoolean { get; set; }
-
-    [NotMapped]
-    public DateTime ValueDateTime { get; set; }
-
-    [NotMapped]
-    public decimal ValueDecimal { get; set; }
-
-    [NotMapped]
-    public double ValueDouble { get; set; }
-
-    [NotMapped]
-    public short ValueInt16 { get; set; }
-
-    [NotMapped]
-    public int ValueInt32 { get; set; }
-
-    [NotMapped]
-    public long ValueInt64 { get; set; }
-
-    [NotMapped]
-    public float ValueSingle { get; set; }
-
-    [NotMapped]
-    public string? ValueString { get; set; }
-
-    public void SetParameterValue()
+    public bool ValueBoolean
     {
-        ParameterValue = ParameterValueType switch
+        get => _valueBoolean;
+        set
         {
-            ParameterValueType.Boolean => ValueBoolean,
-            ParameterValueType.DateTime => ValueDateTime,
-            ParameterValueType.Decimal => ValueDecimal,
-            ParameterValueType.Double => ValueDouble,
-            ParameterValueType.Int16 => ValueInt16,
-            ParameterValueType.Int32 => ValueInt32,
-            ParameterValueType.Int64 => ValueInt64,
-            ParameterValueType.Single => ValueSingle,
-            ParameterValueType.String => ValueString,
-            _ => string.Empty
-        };
+            _valueBoolean = value;
+            _parameterValue = value;
+        }
     }
+
+    private bool _valueBoolean;
+
+    [NotMapped]
+    public DateTime ValueDateTime
+    {
+        get => _valueDateTime;
+        set
+        {
+            _valueDateTime = value;
+            _parameterValue = value;
+        }
+    }
+
+    private DateTime _valueDateTime;
+
+    [NotMapped]
+    public decimal ValueDecimal
+    {
+        get => _valueDecimal;
+        set
+        {
+            _valueDecimal = value;
+            _parameterValue = value;
+        }
+    }
+
+    private decimal _valueDecimal;
+
+    [NotMapped]
+    public double ValueDouble
+    {
+        get => _valueDouble;
+        set
+        {
+            _valueDouble = value;
+            _parameterValue = value;
+        }
+    }
+
+    private double _valueDouble;
+
+    [NotMapped]
+    public short ValueInt16
+    {
+        get => _valueInt16;
+        set
+        {
+            _valueInt16 = value;
+            _parameterValue = value;
+        }
+    }
+
+    private short _valueInt16;
+
+    [NotMapped]
+    public int ValueInt32
+    {
+        get => _valueInt32;
+        set
+        {
+            _valueInt32 = value;
+            _parameterValue = value;
+        }
+    }
+
+    private int _valueInt32;
+
+    [NotMapped]
+    public long ValueInt64
+    {
+        get => _valueInt64;
+        set
+        {
+            _valueInt64 = value;
+            _parameterValue = value;
+        }
+    }
+
+    private long _valueInt64;
+
+    [NotMapped]
+    public float ValueSingle
+    {
+        get => _valueSingle;
+        set
+        {
+            _valueSingle = value;
+            _parameterValue = value;
+        }
+    }
+
+    private float _valueSingle;
+
+    [NotMapped]
+    public string? ValueString
+    {
+        get => _valueString;
+        set
+        {
+            _valueString = value;
+            _parameterValue = value;
+        }
+    }
+
+    private string? _valueString;
+
 }

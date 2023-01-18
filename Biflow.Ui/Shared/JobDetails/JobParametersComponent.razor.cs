@@ -69,8 +69,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
         foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
         {
-            param.SetParameterValue();
-
             // Update the referencing job step parameter names to match the possibly changed new name.
             foreach (var referencingJobStepParam in param.AssigningStepParameters)
             {
@@ -125,6 +123,11 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
+        if (!Context?.ChangeTracker.HasChanges() ?? true)
+        {
+            return;
+        }
+
         var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {

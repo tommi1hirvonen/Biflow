@@ -70,21 +70,12 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             return (false, conditionParamMessage);
         }
 
-        foreach (var param in Step.ExecutionConditionParameters)
-        {
-            param.SetParameterValue();
-        }
-
         (var paramResult, var paramMessage) = ParametersCheck();
         if (!paramResult)
         {
             return (false, paramMessage);
         }
 
-        foreach (var param in Step.StepParameters)
-        {
-            param.SetParameterValue();
-        }
         return (true, null);
     }
 
