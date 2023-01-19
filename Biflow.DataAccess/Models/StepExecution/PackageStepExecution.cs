@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStepExecution : StepExecution, IHasTimeout
+public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<PackageStepExecutionParameter>
 {
     public PackageStepExecution(string stepName, string packageFolderName, string packageProjectName, string packageName) : base(stepName, StepType.Package)
     {
@@ -41,5 +41,5 @@ public class PackageStepExecution : StepExecution, IHasTimeout
     [NotMapped]
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
-    public override bool SupportsParameterization => true;
+    public IList<PackageStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

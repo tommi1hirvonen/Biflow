@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
+public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
     public PackageStep() : base(StepType.Package) { }
 
@@ -45,7 +45,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 
     private string? _executeAsLogin;
 
-    public override bool SupportsParameterization => true;
-
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    public IList<PackageStepParameter> StepParameters { get; set; } = null!;
 }

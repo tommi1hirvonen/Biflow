@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
+public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<SqlStepParameter>
 {
     public SqlStep() : base(StepType.Sql) { }
 
@@ -24,7 +24,7 @@ public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; set; }
 
-    public override bool SupportsParameterization => true;
-
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    public IList<SqlStepParameter> StepParameters { get; set; } = null!;
 }

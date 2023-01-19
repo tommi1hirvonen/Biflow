@@ -32,6 +32,6 @@
                 <InputTextArea class="form-control form-control-sm" @bind-Value="Step.Body" rows="3" @oninput="ResetStepError"></InputTextArea>
             </div>
         </div>
-        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" NewParameterDelegate="() => new()" />
     }
 </StepEditModalTemplate>

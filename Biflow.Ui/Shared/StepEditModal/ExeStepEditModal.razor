@@ -61,6 +61,6 @@
                 </div>
             </div>
         </div>
-        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" NewParameterDelegate="() => new()" />
     }
 </StepEditModalTemplate>

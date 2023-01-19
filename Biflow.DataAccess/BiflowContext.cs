@@ -46,7 +46,6 @@ public class BiflowContext : DbContext
     public DbSet<AnalysisServicesConnectionInfo> AnalysisServicesConnections => Set<AnalysisServicesConnectionInfo>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<PackageStepParameter> PackageParameters => Set<PackageStepParameter>();
-    public DbSet<StepExecutionParameter> ExecutionParameters => Set<StepExecutionParameter>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
@@ -227,38 +226,52 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<StepParameterBase>(e =>
         {
-            e.HasOne(parameter => parameter.Step)
-            .WithMany(step => step.StepParameters)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(p => p.InheritFromJobParameter).WithMany(p => p.InheritingStepParameters);
             e.HasDiscriminator<ParameterType>("ParameterType")
-            .HasValue<StepParameter>(ParameterType.Base)
+            .HasValue<SqlStepParameter>(ParameterType.Sql)
             .HasValue<PackageStepParameter>(ParameterType.Package)
-            .HasValue<JobStepParameter>(ParameterType.Job);
+            .HasValue<JobStepParameter>(ParameterType.Job)
+            .HasValue<ExeStepParameter>(ParameterType.Exe)
+            .HasValue<FunctionStepParameter>(ParameterType.Function)
+            .HasValue<PipelineStepParameter>(ParameterType.Pipeline)
+            .HasValue<EmailStepParameter>(ParameterType.Email);
         });
 
+        modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
+        modelBuilder.Entity<PackageStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
+        modelBuilder.Entity<ExeStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
+        modelBuilder.Entity<FunctionStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
+        modelBuilder.Entity<PipelineStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
+        modelBuilder.Entity<EmailStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
         modelBuilder.Entity<JobStepParameter>(e =>
         {
+            e.HasOne(p => p.Step).WithMany(p => p.StepParameters).IsRequired().OnDelete(DeleteBehavior.Cascade);
             e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters);
         });
 
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
         {
-            e.HasOne(param => param.StepExecution)
-            .WithMany(e => e.StepExecutionParameters)
-            .HasForeignKey("ExecutionId", "StepId")
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(p => p.InheritFromExecutionParameter)
             .WithMany(p => p!.StepExecutionParameters)
             .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })
             .IsRequired(false);
             e.HasDiscriminator<ParameterType>("ParameterType")
-            .HasValue<StepExecutionParameter>(ParameterType.Base)
+            .HasValue<SqlStepExecutionParameter>(ParameterType.Sql)
             .HasValue<PackageStepExecutionParameter>(ParameterType.Package)
-            .HasValue<JobStepExecutionParameter>(ParameterType.Job);
+            .HasValue<JobStepExecutionParameter>(ParameterType.Job)
+            .HasValue<ExeStepExecutionParameter>(ParameterType.Exe)
+            .HasValue<FunctionStepExecutionParameter>(ParameterType.Function)
+            .HasValue<PipelineStepExecutionParameter>(ParameterType.Pipeline)
+            .HasValue<EmailStepExecutionParameter>(ParameterType.Email);
         });
+
+        modelBuilder.Entity<SqlStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<PackageStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<ExeStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<FunctionStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<PipelineStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<EmailStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
+        modelBuilder.Entity<JobStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));
 
         modelBuilder.Entity<StepExecutionConditionParameter>(e =>
         {

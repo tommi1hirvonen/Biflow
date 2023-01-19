@@ -13,4 +13,9 @@ public class JobStepParameter : StepParameterBase
     public Guid AssignToJobParameterId { get; set; }
 
     public JobParameter AssignToJobParameter { get; set; } = null!;
+
+    public JobStep Step { get; set; } = null!;
+
+    public override Step BaseStep => Step;
+
 }

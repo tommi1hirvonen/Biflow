@@ -50,23 +50,26 @@ internal abstract class StepExecutorBase
 
         // If the step is using job parameters,
         // update the job parameter's current value for this execution.
-        try
+        if (StepExecution is IHasStepExecutionParameters hasParameters)
         {
-            using var context = _dbContextFactory.CreateDbContext();
-            foreach (var param in StepExecution.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
+            try
             {
-                context.Attach(param);
-                param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
+                using var context = _dbContextFactory.CreateDbContext();
+                foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
+                {
+                    context.Attach(param);
+                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
+                }
+                await context.SaveChangesAsync();
             }
-            await context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
-            StepExecution.ExecutionId, StepExecution);
-            var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
-            await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
-            return false;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
+                StepExecution.ExecutionId, StepExecution);
+                var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
+                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
+                return false;
+            }
         }
 
         // Update current values of job parameters to execution condition parameters.

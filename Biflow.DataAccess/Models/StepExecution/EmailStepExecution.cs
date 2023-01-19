@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class EmailStepExecution : StepExecution
+public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<EmailStepExecutionParameter>
 {
     public EmailStepExecution(string stepName, string recipients, string subject, string body) : base(stepName, StepType.Email)
     {
@@ -23,10 +23,11 @@ public class EmailStepExecution : StepExecution
     [Column("EmailBody")]
     public string Body { get; set; }
 
+    public IList<EmailStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+
     public List<string> GetRecipientsAsList() =>
         Recipients
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .ToList();
 
-    public override bool SupportsParameterization => true;
 }

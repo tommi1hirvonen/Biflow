@@ -21,7 +21,5 @@ public class DatasetStep : Step
     [Required]
     public string? DatasetId { get; set; }
 
-    public override bool SupportsParameterization => false;
-
     public AppRegistration? AppRegistration { get; set; }
 }

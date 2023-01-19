@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class ExeStepExecution : StepExecution, IHasTimeout
+public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<ExeStepExecutionParameter>
 {
     public ExeStepExecution(string stepName, string exeFileName) : base(stepName, StepType.Exe)
     {
@@ -25,5 +25,5 @@ public class ExeStepExecution : StepExecution, IHasTimeout
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; set; }
 
-    public override bool SupportsParameterization => true;
+    public IList<ExeStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

@@ -87,8 +87,7 @@
             var context = DbFactory.CreateDbContext();
             Executions = await context.StepExecutionAttempts
                 .AsNoTrackingWithIdentityResolution()
-                .Include(attempt => attempt.StepExecution)
-                .ThenInclude(step => step.StepExecutionParameters)
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                 .Include(attempt => attempt.StepExecution)
                 .ThenInclude(step => step.Execution)
                 .ThenInclude(e => e.ExecutionParameters)

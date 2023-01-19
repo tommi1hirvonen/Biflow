@@ -25,5 +25,4 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 
-    public override bool SupportsParameterization => false;
 }

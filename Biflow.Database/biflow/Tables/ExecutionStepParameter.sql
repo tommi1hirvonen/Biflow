@@ -14,7 +14,15 @@
     CONSTRAINT [PK_ExecutionStepParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionStepParameter_InheritFromExecutionParameter] FOREIGN KEY ([ExecutionId], [InheritFromExecutionParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionStepParameter_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [biflow].[ExecutionStep] ([ExecutionId], [StepId]) ON DELETE CASCADE,
-    CONSTRAINT [CK_ExecutionStepParameter_ParameterType] CHECK ([ParameterType] = 'Package' OR [ParameterType] = 'Job' OR [ParameterType] = 'Base'),
+    CONSTRAINT [CK_ExecutionStepParameter_ParameterType] CHECK (
+        [ParameterType] = 'Package' OR
+        [ParameterType] = 'Job' OR
+        [ParameterType] = 'Sql' OR
+        [ParameterType] = 'Pipeline' OR
+        [ParameterType] = 'Exe' OR
+        [ParameterType] = 'Function' OR
+        [ParameterType] = 'Email'
+        ),
     CONSTRAINT [CK_ExecutionStepParameter_ParameterLevel] CHECK ([ParameterLevel] = 'Package' OR [ParameterLevel] = 'Project' OR [ParameterLevel] IS NULL),
     CONSTRAINT [CK_ExecutionStepParameter_JobStep] CHECK ([ParameterType] <> 'Job' OR [ParameterType] = 'Job' AND [AssignToJobParameterId] IS NOT NULL),
     CONSTRAINT [CK_ExecutionStepParameter_ParameterValueType] CHECK (

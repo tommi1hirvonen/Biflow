@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class ExeStep : Step, IHasTimeout
+public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 {
     public ExeStep() : base(StepType.Exe) { }
 
@@ -38,5 +38,5 @@ public class ExeStep : Step, IHasTimeout
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }
 
-    public override bool SupportsParameterization => true;
+    public IList<ExeStepParameter> StepParameters { get; set; } = null!;
 }

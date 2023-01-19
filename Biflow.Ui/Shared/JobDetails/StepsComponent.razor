@@ -281,7 +281,7 @@
                             </div>
                             <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-between">
                                 @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
-                                    || item.StepParameters.Any(p => p.InheritFromJobParameterId is not null)
+                                    || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null)
                                     || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
                                     <div title="Step uses job parameters" class="text-body">

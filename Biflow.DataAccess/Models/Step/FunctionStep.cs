@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class FunctionStep : Step, IHasTimeout
+public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepParameter>
 {
     public FunctionStep() : base(StepType.Function) { }
 
@@ -36,7 +36,7 @@ public class FunctionStep : Step, IHasTimeout
     [Display(Name = "Function key")]
     public string? FunctionKey { get; set; }
 
-    public override bool SupportsParameterization => true;
-
     public FunctionApp FunctionApp { get; set; } = null!;
+
+    public IList<FunctionStepParameter> StepParameters { get; set; } = null!;
 }

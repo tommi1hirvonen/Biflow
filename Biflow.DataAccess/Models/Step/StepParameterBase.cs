@@ -18,9 +18,9 @@ public abstract class StepParameterBase : ParameterBase
     [Required]
     public ParameterType ParameterType { get; }
 
-    public Step Step { get; set; } = null!;
-
     public Guid? InheritFromJobParameterId { get; set; }
 
     public JobParameter? InheritFromJobParameter { get; set; }
+
+    public abstract Step BaseStep { get; }
 }

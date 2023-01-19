@@ -25,7 +25,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Tags = new List<Tag>(),
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<JobStepParameter>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 

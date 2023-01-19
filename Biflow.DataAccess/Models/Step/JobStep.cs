@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class JobStep : Step
+public class JobStep : Step, IHasStepParameters<JobStepParameter>
 {
     public JobStep() : base(StepType.Job) { }
 
@@ -16,5 +16,5 @@ public class JobStep : Step
 
     public Job JobToExecute { get; set; } = null!;
 
-    public override bool SupportsParameterization => true;
+    public IList<JobStepParameter> StepParameters { get; set; } = null!;
 }

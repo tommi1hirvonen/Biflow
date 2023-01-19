@@ -19,7 +19,7 @@
             {
                 <tr><td colspan="6">No parameters</td></tr>
             }
-            @foreach (var param in Step.StepParameters.Cast<PackageStepParameter>())
+            @foreach (var param in Step.StepParameters)
             {
                 <tr>
                     <td>
@@ -70,8 +70,7 @@
             }
         </tbody>
     </table>
-    var level = ParameterLevel.Package; var type = ParameterValueType.String;
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new PackageStepParameter(level) { ParameterValueType = type })">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new(ParameterLevel.Package))">
         <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>

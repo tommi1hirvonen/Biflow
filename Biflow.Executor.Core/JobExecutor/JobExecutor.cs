@@ -56,9 +56,7 @@ internal class JobExecutor : IJobExecutor
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.StepExecutionParameters)
-                    .ThenInclude(p => p.InheritFromExecutionParameter)
+                    .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as DatasetStepExecution)!.AppRegistration)
                     .Include(e => e.StepExecutions)
@@ -66,14 +64,7 @@ internal class JobExecutor : IJobExecutor
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
                     .ThenInclude(df => df.AppRegistration)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as SqlStepExecution)!.Connection)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as PackageStepExecution)!.Connection)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as AgentJobStepExecution)!.Connection)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as TabularStepExecution)!.Connection)
+                    .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasConnection.Connection)}")
                     .FirstAsync(e => e.ExecutionId == executionId);
 
                 job = execution.Job ?? throw new InvalidOperationException("Job was null");

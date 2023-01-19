@@ -12,7 +12,15 @@
     CONSTRAINT [PK_StepParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_StepParameter] UNIQUE ([StepId], [ParameterLevel], [ParameterName]),
 	CONSTRAINT [FK_StepParameter_StepId] FOREIGN KEY ([StepId]) REFERENCES [biflow].[Step] ([StepId]) ON DELETE CASCADE,
-    CONSTRAINT [CK_StepParameter_ParameterType] CHECK ([ParameterType] = 'Package' OR [ParameterType] = 'Job' OR [ParameterType] = 'Base'),
+    CONSTRAINT [CK_StepParameter_ParameterType] CHECK (
+        [ParameterType] = 'Package' OR
+        [ParameterType] = 'Job' OR
+        [ParameterType] = 'Sql' OR
+        [ParameterType] = 'Pipeline' OR
+        [ParameterType] = 'Exe' OR
+        [ParameterType] = 'Function' OR
+        [ParameterType] = 'Email'
+        ),
     CONSTRAINT [CK_StepParameter_ParameterLevel] CHECK ([ParameterLevel] = 'Package' OR [ParameterLevel] = 'Project' OR [ParameterLevel] IS NULL),
     CONSTRAINT [CK_StepParameter_JobStepParameter] CHECK ([ParameterType] <> 'Job' OR [ParameterType] = 'Job' AND [AssignToJobParameterId] IS NOT NULL),
 	CONSTRAINT [CK_StepParameter_ParameterValueType] CHECK (

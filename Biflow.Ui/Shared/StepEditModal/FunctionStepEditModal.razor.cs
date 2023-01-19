@@ -44,7 +44,7 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
             FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<FunctionStepParameter>(),
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()

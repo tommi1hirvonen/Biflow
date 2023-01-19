@@ -381,11 +381,11 @@
             </dd>
         }
     </dl>
-    @if (StepExecutionAttempt.StepExecution.SupportsParameterization)
+    @if (StepExecutionAttempt.StepExecution is IHasStepExecutionParameters hasParams)
     {
         <h6>Parameters</h6>
         <dl class="row">
-            @foreach (var param in StepExecutionAttempt.StepExecution.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
+            @foreach (var param in hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
             {
                 // Append parameter level for package step executions to separate package and project level parameters.
                 <dt class="col-sm-3">

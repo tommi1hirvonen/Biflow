@@ -24,7 +24,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             RetryIntervalMinutes = 0,
             IsEnabled = true,
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<PackageStepParameter>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<DataObject>(),
@@ -56,8 +56,8 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         }
         for (var i = 0; i < parameters.Count - 1; i++)
         {
-            var currentParam = (PackageStepParameter)parameters[i];
-            var nextParam = (PackageStepParameter)parameters[i + 1];
+            var currentParam = parameters[i];
+            var nextParam = parameters[i + 1];
             if (nextParam.ParameterName == currentParam.ParameterName
                 && nextParam.ParameterLevel == currentParam.ParameterLevel)
             {

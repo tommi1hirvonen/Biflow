@@ -28,9 +28,12 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
             IsEnabled = true,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<EmailStepParameter>(),
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
+
+    private static EmailStepParameter GenerateNewParameter() =>
+        new() { ParameterValueType = ParameterValueType.String, ParameterValue = string.Empty };
 }

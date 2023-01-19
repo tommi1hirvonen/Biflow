@@ -8,5 +8,9 @@ public class JobStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public JobStepExecution StepExecution { get; set; } = null!;
+
+    public override StepExecution BaseStepExecution => StepExecution;
+
     public Guid AssignToJobParameterId { get; set; }
 }

@@ -26,7 +26,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             RetryIntervalMinutes = 0,
             IsEnabled = true,
             PipelineClientId = PipelineClients?.FirstOrDefault()?.PipelineClientId,
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<PipelineStepParameter>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<DataObject>(),
@@ -68,7 +68,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             Step.StepParameters.Clear();
             foreach (var param in parameters)
             {
-                Step.StepParameters.Add(new StepParameter
+                Step.StepParameters.Add(new PipelineStepParameter
                 {
                     ParameterName = param.Name,
                     ParameterValueType = param.Type,

@@ -26,7 +26,5 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     [Required]
     public Guid? ConnectionId { get; set; }
 
-    public override bool SupportsParameterization => false;
-
     public SqlConnectionInfo Connection { get; set; } = null!;
 }

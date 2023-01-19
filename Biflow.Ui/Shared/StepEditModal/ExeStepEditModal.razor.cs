@@ -20,7 +20,7 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
-            StepParameters = new List<StepParameterBase>()
+            StepParameters = new List<ExeStepParameter>()
         };
 
     protected override Task<ExeStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>

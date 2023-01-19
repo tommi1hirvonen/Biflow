@@ -84,6 +84,6 @@
                 <div class="form-text">No job parameters to store result value</div>
             }
         </div>
-        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" />
+        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" NewParameterDelegate="() => new()" />
     }
 </StepEditModalTemplate>

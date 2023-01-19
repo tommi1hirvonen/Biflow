@@ -11,4 +11,8 @@ public class PackageStepParameter : StepParameterBase
 
     [Required]
     public ParameterLevel ParameterLevel { get; set; }
+
+    public PackageStep Step { get; set; } = null!;
+
+    public override Step BaseStep => Step;
 }

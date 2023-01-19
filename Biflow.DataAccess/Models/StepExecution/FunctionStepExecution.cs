@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class FunctionStepExecution : StepExecution, IHasTimeout
+public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<FunctionStepExecutionParameter>
 {
     public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
     {
@@ -28,5 +28,5 @@ public class FunctionStepExecution : StepExecution, IHasTimeout
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; set; }
 
-    public override bool SupportsParameterization => true;
+    public IList<FunctionStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

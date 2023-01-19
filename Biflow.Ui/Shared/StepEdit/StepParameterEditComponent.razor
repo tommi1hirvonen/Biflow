@@ -1,4 +1,5 @@
-﻿
+﻿@typeparam TParameter where TParameter : StepParameterBase
+
 @if (Step is not null)
 {
     <p />
@@ -76,19 +77,18 @@
             }
         </tbody>
     </table>
-    var type = ParameterValueType.String;
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new StepParameter { ParameterValueType = type, ParameterValue = string.Empty })">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
         <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>
 }
 
 @code {
-    [Parameter]
-    public Step? Step { get; set; }
+    [Parameter, EditorRequired] public IHasStepParameters<TParameter>? Step { get; set; }
 
-    [Parameter]
-    public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
+    [Parameter, EditorRequired] public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
+
+    [Parameter, EditorRequired] public Func<TParameter>? NewParameterDelegate { get; set; }
 
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {
@@ -100,5 +100,12 @@
         {
             param.InheritFromJobParameterId = null;
         }
+    }
+
+    private void AddParameter()
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        ArgumentNullException.ThrowIfNull(NewParameterDelegate);
+        Step.StepParameters.Add(NewParameterDelegate());
     }
 }

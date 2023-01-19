@@ -57,7 +57,7 @@ public abstract class ParameterBase
         }
     }
 
-    private object? _parameterValue;
+    private object? _parameterValue = string.Empty;
 
     [Required]
     public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
@@ -177,6 +177,6 @@ public abstract class ParameterBase
         }
     }
 
-    private string? _valueString;
+    private string? _valueString = string.Empty;
 
 }

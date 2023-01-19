@@ -34,8 +34,6 @@ public class TabularStepExecution : StepExecution, IHasTimeout
     [Required]
     public Guid? ConnectionId { get; set; }
 
-    public override bool SupportsParameterization => false;
-
     public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
 
 }

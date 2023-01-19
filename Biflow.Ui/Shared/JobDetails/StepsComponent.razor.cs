@@ -202,7 +202,7 @@ public partial class StepsComponent : ComponentBase
                     .Include(step => step.Targets)
                     .Include(step => step.Tags)
                     .Include(step => step.ExecutionConditionParameters)
-                    .Include(step => step.StepParameters)
+                    .Include(nameof(IHasStepParameters.StepParameters))
                     .FirstAsync(step_ => step_.StepId == createdStepId);
                 Steps?.Add(createdStep);
                 SortSteps?.Invoke();
@@ -234,7 +234,7 @@ public partial class StepsComponent : ComponentBase
                         .Include(step => step.Targets)
                         .Include(step => step.Tags)
                         .Include(step => step.ExecutionConditionParameters)
-                        .Include(step => step.StepParameters)
+                        .Include(nameof(IHasStepParameters.StepParameters))
                         .FirstAsync(step_ => step_.StepId == createdStepId);
                     Steps?.Add(createdStep);
                     SortSteps?.Invoke();

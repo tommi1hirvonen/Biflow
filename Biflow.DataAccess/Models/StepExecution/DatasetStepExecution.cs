@@ -21,5 +21,4 @@ public class DatasetStepExecution : StepExecution
     [Display(Name = "Dataset id")]
     public string DatasetId { get; set; }
 
-    public override bool SupportsParameterization => false;
 }

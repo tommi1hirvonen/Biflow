@@ -37,7 +37,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            StepParameters = new List<StepParameterBase>(),
+            StepParameters = new List<SqlStepParameter>(),
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
@@ -79,7 +79,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             Step.StepParameters.Clear();
             foreach (var parameter in parameters)
             {
-                Step.StepParameters.Add(new StepParameter
+                Step.StepParameters.Add(new SqlStepParameter
                 {
                     ParameterName = parameter.ParameterName,
                     ParameterValueType = parameter.ParameterType

@@ -4,5 +4,9 @@ public enum ParameterType
 {
     Package,
     Job,
-    Base
+    Sql,
+    Pipeline,
+    Exe,
+    Function,
+    Email
 }

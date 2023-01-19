@@ -82,7 +82,13 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     protected virtual (bool Result, string? Message) ParametersCheck()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
+        
+        if (Step is not IHasStepParameters hasParams)
+        {
+            return (true, null);
+        }
+        
+        var parameters = hasParams.StepParameters.OrderBy(param => param.ParameterName).ToList();
         foreach (var param in parameters)
         {
             if (string.IsNullOrEmpty(param.ParameterName))
