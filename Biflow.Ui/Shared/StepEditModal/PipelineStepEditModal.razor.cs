@@ -22,6 +22,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
@@ -36,6 +37,8 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 
     protected override Task<PipelineStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.PipelineSteps
+        .Include(step => step.Job)
+        .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)

@@ -17,6 +17,7 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
         new(string.Empty)
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,

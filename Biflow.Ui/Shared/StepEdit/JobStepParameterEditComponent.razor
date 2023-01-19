@@ -107,9 +107,9 @@ else if (Step is not null)
 @code {
     [Parameter] public JobStep? Step { get; set; }
 
-    [Parameter] public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
-
     [Parameter] public Guid? TargetJobId { get; set; }
+
+    private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private Job? TargetJob { get; set; }
 

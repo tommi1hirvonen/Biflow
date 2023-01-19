@@ -66,8 +66,7 @@ public abstract class Step : IComparable
     [Range(0, 1000)]
     public double RetryIntervalMinutes { get; set; }
 
-    [Display(Name = "Execution condition")]
-    public string? ExecutionConditionExpression { get; set; }
+    public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
 
     [Display(Name = "Created by")]
     public string? CreatedBy { get; set; }
@@ -110,5 +109,17 @@ public abstract class Step : IComparable
         {
             throw new ArgumentException("Object is not a Step");
         }
+    }
+
+    public object? EvaluateExecutionCondition()
+    {
+
+        var mapParameterToValue = (ExecutionConditionParameter ecp) =>
+                ecp.JobParameterId is not null
+                ? Job.JobParameters.First(p => p.ParameterId == ecp.JobParameterId).ParameterValue
+                : ecp.ParameterValue;
+        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName ?? "", value => mapParameterToValue(value));
+        var result = ExecutionConditionExpression.Evaluate(parameters);
+        return result;
     }
 }

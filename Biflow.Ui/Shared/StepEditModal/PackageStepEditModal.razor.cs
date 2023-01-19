@@ -20,6 +20,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
@@ -34,6 +35,8 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
 
     protected override Task<PackageStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.PackageSteps
+        .Include(step => step.Job)
+        .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)

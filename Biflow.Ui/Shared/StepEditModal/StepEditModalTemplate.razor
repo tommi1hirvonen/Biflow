@@ -91,7 +91,7 @@
                             {
                                 <div class="row">
                                     <div class="@(Fullscreen ? "col-xl-6" : "col")">
-                                        <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" Job="Modal.Job" />
+                                        <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" />
                                     </div>
                                 </div>
                             }
@@ -212,7 +212,7 @@
                         {
                             <div class="row">
                                 <div class="col">
-                                    <ExecutionConditionEditComponent Step="Modal.Step" JobParameters="Modal.Job?.JobParameters" />
+                                    <ExecutionConditionEditComponent Step="Modal.Step" />
                                 </div>
                             </div>
                         }
@@ -237,8 +237,8 @@
             }
         </HxButton>
         
-        <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success">
-            @(Modal.Step?.StepId == Guid.Empty ? "Create" : "Save")
+        <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success" Spinner="Modal.Saving" Enabled="!Modal.Saving">
+            Save
         </HxSubmit>
         
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.Modal.LetAsync(x => x.HideAsync())">

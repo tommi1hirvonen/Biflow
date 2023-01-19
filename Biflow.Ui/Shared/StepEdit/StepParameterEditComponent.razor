@@ -86,9 +86,9 @@
 @code {
     [Parameter, EditorRequired] public IHasStepParameters<TParameter>? Step { get; set; }
 
-    [Parameter, EditorRequired] public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
-
     [Parameter, EditorRequired] public Func<TParameter>? NewParameterDelegate { get; set; }
+
+    private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {

@@ -107,9 +107,6 @@
 
 @code {
     [Parameter]
-    public Job? Job { get; set; }
-
-    [Parameter]
     public Step Step { get; set; } = null!;
 
     [Parameter]
@@ -128,7 +125,7 @@
             .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
             ?? Enumerable.Empty<Step>();
 
-    private IEnumerable<Step> FilteredStepsOrdered => Job?.UseDependencyMode switch
+    private IEnumerable<Step> FilteredStepsOrdered => Step.Job.UseDependencyMode switch
     {
         true => FilteredSteps.OrderBy(step => step, new TopologicalStepComparer(Steps)),
         _ => FilteredSteps.OrderBy(step => step) // use default comparer

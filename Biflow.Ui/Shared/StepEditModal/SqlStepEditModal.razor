@@ -60,7 +60,7 @@
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="capture_result"
                            checked=@(Step.ResultCaptureJobParameterId is not null)
-                           disabled=@(Job?.JobParameters.Any() == false)
+                           disabled=@(Step.Job.JobParameters.Any() == false)
                            @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
                     <label class="form-check-label" for="capture_result">Capture scalar result</label>
                 </div>
@@ -70,7 +70,7 @@
                 {
                     <label class="form-label mb-0 me-3">To:</label>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
-                        @foreach (var jobParam in Job?.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                        @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                             {
                             <option value="@jobParam.ParameterId">
                                 @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
@@ -79,11 +79,11 @@
                     </InputSelect>
                 }
             </div>
-            @if (!Job?.JobParameters.Any() ?? false)
+            @if (!Step.Job.JobParameters.Any())
             {
                 <div class="form-text">No job parameters to store result value</div>
             }
         </div>
-        <StepParameterEditComponent Step="Step" JobParameters="Job?.JobParameters" NewParameterDelegate="() => new()" />
+        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new()" />
     }
 </StepEditModalTemplate>

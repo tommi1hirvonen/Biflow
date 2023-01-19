@@ -60,9 +60,7 @@ public partial class JobDetails : ComponentBase
         Job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
-            .Include(job => job.JobParameters)
             .FirstAsync(job => job.JobId == Id);
-        Job.JobParameters = Job.JobParameters.OrderBy(p => p.ParameterName).ToList();
         Steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Include(step => step.Dependencies)
@@ -112,16 +110,8 @@ public partial class JobDetails : ComponentBase
         {
             return;
         }
-        job.JobParameters = Job.JobParameters;
         Job = job;
         StateHasChanged();
-    }
-
-    private void OnJobParametersSet(IList<JobParameter> parameters)
-    {
-        if (Job is null) return;
-
-        Job.JobParameters = parameters;
     }
 
     private async Task DeleteJob()

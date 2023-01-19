@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.15" />
     <PackageReference Include="Azure.Identity" Version="1.8.0" />
+    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.39" />
     <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Azure.Management.DataFactory" Version="8.0.0" />

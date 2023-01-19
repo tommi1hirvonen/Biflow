@@ -42,6 +42,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     private IEnumerable<DataObject>? DataObjects { get; set; }
 
+    internal bool Saving { get; set; } = false;
+
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
         AllTags ??= await Context.Tags.ToListAsync();
@@ -148,44 +150,47 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal async Task SubmitStep()
     {
-        if (Step is null)
-        {
-            Messenger.AddError("Error submitting step", "Step was null");
-            return;
-        }
+        Saving = true;
 
-        StepError = string.Empty;
-
-        var (result, message) = StepValidityCheck(Step);
-        if (!result)
-        {
-            StepError = message ?? string.Empty;
-            return;
-        }
-
-        // Check data objects.
-        var (result2, message2) = await CheckDataObjectsAsync();
-        if (!result2)
-        {
-            StepError = message2 ?? string.Empty;
-            return;
-        }
-
-        // Synchronize tags
-        foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
-        {
-            // New tags
-            var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
-            Step.Tags.Add(tag);
-        }
-        foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
-        {
-            Step.Tags.Remove(tag);
-        }
-
-        // Save changes.
         try
         {
+            if (Step is null)
+            {
+                Messenger.AddError("Error submitting step", "Step was null");
+                return;
+            }
+
+            StepError = string.Empty;
+
+            var (result, message) = StepValidityCheck(Step);
+            if (!result)
+            {
+                StepError = message ?? string.Empty;
+                return;
+            }
+
+            // Check data objects.
+            var (result2, message2) = await CheckDataObjectsAsync();
+            if (!result2)
+            {
+                StepError = message2 ?? string.Empty;
+                return;
+            }
+
+            // Synchronize tags
+            foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
+            {
+                // New tags
+                var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
+                Step.Tags.Add(tag);
+            }
+            foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+            {
+                Step.Tags.Remove(tag);
+            }
+
+            // Save changes.
+
             // New step
             if (Step.StepId == Guid.Empty)
             {
@@ -206,6 +211,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         catch (Exception ex)
         {
             Messenger.AddError("Error adding/editing step", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+        finally
+        {
+            Saving = false;
         }
     }
 
@@ -309,7 +318,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
         else if (stepId == Guid.Empty && Job is not null)
         {
-            Step = CreateNewStep(Job);
+            var job = await Context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
+            Step = CreateNewStep(job);
         }
         ResetTags();
         StateHasChanged();

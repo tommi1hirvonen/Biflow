@@ -1,7 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
 
-@using CodingSeb.ExpressionEvaluator
-
 @if (Step is not null)
 {
     <div class="row mt-1">
@@ -16,7 +14,7 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.CheckSquare" />
             </div>
-            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExecutionConditionExpression" style="font-family: monospace;" rows="3"></InputTextArea>
+            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExecutionConditionExpression.Expression" style="font-family: monospace;" rows="3"></InputTextArea>
         </div>
         <div class="form-text">The return type of the expression should always be boolean (True/False).</div>
     </div>
@@ -57,7 +55,7 @@
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="condition_inherit_param_@count"
                                     checked=@(param.JobParameterId is not null)
-                                    disabled=@((!JobParameters?.Any() ?? true))
+                                    disabled=@((!Step.Job.JobParameters?.Any() ?? true))
                                     @onchange="args => SetJobParameter((bool)args.Value!, param)">
                             <label class="form-check-label" for="condition_inherit_param_@count"></label>
                         </div>
@@ -66,7 +64,7 @@
                     {
                         <td colspan="2">
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
-                                @foreach (var jobParam in JobParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                                @foreach (var jobParam in Step.Job.JobParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                                             {
                                     <option value="@jobParam.ParameterId">
                                         @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
@@ -209,11 +207,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter]
-    public Step? Step { get; set; }
-
-    [Parameter]
-    public ICollection<JobParameter>? JobParameters { get; set; }
+    [Parameter] public Step? Step { get; set; }
 
     private HxOffcanvas? HelpOffcanvas { get; set; }
 
@@ -221,7 +215,7 @@
     {
         if (inheritFromJob)
         {
-            param.JobParameterId = JobParameters?.FirstOrDefault()?.ParameterId;
+            param.JobParameterId = Step?.Job.JobParameters.FirstOrDefault()?.ParameterId;
         }
         else
         {
@@ -231,29 +225,15 @@
 
     private void TestEvaluate()
     {
-        if (string.IsNullOrWhiteSpace(Step?.ExecutionConditionExpression))
+        if (string.IsNullOrWhiteSpace(Step?.ExecutionConditionExpression.Expression))
         {
             Messenger.AddWarning("Execution condition expression is empty");
             return;
         }
+
         try
         {
-            ArgumentNullException.ThrowIfNull(JobParameters);
-            var evaluator = new ExpressionEvaluator
-            {
-                OptionScriptEvaluateFunctionActive = false,
-                OptionCanDeclareMultiExpressionsLambdaInSimpleExpressionEvaluate = false
-            };
-            evaluator.Namespaces.Remove("System.IO");
-            foreach (var param in Step.ExecutionConditionParameters)
-            {
-                var value = param.JobParameterId is not null
-                    ? JobParameters.First(p => p.ParameterId == param.JobParameterId).ParameterValue
-                    : param.ParameterValue;
-                evaluator.Variables[param.ParameterName] = value;
-            }
-            var result = evaluator.Evaluate(Step.ExecutionConditionExpression);
-
+            var result = Step.EvaluateExecutionCondition();
             if (result is bool b)
             {
                 Messenger.AddInformation($"Result: {b}");

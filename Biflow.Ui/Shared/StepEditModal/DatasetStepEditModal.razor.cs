@@ -36,6 +36,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,

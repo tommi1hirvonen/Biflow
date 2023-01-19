@@ -25,6 +25,8 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     protected override Task<FunctionStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.FunctionSteps
+        .Include(step => step.Job)
+        .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
@@ -38,6 +40,7 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,

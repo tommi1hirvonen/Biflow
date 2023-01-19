@@ -10,6 +10,8 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
 
     protected override Task<EmailStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.EmailSteps
+        .Include(step => step.Job)
+        .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
@@ -23,6 +25,7 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,

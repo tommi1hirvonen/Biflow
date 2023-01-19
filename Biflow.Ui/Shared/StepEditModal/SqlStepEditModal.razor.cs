@@ -18,6 +18,8 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
     
     protected override Task<SqlStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.SqlSteps
+        .Include(step => step.Job)
+        .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
         .Include(step => step.Tags)
@@ -31,6 +33,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
@@ -48,7 +51,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         ArgumentNullException.ThrowIfNull(Step);
         if (enabled)
         {
-            Step.ResultCaptureJobParameterId = Job?.JobParameters.FirstOrDefault()?.ParameterId;
+            Step.ResultCaptureJobParameterId = Step.Job.JobParameters.FirstOrDefault()?.ParameterId;
         }
         else
         {

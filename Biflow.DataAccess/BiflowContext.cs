@@ -84,6 +84,10 @@ public class BiflowContext : DbContext
             .HasValue<AgentJobStepExecution>(StepType.AgentJob)
             .HasValue<TabularStepExecution>(StepType.Tabular)
             .HasValue<EmailStepExecution>(StepType.Email);
+            e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
+            });
         });
 
         modelBuilder.Entity<StepExecutionAttempt>(e =>
@@ -160,6 +164,10 @@ public class BiflowContext : DbContext
             .HasValue<EmailStep>(StepType.Email);
             e.HasMany(s => s.StepExecutions)
             .WithOne(e => e.Step!);
+            e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
+            });
         });
 
         modelBuilder.Entity<JobStep>()

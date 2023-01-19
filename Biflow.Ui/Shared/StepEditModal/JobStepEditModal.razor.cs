@@ -17,6 +17,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
         new()
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,
@@ -32,6 +33,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
     protected override async Task<JobStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
     {
         var step = await context.JobSteps
+            .Include(step => step.Job)
+            .ThenInclude(job => job.JobParameters)
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
             .Include(step => step.Sources)
@@ -55,10 +58,11 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
 
     private async Task<AutosuggestDataProviderResult<Job>> GetJobSuggestions(AutosuggestDataProviderRequest request)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         await Task.Delay(150);
         return new AutosuggestDataProviderResult<Job>
         {
-            Data = Jobs.Where(j => j.JobId != Job?.JobId)
+            Data = Jobs.Where(j => j.JobId != Step.Job.JobId)
                 .Where(j => j.JobName.ContainsIgnoreCase(request.UserInput)
                         || (j.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
         };

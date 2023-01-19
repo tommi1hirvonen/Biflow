@@ -18,6 +18,7 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
         new(string.Empty)
         {
             JobId = job.JobId,
+            Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             IsEnabled = true,

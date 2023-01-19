@@ -1,7 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using CodingSeb.ExpressionEvaluator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -95,7 +94,7 @@ internal abstract class StepExecutorBase
         // Inspect execution condition expression here
         try
         {
-            var result = await EvaluateExecutionConditionAsync();
+            var result = await StepExecution.EvaluateExecutionConditionAsync();
             if (!result)
             {
                 await UpdateExecutionSkippedAsync("Execution condition evaluated as false");
@@ -282,24 +281,6 @@ internal abstract class StepExecutorBase
         attempt.ExecutionStatus = StepExecutionStatus.Running;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
-    }
-
-    private async Task<bool> EvaluateExecutionConditionAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(StepExecution.ExecutionConditionExpression))
-        {
-            var evaluator = new ExpressionEvaluator
-            {
-                OptionScriptEvaluateFunctionActive = false,
-                OptionCanDeclareMultiExpressionsLambdaInSimpleExpressionEvaluate = false
-            };
-            evaluator.Namespaces.Remove("System.IO");
-            evaluator.Variables = StepExecution.ExecutionConditionParameters
-                .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
-            // Evaluate the expression/statement with a separate Task to allow the executor process to continue.
-            return await Task.Run(() => evaluator.Evaluate<bool>(StepExecution.ExecutionConditionExpression));
-        }
-        return true;
     }
 
     private async Task UpdateExecutionSkippedAsync(string infoMessage)

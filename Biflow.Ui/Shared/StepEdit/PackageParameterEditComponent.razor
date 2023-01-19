@@ -77,11 +77,9 @@
 }
 
 @code {
-    [Parameter]
-    public PackageStep? Step { get; set; }
+    [Parameter] public PackageStep? Step { get; set; }
 
-    [Parameter]
-    public ICollection<JobParameter> JobParameters { get; set; } = new List<JobParameter>();
+    private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
     {

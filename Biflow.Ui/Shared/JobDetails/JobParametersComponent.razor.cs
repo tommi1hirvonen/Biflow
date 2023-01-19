@@ -22,8 +22,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    [Parameter] public Action<IList<JobParameter>>? OnJobParametersSet { get; set; }
-
     private Job? EditJob { get; set; }
 
     private BiflowContext? Context { get; set; }
@@ -80,10 +78,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         {
             ArgumentNullException.ThrowIfNull(Context);
             await Context.SaveChangesAsync();
-            if (EditJob is not null)
-            {
-                OnJobParametersSet?.Invoke(EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList());
-            }
             Messenger.AddInformation("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)

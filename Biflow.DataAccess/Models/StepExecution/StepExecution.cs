@@ -32,8 +32,7 @@ public abstract class StepExecution
 
     public double RetryIntervalMinutes { get; set; }
 
-    [Display(Name = "Execution condition")]
-    public string? ExecutionConditionExpression { get; set; }
+    public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
 
     public Execution Execution { get; set; } = null!;
 
@@ -57,6 +56,13 @@ public abstract class StepExecution
     public StepExecutionStatus? ExecutionStatus => StepExecutionAttempts
             ?.MaxBy(e => e.RetryAttemptIndex)
             ?.ExecutionStatus;
+
+    public async Task<bool> EvaluateExecutionConditionAsync()
+    {
+        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+        var result = await ExecutionConditionExpression.EvaluateBooleanAsync(parameters);
+        return result;
+    }
 
     public double GetDurationInSeconds()
     {
