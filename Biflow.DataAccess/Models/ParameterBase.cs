@@ -60,7 +60,30 @@ public abstract class ParameterBase
     private object? _parameterValue = string.Empty;
 
     [Required]
-    public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
+    public ParameterValueType ParameterValueType
+    {
+        get => _parameterValueType;
+        set
+        {
+            if (_parameterValueType == value) return;
+            _parameterValueType = value;
+            _parameterValue = value switch
+            {
+                ParameterValueType.Boolean => ValueBoolean,
+                ParameterValueType.DateTime => ValueDateTime,
+                ParameterValueType.Decimal => ValueDecimal,
+                ParameterValueType.Double => ValueDouble,
+                ParameterValueType.Int16 => ValueInt16,
+                ParameterValueType.Int32 => ValueInt32,
+                ParameterValueType.Int64 => ValueInt64,
+                ParameterValueType.Single => ValueSingle,
+                ParameterValueType.String => ValueString,
+                _ => string.Empty
+            };
+        }
+    }
+
+    private ParameterValueType _parameterValueType = ParameterValueType.String;
 
     [NotMapped]
     public bool ValueBoolean
