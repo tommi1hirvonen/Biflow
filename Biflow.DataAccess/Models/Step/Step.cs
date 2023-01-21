@@ -117,7 +117,7 @@ public abstract class Step : IComparable
                 ecp.JobParameterId is not null
                 ? Job.JobParameters.First(p => p.ParameterId == ecp.JobParameterId).ParameterValue
                 : ecp.ParameterValue;
-        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName ?? "", mapParameterToValue);
+        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName, mapParameterToValue);
         var result = ExecutionConditionExpression.Evaluate(parameters);
         return result;
     }
