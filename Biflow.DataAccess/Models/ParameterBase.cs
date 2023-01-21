@@ -11,8 +11,9 @@ public abstract class ParameterBase
 
     [Required]
     [MaxLength(128)]
+    [MinLength(1)]
     [Display(Name = "Name")]
-    public string? ParameterName { get; set; }
+    public string ParameterName { get; set; } = string.Empty;
 
     [Display(Name = "Value")]
     [Column(TypeName = "sql_variant")]
@@ -97,7 +98,7 @@ public abstract class ParameterBase
     private bool _valueBoolean;
 
     [NotMapped]
-    public DateTime ValueDateTime
+    public DateTime? ValueDateTime
     {
         get => _valueDateTime;
         set
@@ -107,10 +108,10 @@ public abstract class ParameterBase
         }
     }
 
-    private DateTime _valueDateTime;
+    private DateTime? _valueDateTime;
 
     [NotMapped]
-    public decimal ValueDecimal
+    public decimal? ValueDecimal
     {
         get => _valueDecimal;
         set
@@ -120,10 +121,10 @@ public abstract class ParameterBase
         }
     }
 
-    private decimal _valueDecimal;
+    private decimal? _valueDecimal;
 
     [NotMapped]
-    public double ValueDouble
+    public double? ValueDouble
     {
         get => _valueDouble;
         set
@@ -133,10 +134,10 @@ public abstract class ParameterBase
         }
     }
 
-    private double _valueDouble;
+    private double? _valueDouble;
 
     [NotMapped]
-    public short ValueInt16
+    public short? ValueInt16
     {
         get => _valueInt16;
         set
@@ -146,10 +147,10 @@ public abstract class ParameterBase
         }
     }
 
-    private short _valueInt16;
+    private short? _valueInt16;
 
     [NotMapped]
-    public int ValueInt32
+    public int? ValueInt32
     {
         get => _valueInt32;
         set
@@ -159,10 +160,10 @@ public abstract class ParameterBase
         }
     }
 
-    private int _valueInt32;
+    private int? _valueInt32;
 
     [NotMapped]
-    public long ValueInt64
+    public long? ValueInt64
     {
         get => _valueInt64;
         set
@@ -172,10 +173,10 @@ public abstract class ParameterBase
         }
     }
 
-    private long _valueInt64;
+    private long? _valueInt64;
 
     [NotMapped]
-    public float ValueSingle
+    public float? ValueSingle
     {
         get => _valueSingle;
         set
@@ -185,7 +186,7 @@ public abstract class ParameterBase
         }
     }
 
-    private float _valueSingle;
+    private float? _valueSingle;
 
     [NotMapped]
     public string? ValueString
@@ -193,11 +194,11 @@ public abstract class ParameterBase
         get => _valueString;
         set
         {
-            _valueString = value;
-            _parameterValue = value;
+            _valueString = string.IsNullOrEmpty(value) ? null : value;
+            _parameterValue = _valueString;
         }
     }
 
-    private string? _valueString = string.Empty;
+    private string? _valueString;
 
 }
