@@ -5,11 +5,11 @@
 
 @*Set pt-0 for modal body (BodyCssClass). The DependenciesEditComponent has a sticky-top element that should be placed at the top without any padding*@
 <HxModal @ref="Modal.Modal"
-         Size="ModalSize.Large"
+         Size="ModalSize.ExtraLarge"
          Scrollable="true"
          BodyCssClass="pt-0"
          OnClosed="Modal.OnClosed"
-         Fullscreen="Fullscreen ? ModalFullscreen.Always : ModalFullscreen.LargeDown"
+         Fullscreen="ModalFullscreen.ExtraLargeDown"
          Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
     <BodyTemplate>
         @if (Modal.Step is not null)
@@ -59,20 +59,6 @@
                                 </ul>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col">
-                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
-                                          @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                        Definition explorer
-                                    </HxButton>
-                                    <HxButton CssClass="btn-auto" Size="ButtonSize.Small"
-                                          @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                                        Reference explorer
-                                    </HxButton>
-                                </HxButtonGroup>
-                            </div>
-                        </div>
 
                         <div class="row">
                             <div class="col">
@@ -90,7 +76,7 @@
                             @if (Modal.Steps is not null)
                             {
                                 <div class="row">
-                                    <div class="@(Fullscreen ? "col-xl-6" : "col")">
+                                    <div class="col">
                                         <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" />
                                     </div>
                                 </div>
@@ -98,19 +84,30 @@
                         }
                         else if (Modal.CurrentView == StepEditModalView.Settings)
                         {
-                            <div class="row">
-                                <div class="@(Fullscreen ? "col-xl-6" : "col-12")">
-                                    <div class="row">
+                            <div class="row gap-2">
+                                
+                                <div class="col">
+                                    
+                                    <div class="row gap-2">
                                         <div class="col">
                                             <label class="form-label">Step name</label>
-                                            <div class="input-group input-group-sm">
+                                            <div class="input-group">
                                                 <div class="input-group-text">
                                                     <CxIcon Icon="FeatherIcon.Edit3" />
                                                 </div>
-                                                <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
+                                                <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
                                             </div>
                                         </div>
+                                        <div class="col-lg">
+                                            <label class="form-label">Tags</label>
+                                            <HxInputTags @bind-Value="Modal.Tags"
+                                                    DataProvider="Modal.GetTagSuggestions"
+                                                    SuggestMinimumLength="0"
+                                                    SuggestDelay="0"
+                                                    TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                                        </div>
                                     </div>
+
                                     <div class="row mt-2">
                                         <div class="col">
                                             <label class="form-label">Description</label>
@@ -118,54 +115,51 @@
                                                 <div class="input-group-text">
                                                     <CxIcon Icon="FeatherIcon.BookOpen" />
                                                 </div>
-                                                <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
+                                                <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="4"></InputTextArea>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row mt-2">
-                                        <div class="col">
-                                            <label class="form-label">Tags</label>
-                                            <HxInputTags @bind-Value="Modal.Tags"
-                                                         DataProvider="Modal.GetTagSuggestions"
-                                                         SuggestMinimumLength="0"
-                                                         SuggestDelay="0"
-                                                         TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+
+                                </div>
+
+                                <div class="col-lg-auto d-flex flex-lg-column">
+                                    <div>
+                                        <label class="form-label">Execution phase</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Layers" />
+                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col">
-                                            <label class="form-label">Execution phase</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Layers" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase"></InputNumber>
+                                    <div class="my-lg-2 mx-3 mx-lg-0">
+                                        <label class="form-label">Retry attempts</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Repeat" />
                                             </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 6rem;"></InputNumber>
                                         </div>
-                                        <div class="col">
-                                            <label class="form-label">Retry attempts</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Repeat" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts"></InputNumber>
+                                    </div>
+                                    <div>
+                                        <label class="form-label">Retry interval (min)</label>
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Clock" />
                                             </div>
-                                        </div>
-                                        <div class="col">
-                                            <label class="form-label">Retry interval (min)</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Clock" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes"></InputNumber>
-                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes" style="max-width: 6rem;"></InputNumber>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="@(Fullscreen ? "col-xl-6 mt-2 mt-xl-0" : "col-12 mt-2")">
+
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col">
                                     @ChildContent
                                 </div>
                             </div>
+                                
                         }
                         else if (Modal.CurrentView == StepEditModalView.Sources)
                         {
@@ -226,17 +220,19 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" @onclick="ToggleFullscreen" CssClass="me-auto" title="@(Fullscreen ? "Windowed" : "Fullscreen")">
-            @if (Fullscreen)
-            {
-                <CxIcon Icon="FeatherIcon.Minimize" />
-            }
-            else
-            {
-                <CxIcon Icon="FeatherIcon.Maximize" />
-            }
-        </HxButton>
-        
+        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="me-auto">
+            <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore database module definitions (e.g. stored procedures)"
+                      @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
+                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                Definition explorer
+            </HxButton>
+            <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore references between database objects"
+                      @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
+                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                Reference explorer
+            </HxButton>
+        </HxButtonGroup>
+
         <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success" Spinner="Modal.Saving" Enabled="!Modal.Saving">
             Save
         </HxSubmit>
@@ -255,10 +251,6 @@
     private SqlReferenceExplorerOffcanvas? SqlReferenceOffcanvas { get; set; }
 
     private SqlDefinitionExplorerOffcanvas? SqlDefinitionOffcanvas { get; set; }
-
-    private bool Fullscreen { get; set; } = false;
-
-    private void ToggleFullscreen() => Fullscreen = !Fullscreen;
 
     private string? SqlStatement => Modal?.Step switch
     {
