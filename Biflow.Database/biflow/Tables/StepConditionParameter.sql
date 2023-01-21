@@ -4,7 +4,7 @@
 	[StepId] UNIQUEIDENTIFIER NOT NULL,
     [ParameterName] NVARCHAR(128) NOT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL,
-	[ParameterValue] SQL_VARIANT NOT NULL,
+	[ParameterValue] SQL_VARIANT NULL,
 	[JobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_StepConditionParameter_JobParameter] FOREIGN KEY REFERENCES [biflow].[JobParameter] ([ParameterId]) ON DELETE SET NULL,
     CONSTRAINT [PK_StepConditionParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_StepConditionParameter] UNIQUE ([StepId], [ParameterName]),

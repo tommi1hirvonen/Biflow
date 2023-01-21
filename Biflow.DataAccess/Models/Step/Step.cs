@@ -113,12 +113,11 @@ public abstract class Step : IComparable
 
     public object? EvaluateExecutionCondition()
     {
-
-        var mapParameterToValue = (ExecutionConditionParameter ecp) =>
+        object? mapParameterToValue(ExecutionConditionParameter ecp) =>
                 ecp.JobParameterId is not null
                 ? Job.JobParameters.First(p => p.ParameterId == ecp.JobParameterId).ParameterValue
                 : ecp.ParameterValue;
-        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName ?? "", value => mapParameterToValue(value));
+        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName ?? "", mapParameterToValue);
         var result = ExecutionConditionExpression.Evaluate(parameters);
         return result;
     }

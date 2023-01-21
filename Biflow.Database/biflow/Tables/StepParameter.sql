@@ -6,7 +6,7 @@
     [ParameterLevel] VARCHAR(20) NULL,
     [ParameterName] NVARCHAR(128) NOT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL,
-	[ParameterValue] SQL_VARIANT NOT NULL,
+	[ParameterValue] SQL_VARIANT NULL,
 	[InheritFromJobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_StepParameter_InheritFromJobParameter] FOREIGN KEY REFERENCES [biflow].[JobParameter] ([ParameterId]),
     [AssignToJobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_StepParameter_AssignToJobParameter] FOREIGN KEY REFERENCES [biflow].[JobParameter] ([ParameterId]),
     CONSTRAINT [PK_StepParameter] PRIMARY KEY CLUSTERED ([ParameterId]),

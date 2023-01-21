@@ -45,7 +45,8 @@ internal class PipelineStepExecutor : StepExecutorBase
         try
         {
             parameters = Step.StepExecutionParameters
-                .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+                .Where(p => p.ParameterValue is not null)
+                .ToDictionary(key => key.ParameterName, value => value.ParameterValue!);
         }
         catch (Exception ex)
         {

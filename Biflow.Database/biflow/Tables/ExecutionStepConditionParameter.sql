@@ -4,7 +4,7 @@
 	[StepId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterName] NVARCHAR(128) NOT NULL,
-    [ParameterValue] SQL_VARIANT NOT NULL,
+    [ParameterValue] SQL_VARIANT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL,
 	[ExecutionParameterId] UNIQUEIDENTIFIER NULL,
     [ExecutionParameterValue] SQL_VARIANT NULL,

@@ -5,7 +5,6 @@ namespace Biflow.DataAccess.Models;
 
 public abstract class ParameterBase
 {
-    [Key]
     [Required]
     [Display(Name = "Id")]
     public Guid ParameterId { get; set; }
@@ -15,10 +14,9 @@ public abstract class ParameterBase
     [Display(Name = "Name")]
     public string? ParameterName { get; set; }
 
-    [Required]
     [Display(Name = "Value")]
     [Column(TypeName = "sql_variant")]
-    public object? ParameterValue
+    public virtual object? ParameterValue
     {
         get => _parameterValue;
         set
@@ -60,7 +58,7 @@ public abstract class ParameterBase
     private object? _parameterValue = string.Empty;
 
     [Required]
-    public ParameterValueType ParameterValueType
+    public virtual ParameterValueType ParameterValueType
     {
         get => _parameterValueType;
         set

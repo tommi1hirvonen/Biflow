@@ -4,7 +4,7 @@
 	[JobId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterName] NVARCHAR(128) NOT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL,
-	[ParameterValue] SQL_VARIANT NOT NULL,
+	[ParameterValue] SQL_VARIANT NULL,
     CONSTRAINT [PK_JobParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_JobParameter] UNIQUE ([JobId],[ParameterName]),
 	CONSTRAINT [FK_JobParameter_Job] FOREIGN KEY ([JobId]) REFERENCES [biflow].[Job] ([JobId]),

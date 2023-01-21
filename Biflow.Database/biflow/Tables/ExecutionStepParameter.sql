@@ -6,7 +6,7 @@
     [ParameterType] VARCHAR(20) NOT NULL,
 	[ParameterName] NVARCHAR(128) NOT NULL,
     [ParameterLevel] VARCHAR(20) NULL,
-    [ParameterValue] SQL_VARIANT NOT NULL,
+    [ParameterValue] SQL_VARIANT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL,
 	[InheritFromExecutionParameterId] UNIQUEIDENTIFIER NULL,
     [ExecutionParameterValue] SQL_VARIANT NULL,

@@ -3,7 +3,7 @@
 	[ExecutionId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterId] UNIQUEIDENTIFIER NOT NULL,
 	[ParameterName] NVARCHAR(128) NOT NULL,
-	[ParameterValue] SQL_VARIANT NOT NULL,
+	[ParameterValue] SQL_VARIANT NULL,
 	[ParameterValueType] VARCHAR(20) NOT NULL, 
     CONSTRAINT [PK_ExecutionParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionParameter_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [biflow].[Execution] ([ExecutionId]),

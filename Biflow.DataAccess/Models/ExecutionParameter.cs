@@ -5,7 +5,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionParameter")]
 [PrimaryKey("ExecutionId", "ParameterId")]
-public class ExecutionParameter
+public class ExecutionParameter : ParameterBase
 {
     public ExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
     {
@@ -15,15 +15,6 @@ public class ExecutionParameter
     }
 
     public Guid ExecutionId { get; set; }
-
-    public Guid ParameterId { get; set; }
-
-    public string ParameterName { get; set; }
-
-    [Column(TypeName = "sql_variant")]
-    public object ParameterValue { get; set; }
-
-    public ParameterValueType ParameterValueType { get; set; } = ParameterValueType.String;
 
     public Execution Execution { get; set; } = null!;
 

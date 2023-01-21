@@ -5,7 +5,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepParameter")]
 [PrimaryKey("ExecutionId", "ParameterId")]
-public abstract class StepExecutionParameterBase
+public abstract class StepExecutionParameterBase : ParameterBase
 {
     public StepExecutionParameterBase(string parameterName, object parameterValue, ParameterType parameterType, ParameterValueType parameterValueType)
     {
@@ -19,22 +19,18 @@ public abstract class StepExecutionParameterBase
 
     public Guid StepId { get; set; }
 
-    public Guid ParameterId { get; set; }
-
     public ParameterType ParameterType { get; set; }
 
-    public string ParameterName { get; set; }
-
     [Column(TypeName = "sql_variant")]
-    public object ParameterValue
+    public override object? ParameterValue
     {
         get => ExecutionParameterValue ?? _parameterValue;
         set => _parameterValue = value;
     }
 
-    private object _parameterValue;
+    private object? _parameterValue;
 
-    public ParameterValueType ParameterValueType
+    public override ParameterValueType ParameterValueType
     {
         get => InheritFromExecutionParameter?.ParameterValueType ?? _parameterValueType;
         set => _parameterValueType = value;

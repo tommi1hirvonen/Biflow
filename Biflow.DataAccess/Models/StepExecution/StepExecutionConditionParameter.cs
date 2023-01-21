@@ -5,7 +5,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepConditionParameter")]
 [PrimaryKey("ExecutionId", "ParameterId")]
-public class StepExecutionConditionParameter
+public class StepExecutionConditionParameter : ParameterBase
 {
     public StepExecutionConditionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
     {
@@ -20,20 +20,16 @@ public class StepExecutionConditionParameter
     [Column("StepId")]
     public Guid StepId { get; set; }
 
-    public Guid ParameterId { get; set; }
-
-    public string ParameterName { get; set; }
-
     [Column(TypeName = "sql_variant")]
-    public object ParameterValue
+    public override object? ParameterValue
     {
         get => ExecutionParameterValue ?? _parameterValue;
         set => _parameterValue = value;
     }
 
-    private object _parameterValue;
+    private object? _parameterValue;
 
-    public ParameterValueType ParameterValueType
+    public override ParameterValueType ParameterValueType
     {
         get => ExecutionParameter?.ParameterValueType ?? _parameterValueType;
         set => _parameterValueType = value;

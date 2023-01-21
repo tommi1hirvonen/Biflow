@@ -1,9 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("JobParameter")]
+[PrimaryKey("ParameterId")]
 public class JobParameter : ParameterBase
 {
     [Display(Name = "Job")]

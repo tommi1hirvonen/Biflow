@@ -1,9 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("StepConditionParameter")]
+[PrimaryKey("ParameterId")]
 public class ExecutionConditionParameter : ParameterBase
 {
     [Display(Name = "Step id")]

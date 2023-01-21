@@ -86,7 +86,7 @@ public static class Extensions
         return parameters.Select(p => p.ParameterValue switch
         {
             DateTime dt => (Name: p.ParameterName, Value: dt.ToString("o")),
-            _ => (Name: p.ParameterName, Value: p.ParameterValue.ToString())
+            _ => (Name: p.ParameterName, Value: p.ParameterValue?.ToString())
         })
         .ToDictionary(key => key.Name, value => value.Value);
     }
