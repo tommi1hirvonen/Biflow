@@ -4,17 +4,17 @@
     @if (Step is not null)
     {
         <div class="row">
-            <div class="col-lg-6">
+            <div class="col-auto">
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
+        <div class="row mt-3 gap-2">
             <div class="col">
                 <label class="form-label">File path</label>
                 <div class="input-group input-group-sm">
@@ -24,9 +24,7 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.ExeFileName" @oninput="ResetStepError"></InputText>
                 </div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col">
+            <div class="col-lg">
                 <label class="form-label">Arguments</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -39,8 +37,8 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col">
+        <div class="row mt-2 gap-2">
+            <div class="col col-lg-6">
                 <label class="form-label">Working directory</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -49,16 +47,15 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.ExeWorkingDirectory" @oninput="ResetStepError"></InputText>
                 </div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-lg-6">
-                <label class="form-label">Success exit code (blank if not applicable)</label>
+            <div class="col-lg-auto">
+                <label class="form-label">Success exit code</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.CheckCircle" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.ExeSuccessExitCode" @oninput="ResetStepError"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.ExeSuccessExitCode" @oninput="ResetStepError" style="max-width: 8rem;"></InputNumber>
                 </div>
+                <div class="form-text">Blank if not applicable</div>
             </div>
         </div>
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new()" />

@@ -3,17 +3,17 @@
 <StepEditModalTemplate Modal="this" TStep="TabularStep">
     @if (Step is not null)
     {
-        <div class="row">
-            <div class="col-lg-6">
+        <div class="row align-items-end gap-2">
+            <div class="col-auto">
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
                 </div>
             </div>
-            <div class="col-lg-6">
+            <div class="col-auto">
                 <label class="form-label">Connection</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -27,8 +27,14 @@
                     </InputSelect>
                 </div>
             </div>
+            <div class="col-auto">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await Offcanvas.LetAsync(x => x.ShowAsync())">
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                    Browse objects
+                </HxButton>
+            </div>
         </div>
-        <div class="row mt-2">
+        <div class="row mt-2 gap-3 gap-lg-1">
             <div class="col">
                 <label class="form-label">Model name</label>
                 <div class="input-group input-group-sm">
@@ -39,9 +45,7 @@
                 </div>
                 <div class="form-text">Required</div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col">
+            <div class="col-lg">
                 <label class="form-label">Table name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -49,11 +53,9 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" @oninput="ResetStepError" />
                 </div>
-                <div class="form-text">Blank if not applicable. Required if partition name is defined.</div>
+                <div class="form-text">Blank if the entire model should be processed. Required if partition name is defined.</div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col">
+            <div class="col-lg">
                 <label class="form-label">Partition name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -61,15 +63,7 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" @oninput="ResetStepError" />
                 </div>
-                <div class="form-text">Blank if not applicable</div>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await Offcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Browse objects
-                </HxButton>
+                <div class="form-text">Blank if the entire model or table should be processed.</div>
             </div>
         </div>
         <AnalysisServicesObjectSelectOffcanvas @ref="Offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />

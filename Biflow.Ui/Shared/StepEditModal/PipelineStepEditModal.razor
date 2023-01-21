@@ -3,20 +3,17 @@
 <StepEditModalTemplate Modal="this" TStep="PipelineStep">
     @if (Step is not null)
     {
-        <div class="row">
-            <div class="col-lg-6">
+        <div class="row gap-3">
+            <div class="col-auto">
                 <label class="form-label">Timeout (min) (0 = indefinite)</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
                 </div>
             </div>
-
-        </div>
-        <div class="row mt-2">
-            <div class="col">
+            <div class="col-auto">
                 <label class="form-label">Pipeline client</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -30,7 +27,9 @@
                     </InputSelect>
                 </div>
             </div>
-            <div class="col-lg">
+        </div>
+        <div class="row mt-2 gap-2 align-items-end">
+            <div class="col">
                 <label class="form-label">Pipeline name</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -39,9 +38,7 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName" @oninput="ResetStepError"></InputText>
                 </div>
             </div>
-        </div>
-        <div class="row my-3">
-            <div class="col">
+            <div class="col-md-auto">
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPipelineSelectOffcanvas">
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />

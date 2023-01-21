@@ -3,8 +3,8 @@
 <StepEditModalTemplate Modal="this" TStep="DatasetStep">
     @if (Step is not null)
     {
-        <div class="row">
-            <div class="col-lg-6">
+        <div class="row gap-3 align-items-end">
+            <div class="col-auto">
                 <label class="form-label">App registration</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -18,9 +18,15 @@
                     </InputSelect>
                 </div>
             </div>
+            <div class="col-auto">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                    Browse datasets
+                </HxButton>
+            </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-lg">
+        <div class="row mt-2 gap-3 gap-md-1">
+            <div class="col">
                 <label class="form-label">Group id</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -29,9 +35,7 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId" @oninput="ResetStepError"></InputText>
                 </div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-lg">
+            <div class="col-md">
                 <label class="form-label">Dataset id</label>
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
@@ -39,14 +43,6 @@
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId" @oninput="ResetStepError"></InputText>
                 </div>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
-                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Browse datasets
-                </HxButton>
             </div>
         </div>
         <DatasetSelectOffcanvas @ref="DatasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
