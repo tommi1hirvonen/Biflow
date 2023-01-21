@@ -1,7 +1,5 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
-using Biflow.Ui.Core;
-using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +10,13 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
     [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
 
     internal override string FormId => "job_step_edit_form";
+
+    private IEnumerable<JobCategory?> JobCategories => Jobs
+        .Where(j => j.Category is not null)
+        .Select(j => j.Category)
+        .Distinct()
+        .OrderBy(c => c is not null)
+        .ThenBy(c => c?.CategoryName);
 
     protected override JobStep CreateNewStep(Job job) =>
         new()
@@ -43,28 +48,16 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             .ThenInclude(p => p.InheritFromJobParameter)
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
-        SetJobToExecute(step.JobToExecuteId);
+        SetJobToExecute();
         return step;
     }
 
-    private void SetJobToExecute(Guid? jobId)
+    private void SetJobToExecute()
     {
         if (Step is not null)
         {
-            Step.JobToExecuteId = jobId;
             Step.StepParameters.Clear();
         }
     }
 
-    private async Task<AutosuggestDataProviderResult<Job>> GetJobSuggestions(AutosuggestDataProviderRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        await Task.Delay(150);
-        return new AutosuggestDataProviderResult<Job>
-        {
-            Data = Jobs.Where(j => j.JobId != Step.Job.JobId)
-                .Where(j => j.JobName.ContainsIgnoreCase(request.UserInput)
-                        || (j.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
-        };
-    }
 }

@@ -3,40 +3,41 @@
 <StepEditModalTemplate Modal="this" TStep="JobStep">
     @if (Step is not null)
     {
-        <div class="row">
-            <div class="col-lg-8">
-                <HxAutosuggest Label="Job"
-                               CssClass="input-group-sm"
-                               TItem="Job"
-                               TValue="Guid?"
-                               DataProvider="GetJobSuggestions"
-                               ValueChanged="id => SetJobToExecute(id)"
-                               Value="Step.JobToExecuteId"
-                               ValueExpression="() => Step.JobToExecuteId"
-                               TextSelector="job => job.JobName"
-                               ItemFromValueResolver="id => Task.FromResult(Jobs.First(j => j.JobId == id))"
-                               ValueSelector="job => job.JobId"
-                               MinimumLength="0"
-                               ValidationMessageMode="ValidationMessageMode.None"
-                               InputSize="InputSize.Small">
-                    <ItemTemplate Context="item">
-                        <small>@item.JobName</small><sup>@item.Category?.CategoryName</sup>
-                    </ItemTemplate>
-                    <InputGroupStartTemplate>
-                        <div class="input-group-text">
-                            <CxIcon Icon="LucideIcon.ClipboardList" />
-                        </div>
-                    </InputGroupStartTemplate>
-                </HxAutosuggest>
+        <div class="row align-items-end gap-3">
+            <div class="col-auto">
+                <label class="form-label">Job to execute</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="LucideIcon.ClipboardList" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
+                    <option value=""></option>
+                    @foreach (var category in JobCategories)
+                    {
+                        <optgroup label="@(category?.CategoryName ?? "No category")">
+                            @foreach (var job in Jobs.Where(j => j.CategoryId == category?.CategoryId).OrderBy(j => j.JobName))
+                            {
+                                <option value="@job.JobId">
+                                    @job.JobName
+                                </option>
+                            }
+                        </optgroup>
+                    }
+                </InputSelect>
+                </div>
             </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col">
+            <div class="col-auto">
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="new_step_job_synchronized"
-                           checked=@Step.JobExecuteSynchronized
-                           @bind-value="Step.JobExecuteSynchronized">
-                    <label class="form-check-label" for="new_step_job_synchronized">Synchronized</label>
+                       checked=@Step.JobExecuteSynchronized
+                       @bind-value="Step.JobExecuteSynchronized">
+                    <label class="form-check-label" for="new_step_job_synchronized">
+                        Synchronized
+                        &nbsp;
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.">
+                            <CxIcon Icon="FeatherIcon.Info" />
+                        </HxPopover>
+                    </label>
                 </div>
             </div>
         </div>
