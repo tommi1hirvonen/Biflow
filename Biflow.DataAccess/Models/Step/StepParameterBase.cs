@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("StepParameter")]
 [PrimaryKey("ParameterId")]
-public abstract class StepParameterBase : ParameterBase
+public abstract class StepParameterBase : ParameterBase, IAsyncEvaluable
 {
     public StepParameterBase(ParameterType parameterType)
     {
@@ -25,4 +25,14 @@ public abstract class StepParameterBase : ParameterBase
     public JobParameter? InheritFromJobParameter { get; set; }
 
     public abstract Step BaseStep { get; }
+
+    public async Task<object?> EvaluateAsync()
+    {
+        if (InheritFromJobParameter is not null)
+        {
+            return await InheritFromJobParameter.EvaluateAsync();
+        }
+
+        return ParameterValue;
+    }
 }

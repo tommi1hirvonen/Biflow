@@ -169,14 +169,18 @@ INSERT INTO biflow.ExecutionParameter (
 	ParameterId,
 	ParameterName,
 	ParameterValueType,
-	ParameterValue
+	ParameterValue,
+	UseExpression,
+	Expression
 )
 SELECT
 	@BiflowExecutionId,
 	ParameterId,
 	ParameterName,
 	ParameterValueType,
-	ParameterValue
+	ParameterValue,
+	UseExpression,
+	Expression
 FROM biflow.JobParameter
 WHERE JobId = @JobId
 

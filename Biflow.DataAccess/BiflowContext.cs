@@ -226,11 +226,23 @@ public class BiflowContext : DbContext
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<ExecutionParameter>()
-            .ToTable(t => t.HasTrigger("Trigger_ExecutionParameter"));
+        modelBuilder.Entity<ExecutionParameter>(e =>
+        {
+            e.ToTable(t => t.HasTrigger("Trigger_ExecutionParameter"));
+            e.OwnsOne(s => s.Expression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("Expression");
+            });
+        });
 
-        modelBuilder.Entity<JobParameter>()
-            .ToTable(t => t.HasTrigger("Trigger_JobParameter"));
+        modelBuilder.Entity<JobParameter>(e =>
+        {
+            e.ToTable(t => t.HasTrigger("Trigger_JobParameter"));
+            e.OwnsOne(s => s.Expression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("Expression");
+            });
+        });
 
         modelBuilder.Entity<StepParameterBase>(e =>
         {

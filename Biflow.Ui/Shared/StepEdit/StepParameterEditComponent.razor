@@ -55,7 +55,7 @@
                                 @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
                                             {
                                     <option value="@jobParam.ParameterId">
-                                        @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                                        @jobParam.DisplaySummary
                                     </option>
                                             }
                             </InputSelect>

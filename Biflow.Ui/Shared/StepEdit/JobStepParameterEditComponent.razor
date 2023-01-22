@@ -56,7 +56,7 @@ else if (Step is not null && TargetJob is not null)
                                 @foreach (var jobParam in availableJobParams)
                                 {
                                     <option value="@jobParam.ParameterId">
-                                        @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                                        @jobParam.DisplaySummary
                                     </option>
                                 }
                             </InputSelect>
@@ -171,7 +171,7 @@ else if (Step is not null)
     }
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
-        .Where(p => p.ParameterValueType == param.ParameterValueType)
+        .Where(p => p.ParameterValueType == param.ParameterValueType || p.UseExpression)
         .OrderBy(p => p.ParameterName);
 
     private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param)

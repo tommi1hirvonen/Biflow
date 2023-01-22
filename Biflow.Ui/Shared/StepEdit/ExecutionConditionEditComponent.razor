@@ -63,11 +63,11 @@
                     @if (param.JobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId" @bind-Value:after="() => JobParameterChanged(param)">
                                 @foreach (var jobParam in Step.Job.JobParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                                             {
                                     <option value="@jobParam.ParameterId">
-                                        @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                                        @jobParam.DisplaySummary
                                     </option>
                                             }
                             </InputSelect>
@@ -215,15 +215,23 @@
     {
         if (inheritFromJob)
         {
-            param.JobParameterId = Step?.Job.JobParameters.FirstOrDefault()?.ParameterId;
+            var jobParam = Step?.Job.JobParameters.FirstOrDefault();
+            param.JobParameterId = jobParam?.ParameterId;
+            param.JobParameter = jobParam;
         }
         else
         {
             param.JobParameterId = null;
+            param.JobParameter = null;
         }
     }
 
-    private void TestEvaluate()
+    private void JobParameterChanged(ExecutionConditionParameter param)
+    {
+        param.JobParameter = Step?.Job.JobParameters.FirstOrDefault(p => p.ParameterId == param.JobParameterId);
+    }
+
+    private async Task TestEvaluate()
     {
         if (string.IsNullOrWhiteSpace(Step?.ExecutionConditionExpression.Expression))
         {
@@ -233,7 +241,7 @@
 
         try
         {
-            var result = Step.EvaluateExecutionCondition();
+            var result = await Step.EvaluateExecutionConditionAsync();
             if (result is bool b)
             {
                 Messenger.AddInformation($"Result: {b}");

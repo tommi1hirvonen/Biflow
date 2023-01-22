@@ -94,33 +94,37 @@ internal class JobExecutor : IJobExecutor
         catch (Exception ex)
         {
             _logger.LogError(ex, "{executionId} Error checking for possible circular job executions", executionId);
+            await UpdateExecutionFailedAsync(execution, "Error checking for possible circular job executions");
             return;
         }
 
         if (!string.IsNullOrEmpty(circularExecutions))
         {
             var errorMessage = "Execution was cancelled because of circular job executions:\n" + circularExecutions;
-            using var context = _dbContextFactory.CreateDbContext();
-            foreach (var attempt in execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts))
-            {
-                attempt.StartDateTime = DateTimeOffset.Now;
-                attempt.EndDateTime = DateTimeOffset.Now;
-                attempt.ErrorMessage = errorMessage;
-                attempt.ExecutionStatus = StepExecutionStatus.Failed;
-                context.Attach(attempt).State = EntityState.Modified;
-            }
-
-            execution.StartDateTime = DateTimeOffset.Now;
-            execution.EndDateTime = DateTimeOffset.Now;
-            execution.ExecutionStatus = ExecutionStatus.Failed;
-            context.Attach(execution).State = EntityState.Modified;
-
-            await context.SaveChangesAsync();
-
+            await UpdateExecutionFailedAsync(execution, errorMessage);
             _logger.LogError("{executionId} Execution was cancelled because of circular job executions: {circularExecutions}", executionId, circularExecutions);
             return;
         }
 
+        // Update execution parameter values for parameters that use expressions.
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync();
+            foreach (var parameter in execution.ExecutionParameters.Where(p => p.UseExpression))
+            {
+                context.Attach(parameter);
+                parameter.ParameterValue = await parameter.EvaluateAsync();
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", executionId);
+            await UpdateExecutionFailedAsync(execution, "Error evaluating execution parameters and saving evaluation results");
+            return;
+        }
+        
+        // Execution validation checks passed. Create orchestrator and run it.
         Orchestrator = _orchestratorFactory.Create(execution);
 
         try
@@ -242,6 +246,25 @@ internal class JobExecutor : IJobExecutor
             .GroupBy(key => key.Job, element => element.JobToExecute)
             .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
         return dependencies;
+    }
+
+    private async Task UpdateExecutionFailedAsync(Execution execution, string errorMessage)
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        await context.StepExecutionAttempts
+            .Where(e => e.ExecutionId == execution.ExecutionId)
+            .ExecuteUpdateAsync(attempt => attempt
+            .SetProperty(p => p.StartDateTime, DateTimeOffset.Now)
+            .SetProperty(p => p.EndDateTime, DateTimeOffset.Now)
+            .SetProperty(p => p.ErrorMessage, errorMessage)
+            .SetProperty(p => p.ExecutionStatus, StepExecutionStatus.Failed));
+
+        execution.StartDateTime = DateTimeOffset.Now;
+        execution.EndDateTime = DateTimeOffset.Now;
+        execution.ExecutionStatus = ExecutionStatus.Failed;
+        context.Attach(execution).State = EntityState.Modified;
+
+        await context.SaveChangesAsync();
     }
 
 }

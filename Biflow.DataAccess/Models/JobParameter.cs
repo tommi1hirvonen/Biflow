@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("JobParameter")]
 [PrimaryKey("ParameterId")]
-public class JobParameter : ParameterBase
+public class JobParameter : DynamicParameter
 {
     [Display(Name = "Job")]
     [Column("JobId")]
@@ -17,4 +17,14 @@ public class JobParameter : ParameterBase
     public ICollection<StepParameterBase> InheritingStepParameters { get; set; } = null!;
 
     public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
+
+    public override async Task<object?> EvaluateAsync()
+    {
+        if (UseExpression)
+        {
+            return await Expression.EvaluateAsync();
+        }
+
+        return ParameterValue;
+    }
 }

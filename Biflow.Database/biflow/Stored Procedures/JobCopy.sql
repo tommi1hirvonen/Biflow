@@ -55,13 +55,17 @@ INSERT INTO biflow.JobParameter (
 	JobId,
 	ParameterName,
 	ParameterValueType,
-	ParameterValue
+	ParameterValue,
+	UseExpression,
+	Expression
 )
 SELECT B.ParameterIdNew,
 	@JobIdNew,
 	A.ParameterName,
 	A.ParameterValueType,
-	A.ParameterValue
+	A.ParameterValue,
+	A.UseExpression,
+	A.Expression
 FROM biflow.JobParameter AS A
 	INNER JOIN #ParameterIdMapping AS B ON A.ParameterId = B.ParameterId
 WHERE JobId = @JobId

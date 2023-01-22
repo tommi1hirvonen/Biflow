@@ -30,6 +30,10 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private bool Loading { get; set; } = false;
 
+    private HxOffcanvas? ExpressionEditOffcanvas { get; set; }
+
+    private JobParameter? ExpressionEditParameter { get; set; }
+
     private HxOffcanvas? ReferencingStepsOffcanvas { get; set; }
     
     private ReferencingStepsModel ReferencingSteps { get; set; } = new(new(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>());
@@ -126,6 +130,25 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         if (!confirmed)
         {
             context.PreventNavigation();
+        }
+    }
+
+    private async Task ShowExpressionEditOffcanvasAsync(JobParameter parameter)
+    {
+        ExpressionEditParameter = parameter;
+        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task TestEvaluate(JobParameter parameter)
+    {
+        try
+        {
+            var result = await parameter.Expression.EvaluateAsync();
+            Messenger.AddInformation($"Evaluation result: {result}");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError(ex.Message);
         }
     }
 

@@ -5,7 +5,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionParameter")]
 [PrimaryKey("ExecutionId", "ParameterId")]
-public class ExecutionParameter : ParameterBase
+public class ExecutionParameter : DynamicParameter
 {
     public ExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
     {
@@ -21,4 +21,27 @@ public class ExecutionParameter : ParameterBase
     public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
 
     public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+
+    [NotMapped]
+    private bool Evaluated { get; set; }
+
+    [NotMapped]
+    private object? EvaluationResult { get; set; }
+
+    public override async Task<object?> EvaluateAsync()
+    {
+        if (UseExpression && Evaluated)
+        {
+            return EvaluationResult;
+        }
+        else if (UseExpression)
+        {
+            var result = await Expression.EvaluateAsync();
+            EvaluationResult = result;
+            Evaluated = true;
+            return result;
+        }
+
+        return ParameterValue;
+    }
 }

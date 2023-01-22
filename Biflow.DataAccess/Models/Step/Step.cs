@@ -111,14 +111,14 @@ public abstract class Step : IComparable
         }
     }
 
-    public object? EvaluateExecutionCondition()
+    public async Task<object?> EvaluateExecutionConditionAsync()
     {
-        object? mapParameterToValue(ExecutionConditionParameter ecp) =>
-                ecp.JobParameterId is not null
-                ? Job.JobParameters.First(p => p.ParameterId == ecp.JobParameterId).ParameterValue
-                : ecp.ParameterValue;
-        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName, mapParameterToValue);
-        var result = ExecutionConditionExpression.Evaluate(parameters);
+        var parameters = new Dictionary<string, object?>();
+        foreach (var parameter in ExecutionConditionParameters)
+        {
+            parameters[parameter.ParameterName] = await parameter.EvaluateAsync();
+        }
+        var result = await ExecutionConditionExpression.EvaluateAsync(parameters);
         return result;
     }
 }

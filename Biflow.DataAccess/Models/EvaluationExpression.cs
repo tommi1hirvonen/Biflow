@@ -8,20 +8,8 @@ public class EvaluationExpression
 {
     public string? Expression { get; set; }
 
-    public object? Evaluate(IDictionary<string, object?>? parameters = null)
-    {
-        parameters ??= new Dictionary<string, object?>();
-        var evaluator = GetEvaluator(parameters);
-        // Evaluate the expression/statement with a separate Task to allow the calling thread to continue.
-        return evaluator.Evaluate(Expression);
-    }
-
-    public async Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null)
-    {
-        parameters ??= new Dictionary<string, object?>();
-        var evaluator = GetEvaluator(parameters);
-        return await Task.Run(() => evaluator.Evaluate(Expression));
-    }
+    public async Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null) =>
+        await EvaluateAsync<object?>(parameters);
 
     public async Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
     {
@@ -30,14 +18,12 @@ public class EvaluationExpression
             return true;
         }
 
-        parameters ??= new Dictionary<string, object?>();
-        var evaluator = GetEvaluator(parameters);
-        // Evaluate the expression/statement with a separate Task to allow the calling thread to continue.
-        return await Task.Run(() => evaluator.Evaluate<bool>(Expression));
+        return await EvaluateAsync<bool>(parameters);
     }
 
-    private static ExpressionEvaluator GetEvaluator(IDictionary<string, object?> parameters)
+    private async Task<T> EvaluateAsync<T>(IDictionary<string, object?>? parameters = null)
     {
+        parameters ??= new Dictionary<string, object?>();
         var evaluator = new ExpressionEvaluator
         {
             OptionScriptEvaluateFunctionActive = false,
@@ -45,6 +31,9 @@ public class EvaluationExpression
         };
         evaluator.Namespaces.Remove("System.IO");
         evaluator.Variables = parameters;
-        return evaluator;
+        return await Task.Run(() => evaluator.Evaluate<T>(Expression));
     }
+
+    public override string ToString() => Expression ?? "";
+
 }
