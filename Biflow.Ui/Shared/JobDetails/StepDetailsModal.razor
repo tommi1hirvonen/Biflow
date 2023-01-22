@@ -231,29 +231,33 @@
                         @email.Body
                     </dd>
                 }
+                <dt class="col-sm-3">
+                    Execution condition
+                </dt>
+                <dd class="col-sm-9">
+                    <pre><code>@Step.ExecutionConditionExpression.Expression</code></pre>
+                </dd>
             </dl>
-            @if (Step is PackageStep package_)
-            {
-                <h6>Parameters</h6>
-                @if (package_.StepParameters is not null)
+            <h6>Execution condition parameters</h6>
+            <dl class="row">
+                @foreach (var param in Step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>())
                 {
-                    <dl class="row">
-                        @foreach (var param in package_.StepParameters.Cast<PackageStepParameter>())
-                        {
-                            <dt class="col-sm-3">@($"${param.ParameterLevel}::{param.ParameterName}")</dt>
-                            <dd class="col-sm-9">@($"{param.ParameterValue} ({param.ParameterValueType})")</dd>
-                        }
-                    </dl>
+                    <dt class="col-sm-3">
+                        @param.DisplayName
+                    </dt>
+                    <dd class="col-sm-9">
+                        @param.DisplayValue
+                    </dd>
                 }
-            }
-            else if (Step is IHasStepParameters hasParams)
+            </dl>
+            @if (Step is IHasStepParameters hasParams)
             {
                 <h6>Parameters</h6>
                 <dl class="row">
                     @foreach (var param in hasParams.StepParameters)
                     {
-                        <dt class="col-sm-3">@param.ParameterName</dt>
-                        <dd class="col-sm-9">@param.ParameterValue</dd>
+                        <dt class="col-sm-3">@param.DisplayName</dt>
+                        <dd class="col-sm-9">@param.DisplayValue</dd>
                     }
                 </dl>
             }

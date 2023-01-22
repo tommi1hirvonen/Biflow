@@ -13,4 +13,6 @@ public class PackageStepExecutionParameter : StepExecutionParameterBase
     public override StepExecution BaseStepExecution => StepExecution;
 
     public ParameterLevel ParameterLevel { get; set; }
+
+    public override string DisplayName => $"${ParameterLevel}::{ParameterName}";
 }

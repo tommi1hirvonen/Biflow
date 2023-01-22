@@ -35,4 +35,13 @@ public abstract class StepParameterBase : ParameterBase, IAsyncEvaluable
 
         return ParameterValue;
     }
+
+    public override string DisplayValue => InheritFromJobParameter switch
+    {
+        not null => $"{InheritFromJobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {InheritFromJobParameter.DisplayName})",
+        _ => base.DisplayValue
+    };
+
+    public override string DisplayValueType => InheritFromJobParameter?.DisplayValueType ?? base.DisplayValueType;
+
 }

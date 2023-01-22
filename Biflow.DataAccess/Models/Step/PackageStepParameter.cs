@@ -15,4 +15,6 @@ public class PackageStepParameter : StepParameterBase
     public PackageStep Step { get; set; } = null!;
 
     public override Step BaseStep => Step;
+
+    public override string DisplayName => $"${ParameterLevel}::{ParameterName}";
 }

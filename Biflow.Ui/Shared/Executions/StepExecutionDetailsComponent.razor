@@ -371,13 +371,11 @@
     <dl class="row">
         @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters ?? Enumerable.Empty<StepExecutionConditionParameter>())
         {
-            // Append parameter level for package step executions to separate package and project level parameters.
             <dt class="col-sm-3">
-                @param.ParameterName
+                @param.DisplayName
             </dt>
             <dd class="col-sm-9">
-                @($"{param.ParameterValue} ({param.ParameterValueType})")
-                @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.ExecutionParameter?.ParameterName})" : null)
+                @param.DisplayValue
             </dd>
         }
     </dl>
@@ -387,13 +385,11 @@
         <dl class="row">
             @foreach (var param in hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
             {
-                // Append parameter level for package step executions to separate package and project level parameters.
                 <dt class="col-sm-3">
-                    @(param is PackageStepExecutionParameter p ? $"${p.ParameterLevel}::{p.ParameterName}" : param.ParameterName)
+                    @param.DisplayName
                 </dt>
                 <dd class="col-sm-9">
-                    @($"{param.ParameterValue} ({param.ParameterValueType})")
-                    @(param.ExecutionParameterValue is not null ? $"(Inherited from job param {param.InheritFromExecutionParameter?.ParameterName})" : null)
+                    @param.DisplayValue
                 </dd>
             }
         </dl>

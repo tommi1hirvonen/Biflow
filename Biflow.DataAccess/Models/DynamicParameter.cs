@@ -6,20 +6,13 @@ public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
 
     public EvaluationExpression Expression { get; set; } = new();
 
-    public string DisplayValue => (UseExpression, ParameterValue) switch
+    public override string DisplayValue => UseExpression switch
     {
-        (true, _) => Expression.Expression ?? "",
-        (false, null) => "null",
-        _ => ParameterValue.ToString() ?? ""
+        true => Expression.Expression ?? "",
+        false => base.DisplayValue
     };
 
-    public string DisplaySummary => (UseExpression, DisplayValue) switch
-    {
-        (true, { Length: <45 }) => $"{ParameterName} (Dynamic = {DisplayValue})",
-        (true, _) => $"{ParameterName} (Dynamic = {DisplayValue[..40]}...)",
-        (false, { Length: <45 }) => $"{ParameterName} ({ParameterValueType} = {DisplayValue})",
-        (false, _) => $"{ParameterName} ({ParameterValueType} = {DisplayValue[..40]}...)"
-    };
+    public override string DisplayValueType => UseExpression ? "Dynamic" : base.DisplayValueType;
 
     public abstract Task<object?> EvaluateAsync();
 }

@@ -67,7 +67,9 @@ public partial class JobDetails : ComponentBase
             .Include(step => step.Sources)
             .Include(step => step.Targets)
             .Include(step => step.Tags)
-            .Include(nameof(IHasStepParameters.StepParameters))
+            .Include(step => step.ExecutionConditionParameters)
+            .ThenInclude(p => p.JobParameter)
+            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(step => step.ExecutionConditionParameters)
             .Where(step => step.JobId == Job.JobId)
             .ToListAsync();

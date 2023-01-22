@@ -45,4 +45,12 @@ public class StepExecutionConditionParameter : ParameterBase
     public ExecutionParameter? ExecutionParameter { get; set; }
 
     public StepExecution StepExecution { get; set; } = null!;
+
+    public override string DisplayValue => ExecutionParameter switch
+    {
+        not null => $"{ExecutionParameter.DisplayValue?.ToString() ?? "null"} (inherited from execution parameter {ExecutionParameter.DisplayName})",
+        _ => base.DisplayValue
+    };
+
+    public override string DisplayValueType => ExecutionParameter?.DisplayValueType ?? base.DisplayValueType;
 }

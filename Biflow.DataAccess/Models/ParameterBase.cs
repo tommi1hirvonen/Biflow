@@ -201,4 +201,15 @@ public abstract class ParameterBase
 
     private string? _valueString;
 
+    public virtual string DisplayName => ParameterName;
+
+    public virtual string DisplayValue => ParameterValue?.ToString() ?? "null";
+
+    public virtual string DisplayValueType => ParameterValueType.ToString();
+
+    public virtual string DisplaySummary => DisplayValue switch
+    {
+        { Length: <45 } => $"{DisplayName} ({DisplayValueType} = {DisplayValue})",
+        _ => $"{DisplayName} ({DisplayValueType} = {DisplayValue[..40]}...)"
+    };
 }

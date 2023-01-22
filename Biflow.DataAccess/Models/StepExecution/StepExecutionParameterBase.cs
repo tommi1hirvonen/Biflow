@@ -46,4 +46,12 @@ public abstract class StepExecutionParameterBase : ParameterBase
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
     public abstract StepExecution BaseStepExecution { get; }
+
+    public override string DisplayValue => InheritFromExecutionParameter switch
+    {
+        not null => $"{InheritFromExecutionParameter.DisplayValue?.ToString() ?? "null"} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
+        _ => base.DisplayValue
+    };
+
+    public override string DisplayValueType => InheritFromExecutionParameter?.DisplayValueType ?? base.DisplayValueType;
 }

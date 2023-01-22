@@ -26,4 +26,12 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 
         return ParameterValue;
     }
+
+    public override string DisplayValue => JobParameter switch
+    {
+        not null => $"{JobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {JobParameter.DisplayName})",
+        _ => base.DisplayValue
+    };
+
+    public override string DisplayValueType => JobParameter?.DisplayValueType ?? base.DisplayValueType;
 }
