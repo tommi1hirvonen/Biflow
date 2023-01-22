@@ -24,7 +24,7 @@ public abstract class StepExecutionParameterBase : ParameterBase
     [Column(TypeName = "sql_variant")]
     public override object? ParameterValue
     {
-        get => ExecutionParameterValue ?? _parameterValue;
+        get => InheritFromExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
         set => _parameterValue = value;
     }
 

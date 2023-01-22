@@ -23,7 +23,7 @@ public class StepExecutionConditionParameter : ParameterBase
     [Column(TypeName = "sql_variant")]
     public override object? ParameterValue
     {
-        get => ExecutionParameterValue ?? _parameterValue;
+        get => ExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
         set => _parameterValue = value;
     }
 
