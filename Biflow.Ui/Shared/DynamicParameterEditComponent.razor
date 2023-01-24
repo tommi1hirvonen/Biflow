@@ -11,7 +11,7 @@
     </td>
     @if (Parameter.UseExpression)
     {
-        <td colspan="2">
+        <td colspan="@ColSpan">
             <div class="d-flex">
                 <input type="text" class="form-control form-control-sm me-2 font-monospace" @bind-value="Parameter.Expression.Expression" />
                 <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -33,6 +33,8 @@
 
 @code {
     [Parameter, EditorRequired] public DynamicParameter? Parameter { get; set; }
+
+    [Parameter, EditorRequired] public int ColSpan { get; set; }
 
     [Parameter] public EventCallback<DynamicParameter> OnParameterEdit { get; set; }
 

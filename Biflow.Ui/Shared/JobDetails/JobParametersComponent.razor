@@ -84,7 +84,7 @@ else
                                     <td>
                                         <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                     </td>
-                                    <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)">
+                                    <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)" ColSpan="2">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditComponent Parameter="param" />
                                         </StaticEditTemplate>

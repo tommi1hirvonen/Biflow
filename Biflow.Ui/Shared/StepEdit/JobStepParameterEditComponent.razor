@@ -66,7 +66,7 @@ else if (Step is not null && TargetJob is not null)
                     }
                     else
                     {
-                        <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)">
+                        <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)" ColSpan="1">
                             <StaticEditTemplate>
                                 <td>
                                     <ParameterValueEditComponent Parameter="param" />
