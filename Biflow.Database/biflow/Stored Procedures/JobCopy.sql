@@ -244,7 +244,9 @@ INSERT INTO biflow.StepParameter (
 	ParameterValueType,
 	ParameterValue,
 	InheritFromJobParameterId,
-	AssignToJobParameterId
+	AssignToJobParameterId,
+	UseExpression,
+	Expression
 )
 SELECT NEWID(),
 	B.StepIdNew,
@@ -254,7 +256,9 @@ SELECT NEWID(),
 	A.ParameterValueType,
 	A.ParameterValue,
 	C.ParameterIdNew,
-	A.AssignToJobParameterId
+	A.AssignToJobParameterId,
+	A.UseExpression,
+	A.Expression
 FROM biflow.StepParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId

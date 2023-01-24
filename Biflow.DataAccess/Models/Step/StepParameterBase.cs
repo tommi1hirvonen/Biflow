@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("StepParameter")]
 [PrimaryKey("ParameterId")]
-public abstract class StepParameterBase : ParameterBase, IAsyncEvaluable
+public abstract class StepParameterBase : DynamicParameter
 {
     public StepParameterBase(ParameterType parameterType)
     {
@@ -26,11 +26,16 @@ public abstract class StepParameterBase : ParameterBase, IAsyncEvaluable
 
     public abstract Step BaseStep { get; }
 
-    public async Task<object?> EvaluateAsync()
+    public override async Task<object?> EvaluateAsync()
     {
         if (InheritFromJobParameter is not null)
         {
             return await InheritFromJobParameter.EvaluateAsync();
+        }
+
+        if (UseExpression)
+        {
+            return await Expression.EvaluateAsync();
         }
 
         return ParameterValue;

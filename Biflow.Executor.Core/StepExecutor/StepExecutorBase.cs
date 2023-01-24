@@ -47,25 +47,32 @@ internal abstract class StepExecutorBase
 
         var executionAttempt = StepExecution.StepExecutionAttempts.First();
 
-        // If the step is using job parameters,
-        // update the job parameter's current value for this execution.
+        // If the step is using job parameters, update the job parameter's current value for this execution.
+        // Also evaluate step execution parameter expressions.
         if (StepExecution is IHasStepExecutionParameters hasParameters)
         {
             try
             {
                 using var context = _dbContextFactory.CreateDbContext();
+                // Update the historized ExecutionParameterValue with the ExecutionParameter's value.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
                     context.Attach(param);
                     param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
                 }
+                // Also evaluate expressiosn and save the result to the step parameter's value property.
+                foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
+                {
+                    context.Attach(param);
+                    param.ParameterValue = await param.EvaluateAsync();
+                }
                 await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step parameters",
+                _logger.LogError(ex, "{ExecutionId} {Step} Error updating parameter values",
                 StepExecution.ExecutionId, StepExecution);
-                var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting step parameters");
+                var failure = Result.Failure(ex, "Error updating parameter values");
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                 return false;
             }

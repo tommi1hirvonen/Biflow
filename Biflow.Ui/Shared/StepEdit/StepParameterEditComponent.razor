@@ -1,5 +1,7 @@
 ﻿@typeparam TParameter where TParameter : StepParameterBase
 
+@inject IHxMessengerService Messenger
+
 @if (Step is not null)
 {
     <p />
@@ -20,6 +22,7 @@
             <tr>
                 <th>Name</th>
                 <th>Inherit from job</th>
+                <th>Dynamic</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -50,7 +53,7 @@
                     </td>
                     @if (param.InheritFromJobParameterId is not null)
                     {
-                        <td colspan="2">
+                        <td colspan="3">
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
                                 @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
                                             {
@@ -63,7 +66,11 @@
                     }
                     else
                     {
-                        <ParameterTypeValueEditComponent Parameter="param" />
+                        <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)">
+                            <StaticEditTemplate>
+                                <ParameterTypeValueEditComponent Parameter="param" />
+                            </StaticEditTemplate>
+                        </DynamicParameterEditComponent>
                     }
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -83,12 +90,48 @@
     </HxButton>
 }
 
+<HxOffcanvas @ref="ExpressionEditOffcanvas" Backdrop="OffcanvasBackdrop.False" Title="@ExpressionEditParameter?.ParameterName">
+    <BodyTemplate>
+        @if (ExpressionEditParameter is not null)
+        {
+            <div class="row">
+                <label class="form-label">
+                    Dynamic expression
+                </label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Code" />
+                    </div>
+                    <textarea class="form-control form-control-sm" @bind="ExpressionEditParameter.Expression.Expression" style="font-family: monospace;" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <HxButton OnClick="() => TestEvaluate(ExpressionEditParameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                        <CxIcon Icon="FeatherIcon.Check" />
+                        Test evaluate / validate
+                    </HxButton>
+                </div>
+            </div>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => ExpressionEditOffcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
 @code {
     [Parameter, EditorRequired] public IHasStepParameters<TParameter>? Step { get; set; }
 
     [Parameter, EditorRequired] public Func<TParameter>? NewParameterDelegate { get; set; }
 
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
+
+    private HxOffcanvas? ExpressionEditOffcanvas { get; set; }
+
+    private StepParameterBase? ExpressionEditParameter { get; set; }
 
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {
@@ -107,5 +150,24 @@
         ArgumentNullException.ThrowIfNull(Step);
         ArgumentNullException.ThrowIfNull(NewParameterDelegate);
         Step.StepParameters.Add(NewParameterDelegate());
+    }
+
+    private async Task TestEvaluate(StepParameterBase parameter)
+    {
+        try
+        {
+            var result = await parameter.Expression.EvaluateAsync();
+            Messenger.AddInformation($"Evaluation result: {result}");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError(ex.Message);
+        }
+    }
+
+    private async Task ShowExpressionEditOffcanvasAsync(DynamicParameter parameter)
+    {
+        ExpressionEditParameter = (StepParameterBase)parameter;
+        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync());
     }
 }

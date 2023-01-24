@@ -9,6 +9,8 @@
 	[ParameterValue] SQL_VARIANT NULL,
 	[InheritFromJobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_StepParameter_InheritFromJobParameter] FOREIGN KEY REFERENCES [biflow].[JobParameter] ([ParameterId]),
     [AssignToJobParameterId] UNIQUEIDENTIFIER NULL CONSTRAINT [FK_StepParameter_AssignToJobParameter] FOREIGN KEY REFERENCES [biflow].[JobParameter] ([ParameterId]),
+    [UseExpression] BIT NOT NULL CONSTRAINT [DF_StepParameter_UseExpression] DEFAULT (0),
+    [Expression] NVARCHAR(MAX) NULL,
     CONSTRAINT [PK_StepParameter] PRIMARY KEY CLUSTERED ([ParameterId]),
 	CONSTRAINT [UQ_StepParameter] UNIQUE ([StepId], [ParameterLevel], [ParameterName]),
 	CONSTRAINT [FK_StepParameter_StepId] FOREIGN KEY ([StepId]) REFERENCES [biflow].[Step] ([StepId]) ON DELETE CASCADE,

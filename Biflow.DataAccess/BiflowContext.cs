@@ -255,6 +255,10 @@ public class BiflowContext : DbContext
             .HasValue<FunctionStepParameter>(ParameterType.Function)
             .HasValue<PipelineStepParameter>(ParameterType.Pipeline)
             .HasValue<EmailStepParameter>(ParameterType.Email);
+            e.OwnsOne(s => s.Expression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("Expression");
+            });
         });
 
         modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
@@ -283,6 +287,10 @@ public class BiflowContext : DbContext
             .HasValue<FunctionStepExecutionParameter>(ParameterType.Function)
             .HasValue<PipelineStepExecutionParameter>(ParameterType.Pipeline)
             .HasValue<EmailStepExecutionParameter>(ParameterType.Email);
+            e.OwnsOne(s => s.Expression, ece =>
+            {
+                ece.Property(p => p.Expression).HasColumnName("Expression");
+            });
         });
 
         modelBuilder.Entity<SqlStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));

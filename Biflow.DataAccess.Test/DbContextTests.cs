@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Test;
 
 public class DbContextTests
 {
-    private IDbContextFactory<BiflowContext> dbContextFactory;
+    private readonly IDbContextFactory<BiflowContext> dbContextFactory;
 
     public DbContextTests()
     {
@@ -87,5 +87,26 @@ public class DbContextTests
             .SelectMany(e => e.StepExecutions)
             .Any(s => s is IHasStepExecutionParameters p && p.StepExecutionParameters.Any(ep => ep.InheritFromExecutionParameter is not null));
         Assert.True(inherit);
+    }
+
+    [Fact]
+    public async Task TestStepExecutionParameterExpression()
+    {
+        SqlStepExecution execution;
+        using (var ctx1 = await dbContextFactory.CreateDbContextAsync())
+        {
+            var executionId = Guid.Parse("bb192ea8-51f3-41e9-bfed-b5b9dc08d159");
+            var stepId = Guid.Parse("82ec97aa-be76-4c9c-9121-08d9b27416f7");
+            execution = (SqlStepExecution) await ctx1.StepExecutions
+                .Include(e => (e as SqlStepExecution)!.StepExecutionParameters)
+                .ThenInclude(p => p.InheritFromExecutionParameter)
+                .SingleAsync(e => e.ExecutionId == executionId && e.StepId == stepId);
+        }
+        var parameter = execution.StepExecutionParameters.Single(p => p.ParameterId == Guid.Parse("9be34ec4-fff1-421d-5692-08d9ee078641"));
+        using var ctx2 = await dbContextFactory.CreateDbContextAsync();
+        ctx2.Attach(parameter);
+        parameter.ParameterValue = await parameter.EvaluateAsync();
+        await ctx2.SaveChangesAsync();
+        Assert.Equal(parameter.ParameterValue, "00:00:45");
     }
 }

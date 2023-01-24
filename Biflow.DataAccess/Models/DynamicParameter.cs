@@ -8,7 +8,7 @@ public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
 
     public override string DisplayValue => UseExpression switch
     {
-        true => Expression.Expression ?? "",
+        true => $"{Expression.Expression} (expression)",
         false => base.DisplayValue
     };
 

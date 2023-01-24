@@ -11,6 +11,8 @@
 	[InheritFromExecutionParameterId] UNIQUEIDENTIFIER NULL,
     [ExecutionParameterValue] SQL_VARIANT NULL,
     [AssignToJobParameterId] UNIQUEIDENTIFIER NULL,
+    [UseExpression] BIT NOT NULL CONSTRAINT [DF_ExecutionStepParameter_UseExpression] DEFAULT (0),
+    [Expression] NVARCHAR(MAX) NULL,
     CONSTRAINT [PK_ExecutionStepParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionStepParameter_InheritFromExecutionParameter] FOREIGN KEY ([ExecutionId], [InheritFromExecutionParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionStepParameter_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [biflow].[ExecutionStep] ([ExecutionId], [StepId]) ON DELETE CASCADE,

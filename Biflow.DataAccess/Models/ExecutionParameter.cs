@@ -22,6 +22,9 @@ public class ExecutionParameter : DynamicParameter
 
     public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
+    public override string DisplayValue =>
+        UseExpression ? $"{ParameterValue} ({Expression.Expression})" : base.DisplayValue;
+
     [NotMapped]
     private bool Evaluated { get; set; }
 
