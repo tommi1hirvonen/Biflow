@@ -115,10 +115,23 @@
             @Execution.ExecutorProcessId
         </dd>
         <dt class="col-sm-3">
-            Dependency mode
+            Execution mode
         </dt>
         <dd class="col-sm-9">
-            @Execution.DependencyMode
+            @if (Execution.DependencyMode)
+            {
+                <span>
+                    <CxIcon Icon="LucideIcon.Network" />
+                    Dependency mode
+                </span>
+            }
+            else
+            {
+                <span>
+                    <CxIcon Icon="FeatherIcon.Layers" />
+                    Execution phase
+                </span>
+            }
         </dd>
         @if (!Execution.DependencyMode)
         {
