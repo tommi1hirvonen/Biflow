@@ -147,7 +147,7 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<Step>(e =>
         {
             e.ToTable(t => t.HasTrigger("Trigger_Step"));
-            e.HasOne(step => step.Job!)
+            e.HasOne(step => step.Job)
             .WithMany(job => job.Steps)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
@@ -163,7 +163,8 @@ public class BiflowContext : DbContext
             .HasValue<TabularStep>(StepType.Tabular)
             .HasValue<EmailStep>(StepType.Email);
             e.HasMany(s => s.StepExecutions)
-            .WithOne(e => e.Step!);
+            .WithOne(e => e.Step)
+            .IsRequired(false);
             e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
@@ -276,7 +277,7 @@ public class BiflowContext : DbContext
         modelBuilder.Entity<StepExecutionParameterBase>(e =>
         {
             e.HasOne(p => p.InheritFromExecutionParameter)
-            .WithMany(p => p!.StepExecutionParameters)
+            .WithMany(p => p.StepExecutionParameters)
             .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })
             .IsRequired(false);
             e.HasDiscriminator<ParameterType>("ParameterType")
