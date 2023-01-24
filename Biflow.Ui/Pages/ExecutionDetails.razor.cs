@@ -44,6 +44,8 @@ public partial class ExecutionDetails : ComponentBase
 
     private bool JobExecutionDetailsOpen { get; set; } = false;
 
+    private bool ParametersOpen { get; set; } = false;
+
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 
     // Maintain a list executions that are being stopped.

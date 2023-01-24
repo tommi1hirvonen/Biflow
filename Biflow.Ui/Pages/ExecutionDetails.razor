@@ -26,11 +26,19 @@
 
 <HxButtonToolbar CssClass="mt-3">
 
-    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen"
-              CssClass="@(JobExecutionDetailsOpen ? "active" : null)">
-        <CxIcon Icon="FeatherIcon.Info" />
-        Job details
-    </HxButton>
+    <HxButtonGroup>
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen"
+                  CssClass="@(JobExecutionDetailsOpen ? "active" : null)">
+            <CxIcon Icon="FeatherIcon.Info" />
+            Execution details
+        </HxButton>
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ParametersOpen = !ParametersOpen"
+                  CssClass="@(ParametersOpen ? "active" : null)">
+            <CxIcon Icon="FeatherIcon.AtSign" />
+            Parameters
+        </HxButton>
+    </HxButtonGroup>
+    
 
     <HxButtonGroup CssClass="ms-3">
         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Table ? "active" : null)"
@@ -88,7 +96,7 @@
 
 @if (Execution is not null && JobExecutionDetailsOpen)
 {
-    <dl class="row">
+    <dl class="row border rounded">
         <dt class="col-sm-3">
             Execution id
         </dt>
@@ -185,6 +193,32 @@
             <JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" />
         </dd>
     </dl>
+}
+
+@if (Execution is not null && ParametersOpen)
+{
+    if (Execution.ExecutionParameters.Any())
+    {
+        <dl class="row border rounded">
+            @foreach (var param in Execution.ExecutionParameters)
+            {
+                <dt class="col-sm-3">
+                    @param.DisplayName
+                </dt>
+                <dd class="col-sm-9">
+                    @param.DisplayValue
+                </dd>
+            }
+        </dl>
+    }
+    else
+    {
+        <div class="row border rounded">
+            <div class="col">
+                No parameters
+            </div>
+        </div>
+    }
 }
 
 @if (ShowReport != Report.Rerun)
