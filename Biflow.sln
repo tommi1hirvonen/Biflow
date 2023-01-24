@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.SourceGeneration"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.Components", "Biflow.Ui.Components\Biflow.Ui.Components.csproj", "{6E69A58C-B8DE-43CF-8E01-FCADF040F5DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biflow.DataAccess.Test", "Biflow.DataAccess.Test\Biflow.DataAccess.Test.csproj", "{0A3EF0A6-145B-4807-AC0A-498496B431AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess.Test", "Biflow.DataAccess.Test\Biflow.DataAccess.Test.csproj", "{0A3EF0A6-145B-4807-AC0A-498496B431AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

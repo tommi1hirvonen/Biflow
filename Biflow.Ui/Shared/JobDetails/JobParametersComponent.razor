@@ -75,9 +75,6 @@ else
                             {
                                 <tr><td colspan="6">No parameters</td></tr>
                             }
-                            @{
-                                var count = 0;
-                            }
                             @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
                                 var inheritingSteps = GetInheritingSteps(param).ToList();
@@ -87,33 +84,11 @@ else
                                     <td>
                                         <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                     </td>
-                                    <td class="align-middle">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="dynamic_param_@count"
-                                            checked=@param.UseExpression @bind-value="param.UseExpression">
-                                            <label class="form-check-label" for="dynamic_param_@count"></label>
-                                        </div>
-                                    </td>
-                                    @if (param.UseExpression)
-                                    {
-                                        <td colspan="2">
-                                            <div class="d-flex">
-                                                <input type="text" class="form-control form-control-sm me-2 font-monospace" @bind-value="param.Expression.Expression" />
-                                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                                    <HxButton CssClass="btn-auto" OnClick="() => ShowExpressionEditOffcanvasAsync(param)" title="Edit">
-                                                        <CxIcon Icon="FeatherIcon.Edit2" />
-                                                    </HxButton>
-                                                    <HxButton CssClass="btn-auto" OnClick="() => TestEvaluate(param)" title="Test evaluate">
-                                                        <CxIcon Icon="FeatherIcon.CheckCircle" />
-                                                    </HxButton>
-                                                </HxButtonGroup>
-                                            </div>
-                                        </td>
-                                    }
-                                    else
-                                    {
-                                        <ParameterTypeValueEditComponent Parameter="param" />
-                                    }
+                                    <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)">
+                                        <StaticEditTemplate>
+                                            <ParameterTypeValueEditComponent Parameter="param" />
+                                        </StaticEditTemplate>
+                                    </DynamicParameterEditComponent>
                                     <td class="@(inheritingSteps.Count == 0 ? "text-muted" : null)">
                                         @inheritingSteps.Count step(s)
                                     </td>

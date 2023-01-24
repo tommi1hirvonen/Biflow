@@ -133,9 +133,9 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         }
     }
 
-    private async Task ShowExpressionEditOffcanvasAsync(JobParameter parameter)
+    private async Task ShowExpressionEditOffcanvasAsync(DynamicParameter parameter)
     {
-        ExpressionEditParameter = parameter;
+        ExpressionEditParameter = (JobParameter)parameter;
         await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
