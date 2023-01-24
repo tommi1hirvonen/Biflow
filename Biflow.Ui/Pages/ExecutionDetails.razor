@@ -8,7 +8,18 @@
                 All executions
             </a>
             <span>&nbsp;/&nbsp;</span>
-            <strong>@Execution?.JobName</strong>
+            @if (Execution?.Job is not null)
+            {
+                <strong>
+                    <a href="@($"jobs/{Execution.Job.JobId}/steps")">
+                        @Execution.Job.JobName
+                    </a>
+                </strong>   
+            }
+            else
+            {
+                <strong>@Execution?.JobName</strong>
+            }
         </div>
     </div>
 </div>
@@ -83,6 +94,19 @@
         </dt>
         <dd class="col-sm-9">
             @Execution.ExecutionId
+        </dd>
+        <dt class="col-sm-3">
+            Job id
+        </dt>
+        <dd class="col-sm-9">
+            @if (Execution.Job is not null)
+            {
+                <a href="@($"jobs/{Execution.Job.JobId}/steps")">@Execution.Job.JobId</a>
+            }
+            else
+            {
+                @Execution.JobId
+            }
         </dd>
         <dt class="col-sm-3">
             Executor PID
