@@ -51,6 +51,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
             .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
             .ThenInclude(s => s.Job)
             .FirstAsync(j => j.JobId == Job.JobId);
+        EditJob.JobParameters = EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList();
         Loading = false;
     }
 
