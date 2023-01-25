@@ -111,7 +111,7 @@ else if (Step is not null)
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
 
 @code {
     [Parameter] public JobStep? Step { get; set; }

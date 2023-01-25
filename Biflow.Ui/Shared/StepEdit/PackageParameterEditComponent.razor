@@ -83,7 +83,7 @@
     </HxButton>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
 
 @code {
     [Parameter] public PackageStep? Step { get; set; }

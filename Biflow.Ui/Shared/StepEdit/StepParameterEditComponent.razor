@@ -90,7 +90,7 @@
     </HxButton>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
 
 @code {
     [Parameter, EditorRequired] public IHasStepParameters<TParameter>? Step { get; set; }

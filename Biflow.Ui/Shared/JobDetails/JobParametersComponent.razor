@@ -122,7 +122,7 @@ else
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
 
 <HxOffcanvas @ref="ReferencingStepsOffcanvas" Title="@($"Steps referencing {ReferencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>

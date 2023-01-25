@@ -12,7 +12,12 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Code" />
                     </div>
-                    <textarea class="form-control form-control-sm" @bind="Parameter.Expression.Expression" style="font-family: monospace;" rows="3"></textarea>
+                    <textarea class="form-control form-control-sm"
+                              @bind="Parameter.Expression.Expression"
+                              @bind:event="oninput"
+                              @bind:after="() => OnExpressionChanged.InvokeAsync()"
+                              style="font-family: monospace;"
+                              rows="3"></textarea>
                 </div>
             </div>
             <div class="row mt-3">
@@ -35,6 +40,8 @@
 
 @code {
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public EventCallback OnExpressionChanged { get; set; }
 
     private HxOffcanvas? Offcanvas { get; set; }
 
