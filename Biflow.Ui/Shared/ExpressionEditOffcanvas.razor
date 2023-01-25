@@ -1,0 +1,64 @@
+﻿@inject IHxMessengerService Messenger
+
+<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(Parameter?.DisplayName ?? "")">
+    <BodyTemplate>
+        @if (Parameter is not null)
+        {
+            <div class="row">
+                <label class="form-label">
+                    Dynamic expression
+                </label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Code" />
+                    </div>
+                    <textarea class="form-control form-control-sm" @bind="Parameter.Expression.Expression" style="font-family: monospace;" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col">
+                    <HxButton OnClick="() => TestEvaluate(Parameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                        <CxIcon Icon="FeatherIcon.Check" />
+                        Test evaluate / validate
+                    </HxButton>
+                </div>
+            </div>
+        }
+        @ChildContent
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private HxOffcanvas? Offcanvas { get; set; }
+
+    private DynamicParameter? Parameter { get; set; }
+
+    private string Title { get; set; } = "";
+
+    public async Task ShowAsync(DynamicParameter parameter)
+    {
+        Parameter = parameter;
+        StateHasChanged(); // To update offcanvas title text
+        await Offcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task TestEvaluate(DynamicParameter parameter)
+    {
+        try
+        {
+            var result = await parameter.Expression.EvaluateAsync();
+            Messenger.AddInformation($"Evaluation result: {result}");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError(ex.Message);
+        }
+    }
+}

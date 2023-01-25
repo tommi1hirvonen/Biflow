@@ -1,5 +1,4 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbContextFactory
-@inject IHxMessengerService Messenger
 
 @if (Loading)
 {
@@ -66,7 +65,9 @@ else if (Step is not null && TargetJob is not null)
                     }
                     else
                     {
-                        <DynamicParameterEditComponent Parameter="param" OnParameterEdit="p => ShowExpressionEditOffcanvasAsync(p)" ColSpan="1">
+                        <DynamicParameterEditComponent Parameter="param"
+                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))"
+                                                       ColSpan="1">
                             <StaticEditTemplate>
                                 <td>
                                     <ParameterValueEditComponent Parameter="param" />
@@ -110,37 +111,7 @@ else if (Step is not null)
     </div>
 }
 
-<HxOffcanvas @ref="ExpressionEditOffcanvas" Backdrop="OffcanvasBackdrop.False" Title="@ExpressionEditParameter?.ParameterName">
-    <BodyTemplate>
-        @if (ExpressionEditParameter is not null)
-        {
-            <div class="row">
-                <label class="form-label">
-                    Dynamic expression
-                </label>
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Code" />
-                    </div>
-                    <textarea class="form-control form-control-sm" @bind="ExpressionEditParameter.Expression.Expression" style="font-family: monospace;" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col">
-                    <HxButton OnClick="() => TestEvaluate(ExpressionEditParameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                        <CxIcon Icon="FeatherIcon.Check" />
-                        Test evaluate / validate
-                    </HxButton>
-                </div>
-            </div>
-        }
-    </BodyTemplate>
-    <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => ExpressionEditOffcanvas.LetAsync(x => x.HideAsync())">
-            Close
-        </HxButton>
-    </FooterTemplate>
-</HxOffcanvas>
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" />
 
 @code {
     [Parameter] public JobStep? Step { get; set; }
@@ -157,9 +128,7 @@ else if (Step is not null)
         .Where(jp => !Step?.StepParameters.Cast<JobStepParameter>().Any(sp => sp.AssignToJobParameterId == jp.ParameterId) ?? false)
         ?? Enumerable.Empty<JobParameter>();
 
-    private HxOffcanvas? ExpressionEditOffcanvas { get; set; }
-
-    private StepParameterBase? ExpressionEditParameter { get; set; }
+    private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -228,22 +197,4 @@ else if (Step is not null)
         }
     }
 
-    private async Task TestEvaluate(StepParameterBase parameter)
-    {
-        try
-        {
-            var result = await parameter.Expression.EvaluateAsync();
-            Messenger.AddInformation($"Evaluation result: {result}");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError(ex.Message);
-        }
-    }
-
-    private async Task ShowExpressionEditOffcanvasAsync(DynamicParameter parameter)
-    {
-        ExpressionEditParameter = (StepParameterBase)parameter;
-        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync());
-    }
 }
