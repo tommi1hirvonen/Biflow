@@ -30,6 +30,22 @@
             </div>
         }
         @ChildContent
+
+        <div class="row mt-4">
+            <div class="col text-secondary">
+                Use C# expressions to dynamically evaluate parameter values during job/step executions.
+            </div>
+            <div class="col-auto">
+                <HxButton CssClass="btn-auto" OnClick="() => HelpOpen = !HelpOpen">
+                    <CxIcon Icon="FeatherIcon.HelpCircle" />
+                </HxButton>
+            </div>
+        </div>
+
+        @if (HelpOpen)
+        {
+            <DynamicExpressionHelpComponent />
+        }
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
@@ -48,6 +64,8 @@
     private DynamicParameter? Parameter { get; set; }
 
     private string Title { get; set; } = "";
+
+    private bool HelpOpen { get; set; } = false;
 
     public async Task ShowAsync(DynamicParameter parameter)
     {
