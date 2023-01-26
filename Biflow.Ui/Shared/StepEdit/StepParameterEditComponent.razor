@@ -19,8 +19,7 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Inherit from job</th>
-                <th>Dynamic</th>
+                <th></th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -46,12 +45,12 @@
                                    checked=@(param.InheritFromJobParameterId is not null)
                                    disabled=@(!JobParameters.Any())
                                    @onchange="args => SetJobParameter((bool)args.Value!, param)">
-                            <label class="form-check-label" for="inherit_param_@count"></label>
+                            <label class="form-check-label fw-normal" for="inherit_param_@count">Inherit</label>
                         </div>
                     </td>
                     @if (param.InheritFromJobParameterId is not null)
                     {
-                        <td colspan="3">
+                        <td colspan="2">
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
                                 @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
                                             {
@@ -65,8 +64,7 @@
                     else
                     {
                         <DynamicParameterEditComponent Parameter="param"
-                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))"
-                                                       ColSpan="2">
+                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                             <StaticEditTemplate>
                                 <ParameterTypeValueEditComponent Parameter="param" />
                             </StaticEditTemplate>

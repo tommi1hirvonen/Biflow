@@ -49,13 +49,10 @@ else
                                     Name
                                 </th>
                                 <th>
-                                    Dynamic
+                                    
                                 </th>
                                 <th>
-                                    Type
-                                </th>
-                                <th>
-                                    Value
+                                    
                                 </th>
                                 <th>
                                     Inherits
@@ -73,7 +70,7 @@ else
                         <tbody>
                             @if (!EditJob?.JobParameters?.Any() ?? true)
                             {
-                                <tr><td colspan="6">No parameters</td></tr>
+                                <tr><td colspan="8">No parameters</td></tr>
                             }
                             @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
@@ -85,8 +82,7 @@ else
                                         <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
                                     </td>
                                     <DynamicParameterEditComponent Parameter="param"
-                                                                   OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))"
-                                                                   ColSpan="2">
+                                                                   OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditComponent Parameter="param" />
                                         </StaticEditTemplate>

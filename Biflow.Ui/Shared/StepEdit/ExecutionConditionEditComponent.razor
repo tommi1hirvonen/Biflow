@@ -31,7 +31,6 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Inherit from job</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -40,7 +39,7 @@
         <tbody>
             @if (!Step.ExecutionConditionParameters.Any())
             {
-                <tr><td colspan="5">No parameters</td></tr>
+                <tr><td colspan="4">No parameters</td></tr>
             }
             @{
                 var count = 0;
@@ -57,12 +56,12 @@
                                     checked=@(param.JobParameterId is not null)
                                     disabled=@((!Step.Job.JobParameters?.Any() ?? true))
                                     @onchange="args => SetJobParameter((bool)args.Value!, param)">
-                            <label class="form-check-label" for="condition_inherit_param_@count"></label>
+                            <label class="form-check-label fw-normal" for="condition_inherit_param_@count">Inherit</label>
                         </div>
                     </td>
                     @if (param.JobParameterId is not null)
                     {
-                        <td colspan="2">
+                        <td>
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId" @bind-Value:after="() => JobParameterChanged(param)">
                                 @foreach (var jobParam in Step.Job.JobParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                                             {

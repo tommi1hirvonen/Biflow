@@ -19,8 +19,8 @@ else if (Step is not null && TargetJob is not null)
         <thead>
             <tr>
                 <th>Target</th>
-                <th>Inherit from job</th>
-                <th>Dynamic</th>
+                <th></th>
+                <th></th>
                 <th></th>
                 <th></th>
             </tr>
@@ -28,7 +28,7 @@ else if (Step is not null && TargetJob is not null)
         <tbody>
             @if (!Step.StepParameters.Any())
             {
-                <tr><td colspan="4">No parameters</td></tr>
+                <tr><td colspan="5">No parameters</td></tr>
             }
             @{
                 var count = 0;
@@ -47,12 +47,12 @@ else if (Step is not null && TargetJob is not null)
                            checked=@(param.InheritFromJobParameterId is not null)
                            disabled=@(!availableJobParams.Any())
                            @onchange="args => SetInheritFromJobParameter((bool)args.Value!, param)">
-                            <label class="form-check-label" for="inherit_param_@count"></label>
+                            <label class="form-check-label fw-normal" for="inherit_param_@count">Inherit</label>
                         </div>
                     </td>
                     @if (param.InheritFromJobParameterId is not null)
                     {
-                        <td>
+                        <td colspan="2">
                             <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
                                 @foreach (var jobParam in availableJobParams)
                                 {
@@ -66,11 +66,15 @@ else if (Step is not null && TargetJob is not null)
                     else
                     {
                         <DynamicParameterEditComponent Parameter="param"
-                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))"
-                                                       ColSpan="1">
+                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                             <StaticEditTemplate>
                                 <td>
-                                    <ParameterValueEditComponent Parameter="param" />
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-text">
+                                            Value
+                                        </div>
+                                        <ParameterValueEditComponent Parameter="param" />
+                                    </div>
                                 </td>
                             </StaticEditTemplate>
                         </DynamicParameterEditComponent>

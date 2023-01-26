@@ -1,12 +1,10 @@
 ﻿@switch (Parameter?.ParameterValueType)
 {
     case ParameterValueType.Boolean:
-        <div class="input-group">
-            <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ValueBoolean">
-                <option value="true">True</option>
-                <option value="false">False</option>
-            </InputSelectBoolean>
-        </div>
+        <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ValueBoolean">
+            <option value="true">True</option>
+            <option value="false">False</option>
+        </InputSelectBoolean>
         break;
     case ParameterValueType.DateTime:
         <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" type="datetime-local">
