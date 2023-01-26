@@ -45,6 +45,8 @@ public abstract class StepExecutionParameterBase : DynamicParameter
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
+    public IList<StepExecutionParameterExpressionParameter> ExpressionParameters { get; set; } = null!;
+
     public abstract StepExecution BaseStepExecution { get; }
 
     public override string DisplayValue => (InheritFromExecutionParameter, UseExpression) switch
@@ -70,7 +72,9 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         }
         else if (UseExpression)
         {
-            var result = await Expression.EvaluateAsync();
+            var parameters = ExpressionParameters
+                .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue);
+            var result = await Expression.EvaluateAsync(parameters);
             EvaluationResult = result;
             Evaluated = true;
             return result;

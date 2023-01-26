@@ -8,10 +8,10 @@ public class EvaluationExpression
 {
     public string? Expression { get; set; }
 
-    public async Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null) =>
+    internal async Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null) =>
         await EvaluateAsync<object?>(parameters);
 
-    public async Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
+    internal async Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
     {
         if (string.IsNullOrWhiteSpace(Expression))
         {

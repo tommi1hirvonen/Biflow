@@ -18,6 +18,8 @@ public class JobParameter : DynamicParameter
 
     public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
 
+    public ICollection<StepParameterExpressionParameter> InheritingStepParameterExpressionParameters { get; set; } = null!;
+
     public override async Task<object?> EvaluateAsync()
     {
         if (UseExpression)

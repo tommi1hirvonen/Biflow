@@ -234,6 +234,9 @@ public class BiflowContext : DbContext
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
+            e.HasMany(p => p.StepExecutionParameterExpressionParameters)
+            .WithOne(p => p.InheritFromExecutionParameter)
+            .HasForeignKey("ExecutionId", "InheritFromExecutionParameterId");
         });
 
         modelBuilder.Entity<JobParameter>(e =>
@@ -243,6 +246,7 @@ public class BiflowContext : DbContext
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
+            e.HasMany(p => p.InheritingStepParameterExpressionParameters).WithOne(p => p.InheritFromJobParameter);
         });
 
         modelBuilder.Entity<StepParameterBase>(e =>
@@ -260,6 +264,7 @@ public class BiflowContext : DbContext
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
+            e.HasMany(p => p.ExpressionParameters).WithOne(p => p.StepParameter);
         });
 
         modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters));
@@ -292,6 +297,7 @@ public class BiflowContext : DbContext
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
+            e.HasMany(p => p.ExpressionParameters).WithOne(p => p.StepParameter).HasForeignKey("ExecutionId", "StepParameterId");
         });
 
         modelBuilder.Entity<SqlStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId"));

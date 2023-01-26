@@ -139,7 +139,8 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
     }
 
     private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) => Steps
-        ?.Where(s => s is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId))
+        ?.Where(s => s is IHasStepParameters hasParams &&
+            hasParams.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameterId == parameter.ParameterId)))
         .OrderBy(s => s.StepName)
         ?? Enumerable.Empty<Step>();
 

@@ -58,6 +58,6 @@
                 <div class="form-text">Blank if not applicable</div>
             </div>
         </div>
-        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new()" />
+        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>

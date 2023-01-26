@@ -120,6 +120,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             .Include(e => e.StepExecutions)
             .ThenInclude(exec => exec.StepExecutionAttempts)
             .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+            .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.ExecutionConditionParameters)
             .ThenInclude(p => p.ExecutionParameter)

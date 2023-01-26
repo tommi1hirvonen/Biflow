@@ -337,6 +337,22 @@ FROM biflow.ExecutionStep AS a
 	JOIN biflow.StepParameter AS b ON b.StepId = a.StepId
 WHERE a.ExecutionId = @BiflowExecutionId
 
+-- Store and historize step execution parameter expression parameters.
+INSERT INTO biflow.ExecutionStepParameterExpressionParameter (
+	ExecutionId,
+	StepParameterId,
+	ParameterName,
+	InheritFromExecutionParameterId
+)
+SELECT
+	a.ExecutionId,
+	b.StepParameterId,
+	b.ParameterName,
+	b.InheritFromJobParameterId
+FROM biflow.ExecutionStepParameter AS a
+	JOIN biflow.StepParameterExpressionParameter AS b ON a.ParameterId = b.StepParameterId
+WHERE a.ExecutionId = @BiflowExecutionId
+
 -- Store and historize execution condition parameters
 INSERT INTO biflow.ExecutionStepConditionParameter (
 	ExecutionId,

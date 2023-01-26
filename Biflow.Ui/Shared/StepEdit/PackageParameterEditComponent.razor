@@ -58,7 +58,7 @@
                     else
                     {
                         <DynamicParameterEditComponent Parameter="param"
-                                                       OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                       OnParameterEdit="OnParameterEdit">
                             <StaticEditTemplate>
                                 <ParameterTypeValueEditComponent Parameter="param" />
                             </StaticEditTemplate>
@@ -75,13 +75,19 @@
             }
         </tbody>
     </table>
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Add(new(ParameterLevel.Package))">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
         <CxIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged">
+    <div class="row mt-3">
+        <div class="col">
+            <ExpressionParameterEditComponent Parameter="ExpressionEditParameter" />
+        </div>
+    </div>
+</ExpressionEditOffcanvas>
 
 @code {
     [Parameter] public PackageStep? Step { get; set; }
@@ -90,15 +96,31 @@
 
     private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
 
+    private StepParameterBase? ExpressionEditParameter { get; set; }
+
+    private async Task OnParameterEdit(DynamicParameter parameter)
+    {
+        ExpressionEditParameter = (StepParameterBase)parameter;
+        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(ExpressionEditParameter));
+    }
+
+    private void AddParameter()
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.StepParameters.Add(new(ParameterLevel.Package) { Step = Step });
+    }
+
     private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
     {
         if (inheritFromJob)
         {
             param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+            param.InheritFromJobParameter = JobParameters.FirstOrDefault();
         }
         else
         {
             param.InheritFromJobParameterId = null;
+            param.InheritFromJobParameter = null;
         }
     }
 

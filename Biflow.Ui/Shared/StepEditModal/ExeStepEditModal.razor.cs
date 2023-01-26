@@ -30,6 +30,8 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
         .ThenInclude(job => job.JobParameters)
         .Include(step => step.StepParameters)
         .ThenInclude(p => p.InheritFromJobParameter)
+        .Include(step => step.StepParameters)
+        .ThenInclude(p => p.ExpressionParameters)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

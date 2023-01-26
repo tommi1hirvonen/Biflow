@@ -390,6 +390,14 @@
                 </dt>
                 <dd class="col-sm-9">
                     @param.DisplayValue
+                    @if (param.ExpressionParameters.Any())
+                    {
+                        var expressionParameters = param.ExpressionParameters.Select(p => $"<p><small>{p.ParameterName} = {p.InheritFromExecutionParameter.DisplayValue}</small></p>");
+                        var content = string.Join("\n", expressionParameters);
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="@content" Html>
+                            <small class="text-decoration-underline ms-2">Expression parameters</small>
+                        </HxPopover>
+                    }
                 </dd>
             }
         </dl>

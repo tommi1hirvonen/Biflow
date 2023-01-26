@@ -1,6 +1,6 @@
 ﻿@inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(Parameter?.DisplayName ?? "")">
+<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(Parameter?.DisplayName ?? "")" OnClosed="OnClosed">
     <BodyTemplate>
         @if (Parameter is not null)
         {
@@ -59,6 +59,8 @@
 
     [Parameter] public EventCallback OnExpressionChanged { get; set; }
 
+    [Parameter] public EventCallback OnClosed { get; set; }
+
     private HxOffcanvas? Offcanvas { get; set; }
 
     private DynamicParameter? Parameter { get; set; }
@@ -78,7 +80,7 @@
     {
         try
         {
-            var result = await parameter.Expression.EvaluateAsync();
+            var result = await parameter.EvaluateAsync();
             Messenger.AddInformation($"Evaluation result: {result}");
         }
         catch (Exception ex)

@@ -1,0 +1,90 @@
+﻿<div class="row">
+    <div class="col">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Inherit job parameter</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Parameter?.ExpressionParameters.Any() ?? false)
+                {
+                    @foreach (var param in Parameter.ExpressionParameters)
+                    {
+                        <tr>
+                            <td>
+                                <InputText class="form-control form-control-sm" @bind-Value="param.ParameterName" />
+                            </td>
+                            <td>
+                                <InputSelect class="form-select form-select-sm"
+                                             @bind-Value="param.InheritFromJobParameterId"
+                                             @bind-Value:after="() => OnInheritFromJobParameterChanged(param)">
+                                    @foreach (var jobParam in Parameter.BaseStep.Job.JobParameters.OrderBy(p => p.ParameterName))
+                                    {
+                                        <option value="@jobParam.ParameterId">
+                                            @jobParam.DisplaySummary
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </td>
+                            <td>
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Parameter.ExpressionParameters.Remove(param)">
+                                        <CxIcon Icon="FeatherIcon.Delete" />
+                                    </HxButton>
+                                </HxButtonGroup>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3">
+                            No parameters
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <HxButton Color="ThemeColor.None"
+                  CssClass="btn-auto"
+                  Size="ButtonSize.Small"
+                  Enabled="Parameter?.BaseStep.Job.JobParameters.Any() ?? false"
+                  @onclick="AddParameter">
+            <CxIcon Icon="FeatherIcon.Plus" />
+            Add parameter
+        </HxButton>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public StepParameterBase? Parameter { get; set; }
+
+    private void AddParameter()
+    {
+        ArgumentNullException.ThrowIfNull(Parameter);
+        var jobParameter = Parameter.BaseStep.Job.JobParameters.First();
+        var expressionParameter = new StepParameterExpressionParameter
+        {
+            StepParameter = Parameter,
+            StepParameterId = Parameter.ParameterId,
+            InheritFromJobParameter = jobParameter,
+            InheritFromJobParameterId = jobParameter.ParameterId
+        };
+        Parameter.ExpressionParameters.Add(expressionParameter);
+    }
+
+    private void OnInheritFromJobParameterChanged(StepParameterExpressionParameter param)
+    {
+        ArgumentNullException.ThrowIfNull(Parameter);
+        param.InheritFromJobParameter = Parameter.BaseStep.Job.JobParameters
+            .First(p => p.ParameterId == param.InheritFromJobParameterId);
+    }
+}

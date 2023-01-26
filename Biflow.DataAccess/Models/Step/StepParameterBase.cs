@@ -24,6 +24,8 @@ public abstract class StepParameterBase : DynamicParameter
 
     public JobParameter? InheritFromJobParameter { get; set; }
 
+    public IList<StepParameterExpressionParameter> ExpressionParameters { get; set; } = new List<StepParameterExpressionParameter>();
+
     public abstract Step BaseStep { get; }
 
     public override async Task<object?> EvaluateAsync()
@@ -35,7 +37,12 @@ public abstract class StepParameterBase : DynamicParameter
 
         if (UseExpression)
         {
-            return await Expression.EvaluateAsync();
+            var parameters = new Dictionary<string, object?>();
+            foreach (var parameter in ExpressionParameters)
+            {
+                parameters[parameter.ParameterName] = await parameter.EvaluateAsync();
+            }
+            return await Expression.EvaluateAsync(parameters);
         }
 
         return ParameterValue;

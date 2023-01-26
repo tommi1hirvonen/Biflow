@@ -47,7 +47,7 @@
     {
         try
         {
-            var result = await parameter.Expression.EvaluateAsync();
+            var result = await parameter.EvaluateAsync();
             Messenger.AddInformation($"Evaluation result: {result}");
         }
         catch (Exception ex)

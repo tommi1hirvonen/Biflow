@@ -46,6 +46,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             .Include(step => step.Targets)
             .Include(step => step.StepParameters)
             .ThenInclude(p => p.InheritFromJobParameter)
+            .Include(step => step.StepParameters)
+            .ThenInclude(p => p.ExpressionParameters)
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         SetJobToExecute();

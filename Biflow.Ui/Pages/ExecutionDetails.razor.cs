@@ -103,6 +103,7 @@ public partial class ExecutionDetails : ComponentBase
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionDependencies)
                 .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionConditionParameters)
                 .ThenInclude(p => p.ExecutionParameter)

@@ -88,6 +88,7 @@
             Executions = await context.StepExecutionAttempts
                 .AsNoTrackingWithIdentityResolution()
                 .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                 .Include(attempt => attempt.StepExecution)
                 .ThenInclude(step => step.Execution)
                 .ThenInclude(e => e.ExecutionParameters)

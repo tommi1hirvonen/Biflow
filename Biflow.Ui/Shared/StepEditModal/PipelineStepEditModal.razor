@@ -52,6 +52,6 @@
             </div>
         </div>
         <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" PipelineClientId="Step.PipelineClientId" OnPipelineSelected="OnPipelineSelected" />
-        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new()" />
+        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>

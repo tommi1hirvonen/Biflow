@@ -20,6 +20,8 @@ public class ExecutionParameter : DynamicParameter
 
     public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
 
+    public IList<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters { get; set; } = null!;
+
     public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public override string DisplayValue =>

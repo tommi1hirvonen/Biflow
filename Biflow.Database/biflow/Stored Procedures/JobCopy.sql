@@ -235,6 +235,15 @@ FROM biflow.Dependency AS A
 
 
 -- Copy step parameters
+
+-- First create mapping table
+SELECT NEWID() AS ParameterIdNew,
+	ParameterId
+INTO #StepParameterIdMapping
+FROM biflow.StepParameter AS a
+	JOIN #StepIdMapping AS b ON a.StepId = b.StepId
+
+
 INSERT INTO biflow.StepParameter (
 	ParameterId,
 	StepId,
@@ -248,7 +257,7 @@ INSERT INTO biflow.StepParameter (
 	UseExpression,
 	Expression
 )
-SELECT NEWID(),
+SELECT d.ParameterIdNew,
 	B.StepIdNew,
 	A.ParameterLevel,
 	A.ParameterName,
@@ -261,7 +270,21 @@ SELECT NEWID(),
 	A.Expression
 FROM biflow.StepParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
+	INNER JOIN #StepParameterIdMapping AS d ON a.ParameterId = d.ParameterId
 	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
+
+
+-- Copy expression parameters
+INSERT INTO biflow.StepParameterExpressionParameter (
+	StepParameterId,
+	ParameterName,
+	InheritFromJobParameterId
+)
+SELECT b.ParameterIdNew,
+	a.ParameterName,
+	a.InheritFromJobParameterId
+FROM biflow.StepParameterExpressionParameter AS a
+	JOIN #StepParameterIdMapping AS b ON a.StepParameterId = b.ParameterId
 
 
 -- Copy condition parameters
