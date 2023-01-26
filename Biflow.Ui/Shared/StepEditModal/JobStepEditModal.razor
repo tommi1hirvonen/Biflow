@@ -6,11 +6,11 @@
         <div class="row align-items-end gap-3">
             <div class="col-auto">
                 <label class="form-label">Job to execute</label>
-                <div class="input-group input-group-sm">
+                <div class="input-group">
                     <div class="input-group-text">
                         <CxIcon Icon="LucideIcon.ClipboardList" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
+                    <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
                     <option value=""></option>
                     @foreach (var category in JobCategories)
                     {
