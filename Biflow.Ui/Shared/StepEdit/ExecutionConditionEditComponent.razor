@@ -14,9 +14,14 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.CheckSquare" />
             </div>
-            <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExecutionConditionExpression.Expression" style="font-family: monospace;" rows="3"></InputTextArea>
+            <InputTextArea class="form-control form-control-sm"
+                           @bind-Value="Step.ExecutionConditionExpression.Expression"
+                           @bind-Value:after="() => OnExecutionConditionChanged.InvokeAsync()"
+                           style="font-family: monospace;"
+                           rows="3">
+            </InputTextArea>
         </div>
-        <div class="form-text">The return type of the expression should always be boolean (True/False).</div>
+        <div class="form-text">Blank = no execution condition. The return type of the expression should always be boolean (True/False).</div>
     </div>
     <div class="row mt-3">
         <div class="col">
@@ -207,6 +212,8 @@
 
 @code {
     [Parameter] public Step? Step { get; set; }
+
+    [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}
 
     private HxOffcanvas? HelpOffcanvas { get; set; }
 
