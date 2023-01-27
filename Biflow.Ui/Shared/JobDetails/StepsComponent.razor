@@ -7,7 +7,7 @@
             <div class="btn-toolbar">
                 <AuthorizeView Roles="Admin, Editor">
                     <HxDropdownButtonGroup CssClass="me-3">
-                        <HxDropdownToggleButton Color="ThemeColor.Success">
+                        <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Steps is not null && Job is not null && Jobs is not null">
                             Add step
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
@@ -24,7 +24,9 @@
                     </HxDropdownButtonGroup>
                 </AuthorizeView>
                 <AuthorizeView Roles="Admin, Editor, Operator">
-                    <HxButton Color="ThemeColor.Primary" @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
+                    <HxButton Color="ThemeColor.Primary"
+                              Enabled="Steps is not null && Job is not null && Jobs is not null"
+                              @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
                         <CxIcon Icon="FeatherIcon.Play" />
                         Execute
                     </HxButton>
