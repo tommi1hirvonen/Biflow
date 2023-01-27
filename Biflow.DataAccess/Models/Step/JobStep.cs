@@ -16,5 +16,6 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
 
     public Job JobToExecute { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<JobStepParameter> StepParameters { get; set; } = null!;
 }

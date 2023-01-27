@@ -71,6 +71,11 @@
                             <div class="col">
                                 <ObjectGraphDataAnnotationsValidator />
                                 <ValidationSummary />
+                                <FluentValidationValidator ValidatorType="typeof(StepValidator)" />
+                                @if (Modal.Step is IHasStepParameters)
+                                {
+                                    <FluentValidationValidator ValidatorType="typeof(StepParametersValidator)" />
+                                }
                                 @if (!string.IsNullOrEmpty(Modal.StepError))
                                 {
                                     <p class="text-danger">@Modal.StepError</p>

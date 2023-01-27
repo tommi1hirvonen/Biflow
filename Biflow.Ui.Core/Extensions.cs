@@ -140,6 +140,12 @@ public static partial class Extensions
 
         return services;
     }
+    public static IServiceCollection AddValidationServices(this IServiceCollection services)
+    {
+        services.AddScoped<StepParametersValidator>();
+        services.AddScoped<StepValidator>();
+        return services;
+    }
 
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {

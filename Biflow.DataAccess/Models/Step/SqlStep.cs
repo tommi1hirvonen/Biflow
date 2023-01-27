@@ -26,5 +26,6 @@ public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHa
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<SqlStepParameter> StepParameters { get; set; } = null!;
 }

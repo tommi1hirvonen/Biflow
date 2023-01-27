@@ -23,5 +23,6 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
 
     public PipelineClient? PipelineClient { get; set; }
 
+    [ValidateComplexType]
     public IList<PipelineStepParameter> StepParameters { get; set; } = null!;
 }

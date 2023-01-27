@@ -63,52 +63,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         return DataObjects;
     }
 
-    protected virtual (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        (var conditionParamResult, var conditionParamMessage) = ExecutionConditionParametersCheck();
-        if (!conditionParamResult)
-        {
-            return (false, conditionParamMessage);
-        }
-
-        (var paramResult, var paramMessage) = ParametersCheck();
-        if (!paramResult)
-        {
-            return (false, paramMessage);
-        }
-
-        return (true, null);
-    }
-
-    protected virtual (bool Result, string? Message) ParametersCheck()
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        
-        if (Step is not IHasStepParameters hasParams)
-        {
-            return (true, null);
-        }
-        
-        var parameters = hasParams.StepParameters.OrderBy(param => param.ParameterName).ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
-            {
-                return (false, "Duplicate parameter names");
-            }
-        }
-
-        return (true, null);
-    }
-
     /// <summary>
     /// Called during OnParametersSetAsync() to load an existing Step from BiflowContext.
     /// The Step loaded from the context should be tracked in order to track changes made to the object.
@@ -161,13 +115,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             }
 
             StepError = string.Empty;
-
-            var (result, message) = StepValidityCheck(Step);
-            if (!result)
-            {
-                StepError = message ?? string.Empty;
-                return;
-            }
 
             // Check data objects.
             var (result2, message2) = await CheckDataObjectsAsync();
@@ -283,28 +230,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             objects.Remove(remove);
             objects.Add(dbObject);
         }
-    }
-
-    private (bool Result, string? Message) ExecutionConditionParametersCheck()
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        var parameters = Step.ExecutionConditionParameters.OrderBy(param => param.ParameterName).ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Execution condition parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
-            {
-                return (false, "Duplicate execution condition parameter names");
-            }
-        }
-
-        return (true, null);
     }
 
     public async Task ShowAsync(Guid stepId, StepEditModalView startView = StepEditModalView.Settings)

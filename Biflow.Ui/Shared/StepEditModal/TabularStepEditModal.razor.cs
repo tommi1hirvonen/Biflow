@@ -45,23 +45,4 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
         (Step.TabularModelName, Step.TabularTableName, Step.TabularPartitionName) = obj;
     }
 
-    protected override (bool Result, string? ErrorMessage) StepValidityCheck(Step step)
-    {
-        if (step is TabularStep tabular)
-        {
-            if (!string.IsNullOrEmpty(tabular.TabularPartitionName) && string.IsNullOrEmpty(tabular.TabularTableName))
-            {
-                return (false, "Table name is required if partition name has been defined");
-            }
-            else
-            {
-                return (true, null);
-            }
-        }
-        else
-        {
-            return (false, "Not TabularStep");
-        }
-    }
-
 }

@@ -38,5 +38,6 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
 
     public FunctionApp FunctionApp { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<FunctionStepParameter> StepParameters { get; set; } = null!;
 }

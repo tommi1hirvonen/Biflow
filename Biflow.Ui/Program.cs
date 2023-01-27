@@ -20,6 +20,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 // Adds all necessary core Biflow UI services.
 builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);
+builder.Services.AddValidationServices();
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();

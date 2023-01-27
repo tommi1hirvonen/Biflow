@@ -47,5 +47,6 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<PackageStepParameter> StepParameters { get; set; } = null!;
 }

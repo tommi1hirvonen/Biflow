@@ -22,6 +22,7 @@ public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
     [Required]
     public string Body { get; set; } = string.Empty;
 
+    [ValidateComplexType]
     public IList<EmailStepParameter> StepParameters { get; set; } = null!;
 
     public List<string> GetRecipientsAsList() =>

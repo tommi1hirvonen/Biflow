@@ -48,31 +48,6 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    protected override (bool Result, string? Message) ParametersCheck()
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        var parameters = Step.StepParameters.OrderBy(param => param.ParameterName).ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            var currentParam = parameters[i];
-            var nextParam = parameters[i + 1];
-            if (nextParam.ParameterName == currentParam.ParameterName
-                && nextParam.ParameterLevel == currentParam.ParameterLevel)
-            {
-                return (false, "Duplicate parameter names");
-            }
-        }
-
-        return (true, null);
-    }
-
     private async Task ImportParametersAsync()
     {
         try

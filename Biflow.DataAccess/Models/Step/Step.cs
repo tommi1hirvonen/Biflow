@@ -79,10 +79,13 @@ public abstract class Step : IComparable
 
     public IList<Dependency> Dependencies { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<DataObject> Sources { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<DataObject> Targets { get; set; } = null!;
 
+    [ValidateComplexType]
     public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public IList<Tag> Tags { get; set; } = null!;
