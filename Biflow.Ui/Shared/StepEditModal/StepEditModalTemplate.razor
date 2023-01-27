@@ -56,10 +56,12 @@
                                             Condition
                                             @if (!string.IsNullOrWhiteSpace(Modal.Step.ExecutionConditionExpression.Expression))
                                             {
-                                                <span style="color: var(--bs-warning);" title="Execution condition enabled">
-                                                    &nbsp;
-                                                    <CxIcon Icon="FeatherIcon.Info" />
-                                                </span>
+                                                <HxTooltip Trigger="TooltipTrigger.Hover" Text="Execution condition enabled">
+                                                    <span style="color: var(--bs-warning);">
+                                                        &nbsp;
+                                                        <CxIcon Icon="FeatherIcon.Info" />
+                                                    </span>
+                                                </HxTooltip>
                                             }
                                         </span>
                                     </li>
