@@ -10,7 +10,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Users" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.Recipients" @oninput="ResetStepError" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.Recipients" />
                 </div>
                 <div class="form-text">Comma separated list of recipient email addresses. Step parameters can be used to dynamically set the value of recipients, subject and body properties.</div>
             </div>
@@ -22,14 +22,14 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Type" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.Subject" @oninput="ResetStepError" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.Subject" />
                 </div>
             </div>
         </div>
         <div class="row mt-2">
             <div class="col">
                 <label class="form-label">Body</label>
-                <InputTextArea class="form-control form-control-sm" @bind-Value="Step.Body" rows="3" @oninput="ResetStepError"></InputTextArea>
+                <InputTextArea class="form-control form-control-sm" @bind-Value="Step.Body" rows="3"></InputTextArea>
             </div>
         </div>
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />

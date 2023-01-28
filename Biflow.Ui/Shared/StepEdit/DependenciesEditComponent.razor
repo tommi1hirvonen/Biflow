@@ -158,7 +158,7 @@
 
     private void InferDependenciesFromDatabaseObjects()
     {
-        var dependsOnSteps = Steps.Where(step => step.Targets.Any(target => Step.Sources.Any(source => target.Equals(source))));
+        var dependsOnSteps = Steps.Where(step => step.Targets.Any(target => Step.Sources.Any(source => target.NamesEqual(source))));
         var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
         foreach (var step in missingDependencies)
         {

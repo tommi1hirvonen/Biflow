@@ -35,7 +35,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Folder" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageFolderName" @onchange="ResetStepError"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageFolderName"></InputText>
                 </div>
             </div>
             <div class="col-md">
@@ -44,7 +44,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Briefcase" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageProjectName" @oninput="ResetStepError"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageProjectName"></InputText>
                 </div>
             </div>
         </div>
@@ -55,7 +55,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Package" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageName" @oninput="ResetStepError"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.PackageName"></InputText>
                 </div>
             </div>
             <div class="col-md-auto">
@@ -87,7 +87,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.User" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExecuteAsLogin" @oninput="ResetStepError" style="max-width: 30rem;"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExecuteAsLogin" style="max-width: 30rem;"></InputText>
                 </div>
             </div>
         </div>

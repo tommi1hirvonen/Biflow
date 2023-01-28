@@ -73,157 +73,157 @@
                             <div class="col">
                                 <ObjectGraphDataAnnotationsValidator />
                                 <ValidationSummary />
-                                <FluentValidationValidator ValidatorType="typeof(StepValidator)" />
+                                <FluentValidationValidator @ref="StepValidator" ValidatorType="typeof(StepValidator)" />
                                 @if (Modal.Step is IHasStepParameters)
                                 {
-                                    <FluentValidationValidator ValidatorType="typeof(StepParametersValidator)" />
-                                }
-                                @if (!string.IsNullOrEmpty(Modal.StepError))
-                                {
-                                    <p class="text-danger">@Modal.StepError</p>
+                                    <FluentValidationValidator @ref="StepParametersValidator" ValidatorType="typeof(StepParametersValidator)" />
                                 }
                             </div>
                         </div>
 
-                        @if (Modal.CurrentView == StepEditModalView.Dependencies)
-                        {
-                            @if (Modal.Steps is not null)
+                        <CascadingValue Value="StepValidator" Name="StepValidator">
+                            @if (Modal.CurrentView == StepEditModalView.Dependencies)
+                            {
+                                @if (Modal.Steps is not null)
+                                {
+                                    <div class="row">
+                                        <div class="col">
+                                            <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" />
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else if (Modal.CurrentView == StepEditModalView.Settings)
+                            {
+                                <div class="row gap-2">
+                                
+                                    <div class="col">
+                                    
+                                        <div class="row gap-2">
+                                            <div class="col">
+                                                <label class="form-label">Step name</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-text">
+                                                        <CxIcon Icon="FeatherIcon.Edit3" />
+                                                    </div>
+                                                    <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg">
+                                                <label class="form-label">Tags</label>
+                                                <HxInputTags @bind-Value="Modal.Tags"
+                                                        DataProvider="Modal.GetTagSuggestions"
+                                                        SuggestMinimumLength="0"
+                                                        SuggestDelay="0"
+                                                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
+                                            <div class="col">
+                                                <label class="form-label">Description</label>
+                                                <div class="input-group input-group-sm">
+                                                    <div class="input-group-text">
+                                                        <CxIcon Icon="FeatherIcon.BookOpen" />
+                                                    </div>
+                                                    <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="4"></InputTextArea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="col-lg-auto d-flex flex-lg-column">
+                                        <div>
+                                            <label class="form-label">Execution phase</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
+                                            </div>
+                                        </div>
+                                        <div class="my-lg-2 mx-3 mx-lg-0">
+                                            <label class="form-label">Retry attempts</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    <CxIcon Icon="FeatherIcon.Repeat" />
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 6rem;"></InputNumber>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Retry interval (min)</label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-text">
+                                                    <CxIcon Icon="FeatherIcon.Clock" />
+                                                </div>
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes" style="max-width: 6rem;"></InputNumber>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <CascadingValue Value="StepParametersValidator" Name="StepParametersValidator">
+                                    <div class="row">
+                                        <div class="col">
+                                            @ChildContent
+                                        </div>
+                                    </div>
+                                </CascadingValue>
+                                
+                            }
+                            else if (Modal.CurrentView == StepEditModalView.Sources)
                             {
                                 <div class="row">
                                     <div class="col">
-                                        <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" />
+                                        <DataObjectManagementComponent
+                                        ListName="source"
+                                        StepType="Modal.Step.StepType"
+                                        DataObjects="Modal.Step.Sources"
+                                        ComparisonObjects="Modal.Step.Targets"
+                                        ConnectionId="ConnectionId"
+                                        Connections="Modal.Connections"
+                                        SqlStatement="@SqlStatement"
+                                        GetMappingResult="dbObject => dbObject.SourceMappingResult"
+                                        LoadDataObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
+                                        LoadAllDataObjects="Modal.GetDataObjectsAsync"
+                                        AddButtonText="Add source"
+                                        NoDataObjectsText="No sources" />
+                                    </div>
+                                </div>
+                            
+                            }
+                            else if (Modal.CurrentView == StepEditModalView.Targets)
+                            {
+                                <div class="row">
+                                    <div class="col">
+                                        <DataObjectManagementComponent
+                                        ListName="target"
+                                        StepType="Modal.Step.StepType"
+                                        DataObjects="Modal.Step.Targets"
+                                        ComparisonObjects="Modal.Step.Sources"
+                                        ConnectionId="ConnectionId"
+                                        Connections="Modal.Connections"
+                                        SqlStatement="@SqlStatement"
+                                        GetMappingResult="dbObject => dbObject.TargetMappingResult"
+                                        LoadDataObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
+                                        LoadAllDataObjects="Modal.GetDataObjectsAsync"
+                                        AddButtonText="Add target"
+                                        NoDataObjectsText="No targets" />
                                     </div>
                                 </div>
                             }
-                        }
-                        else if (Modal.CurrentView == StepEditModalView.Settings)
-                        {
-                            <div class="row gap-2">
-                                
-                                <div class="col">
-                                    
-                                    <div class="row gap-2">
-                                        <div class="col">
-                                            <label class="form-label">Step name</label>
-                                            <div class="input-group">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Edit3" />
-                                                </div>
-                                                <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg">
-                                            <label class="form-label">Tags</label>
-                                            <HxInputTags @bind-Value="Modal.Tags"
-                                                    DataProvider="Modal.GetTagSuggestions"
-                                                    SuggestMinimumLength="0"
-                                                    SuggestDelay="0"
-                                                    TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
-                                        </div>
-                                    </div>
-
-                                    <div class="row mt-2">
-                                        <div class="col">
-                                            <label class="form-label">Description</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.BookOpen" />
-                                                </div>
-                                                <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="4"></InputTextArea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <div class="col-lg-auto d-flex flex-lg-column">
-                                    <div>
-                                        <label class="form-label">Execution phase</label>
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Layers" />
-                                            </div>
-                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
-                                        </div>
-                                    </div>
-                                    <div class="my-lg-2 mx-3 mx-lg-0">
-                                        <label class="form-label">Retry attempts</label>
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Repeat" />
-                                            </div>
-                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 6rem;"></InputNumber>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="form-label">Retry interval (min)</label>
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Clock" />
-                                            </div>
-                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes" style="max-width: 6rem;"></InputNumber>
-                                        </div>
+                            else if (Modal.CurrentView == StepEditModalView.Condition)
+                            {
+                                <div class="row">
+                                    <div class="col">
+                                        <ExecutionConditionEditComponent Step="Modal.Step" OnExecutionConditionChanged="StateHasChanged" />
                                     </div>
                                 </div>
-
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col">
-                                    @ChildContent
-                                </div>
-                            </div>
-                                
-                        }
-                        else if (Modal.CurrentView == StepEditModalView.Sources)
-                        {
-                            <div class="row">
-                                <div class="col">
-                                    <DataObjectManagementComponent
-                                    ListName="source"
-                                    StepType="Modal.Step.StepType"
-                                    DataObjects="Modal.Step.Sources"
-                                    ComparisonObjects="Modal.Step.Targets"
-                                    ConnectionId="ConnectionId"
-                                    Connections="Modal.Connections"
-                                    SqlStatement="@SqlStatement"
-                                    GetMappingResult="dbObject => dbObject.SourceMappingResult"
-                                    LoadDataObjectDependencies="SqlServerHelper.GetSourceObjectsAsync"
-                                    LoadAllDataObjects="Modal.GetDataObjectsAsync"
-                                    AddButtonText="Add source"
-                                    NoDataObjectsText="No sources" />
-                                </div>
-                            </div>
-                            
-                        }
-                        else if (Modal.CurrentView == StepEditModalView.Targets)
-                        {
-                            <div class="row">
-                                <div class="col">
-                                    <DataObjectManagementComponent
-                                    ListName="target"
-                                    StepType="Modal.Step.StepType"
-                                    DataObjects="Modal.Step.Targets"
-                                    ComparisonObjects="Modal.Step.Sources"
-                                    ConnectionId="ConnectionId"
-                                    Connections="Modal.Connections"
-                                    SqlStatement="@SqlStatement"
-                                    GetMappingResult="dbObject => dbObject.TargetMappingResult"
-                                    LoadDataObjectDependencies="SqlServerHelper.GetTargetObjectsAsync"
-                                    LoadAllDataObjects="Modal.GetDataObjectsAsync"
-                                    AddButtonText="Add target"
-                                    NoDataObjectsText="No targets" />
-                                </div>
-                            </div>
-                        }
-                        else if (Modal.CurrentView == StepEditModalView.Condition)
-                        {
-                            <div class="row">
-                                <div class="col">
-                                    <ExecutionConditionEditComponent Step="Modal.Step" OnExecutionConditionChanged="StateHasChanged" />
-                                </div>
-                            </div>
-                        }
+                            }
+                        </CascadingValue>
                     </EditForm>
                 </div>
             </div>
@@ -261,6 +261,10 @@
     [Parameter] public StepEditModal<TStep> Modal { get; set; } = null!;
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private FluentValidationValidator? StepValidator { get; set; }
+
+    private FluentValidationValidator? StepParametersValidator { get; set; }
 
     private SqlReferenceExplorerOffcanvas? SqlReferenceOffcanvas { get; set; }
 

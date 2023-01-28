@@ -40,53 +40,23 @@ public class DataObject
 
     public IList<Step> Readers { get; set; } = null!;
 
-    public override bool Equals(object? obj)
+    public void Deconstruct(out string serverName, out string databaseName, out string schemaName, out string objectName)
     {
-        if (obj is DataObject dbo)
-        {
-            return ServerName.EqualsIgnoreCase(dbo.ServerName)
-                && DatabaseName.EqualsIgnoreCase(dbo.DatabaseName)
-                && SchemaName.EqualsIgnoreCase(dbo.SchemaName)
-                && ObjectName.EqualsIgnoreCase(dbo.ObjectName);
-        }
-        else if (obj is ValueTuple<string, string, string, string> vt)
-        {
-            return ServerName.EqualsIgnoreCase(vt.Item1)
-                && DatabaseName.EqualsIgnoreCase(vt.Item2)
-                && SchemaName.EqualsIgnoreCase(vt.Item3)
-                && ObjectName.EqualsIgnoreCase(vt.Item4);
-        }
-        else if (obj is Tuple<string, string, string, string> tuple)
-        {
-            return ServerName.EqualsIgnoreCase(tuple.Item1)
-                && DatabaseName.EqualsIgnoreCase(tuple.Item2)
-                && SchemaName.EqualsIgnoreCase(tuple.Item3)
-                && ObjectName.EqualsIgnoreCase(tuple.Item4);
-        }
-        else if (obj is ValueTuple<string, string, string, string, bool> vt2)
-        {
-            return ServerName.EqualsIgnoreCase(vt2.Item1)
-                && DatabaseName.EqualsIgnoreCase(vt2.Item2)
-                && SchemaName.EqualsIgnoreCase(vt2.Item3)
-                && ObjectName.EqualsIgnoreCase(vt2.Item4);
-        }
-        else if (obj is Tuple<string, string, string, string, bool> tuple2)
-        {
-            return ServerName.EqualsIgnoreCase(tuple2.Item1)
-                && DatabaseName.EqualsIgnoreCase(tuple2.Item2)
-                && SchemaName.EqualsIgnoreCase(tuple2.Item3)
-                && ObjectName.EqualsIgnoreCase(tuple2.Item4);
-        }
-
-        return false;
+        (serverName, databaseName, schemaName, objectName) = (ServerName, DatabaseName, SchemaName, ObjectName);
     }
 
-    public override int GetHashCode() =>
-        HashCode.Combine(
-            ServerName.ToLower(),
-            DatabaseName.ToLower(),
-            SchemaName.ToLower(),
-            ObjectName.ToLower());
+    public bool NamesEqual((string ServerName, string DatabaseName, string SchemaName, string ObjectName) other) =>
+        ServerName.EqualsIgnoreCase(other.ServerName)
+        && DatabaseName.EqualsIgnoreCase(other.DatabaseName)
+        && SchemaName.EqualsIgnoreCase(other.SchemaName)
+        && ObjectName.EqualsIgnoreCase(other.ObjectName);
+
+    public bool NamesEqual(DataObject other) =>
+        NamesEqual((other.ServerName, other.DatabaseName, other.SchemaName, other.ObjectName));
+
+    public bool NamesEqual((string ServerName, string DatabaseName, string SchemaName, string ObjectName, object? _) other) =>
+        NamesEqual((other.ServerName, other.DatabaseName, other.SchemaName, other.ObjectName));
+
 }
 
 public class DataObjectMappingResult

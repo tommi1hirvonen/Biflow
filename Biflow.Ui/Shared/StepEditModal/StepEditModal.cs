@@ -32,8 +32,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal HxModal? Modal { get; set; }
 
-    internal string StepError { get; private set; } = string.Empty;
-
     internal StepEditModalView CurrentView { get; set; } = StepEditModalView.Settings;
 
     private BiflowContext Context { get; set; } = null!;
@@ -93,8 +91,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         .OrderBy(t => t)
         .ToList() ?? new();
 
-    public void ResetStepError() => StepError = string.Empty;
-
     internal void OnClosed()
     {
         Step = null;
@@ -114,15 +110,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
                 return;
             }
 
-            StepError = string.Empty;
-
-            // Check data objects.
-            var (result2, message2) = await CheckDataObjectsAsync();
-            if (!result2)
-            {
-                StepError = message2 ?? string.Empty;
-                return;
-            }
+            await MapExistingObjectsAsync(Step.Sources);
+            await MapExistingObjectsAsync(Step.Targets);
 
             // Synchronize tags
             foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
@@ -165,68 +154,13 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
     }
 
-    private async Task<(bool Result, string? Message)> CheckDataObjectsAsync()
-    {
-        if (Step is null)
-        {
-            return (false, "Step was null");
-        }
-
-        var sources = Step.Sources
-            .OrderBy(x => x.ServerName)
-            .ThenBy(x => x.DatabaseName)
-            .ThenBy(x => x.SchemaName)
-            .ThenBy(x => x.ObjectName)
-            .ToList();
-        if (!CheckDataObjectDuplicates(sources)) return (false, "Duplicate sources");
-        
-        if (sources.Any(x => !x.ServerName.Any()
-        || !x.DatabaseName.Any()
-        || !x.SchemaName.Any()
-        || !x.ObjectName.Any()))
-            return (false, "Empty source object names are not valid");
-        
-        var targets = Step.Targets
-            .OrderBy(x => x.ServerName)
-            .ThenBy(x => x.DatabaseName)
-            .ThenBy(x => x.SchemaName)
-            .ThenBy(x => x.ObjectName)
-            .ToList();
-        if (!CheckDataObjectDuplicates(targets)) return (false, "Duplicate targets");
-
-        if (targets.Any(x => !x.ServerName.Any()
-        || !x.DatabaseName.Any()
-        || !x.SchemaName.Any()
-        || !x.ObjectName.Any()))
-            return (false, "Empty target object names are not valid");
-
-        await MapExistingObjectsAsync(Step.Sources);
-        await MapExistingObjectsAsync(Step.Targets);
-
-        return (true, null);
-    }
-
-    private static bool CheckDataObjectDuplicates(IEnumerable<DataObject> objects)
-    {
-        for (int i = 0; i < objects.Count() - 1; i++)
-        {
-            var current = objects.ElementAt(i);
-            var next = objects.ElementAt(i + 1);
-            if (current.Equals(next))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private async Task MapExistingObjectsAsync(IList<DataObject> objects)
     {
         var allObjects = await GetDataObjectsAsync();
-        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.Equals(d)));
+        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.NamesEqual(d)));
         foreach (var dbObject in existing)
         {
-            var remove = objects.First(d => d.Equals(dbObject));
+            var remove = objects.First(d => d.NamesEqual(dbObject));
             objects.Remove(remove);
             objects.Add(dbObject);
         }

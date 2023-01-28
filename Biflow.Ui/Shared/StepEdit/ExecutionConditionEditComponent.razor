@@ -53,7 +53,10 @@
             {
                 <tr>
                     <td>
-                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
+                        <InputText class="form-control form-control-sm"
+                                   @bind-Value="param.ParameterName"
+                                   placeholder="Name"
+                                   @bind-Value:after="() => StepValidator.LetAsync(x => x.ValidateAsync())" />
                     </td>
                     <td class="align-middle">
                         <div class="form-check">
@@ -83,7 +86,10 @@
                     }
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
+                            <HxButton Color="ThemeColor.None"
+                                      Size="ButtonSize.Small"
+                                      CssClass="btn-auto"
+                                      @onclick="async () => { Step.ExecutionConditionParameters.Remove(param); await StepValidator.LetAsync(x => x.ValidateAsync()); }">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -116,6 +122,8 @@
 </HxOffcanvas>
 
 @code {
+    [CascadingParameter(Name = "StepValidator")] FluentValidationValidator? StepValidator { get; set; }
+
     [Parameter] public Step? Step { get; set; }
 
     [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}

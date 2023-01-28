@@ -41,7 +41,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Code" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionUrl" @oninput="ResetStepError"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionUrl"></InputText>
                 </div>
             </div>
             <div class="col-lg">
@@ -50,7 +50,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Key" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey" @oninput="ResetStepError"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey"></InputText>
                 </div>
                 @{ var functionAppKey = FunctionApps?.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey; }
                 @if (functionAppKey is null)
@@ -79,7 +79,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.ChevronRight" />
                     </div>
-                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3" @oninput="ResetStepError"></InputTextArea>
+                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3"></InputTextArea>
                 </div>
             </div>
         </div>

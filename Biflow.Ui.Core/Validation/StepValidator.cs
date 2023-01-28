@@ -10,10 +10,36 @@ public class StepValidator : AbstractValidator<Step>
         RuleFor(step => step)
             .Must(step => step.ExecutionConditionParameters.DistinctBy(p => p.ParameterName).Count() == step.ExecutionConditionParameters.Count)
             .WithMessage("Execution condition parameter names must be unique");
+        RuleFor(step => step.Sources)
+            .Must(HaveNoDuplicates)
+            .WithMessage("Source object names must be unique");
+        RuleFor(step => step.Targets)
+            .Must(HaveNoDuplicates)
+            .WithMessage("Target object names must be unique");
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
         });
+    }
+
+    private static bool HaveNoDuplicates(IEnumerable<DataObject> objects)
+    {
+        var ordered = objects
+            .OrderBy(x => x.ServerName)
+            .ThenBy(x => x.DatabaseName)
+            .ThenBy(x => x.SchemaName)
+            .ThenBy(x => x.ObjectName)
+            .ToList();
+        for (int i = 0; i < ordered.Count - 1; i++)
+        {
+            var current = ordered.ElementAt(i);
+            var next = ordered.ElementAt(i + 1);
+            if (current.NamesEqual(next))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

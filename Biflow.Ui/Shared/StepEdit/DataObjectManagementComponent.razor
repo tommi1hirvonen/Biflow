@@ -285,14 +285,14 @@
         ArgumentNullException.ThrowIfNull(NewObject);
         ArgumentNullException.ThrowIfNull(DataObjects);
 
-        if (DataObjects.Any(o => o.Equals(NewObject)))
+        if (DataObjects.Any(o => o.NamesEqual(NewObject)))
         {
             Messenger.AddWarning($"Duplicate {ListName} object");
             return;
         }
 
-        var existing = AllObjects?.FirstOrDefault(o => o.Equals(NewObject))
-            ?? ComparisonObjects.FirstOrDefault(o => o.Equals(NewObject));
+        var existing = AllObjects?.FirstOrDefault(o => o.NamesEqual(NewObject))
+            ?? ComparisonObjects.FirstOrDefault(o => o.NamesEqual(NewObject));
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
@@ -328,11 +328,11 @@
                 // Check if the same object exists in the comparison list. Skip this object if it does.
                 // This way we do not accidentally add objects that might be a target as sources,
                 // thus creating a self reference.
-                var comparison = ComparisonObjects.FirstOrDefault(o => o.Equals(dependency));
+                var comparison = ComparisonObjects.FirstOrDefault(o => o.NamesEqual(dependency));
                 if (comparison is not null)
                     continue;
 
-                var dbObject = AllObjects?.FirstOrDefault(o => o.Equals(dependency)) ??
+                var dbObject = AllObjects?.FirstOrDefault(o => o.NamesEqual(dependency)) ??
                     new DataObject
                         {
                             ServerName = dependency.ServerName,
@@ -341,7 +341,7 @@
                             ObjectName = dependency.ObjectName
                         };
 
-                if (!DataObjects.Any(s => s.Equals(dbObject)))
+                if (!DataObjects.Any(s => s.NamesEqual(dbObject)))
                 {
                     GetMappingResult(dbObject).IsNewAddition = true;
                     GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
@@ -353,7 +353,7 @@
 
             // Check if there are objects in the list that are not mentioned in the dependencies.
             // Flag them as candidates for removal.
-            var candidatesForRemoval = DataObjects.Where(o => !dependencies.Any(d => o.Equals(d))).ToList();
+            var candidatesForRemoval = DataObjects.Where(o => !dependencies.Any(d => o.NamesEqual(d))).ToList();
             foreach (var candidate in candidatesForRemoval)
             {
                 GetMappingResult(candidate).IsCandidateForRemoval = true;

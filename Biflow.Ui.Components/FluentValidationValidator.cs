@@ -47,17 +47,19 @@ public class FluentValidationValidator : ComponentBase
         }
     }
 
-    private async void ValidationRequested(object? sender, ValidationRequestedEventArgs args)
+    public async Task ValidateAsync()
     {
         ArgumentNullException.ThrowIfNull(EditContext);
         ArgumentNullException.ThrowIfNull(_validator);
         ArgumentNullException.ThrowIfNull(_validationMessageStore);
-        
+
         _validationMessageStore.Clear();
         var validationContext = new ValidationContext<object>(EditContext.Model);
         var result = await _validator.ValidateAsync(validationContext);
         AddValidationResult(EditContext.Model, result);
     }
+
+    private async void ValidationRequested(object? sender, ValidationRequestedEventArgs args) => await ValidateAsync();
 
     private async void FieldChanged(object? sender, FieldChangedEventArgs args)
     {

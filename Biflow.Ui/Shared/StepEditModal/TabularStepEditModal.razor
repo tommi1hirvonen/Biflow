@@ -41,7 +41,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Box" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" @oninput="ResetStepError" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" />
                 </div>
                 <div class="form-text">Required</div>
             </div>
@@ -51,7 +51,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Table" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" @oninput="ResetStepError" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" />
                 </div>
                 <div class="form-text">Blank if the entire model should be processed. Required if partition name is defined.</div>
             </div>
@@ -61,7 +61,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.PieChart" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" @oninput="ResetStepError" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" />
                 </div>
                 <div class="form-text">Blank if the entire model or table should be processed.</div>
             </div>
