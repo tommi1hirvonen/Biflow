@@ -9,6 +9,7 @@
 
         <ObjectGraphDataAnnotationsValidator />
         <ValidationSummary />
+        <FluentValidationValidator ValidatorType="typeof(JobValidator)" />
 
         <div class="text-secondary">
             <p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p>
@@ -73,12 +74,6 @@
                 }
             </tbody>
         </table>
-        
-
-        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
-        {
-            <p class="text-danger">@ErrorMessage</p>
-        }
 
         <div class="row">
             <div class="col">
@@ -98,8 +93,6 @@
 
     private Job? EditJob { get; set; }
 
-    private string? ErrorMessage { get; set; }
-
     protected override async Task OnParametersSetAsync()
     {
         if (Job is null || Context is not null)
@@ -116,14 +109,6 @@
     private async Task OnSubmit()
     {
         ArgumentNullException.ThrowIfNull(EditJob);
-        var count = EditJob.JobConcurrencies.Count();
-        var distinct = EditJob.JobConcurrencies.Select(c => c.StepType).Distinct().Count();
-        if (count != distinct)
-        {
-            ErrorMessage = "Duplicate step types detected";
-            return;
-        }
-
         try
         {
             ArgumentNullException.ThrowIfNull(Context);

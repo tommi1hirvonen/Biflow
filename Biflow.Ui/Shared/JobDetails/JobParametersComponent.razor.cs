@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
@@ -26,9 +27,9 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private BiflowContext? Context { get; set; }
 
-    private string? ErrorMessage { get; set; }
-
     private bool Loading { get; set; } = false;
+
+    private FluentValidationValidator? JobValidator { get; set; }
 
     private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
 
@@ -60,14 +61,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private async Task SubmitParameters()
     {
-        ErrorMessage = null;
-        var (paramResult, paramMessage) = ParametersCheck();
-        if (!paramResult)
-        {
-            ErrorMessage = paramMessage;
-            return;
-        }
-
         foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
         {
             // Update the referencing job step parameter names to match the possibly changed new name.
@@ -93,29 +86,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
             Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
-    }
-
-    private (bool Result, string? Message) ParametersCheck()
-    {
-        var parameters = EditJob?.JobParameters
-            .OrderBy(param => param.ParameterName)
-            .ToList() ?? Enumerable.Empty<JobParameter>().ToList();
-        foreach (var param in parameters)
-        {
-            if (string.IsNullOrEmpty(param.ParameterName))
-            {
-                return (false, "Parameter name cannot be empty");
-            }
-        }
-        for (var i = 0; i < parameters.Count - 1; i++)
-        {
-            if (parameters[i + 1].ParameterName == parameters[i].ParameterName)
-            {
-                return (false, "Duplicate parameter names");
-            }
-        }
-
-        return (true, null);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

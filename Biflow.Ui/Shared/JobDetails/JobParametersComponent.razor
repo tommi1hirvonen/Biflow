@@ -22,10 +22,6 @@ else
                     Add parameter
                 </HxButton>
             </HxButtonToolbar>
-            @if (!string.IsNullOrEmpty(ErrorMessage))
-            {
-                <p class="text-danger mt-1">@ErrorMessage</p>
-            }
         </div>
         <div class="col text-end">
             <HxPopover Placement="PopoverPlacement.Bottom" Trigger="PopoverTrigger.Focus"
@@ -42,6 +38,9 @@ else
         <div class="col">
             <div class="card shadow-sm">
                 <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
+                    <ObjectGraphDataAnnotationsValidator />
+                    <ValidationSummary />
+                    <FluentValidationValidator @ref="JobValidator" ValidatorType="typeof(JobValidator)" />
                     <table id="parameters_table" class="table">
                         <thead>
                             <tr>
@@ -79,7 +78,10 @@ else
                                 var assigningSteps = GetAssigningSteps(param).ToList();
                                 <tr>
                                     <td>
-                                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
+                                        <InputText class="form-control form-control-sm"
+                                                   @bind-Value="param.ParameterName"
+                                                   placeholder="Name"
+                                                   @bind-Value:after="() => JobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditComponent Parameter="param"
                                                                    OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">

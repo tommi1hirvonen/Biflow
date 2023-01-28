@@ -69,7 +69,8 @@ public class Job
     public ICollection<Execution> Executions { get; set; } = null!;
     
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
-    
+
+    [ValidateComplexType]
     public IList<JobParameter> JobParameters { get; set; } = null!;
 
     [ValidateComplexType]
