@@ -24,6 +24,7 @@ public abstract class StepParameterBase : DynamicParameter
 
     public JobParameter? InheritFromJobParameter { get; set; }
 
+    [ValidateComplexType]
     public IList<StepParameterExpressionParameter> ExpressionParameters { get; set; } = new List<StepParameterExpressionParameter>();
 
     public abstract Step BaseStep { get; }
