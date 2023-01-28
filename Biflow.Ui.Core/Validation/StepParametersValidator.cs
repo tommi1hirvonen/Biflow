@@ -7,6 +7,7 @@ public class StepParametersValidator : AbstractValidator<IHasStepParameters>
 {
     public StepParametersValidator()
     {
+        // Validate step parameter name uniqueness using DisplayName to take into account ParameterLevel for PackageStepParameters.
         RuleFor(step => step)
             .Must(step => step.StepParameters.DistinctBy(p => p.DisplayName).Count() == step.StepParameters.Count)
             .WithMessage("Parameter names must be unique");
