@@ -24,14 +24,19 @@
                 <tr>
                     <td>
                         <div class="input-group">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.ParameterLevel">
+                            <InputSelect class="form-select form-select-sm"
+                                         @bind-Value="param.ParameterLevel"
+                                         @bind-Value:after="() => ParametersValidator.LetAsync(x => x.ValidateAsync())">
                                 <option>@ParameterLevel.Package</option>
                                 <option>@ParameterLevel.Project</option>
                             </InputSelect>
                         </div>
                     </td>
                     <td>
-                        <HxInputText InputSize="InputSize.Small" @bind-Value="param.ParameterName" placeholder="Name"></HxInputText>
+                        <InputText class="form-control form-control-sm"
+                                   @bind-Value="param.ParameterName"
+                                   placeholder="Name"
+                                   @bind-Value:after="() => ParametersValidator.LetAsync(x => x.ValidateAsync())" />
                     </td>
                     <td class="align-middle">
                         <div class="form-check">
@@ -66,7 +71,10 @@
                     }
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => Step.StepParameters.Remove(param)">
+                            <HxButton Color="ThemeColor.None"
+                                      Size="ButtonSize.Small"
+                                      CssClass="btn-auto"
+                                      @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -90,6 +98,8 @@
 </ExpressionEditOffcanvas>
 
 @code {
+    [CascadingParameter(Name = "StepParametersValidator")] FluentValidationValidator? ParametersValidator { get; set; }
+
     [Parameter] public PackageStep? Step { get; set; }
 
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();

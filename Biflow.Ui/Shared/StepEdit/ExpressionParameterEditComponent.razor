@@ -15,7 +15,9 @@
                     {
                         <tr>
                             <td>
-                                <InputText class="form-control form-control-sm" @bind-Value="param.ParameterName" />
+                                <InputText class="form-control form-control-sm"
+                                           @bind-Value="param.ParameterName"
+                                           @bind-Value:after="() => ParametersValidator.LetAsync(x => x.ValidateAsync())" />
                             </td>
                             <td>
                                 <InputSelect class="form-select form-select-sm"
@@ -31,7 +33,10 @@
                             </td>
                             <td>
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Parameter.ExpressionParameters.Remove(param)">
+                                    <HxButton Color="ThemeColor.None"
+                                              CssClass="btn-auto"
+                                              Size="ButtonSize.Small"
+                                              @onclick="() => RemoveParameter(Parameter, param)">
                                         <CxIcon Icon="FeatherIcon.Delete" />
                                     </HxButton>
                                 </HxButtonGroup>
@@ -65,7 +70,15 @@
 </div>
 
 @code {
+    [CascadingParameter(Name = "StepParametersValidator")] FluentValidationValidator? ParametersValidator { get; set; }
+
     [Parameter, EditorRequired] public StepParameterBase? Parameter { get; set; }
+
+    private async Task RemoveParameter(StepParameterBase parameter, StepParameterExpressionParameter expressionParameter)
+    {
+        parameter.ExpressionParameters.Remove(expressionParameter);
+        await ParametersValidator.LetAsync(x => x.ValidateAsync());
+    }
 
     private void AddParameter()
     {
