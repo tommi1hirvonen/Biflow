@@ -176,17 +176,18 @@
             return;
         }
 
-        var result = await DbHelperService.UpdatePasswordAsync(Username, PasswordModel_.Password);
-        if (result)
+        try
         {
+            await DbHelperService.UpdatePasswordAsync(Username, PasswordModel_.Password);
             Messenger.AddInformation("Success", "Password updated successfully");
             PasswordModel_.Password = null;
             PasswordModel_.ConfirmPassword = null;
         }
-        else
+        catch (Exception)
         {
-            Messenger.AddError("Error", "Error updating password");
+            Messenger.AddError("Error updating password");
         }
+        
     }
 
     private class PasswordModel

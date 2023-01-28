@@ -102,43 +102,38 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
             try
             {
-                var result = await DbHelperService.AddUserAsync(User ?? throw new ArgumentNullException(nameof(User), "User was null"), Password);
-                if (result)
+                ArgumentNullException.ThrowIfNull(User);
+                await DbHelperService.AddUserAsync(User, Password);
+                
+                // Add possible job authorizations.
+                var context = DbFactory.CreateDbContext();
+                var user = await context.Users
+                    .Include(u => u.Jobs)
+                    .Include(u => u.DataTables)
+                    .FirstAsync(u => u.Username == User.Username);
+                var jobs = await context.Jobs.ToListAsync();
+                var dataTables = await context.MasterDataTables.ToListAsync();
+                user.AuthorizeAllJobs = User.AuthorizeAllJobs;
+                user.AuthorizeAllDataTables = User.AuthorizeAllDataTables;
+                foreach (var jobToAdd in User.Jobs)
                 {
-                    // Add possible job authorizations.
-                    var context = DbFactory.CreateDbContext();
-                    var user = await context.Users
-                        .Include(u => u.Jobs)
-                        .Include(u => u.DataTables)
-                        .FirstAsync(u => u.Username == User.Username);
-                    var jobs = await context.Jobs.ToListAsync();
-                    var dataTables = await context.MasterDataTables.ToListAsync();
-                    user.AuthorizeAllJobs = User.AuthorizeAllJobs;
-                    user.AuthorizeAllDataTables = User.AuthorizeAllDataTables;
-                    foreach (var jobToAdd in User.Jobs)
-                    {
-                        var job = jobs.FirstOrDefault(j => j.JobId == jobToAdd.JobId);
-                        if (job is not null)
-                            user.Jobs.Add(job);
-                    }
-                    foreach (var tableToAdd in User.DataTables)
-                    {
-                        var table = dataTables.FirstOrDefault(t => t.DataTableId == tableToAdd.DataTableId);
-                        if (table is not null)
-                            user.DataTables.Add(table);
-                    }
-
-                    await context.SaveChangesAsync();
-
-                    Password = null;
-                    ConfirmPassword = null;
-                    await OnUserSubmit.InvokeAsync(User);
-                    await Modal.LetAsync(x => x.HideAsync());
+                    var job = jobs.FirstOrDefault(j => j.JobId == jobToAdd.JobId);
+                    if (job is not null)
+                        user.Jobs.Add(job);
                 }
-                else
+                foreach (var tableToAdd in User.DataTables)
                 {
-                    Messenger.AddError("Error creating user");
+                    var table = dataTables.FirstOrDefault(t => t.DataTableId == tableToAdd.DataTableId);
+                    if (table is not null)
+                        user.DataTables.Add(table);
                 }
+
+                await context.SaveChangesAsync();
+
+                Password = null;
+                ConfirmPassword = null;
+                await OnUserSubmit.InvokeAsync(User);
+                await Modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {

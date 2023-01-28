@@ -7,52 +7,37 @@ CREATE PROCEDURE [biflow].[UserAdd]
 AS
 BEGIN
 
-SET NOCOUNT ON;
+SET XACT_ABORT ON
+SET NOCOUNT ON
 
-IF ISNULL(@Username, '') IS NULL OR ISNULL(@Role, '') IS NULL
-BEGIN
+IF NULLIF(@Username, '') IS NULL
+	THROW 50000, 'Username cannot be null or empty', 1
 
-	SELECT 0;
-
-	RETURN;
-
-END;
+IF NULLIF(@Role, '') IS NULL
+	THROW 50000, 'Role cannot be null or empty', 1
 
 
-DECLARE @Salt [uniqueidentifier] = NEWID();
+DECLARE @Salt [uniqueidentifier] = NEWID()
 
-BEGIN TRY
+INSERT INTO [biflow].[User] (
+	[Username],
+	[PasswordHash],
+	[Salt],
+	[Role],
+	[Email],
+	[CreatedDateTime],
+	[LastModifiedDateTime]
+)
+SELECT
+	@Username,
+	CASE
+        WHEN @Password IS NOT NULL THEN
+            HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), @Salt))
+    END,
+	@Salt,
+	@Role,
+	@Email,
+	GETUTCDATE(),
+	GETUTCDATE()
 
-	INSERT INTO [biflow].[User] (
-		[Username],
-		[PasswordHash],
-		[Salt],
-		[Role],
-		[Email],
-		[CreatedDateTime],
-		[LastModifiedDateTime]
-	)
-	SELECT
-		@Username,
-		CASE
-            WHEN @Password IS NOT NULL THEN
-                HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), @Salt))
-        END,
-		@Salt,
-		@Role,
-		@Email,
-		GETUTCDATE(),
-		GETUTCDATE()
-	;
-
-	SELECT 1;
-
-END TRY
-BEGIN CATCH
-
-	SELECT 0;
-
-END CATCH;
-
-
-END;
+END

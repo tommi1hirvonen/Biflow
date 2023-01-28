@@ -161,15 +161,14 @@
         {
             return;
         }
-
-        var result = await DbHelperService.UpdatePasswordAsync(user.Username ?? throw new ArgumentNullException(nameof(user.Username), "Username was null"),
-            Password!); // PasswordCheck() makes sure Password is not null
-        if (result)
+        try
         {
+            ArgumentNullException.ThrowIfNull(user.Username);
+            await DbHelperService.UpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
             ResetPassword();
             Messenger.AddInformation("Password updated successfully");
         }
-        else
+        catch (Exception)
         {
             Messenger.AddError("Error updating password");
         }

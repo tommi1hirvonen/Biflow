@@ -6,34 +6,26 @@ CREATE PROCEDURE [biflow].[UserUpdatePassword]
 AS
 BEGIN
 
-SET NOCOUNT ON;
+SET XACT_ABORT ON
+SET NOCOUNT ON
 
-IF ISNULL(@Username, '') IS NULL OR ISNULL(@Password, '') IS NULL
-BEGIN
+IF NULLIF(@Username, '') IS NULL
+	THROW 50000, 'Username cannot be null or empty', 1
 
-	SELECT 0;
+IF NULLIF(@Password, '') IS NULL
+	THROW 50000, 'Password cannot be null or empty', 1
 
-	RETURN;
+DECLARE @temp TABLE (Username [nvarchar](250) NOT NULL)
 
-END;
+DECLARE @Salt [uniqueidentifier] = NEWID()
 
-BEGIN TRY
+UPDATE [biflow].[User]
+SET [PasswordHash] = HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), @Salt)),
+	[Salt] = @Salt,
+	[LastModifiedDateTime] = GETUTCDATE()
+OUTPUT inserted.Username INTO @temp
+WHERE [Username] = @Username
 
+SELECT COUNT(*) FROM @temp
 
-	UPDATE [biflow].[User]
-	SET [PasswordHash] = HASHBYTES('SHA2_512', @Password + CONVERT([nvarchar](36), [Salt])),
-		[LastModifiedDateTime] = GETUTCDATE()
-	WHERE [Username] = @Username
-	;
-
-	SELECT 1;
-
-END TRY
-BEGIN CATCH
-
-	SELECT 0;
-
-END CATCH;
-
-
-END;
+END

@@ -89,26 +89,30 @@ public class DbHelperService
         return createdStepId;
     }
 
-    public async Task<bool> UpdatePasswordAsync(string username, string password)
+    /// <summary>
+    /// Update the password for an existing user. Should only be used when the authentication mode is BuiltIn.
+    /// </summary>
+    /// <param name="username">Username for the account</param>
+    /// <param name="password">New password</param>
+    /// <exception cref="ArgumentException">If no user was found with the provided username</exception>
+    public async Task UpdatePasswordAsync(string username, string password)
     {
         using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
-        var result = await sqlConnection.ExecuteScalarAsync<int>(
+        var affectedRows = await sqlConnection.ExecuteScalarAsync<int>(
             "EXEC [biflow].[UserUpdatePassword] @Username = @Username_, @Password = @Password_",
             new { Username_ = username, Password_ = password });
-
-        if (result > 0) return true;
-        else return false;
+        if (affectedRows == 0)
+        {
+            throw new ArgumentException($"No user found with username {username}");
+        }
     }
 
-    public async Task<bool> AddUserAsync(User user, string password)
+    public async Task AddUserAsync(User user, string password)
     {
         using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
-        var result = await sqlConnection.ExecuteScalarAsync<int>(
+        await sqlConnection.ExecuteAsync(
             "EXEC [biflow].[UserAdd] @Username = @Username_, @Password = @Password_, @Role = @Role_, @Email = @Email_",
             new { Username_ = user.Username, Password_ = password, Role_ = user.Role, Email_ = user.Email });
-
-        if (result > 0) return true;
-        else return false;
     }
 
     public async Task<string?> AuthenticateUserAsync(string username, string password)
