@@ -8,7 +8,7 @@
          Size="ModalSize.ExtraLarge"
          Scrollable="true"
          BodyCssClass="pt-0"
-         OnClosed="Modal.OnClosed"
+         OnClosed="OnClosed"
          Fullscreen="ModalFullscreen.ExtraLargeDown"
          Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
     <BodyTemplate>
@@ -73,6 +73,7 @@
                             <div class="col">
                                 <ObjectGraphDataAnnotationsValidator />
                                 <ValidationSummary />
+                                <ValidationStateChangeListener OnValidationStateChanged="OnValidationStateChanged" />
                                 <FluentValidationValidator @ref="StepValidator" ValidatorType="typeof(StepValidator)" />
                                 @if (Modal.Step is IHasStepParameters)
                                 {
@@ -247,6 +248,19 @@
             </HxButton>
         </HxButtonGroup>
 
+        @if (ValidationErrors.Any())
+        {
+            var errors = string.Join("<br />", ValidationErrors.Select(e => $"- {e}"));
+            <div class="me-auto ms-3">
+                <HxPopover Content="@errors" Html Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top">
+                    <span class="border border-danger text-danger small rounded py-1 px-2">
+                        <CxIcon Icon="FeatherIcon.AlertOctagon" />
+                        Validation errors
+                    </span>
+                </HxPopover>
+            </div>
+        }
+
         <HxSubmit FormId="@Modal.FormId" Color="ThemeColor.Success" Spinner="Modal.Saving" Enabled="!Modal.Saving">
             Save
         </HxSubmit>
@@ -270,6 +284,8 @@
 
     private SqlDefinitionExplorerOffcanvas? SqlDefinitionOffcanvas { get; set; }
 
+    private IEnumerable<string> ValidationErrors { get; set; } = Enumerable.Empty<string>();
+
     private string? SqlStatement => Modal?.Step switch
     {
         SqlStep sql => sql.SqlStatement,
@@ -289,5 +305,17 @@
         {
             context.PreventNavigation();
         }
+    }
+
+    private void OnValidationStateChanged(IEnumerable<string> errors)
+    {
+        ValidationErrors = errors;
+        StateHasChanged();
+    }
+
+    private void OnClosed()
+    {
+        ValidationErrors = Enumerable.Empty<string>();
+        Modal.OnClosed();
     }
 }
