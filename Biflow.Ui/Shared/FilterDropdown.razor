@@ -44,7 +44,7 @@
                                 <input type="checkbox" class="form-check-input" id="@($"{ComponentInstanceId}_{id}")"
                                        checked=@FilterSet.Contains(item)
                                        @onchange="args => Toggle((bool)args.Value!, item)">
-                                <label class="form-check-label" for="@($"{ComponentInstanceId}_{id}")">
+                                <label class="form-check-label fw-normal" for="@($"{ComponentInstanceId}_{id}")">
                                     @if (ItemTemplate is not null)
                                     {
                                         @ItemTemplate(item)
