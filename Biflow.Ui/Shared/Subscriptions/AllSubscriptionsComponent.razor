@@ -14,6 +14,7 @@
                             Items="Users ?? Enumerable.Empty<User>()"
                             IdSelector="u => u.Username"
                             OnChange="StateHasChanged"
+                            IsSearchable
                             TextSelector="u => u.Username">
                 <ItemTemplate>
                     @context.Username
@@ -28,6 +29,7 @@
                             Items="Jobs ?? Enumerable.Empty<Job>()"
                             IdSelector="j => j.JobId.ToString()"
                             OnChange="StateHasChanged"
+                            IsSearchable
                             TextSelector="j => j.JobName">
                 <ItemTemplate>
                     @context.JobName
@@ -66,6 +68,12 @@
                         @if (Users is null || Jobs is null)
                         {
                             <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                        }
+                        else if (!UserFilter.Any() && !JobFilter.Any())
+                        {
+                            <tr>
+                                <td colspan="4">Apply filters to view subscriptions</td>
+                            </tr>
                         }
                         else
                         {
