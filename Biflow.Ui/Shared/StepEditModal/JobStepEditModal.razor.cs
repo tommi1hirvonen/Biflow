@@ -12,10 +12,9 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
     internal override string FormId => "job_step_edit_form";
 
     private IEnumerable<JobCategory?> JobCategories => Jobs
-        .Where(j => j.Category is not null)
         .Select(j => j.Category)
         .Distinct()
-        .OrderBy(c => c is not null)
+        .OrderBy(c => c is null)
         .ThenBy(c => c?.CategoryName);
 
     protected override JobStep CreateNewStep(Job job) =>
