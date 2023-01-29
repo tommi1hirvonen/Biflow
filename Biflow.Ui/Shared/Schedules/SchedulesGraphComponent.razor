@@ -1,5 +1,23 @@
 ﻿
-<div class="row">
+<div class="row justify-content-between gap-2">
+    <div class="col-auto">
+        <form class="d-inline-flex align-items-center" id="executions_form" @onsubmit="StateHasChanged" style="flex-direction: unset !important;">
+            <label class="me-2">From</label>
+            <div class="input-group">
+                <div class="input-group-text">
+                    <CxIcon Icon="FeatherIcon.Calendar" />
+                </div>
+                <input @bind="Start" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
+            </div>
+            <label class="mx-2">To</label>
+            <div class="input-group">
+                <div class="input-group-text">
+                    <CxIcon Icon="FeatherIcon.Calendar" />
+                </div>
+                <input @bind="End" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
+            </div>
+        </form>
+    </div>
     <div class="col-auto">
         <div class="alert alert-secondary">
             Only enabled jobs and schedules are displayed in the schedules forecast graph.
@@ -74,9 +92,41 @@
     [Parameter] public List<Schedule>? Schedules { get; set; }
 
     private const int Columns = 12;
-    private DateTime Start => DateTime.Today;
-    private DateTime End => DateTime.Today.AddDays(1);
+
+    private DateTime Start
+    {
+        get => _start;
+        set
+        {
+            if (value >= _end)
+            {
+                var diff = value - _start;
+                _end = _end.Add(diff);
+            }
+            _start = value;
+        }
+    }
+
+    private DateTime _start = DateTime.Today;
+
+    private DateTime End
+    {
+        get => _end;
+        set
+        {
+            if (value <= _start)
+            {
+                var diff = value - _end;
+                _start = _start.Add(diff);
+            }
+            _end = value;
+        }
+    }
+
+    private DateTime _end = DateTime.Today.AddDays(1);
+
     private long MinTicks => Start.Ticks;
+    
     private long MaxTicks => End.Ticks;
 
     private string GetTimeFromPercentage(double percentage)
