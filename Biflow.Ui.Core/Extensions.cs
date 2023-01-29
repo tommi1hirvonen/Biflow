@@ -298,12 +298,12 @@ public static partial class Extensions
 
     public static IEnumerable<DateTime?> GetNextFireTimes(this Schedule schedule, int count) => schedule.NextFireTimesSequence().Take(count);
 
-    private static IEnumerable<DateTime?> NextFireTimesSequence(this Schedule schedule)
+    public static IEnumerable<DateTime?> NextFireTimesSequence(this Schedule schedule, DateTimeOffset? start = null)
     {
         if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
         {
             var cron = new CronExpression(schedule.CronExpression);
-            DateTimeOffset? dateTime = DateTimeOffset.UtcNow;
+            DateTimeOffset? dateTime = start ?? DateTimeOffset.UtcNow;
             while (dateTime is not null)
             {
                 dateTime = cron.GetTimeAfter((DateTimeOffset)dateTime);

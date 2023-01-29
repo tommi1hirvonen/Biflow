@@ -1,0 +1,89 @@
+﻿
+<div class="row mx-1 my-2">
+    <div class="col">
+        <div class="row" style="height: 40px;">
+            <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
+            </div>
+            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
+                @for (int i = 0; i <= 100; i += 10)
+                {
+                    @*With screen sizes < xl only show every other line*@
+                    <div class="@(i / 10 % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center"
+                     style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
+                        @if (i < 100)
+                        {
+                            <small>@GetDateFromPercentage(i)<br />@GetTimeFromPercentage(i)</small>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        @if (Schedules is not null)
+        {
+            var jobs = Schedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
+            foreach (var job in jobs)
+            {
+                <div class="row border-top gantt-row" style="cursor: pointer;">
+                    <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
+                        <small>
+                            @job.Key.JobName
+                        </small>
+                    </div>
+                    <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
+                        @for (int i = 0; i <= 100; i += 10)
+                        {
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");"></div>
+                        }
+                        @foreach (var schedule in job)
+                        {
+                            var nextFireTimes = schedule.NextFireTimesSequence(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
+                            foreach (var dt in nextFireTimes)
+                            {
+                                var offset = GetOffset(dt);
+                                <div class="progress" style="position: absolute; width: 1%; left: @($"{offset}%");">
+                                    <div class="progress-bar" style="width: 100%;"></div>
+                                </div>    
+                            }
+                        }
+                    </div>
+                </div>  
+            }            
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Schedule>? Schedules { get; set; }
+
+    private DateTime Start => DateTime.Today;
+    private DateTime End => DateTime.Today.AddDays(1);
+    private long MinTicks => Start.Ticks;
+    private long MaxTicks => End.Ticks;
+
+    private string GetTimeFromPercentage(double percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("T");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100.0;
+        var time = new DateTime(Convert.ToInt64(ticks));
+        return time.ToString("T");
+    }
+
+    private string GetDateFromPercentage(double percentage)
+    {
+        if (MinTicks == MaxTicks)
+            return DateTime.Now.ToString("d");
+
+        var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100.0;
+        var time = new DateTime(Convert.ToInt64(ticks));
+        return time.ToString("d");
+    }
+
+    private int GetOffset(DateTime dt)
+    {
+        var ticks = dt.Ticks;
+        var offset = (double)(ticks - MinTicks) / (MaxTicks - MinTicks) * 100;
+        return (int)Math.Round(offset, 0);
+    }
+}
