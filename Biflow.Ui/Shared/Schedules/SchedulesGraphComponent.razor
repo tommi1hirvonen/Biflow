@@ -1,18 +1,27 @@
 ﻿
+<div class="row">
+    <div class="col-auto">
+        <div class="alert alert-secondary">
+            Only enabled jobs and schedules are displayed in the schedules forecast graph.
+        </div>
+    </div>
+</div>
+
 <div class="row mx-1 my-2">
     <div class="col">
         <div class="row" style="height: 40px;">
             <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
             </div>
             <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
-                @for (int i = 0; i <= 100; i += 10)
+                @for (int i = 0; i <= Columns; i++)
                 {
+                    var percentage = Math.Round(i * (100.0 / 12.0), 10);
                     @*With screen sizes < xl only show every other line*@
-                    <div class="@(i / 10 % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center"
-                     style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");">
-                        @if (i < 100)
+                    <div class="@(i % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center"
+                     style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{percentage.ToString().Replace(',', '.')}%");">
+                        @if (i < Columns)
                         {
-                            <small>@GetDateFromPercentage(i)<br />@GetTimeFromPercentage(i)</small>
+                            <small>@GetDateFromPercentage(percentage)<br />@GetTimeFromPercentage(percentage)</small>
                         }
                     </div>
                 }
@@ -23,6 +32,10 @@
             var jobs = Schedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
             foreach (var job in jobs)
             {
+                if (!job.Key.IsEnabled)
+                {
+                    continue;
+                }
                 <div class="row border-top gantt-row" style="cursor: pointer;">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                         <small>
@@ -30,17 +43,22 @@
                         </small>
                     </div>
                     <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
-                        @for (int i = 0; i <= 100; i += 10)
+                        @for (double i = 0; i <= 12; i++)
                         {
-                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{i}%");"></div>
+                            var percentage = Math.Round(i * (100.0 / 12.0), 10);
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{percentage.ToString().Replace(',', '.')}%");"></div>
                         }
                         @foreach (var schedule in job)
                         {
+                            if (!schedule.IsEnabled)
+                            {
+                                continue;
+                            }
                             var nextFireTimes = schedule.NextFireTimesSequence(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
                             foreach (var dt in nextFireTimes)
                             {
                                 var offset = GetOffset(dt);
-                                <div class="progress" style="position: absolute; width: 1%; left: @($"{offset}%");">
+                                <div class="progress" style="position: absolute; width: 1%; left: @($"{offset.ToString().Replace(',', '.')}%");" title="@schedule.ScheduleName; @schedule.GetScheduleDescription(); @dt">
                                     <div class="progress-bar" style="width: 100%;"></div>
                                 </div>    
                             }
@@ -55,6 +73,7 @@
 @code {
     [Parameter] public List<Schedule>? Schedules { get; set; }
 
+    private const int Columns = 12;
     private DateTime Start => DateTime.Today;
     private DateTime End => DateTime.Today.AddDays(1);
     private long MinTicks => Start.Ticks;
@@ -63,11 +82,11 @@
     private string GetTimeFromPercentage(double percentage)
     {
         if (MinTicks == MaxTicks)
-            return DateTime.Now.ToString("T");
+            return DateTime.Now.ToString("t");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100.0;
         var time = new DateTime(Convert.ToInt64(ticks));
-        return time.ToString("T");
+        return time.ToString("t");
     }
 
     private string GetDateFromPercentage(double percentage)
@@ -80,10 +99,10 @@
         return time.ToString("d");
     }
 
-    private int GetOffset(DateTime dt)
+    private double GetOffset(DateTime dt)
     {
         var ticks = dt.Ticks;
         var offset = (double)(ticks - MinTicks) / (MaxTicks - MinTicks) * 100;
-        return (int)Math.Round(offset, 0);
+        return Math.Round(offset, 10);
     }
 }
