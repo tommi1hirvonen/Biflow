@@ -17,6 +17,8 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
     
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
@@ -86,6 +88,21 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
             Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
+    }
+
+    private async Task RemoveParameter(JobParameter parameter)
+    {
+        var referencingSteps = GetInheritingSteps(parameter).Concat(GetCapturingSteps(parameter)).Concat(GetAssigningSteps(parameter));
+        if (referencingSteps.Any())
+        {
+            var confirmResult = await Confirmer.ConfirmAsync("This parameter has one or more referencing steps. Removing it can break these steps. Delete anyway?");
+            if (!confirmResult)
+            {
+                return;
+            }
+        }
+
+        EditJob?.JobParameters.Remove(parameter);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
