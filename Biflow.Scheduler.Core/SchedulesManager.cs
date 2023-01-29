@@ -38,10 +38,10 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            if (schedule.CronExpression is null)
-                throw new ArgumentNullException(nameof(schedule.CronExpression), "Cron expression cannot be null");
+            ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+            ArgumentNullException.ThrowIfNull(schedule.JobId);
 
-            var jobKey = new JobKey(schedule.JobId.ToString());
+            var jobKey = new JobKey(((Guid)schedule.JobId).ToString());
             var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
             var jobDetail = JobBuilder.Create<TJob>()
                 .WithIdentity(jobKey)

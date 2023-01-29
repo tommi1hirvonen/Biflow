@@ -17,14 +17,16 @@ public class SelfHostedSchedulerService : ISchedulerService
     public async Task AddScheduleAsync(Schedule schedule)
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        ArgumentNullException.ThrowIfNull(schedule.JobId);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
         await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        ArgumentNullException.ThrowIfNull(schedule.JobId);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
         await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
@@ -52,7 +54,8 @@ public class SelfHostedSchedulerService : ISchedulerService
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression ?? string.Empty);
+        ArgumentNullException.ThrowIfNull(schedule.JobId);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression ?? string.Empty);
         if (enabled)
         {
             await _schedulesManager.ResumeScheduleAsync(schedulerSchedule, CancellationToken.None);

@@ -12,46 +12,57 @@
             <div class="row">
                 <div class="col">
                     <DataAnnotationsValidator />
-                    <ValidationSummary />
                     <div>
                         <label class="form-label">Job</label>
                         <div class="input-group">
                             <div class="input-group-text">
                                 <CxIcon Icon="LucideIcon.ClipboardList" />
                             </div>
-                            <InputSelect class="form-select" @bind-Value="Schedule.JobId" disabled=@(Schedule.ScheduleId != Guid.Empty || Job is not null)>
+                            <InputSelect DisplayName="Job" class="form-select" @bind-Value="Schedule.JobId" disabled=@(Schedule.ScheduleId != Guid.Empty || Job is not null)>
                                 @if (Job is not null)
                                 {
                                     <option value="@Job.JobId">@Job.JobName</option>
                                 }
                                 else
                                 {
-                                    foreach (var job in Jobs)
+                                    <option value="">Select job</option>
+                                    foreach (var category in JobCategories)
                                     {
-                                        <option value="@job.JobId">@job.JobName</option>
+                                        <optgroup label="@(category?.CategoryName ?? "No category")">
+                                            @foreach (var job in Jobs.Where(j => j.CategoryId == category?.CategoryId).OrderBy(j => j.JobName))
+                                            {
+                                                <option value="@job.JobId">
+                                                    @job.JobName
+                                                </option>
+                                            }
+                                        </optgroup>
                                     }
                                 }
                             </InputSelect>
                         </div>
                     </div>
+                    <ValidationMessage For="() => Schedule.JobId" />
                     <div class="mt-3">
                         <label class="form-label">Name</label>
                         <div class="input-group">
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Edit3" />
                             </div>
-                            <input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.ScheduleName"></input>
+                            <InputText DisplayName="Name" class="form-control" @bind-Value="Schedule.ScheduleName"></InputText>
                         </div>
                     </div>
+                    <ValidationMessage For="() => Schedule.ScheduleName" />
                     <div class="mt-3">
                         <label class="form-label">Cron expression</label>
                         <div class="input-group">
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Calendar" />
                             </div>
-                            <input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty)></input>
+                            <OnInputText class="form-control" @bind-Value="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty) />
+                            @*<input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty)></input>*@
                         </div>
                     </div>
+                    <ValidationMessage For="() => Schedule.CronExpression" />
                     <div class="row mt-3">
                         @if (CronExpression.IsValidExpression(Schedule.CronExpression ?? string.Empty))
                         {
@@ -72,10 +83,6 @@
                                     <small class="row text-secondary ms-3">@fireTime</small>
                                 }
                             </div>
-                        }
-                        else
-                        {
-                            <small class="text-secondary">Not a valid cron expression</small>
                         }
                     </div>
                     <div class="row mt-3">
@@ -113,6 +120,12 @@
 
     private List<string> Tags { get; set; } = new();
     public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+
+    private IEnumerable<JobCategory?> JobCategories => Jobs
+        .Select(j => j.Category)
+        .Distinct()
+        .OrderBy(c => c is null)
+        .ThenBy(c => c?.CategoryName);
 
     private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request) =>
          await Task.FromResult<InputTagsDataProviderResult>(new InputTagsDataProviderResult
@@ -221,7 +234,6 @@
         {
             Schedule = new()
             {
-                JobId = Job is not null ? Job.JobId : Jobs?.Select(job => job.JobId).FirstOrDefault() ?? Guid.Empty,
                 IsEnabled = true,
                 Tags = new List<Tag>()
             };

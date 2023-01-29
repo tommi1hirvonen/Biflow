@@ -64,7 +64,10 @@ else
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
-        Jobs = await context.Jobs.OrderBy(job => job.JobName).ToListAsync();
+        Jobs = await context.Jobs
+            .Include(j => j.Category)
+            .OrderBy(job => job.JobName)
+            .ToListAsync();
         Schedules_ = await context.Schedules
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)

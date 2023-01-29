@@ -10,7 +10,7 @@ public class Schedule
     public Guid ScheduleId { get; set; }
 
     [Required]
-    public Guid JobId { get; set; }
+    public Guid? JobId { get; set; }
 
     [Required]
     [MaxLength(250)]
