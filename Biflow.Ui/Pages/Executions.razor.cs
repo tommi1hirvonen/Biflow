@@ -27,6 +27,8 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     
     private bool Loading { get; set; } = false;
 
+    private Preset? ActivePreset { get; set; } = Preset.OneHour;
+
     private DateTime FromDateTime
     {
         get => _fromDateTime;
@@ -102,6 +104,12 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     {
         Loading = true;
         StateHasChanged();
+
+        if (ActivePreset is Preset preset)
+        {
+            (FromDateTime, ToDateTime) = GetPreset(preset);
+        }
+
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
 
         var query = context.Executions
@@ -134,21 +142,62 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         StateHasChanged();
     }
 
-    private async Task SelectPresetLast(int hours)
+    private async Task ApplyPresetAsync(Preset preset)
     {
-        ToDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
-        FromDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-hours);
+        (FromDateTime, ToDateTime) = GetPreset(preset);
+        ActivePreset = preset;
         await LoadData();
     }
 
-    private async Task SelectPreset(DateTime from, DateTime to)
+    private (DateTime From, DateTime To) GetPreset(Preset preset)
     {
-        FromDateTime = from.Trim(TimeSpan.TicksPerMinute);
-        ToDateTime = to.Trim(TimeSpan.TicksPerMinute);
-        await LoadData();
+        var today = DateTime.Now.Date;
+        var endToday = today.AddDays(1).AddTicks(-1);
+        var startThisWeek = today.StartOfWeek(DayOfWeek.Monday);
+        var endThisWeek = startThisWeek.AddDays(7).AddTicks(-1);
+        var startThisMonth = new DateTime(today.Year, today.Month, 1);
+        var endThisMonth = startThisMonth.AddMonths(1).AddTicks(-1);
+        var yesterday = today.AddDays(-1);
+        var endYesterday = today.AddTicks(-1);
+        var startPrevWeek = today.AddDays(-7).StartOfWeek(DayOfWeek.Monday);
+        var endPrevWeek = startPrevWeek.AddDays(7).AddTicks(-1);
+        var prevMonth = today.AddMonths(-1);
+        var startPrevMonth = new DateTime(prevMonth.Year, prevMonth.Month, 1);
+        var endPrevMonth = startPrevMonth.AddMonths(1).AddTicks(-1);
+        return preset switch
+        {
+            Preset.OneHour => GetPresetLast(1),
+            Preset.ThreeHours => GetPresetLast(3),
+            Preset.TwelveHours => GetPresetLast(12),
+            Preset.TwentyFourHours => GetPresetLast(24),
+            Preset.ThreeDays => GetPresetLast(72),
+            Preset.SevenDays => GetPresetLast(168),
+            Preset.FourteenDays => GetPresetLast(336),
+            Preset.ThirtyDays => GetPresetLast(720),
+            Preset.ThisDay => GetPresetBetween(today, endToday),
+            Preset.ThisWeek => GetPresetBetween(startThisWeek, endThisWeek),
+            Preset.ThisMonth => GetPresetBetween(startThisMonth, endThisMonth),
+            Preset.PreviousDay => GetPresetBetween(yesterday, endYesterday),
+            Preset.PreviousWeek => GetPresetBetween(startPrevWeek, endPrevWeek),
+            Preset.PreviousMonth => GetPresetBetween(startPrevMonth, endPrevMonth),
+            _ => (FromDateTime, ToDateTime)
+        };
+    }
+
+    private static (DateTime From, DateTime To) GetPresetLast(int hours)
+    {
+        var to = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+        var from = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-hours);
+        return (from, to);
+    }
+
+    private static (DateTime From, DateTime To) GetPresetBetween(DateTime from, DateTime to)
+    {
+        return (from.Trim(TimeSpan.TicksPerMinute), to.Trim(TimeSpan.TicksPerMinute));
     }
 
     private record SessionStorage(
+        Preset? Preset,
         DateTime FromDateTime,
         DateTime ToDateTime,
         bool ShowSteps,
@@ -165,17 +214,18 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     private async Task SetSessionStorageValues()
     {
         var sessionStorage = new SessionStorage(
-            FromDateTime,
-            ToDateTime,
-            ShowSteps,
-            ShowGraph,
-            StartTypeFilter,
-            JobStatusFilter,
-            StepStatusFilter,
-            JobFilter,
-            StepFilter,
-            StepTypeFilter,
-            TagFilter
+            Preset: ActivePreset,
+            FromDateTime: FromDateTime,
+            ToDateTime: ToDateTime,
+            ShowSteps: ShowSteps,
+            ShowGraph: ShowGraph,
+            StartType: StartTypeFilter,
+            JobStatuses: JobStatusFilter,
+            StepStatuses: StepStatusFilter,
+            JobNames: JobFilter,
+            StepNames: StepFilter,
+            StepTypes: StepTypeFilter,
+            Tags: TagFilter
         );
         var text = JsonSerializer.Serialize(sessionStorage);
         await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
@@ -186,8 +236,13 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
         if (text is null) return;
         var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text);
-        FromDateTime = sessionStorage?.FromDateTime ?? FromDateTime;
-        ToDateTime = sessionStorage?.ToDateTime ?? ToDateTime;
+        ActivePreset = sessionStorage?.Preset;
+        (FromDateTime, ToDateTime) = sessionStorage switch
+        {
+            not null and { Preset: Preset preset } => GetPreset(preset),
+            not null => (sessionStorage.FromDateTime, sessionStorage.ToDateTime),
+            null => (FromDateTime, ToDateTime)
+        };
         ShowSteps = sessionStorage?.ShowSteps ?? ShowSteps;
         ShowGraph = sessionStorage?.ShowGraph ?? ShowGraph;
         StartTypeFilter = sessionStorage?.StartType ?? StartTypeFilter;
@@ -209,5 +264,23 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         {
             Messenger.AddWarning("Error saving session storage values", ex.Message);
         }
+    }
+
+    private enum Preset
+    {
+        OneHour,
+        ThreeHours,
+        TwelveHours,
+        TwentyFourHours,
+        ThreeDays,
+        SevenDays,
+        FourteenDays,
+        ThirtyDays,
+        ThisDay,
+        ThisWeek,
+        ThisMonth,
+        PreviousDay,
+        PreviousWeek,
+        PreviousMonth
     }
 }

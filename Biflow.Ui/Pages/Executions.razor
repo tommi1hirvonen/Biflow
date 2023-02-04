@@ -43,39 +43,24 @@
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Last</HxDropdownHeader>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(1)">1 h</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(3)">3 h</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(12)">12 h</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(24)">24 h</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(72)">3 d</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(168)">7 d</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(336)">14 d</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPresetLast(720)">30 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.OneHour ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.OneHour)">1 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThreeHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeHours)">3 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.TwelveHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwelveHours)">12 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.TwentyFourHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwentyFourHours)">24 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThreeDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeDays)">3 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.SevenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.SevenDays)">7 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.FourteenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.FourteenDays)">14 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThirtyDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThirtyDays)">30 d</HxDropdownItem>
                     <HxDropdownDivider></HxDropdownDivider>
-                    @{
-                        var today = DateTime.Now.Date;
-                        var endToday = today.AddDays(1).AddTicks(-1);
-                        var startThisWeek = today.StartOfWeek(DayOfWeek.Monday);
-                        var endThisWeek = startThisWeek.AddDays(7).AddTicks(-1);
-                        var startThisMonth = new DateTime(today.Year, today.Month, 1);
-                        var endThisMonth = startThisMonth.AddMonths(1).AddTicks(-1);
-                        var yesterday = today.AddDays(-1);
-                        var endYesterday = today.AddTicks(-1);
-                        var startPrevWeek = today.AddDays(-7).StartOfWeek(DayOfWeek.Monday);
-                        var endPrevWeek = startPrevWeek.AddDays(7).AddTicks(-1);
-                        var prevMonth = today.AddMonths(-1);
-                        var startPrevMonth = new DateTime(prevMonth.Year, prevMonth.Month, 1);
-                        var endPrevMonth = startPrevMonth.AddMonths(1).AddTicks(-1);
-                    }
                     <HxDropdownHeader>This</HxDropdownHeader>
-                    <HxDropdownItem @onclick="() => SelectPreset(today, endToday)">Day</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPreset(startThisWeek, endThisWeek)">Week</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPreset(startThisMonth, endThisMonth)">Month</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThisDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisDay)">Day</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThisWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisWeek)">Week</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.ThisMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisMonth)">Month</HxDropdownItem>
                     <HxDropdownDivider></HxDropdownDivider>
                     <HxDropdownHeader>Previous</HxDropdownHeader>
-                    <HxDropdownItem @onclick="() => SelectPreset(yesterday, endYesterday)">Day</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPreset(startPrevWeek, endPrevWeek)">Week</HxDropdownItem>
-                    <HxDropdownItem @onclick="() => SelectPreset(startPrevMonth, endPrevMonth)">Month</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.PreviousDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousDay)">Day</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.PreviousWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousWeek)">Week</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(ActivePreset == Preset.PreviousMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousMonth)">Month</HxDropdownItem>
                 </HxDropdownMenu>
             </HxDropdownButtonGroup>
 
@@ -95,14 +80,22 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
-                <input @bind="FromDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
+                <input @bind="FromDateTime"
+                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                       @bind:after="() => ActivePreset = null"
+                       class="form-control form-control-sm"
+                       type="datetime-local">
             </div>
             <label class="mx-3">To</label>
             <div class="input-group">
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
-                <input @bind="ToDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" class="form-control form-control-sm" type="datetime-local">
+                <input @bind="ToDateTime"
+                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                       @bind:after="() => ActivePreset = null"
+                       class="form-control form-control-sm"
+                       type="datetime-local">
             </div>
         </form>
     </div>
