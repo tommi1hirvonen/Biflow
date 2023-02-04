@@ -50,11 +50,11 @@
                         @foreach (var execution in group)
                         {
                             (var offset, var width) = execution.GetGanttGraphDimensions(Executions);
-                            <div class="progress"
+                            <div class="progress hover @execution.ExecutionStatus.ToString().ToLower()"
                                  style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
                                  title="@($"{execution.ExecutionStatus}, {execution.GetDurationInReadableFormat()}")"
                                  @onclick="() => GoToExecutionDetails(execution.ExecutionId)">
-                                <div class="progress-bar hover @execution.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
+                                <div class="progress-bar" style="width: 100%;"></div>
                             </div>
                         }
                     </div>

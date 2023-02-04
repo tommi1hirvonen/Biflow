@@ -188,62 +188,35 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 // Execution Gantt graph
 
-$progress-bar-hover-tint: 25%;
+$statuses: (
+    "running": $primary,
+    "succeeded": $success,
+    "failed": $danger,
+    "skipped": $secondary,
+    "duplicate": $warning,
+    "stopped": $warning,
+    "retry": $warning,
+    "dependenciesfailed": $warning,
+    "warning": $warning,
+    "suspended": $danger
+);
 
-.progress-bar.running {
-    background-color: $primary;
-
-    &.hover:hover {
-        background-color: tint-color($primary, $progress-bar-hover-tint);
+@each $status, $color in $statuses {
+    .progress.#{$status} .progress-bar {
+        background-color: $color;
     }
-}
 
-.progress-bar.succeeded {
-    background-color: $success;
-
-    &.hover:hover {
-        background-color: tint-color($success, $progress-bar-hover-tint);
+    .progress.#{$status}.hover:hover .progress-bar {
+        background-color: tint-color($color, 20%);
     }
-}
 
-.progress-bar.failed {
-    background-color: $danger;
+    .progress.#{$status}.active {
+        box-shadow: tint-color($color, 20%) 0px 0px 5px 1px;
 
-    &.hover:hover {
-        background-color: tint-color($danger, $progress-bar-hover-tint);
+        .progress-bar {
+            background-color: tint-color($color, 20%);
+        }
     }
-}
-
-.progress-bar.skipped {
-    background-color: $secondary;
-
-    &.hover:hover {
-        background-color: tint-color($secondary, $progress-bar-hover-tint);
-    }
-}
-
-.progress-bar.duplicate,
-.progress-bar.stopped,
-.progress-bar.retry,
-.progress-bar.dependenciesfailed,
-.progress-bar.warning {
-    background-color: $warning;
-
-    &.hover:hover {
-        background-color: tint-color($warning, $progress-bar-hover-tint);
-    }
-}
-
-.progress-bar.suspended {
-    background-color: $danger;
-
-    &.hover:hover {
-        background-color: tint-color($danger, $progress-bar-hover-tint);
-    }
-}
-
-.gantt-row:hover {
-    background-color: rgba(0, 0, 0, 0.075);
 }
 
 

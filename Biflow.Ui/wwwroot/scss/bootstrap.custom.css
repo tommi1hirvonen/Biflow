@@ -11768,58 +11768,154 @@ tr .btn-auto, .list-group-item .btn-auto {
   font-weight: 500;
 }
 
-.progress-bar.running {
+.progress.running .progress-bar {
   background-color: #6a71de;
 }
-.progress-bar.running.hover:hover {
-  background-color: #8f95e6;
+
+.progress.running.hover:hover .progress-bar {
+  background-color: #888de5;
 }
 
-.progress-bar.succeeded {
+.progress.running.active {
+  box-shadow: #888de5 0px 0px 5px 1px;
+}
+.progress.running.active .progress-bar {
+  background-color: #888de5;
+}
+
+.progress.succeeded .progress-bar {
   background-color: #0cb081;
 }
-.progress-bar.succeeded.hover:hover {
-  background-color: #49c4a1;
+
+.progress.succeeded.hover:hover .progress-bar {
+  background-color: #3dc09a;
 }
 
-.progress-bar.failed {
+.progress.succeeded.active {
+  box-shadow: #3dc09a 0px 0px 5px 1px;
+}
+.progress.succeeded.active .progress-bar {
+  background-color: #3dc09a;
+}
+
+.progress.failed .progress-bar {
   background-color: #e85875;
 }
-.progress-bar.failed.hover:hover {
-  background-color: #ee8298;
+
+.progress.failed.hover:hover .progress-bar {
+  background-color: #ed7991;
 }
 
-.progress-bar.skipped {
+.progress.failed.active {
+  box-shadow: #ed7991 0px 0px 5px 1px;
+}
+.progress.failed.active .progress-bar {
+  background-color: #ed7991;
+}
+
+.progress.skipped .progress-bar {
   background-color: #6c757d;
 }
-.progress-bar.skipped.hover:hover {
-  background-color: #91989e;
+
+.progress.skipped.hover:hover .progress-bar {
+  background-color: #899197;
 }
 
-.progress-bar.duplicate,
-.progress-bar.stopped,
-.progress-bar.retry,
-.progress-bar.dependenciesfailed,
-.progress-bar.warning {
+.progress.skipped.active {
+  box-shadow: #899197 0px 0px 5px 1px;
+}
+.progress.skipped.active .progress-bar {
+  background-color: #899197;
+}
+
+.progress.duplicate .progress-bar {
   background-color: #dfa100;
 }
-.progress-bar.duplicate.hover:hover,
-.progress-bar.stopped.hover:hover,
-.progress-bar.retry.hover:hover,
-.progress-bar.dependenciesfailed.hover:hover,
-.progress-bar.warning.hover:hover {
-  background-color: #e7b940;
+
+.progress.duplicate.hover:hover .progress-bar {
+  background-color: #e5b433;
 }
 
-.progress-bar.suspended {
+.progress.duplicate.active {
+  box-shadow: #e5b433 0px 0px 5px 1px;
+}
+.progress.duplicate.active .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.stopped .progress-bar {
+  background-color: #dfa100;
+}
+
+.progress.stopped.hover:hover .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.stopped.active {
+  box-shadow: #e5b433 0px 0px 5px 1px;
+}
+.progress.stopped.active .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.retry .progress-bar {
+  background-color: #dfa100;
+}
+
+.progress.retry.hover:hover .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.retry.active {
+  box-shadow: #e5b433 0px 0px 5px 1px;
+}
+.progress.retry.active .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.dependenciesfailed .progress-bar {
+  background-color: #dfa100;
+}
+
+.progress.dependenciesfailed.hover:hover .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.dependenciesfailed.active {
+  box-shadow: #e5b433 0px 0px 5px 1px;
+}
+.progress.dependenciesfailed.active .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.warning .progress-bar {
+  background-color: #dfa100;
+}
+
+.progress.warning.hover:hover .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.warning.active {
+  box-shadow: #e5b433 0px 0px 5px 1px;
+}
+.progress.warning.active .progress-bar {
+  background-color: #e5b433;
+}
+
+.progress.suspended .progress-bar {
   background-color: #e85875;
 }
-.progress-bar.suspended.hover:hover {
-  background-color: #ee8298;
+
+.progress.suspended.hover:hover .progress-bar {
+  background-color: #ed7991;
 }
 
-.gantt-row:hover {
-  background-color: rgba(0, 0, 0, 0.075);
+.progress.suspended.active {
+  box-shadow: #ed7991 0px 0px 5px 1px;
+}
+.progress.suspended.active .progress-bar {
+  background-color: #ed7991;
 }
 
 .dependency-graph {

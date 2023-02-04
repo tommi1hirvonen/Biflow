@@ -226,8 +226,8 @@
     <div class="row">
         <div class="col-6">
             <small>Progress:</small>
-            <div class="progress">
-                <div class="progress-bar @Execution?.ExecutionStatus.ToString().ToLower()" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+            <div class="progress @Execution?.ExecutionStatus.ToString().ToLower()">
+                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
             </div>
         </div>
         <div class="col-2">
