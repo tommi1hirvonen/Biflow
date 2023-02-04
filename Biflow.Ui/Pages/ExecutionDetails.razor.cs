@@ -58,8 +58,7 @@ public partial class ExecutionDetails : ComponentBase
     private HashSet<string> StepFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private HashSet<string> TagFilter { get; } = new();
-    private SortMode SortMode_ { get; set; } = SortMode.StartedAsc;
-    private enum SortMode { StartedAsc, StartedDesc, DurationAsc, DurationDesc }
+    private SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
     private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }

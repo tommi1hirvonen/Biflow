@@ -34,11 +34,11 @@
                 })
                 .OrderBy(g => g.Min(e => e.StartDateTime))
                 .ToList();
-            <Virtualize Context="item" Items="executions">
+            <Virtualize Context="group" Items="executions">
                 <div class="row border-top">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                         <small>
-                            @item.Key.JobName
+                            @group.Key.JobName
                         </small>
                     </div>
                     <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
@@ -47,7 +47,7 @@
                             var percentage = i * 100.0 / Columns;
                             <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @(percentage.ToString("F10", CultureInfo.InvariantCulture))%;"></div>
                         }
-                        @foreach (var execution in item)
+                        @foreach (var execution in group)
                         {
                             (var offset, var width) = execution.GetGanttGraphDimensions(Executions);
                             <div class="progress"

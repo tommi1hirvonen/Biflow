@@ -345,26 +345,26 @@
             <span class="me-3">Sort</span>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_asc"
-                   checked=@(SortMode_ == SortMode.StartedAsc)
-                   @onchange="() => SortMode_ = SortMode.StartedAsc">
+                   checked=@(SortMode == SortMode.StartedAsc)
+                   @onchange="() => SortMode = SortMode.StartedAsc">
                 <label class="form-check-label" for="radio_started_asc">Started <sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_desc"
-                   checked=@(SortMode_ == SortMode.StartedDesc)
-                   @onchange="() => SortMode_ = SortMode.StartedDesc">
+                   checked=@(SortMode == SortMode.StartedDesc)
+                   @onchange="() => SortMode = SortMode.StartedDesc">
                 <label class="form-check-label" for="radio_started_desc">Started<sup>desc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_asc"
-                   checked=@(SortMode_ == SortMode.DurationAsc)
-                   @onchange="() => SortMode_ = SortMode.DurationAsc">
+                   checked=@(SortMode == SortMode.DurationAsc)
+                   @onchange="() => SortMode = SortMode.DurationAsc">
                 <label class="form-check-label" for="radio_duration_asc">Duration<sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_desc"
-                   checked=@(SortMode_ == SortMode.DurationDesc)
-                   @onchange="() => SortMode_ = SortMode.DurationDesc">
+                   checked=@(SortMode == SortMode.DurationDesc)
+                   @onchange="() => SortMode = SortMode.DurationDesc">
                 <label class="form-check-label" for="radio_duration_desc">Duration<sup>desc</sup></label>
             </div>
         </div>
@@ -376,12 +376,12 @@
     <div class="card shadow-sm mt-3 pt-2">
         <StepExecutionsTableComponent ShowDetailed="false"
                                   Executions="FilteredExecutions
-                                                .OrderBy(e => SortMode_ == SortMode.DurationAsc ? e.ExecutionInSeconds : null)
-                                                .OrderByDescending(e => SortMode_ == SortMode.DurationDesc ? e.ExecutionInSeconds : null)
+                                                .OrderBy(e => SortMode == SortMode.DurationAsc ? e.ExecutionInSeconds : null)
+                                                .OrderByDescending(e => SortMode == SortMode.DurationDesc ? e.ExecutionInSeconds : null)
                                                 // asc => Show not started steps last. desc => Show not started steps first.
-                                                .ThenBy(e => SortMode_ == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
-                                                .ThenBy(e => SortMode_ == SortMode.StartedAsc ? e.StartDateTime : null)
-                                                .ThenByDescending(e => SortMode_ == SortMode.StartedDesc ? e.StartDateTime : null)
+                                                .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
+                                                .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime : null)
+                                                .ThenByDescending(e => SortMode == SortMode.StartedDesc ? e.StartDateTime : null)
                                                 .ThenBy(e => e.EndDateTime is null)
                                                 .ThenBy(e => e.EndDateTime)
                                                 .ThenBy(e => e.StepExecution.ExecutionPhase)
@@ -392,13 +392,7 @@
 else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3">
-        <StepExecutionsGraphComponent Executions="FilteredExecutions
-                                                .Where(e => e.StartDateTime != null)
-                                                .OrderBy(e => SortMode_ == SortMode.DurationAsc ? e.ExecutionInSeconds : null)
-                                                .OrderByDescending(e => SortMode_ == SortMode.DurationDesc ? e.ExecutionInSeconds : null)
-                                                .ThenBy(e => SortMode_ == SortMode.StartedAsc ? e.StartDateTime : null)
-                                                .ThenByDescending(e => SortMode_ == SortMode.StartedDesc ? e.StartDateTime : null)
-                                                .ThenBy(e => e.StepExecution.StepName)" />
+        <StepExecutionsGraphComponent Executions="FilteredExecutions" SortMode="SortMode"/>
     </div>
     
 }
