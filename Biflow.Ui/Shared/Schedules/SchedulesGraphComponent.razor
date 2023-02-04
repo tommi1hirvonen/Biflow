@@ -26,66 +26,83 @@
     </div>
 </div>
 
-<div class="row mx-1 my-2">
+@{
+    var currentTimePercentage = GetCurrentTimePercentage();
+}
+
+<div class="row my-2">
     <div class="col">
-        <div class="row" style="height: 40px;">
-            <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
-            </div>
-            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
-                @for (int i = 0; i <= Columns; i++)
-                {
-                    var percentage = i * 100.0 / Columns;
-                    @*With screen sizes < xl only show every other line*@
-                    <div class="@(i % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center"
-                     style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{percentage.ToString("F10", CultureInfo.InvariantCulture)}%");">
-                        @if (i < Columns)
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row" style="height: 40px;">
+                    <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
+                    </div>
+                    <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
+                        @for (int i = 0; i <= Columns; i++)
                         {
-                            <small>@GetDateFromPercentage(percentage)<br />@GetTimeFromPercentage(percentage)</small>
+                            var percentage = i * 100.0 / Columns;
+                            @*With screen sizes < xl only show every other line*@
+                            <div class="@(i % 2 != 0 ? "d-none d-xl-flex" : "d-flex") align-items-center text-body-secondary"
+                             style="height: 100%; border-left: 1px dashed var(--bs-border-color); position: absolute; left: @($"{percentage.ToString("F10", CultureInfo.InvariantCulture)}%");">
+                                @if (i < Columns)
+                                {
+                                    <small>@GetDateFromPercentage(percentage)<br />@GetTimeFromPercentage(percentage)</small>
+                                }
+                            </div>
+                        }
+                        @if (currentTimePercentage is > 0 and < 100)
+                        {
+                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px solid var(--bs-danger); position: absolute; left: @(currentTimePercentage.ToString("F10", CultureInfo.InvariantCulture))%;"></div>
                         }
                     </div>
+                </div>
+                @if (Schedules is not null)
+                {
+                    var jobs = Schedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
+                    foreach (var job in jobs)
+                    {
+                        if (!job.Key.IsEnabled)
+                        {
+                            continue;
+                        }
+                        <div class="row border-top">
+                            <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
+                                <small>
+                                    @job.Key.JobName
+                                </small>
+                            </div>
+                            <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
+                                @for (double i = 0; i <= Columns; i++)
+                                {
+                                    var percentage = i * 100.0 / Columns;
+                                    <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed var(--bs-border-color); position: absolute; left: @($"{percentage.ToString("F10", CultureInfo.InvariantCulture)}%");"></div>
+                                }
+                                @if (currentTimePercentage is > 0 and < 100)
+                                {
+                                    <div class="d-flex align-items-center" style="height: 100%; border-left: 1px solid var(--bs-danger); position: absolute; left: @(currentTimePercentage.ToString("F10", CultureInfo.InvariantCulture))%;"></div>
+                                }
+                                @foreach (var schedule in job)
+                                {
+                                    if (!schedule.IsEnabled)
+                                    {
+                                        continue;
+                                    }
+                                    var nextFireTimes = schedule.NextFireTimesSequence(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
+                                    foreach (var dt in nextFireTimes)
+                                    {
+                                        var offset = GetOffset(dt);
+                                        <div class="d-flex align-items-center"
+                             style="height: 70%; margin-left: -4px; border-left: 8px solid var(--bs-primary); position: absolute; left: @(offset.ToString("F10", CultureInfo.InvariantCulture))%;"
+                             title="@schedule.ScheduleName; @schedule.GetScheduleDescription(); @dt">
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
                 }
             </div>
         </div>
-        @if (Schedules is not null)
-        {
-            var jobs = Schedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
-            foreach (var job in jobs)
-            {
-                if (!job.Key.IsEnabled)
-                {
-                    continue;
-                }
-                <div class="row border-top">
-                    <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
-                        <small>
-                            @job.Key.JobName
-                        </small>
-                    </div>
-                    <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
-                        @for (double i = 0; i <= Columns; i++)
-                        {
-                            var percentage = i * 100.0 / Columns;
-                            <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @($"{percentage.ToString("F10", CultureInfo.InvariantCulture)}%");"></div>
-                        }
-                        @foreach (var schedule in job)
-                        {
-                            if (!schedule.IsEnabled)
-                            {
-                                continue;
-                            }
-                            var nextFireTimes = schedule.NextFireTimesSequence(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
-                            foreach (var dt in nextFireTimes)
-                            {
-                                var offset = GetOffset(dt);
-                                <div class="progress" style="position: absolute; width: 1%; left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");" title="@schedule.ScheduleName; @schedule.GetScheduleDescription(); @dt">
-                                    <div class="progress-bar" style="width: 100%;"></div>
-                                </div>    
-                            }
-                        }
-                    </div>
-                </div>  
-            }            
-        }
     </div>
 </div>
 
@@ -127,8 +144,14 @@
     private DateTime _end = DateTime.Today.AddDays(1);
 
     private long MinTicks => Start.Ticks;
-    
+
     private long MaxTicks => End.Ticks;
+
+    private double GetCurrentTimePercentage()
+    {
+        var result = (double)(DateTime.Now.Ticks - MinTicks) / (MaxTicks - MinTicks) * 100;
+        return result;
+    }
 
     private string GetTimeFromPercentage(double percentage)
     {
