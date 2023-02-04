@@ -191,7 +191,7 @@ public static partial class Extensions
         return null;
     }
 
-    public static (int Offset, int Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt)
+    public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt)
     {
         var allAttempts = attempt.StepExecution.Execution.StepExecutions
             .SelectMany(e => e.StepExecutionAttempts)
@@ -200,7 +200,7 @@ public static partial class Extensions
         return attempt.GetGanttGraphDimensions(allAttempts);
     }
 
-    public static (int Offset, int Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
+    public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
     {
         if (!allAttempts.Any())
             return (0, 0);
@@ -223,10 +223,10 @@ public static partial class Extensions
         width = width < 1 ? 1 : width; // check that width is not 0
         start = start > 99 ? 99 : start; // check that start is not 100
 
-        return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
+        return (start, width);
     }
 
-    public static (int Offset, int Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
+    public static (double Offset, double Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
     {
         if (!allExecutions.Any())
             return (0, 0);
@@ -249,7 +249,7 @@ public static partial class Extensions
         width = width < 1 ? 1 : width; // check that width is not 0
         start = start > 99 ? 99 : start; // check that start is not 100
 
-        return ((int)Math.Round(start, 0), (int)Math.Round(width, 0));
+        return (start, width);
     }
 
     public static decimal GetSuccessPercent(this Execution execution)
