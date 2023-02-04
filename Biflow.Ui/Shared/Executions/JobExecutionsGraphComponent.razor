@@ -23,14 +23,22 @@
         </div>
         @if (Executions is not null)
         {
-            <Virtualize TItem="Execution" Context="item" Items="Executions.Where(e => e.StartDateTime is not null).ToList()">
-                @{
-                    (var offset, var width) = item.GetGanttGraphDimensions(Executions);
-                }
-                <div class="row border-top gantt-row" style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
+            var executions = Executions
+                .Where(e => e.StartDateTime is not null)
+                .GroupBy(e =>
+                {
+                    var overlapsWithSelf = Executions
+                        .Where(other => other.JobId == e.JobId && other.JobName == e.JobName && e.ExecutionId != other.ExecutionId)
+                        .Any(other => e.StartDateTime >= other.StartDateTime && e.StartDateTime <= (other.EndDateTime ?? DateTime.Now));
+                    return (e.JobId, e.JobName, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
+                })
+                .OrderBy(g => g.Min(e => e.StartDateTime))
+                .ToList();
+            <Virtualize Context="item" Items="executions">
+                <div class="row border-top">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
-                        <small title="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
-                            @item.JobName
+                        <small>
+                            @item.Key.JobName
                         </small>
                     </div>
                     <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
@@ -39,9 +47,16 @@
                             var percentage = i * 100.0 / Columns;
                             <div class="d-flex align-items-center" style="height: 100%; border-left: 1px dashed #ccc; position: absolute; left: @(percentage.ToString("F10", CultureInfo.InvariantCulture))%;"></div>
                         }
-                        <div class="progress" style="position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");" title="@($"{item.ExecutionStatus}, {item.GetDurationInReadableFormat()}")">
-                            <div class="progress-bar @item.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
-                        </div>
+                        @foreach (var execution in item)
+                        {
+                            (var offset, var width) = execution.GetGanttGraphDimensions(Executions);
+                            <div class="progress"
+                                 style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
+                                 title="@($"{execution.ExecutionStatus}, {execution.GetDurationInReadableFormat()}")"
+                                 @onclick="() => GoToExecutionDetails(execution.ExecutionId)">
+                                <div class="progress-bar hover @execution.ExecutionStatus.ToString().ToLower()" style="width: 100%;"></div>
+                            </div>
+                        }
                     </div>
                 </div>
             </Virtualize>
@@ -50,8 +65,7 @@
 </div>
 
 @code {
-    [Parameter]
-    public IEnumerable<Execution>? Executions { get; set; }
+    [Parameter] public IEnumerable<Execution>? Executions { get; set; }
 
     private const int Columns = 12;
 

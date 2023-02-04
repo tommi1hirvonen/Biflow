@@ -188,20 +188,38 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 // Execution Gantt graph
 
+$progress-bar-hover-tint: 25%;
+
 .progress-bar.running {
     background-color: $primary;
+
+    &.hover:hover {
+        background-color: tint-color($primary, $progress-bar-hover-tint);
+    }
 }
 
 .progress-bar.succeeded {
     background-color: $success;
+
+    &.hover:hover {
+        background-color: tint-color($success, $progress-bar-hover-tint);
+    }
 }
 
 .progress-bar.failed {
     background-color: $danger;
+
+    &.hover:hover {
+        background-color: tint-color($danger, $progress-bar-hover-tint);
+    }
 }
 
 .progress-bar.skipped {
     background-color: $secondary;
+
+    &.hover:hover {
+        background-color: tint-color($secondary, $progress-bar-hover-tint);
+    }
 }
 
 .progress-bar.duplicate,
@@ -210,10 +228,18 @@ tr .btn-auto, .list-group-item .btn-auto {
 .progress-bar.dependenciesfailed,
 .progress-bar.warning {
     background-color: $warning;
+
+    &.hover:hover {
+        background-color: tint-color($warning, $progress-bar-hover-tint);
+    }
 }
 
 .progress-bar.suspended {
     background-color: $danger;
+
+    &.hover:hover {
+        background-color: tint-color($danger, $progress-bar-hover-tint);
+    }
 }
 
 .gantt-row:hover {

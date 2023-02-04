@@ -11771,17 +11771,29 @@ tr .btn-auto, .list-group-item .btn-auto {
 .progress-bar.running {
   background-color: #6a71de;
 }
+.progress-bar.running.hover:hover {
+  background-color: #8f95e6;
+}
 
 .progress-bar.succeeded {
   background-color: #0cb081;
+}
+.progress-bar.succeeded.hover:hover {
+  background-color: #49c4a1;
 }
 
 .progress-bar.failed {
   background-color: #e85875;
 }
+.progress-bar.failed.hover:hover {
+  background-color: #ee8298;
+}
 
 .progress-bar.skipped {
   background-color: #6c757d;
+}
+.progress-bar.skipped.hover:hover {
+  background-color: #91989e;
 }
 
 .progress-bar.duplicate,
@@ -11791,9 +11803,19 @@ tr .btn-auto, .list-group-item .btn-auto {
 .progress-bar.warning {
   background-color: #dfa100;
 }
+.progress-bar.duplicate.hover:hover,
+.progress-bar.stopped.hover:hover,
+.progress-bar.retry.hover:hover,
+.progress-bar.dependenciesfailed.hover:hover,
+.progress-bar.warning.hover:hover {
+  background-color: #e7b940;
+}
 
 .progress-bar.suspended {
   background-color: #e85875;
+}
+.progress-bar.suspended.hover:hover {
+  background-color: #ee8298;
 }
 
 .gantt-row:hover {
