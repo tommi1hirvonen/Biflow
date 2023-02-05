@@ -3,7 +3,7 @@
 }
 
 tr.job-row.disabled {
-    background-color: var(--bs-table-hover-bg);
+    background-color: var(--bs-tertiary-bg);
 }
 
 tr a {

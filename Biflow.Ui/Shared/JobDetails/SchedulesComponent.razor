@@ -52,7 +52,7 @@
             {
                 @foreach (var item in Schedules)
                 {
-                    <tr class="@(item.IsEnabled ? null : "disabled")">
+                    <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
                             @item.ScheduleName
                         </td>
