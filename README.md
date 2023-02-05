@@ -32,18 +32,25 @@ Some requirements apply when running Biflow either on-premise or in Azure but so
 
 ## Authentication
 
-Three methods of authentication are supported:
+Four methods of authentication are supported:
 - Built-in
-    - User management and authentication is done using a built in identity provider.
-    - MFA is not supported.
-- Windows (Active Directory)
-    - Authentication is done at the OS level using Active Directory accounts.
+  - User management and authentication is done using a built in identity provider
+  - MFA is not supported
+  - Supports remote access
+- Windows
+  - Authentication is done at the OS level using Windows accounts
+  - No login page is presented to the user to access the UI
+  - Does not support remote access
+- LDAP
+  - An LDAP server (e.g. Active Directory) can be used as the identity provider to authenticate users
+  - Supports remote access
 - Azure Active Directory
-    - Users are authenticated using their Microsoft organizational accounts.
-    - Requires an app registration to be created in the host tenant's Active Directory.
-    - Requires internet access
+  - Users are authenticated using their Microsoft organizational accounts
+  - Requires an app registration to be created in the host tenant's Active Directory
+  - Requires internet access
+  - Supports remote access
 
-In all cases the list of authorized users and their access is managed in the application.
+**Note:** In all cases the list of authorized users and their access role is managed in the application.
 
 ## Architecture
 
