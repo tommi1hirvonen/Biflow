@@ -44,6 +44,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
+        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
         AllTags ??= await Context.Tags.ToListAsync();
         return new InputTagsDataProviderResult
         {
