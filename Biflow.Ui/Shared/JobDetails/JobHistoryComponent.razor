@@ -73,10 +73,7 @@
             }
             else
             {
-                @foreach (var item in Executions
-                   .Where(e => StartTypeFilter == StartType.All ||
-                                StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                StartTypeFilter == StartType.Manual && e.ScheduleId is null))
+                @foreach (var item in FilteredExecutions)
                 {
                     <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                         <td>
@@ -115,12 +112,25 @@
 
     public IList<Execution>? Executions { get; set; }
 
-    public int MaxExecutions { get; set; } = 50;
-
-    public decimal AverageSuccessRate { get; set; }
-    public double AverageDurationInSeconds { get; set; }
+    private const int MaxExecutions = 50;
 
     private StartType StartTypeFilter { get; set; } = StartType.All;
+
+    private IEnumerable<Execution> FilteredExecutions =>
+        Executions?
+        .Where(e => StartTypeFilter == StartType.All ||
+                    StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                    StartTypeFilter == StartType.Manual && e.ScheduleId is null)
+        ?? Enumerable.Empty<Execution>();
+
+    public decimal AverageSuccessRate => FilteredExecutions.Any() switch
+    {
+        true => (decimal)FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Count() / FilteredExecutions.Count() * 100,
+        false => 0
+    };
+
+    public double AverageDurationInSeconds =>
+        (int)(FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -135,17 +145,6 @@
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .Take(MaxExecutions)
                 .ToListAsync();
-
-            if (Executions.Count > 0)
-            {
-                AverageSuccessRate = (decimal)Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Count() / Executions.Count() * 100;
-            }
-            else
-            {
-                AverageSuccessRate = 0;
-            }
-
-            AverageDurationInSeconds = (int)(Executions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
         }
     }
 
