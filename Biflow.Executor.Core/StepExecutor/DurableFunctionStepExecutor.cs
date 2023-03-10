@@ -53,9 +53,10 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
             AddOutput(content);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException e)
         {
-            throw; // Step was canceled => pass the exception => no retries
+            _logger.LogError(e, "{ExecutionId} {Step} Error invoking durable function", Step.ExecutionId, Step);
+            throw new OperationCanceledException("Invoking durable function timed out", e); // Step was canceled => pass the exception => no retries
         }
         catch (Exception ex)
         {

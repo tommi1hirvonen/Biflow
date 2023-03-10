@@ -145,9 +145,9 @@ internal abstract class StepExecutorBase
             {
                 result = await ExecuteAsync(cancellationTokenSource);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException e)
             {
-                await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
+                await UpdateExecutionCancelledAsync(executionAttempt, e, cancellationTokenSource.Username);
                 return false;
             }
             catch (Exception ex)
@@ -184,10 +184,10 @@ internal abstract class StepExecutorBase
                 {
                     await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationToken);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException e)
                 {
                     _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
-                    await UpdateExecutionCancelledAsync(executionAttempt, cancellationTokenSource.Username);
+                    await UpdateExecutionCancelledAsync(executionAttempt, e, cancellationTokenSource.Username);
                     return false;
                 }
 
@@ -223,13 +223,19 @@ internal abstract class StepExecutorBase
         return string.IsNullOrWhiteSpace(message) ? null : message;
     }
 
-    private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
+    private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, OperationCanceledException exception, string username)
     {
+        var errorMessage = exception switch
+        {
+            { InnerException: not null } => $"{exception.Message}\n{exception.InnerException.Message}",
+            _ => exception.Message
+        };
         using var context = _dbContextFactory.CreateDbContext();
         attempt.StartDateTime ??= DateTimeOffset.Now;
         attempt.EndDateTime = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
+        attempt.ErrorMessage = errorMessage;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
