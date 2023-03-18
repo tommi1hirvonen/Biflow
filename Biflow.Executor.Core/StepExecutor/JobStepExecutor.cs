@@ -54,7 +54,7 @@ internal class JobStepExecutor : StepExecutorBase
                 }
                 else
                 {
-                    AddWarning(null, "No steps to include in execution with current tag filters");
+                    AddWarning("No steps to include in execution with current tag filters");
                     return new Success();
                 }
             }
