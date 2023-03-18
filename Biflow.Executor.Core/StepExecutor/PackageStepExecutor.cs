@@ -52,7 +52,7 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-            return Result.Failure(ex, "Error starting package execution");
+            return new Failure(ex, "Error starting package execution");
         }
 
         // Initialize timeout cancellation token source already here
@@ -99,17 +99,14 @@ internal class PackageStepExecutor : StepExecutorBase
         catch (OperationCanceledException ex)
         {
             await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
-            if (timeoutCts.IsCancellationRequested)
-            {
-                _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-            }
-            throw; // Step was canceled => pass the exception => no retries
+            return timeoutCts.IsCancellationRequested
+                ? new Failure(ex, "Step execution timed out")
+                : new Cancel(ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-            return Result.Failure(ex, "Error monitoring package execution status");
+            return new Failure(ex, "Error monitoring package execution status");
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -118,16 +115,16 @@ internal class PackageStepExecutor : StepExecutorBase
             try
             {
                 List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
-                return Result.Failure(string.Join("\n\n", errors));
+                return new Failure(string.Join("\n\n", errors));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                return Result.Failure(ex, "Error getting package error messages");
+                return new Failure(ex, "Error getting package error messages");
             }
         }
 
-        return Result.Success();
+        return new Success();
     }
 
     private async Task<long> StartExecutionAsync(string connectionString)

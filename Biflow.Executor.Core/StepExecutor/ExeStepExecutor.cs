@@ -64,7 +64,7 @@ internal class ExeStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return Result.Failure($"Error starting process:\n{ex.Message}");
+            return new Failure($"Error starting process:\n{ex.Message}");
         }
 
         try
@@ -102,12 +102,12 @@ internal class ExeStepExecutor : StepExecutorBase
             // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
             if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
             {
-                return Result.Success();
+                return new Success();
             }
             else
             {
                 var errorMessage = $"{Error}\n\nProcess finished with exit code {process.ExitCode}";
-                return Result.Failure(errorMessage);
+                return new Failure(errorMessage);
             }
         }
         catch (OperationCanceledException cancelEx)
@@ -123,17 +123,14 @@ internal class ExeStepExecutor : StepExecutorBase
                 AddWarning(ex, "Error killing process after timeout");
             }
 
-            if (timeoutCts.IsCancellationRequested)
-            {
-                return Result.Failure(cancelEx, "Executing exe timed out"); // Report failure => allow possible retries
-            }
-
-            throw; // Step was canceled => pass the exception => no retries
+            return timeoutCts.IsCancellationRequested
+                ? new Failure(cancelEx, "Executing exe timed out")
+                : new Cancel(cancelEx);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return Result.Failure(ex, "Error while executing exe");
+            return new Failure(ex, "Error while executing exe");
         }
     }
 

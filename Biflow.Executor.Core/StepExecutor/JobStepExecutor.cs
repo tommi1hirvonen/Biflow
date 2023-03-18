@@ -55,7 +55,7 @@ internal class JobStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-            return Result.Failure(ex, "Error initializing job execution");
+            return new Failure(ex, "Error initializing job execution");
         }
 
         try
@@ -106,7 +106,7 @@ internal class JobStepExecutor : StepExecutorBase
             }
             catch (Exception ex)
             {
-                return Result.Failure(ex, $"Error assigning step parameter values to initialized execution's parameters for execution id {jobExecutionId}");
+                return new Failure(ex, $"Error assigning step parameter values to initialized execution's parameters for execution id {jobExecutionId}");
             }
         }
             
@@ -117,7 +117,7 @@ internal class JobStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-            return Result.Failure(ex, "Error starting executor process");
+            return new Failure(ex, "Error starting executor process");
         }
 
         if (Step.JobExecuteSynchronized)
@@ -126,10 +126,10 @@ internal class JobStepExecutor : StepExecutorBase
             {
                 await _executorLauncher.WaitForExitAsync(jobExecutionId, cancellationToken);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
                 await _executorLauncher.CancelAsync(jobExecutionId, cancellationTokenSource.Username);
-                throw;
+                return new Cancel(ex);
             }
 
             try
@@ -141,23 +141,23 @@ internal class JobStepExecutor : StepExecutorBase
                     .FirstAsync();
                 return status switch
                 {
-                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => Result.Success(),
-                    ExecutionStatus.Failed => Result.Failure("Sub-execution failed"),
-                    ExecutionStatus.Stopped => Result.Failure("Sub-execution was stopped"),
-                    ExecutionStatus.Suspended => Result.Failure("Sub-execution was suspended"),
-                    ExecutionStatus.NotStarted => Result.Failure("Sub-execution failed to start"),
-                    ExecutionStatus.Running => Result.Failure($"Sub-execution was finished but its status was reported as {status} after finishing"),
-                    _ => Result.Failure("Unhandled sub-execution status"),
+                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => new Success(),
+                    ExecutionStatus.Failed => new Failure("Sub-execution failed"),
+                    ExecutionStatus.Stopped => new Failure("Sub-execution was stopped"),
+                    ExecutionStatus.Suspended => new Failure("Sub-execution was suspended"),
+                    ExecutionStatus.NotStarted => new Failure("Sub-execution failed to start"),
+                    ExecutionStatus.Running => new Failure($"Sub-execution was finished but its status was reported as {status} after finishing"),
+                    _ => new Failure("Unhandled sub-execution status"),
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                return Result.Failure(ex, "Error getting sub-execution status");
+                return new Failure(ex, "Error getting sub-execution status");
             }
         }
 
-        return Result.Success();
+        return new Success();
     }
 
 }
