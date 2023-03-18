@@ -190,6 +190,7 @@ public partial class ExecutionDetails : ComponentBase
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
             await ExecutorService.StopExecutionAsync(Execution, username);
+            Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
