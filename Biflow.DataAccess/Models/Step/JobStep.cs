@@ -18,4 +18,6 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
 
     [ValidateComplexType]
     public IList<JobStepParameter> StepParameters { get; set; } = null!;
+
+    public IList<Tag> TagFilters { get; set; } = null!;
 }

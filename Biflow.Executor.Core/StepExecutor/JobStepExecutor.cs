@@ -37,16 +37,44 @@ internal class JobStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
+        string? stepIds = null;
+        if (Step.TagFilters.Any())
+        {
+            try
+            {
+                using var context = await _dbContextFactory.CreateDbContextAsync();
+                var steps = await context.Steps
+                    .Where(step => step.JobId == Step.JobToExecuteId)
+                    .Where(step => step.Tags.Any(tag => Step.TagFilters.Select(filter => filter.TagId).Contains(tag.TagId)))
+                    .Select(step => step.StepId)
+                    .ToListAsync();
+                if (steps.Any())
+                {
+                    stepIds = string.Join(",", steps);
+                }
+                else
+                {
+                    AddWarning(null, "No steps to include in execution with current tag filters");
+                    return new Success();
+                }
+            }
+            catch (Exception ex)
+            {
+                return new Failure(ex, "Error getting list of steps based on tag filters");
+            }
+        }
+
         Guid jobExecutionId;
         try
         {
             using var connection = new SqlConnection(_executionConfiguration.ConnectionString);
             await connection.OpenAsync(CancellationToken.None);
             jobExecutionId = await connection.ExecuteScalarAsync<Guid>(
-                "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
+                "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
                 new
                 {
                     JobId_ = Step.JobToExecuteId,
+                    StepIds_ = stepIds,
                     Notify_ = Step.Execution.Notify,
                     NotifyCaller_ = Step.Execution.NotifyCaller,
                     NotifyCallerOvertime_ = Step.Execution.NotifyCallerOvertime

@@ -25,7 +25,7 @@ internal abstract class StepExecutorBase
 
     protected abstract Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
 
-    protected void AddWarning(Exception exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
+    protected void AddWarning(Exception? exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
 
     protected void AddOutput(string? message)
     {
@@ -215,7 +215,7 @@ internal abstract class StepExecutorBase
         var warnings = ExecutionMessages
             .Where(m => m is Warning)
             .Cast<Warning>()
-            .Select(w => $"{w.Message}:\n{w.Exception.Message}");
+            .Select(w => w.Exception is null ? w.Message : $"{w.Message}:\n{w.Exception.Message}");
         var message = string.Join("\n\n", warnings);
         return string.IsNullOrWhiteSpace(message) ? null : message;
     }

@@ -16,11 +16,11 @@ internal class Output : Message
 
 internal class Warning : Message
 {
-    public Exception Exception { get; }
+    public Exception? Exception { get; }
 
     public string Message { get; }
 
-    public Warning(Exception exception, string message)
+    public Warning(Exception? exception, string message)
     {
         Exception = exception;
         Message = message;

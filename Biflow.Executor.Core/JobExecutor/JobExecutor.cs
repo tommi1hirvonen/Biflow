@@ -65,6 +65,8 @@ internal class JobExecutor : IJobExecutor
                     .Include(e => e.StepExecutions)
                     .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
                     .ThenInclude(df => df.AppRegistration)
+                    .Include(e => e.StepExecutions)
+                    .ThenInclude(e => (e as JobStepExecution)!.TagFilters)
                     .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasConnection.Connection)}")
                     .FirstAsync(e => e.ExecutionId == executionId);
 

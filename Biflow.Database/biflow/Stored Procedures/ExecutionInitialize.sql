@@ -448,6 +448,20 @@ FROM #Steps AS a
 	INNER JOIN biflow.StepTarget AS b ON a.StepId = b.StepId
 
 
+-- Job step tag filters
+INSERT INTO biflow.ExecutionJobStepTagFilter (
+	ExecutionId,
+	StepId,
+	TagId
+)
+SELECT
+	@BiflowExecutionId,
+	a.StepId,
+	a.TagId
+FROM biflow.JobStepTagFilter AS a
+	INNER JOIN #Steps AS b ON a.StepId = b.StepId
+
+
 
 -- Finally return the id of the initialized execution.
 SELECT @BiflowExecutionId

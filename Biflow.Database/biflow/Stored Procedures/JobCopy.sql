@@ -316,6 +316,15 @@ SELECT B.StepIdNew,
 FROM biflow.StepTag AS A
 	INNER JOIN #StepIdMapping AS B ON a.StepId = B.StepId
 
+INSERT INTO biflow.JobStepTagFilter (
+	StepId,
+	TagId
+)
+SELECT B.StepIdNew,
+	A.TagId
+FROM biflow.JobStepTagFilter AS A
+	INNER JOIN #StepIdMapping AS B ON a.StepId = B.StepId
+
 COMMIT TRANSACTION
 
 SELECT @JobIdNew

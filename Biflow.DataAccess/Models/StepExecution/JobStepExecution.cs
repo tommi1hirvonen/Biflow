@@ -15,4 +15,6 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     public bool JobExecuteSynchronized { get; set; }
 
     public IList<JobStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+
+    public IList<Tag> TagFilters { get; set; } = null!;
 }

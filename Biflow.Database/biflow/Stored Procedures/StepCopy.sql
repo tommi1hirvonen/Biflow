@@ -239,6 +239,15 @@ SELECT @StepIdNew,
 FROM biflow.StepTag AS A
 WHERE A.StepId = @StepId
 
+INSERT INTO biflow.JobStepTagFilter (
+	StepId,
+	TagId
+)
+SELECT @StepIdNew,
+	a.TagId
+FROM biflow.JobStepTagFilter AS a
+WHERE a.StepId = @StepId
+
 
 COMMIT TRANSACTION
 

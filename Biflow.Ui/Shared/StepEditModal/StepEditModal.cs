@@ -36,7 +36,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     private BiflowContext Context { get; set; } = null!;
 
-    private IEnumerable<Tag>? AllTags { get; set; }
+    protected IEnumerable<Tag>? AllTags { get; private set; }
 
     private IEnumerable<DataObject>? DataObjects { get; set; }
 
@@ -45,7 +45,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
         await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
-        AllTags ??= await Context.Tags.ToListAsync();
+        await EnsureAllTagsInitialized();
         return new InputTagsDataProviderResult
         {
             Data = AllTags?
@@ -55,6 +55,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             .OrderBy(t => t) ?? Enumerable.Empty<string>()
         };
     }
+
+    protected async Task EnsureAllTagsInitialized() => AllTags ??= await Context.Tags.ToListAsync();
 
     public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
     {
@@ -78,6 +80,12 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     /// <param name="job">The job in which the Step is created</param>
     /// <returns></returns>
     protected abstract TStep CreateNewStep(Job job);
+
+    /// <summary>
+    /// Called when the step is submitted.
+    /// Invoking takes place after tags and other objects are mapped but before the step is saved.
+    /// </summary>
+    protected virtual void OnSubmit(TStep step) { }
 
     private async Task ResetContext()
     {
@@ -125,6 +133,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             {
                 Step.Tags.Remove(tag);
             }
+
+            OnSubmit(Step);
 
             // Save changes.
 

@@ -24,6 +24,10 @@ public class Tag
 
     public IList<Step> Steps { get; set; } = null!;
 
+    public IList<JobStep> JobSteps { get; set; } = null!;
+
+    public IList<JobStepExecution> JobStepExecutions { get; set; } = null!;
+
     public IList<Schedule> Schedules { get; set; } = null!;
 }
 
