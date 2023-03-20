@@ -118,6 +118,8 @@
     <Build Include="biflow\Tables\JobCategory.sql" />
     <Build Include="biflow\Tables\StepParameterExpressionParameter.sql" />
     <Build Include="biflow\Tables\ExecutionStepParameterExpressionParameter.sql" />
+    <Build Include="biflow\Tables\JobStepTagFilter.sql" />
+    <Build Include="biflow\Tables\ExecutionJobStepTagFilter.sql" />
   </ItemGroup>
   <Import Condition="'$(NetCoreBuild)' == 'true'" Project="$(NETCoreTargetsPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>

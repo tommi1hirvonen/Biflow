@@ -43,7 +43,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error starting agent job");
+            return new Failure(ex, "Error starting agent job");
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -73,15 +73,13 @@ internal class AgentJobStepExecutor : StepExecutorBase
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
                 new { Step.AgentJobName });
-            if (timeoutCts.IsCancellationRequested)
-            {
-                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-            }
-            throw; // Step was canceled => pass the exception => no retries
+            return timeoutCts.IsCancellationRequested
+                ? new Failure(ex, "Step execution timed out")
+                : new Cancel(ex);
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error monitoring agent job execution status");
+            return new Failure(ex, "Error monitoring agent job execution status");
         }
 
         try
@@ -127,21 +125,21 @@ internal class AgentJobStepExecutor : StepExecutorBase
             if (status == 1)
             {
                 AddOutput(messageString);
-                return Result.Success();
+                return new Success();
             }
             else if (status == 0 || status == 3)
             {
-                return Result.Failure(messageString);
+                return new Failure(messageString);
             }
             else
             {
                 AddOutput(messageString);
-                return Result.Failure($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+                return new Failure($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
             }
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
+            return new Failure(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
         }
     }
 

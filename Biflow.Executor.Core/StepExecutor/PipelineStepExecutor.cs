@@ -51,7 +51,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
-            return Result.Failure(ex, "Error reading pipeline parameters");
+            return new Failure(ex, "Error reading pipeline parameters");
         }
 
         string runId;
@@ -63,7 +63,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
                 Step.ExecutionId, Step, Step.PipelineClientId, Step.PipelineName);
-            return Result.Failure(ex, "Error starting pipeline run");
+            return new Failure(ex, "Error starting pipeline run");
         }
 
         // Initialize timeout cancellation token source already here
@@ -114,26 +114,23 @@ internal class PipelineStepExecutor : StepExecutorBase
         catch (OperationCanceledException ex)
         {
             await CancelAsync(runId);
-            if (timeoutCts.IsCancellationRequested)
-            {
-                _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-            }
-            throw; // Step was canceled => pass the exception => no retries
+            return timeoutCts.IsCancellationRequested
+                ? new Failure(ex, "Step execution timed out")
+                : new Cancel(ex);
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error getting pipeline run status");
+            return new Failure(ex, "Error getting pipeline run status");
         }
 
         if (status == "Succeeded")
         {
             AddOutput(message);
-            return Result.Success();
+            return new Success();
         }
         else
         {
-            return Result.Failure(message);
+            return new Failure(message);
         }
     }
 

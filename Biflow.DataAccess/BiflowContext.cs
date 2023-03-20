@@ -183,7 +183,19 @@ public class BiflowContext : DbContext
             .UsingEntity<Dictionary<string, object>>("StepTag",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
-            
+
+            e.HasMany(t => t.JobSteps)
+            .WithMany(s => s.TagFilters)
+            .UsingEntity<Dictionary<string, object>>("JobStepTagFilter",
+            x => x.HasOne<JobStep>().WithMany().HasForeignKey("StepId"),
+            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
+
+            e.HasMany(t => t.JobStepExecutions)
+            .WithMany(s => s.TagFilters)
+            .UsingEntity<Dictionary<string, object>>("ExecutionJobStepTagFilter",
+            x => x.HasOne<JobStepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
+            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
+
             e.HasMany(t => t.Schedules)
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>("ScheduleTag",

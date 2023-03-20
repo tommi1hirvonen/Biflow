@@ -41,6 +41,16 @@
                 </div>
             </div>
         </div>
+        <div class="row mt-3">
+            <label class="form-label">Tag filters</label>
+            <HxInputTags @bind-Value="TagFilters"
+                     DataProvider="GetTagFilterSuggestions"
+                     AllowCustomTags="false"
+                     SuggestMinimumLength="0"
+                     SuggestDelay="0"
+                     TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+            <div class="form-text">Use tag filters to only include steps with specific tags in job executions.</div>
+        </div>
         <JobStepParameterEditComponent Step="Step" TargetJobId="Step.JobToExecuteId" />
     }
 </StepEditModalTemplate>

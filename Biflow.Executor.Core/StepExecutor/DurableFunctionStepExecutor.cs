@@ -53,14 +53,15 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
             AddOutput(content);
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogError(e, "{ExecutionId} {Step} Error invoking durable function", Step.ExecutionId, Step);
-            throw new OperationCanceledException("Invoking durable function timed out", e); // Step was canceled => pass the exception => no retries
+            return cancellationTokenSource.IsCancellationRequested
+                ? new Cancel(ex)
+                : new Failure(ex, "Invoking durable function timed out");
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error sending POST request to invoke function");
+            return new Failure(ex, "Error sending POST request to invoke function");
         }
 
         StartResponse startResponse;
@@ -72,7 +73,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error getting start response for durable function");
+            return new Failure(ex, "Error getting start response for durable function");
         }
 
         // Create timeout cancellation token source here
@@ -124,31 +125,28 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelAsync(client, startResponse.TerminatePostUri, reason);
-                if (timeoutCts.IsCancellationRequested)
-                {
-                    _logger.LogWarning("{ExecutionId} {Step} Step execution timed out", Step.ExecutionId, Step);
-                    return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-                }
-                throw; // Step was canceled => pass the exception => no retries
+                return timeoutCts.IsCancellationRequested
+                    ? new Failure(ex, "Step execution timed out")
+                    : new Cancel(ex);
             }
             catch (Exception ex)
             {
-                return Result.Failure(ex, "Error getting function status");
+                return new Failure(ex, "Error getting function status");
             }
         }
         
         if (status.RuntimeStatus == "Completed")
         {
             AddOutput(status.Output?.ToString());
-            return Result.Success();
+            return new Success();
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return Result.Failure(status.Output?.ToString() ?? "Function was terminated");
+            return new Failure(status.Output?.ToString() ?? "Function was terminated");
         }
         else
         {
-            return Result.Failure(status.Output?.ToString() ?? "Function failed");
+            return new Failure(status.Output?.ToString() ?? "Function failed");
         }
 
     }

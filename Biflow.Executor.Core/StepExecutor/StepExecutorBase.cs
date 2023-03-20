@@ -24,7 +24,9 @@ internal abstract class StepExecutorBase
 
     protected abstract Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
 
-    protected void AddWarning(Exception exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
+    protected void AddWarning(Exception? exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
+
+    protected void AddWarning(string message) => ExecutionMessages.Add(new Warning(message));
 
     protected void AddOutput(string? message)
     {
@@ -72,7 +74,7 @@ internal abstract class StepExecutorBase
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error updating parameter values",
                 StepExecution.ExecutionId, StepExecution);
-                var failure = Result.Failure(ex, "Error updating parameter values");
+                var failure = new Failure(ex, "Error updating parameter values");
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
                 return false;
             }
@@ -93,7 +95,7 @@ internal abstract class StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step execution condition parameters",
                 StepExecution.ExecutionId, StepExecution);
-            var failure = Result.Failure(ex, "Error updating execution parameter values to inheriting execution condition parameters");
+            var failure = new Failure(ex, "Error updating execution parameter values to inheriting execution condition parameters");
             await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
@@ -110,7 +112,7 @@ internal abstract class StepExecutorBase
         }
         catch (Exception ex)
         {
-            var failure = Result.Failure(ex, "Error evaluating execution condition");
+            var failure =new Failure(ex, "Error evaluating execution condition");
             await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
@@ -132,34 +134,47 @@ internal abstract class StepExecutorBase
             }
         }
 
-        // Loop until there are no retry attempts left.
-        while (executionAttempt.RetryAttemptIndex <= StepExecution.RetryAttempts)
+        return await ExecuteRecursivelyWithRetriesAsync(executionAttempt, cancellationTokenSource);
+    }
+
+    private async Task<bool> ExecuteRecursivelyWithRetriesAsync(StepExecutionAttempt executionAttempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    {
+        ExecutionMessages.Clear(); // Clear messages before every execution attempt.
+
+        await UpdateExecutionRunningAsync(executionAttempt);
+
+        // Execute the step based on its step type.
+        Result result;
+        try
         {
-            ExecutionMessages.Clear(); // Clear messages before every execution attempt.
-
-            await UpdateExecutionRunningAsync(executionAttempt);
-
-            // Execute the step based on its step type.
-            Result result;
-            try
+            result = await ExecuteAsync(cancellationTokenSource);
+        }
+        catch (Exception ex)
+        {
+            result = (ex, cancellationTokenSource) switch
             {
-                result = await ExecuteAsync(cancellationTokenSource);
-            }
-            catch (OperationCanceledException e)
+                (OperationCanceledException canceled, { IsCancellationRequested: true }) => new Cancel(canceled),
+                _ => new Failure(ex, "Unhandled error caught in base executor")
+            };
+        }
+
+        return await result.Match(
+            async success =>
             {
-                await UpdateExecutionCancelledAsync(executionAttempt, e, cancellationTokenSource.Username);
+                _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
+                await UpdateExecutionSucceededAsync(executionAttempt);
+                return true;
+            },
+            async cancel =>
+            {
+                await UpdateExecutionCancelledAsync(executionAttempt, cancel, cancellationTokenSource.Username);
                 return false;
-            }
-            catch (Exception ex)
-            {
-                result = Result.Failure(ex, "Unhandled error caught in base executor");
-            }
-
-            if (result is Failure failure)
+            },
+            async failure =>
             {
                 _logger.LogWarning("{ExecutionId} {Step} Error executing step: {ErrorMessage}", StepExecution.ExecutionId, StepExecution, failure.ErrorMessage);
 
-                // No attempts left => break the loop and end this execution.
+                // Check whether retry attempts have been exhausted and return false if so.
                 if (executionAttempt.RetryAttemptIndex >= StepExecution.RetryAttempts)
                 {
                     await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
@@ -168,39 +183,32 @@ internal abstract class StepExecutorBase
 
                 // There are attempts left => update execution with status Retry,
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Retry);
-                
+
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                executionAttempt = executionAttempt.Clone();
-                executionAttempt.RetryAttemptIndex++;
-                executionAttempt.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
-                StepExecution.StepExecutionAttempts.Add(executionAttempt);
+                var nextExecution = executionAttempt.Clone();
+                nextExecution.RetryAttemptIndex++;
+                nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
+                StepExecution.StepExecutionAttempts.Add(nextExecution);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {
-                    context.Attach(executionAttempt).State = EntityState.Added;
+                    context.Attach(nextExecution).State = EntityState.Added;
                     await context.SaveChangesAsync();
                 }
-                
+
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationTokenSource.Token);
                 }
-                catch (OperationCanceledException e)
+                catch (OperationCanceledException ex)
                 {
+                    var cancel = new Cancel(ex);
                     _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
-                    await UpdateExecutionCancelledAsync(executionAttempt, e, cancellationTokenSource.Username);
+                    await UpdateExecutionCancelledAsync(nextExecution, cancel, cancellationTokenSource.Username);
                     return false;
                 }
 
-                continue;
-            }
-
-            _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
-            // The step execution was successful. Update the execution accordingly.
-            await UpdateExecutionSucceededAsync(executionAttempt);
-            return true; // Break the loop to end this execution.
-        }
-
-        return false; // Execution should not arrive here in normal conditions. Return false.
+                return await ExecuteRecursivelyWithRetriesAsync(nextExecution, cancellationTokenSource);
+            });
     }
 
     private string? GetWarningMessage()
@@ -208,7 +216,7 @@ internal abstract class StepExecutorBase
         var warnings = ExecutionMessages
             .Where(m => m is Warning)
             .Cast<Warning>()
-            .Select(w => $"{w.Message}:\n{w.Exception.Message}");
+            .Select(w => w.Exception is not null ? $"{w.Message}:\n{w.Exception.Message}" : w.Message);
         var message = string.Join("\n\n", warnings);
         return string.IsNullOrWhiteSpace(message) ? null : message;
     }
@@ -223,19 +231,15 @@ internal abstract class StepExecutorBase
         return string.IsNullOrWhiteSpace(message) ? null : message;
     }
 
-    private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, OperationCanceledException exception, string username)
+    private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, Cancel cancel, string username)
     {
-        var errorMessage = exception switch
-        {
-            { InnerException: not null } => $"{exception.Message}\n{exception.InnerException.Message}",
-            _ => exception.Message
-        };
         using var context = _dbContextFactory.CreateDbContext();
         attempt.StartDateTime ??= DateTimeOffset.Now;
         attempt.EndDateTime = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-        attempt.ErrorMessage = errorMessage;
+        attempt.ErrorMessage = cancel.Exception?.Message;
+        attempt.ErrorStackTrace = cancel.Exception?.StackTrace;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }

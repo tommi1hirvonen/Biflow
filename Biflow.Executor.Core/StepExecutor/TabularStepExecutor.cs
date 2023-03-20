@@ -70,20 +70,15 @@ internal class TabularStepExecutor : StepExecutorBase
         catch (OperationCanceledException ex)
         {
             await Task.Run(server.CancelCommand); // Cancel the SaveChanges operation.
-            if (cancellationTokenSource.IsCancellationRequested)
-            {
-                // Step was canceled => pass exception => no retries
-                throw;
-            }
-            
-            // Step timed out => return failure result => allow for possible retries.
-            return Result.Failure(ex, "Step execution timed out");
+            return cancellationTokenSource.IsCancellationRequested
+                ? new Cancel(ex)
+                : new Failure(ex, "Step execution timed out");
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error processing tabular model");
+            return new Failure(ex, "Error processing tabular model");
         }
 
-        return Result.Success();
+        return new Success();
     }
 }

@@ -12,6 +12,8 @@
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.54.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.1" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="7.0.0" />
+    <PackageReference Include="OneOf" Version="3.0.243" />
+    <PackageReference Include="OneOf.SourceGenerator" Version="3.0.243" />
     <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
 

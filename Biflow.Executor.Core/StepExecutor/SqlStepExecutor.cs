@@ -44,7 +44,7 @@ internal class SqlStepExecutor : StepExecutorBase
             // command timeout = 0 => wait indefinitely
             var command = new CommandDefinition(
                 Step.SqlStatement,
-                commandTimeout: Convert.ToInt32(Step.TimeoutMinutes) * 60,
+                commandTimeout: Convert.ToInt32(Step.TimeoutMinutes * 60),
                 parameters: dynamicParams,
                 cancellationToken: cancellationToken);
 
@@ -73,17 +73,20 @@ internal class SqlStepExecutor : StepExecutorBase
         }
         catch (SqlException ex)
         {
-            // Throw OperationCanceledException if the SqlCommand failed due to cancel being requested.
+            // Return Cancel if the SqlCommand failed due to cancel being requested.
             // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
-            cancellationToken.ThrowIfCancellationRequested();
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new Cancel(ex);
+            }
 
             _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
             var errors = ex.Errors.Cast<SqlError>();
             var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-            return Result.Failure(errorMessage);
+            return new Failure(errorMessage);
         }
 
-        return Result.Success();
+        return new Success();
     }
 
     private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e) => AddOutput(e.Message);

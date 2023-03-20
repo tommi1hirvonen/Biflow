@@ -48,26 +48,23 @@ internal class FunctionStepExecutor : FunctionStepExecutorBase
         }
         catch (OperationCanceledException ex)
         {
-            if (timeoutCts.IsCancellationRequested)
-            {
-                return Result.Failure(ex, "Step execution timed out"); // Report failure => allow possible retries
-            }
-
-            throw; // Step was canceled => pass the exception => no retries
+            return timeoutCts.IsCancellationRequested
+                ? new Failure(ex, "Step execution timed out")
+                : new Cancel(ex);
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Error sending POST request to invoke function");
+            return new Failure(ex, "Error sending POST request to invoke function");
         }
 
         try
         {
             response.EnsureSuccessStatusCode();
-            return Result.Success();
+            return new Success();
         }
         catch (Exception ex)
         {
-            return Result.Failure(ex, "Function execution failed");
+            return new Failure(ex, "Function execution failed");
         }
     }
 

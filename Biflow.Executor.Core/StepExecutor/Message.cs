@@ -1,28 +1,10 @@
 ﻿namespace Biflow.Executor.Core.StepExecutor;
 
-internal abstract class Message
+internal abstract record Message;
+
+internal record Output(string Message) : Message;
+
+internal record Warning(Exception? Exception, string Message) : Message
 {
-}
-
-internal class Output : Message
-{
-    public string Message { get; }
-
-    public Output(string message)
-    {
-        Message = message;
-    }
-}
-
-internal class Warning : Message
-{
-    public Exception Exception { get; }
-
-    public string Message { get; }
-
-    public Warning(Exception exception, string message)
-    {
-        Exception = exception;
-        Message = message;
-    }
+    public Warning(string message) : this(null, message) { }
 }

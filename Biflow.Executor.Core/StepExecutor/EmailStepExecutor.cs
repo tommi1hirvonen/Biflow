@@ -37,6 +37,6 @@ internal class EmailStepExecutor : StepExecutorBase
 
         await _notificationService.SendNotification(recipients, subject, body, cancellationToken);
 
-        return Result.Success();
+        return new Success();
     }
 }
