@@ -34,11 +34,11 @@ builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNe
 var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
 var useWindowsAuth = windowsAuth.Exists();
 
-builder.Services.AddAuthorization(options =>
+if (useWindowsAuth)
 {
-    // If a list of Windows users were defined, require authentication for all endpoints.
-    if (useWindowsAuth)
+    builder.Services.AddAuthorization(options =>
     {
+        // If a list of Windows users were defined, require authentication for all endpoints.
         var allowedUsers = windowsAuth.GetSection("AllowedUsers").Get<string[]>();
         if (allowedUsers is null)
         {
@@ -46,16 +46,10 @@ builder.Services.AddAuthorization(options =>
                 "Property AllowedUsers must be defined if Windows Authorization is enabled");
         }
         options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserNamesRequirement(allowedUsers)).Build();
-    }
-    // Otherwise allow anonymous access.
-    else
-    {
-        options.FallbackPolicy = options.DefaultPolicy;
-    }
-});
-
-if (useWindowsAuth)
+    });
     builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
+}
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -82,8 +76,11 @@ builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
 
-app.UseAuthentication();
-app.UseAuthorization();
+if (useWindowsAuth)
+{
+    app.UseAuthentication();
+    app.UseAuthorization();
+}
 
 if (app.Environment.IsDevelopment())
 {
