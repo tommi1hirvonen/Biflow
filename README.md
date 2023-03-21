@@ -7,7 +7,7 @@ Powerful Business Intelligence workflow orchestration
 Some requirements apply when running Biflow either on-premise or in Azure but some requirements are common.
 
 ### Common
-- SQL Server database to host the system database
+- SQL Server or Azure SQL Database to host the system database
     - SQL Server 2012 or newer (tested on 2017 and 2019)
         - Edition: Express or above
     - Azure SQL Database or Managed Instance
@@ -27,8 +27,7 @@ Some requirements apply when running Biflow either on-premise or in Azure but so
 
 ### Azure
 - Azure App Service (Linux)
-    - Minimum B2/B3 level is recommended
-    - For advanced networking, minimum S1 level is required for the App Service
+    - Minimum B2 or B3 level is recommended
 
 ## Authentication
 
@@ -54,7 +53,7 @@ Four methods of authentication are supported:
 
 ## Architecture
 
-There are three ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (microservices).
+There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given in the installation section.
 
 ### On-premise
 
@@ -62,11 +61,11 @@ The on-premise option takes advantage of OS level features such as Windows Servi
 
 ### Azure (monolithic)
 
-The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B1, B2 and B3).
+The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B2 and B3).
 
-### Azure (microservices)
+### Azure (distributed)
 
-The Azure (microservices) approach closely resembles the on-premise architecture. However, the executor console app is now replaced with an executor service running as an Azure Web App. From the two Azure architectures, this offers significantly more control over upgrades to different components of the application.
+The Azure (distributed) approach closely resembles the on-premise architecture. However, the executor console app is now replaced with an executor service running as an Azure Web App. From the two Azure architectures, this offers significantly more control over upgrades to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
 # Documentation
 
@@ -113,7 +112,7 @@ The Azure (microservices) approach closely resembles the on-premise architecture
 |Running|The step is currently executing|
 |Succeeded|The step was completed successfully|
 |Warning|The step succeeded with warnings|
-|Failed|The step encountered an exception and failed|
+|Failed|The step encountered an exception and failed or the step reached its timeout limit|
 |Retry|The step failed but has retry attempts left|
 |AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
 |Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
@@ -165,7 +164,7 @@ If Always Encrypted is utilized, this should be reflected in the connection stri
 
 # Installation
 
-There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (microservices).
+There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (distributed).
 
 ## On-premise
 
@@ -212,12 +211,12 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Setting|Description|
 |-|-|
 |ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Executor:Type|`[ ConsoleApp \| WebApp ]`|
+|Executor:Type|`[ ConsoleApp | WebApp ]`|
 ||Whether the executor is installed as a console app or web app|
 |Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app|
-|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization:Windows` section.|
-|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations on the same server, the scheduler applications should listen to different ports.|
+|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section.|
+|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
 |Serilog:WriteTo:Args:path|Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`|
 
 3. Open the Windows command terminal in **administrator mode**.
@@ -247,7 +246,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |-|-|
 |EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
 |ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
+|Authentication|`[ BuiltIn | Windows | AzureAd | Ldap ]`|
 ||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
 ||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
 ||`AzureAd`: Authentication is done using Azure Active Directory. User roles and access are defined in the Biflow users management.|
@@ -264,12 +263,12 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Ldap:Port|The port to use for the LDAP server connection |
 |Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
 |Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
-|Executor:Type|`[ ConsoleApp \| WebApp \| SelfHosted ]`|
+|Executor:Type|`[ ConsoleApp | WebApp | SelfHosted ]`|
 ||Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
 |Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
 |Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor console application's settings section to set the values in this section.|
-|Scheduler:Type|`[ WebApp \| SelfHosted ]`|
+|Scheduler:Type|`[ WebApp | SelfHosted ]`|
 ||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
 |Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
@@ -285,7 +284,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 ## Azure (monolithic)
 
 - Create a new App Service Plan (Linux)
-    - Recommended pricing tier B1-B3
+    - Recommended pricing tier B2 or B3
 - Create a new Web App and set the following settings
     - Publish: Code
     - Runtime stack: .NET 7 (STS)
@@ -295,20 +294,69 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - General Settings => Websocket => On
     - General Settings => Always on => On
 - Set the application settings in Configuration => Application settings.
+    - __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead double underscores are used.
     - Application settings
+        - Authentication = See the on-premise section for configuring authentication
         - EnvironmentName = NameOfYourEnvironment
+        - Executor__Type = __SelfHosted__
+        - Scheduler__Type = __SelfHosted__
         - Executor__SelfHosted__MaximumParallelSteps = 5
         - Executor__SelfHosted__PollingIntervalMs = 5000
-        - Executor__Type = SelfHosted
-        - Scheduler__Type = SelfHosted
     - Connection string
         - BiflowContext
             - Connection string to the Biflow system database
+- Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file.
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
+- Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
-## Azure (microservices)
+## Azure (distributed)
 
-TODO
+- Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
+- Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
+- Make sure websockets are enabled for the UI application and that "Always on" is enabled for the scheduler and executor applications.
+- Create a virtual network resource.
+- Create a lightweight Linux virtual machine resource (B1s is sufficient).
+    - Attach the virtual machine to the default subnet of the virtual network created in the previous step.
+    - Allow SSH traffic from your desired IP addresses or networks to the virtual machine.
+- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks.
+- Create a new subnet in the virtual network (e.g. biflow-subnet).
+    - Configure the UI and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet).
+- Configure private endpoints for the inbound traffic of the scheduler and executor applications.
+    - Create the private endpoints in the default subnet of the virtual network.
+- Add service endpoints for the following services to the virtual network
+    - Microsoft.AzureActiveDirectory
+    - Microsoft.Sql
+    - Microsoft.Web
+
+These steps isolate the executor and scheduler application endpoints from the internet and only exposes them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also traffic from the UI application is routed to the scheduler service using its respective private endpoint.
+
+Add application configurations for each app based on the table below. __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead double underscores are used.
+
+|Setting|Value|
+|-|-|
+|__UI__||
+|ConnectionStrings__BiflowContext|Connection string to the system database|
+|Authentication|See the on-premise section for configuring authentication|
+|EnvironmentName|`NameOfYourEnvironment`|
+|Executor__Type|`WebApp`|
+|Scheduler__Type|`WebApp`|
+|Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
+|Scheduler__WebApp__Url|Scheduler web app URL, e.g. `https://biflow-scheduler.azurewebsites.net`|
+|__Executor__||
+|ConnectionStrings__BiflowContext|Connection string to the system database|
+|MaximumParallelSteps|`10` (default)|
+|PollingIntervalMs|`5000` (default)|
+|__Scheduler__||
+|ConnectionStrings__BiflowContext|Connection string to the system database|
+|Executor__Type|`WebApp`|
+|Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
+
+Deploying the application code can be done via the Linux virtual machine.
+- Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
+- Connect remotely to the VM via SSH.
+- <a href="https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt">Install the Azure CLI</a> on the Linux VM.
+- Deploy the zip files to the respective Web Apps from the Linux VM.
+
 
 ## First use
 
