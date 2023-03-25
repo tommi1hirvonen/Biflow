@@ -25,7 +25,7 @@ internal class PackageStepExecutor : StepExecutorBase
         IExecutionConfiguration executionConfiguration,
         IDbContextFactory<BiflowContext> dbContextFactory,
         PackageStepExecution step)
-        : base(logger, dbContextFactory, step)
+        : base(logger, dbContextFactory, executionConfiguration, step)
     {
         _logger = logger;
         _executionConfiguration = executionConfiguration;

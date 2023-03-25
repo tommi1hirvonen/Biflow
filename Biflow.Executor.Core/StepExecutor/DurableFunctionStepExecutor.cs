@@ -3,9 +3,8 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using System.Text;
 using Polly;
+using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -26,7 +25,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         IExecutionConfiguration executionConfiguration,
         IHttpClientFactory httpClientFactory,
         FunctionStepExecution step)
-        : base(logger, dbContextFactory, step)
+        : base(logger, dbContextFactory, executionConfiguration, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

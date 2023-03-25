@@ -17,8 +17,9 @@ internal class EmailStepExecutor : StepExecutorBase
         ILogger<EmailStepExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
         INotificationService notificationService,
+        IExecutionConfiguration executionConfiguration,
         EmailStepExecution stepExecution)
-        : base(logger, dbContextFactory, stepExecution)
+        : base(logger, dbContextFactory, executionConfiguration, stepExecution)
     {
         _notificationService = notificationService;
         Step = stepExecution;

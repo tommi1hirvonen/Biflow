@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -15,8 +16,9 @@ internal abstract class FunctionStepExecutorBase : StepExecutorBase
     public FunctionStepExecutorBase(
         ILogger<FunctionStepExecutorBase> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
+        IExecutionConfiguration executionConfiguration,
         FunctionStepExecution step)
-        : base(logger, dbContextFactory, step)
+        : base(logger, dbContextFactory, executionConfiguration, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

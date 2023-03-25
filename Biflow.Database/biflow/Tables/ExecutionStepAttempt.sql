@@ -19,7 +19,7 @@
     CONSTRAINT [PK_ExecutionStepAttempt] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
     CONSTRAINT [FK_ExecutionStepAttempt_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [biflow].ExecutionStep ([ExecutionId], [StepId]) ON DELETE CASCADE,
     -- Index used by executor application's duplicate step execution check
-    INDEX [NCI_ExecutionStepAttempt_StepId_StartDateTime_ExecutionStatus] NONCLUSTERED ([StepId], [StartDateTime], [ExecutionStatus]),
+    INDEX [NCI_ExecutionStepAttempt_StepId_StartDateTime_ExecutionStatus] NONCLUSTERED ([ExecutionStatus], [StepId], [StartDateTime]),
     CONSTRAINT [CK_ExecutionStepAttempt_StepType] CHECK (
         [StepType]='Package'
         OR [StepType]='Sql'

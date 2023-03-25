@@ -10,15 +10,21 @@ internal abstract class StepExecutorBase
 {
     private readonly ILogger<StepExecutorBase> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IExecutionConfiguration _executionConfiguration;
     
     private StepExecution StepExecution { get; }
 
     private List<Message> ExecutionMessages { get; } = new();
 
-    protected StepExecutorBase(ILogger<StepExecutorBase> logger, IDbContextFactory<BiflowContext> dbContextFactory, StepExecution stepExecution)
+    protected StepExecutorBase(
+        ILogger<StepExecutorBase> logger,
+        IDbContextFactory<BiflowContext> dbContextFactory,
+        IExecutionConfiguration executionConfiguration,
+        StepExecution stepExecution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _executionConfiguration = executionConfiguration;
         StepExecution = stepExecution;
     }
 
@@ -118,20 +124,22 @@ internal abstract class StepExecutorBase
         }
 
         // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
-        using (var context = _dbContextFactory.CreateDbContext())
+        try
         {
-            var duplicateExecution = await context.StepExecutionAttempts
-                .Where(e => e.StepId == StepExecution.StepId
-                            && (e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
-                            && e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
-                .AnyAsync();
-            // This step execution should be marked as duplicate.
-            if (duplicateExecution)
-            {
-                await UpdateExecutionDuplicateAsync(context);
-                _logger.LogWarning("{ExecutionId} {Step} Marked step as DUPLICATE", StepExecution.ExecutionId, StepExecution);
-                return false;
-            }
+            using var context = _dbContextFactory.CreateDbContext();
+            await WaitForDuplicateExecutionsAsync(context, cancellationToken);
+            await WaitForRunningDependentExecutionsAsync(context, cancellationToken);
+        }
+        catch (OperationCanceledException ex)
+        {
+            await UpdateExecutionCancelledAsync(executionAttempt, new Cancel(ex), cancellationTokenSource.Username);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            var failure = new Failure(ex, "Error awaiting possible external duplicate or dependent executions");
+            await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
+            return false;
         }
 
         return await ExecuteRecursivelyWithRetriesAsync(executionAttempt, cancellationTokenSource);
@@ -159,18 +167,18 @@ internal abstract class StepExecutorBase
         }
 
         return await result.Match(
-            async success =>
+            async (Success success) =>
             {
                 _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
                 await UpdateExecutionSucceededAsync(executionAttempt);
                 return true;
             },
-            async cancel =>
+            async (Cancel cancel) =>
             {
                 await UpdateExecutionCancelledAsync(executionAttempt, cancel, cancellationTokenSource.Username);
                 return false;
             },
-            async failure =>
+            async (Failure failure) =>
             {
                 _logger.LogWarning("{ExecutionId} {Step} Error executing step: {ErrorMessage}", StepExecution.ExecutionId, StepExecution, failure.ErrorMessage);
 
@@ -211,11 +219,54 @@ internal abstract class StepExecutorBase
             });
     }
 
+    /// <summary>
+    /// Wait for possible duplicate executions of this step that are running under a different execution.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    private async Task WaitForDuplicateExecutionsAsync(BiflowContext context, CancellationToken cancellationToken)
+    {
+        while (await DuplicatesExistAsync(context, cancellationToken))
+        {
+            await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Wait for possible steps that are dependent on this step but are already running under a different execution.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    private async Task WaitForRunningDependentExecutionsAsync(BiflowContext context, CancellationToken cancellationToken)
+    {
+        while (await DependentsExistAsync(context, cancellationToken))
+        {
+            await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+        }
+    }
+
+    private async Task<bool> DuplicatesExistAsync(BiflowContext context, CancellationToken cancellationToken) =>
+        await context.StepExecutionAttempts
+        .AsNoTrackingWithIdentityResolution()
+        .Where(e => e.StepId == StepExecution.StepId)
+        .Where(e => e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
+        .Where(e => e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
+        .AnyAsync(cancellationToken);
+
+    private async Task<bool> DependentsExistAsync(BiflowContext context, CancellationToken cancellationToken) =>
+        await context.StepExecutionAttempts
+        .AsNoTrackingWithIdentityResolution()
+        .Where(e => e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
+        .Where(e => e.StepExecution.Execution.DependencyMode)
+        .Where(e => e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).Contains(StepExecution.StepId))
+        .AnyAsync(cancellationToken);
+
     private string? GetWarningMessage()
     {
         var warnings = ExecutionMessages
-            .Where(m => m is Warning)
-            .Cast<Warning>()
+            .OfType<Warning>()
             .Select(w => w.Exception is not null ? $"{w.Message}:\n{w.Exception.Message}" : w.Message);
         var message = string.Join("\n\n", warnings);
         return string.IsNullOrWhiteSpace(message) ? null : message;
@@ -224,8 +275,7 @@ internal abstract class StepExecutorBase
     private string? GetOutputMessage()
     {
         var outputs = ExecutionMessages
-            .Where(m => m is Output)
-            .Cast<Output>()
+            .OfType<Output>()
             .Select(o => o.Message);
         var message = string.Join("\n\n", outputs);
         return string.IsNullOrWhiteSpace(message) ? null : message;
@@ -309,18 +359,6 @@ internal abstract class StepExecutorBase
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
             attempt.InfoMessage = infoMessage;
-            context.Attach(attempt).State = EntityState.Modified;
-        }
-        await context.SaveChangesAsync();
-    }
-
-    private async Task UpdateExecutionDuplicateAsync(BiflowContext context)
-    {
-        foreach (var attempt in StepExecution.StepExecutionAttempts)
-        {
-            attempt.ExecutionStatus = StepExecutionStatus.Duplicate;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

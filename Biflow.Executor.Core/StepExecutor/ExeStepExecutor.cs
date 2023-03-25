@@ -17,8 +17,12 @@ internal class ExeStepExecutor : StepExecutorBase
 
     private StringBuilder Error { get; } = new StringBuilder();
 
-    public ExeStepExecutor(ILogger<ExeStepExecutor> logger, IDbContextFactory<BiflowContext> dbContextFactory, ExeStepExecution step)
-        : base(logger, dbContextFactory, step)
+    public ExeStepExecutor(
+        ILogger<ExeStepExecutor> logger,
+        IDbContextFactory<BiflowContext> dbContextFactory,
+        IExecutionConfiguration executionConfiguration,
+        ExeStepExecution step)
+        : base(logger, dbContextFactory, executionConfiguration, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
