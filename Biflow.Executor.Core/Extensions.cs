@@ -90,4 +90,10 @@ public static class Extensions
         })
         .ToDictionary(key => key.Name, value => value.Value);
     }
+
+    internal static IEnumerable<T> SelectNotNull<T, U>(this IEnumerable<U> source, Func<U, T?> selector)
+        where T : class
+    {
+        return source.Select(selector).Where(t => t is not null).Cast<T>();
+    }
 }

@@ -389,7 +389,6 @@ SELECT @BiflowExecutionId,
 	a.DependencyType
 FROM biflow.Dependency AS a
 	INNER JOIN #Steps AS b ON a.StepId = b.StepId
-	INNER JOIN #Steps AS c ON a.DependantOnStepId = c.StepId
 
 
 -- Store and historize sources and targets

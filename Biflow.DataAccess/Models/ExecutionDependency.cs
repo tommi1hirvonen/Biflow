@@ -21,5 +21,5 @@ public class ExecutionDependency
 
     public StepExecution StepExecution { get; set; } = null!;
 
-    public StepExecution DependantOnStepExecution { get; set; } = null!;
+    public StepExecution? DependantOnStepExecution { get; set; }
 }

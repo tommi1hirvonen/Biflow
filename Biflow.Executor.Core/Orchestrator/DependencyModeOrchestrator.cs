@@ -36,7 +36,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
                 .Where(e => e.ExecutionDependencies.Any())
                 .ToDictionary(
                 e => e,
-                e => e.ExecutionDependencies.Select(d => d.DependantOnStepExecution))
+                e => e.ExecutionDependencies.SelectNotNull(d => d.DependantOnStepExecution))
                 .FindCycles();
 
             // If there are circular dependencies, update error message for all steps and cancel execution.
@@ -131,7 +131,7 @@ internal class DependencyModeOrchestrator : OrchestratorBase
         }
 
         var allDependencies = step.ExecutionDependencies
-            .Select(d => d.DependantOnStepExecution);
+            .SelectNotNull(d => d.DependantOnStepExecution);
 
         var onSucceeded = step.ExecutionDependencies
             .Where(d => d.DependencyType == DependencyType.OnSucceeded)
