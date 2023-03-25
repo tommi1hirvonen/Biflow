@@ -12,10 +12,9 @@ public class SelfHostedExecutorService : IExecutorService
         _executionManager = executionManager;
     }
 
-    public Task StartExecutionAsync(Guid executionId)
+    public async Task StartExecutionAsync(Guid executionId)
     {
-        _executionManager.StartExecution(executionId);
-        return Task.CompletedTask;
+        await _executionManager.StartExecutionAsync(executionId);
     }
 
     public Task StopExecutionAsync(StepExecutionAttempt attempt, string username)

@@ -24,9 +24,9 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.MapGet("/execution/start/{executionId}", (Guid executionId, ExecutionManager executionManager) =>
+app.MapGet("/execution/start/{executionId}", async (Guid executionId, ExecutionManager executionManager) =>
 {
-    executionManager.StartExecution(executionId);
+    await executionManager.StartExecutionAsync(executionId);
     return "Execution started successfully";
 }).WithName("StartExecution");
 

@@ -46,7 +46,7 @@ public static class Extensions
         services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
         services.AddSingleton<IEmailTest, EmailTest>();
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
-        services.AddTransient<IJobExecutor, JobExecutor.JobExecutor>();
+        services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddTransient<IExecutorLauncher, TExecutorLauncher>();
     }
 

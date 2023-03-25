@@ -1,5 +1,4 @@
 ﻿using Biflow.Executor.Core.JobExecutor;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.WebExtensions;
@@ -7,26 +6,26 @@ namespace Biflow.Executor.Core.WebExtensions;
 public class ExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IJobExecutorFactory _jobExecutorFactory;
 
     private Dictionary<Guid, IJobExecutor> JobExecutors { get; } = new();
 
     private Dictionary<Guid, Task> ExecutionTasks { get; } = new();
 
-    public ExecutionManager(ILogger<ExecutionManager> logger, IServiceProvider serviceProvider)
+    public ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
     {
         _logger = logger;
-        _serviceProvider = serviceProvider;
+        _jobExecutorFactory = jobExecutorFactory;
     }
 
-    public void StartExecution(Guid executionId)
+    public async Task StartExecutionAsync(Guid executionId)
     {
         if (JobExecutors.ContainsKey(executionId))
         {
             throw new InvalidOperationException($"Execution with id {executionId} is already being managed.");
         }
 
-        var jobExecutor = _serviceProvider.GetRequiredService<IJobExecutor>();
+        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
         _ = RunExecution(executionId, jobExecutor);
     }
 

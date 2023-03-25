@@ -16,95 +16,65 @@ internal class JobExecutor : IJobExecutor
     private readonly INotificationService _notificationService;
     private readonly IOrchestratorFactory _orchestratorFactory;
 
-    private OrchestratorBase? Orchestrator { get; set; }
+    private OrchestratorBase Orchestrator { get; }
+
+    private Execution Execution { get; }
+
+    private Job Job => Execution.Job ?? throw new ArgumentNullException(nameof(Execution.Job));
 
     public JobExecutor(
         ILogger<JobExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
         INotificationService notificationService,
-        IOrchestratorFactory orchestratorFactory)
+        IOrchestratorFactory orchestratorFactory,
+        Execution execution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
         _orchestratorFactory = orchestratorFactory;
+        Execution = execution;
+        Orchestrator = _orchestratorFactory.Create(Execution);
     }
 
     public async Task RunAsync(Guid executionId)
     {
-        Execution execution;
-        Job job;
-        using (var context = _dbContextFactory.CreateDbContext())
+        try
         {
-            try
-            {
-                var process = Process.GetCurrentProcess();
-                execution = await context.Executions
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(e => e.Job)
-                    .Include(e => e.ExecutionParameters)
-                    .Include(e => e.ExecutionConcurrencies)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.StepExecutionAttempts)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.ExecutionDependencies)
-                    .ThenInclude(e => e.DependantOnStepExecution)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.Sources)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.Targets)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => e.ExecutionConditionParameters)
-                    .ThenInclude(e => e.ExecutionParameter)
-                    .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as DatasetStepExecution)!.AppRegistration)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as FunctionStepExecution)!.FunctionApp)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
-                    .ThenInclude(df => df.AppRegistration)
-                    .Include(e => e.StepExecutions)
-                    .ThenInclude(e => (e as JobStepExecution)!.TagFilters)
-                    .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasConnection.Connection)}")
-                    .FirstAsync(e => e.ExecutionId == executionId);
-
-                job = execution.Job ?? throw new InvalidOperationException("Job was null");
-
-                execution.ExecutorProcessId = process.Id;
-                execution.ExecutionStatus = ExecutionStatus.Running;
-                execution.StartDateTime = DateTimeOffset.Now;
-                context.Attach(execution);
-                context.Entry(execution).Property(e => e.ExecutorProcessId).IsModified = true;
-                context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
-                context.Entry(execution).Property(e => e.StartDateTime).IsModified = true;
-                await context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting job details for execution");
-                return;
-            }
+            var process = Process.GetCurrentProcess();
+            Execution.ExecutorProcessId = process.Id;
+            Execution.ExecutionStatus = ExecutionStatus.Running;
+            Execution.StartDateTime = DateTimeOffset.Now;
+            using var context = _dbContextFactory.CreateDbContext();
+            context.Attach(Execution);
+            context.Entry(Execution).Property(e => e.ExecutorProcessId).IsModified = true;
+            context.Entry(Execution).Property(e => e.ExecutionStatus).IsModified = true;
+            context.Entry(Execution).Property(e => e.StartDateTime).IsModified = true;
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating job execution status");
+            return;
         }
 
         // Check whether there are circular dependencies between jobs (through steps executing another jobs).
         string? circularExecutions;
         try
         {
-            circularExecutions = await GetCircularJobExecutionsAsync(job);
+            circularExecutions = await GetCircularJobExecutionsAsync(Job);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{executionId} Error checking for possible circular job executions", executionId);
-            await UpdateExecutionFailedAsync(execution, "Error checking for possible circular job executions");
+            await UpdateExecutionFailedAsync("Error checking for possible circular job executions");
             return;
         }
 
         if (!string.IsNullOrEmpty(circularExecutions))
         {
             var errorMessage = "Execution was cancelled because of circular job executions:\n" + circularExecutions;
-            await UpdateExecutionFailedAsync(execution, errorMessage);
+            await UpdateExecutionFailedAsync(errorMessage);
             _logger.LogError("{executionId} Execution was cancelled because of circular job executions: {circularExecutions}", executionId, circularExecutions);
             return;
         }
@@ -113,7 +83,7 @@ internal class JobExecutor : IJobExecutor
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-            foreach (var parameter in execution.ExecutionParameters.Where(p => p.UseExpression))
+            foreach (var parameter in Execution.ExecutionParameters.Where(p => p.UseExpression))
             {
                 context.Attach(parameter);
                 parameter.ParameterValue = await parameter.EvaluateAsync();
@@ -123,17 +93,14 @@ internal class JobExecutor : IJobExecutor
         catch (Exception ex)
         {
             _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", executionId);
-            await UpdateExecutionFailedAsync(execution, "Error evaluating execution parameters and saving evaluation results");
+            await UpdateExecutionFailedAsync("Error evaluating execution parameters and saving evaluation results");
             return;
         }
-        
-        // Execution validation checks passed. Create orchestrator and run it.
-        Orchestrator = _orchestratorFactory.Create(execution);
 
         try
         {
-            var notificationTask = execution.OvertimeNotificationLimitMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(execution.OvertimeNotificationLimitMinutes))
+            var notificationTask = Execution.OvertimeNotificationLimitMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(Execution.OvertimeNotificationLimitMinutes))
                 : Task.Delay(-1); // infinite timeout
 
             var orchestrationTask = Orchestrator.RunAsync();
@@ -144,7 +111,7 @@ internal class JobExecutor : IJobExecutor
             // send a notification about a long running execution.
             if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotification(execution);
+                await _notificationService.SendLongRunningExecutionNotification(Execution);
             }
 
             await orchestrationTask; // Wait for orchestration to finish.
@@ -155,7 +122,7 @@ internal class JobExecutor : IJobExecutor
         }
 
         // Get job execution status based on step execution statuses.
-        var allStepAttempts = execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
+        var allStepAttempts = Execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
         ExecutionStatus status;
         if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
             || step.ExecutionStatus == StepExecutionStatus.Skipped
@@ -192,11 +159,11 @@ internal class JobExecutor : IJobExecutor
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            execution.ExecutionStatus = status;
-            execution.EndDateTime = DateTimeOffset.Now;
-            context.Attach(execution);
-            context.Entry(execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(execution).Property(e => e.EndDateTime).IsModified = true;
+            Execution.ExecutionStatus = status;
+            Execution.EndDateTime = DateTimeOffset.Now;
+            context.Attach(Execution);
+            context.Entry(Execution).Property(e => e.ExecutionStatus).IsModified = true;
+            context.Entry(Execution).Property(e => e.EndDateTime).IsModified = true;
             await context.SaveChangesAsync();
         }
         catch (Exception ex)
@@ -204,7 +171,7 @@ internal class JobExecutor : IJobExecutor
             _logger.LogError(ex, "Error updating execution status");
         }
 
-        await _notificationService.SendCompletionNotification(execution);
+        await _notificationService.SendCompletionNotification(Execution);
     }
 
     public void Cancel(string username) => Orchestrator?.CancelExecution(username);
@@ -251,21 +218,21 @@ internal class JobExecutor : IJobExecutor
         return dependencies;
     }
 
-    private async Task UpdateExecutionFailedAsync(Execution execution, string errorMessage)
+    private async Task UpdateExecutionFailedAsync(string errorMessage)
     {
         using var context = _dbContextFactory.CreateDbContext();
         await context.StepExecutionAttempts
-            .Where(e => e.ExecutionId == execution.ExecutionId)
+            .Where(e => e.ExecutionId == Execution.ExecutionId)
             .ExecuteUpdateAsync(attempt => attempt
             .SetProperty(p => p.StartDateTime, DateTimeOffset.Now)
             .SetProperty(p => p.EndDateTime, DateTimeOffset.Now)
             .SetProperty(p => p.ErrorMessage, errorMessage)
             .SetProperty(p => p.ExecutionStatus, StepExecutionStatus.Failed));
 
-        execution.StartDateTime = DateTimeOffset.Now;
-        execution.EndDateTime = DateTimeOffset.Now;
-        execution.ExecutionStatus = ExecutionStatus.Failed;
-        context.Attach(execution).State = EntityState.Modified;
+        Execution.StartDateTime = DateTimeOffset.Now;
+        Execution.EndDateTime = DateTimeOffset.Now;
+        Execution.ExecutionStatus = ExecutionStatus.Failed;
+        context.Attach(Execution).State = EntityState.Modified;
 
         await context.SaveChangesAsync();
     }

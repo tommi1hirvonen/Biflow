@@ -52,7 +52,8 @@ return await Parser.Default
 
 async Task<int> RunExecutionAsync(IHost host, JobExecutorOptions options)
 {
-    var executor = host.Services.GetRequiredService<IJobExecutor>();
+    var factory = host.Services.GetRequiredService<IJobExecutorFactory>();
+    var executor = await factory.CreateAsync(options.ExecutionId);
     _ = Task.Run(() => ReadCancelKey(executor));
     _ = Task.Run(() => ReadCancelPipe(executor, options.ExecutionId));
     await executor.RunAsync(options.ExecutionId);
