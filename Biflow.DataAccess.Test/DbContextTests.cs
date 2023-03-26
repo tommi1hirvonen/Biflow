@@ -1,32 +1,17 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace Biflow.DataAccess.Test;
 
+[Collection(nameof(DatabaseCollection))]
 public class DbContextTests
 {
     private readonly IDbContextFactory<BiflowContext> dbContextFactory;
 
-    public DbContextTests()
+    public DbContextTests(DatabaseFixture fixture)
     {
-        var settings = new Dictionary<string, string?>();
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(settings)
-            .Build();
-        var connectionString = "Data Source=localhost;Database=Biflow;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
-        var services = new ServiceCollection()
-            .AddSingleton<IConfiguration>(configuration)
-            .AddDbContextFactory<BiflowContext>(options =>
-                    options.UseSqlServer(connectionString, o =>
-                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)))
-            .BuildServiceProvider();
-
-        var factory = services.GetService<IDbContextFactory<BiflowContext>>();
-        Assert.NotNull(factory);
-        dbContextFactory = factory;
+        dbContextFactory = fixture.DbContextFactory;
     }
 
     [Fact]
