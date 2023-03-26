@@ -142,6 +142,7 @@ public partial class ExecutionDetails : ComponentBase
             });
         var dependencies = Execution?.StepExecutions
             .SelectMany(step => step.ExecutionDependencies)
+            .Where(dep => dep.DependantOnStepExecution is not null)
             .Select(dep => new
             {
                 dep.StepId,
