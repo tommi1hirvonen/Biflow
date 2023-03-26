@@ -10,10 +10,8 @@ public class ExecutionDependency
 {
     public Guid ExecutionId { get; set; }
 
-    [Required]
     public Guid StepId { get; set; }
 
-    [Required]
     public Guid DependantOnStepId { get; set; }
 
     [Display(Name = "Type")]

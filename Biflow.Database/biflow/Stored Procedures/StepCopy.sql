@@ -57,7 +57,8 @@ INSERT INTO biflow.Step (
 	CreatedDateTime,
 	LastModifiedDateTime,
 	IsEnabled,
-	CreatedBy
+	CreatedBy,
+	DuplicateExecutionBehaviour
 )
 SELECT @TargetJobId,
 	@StepIdNew,
@@ -102,7 +103,8 @@ SELECT @TargetJobId,
 	GETUTCDATE(),
 	GETUTCDATE(),
 	IsEnabled,
-	@Username
+	@Username,
+	DuplicateExecutionBehaviour
 FROM biflow.Step
 WHERE StepId = @StepId
 

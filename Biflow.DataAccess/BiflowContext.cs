@@ -118,7 +118,8 @@ public class BiflowContext : DbContext
             .HasForeignKey(d => new { d.ExecutionId, d.StepId });
             e.HasOne(d => d.DependantOnStepExecution)
             .WithMany(e => e.DependantExecutions)
-            .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId });
+            .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId })
+            .IsRequired(false);
         });
 
         modelBuilder.Entity<Job>(e =>
@@ -413,6 +414,7 @@ public class BiflowContext : DbContext
         configurationBuilder.Properties<StepExecutionStatus>().HaveConversion<EnumToStringConverter<StepExecutionStatus>>();
         configurationBuilder.Properties<SubscriptionType>().HaveConversion<EnumToStringConverter<SubscriptionType>>();
         configurationBuilder.Properties<StepType>().HaveConversion<EnumToStringConverter<StepType>>();
+        configurationBuilder.Properties<DuplicateExecutionBehaviour>().HaveConversion<EnumToStringConverter<DuplicateExecutionBehaviour>>();
         configurationBuilder.Properties<ParameterValueType>().HaveConversion<EnumToStringConverter<ParameterValueType>>();
         configurationBuilder.Properties<DependencyType>().HaveConversion<EnumToStringConverter<DependencyType>>();
         configurationBuilder.Properties<TagColor>().HaveConversion<EnumToStringConverter<TagColor>>();

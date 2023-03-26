@@ -45,7 +45,8 @@
     [CreatedBy]                     NVARCHAR(250)    NULL,
     [LastModifiedDateTime]          DATETIMEOFFSET   NOT NULL,
     [LastModifiedBy]                NVARCHAR(250)    NULL,
-    [Timestamp]                     ROWVERSION       NOT NULL, 
+    [Timestamp]                     ROWVERSION       NOT NULL,
+    [DuplicateExecutionBehaviour]   VARCHAR(20)      CONSTRAINT [DF_Step_DuplicateExecutionBehaviour] DEFAULT ('Wait') NOT NULL,
     CONSTRAINT [PK_Step] PRIMARY KEY CLUSTERED ([StepId] ASC),
     INDEX [NCI_Step_Job] NONCLUSTERED ([JobId]),
     CONSTRAINT [CK_Step_StepType] CHECK (
@@ -59,7 +60,11 @@
         OR [StepType]='AgentJob' AND [AgentJobName] IS NOT NULL AND [ConnectionId] IS NOT NULL
         OR [StepType]='Tabular' AND [TabularModelName] IS NOT NULL AND NOT ([TabularTableName] IS NULL AND [TabularPartitionName] IS NOT NULL)
         OR [StepType]='Email' AND [EmailRecipients] IS NOT NULL AND [EmailSubject] IS NOT NULL AND [EmailBody] IS NOT NULL),
-    CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0)
+    CONSTRAINT [CK_Step_Retry] CHECK ([RetryAttempts] >= 0 AND [RetryIntervalMinutes] >= 0),
+    CONSTRAINT [CK_Step_DuplicateExecutionBehaviour] CHECK (
+        [DuplicateExecutionBehaviour] = 'Allow'
+        OR [DuplicateExecutionBehaviour] = 'Wait'
+        OR [DuplicateExecutionBehaviour] = 'Fail')
 );
 
 

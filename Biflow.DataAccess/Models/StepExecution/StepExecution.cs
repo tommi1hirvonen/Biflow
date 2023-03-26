@@ -26,6 +26,8 @@ public abstract class StepExecution
     [Display(Name = "Step type")]
     public StepType StepType { get; }
 
+    public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; }
+
     public int ExecutionPhase { get; set; }
 
     public int RetryAttempts { get; set; }

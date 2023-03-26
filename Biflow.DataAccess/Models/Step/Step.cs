@@ -43,6 +43,9 @@ public abstract class Step : IComparable
     public StepType StepType { get; }
 
     [Required]
+    public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
+
+    [Required]
     [DataType(DataType.DateTime)]
     [Display(Name = "Created")]
     public DateTimeOffset CreatedDateTime { get; set; }

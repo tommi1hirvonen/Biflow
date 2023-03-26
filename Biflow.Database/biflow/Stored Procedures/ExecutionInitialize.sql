@@ -108,7 +108,8 @@ SELECT
 	a.TabularPartitionName,
 	a.EmailRecipients,
 	a.EmailSubject,
-	a.EmailBody
+	a.EmailBody,
+	a.DuplicateExecutionBehaviour
 INTO #Steps
 FROM biflow.Step AS a
 WHERE a.JobId = @JobId 
@@ -239,7 +240,8 @@ INSERT INTO biflow.ExecutionStep (
 	TabularPartitionName,
 	EmailRecipients,
 	EmailSubject,
-	EmailBody
+	EmailBody,
+	DuplicateExecutionBehaviour
 )
 SELECT
 	ExecutionId = @BiflowExecutionId,
@@ -280,7 +282,8 @@ SELECT
 	a.TabularPartitionName,
 	a.EmailRecipients,
 	a.EmailSubject,
-	a.EmailBody
+	a.EmailBody,
+	a.DuplicateExecutionBehaviour
 FROM #Steps AS a
 
 

@@ -39,6 +39,7 @@
     [EmailRecipients]                   NVARCHAR(MAX)       NULL,
     [EmailSubject]                      NVARCHAR(MAX)       NULL,
     [EmailBody]                         NVARCHAR(MAX)       NULL,
+    [DuplicateExecutionBehaviour]       VARCHAR(20)         CONSTRAINT [DF_ExecutionStep_DuplicateExecutionBehaviour] DEFAULT ('Wait') NOT NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
     CONSTRAINT [CK_ExecutionStep_StepType] CHECK (
@@ -51,7 +52,11 @@
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
         OR [StepType]='Tabular'
-        OR [StepType]='Email')
+        OR [StepType]='Email'),
+    CONSTRAINT [CK_ExecutionStep_DuplicateExecutionBehaviour] CHECK (
+        [DuplicateExecutionBehaviour] = 'Allow'
+        OR [DuplicateExecutionBehaviour] = 'Wait'
+        OR [DuplicateExecutionBehaviour] = 'Fail')
 );
 
 GO

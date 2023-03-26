@@ -132,6 +132,23 @@
                                             </div>
                                         </div>
 
+                                        <div class="row mt-2">
+                                            <div class="col">
+                                                <label class="form-label">
+                                                    Duplicate execution behaviour
+                                                    <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
+                                                        <CxIcon Icon="FeatherIcon.Info" />
+                                                    </HxPopover>
+                                                </label>
+                                                <InputSelect class="form-select form-select-sm" @bind-Value="Modal.Step.DuplicateExecutionBehaviour" style="max-width: 17rem;">
+                                                    @foreach (var type in Enum.GetValues<DuplicateExecutionBehaviour>())
+                                                    {
+                                                        <option>@type</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+                                        </div>
+
                                     </div>
 
                                     <div class="col-lg-auto d-flex flex-lg-column">
@@ -318,4 +335,10 @@
         ValidationErrors = Enumerable.Empty<string>();
         Modal.OnClosed();
     }
+
+    private const string DuplicateBehaviourPopoverContent =
+        "<p>Behaviour when the same step is detected to be running under a different execution at the same time it is orchestrated to start</p>" +
+        "<p><strong>Wait</strong> => Wait for the duplicate execution to complete before the step is started</p>" +
+        "<p><strong>Allow</strong> => Allow duplicate executions and start the step regardless of duplicates</p>" +
+        "<p><strong>Fail</strong> => Fail the step with 'Duplicate' status in case duplicates are detected</p>";
 }

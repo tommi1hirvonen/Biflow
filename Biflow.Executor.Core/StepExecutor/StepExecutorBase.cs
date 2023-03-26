@@ -123,12 +123,45 @@ internal abstract class StepExecutorBase
             return false;
         }
 
-        // Check whether this step is already running (in another execution). Only include executions from the past 24 hours.
+        // If the duplicate execution behaviour is "Allow", continue.
+        if (StepExecution.DuplicateExecutionBehaviour != DuplicateExecutionBehaviour.Allow)
+        {
+            try
+            {
+                // Otherwise check the defined behaviour and whether there are duplicates of this step running in other executions.
+                using var context = _dbContextFactory.CreateDbContext();
+                var duplicatesExist = await DuplicatesExistAsync(context, cancellationToken);
+                if (duplicatesExist && StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
+                {
+                    await UpdateExecutionDuplicateAsync(context);
+                    return false;
+                }
+                else if (duplicatesExist && StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
+                {
+                    await WaitForDuplicateExecutionsAsync(context, cancellationToken);
+                }   
+            }
+            catch (OperationCanceledException ex)
+            {
+                await UpdateExecutionCancelledAsync(executionAttempt, new Cancel(ex), cancellationTokenSource.Username);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                var failure = new Failure(ex, "Error awaiting possible external duplicate executions");
+                await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
+                return false;
+            }
+        }
+
+        // Check whether there are steps depending on this step running in other executions
+        // or whether there are steps running in other executions that this step depends on.
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            await WaitForDuplicateExecutionsAsync(context, cancellationToken);
-            await WaitForRunningDependentExecutionsAsync(context, cancellationToken);
+            await WaitForRunningDependentExecutionsAsync(context, cancellationToken); // steps that depend on this step
+            if (StepExecution.Execution.DependencyMode)
+                await WaitForRunningDependenciesAsync(context, cancellationToken); // steps this step depends on
         }
         catch (OperationCanceledException ex)
         {
@@ -137,7 +170,7 @@ internal abstract class StepExecutorBase
         }
         catch (Exception ex)
         {
-            var failure = new Failure(ex, "Error awaiting possible external duplicate or dependent executions");
+            var failure = new Failure(ex, "Error awaiting dependent steps that were running in another execution in dependency mode");
             await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Failed);
             return false;
         }
@@ -222,9 +255,6 @@ internal abstract class StepExecutorBase
     /// <summary>
     /// Wait for possible duplicate executions of this step that are running under a different execution.
     /// </summary>
-    /// <param name="context"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     private async Task WaitForDuplicateExecutionsAsync(BiflowContext context, CancellationToken cancellationToken)
     {
         while (await DuplicatesExistAsync(context, cancellationToken))
@@ -236,9 +266,6 @@ internal abstract class StepExecutorBase
     /// <summary>
     /// Wait for possible steps that are dependent on this step but are already running under a different execution.
     /// </summary>
-    /// <param name="context"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     private async Task WaitForRunningDependentExecutionsAsync(BiflowContext context, CancellationToken cancellationToken)
     {
         while (await DependentsExistAsync(context, cancellationToken))
@@ -247,6 +274,21 @@ internal abstract class StepExecutorBase
         }
     }
 
+    /// <summary>
+    /// Wait for possible steps that this step depends on and are running under a different execution.
+    /// </summary>
+    private async Task WaitForRunningDependenciesAsync(BiflowContext context, CancellationToken cancellationToken)
+    {
+        while (await DependenciesExistAsync(context, cancellationToken))
+        {
+            await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// Checks whether there are duplicates of this step running under a different execution.
+    /// Only consider statuses "Running" and "AwaitingRetry". Only include executions from the last 24 hours.
+    /// </summary>
     private async Task<bool> DuplicatesExistAsync(BiflowContext context, CancellationToken cancellationToken) =>
         await context.StepExecutionAttempts
         .AsNoTrackingWithIdentityResolution()
@@ -255,12 +297,25 @@ internal abstract class StepExecutorBase
         .Where(e => e.StartDateTime >= DateTimeOffset.Now.AddDays(-1))
         .AnyAsync(cancellationToken);
 
+    /// <summary>
+    /// Checks whether there are steps that depend on this step running under a different execution.
+    /// </summary>
     private async Task<bool> DependentsExistAsync(BiflowContext context, CancellationToken cancellationToken) =>
         await context.StepExecutionAttempts
         .AsNoTrackingWithIdentityResolution()
         .Where(e => e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
         .Where(e => e.StepExecution.Execution.DependencyMode)
         .Where(e => e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).Contains(StepExecution.StepId))
+        .AnyAsync(cancellationToken);
+
+    /// <summary>
+    /// Checks whether there are steps that this step depends on running under a different execution.
+    /// </summary>
+    private async Task<bool> DependenciesExistAsync(BiflowContext context, CancellationToken cancellationToken) =>
+        await context.StepExecutionAttempts
+        .AsNoTrackingWithIdentityResolution()
+        .Where(e => e.ExecutionStatus == StepExecutionStatus.Running || e.ExecutionStatus == StepExecutionStatus.AwaitingRetry)
+        .Where(e => StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).Contains(e.StepId))
         .AnyAsync(cancellationToken);
 
     private string? GetWarningMessage()
@@ -359,6 +414,18 @@ internal abstract class StepExecutorBase
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
             attempt.InfoMessage = infoMessage;
+            context.Attach(attempt).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
+    }
+
+    private async Task UpdateExecutionDuplicateAsync(BiflowContext context)
+    {
+        foreach (var attempt in StepExecution.StepExecutionAttempts)
+        {
+            attempt.ExecutionStatus = StepExecutionStatus.Duplicate;
+            attempt.StartDateTime = DateTimeOffset.Now;
+            attempt.EndDateTime = DateTimeOffset.Now;
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

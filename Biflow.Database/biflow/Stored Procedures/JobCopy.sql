@@ -142,7 +142,8 @@ INSERT INTO biflow.Step (
 	CreatedDateTime,
 	LastModifiedDateTime,
 	IsEnabled,
-	CreatedBy
+	CreatedBy,
+	DuplicateExecutionBehaviour
 )
 SELECT @JobIdNew,
 	B.StepIdNew,
@@ -188,7 +189,8 @@ SELECT @JobIdNew,
 	GETUTCDATE(),
 	GETUTCDATE(),
 	A.IsEnabled,
-	@Username
+	@Username,
+	A.DuplicateExecutionBehaviour
 FROM biflow.Step AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
 	LEFT JOIN #ParameterIdMapping AS C ON A.ResultCaptureJobParameterId = C.ParameterId

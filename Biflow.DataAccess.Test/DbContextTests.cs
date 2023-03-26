@@ -1,5 +1,6 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -108,5 +109,20 @@ public class DbContextTests
         parameter.ParameterValue = await parameter.EvaluateAsync();
         await ctx2.SaveChangesAsync();
         Assert.Equal(parameter.ParameterValue, "00:00:45");
+    }
+
+    [Fact]
+    public async Task TestLoadingStepExecutionDependentOnSteps()
+    {
+        var executionId = Guid.Parse("03b71d68-67d2-4e2b-8e15-8878e8fdcfda");
+        using var context = await dbContextFactory.CreateDbContextAsync();
+        var execution = await context.Executions
+            .AsNoTrackingWithIdentityResolution()
+            .Include(e => e.StepExecutions)
+            .ThenInclude(e => e.ExecutionDependencies)
+            .ThenInclude(e => e.DependantOnStepExecution)
+            .FirstAsync(e => e.ExecutionId == executionId);
+        var step = execution.StepExecutions.First();
+        Assert.True(step.ExecutionDependencies.Any());
     }
 }
