@@ -1,10 +1,64 @@
 #  Biflow
 
-Powerful Business Intelligence workflow orchestration
+Biflow is a powerful platform for easy Business Intelligence (BI) workflow orchestration built on top of the .NET stack. It integrates with several of Microsoft's BI related technologies such as
+- SQL Server (including SSIS and SSAS)
+- Azure SQL
+- Azure Data Factory
+- Azure Synapse
+- Azure Functions
+- Azure Analysis Services
+- Power BI
+
+The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflows enables intelligent management of even large and complex workflows.
+
+- *__Author, schedule, execute and monitor workflows__* (jobs) comprising of multiple steps
+    - Supports complex schedules using Cron expressions
+    - Easy manual execution of either entire or partial workflows
+- Create jobs and *__manage the order in which steps are run__* either by
+    1. Simply grouping steps into consecutive execution phases
+    2. Defining detailed dependencies (loose or strict) between steps in each job
+- *__Parameterize__* workflows and steps
+    - Define static or dynamic parameters that are passed to steps
+    - Share commong parameters and values across multiple steps
+    - Evaluate or assign parameter values during execution
+- *__Visualize__* workflows
+    - Understand your workflow's dependencies more easily by analyzing dependency graphs
+    - Find bottlenecks and problematic steps in your executions by visualizing durations, statuses etc.
+- Manage *__subscriptions__* to receive alerts when something goes wrong
+    - Or temporarily bypass subscriptions when doing development and testing of workflows
+- Easily *__manage simple Master Data__* through the web user interface
+    - Configure SQL database tables available for editing in the UI with minimal effort
+- Grant users different levels of access and permissions
+- Authorize users to manage specific workflows or data tables
+
+Currently supported step types:
+- Sql
+    - Run arbitrary SQL commands (e.g. stored procs) either on SQL Server or Azure SQL databases
+    - Return scalar values and assign them to workflow parameters/variables
+- Package
+    - Execute SQL Server Integration Services (SSIS) packages deployed to the SSIS catalogue
+- Tabular
+    - Process tabular models deployed to SQL Server (SSAS) or Azure Analysis Services
+- AgentJob
+    - Execute SQL Server Agent jobs
+- Pipeline
+    - Execute pipelines created in Azure Data Factory and Synapse Analytics workspaces
+- Function
+    - Invoke Azure Function App functions
+    - Wait for durable functions to complete before step is considered completed
+- Exe
+    - Run locally stored executables (e.g. Python or PowerShell scripts)
+- Dataset
+    - Refresh datasets published to Power BI Service workspaces
+- Mail
+    - Send emails as part of your workflows
+- Job
+    - Start another Biflow job as part of your workflow
+
 
 ## Requirements
 
-Some requirements apply when running Biflow either on-premise or in Azure but some requirements are common.
+Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
 
 ### Common
 - SQL Server or Azure SQL Database to host the system database
@@ -53,7 +107,7 @@ Four methods of authentication are supported:
 
 ## Architecture
 
-There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given in the installation section.
+There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given also in the installation section.
 
 ### On-premise
 
@@ -65,7 +119,7 @@ The Azure (monolithic) architecture has all the necessary components and service
 
 ### Azure (distributed)
 
-The Azure (distributed) approach closely resembles the on-premise architecture. However, the executor console app is now replaced with an executor service running as an Azure Web App. From the two Azure architectures, this offers significantly more control over upgrades to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
+The Azure (distributed) approach closely resembles the on-premise architecture. However, the executor console app is now replaced with an executor service running as an Azure Web App. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
 # Documentation
 
@@ -108,7 +162,7 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |DependenciesFailed|One or more of the step's strict dependencies failed and the step's execution was skipped.|
 |Queued|The step's dependencies succeeded and the step is waiting for a parallel execution slot to open up.|
 |Skipped|The step's execution condition was not met and the step was skipped.|
-|Duplicate|A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.|
+|Duplicate|Deprecated. ~~A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.~~|
 |Running|The step is currently executing|
 |Succeeded|The step was completed successfully|
 |Warning|The step succeeded with warnings|
@@ -145,7 +199,7 @@ The flowchart below describes the lifecycle and states of a step execution. Duri
     - In addition to the same rights as the Editor role
         - Can manage users and global settings
         - Can manage other users' subscriptions
-        - Can view stack traces of failed steps (when available)
+        - Can view stack traces of failed and cancelled steps (when available)
 
 ## Encryption
 
