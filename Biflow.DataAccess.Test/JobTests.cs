@@ -20,7 +20,6 @@ public class JobTests
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
-            .AsNoTracking()
             .Include(job => job.Category)
             .FirstAsync(job => job.JobName == "Test job");
         Assert.Equal(_username, job.CreatedBy);
@@ -28,5 +27,7 @@ public class JobTests
         Assert.NotEqual(default, job.CreatedDateTime);
         Assert.NotEqual(default, job.LastModifiedDateTime);
         Assert.NotNull(job.Category);
+        job.JobName = "Test job renamed";
+        await context.SaveChangesAsync();
     }
 }

@@ -43,6 +43,8 @@ public class DatabaseFixture : IAsyncLifetime
         DbContextFactory = factory;
     }
 
+    public Task DisposeAsync() => Task.CompletedTask;
+
     public async Task InitializeAsync()
     {
         var respawner = await Respawner.CreateAsync(ConnectionString);
@@ -50,6 +52,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         // Initialize seed data
         var context = await DbContextFactory.CreateDbContextAsync();
+
         var job = new Job
         {
             JobName = "Test job",
@@ -61,9 +64,102 @@ public class DatabaseFixture : IAsyncLifetime
             IsEnabled = true,
             Category = new JobCategory { CategoryName = "Test category" }
         };
+        var jobParameter = new JobParameter
+        {
+            Job = job,
+            ParameterName = "JobParameter1",
+            ParameterValueType = ParameterValueType.String,
+            ValueString = "Hello world"
+        };
+        job.JobParameters = new List<JobParameter> { jobParameter };
+        var jobConcurrency = new JobConcurrency { Job = job, StepType = StepType.Sql, MaxParallelSteps = 1 };
+        job.JobConcurrencies = new List<JobConcurrency> { jobConcurrency };
+
+        var connection = new SqlConnectionInfo("Test connection", ConnectionString);
+
+        var tag = new Tag("Test tag") { Color = TagColor.DarkGray };
+        
+        var step1 = new SqlStep
+        {
+            StepName = "Test step 1",
+            ExecutionPhase = 10,
+            SqlStatement = "select 1",
+            Connection = connection,
+            Tags = new List<Tag> { tag }
+        };
+        
+        var step2 = new SqlStep
+        {
+            StepName = "Test step 2",
+            StepDescription = "Test step 2 description",
+            ExecutionPhase = 20,
+            SqlStatement = "select @param",
+            Connection = connection,
+            Tags = new List<Tag> { tag }
+        };
+        var step2Dependency = new Dependency { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
+        step2.Dependencies = new List<Dependency> { step2Dependency };
+        var step2Parameter = new SqlStepParameter 
+        {
+            Step = step2,
+            ParameterName = "@param",
+            ParameterValueType = ParameterValueType.Int32,
+            ValueInt32 = 10
+        };
+        step2.StepParameters = new List<SqlStepParameter> { step2Parameter };
+
+        var step3 = new SqlStep
+        {
+            StepName = "Test step 3",
+            ExecutionPhase = 20,
+            SqlStatement = "select @param",
+            Connection = connection,
+            Tags = new List<Tag> { tag }
+        };
+        var step3Parameter = new SqlStepParameter
+        {
+            Step = step3,
+            ParameterName = "@param",
+            ParameterValueType = ParameterValueType.String,
+            InheritFromJobParameter = jobParameter
+        };
+        step3.StepParameters = new List<SqlStepParameter> { step3Parameter };
+        
+        var step4 = new SqlStep
+        {
+            StepName = "Test step 4",
+            ExecutionPhase = 30,
+            SqlStatement = "select @param",
+            Connection = connection,
+            Tags = new List<Tag> { tag }
+        };
+        var step4Parameter = new SqlStepParameter
+        {
+            Step = step4,
+            ParameterName = "@param",
+            ParameterValueType = ParameterValueType.DateTime,
+            UseExpression = true,
+            Expression = new EvaluationExpression { Expression = "DateTime.Now" }
+        };
+        step4.StepParameters = new List<SqlStepParameter> { step4Parameter };
+
+        var step3Target = new DataObject
+        {
+            ServerName = "TestServer",
+            DatabaseName = "TestDb",
+            SchemaName = "TestSchema",
+            ObjectName = "TestTable",
+            MaxConcurrentWrites = 1,
+            Writers = new List<Step> { step3 },
+            Readers = new List<Step> { step4 }
+        };
+        step3.Targets = new List<DataObject> { step3Target };
+        step4.Sources = new List<DataObject> { step3Target };
+
+        job.Steps = new List<Step> { step1, step2, step3, step4 };
+
         context.AddRange(job);
         await context.SaveChangesAsync();
     }
 
-    public Task DisposeAsync() => Task.CompletedTask;
 }
