@@ -56,6 +56,7 @@ public partial class ExecutionDetails : ComponentBase
 
     private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
     private HashSet<string> StepFilter { get; } = new();
+    private StepExecution? DependencyGraphStepFilter { get; set; }
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private HashSet<string> TagFilter { get; } = new();
     private SortMode SortMode { get; set; } = SortMode.StartedAsc;
@@ -66,6 +67,22 @@ public partial class ExecutionDetails : ComponentBase
     private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
 
     private bool GraphShouldRender { get; set; } = false;
+
+    private int FilterDepthBackwards
+    {
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+    }
+
+    private int _filterDepthBackwards;
+
+    private int FilterDepthForwards
+    {
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+    }
+
+    private int _filterDepthForwards;
 
     protected override void OnInitialized()
     {
@@ -127,31 +144,67 @@ public partial class ExecutionDetails : ComponentBase
     {
         GraphShouldRender = false;
 
-        // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-        var steps = Execution?.StepExecutions
-            .Select(step =>
+        string? stepsJson = null;
+        string? dependenciesJson = null;
+
+        if (DependencyGraphStepFilter is null)
+        {
+            // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+            var steps = Execution?.StepExecutions
+                .Select(step =>
+                {
+                    var status = step.ExecutionStatus.ToString() ?? "";
+                    return new
+                    {
+                        Id = step.StepId,
+                        Name = step.StepName,
+                        ClassName = $"enabled {status.ToLower()}",
+                        Tooltip = $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
+                    };
+                });
+            var dependencies = Execution?.StepExecutions
+                .SelectMany(step => step.ExecutionDependencies)
+                .Where(dep => dep.DependantOnStepExecution is not null)
+                .Select(dep => new
+                {
+                    dep.StepId,
+                    dep.DependantOnStepId,
+                    ClassName = dep.DependencyType.ToString().ToLower()
+                });
+
+            stepsJson = JsonSerializer.Serialize(steps);
+            dependenciesJson = JsonSerializer.Serialize(dependencies);
+        }
+        else
+        {
+            var startStep = Execution?.StepExecutions.FirstOrDefault(s => s.StepId == DependencyGraphStepFilter.StepId);
+            if (startStep is not null)
             {
-                var status = step.ExecutionStatus.ToString() ?? "";
-                return new
+                var steps = RecurseDependenciesBackward(startStep, new(), 0);
+                steps.Remove(startStep);
+                steps = RecurseDependenciesForward(startStep, steps, 0);
+
+                var dependencies = steps
+                    .SelectMany(step => step.ExecutionDependencies)
+                    .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
+                    .Select(dep => new
+                    {
+                        dep.StepId,
+                        dep.DependantOnStepId,
+                        ClassName = dep.DependencyType.ToString().ToLower()
+                    });
+
+                stepsJson = JsonSerializer.Serialize(steps.Select(step => new
                 {
                     Id = step.StepId,
                     Name = step.StepName,
-                    ClassName = $"enabled {status.ToLower()}",
-                    Tooltip = $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
-                };
-            });
-        var dependencies = Execution?.StepExecutions
-            .SelectMany(step => step.ExecutionDependencies)
-            .Where(dep => dep.DependantOnStepExecution is not null)
-            .Select(dep => new
-            {
-                dep.StepId,
-                dep.DependantOnStepId,
-                ClassName = dep.DependencyType.ToString().ToLower()
-            });
-
-        var stepsJson = JsonSerializer.Serialize(steps);
-        var dependenciesJson = JsonSerializer.Serialize(dependencies);
+                    ClassName = $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""}",
+                    Tooltip = $"{step.StepType}"
+                }));
+                dependenciesJson = JsonSerializer.Serialize(dependencies);
+            }
+        }
+        
 
         if (stepsJson is not null && dependenciesJson is not null)
             await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
@@ -203,6 +256,95 @@ public partial class ExecutionDetails : ComponentBase
             Messenger.AddError("Error stopping execution", ex.Message);
             StoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
+    }
+
+    private async Task LimitGraph(StepExecution step)
+    {
+        DependencyGraphStepFilter = step;
+        await LoadGraph();
+    }
+
+    private List<StepExecution> RecurseDependenciesBackward(StepExecution step, List<StepExecution> processedSteps, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+
+        // If the step was already handled, return.
+        // This way we do not loop indefinitely in case of circular dependencies.
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
+        {
+            depth--;
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        // Get dependency steps.
+        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => step.ExecutionDependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesBackward(depencyStep, processedSteps, depth);
+        }
+
+        depth--;
+
+        return processedSteps;
+    }
+
+    private List<StepExecution> RecurseDependenciesForward(StepExecution step, List<StepExecution> processedSteps, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
+        {
+            depth--;
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => s.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
+
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesForward(depencyStep, processedSteps, depth);
+        }
+
+        depth--;
+
+        return processedSteps;
+    }
+
+    private async Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(Execution);
+        await Task.Delay(150);
+        var filtered = Execution.StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        return new AutosuggestDataProviderResult<StepExecution>
+        {
+            Data = filtered
+        };
+    }
+
+    private StepExecution ValueSelector(StepExecution step) => step;
+
+    private string TextSelector(StepExecution step) => step.StepName ?? "";
+
+    private Task<StepExecution> ResolveAutosuggestItemFromValue(StepExecution step)
+    {
+        ArgumentNullException.ThrowIfNull(Execution);
+        var step_ = Task.FromResult(Execution.StepExecutions.First(s => s.StepId == step.StepId));
+        return step_;
     }
 
     public void Dispose() => ObjectReference?.Dispose();
