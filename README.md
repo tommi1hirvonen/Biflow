@@ -162,7 +162,7 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |DependenciesFailed|One or more of the step's strict dependencies failed and the step's execution was skipped.|
 |Queued|The step's dependencies succeeded and the step is waiting for a parallel execution slot to open up.|
 |Skipped|The step's execution condition was not met and the step was skipped.|
-|Duplicate|Deprecated. ~~A different job execution instance with the same step was found running at the same time as this was step was due for execution. The execution of this step was skipped.~~|
+|Duplicate|The step was skipped with a status of 'Duplicate'. This happens if the same step is running under a different execution at the same time and the step's duplicate behaviour is defined as 'Fail'.|
 |Running|The step is currently executing|
 |Succeeded|The step was completed successfully|
 |Warning|The step succeeded with warnings|
