@@ -78,7 +78,8 @@
     {
         <HxButtonToolbar CssClass="mt-3">
             <HxDropdownButtonGroup>
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Danger" CssClass="@(Stopping ? "disabled" : null)">
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                                        CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
                     <CxIcon Icon="FeatherIcon.XOctagon" />
                     Stop
                 </HxDropdownToggleButton>
