@@ -120,7 +120,7 @@
             </div>
         </div>
         
-        <div class="col-xl mt-3 mt-xl-0 d-inline-flex align-items-center">
+        <div class="col-xxl mt-3 mt-xxl-0 d-inline-flex align-items-center">
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="StepType"
                                 FilterSet="StepTypeFilter"
@@ -135,23 +135,11 @@
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
-                <FilterDropdown TItem="ConnectionInfoBase"
-                                FilterSet="ConnectionFilter"
-                                IdSelector="c => c.ConnectionId.ToString()"
-                                TextSelector="c => c.ConnectionName"
-                                Items="SqlConnections
-                                        ?.Cast<ConnectionInfoBase>()
-                                        .Concat(AsConnections?.Cast<ConnectionInfoBase>() ?? Enumerable.Empty<ConnectionInfoBase>())
-                                        .Where(c => Steps?.Any(s => s is IHasConnection conn && conn.ConnectionId == c.ConnectionId) ?? false)
-                                        .OrderBy(c => c.ConnectionName)
-                                        ?? Enumerable.Empty<ConnectionInfoBase>()"
-                                OnChange="StateHasChanged">
-                    <TitleTemplate>
-                        <CxIcon Icon="FeatherIcon.Database" />
-                        Connection
-                    </TitleTemplate>
-                </FilterDropdown>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => AdvancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                    Advanced filters
+                </HxButton>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () =>
                     {
                         TagsFilterSet.Clear();
                         StepTypeFilter.Clear();
@@ -159,6 +147,7 @@
                         StepNameFilter = string.Empty;
                         StepDescriptionFilter = string.Empty;
                         SqlStatementFilter = string.Empty;
+                        await AdvancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
                     }">
                     <CxIcon Icon="FeatherIcon.X" />
                     Clear
@@ -480,6 +469,27 @@
         PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />   
 </AuthorizeView>
+
+@{
+    var connections = SqlConnections
+        ?.Cast<ConnectionInfoBase>()
+        .Concat(AsConnections?.Cast<ConnectionInfoBase>() ?? Enumerable.Empty<ConnectionInfoBase>())
+        .Where(c => Steps?.OfType<IHasConnection>().Any(step => c.ConnectionId == step.ConnectionId) ?? false)
+        .OrderBy(c => c.ConnectionName)
+        ?? Enumerable.Empty<ConnectionInfoBase>();
+    var pipelineClients = PipelineClients
+        ?.Where(c => Steps?.OfType<PipelineStep>().Any(step => c.PipelineClientId == step.PipelineClientId) ?? false)
+        ?? Enumerable.Empty<PipelineClient>();
+    var functionApps = FunctionApps
+        ?.Where(fa => Steps?.OfType<FunctionStep>().Any(step => fa.FunctionAppId == step.FunctionAppId) ?? false)
+        ?? Enumerable.Empty<FunctionApp>();
+}
+
+<AdvancedFiltersOffcanvas @ref="AdvancedFiltersOffcanvas"
+    OnFiltersChanged="StateHasChanged"
+    Connections="connections"
+    FunctionApps="functionApps"
+    PipelineClients="pipelineClients" />
 
 <StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
 

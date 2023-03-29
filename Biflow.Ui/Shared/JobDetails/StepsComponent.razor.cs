@@ -46,6 +46,7 @@ public partial class StepsComponent : ComponentBase
         .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
         .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType))
         .Where(step => !ConnectionFilter.Any() || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
+        .Where(step => AdvancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? Enumerable.Empty<Step>();
 
     private IEnumerable<Tag> Tags => Steps?
@@ -65,6 +66,8 @@ public partial class StepsComponent : ComponentBase
     private Step? HistoryModalStep { get; set; }
 
     private ExecuteModal? ExecuteModal { get; set; }
+
+    private AdvancedFiltersOffcanvas? AdvancedFiltersOffcanvas { get; set; }
 
     private string StepNameFilter { get; set; } = string.Empty;
     private string StepDescriptionFilter { get; set; } = string.Empty;
