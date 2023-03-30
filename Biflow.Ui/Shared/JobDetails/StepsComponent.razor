@@ -373,19 +373,29 @@
                                 </div>
                             </div>
                         }
-                        @if (ShowDetails && item is PackageStep package)
+                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageFolder)
+                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageProject)
+                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary">@package.PackageFolderName\@package.PackageProjectName\@package.PackageName</small>
+                                    <small class="text-secondary">
+                                        <HighlightableText Text="@package.PackageFolderName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageFolder" />
+                                        \
+                                        <HighlightableText Text="@package.PackageProjectName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageProject" />
+                                        \
+                                        <HighlightableText Text="@package.PackageName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageName" />
+                                    </small>
                                 </div>
                             </div>
                         }
-                        @if (ShowDetails && item is PipelineStep pipeline)
+                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary">@pipeline.PipelineName</small>
+                                    <small class="text-secondary">
+                                        <HighlightableText Text="@pipeline.PipelineName" PartToHighlight="@AdvancedFiltersOffcanvas?.PipelineName" />
+                                    </small>
                                 </div>
                             </div>
                         }
@@ -397,26 +407,32 @@
                                 </div>
                             </div>
                         }
-                        @if (ShowDetails && item is ExeStep exe)
+                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeFilePath)
+                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary">@exe.ExeFileName</small>
+                                    <small class="text-secondary">
+                                        <HighlightableText Text="@exe.ExeFileName" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeFilePath" />
+                                        <HighlightableText Text="@exe.ExeArguments" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeArguments" />
+                                    </small>
                                 </div>
                             </div>
                         }
-                        @if (ShowDetails && item is FunctionStep function)
+                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary">@function.FunctionUrl</small>
+                                    <small class="text-secondary">
+                                        <HighlightableText Text="@function.FunctionUrl" PartToHighlight="@AdvancedFiltersOffcanvas?.FunctionUrl" />
+                                    </small>
                                 </div>
                             </div>
                         }
                         @if (ShowDetails && item is TabularStep tabular)
                         {
-                            var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $"\\{tabular.TabularTableName}";
-                            var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $"\\{tabular.TabularPartitionName}";
+                            var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $" \\ {tabular.TabularTableName}";
+                            var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $" \\ {tabular.TabularPartitionName}";
                             <div class="row">
                                 <div class="col text-truncate">
                                      

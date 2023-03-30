@@ -19,19 +19,19 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     private HashSet<ConnectionInfoBase> ConnectionsFilter { get; set; } = new();
 
-    private string PackageFolder { get; set; } = "";
-    private string PackageProject { get; set; } = "";
-    private string PackageName { get; set; } = "";
+    public string PackageFolder { get; private set; } = "";
+    public string PackageProject { get; private set; } = "";
+    public string PackageName { get; private set; } = "";
 
-    private string PipelineName { get; set; } = "";
+    public string PipelineName { get; private set; } = "";
     private HashSet<PipelineClient> PipelineClientsFilter { get; set; } = new();
 
-    private string FunctionUrl { get; set; } = "";
+    public string FunctionUrl { get; private set; } = "";
     private string FunctionInput { get; set; } = "";
     private HashSet<FunctionApp> FunctionAppsFilter { get; set; } = new();
 
-    private string ExeFilePath { get; set; } = "";
-    private string ExeArguments { get; set; } = "";
+    public string ExeFilePath { get; private set; } = "";
+    public string ExeArguments { get; private set; } = "";
 
     public async Task ClearAsync()
     {
