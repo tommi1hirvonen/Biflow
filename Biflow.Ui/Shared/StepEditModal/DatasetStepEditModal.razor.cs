@@ -25,6 +25,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 
     protected override Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.DatasetSteps
+        .Include(step => step.Job)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

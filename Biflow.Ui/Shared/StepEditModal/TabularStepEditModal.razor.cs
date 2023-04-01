@@ -32,6 +32,7 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
 
     protected override Task<TabularStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.TabularSteps
+        .Include(step => step.Job)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)

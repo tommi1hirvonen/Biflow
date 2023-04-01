@@ -31,6 +31,7 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
 
     protected override Task<AgentJobStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.AgentJobSteps
+        .Include(step => step.Job)
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
