@@ -52,6 +52,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         // Initialize seed data
         var context = await DbContextFactory.CreateDbContextAsync();
+        var connection = new SqlConnectionInfo("Test connection", ConnectionString);
 
         var job = new Job
         {
@@ -75,10 +76,8 @@ public class DatabaseFixture : IAsyncLifetime
         var jobConcurrency = new JobConcurrency { Job = job, StepType = StepType.Sql, MaxParallelSteps = 1 };
         job.JobConcurrencies = new List<JobConcurrency> { jobConcurrency };
 
-        var connection = new SqlConnectionInfo("Test connection", ConnectionString);
-
         var tag = new Tag("Test tag") { Color = TagColor.DarkGray };
-        
+
         var step1 = new SqlStep
         {
             StepName = "Test step 1",
@@ -87,7 +86,7 @@ public class DatabaseFixture : IAsyncLifetime
             Connection = connection,
             Tags = new List<Tag> { tag }
         };
-        
+
         var step2 = new SqlStep
         {
             StepName = "Test step 2",
@@ -99,7 +98,7 @@ public class DatabaseFixture : IAsyncLifetime
         };
         var step2Dependency = new Dependency { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
         step2.Dependencies = new List<Dependency> { step2Dependency };
-        var step2Parameter = new SqlStepParameter 
+        var step2Parameter = new SqlStepParameter
         {
             Step = step2,
             ParameterName = "@param",
@@ -124,7 +123,7 @@ public class DatabaseFixture : IAsyncLifetime
             InheritFromJobParameter = jobParameter
         };
         step3.StepParameters = new List<SqlStepParameter> { step3Parameter };
-        
+
         var step4 = new SqlStep
         {
             StepName = "Test step 4",
@@ -133,6 +132,8 @@ public class DatabaseFixture : IAsyncLifetime
             Connection = connection,
             Tags = new List<Tag> { tag }
         };
+        var step4Dependency = new Dependency { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
+        step4.Dependencies = new List<Dependency> { step4Dependency };
         var step4Parameter = new SqlStepParameter
         {
             Step = step4,
@@ -155,6 +156,17 @@ public class DatabaseFixture : IAsyncLifetime
         };
         step3.Targets = new List<DataObject> { step3Target };
         step4.Sources = new List<DataObject> { step3Target };
+
+        var step4Target = new DataObject
+        {
+            ServerName = "TestServer",
+            DatabaseName = "TestDb",
+            SchemaName = "TestSchema",
+            ObjectName = "TestTable2",
+            MaxConcurrentWrites = 1,
+            Writers = new List<Step> { step4 }
+        };
+        step4.Targets = new List<DataObject> { step4Target };
 
         job.Steps = new List<Step> { step1, step2, step3, step4 };
 

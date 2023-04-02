@@ -1,33 +1,54 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Biflow.DataAccess.Models;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class JobTests
+public class JobTests : IClassFixture<JobFixture>
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly string _username;
 
-    public JobTests(DatabaseFixture fixture)
+    public JobTests(JobFixture fixture)
     {
-        _dbContextFactory = fixture.DbContextFactory;
+        Job = fixture.Job;
         _username = fixture.Username;
     }
 
-    [Fact]
-    public async Task TestJob()
+    private Job Job { get; }
+
+    [Fact] public void CreatedBy_Equals_Username() => Assert.Equal(_username, Job.CreatedBy);
+
+    [Fact] public void LastModifiedBy_Equals_Username() => Assert.Equal(_username, Job.LastModifiedBy);
+
+    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.CreatedDateTime);
+
+    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.LastModifiedDateTime);
+
+    [Fact] public void Category_NotNull() => Assert.NotNull(Job.Category);
+}
+
+public class JobFixture : IAsyncLifetime
+{
+    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+
+    public Job Job { get; private set; } = null!;
+
+    public string Username { get; }
+
+    public JobFixture(DatabaseFixture fixture)
+    {
+        _dbContextFactory = fixture.DbContextFactory;
+        Username = fixture.Username;
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    public async Task InitializeAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        var job = await context.Jobs
+        Job = await context.Jobs
             .Include(job => job.Category)
             .FirstAsync(job => job.JobName == "Test job");
-        Assert.Equal(_username, job.CreatedBy);
-        Assert.Equal(_username, job.LastModifiedBy);
-        Assert.NotEqual(default, job.CreatedDateTime);
-        Assert.NotEqual(default, job.LastModifiedDateTime);
-        Assert.NotNull(job.Category);
-        job.JobName = "Test job renamed";
-        await context.SaveChangesAsync();
     }
 }
