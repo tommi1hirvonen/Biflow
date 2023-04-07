@@ -18,7 +18,7 @@ public class TokenService : ITokenService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<(string Token, DateTimeOffset ExpiresOne)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
+    public async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
     {
         await _semaphore.WaitAsync();
         try
