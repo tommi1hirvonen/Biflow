@@ -3,6 +3,16 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
+@if (Table is null)
+{
+    <div class="row mt-5">
+        <div class="col">
+            <HxSpinner Color="ThemeColor.Secondary" />
+        </div>
+    </div>
+    return;
+}
+
 <div class="row">
     <div class="col">
         <div>
@@ -10,12 +20,12 @@
                 All data tables
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (Table?.Category is not null)
+            @if (Table.Category is not null)
             {
                 <span>@Table.Category.CategoryName /&nbsp;</span>
             }
-            <a href="datatables/edit/@Table?.DataTableId">
-                @Table?.DataTableName
+            <a href="datatables/edit/@Table.DataTableId">
+                @Table.DataTableName
             </a>
             <span>&nbsp;/</span>
             <strong>Import data</strong>
@@ -45,7 +55,7 @@
     <div class="col-auto">
         <div>
             <select @bind="UploadType" class="form-select form-select-sm">
-                @foreach (var type in Enum.GetValues<UploadType>())
+                @foreach (var type in UploadTypes)
                 {
                     <option value="@type">@type</option>
                 }
@@ -116,7 +126,9 @@
 
     private bool Loading { get; set; } = false;
 
-    private UploadType UploadType { get; set; } = UploadType.Upsert;
+    private List<UploadType> UploadTypes { get; set; } = new();
+
+    private UploadType UploadType { get; set; }
 
     private UploadBuilder? Builder { get; set; }
 
@@ -129,6 +141,27 @@
             .Include(t => t.Category)
             .Include(t => t.Connection)
             .FirstAsync(t => t.DataTableId == TableId);
+
+        // Protect users against an incorrect upload type selection by filtering them
+        // based on what is allowed with the current data table.
+        var uploadTypes = new List<UploadType>();
+        if (Table.AllowInsert)
+        {
+            uploadTypes.Add(UploadType.Upsert);
+            uploadTypes.Add(UploadType.InsertNew);
+        }
+        uploadTypes.Add(UploadType.UpdateExisting);
+        if (Table.AllowDelete)
+        {
+            uploadTypes.Add(UploadType.DeleteMissing);
+        }
+        if (Table.AllowInsert && Table.AllowDelete)
+        {
+            uploadTypes.Add(UploadType.Full);
+        }
+        UploadTypes = uploadTypes;
+        UploadType = UploadTypes.First();
+
         Builder = await UploadBuilder.FromTableAsync(Table);
     }
 

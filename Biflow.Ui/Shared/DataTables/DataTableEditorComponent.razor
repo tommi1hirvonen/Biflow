@@ -90,12 +90,15 @@
                 Save changes
             </HxButton>
 
-            <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+            @if (Table.AllowInsert)
+            {
+                <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="TableData is not null && TableData.IsEditable"
                       OnClick="() => TableData?.AddRow()">
-                <CxIcon Icon="FeatherIcon.Plus" />
-                Add record
-            </HxButton>
+                    <CxIcon Icon="FeatherIcon.Plus" />
+                    Add record
+                </HxButton>
+            }
         </HxButtonToolbar>
     </div>
     <div class="col-xl mt-xl-0 mt-3">
@@ -180,7 +183,7 @@
                                         }
                                     </th>
                                 }
-                                @if (TableData.IsEditable && EditModeEnabled)
+                                @if (TableData.IsEditable && EditModeEnabled && Table.AllowDelete)
                                 {
                                     <th></th>    
                                 }
@@ -326,7 +329,7 @@
                                             }
                                         </td>
                                     }
-                                    @if (TableData.IsEditable && EditModeEnabled)
+                                    @if (TableData.IsEditable && EditModeEnabled && Table.AllowDelete)
                                     {
                                         <td>
                                             <button class="btn btn-sm btn-auto text-danger" @onclick="row.Delete">

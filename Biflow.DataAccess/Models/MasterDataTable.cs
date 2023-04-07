@@ -26,6 +26,10 @@ public class MasterDataTable
     [MaxLength(128)]
     public string TargetTableName { get; set; } = string.Empty;
 
+    public bool AllowInsert { get; set; } = true;
+
+    public bool AllowDelete { get; set; } = true;
+
     [Required]
     public Guid ConnectionId { get; set; }
 
