@@ -57,7 +57,7 @@ public class Upload
         WHERE {string.Join(" AND ", PkColumns.Select(c => $"src.[{c}] IS NULL"))}
         """;
 
-    public async Task SaveUploadToDbAsync(UploadType uploadType)
+    public async Task<(int Inserted, int Updated, int Deleted)> SaveUploadToDbAsync(UploadType uploadType)
     {
         using var connection = new SqlConnection(_table.Connection.ConnectionString);
         await connection.OpenAsync();
@@ -82,30 +82,33 @@ public class Upload
         var reader = new DictionaryReader(_columns.Select(c => c.Name), Data);
         await copy.WriteToServerAsync(reader);
 
+        var inserted = 0;
+        var updated = 0;
+        var deleted = 0;
         var transaction = await connection.BeginTransactionAsync();
         try
         {
             if (uploadType == UploadType.Upsert)
             {
-                await connection.ExecuteAsync(UpdateCommand, transaction: transaction);
-                await connection.ExecuteAsync(InsertCommand, transaction: transaction);
+                updated = await connection.ExecuteAsync(UpdateCommand, transaction: transaction);
+                inserted = await connection.ExecuteAsync(InsertCommand, transaction: transaction);
             }
             else if (uploadType == UploadType.InsertNew)
             {
-                await connection.ExecuteAsync(InsertCommand, transaction: transaction);
+                inserted = await connection.ExecuteAsync(InsertCommand, transaction: transaction);
             }
             else if (uploadType == UploadType.UpdateExisting)
             {
-                await connection.ExecuteAsync(UpdateCommand, transaction: transaction);
+                updated = await connection.ExecuteAsync(UpdateCommand, transaction: transaction);
             }
             else if (uploadType == UploadType.Full)
             {
                 await connection.ExecuteAsync($"TRUNCATE TABLE [{_table.TargetSchemaName}].[{_table.TargetTableName}]", transaction: transaction);
-                await connection.ExecuteAsync(InsertCommand, transaction: transaction);
+                inserted = await connection.ExecuteAsync(InsertCommand, transaction: transaction);
             }
             else if (uploadType == UploadType.DeleteMissing)
             {
-                await connection.ExecuteAsync(DeleteCommand, transaction: transaction);
+                deleted = await connection.ExecuteAsync(DeleteCommand, transaction: transaction);
             }
             else
             {
@@ -118,7 +121,7 @@ public class Upload
             await transaction.RollbackAsync();
             throw;
         }
-        
+        return (inserted, updated, deleted);
     }
 
 }

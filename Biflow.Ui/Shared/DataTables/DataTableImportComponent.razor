@@ -1,4 +1,5 @@
 ﻿@using System.Data;
+@using System.Text;
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
@@ -154,10 +155,32 @@
 
     private async Task UploadAsync()
     {
+        if (Upload is null)
+        {
+            Messenger.AddError("Upload object was null");
+            return;
+        }
         try
         {
-            await Upload.LetAsync(x => x.SaveUploadToDbAsync(UploadType));
-            Messenger.AddInformation("Data updated successfully");
+            var (inserted, updated, deleted) = await Upload.SaveUploadToDbAsync(UploadType);
+            var message = new StringBuilder();
+            if (inserted == 0 && updated == 0 && deleted == 0)
+            {
+                message.Append("No changes detected");
+            }
+            if (inserted > 0)
+            {
+                message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
+            }
+            if (updated > 0)
+            {
+                message.Append("Updated ").Append(updated).Append(" record(s)").AppendLine();
+            }
+            if (deleted > 0)
+            {
+                message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
+            }
+            Messenger.AddInformation("Data updated successfully", message.ToString());
         }
         catch (Exception ex)
         {
