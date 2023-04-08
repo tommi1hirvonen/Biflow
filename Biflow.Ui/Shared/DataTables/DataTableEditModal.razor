@@ -98,6 +98,12 @@
                                @bind-value="EditTable.AllowDelete">
                             <label class="form-check-label" for="allow_delete">Allow delete</label>
                         </div>
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="allow_import"
+                                   checked=@EditTable.AllowImport
+                               @bind-value="EditTable.AllowImport">
+                            <label class="form-check-label" for="allow_import">Allow import</label>
+                        </div>
                     </div>
                     <div class="col">
                         <label class="form-label">

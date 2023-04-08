@@ -33,6 +33,18 @@
     </div>
 </div>
 
+@if (!Table.AllowImport)
+{
+    <div class="row mt-3">
+        <div class="col">
+            <div class="alert alert-secondary">
+                This data table does not allow importing data.
+            </div>
+        </div>
+    </div>
+    return;
+}
+
 <div class="row mt-3">
     <div class="col" style="max-width: 40rem;">
         <div>

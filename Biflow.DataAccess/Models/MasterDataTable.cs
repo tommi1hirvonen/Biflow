@@ -30,6 +30,8 @@ public class MasterDataTable
 
     public bool AllowDelete { get; set; } = true;
 
+    public bool AllowImport { get; set; } = true;
+
     [Required]
     public Guid ConnectionId { get; set; }
 
