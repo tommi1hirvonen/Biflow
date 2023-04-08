@@ -100,7 +100,12 @@
                         </div>
                     </div>
                     <div class="col">
-                        <label class="form-label">Locked columns</label>
+                        <label class="form-label">
+                            Locked columns
+                            <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
+                                <CxIcon Icon="FeatherIcon.Info" />
+                            </HxPopover>
+                        </label>
                         <HxInputTags
                             Delimiters="new()"
                             InputSize="InputSize.Small"
