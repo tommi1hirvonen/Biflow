@@ -66,16 +66,16 @@ public static class TableEditorExtensions
             var lookup = lookups?.GetValueOrDefault(c.Name);
             var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
             return new Column(
-                name: c.Name,
-                isPrimaryKey: isPk,
-                isIdentity: isIdentity,
-                isComputed: c.Computed,
-                isLocked: isLocked,
-                dbDatatype: c.Datatype,
-                dbDatatypeDescription: c.DatatypeDesc,
-                dbCreateDatatype: c.CreateDatatype,
-                datatype: datatype,
-                lookup: lookup);
+                Name: c.Name,
+                IsPrimaryKey: isPk,
+                IsIdentity: isIdentity,
+                IsComputed: c.Computed,
+                IsLocked: isLocked,
+                DbDatatype: c.Datatype,
+                DbDatatypeDescription: c.DatatypeDesc,
+                DbCreateDatatype: c.CreateDatatype,
+                Datatype: datatype,
+                Lookup: lookup);
         });
         return columns;
     }

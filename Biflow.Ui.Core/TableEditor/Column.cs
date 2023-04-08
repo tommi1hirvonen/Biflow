@@ -1,52 +1,16 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class Column
+public record Column(
+    string Name,
+    bool IsPrimaryKey,
+    bool IsIdentity,
+    bool IsComputed,
+    bool IsLocked,
+    string DbDatatype,
+    string DbDatatypeDescription,
+    string DbCreateDatatype,
+    Type? Datatype,
+    Lookup? Lookup)
 {
-    public string Name { get; }
-
-    public bool IsPrimaryKey { get; }
-
-    public bool IsIdentity { get; }
-
-    public bool IsComputed { get; }
-
-    public bool IsLocked { get; }
-
-    public string DbDatatype { get; }
-
-    public string DbDatatypeDescription { get; }
-
-    public Type? Datatype { get; }
-
-    public Lookup? Lookup { get; }
-
     public bool IsEditable => !IsIdentity && !IsComputed && Datatype is not null;
-
-    internal string DbCreateDatatype { get; }
-
-    public Column(
-        string name,
-        bool isPrimaryKey,
-        bool isIdentity,
-        bool isComputed,
-        bool isLocked,
-        string dbDatatype,
-        string dbDatatypeDescription,
-        string dbCreateDatatype,
-        Type? datatype,
-        Lookup? lookup)
-    {
-        Name = name;
-        IsPrimaryKey = isPrimaryKey;
-        IsIdentity = isIdentity;
-        IsComputed = isComputed;
-        IsLocked = isLocked;
-        DbDatatype = dbDatatype;
-        DbDatatypeDescription = dbDatatypeDescription;
-        DbCreateDatatype = dbCreateDatatype;
-        Datatype = datatype;
-        Lookup = lookup;
-    }
-
-    
 }
