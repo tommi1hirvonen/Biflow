@@ -10,5 +10,6 @@
 	[Timestamp] ROWVERSION NOT NULL,
 	[AllowInsert] BIT NOT NULL CONSTRAINT [DF_DataTable_AllowInsert] DEFAULT (1),
 	[AllowDelete] BIT NOT NULL CONSTRAINT [DF_DataTable_AllowDelete] DEFAULT (1),
+	[LockedColumns] VARCHAR(8000) NOT NULL CONSTRAINT [DF_DataTable_LockedColumns] DEFAULT ('[]'), -- Empty JSON array
     CONSTRAINT [PK_DataTable] PRIMARY KEY CLUSTERED ([DataTableId])
 )

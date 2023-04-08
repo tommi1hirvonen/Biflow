@@ -90,7 +90,7 @@ public class Upload
             throw new InvalidOperationException("Insert operation rejected because the table does not allow inserts. No changes were made.");
         }
         var insertColumns = _columns
-            .Where(c => !c.IsIdentity && !c.IsComputed)
+            .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked)
             .Select(c => c.Name)
             .ToList();
         if (!insertColumns.Any())
@@ -113,7 +113,7 @@ public class Upload
     private async Task<int> ExecuteUpdateAsync(SqlConnection connection, IDbTransaction transaction)
     {
         var updateColumns = _columns
-            .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity)
+            .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked)
             .Select(c => c.Name)
             .ToList();
         if (!updateColumns.Any())

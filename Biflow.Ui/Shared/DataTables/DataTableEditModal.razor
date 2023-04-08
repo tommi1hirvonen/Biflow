@@ -14,7 +14,7 @@
     };
 }
 
-<HxModal @ref="Modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title">
+<HxModal @ref="Modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title" Scrollable="true">
     <BodyTemplate>
         @if (EditTable is not null && Categories is not null)
         {
@@ -98,6 +98,14 @@
                                @bind-value="EditTable.AllowDelete">
                             <label class="form-check-label" for="allow_delete">Allow delete</label>
                         </div>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Locked columns</label>
+                        <HxInputTags
+                            Delimiters="new()"
+                            InputSize="InputSize.Small"
+                            TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                            @bind-Value="EditTable.LockedColumns" />
                     </div>
                 </div>
                 <div class="row">

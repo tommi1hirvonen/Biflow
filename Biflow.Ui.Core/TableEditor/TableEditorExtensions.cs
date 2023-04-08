@@ -62,9 +62,20 @@ public static class TableEditorExtensions
         {
             var isPk = primaryKeyColumns.Contains(c.Name);
             var isIdentity = identityColumn == c.Name;
+            var isLocked = table.LockedColumns.Contains(c.Name);
             var lookup = lookups?.GetValueOrDefault(c.Name);
             var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
-            return new Column(c.Name, isPk, isIdentity, c.Computed, c.Datatype, c.DatatypeDesc, c.CreateDatatype, datatype, lookup);
+            return new Column(
+                name: c.Name,
+                isPrimaryKey: isPk,
+                isIdentity: isIdentity,
+                isComputed: c.Computed,
+                isLocked: isLocked,
+                dbDatatype: c.Datatype,
+                dbDatatypeDescription: c.DatatypeDesc,
+                dbCreateDatatype: c.CreateDatatype,
+                datatype: datatype,
+                lookup: lookup);
         });
         return columns;
     }

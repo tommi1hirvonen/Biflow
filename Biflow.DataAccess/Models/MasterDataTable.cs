@@ -47,6 +47,8 @@ public class MasterDataTable
 
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 
+    public List<string> LockedColumns { get; set; } = new();
+
     [Timestamp]
     public byte[]? Timestamp { get; set; }
 }

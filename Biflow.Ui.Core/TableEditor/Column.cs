@@ -10,6 +10,8 @@ public class Column
 
     public bool IsComputed { get; }
 
+    public bool IsLocked { get; }
+
     public string DbDatatype { get; }
 
     public string DbDatatypeDescription { get; }
@@ -27,6 +29,7 @@ public class Column
         bool isPrimaryKey,
         bool isIdentity,
         bool isComputed,
+        bool isLocked,
         string dbDatatype,
         string dbDatatypeDescription,
         string dbCreateDatatype,
@@ -37,6 +40,7 @@ public class Column
         IsPrimaryKey = isPrimaryKey;
         IsIdentity = isIdentity;
         IsComputed = isComputed;
+        IsLocked = isLocked;
         DbDatatype = dbDatatype;
         DbDatatypeDescription = dbDatatypeDescription;
         DbCreateDatatype = dbCreateDatatype;
