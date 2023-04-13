@@ -137,7 +137,7 @@
                                .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
-                               .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains(s.StepName))) // Limit visible jobs based on step filter
+                               .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains((s.StepName, s.StepType)))) // Limit visible jobs based on step filter
                                .Where(e => !StepTypeFilter.Any() || e.StepExecutions.Any(s => StepTypeFilter.Contains(s.StepType))) // Limit visible jobs based on step type filter
                                .Where(e => !TagFilter.Any() || e.StepExecutions.Any(s => s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)) // Limit visible jobs based on tag filter
                                .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
@@ -153,7 +153,7 @@
 
             @if (ShowSteps)
             {
-                <FilterDropdown TItem="string"
+                <FilterDropdown TItem="(string StepName, StepType StepType)"
                                 FilterSet="StepFilter"
                                 Items="Executions_?
                                    .Where(e => StartTypeFilter == StartType.All ||
@@ -165,15 +165,19 @@
                                    .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                         StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                   .Select(s => s.StepName)
+                                   .Select(s => (s.StepName, s.StepType))
                                    .Distinct()
-                                   .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                                   .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <TitleTemplate>
                         <CxIcon Icon="LucideIcon.ListChecks" />
                         Step
                     </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepTypeIconComponent StepType_="item.StepType" />
+                        @item.StepName
+                    </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
                                 FilterSet="StepTypeFilter"
@@ -186,7 +190,7 @@
                                    .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
                                    .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                         StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
-                                   .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step types based on step filter
+                                   .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                    .Select(s => s.StepType)
                                    .Distinct()
                                    .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
@@ -235,7 +239,7 @@
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
                                    .SelectMany(e => e.StepExecutions)
                                    .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
-                                   .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                   .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                    .SelectMany(s => s.StepExecutionAttempts)
                                    .Select(e => e.ExecutionStatus)
@@ -258,7 +262,7 @@
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
                                    .SelectMany(e => e.StepExecutions)
-                                   .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible tags based on step filter
+                                   .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                    .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                                 StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter

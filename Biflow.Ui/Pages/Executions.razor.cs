@@ -51,7 +51,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     
     private HashSet<string> JobFilter { get; set; } = new();
     
-    private HashSet<string> StepFilter { get; set; } = new();
+    private HashSet<(string StepName, StepType StepType)> StepFilter { get; set; } = new();
     
     private HashSet<StepType> StepTypeFilter { get; set; } = new();
     
@@ -75,7 +75,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         .SelectMany(s => s.StepExecutionAttempts)
                         .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
                         .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
-                        .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+                        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
                         .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
                         .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
                         .ThenByDescending(e => e.StartDateTime)
@@ -206,7 +206,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         HashSet<ExecutionStatus> JobStatuses,
         HashSet<StepExecutionStatus> StepStatuses,
         HashSet<string> JobNames,
-        HashSet<string> StepNames,
+        HashSet<(string StepName, StepType StepType)> StepNames,
         HashSet<StepType> StepTypes,
         HashSet<string> Tags
     );
@@ -227,7 +227,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             StepTypes: StepTypeFilter,
             Tags: TagFilter
         );
-        var text = JsonSerializer.Serialize(sessionStorage);
+        var text = JsonSerializer.Serialize(sessionStorage, new JsonSerializerOptions { IncludeFields = true });
         await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
     }
 
@@ -235,7 +235,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     {
         var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
         if (text is null) return;
-        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text);
+        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text, new JsonSerializerOptions { IncludeFields = true });
         ActivePreset = sessionStorage?.Preset;
         (FromDateTime, ToDateTime) = sessionStorage switch
         {

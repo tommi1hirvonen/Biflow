@@ -33,7 +33,7 @@ public partial class ExecutionDetails : ComponentBase
     private IEnumerable<StepExecutionAttempt> FilteredExecutions => Executions
         .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
         .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => !StepFilter.Any() || StepFilter.Contains(e.StepExecution.StepName))
+        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType));
 
     private Report ShowReport { get; set; } = Report.Table;
@@ -55,7 +55,7 @@ public partial class ExecutionDetails : ComponentBase
     private List<Guid> StoppingExecutions { get; set; } = new();
 
     private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
-    private HashSet<string> StepFilter { get; } = new();
+    private HashSet<(string StepName, StepType StepType)> StepFilter { get; } = new();
     private StepExecution? DependencyGraphStepFilter { get; set; }
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private HashSet<string> TagFilter { get; } = new();

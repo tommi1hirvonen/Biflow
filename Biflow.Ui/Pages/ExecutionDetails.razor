@@ -260,22 +260,26 @@
             <span class="me-3">Filter</span>
 
             <HxButtonGroup Size="ButtonGroupSize.Small">
-                <FilterDropdown TItem="string"
+                <FilterDropdown TItem="(string StepName, StepType StepType)"
                             FilterSet="StepFilter"
                             Items="Execution?.StepExecutions
                                 .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
                                 .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                     StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
                                 .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                .Select(s => s.StepName)
+                                .Select(s => (s.StepName, s.StepType))
                                 .Distinct()
-                                .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                                .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
                             OnChange="StateHasChanged"
                             IsSearchable="true">
                     <TitleTemplate>
                         <CxIcon Icon="LucideIcon.ListChecks" />
                         Step
                     </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepTypeIconComponent StepType_="item.StepType" />
+                        @item.StepName
+                    </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
                             FilterSet="StepTypeFilter"
@@ -283,7 +287,7 @@
                                 .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
                                 .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                     StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step types based on step filter
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                 .Select(s => s.StepType)
                                 .Distinct()
                                 .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
@@ -301,7 +305,7 @@
                             FilterSet="StepStatusFilter"
                             Items="Execution?.StepExecutions
                                 .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible step statuses based on step filter
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                 .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                 .SelectMany(s => s.StepExecutionAttempts)
                                 .Select(e => e.ExecutionStatus)
@@ -319,7 +323,7 @@
                 <FilterDropdown TItem="string"
                             FilterSet="TagFilter"
                             Items="Execution?.StepExecutions
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains(s.StepName)) // Limit visible tags based on step filter
+                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                 .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                 .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                             StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
