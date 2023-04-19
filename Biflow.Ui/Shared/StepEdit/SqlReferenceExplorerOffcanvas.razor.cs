@@ -122,6 +122,12 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
             ReferencingNameOperator = "=";
         }
         await Offcanvas.LetAsync(x => x.ShowAsync());
-        await RunQueryAsync();
+
+        // Only run the query automatically when opening the modal if some kind of a filter was set.
+        // Running a query without filters should only be done on demand.
+        if (!string.IsNullOrEmpty(ReferencingSchemaFilter) || !string.IsNullOrEmpty(ReferencingNameFilter))
+        {
+            await RunQueryAsync();
+        }
     }
 }
