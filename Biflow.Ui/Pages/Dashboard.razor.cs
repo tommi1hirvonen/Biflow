@@ -61,12 +61,17 @@ public partial class Dashboard : ComponentBase
 
         // Group job executions by job names to day level and calculate each job's average duration as well as the number of executions.
         var executions = await executionsQuery
-            .OrderBy(e => e.CreatedDateTime).ToListAsync();
-        var executions_ = executions.GroupBy(group => new
-        {
-            group.JobName,
-            ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
-        })
+            .Select(e => new { Execution = e, e.Job!.JobName })
+            .OrderBy(e => e.Execution.CreatedDateTime).ToListAsync();
+        // Replace the historized job name with the current job name if it is available.
+        executions.ForEach(e => e.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.JobName);
+        var executions_ = executions
+            .Select(e => e.Execution)
+            .GroupBy(group => new
+            {
+                group.JobName,
+                ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
+            })
             .Select(select => new TimeSeriesItem
             {
                 DurationInMinutes = select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60),
@@ -98,15 +103,21 @@ public partial class Dashboard : ComponentBase
         }
 
         // Group job executions by job name and calculate average success percentage.
-        var jobs = await jobsQuery.ToListAsync();
-        Jobs = jobs.GroupBy(group => group.JobName)
-        .Select(select => new ReportingJob
-        {
-            SuccessPercent = select.Average(total => total.GetSuccessPercent()),
-            JobName = select.Key
-        })
-        .OrderByDescending(order => order.SuccessPercent)
-        .ToList();
+        var jobs = await jobsQuery
+            .Select(e => new { Execution = e, e.Job!.JobName })
+            .ToListAsync();
+        // Replace the historized job name with the current job name if it is available.
+        jobs.ForEach(j => j.Execution.JobName = j.JobName is not null ? j.JobName : j.Execution.JobName);
+        Jobs = jobs
+            .Select(j => j.Execution)
+            .GroupBy(group => group.JobName)
+            .Select(select => new ReportingJob
+            {
+                SuccessPercent = select.Average(total => total.GetSuccessPercent()),
+                JobName = select.Key
+            })
+            .OrderByDescending(order => order.SuccessPercent)
+            .ToList();
 
         // Get a temporary list of all job names to retrieve their colors.
         var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
@@ -132,11 +143,15 @@ public partial class Dashboard : ComponentBase
             topFailedStepsQuery = topFailedStepsQuery.Where(e => e.Execution.ScheduleId != null);
         }
 
-        var topFailedStepsGrouping = await topFailedStepsQuery.ToListAsync();
-
+        var topFailedStepsGrouping = await topFailedStepsQuery
+            .Select(e => new { Execution = e, e.Execution.Job!.JobName })
+            .ToListAsync();
+        // Replace the historized job name with the current job name if it is available.
+        topFailedStepsGrouping.ForEach(e => e.Execution.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.Execution.JobName);
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
+            .Select(g => g.Execution)
             .GroupBy(group => new { group.StepId, group.StepName, group.StepType, group.Execution.JobId, group.Execution.JobName })
             .Select(select => new TopStep
             {
