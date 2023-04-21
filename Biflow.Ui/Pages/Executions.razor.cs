@@ -122,7 +122,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 // Adds currently running executions if current time fits in the time window.
                 .Where(e => DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime && e.ExecutionStatus == ExecutionStatus.Running));
 
-        Executions_ = await query
+        var executions = await query
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.ExecutionParameters)
             .Include(e => e.StepExecutions)
@@ -137,7 +137,10 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             .ThenInclude(s => s!.Tags)
             .OrderByDescending(execution => execution.CreatedDateTime)
             .ThenByDescending(execution => execution.StartDateTime)
+            .Select(execution => new { Execution = execution, execution.Job!.JobName })
             .ToListAsync();
+        executions.ForEach(e => e.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.JobName);
+        Executions_ = executions.Select(e => e.Execution).ToList();
         Loading = false;
         StateHasChanged();
     }
