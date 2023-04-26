@@ -38,6 +38,8 @@ public partial class StepsComponent : ComponentBase
     
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
+    [Parameter] public Guid? InitialStepId { get; set; }
+
     private IEnumerable<Step> FilteredSteps => Steps?
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
@@ -79,6 +81,25 @@ public partial class StepsComponent : ComponentBase
     private Guid? LastStartedExecutionId { get; set; }
 
     private bool ShowDetails { get; set; } = false;
+
+    private bool InitialStepModalShouldOpen { get; set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (InitialStepModalShouldOpen && InitialStepId is Guid stepId)
+        {
+            var step = Steps?.FirstOrDefault(s => s.StepId == stepId);
+            if (step is not null)
+            {
+                InitialStepModalShouldOpen = false;
+                var editModal = StepEditModals.GetValueOrDefault(step.StepType);
+                if (editModal is not null)
+                {
+                    await editModal.ShowAsync(stepId);
+                }
+            }
+        }
+    }
 
     private bool IsStepTypeDisabled(StepType type) => type switch
     {

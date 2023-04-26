@@ -13,7 +13,16 @@
             Step id
         </dt>
         <dd class="col-sm-9">
-            @StepExecutionAttempt.StepId
+            @if (StepExecutionAttempt.StepExecution.Step is not null)
+            {
+                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@StepExecutionAttempt.StepExecution.Step.StepId">
+                    @StepExecutionAttempt.StepExecution.Step.StepId
+                </a>
+            }
+            else
+            {
+                @StepExecutionAttempt.StepId
+            }
         </dd>
 
         @if (ShowExtraDetails)

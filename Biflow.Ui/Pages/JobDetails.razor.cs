@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Pages;
 
-[Route("/jobs/{Id:guid}/{DetailsPage}")]
+[Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
 public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
@@ -16,9 +16,11 @@ public partial class JobDetails : ComponentBase
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
-    [Parameter] public string? DetailsPage { get; set; }
+    [Parameter] public string DetailsPage { get; set; } = "steps";
 
     [Parameter] public Guid Id { get; set; }
+
+    [Parameter] public Guid? InitialStepId { get; set; }
 
     private Job? Job { get; set; }
 
