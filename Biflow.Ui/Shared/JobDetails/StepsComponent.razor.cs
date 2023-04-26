@@ -64,7 +64,6 @@ public partial class StepsComponent : ComponentBase
     private StepDetailsModal? StepDetailsModal { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-    private Step? HistoryModalStep { get; set; }
 
     private ExecuteModal? ExecuteModal { get; set; }
 
@@ -288,15 +287,6 @@ public partial class StepsComponent : ComponentBase
             SelectedSteps.Remove(selectedStep);
             SelectedSteps.Add(step);
         }
-    }
-
-    private async Task ShowStepHistoryOffcanvas(Step step)
-    {
-        // Do not unnecessarily set the component parameter and start its data load.
-        if (step != HistoryModalStep)
-            HistoryModalStep = step;
-
-        await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private void OnExecutionStarted(Guid executionId)

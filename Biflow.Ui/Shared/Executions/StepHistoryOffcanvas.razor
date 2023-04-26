@@ -56,13 +56,7 @@
 </HxOffcanvas>
 
 @code {
-
-    [Parameter]
-    public string? StepId_ { get; set; }
-
     private string StepName => Executions?.FirstOrDefault()?.StepExecution?.StepName ?? "";
-
-    private Guid StepId => StepId_ switch { not null => Guid.Parse(StepId_), _ => Guid.Empty };
 
     private HxOffcanvas? Offcanvas { get; set; }
 
@@ -78,37 +72,32 @@
             .Average(e => e.ExecutionInSeconds)
             ?? 0);
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (StepId_ is not null)
-        {
-            Executions = null; // Set to null to reset the modal layout.
-
-            var context = DbFactory.CreateDbContext();
-            Executions = await context.StepExecutionAttempts
-                .AsNoTrackingWithIdentityResolution()
-                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .Include(attempt => attempt.StepExecution)
-                .ThenInclude(step => step.Execution)
-                .ThenInclude(e => e.ExecutionParameters)
-                .Include(e => e.StepExecution)
-                .ThenInclude(e => e.ExecutionConditionParameters)
-                .ThenInclude(p => p.ExecutionParameter)
-                .Where(e => e.StepId == StepId)
-                .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
-                .ThenByDescending(Execution => Execution.StartDateTime)
-                .Take(MaxExecutions)
-                .ToListAsync();
-        }
-    }
-
     private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
     }
 
-    public async Task ShowAsync() => await Offcanvas.LetAsync(x => x.ShowAsync());
-
+    public async Task ShowAsync(Guid stepId)
+    {
+        Executions = null;
+        await Offcanvas.LetAsync(x => x.ShowAsync());
+        var context = await DbFactory.CreateDbContextAsync();
+        Executions = await context.StepExecutionAttempts
+            .AsNoTrackingWithIdentityResolution()
+            .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+            .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+            .Include(attempt => attempt.StepExecution)
+            .ThenInclude(step => step.Execution)
+            .ThenInclude(e => e.ExecutionParameters)
+            .Include(e => e.StepExecution)
+            .ThenInclude(e => e.ExecutionConditionParameters)
+            .ThenInclude(p => p.ExecutionParameter)
+            .Where(e => e.StepId == stepId)
+            .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
+            .ThenByDescending(Execution => Execution.StartDateTime)
+            .Take(MaxExecutions)
+            .ToListAsync();
+        StateHasChanged();
+    }
 }

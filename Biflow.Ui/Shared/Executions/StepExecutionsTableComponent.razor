@@ -78,7 +78,7 @@
                     <tr class="table-borderless no-hover bg-body-tertiary">
                         <td colspan="7">
                             <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await ShowStepHistoryOffcanvasAsync(item.StepId.ToString())">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                     <CxIcon Icon="LucideIcon.History" />
                                     History
                                 </HxButton>
@@ -107,7 +107,7 @@
     </tbody>
 </table>
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStepId" />
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
 @code {
     [Parameter]
@@ -119,7 +119,6 @@
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-    private string? HistoryModalStepId { get; set; }
 
     private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
@@ -127,12 +126,6 @@
         // => hides step execution details component.
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
-    }
-
-    private async Task ShowStepHistoryOffcanvasAsync(string stepId)
-    {
-        HistoryModalStepId = stepId;
-        await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)

@@ -313,7 +313,7 @@
                                     </div>
                                 </AuthorizeView>
                                 <div class="btn-group ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ShowStepHistoryOffcanvas(item)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                     </HxButton>
 
@@ -509,7 +509,7 @@
 
 <StepDetailsModal @ref="StepDetailsModal" />
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStep?.StepId.ToString()" />
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
 <AuthorizeView Roles="Admin, Editor, Operator">
     <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
