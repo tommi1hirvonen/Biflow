@@ -62,7 +62,6 @@ public partial class StepsComponent : ComponentBase
     private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
 
     private StepDetailsModal? StepDetailsModal { get; set; }
-    private Step? DetailsModalStep { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
     private Step? HistoryModalStep { get; set; }
@@ -96,7 +95,9 @@ public partial class StepsComponent : ComponentBase
                 if (editModal is not null)
                 {
                     await editModal.ShowAsync(stepId);
+                    return;
                 }
+                await StepDetailsModal.LetAsync(x => x.ShowAsync(step));
             }
         }
     }
@@ -287,12 +288,6 @@ public partial class StepsComponent : ComponentBase
             SelectedSteps.Remove(selectedStep);
             SelectedSteps.Add(step);
         }
-    }
-
-    private async Task ShowStepDetailsModal(Step step)
-    {
-        DetailsModalStep = step;
-        await StepDetailsModal.LetAsync(x => x.Modal.LetAsync(y => y.ShowAsync()));
     }
 
     private async Task ShowStepHistoryOffcanvas(Step step)

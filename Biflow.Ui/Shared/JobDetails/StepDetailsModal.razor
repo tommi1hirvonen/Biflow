@@ -277,8 +277,15 @@
 
 
 @code {
-    public HxModal? Modal { get; set; }
+    private HxModal? Modal { get; set; }
 
-    [Parameter]
-    public Step? Step { get; set; }
+    private Step? Step { get; set; }
+
+    public async Task ShowAsync(Step step)
+    {
+        Step = step;
+        await Modal.LetAsync(x => x.ShowAsync());
+    }
+
+    public Task HideAsync() => Modal.LetAsync(x => x.HideAsync());
 }

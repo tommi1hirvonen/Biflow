@@ -317,7 +317,7 @@
                                         <CxIcon Icon="LucideIcon.History" />
                                     </HxButton>
 
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ShowStepDetailsModal(item)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => StepDetailsModal.LetAsync(x => x.ShowAsync(item))">
                                         <CxIcon Icon="FeatherIcon.Info" />
                                     </HxButton>
 
@@ -507,7 +507,7 @@
     FunctionApps="functionApps"
     PipelineClients="pipelineClients" />
 
-<StepDetailsModal @ref="StepDetailsModal" Step="DetailsModalStep" />
+<StepDetailsModal @ref="StepDetailsModal" />
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" StepId_="@HistoryModalStep?.StepId.ToString()" />
 
