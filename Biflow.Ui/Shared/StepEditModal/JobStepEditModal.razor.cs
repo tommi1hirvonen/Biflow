@@ -49,7 +49,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Sources = new List<DataObject>(),
             Targets = new List<DataObject>(),
             StepParameters = new List<JobStepParameter>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
+            TagFilters = new List<Tag>()
         };
 
     protected override async Task<JobStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
