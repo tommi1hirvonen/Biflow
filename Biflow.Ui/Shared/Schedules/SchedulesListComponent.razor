@@ -50,17 +50,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (Schedules is null)
+            @if (FilteredSchedules is null)
             {
                 <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (Schedules.Count == 0)
+            else if (FilteredSchedules.Count() == 0)
             {
                 <tr><td colspan="7">No schedules</td></tr>
             }
             else
             {
-                @foreach (var item in Schedules)
+                @foreach (var item in FilteredSchedules)
                 {
                     <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
@@ -132,7 +132,7 @@
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteSchedule(item)">Confirm</HxDropdownItem>
+                                        <HxDropdownItem @onclick="() => DeleteScheduleAsync(item)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                             </AuthorizeView>
@@ -145,7 +145,7 @@
 </div>
 
 <AuthorizeView Roles="Admin, Editor, Operator">
-    <ScheduleEditModal @ref="EditModal" Jobs="Jobs" OnSubmit="OnScheduleSubmit" />
+    <ScheduleEditModal @ref="EditModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
 </AuthorizeView>
 
 <SchedulesHelpModal @ref="HelpModal" />
@@ -154,6 +154,10 @@
     [Parameter] public List<Schedule>? Schedules { get; set; }
 
     [Parameter] public List<Job>? Jobs { get; set; }
+
+    [Parameter] public IEnumerable<Schedule>? FilteredSchedules { get; set; }
+
+    [Parameter] public EventCallback OnSchedulesChanged { get; set; }
 
     private ScheduleEditModal? EditModal { get; set; }
 
@@ -187,13 +191,14 @@
         }
     }
 
-    private void OnScheduleSubmit(Schedule schedule)
+    private async Task OnScheduleSubmitAsync(Schedule schedule)
     {
         Schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
         Schedules?.Add(schedule);
+        await OnSchedulesChanged.InvokeAsync();
     }
 
-    private async Task DeleteSchedule(Schedule schedule)
+    private async Task DeleteScheduleAsync(Schedule schedule)
     {
         try
         {
@@ -213,6 +218,7 @@
             }
 
             Schedules?.Remove(schedule);
+            await OnSchedulesChanged.InvokeAsync();
         }
         catch (Exception ex)
         {

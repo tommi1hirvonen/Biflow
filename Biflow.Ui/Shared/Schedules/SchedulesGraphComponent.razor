@@ -1,6 +1,6 @@
 ﻿@using System.Globalization
 
-<div class="row justify-content-between gap-2">
+<div class="row justify-content-between gap-2 mt-3">
     <div class="col-auto">
         <form class="d-inline-flex align-items-center" id="executions_form" @onsubmit="StateHasChanged" style="flex-direction: unset !important;">
             <label class="me-2">From</label>
@@ -107,7 +107,7 @@
 </div>
 
 @code {
-    [Parameter] public List<Schedule>? Schedules { get; set; }
+    [Parameter] public IEnumerable<Schedule>? Schedules { get; set; }
 
     private const int Columns = 12;
 
