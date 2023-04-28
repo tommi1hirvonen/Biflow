@@ -1,5 +1,9 @@
 ﻿@using System.Globalization
 
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject ISchedulerService SchedulerService
+@inject IHxMessengerService Messenger
+
 <div class="row justify-content-between gap-2 mt-3">
     <div class="col-auto">
         <form class="d-inline-flex align-items-center" id="executions_form" @onsubmit="StateHasChanged" style="flex-direction: unset !important;">
@@ -56,9 +60,9 @@
                         }
                     </div>
                 </div>
-                @if (Schedules is not null)
+                @if (FilteredSchedules is not null)
                 {
-                    var jobs = Schedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
+                    var jobs = FilteredSchedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
                     foreach (var job in jobs)
                     {
                         if (!job.Key.IsEnabled)
@@ -91,10 +95,24 @@
                                     foreach (var dt in nextFireTimes)
                                     {
                                         var offset = GetOffset(dt);
-                                        <div class="d-flex align-items-center"
-                             style="height: 70%; margin-left: -4px; border-left: 8px solid var(--bs-primary); position: absolute; left: @(offset.ToString("F10", CultureInfo.InvariantCulture))%;"
-                             title="@schedule.ScheduleName; @schedule.GetScheduleDescription(); @dt">
-                                        </div>
+                                        <HxDropdown CssClass="d-flex align-items-center" style="@($"height: 70%; width: 10px; background: var(--bs-primary); position: absolute; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")">
+                                            <HxDropdownToggleElement style="cursor: pointer; width: 100%; height: 100%;" title="@($"{schedule.ScheduleName}; {schedule.GetScheduleDescription()}; {dt}")">
+                                                &nbsp;
+                                            </HxDropdownToggleElement>
+                                            <HxDropdownMenu>
+                                                <HxDropdownHeader>
+                                                    @schedule.ScheduleName
+                                                </HxDropdownHeader>
+                                                <HxDropdownItem OnClick="() => DisableScheduleAsync(schedule)">
+                                                    <CxIcon Icon="FeatherIcon.PauseCircle" />
+                                                    Disable schedule
+                                                </HxDropdownItem>
+                                                <HxDropdownItem OnClick="() => DeleteScheduleAsync(schedule)">
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                                    Delete schedule
+                                                </HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdown>
                                     }
                                 }
                             </div>
@@ -107,7 +125,11 @@
 </div>
 
 @code {
-    [Parameter] public IEnumerable<Schedule>? Schedules { get; set; }
+    [Parameter] public List<Schedule>? Schedules { get; set; }
+
+    [Parameter] public IEnumerable<Schedule>? FilteredSchedules { get; set; }
+
+    [Parameter] public EventCallback OnSchedulesChanged { get; set; }
 
     private const int Columns = 12;
 
@@ -178,5 +200,61 @@
         var ticks = dt.Ticks;
         var offset = (double)(ticks - MinTicks) / (MaxTicks - MinTicks) * 100;
         return offset;
+    }
+
+    private async Task DeleteScheduleAsync(Schedule schedule)
+    {
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            using var transaction = context.Database.BeginTransaction();
+            context.Schedules.Remove(schedule);
+            await context.SaveChangesAsync();
+            try
+            {
+                await SchedulerService.RemoveScheduleAsync(schedule);
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                throw;
+            }
+
+            Schedules?.Remove(schedule);
+            await OnSchedulesChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting schedule", ex.Message);
+        }
+    }
+
+    private async Task DisableScheduleAsync(Schedule schedule)
+    {
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            using var transaction = context.Database.BeginTransaction();
+            context.Attach(schedule);
+            schedule.IsEnabled = !schedule.IsEnabled;
+            await context.SaveChangesAsync();
+            try
+            {
+                await SchedulerService.ToggleScheduleEnabledAsync(schedule, false);
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                schedule.IsEnabled = !schedule.IsEnabled;
+                throw;
+            }
+            await OnSchedulesChanged.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling schedule", ex.Message);
+        }
     }
 }
