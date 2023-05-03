@@ -177,8 +177,9 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Remove(client);
-            await context.SaveChangesAsync();
+            await context.PipelineClients
+                .Where(x => x.PipelineClientId == client.PipelineClientId)
+                .ExecuteDeleteAsync();
             PipelineClients?.Remove(client);
         }
         catch (Exception ex)

@@ -265,8 +265,9 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Remove(appRegistration);
-            await context.SaveChangesAsync();
+            await context.AppRegistrations
+                .Where(x => x.AppRegistrationId == appRegistration.AppRegistrationId)
+                .ExecuteDeleteAsync();
             AppRegistrations?.Remove(appRegistration);
         }
         catch (Exception ex)

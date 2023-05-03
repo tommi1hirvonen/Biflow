@@ -219,8 +219,9 @@
         {
             using var context = DbFactory.CreateDbContext();
             var conn = await context.Connections.FirstAsync(c => c.ConnectionId == connection.ConnectionId);
-            context.Connections.Remove(conn);
-            await context.SaveChangesAsync();
+            await context.Connections
+                .Where(x => x.ConnectionId == connection.ConnectionId)
+                .ExecuteDeleteAsync();
             Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             ShowConnectionString.Remove(connection.ConnectionId);
         }

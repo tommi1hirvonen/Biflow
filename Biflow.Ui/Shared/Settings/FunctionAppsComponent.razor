@@ -166,8 +166,9 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Remove(functionApp);
-            await context.SaveChangesAsync();
+            await context.FunctionApps
+                .Where(x => x.FunctionAppId == functionApp.FunctionAppId)
+                .ExecuteDeleteAsync();
             FunctionApps?.Remove(functionApp);
         }
         catch (Exception ex)
