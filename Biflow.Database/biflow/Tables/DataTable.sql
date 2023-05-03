@@ -14,3 +14,20 @@
 	[AllowImport] BIT NOT NULL CONSTRAINT [DF_DataTable_AllowImport] DEFAULT (1),
     CONSTRAINT [PK_DataTable] PRIMARY KEY CLUSTERED ([DataTableId])
 )
+
+GO
+
+CREATE TRIGGER [biflow].[Trigger_DataTable] ON [biflow].[DataTable] INSTEAD OF DELETE AS
+BEGIN
+
+	SET NOCOUNT ON 
+
+	DELETE FROM a
+	FROM [biflow].[DataTableLookup] AS a
+		INNER JOIN [deleted] AS b ON a.[DataTableId] = b.[DataTableId]
+
+	DELETE FROM a
+	FROM [biflow].[DataTable] AS a
+		INNER JOIN [deleted] AS b ON a.[DataTableId] = b.[DataTableId]
+
+END

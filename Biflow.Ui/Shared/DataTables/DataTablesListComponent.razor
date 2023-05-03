@@ -229,13 +229,15 @@
         try
         {
             using var context = DbContextFactory.CreateDbContext();
-            context.MasterDataTables.Remove(table);
-            await context.SaveChangesAsync();
+            await context.MasterDataTables
+                .Where(x => x.DataTableId == table.DataTableId)
+                .ExecuteDeleteAsync();
             Tables?.Remove(table);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting data table", ex.Message);
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting data table", message);
         }
     }
 
