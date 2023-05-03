@@ -154,6 +154,26 @@
                         <div class="col">
                             <HighlightableText PartToHighlight="@TargetTableNameFilter" Text="@($"{table.TargetSchemaName}.{table.TargetTableName}")" />
                         </div>
+                        <div class="col">
+                            @{
+                                var lookups = Tables
+                                    .SelectMany(t => t.Lookups)
+                                    .Where(l => l.LookupTableId == table.DataTableId)
+                                    .OrderBy(l => l.Table.DataTableName)
+                                    .ThenBy(l => l.ColumnName)
+                                    .Select(l => $"[{l.Table.DataTableName}].[{l.ColumnName}]")
+                                    .ToList();
+                            }
+                            @if (lookups.Any())
+                            {
+                                var content = string.Join("\n", lookups);
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@content">
+                                    <a href="javascript:void()" class="text-body">
+                                        @lookups.Count() dependent lookup(s)
+                                    </a>
+                                </HxPopover>
+                            }
+                        </div>
                         <AuthorizeView Roles="Admin, Editor">
                             <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
