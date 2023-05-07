@@ -20,6 +20,16 @@ public class StepValidator : AbstractValidator<Step>
         {
             v.Add(new TabularStepValidator());
         });
+        When(step => step is IHasStepParameters, () =>
+        {
+            var reservedParameterNames = new string[] { "_execution_id_", "_job_id_", "_step_id_", "_retry_attempt_index_" };
+            foreach (var reservedName in reservedParameterNames)
+            {
+                RuleForEach(step => ((IHasStepParameters)step).StepParameters)
+                    .Must(p => p.ExpressionParameters.All(ep => ep.ParameterName != reservedName))
+                    .WithMessage((step, stepParam) => $"Reserved expression parameter name {reservedName} in parameter {stepParam.ParameterName}");
+            }
+        });
     }
 
     private static bool HaveNoDuplicates(IEnumerable<DataObject> objects)

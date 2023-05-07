@@ -24,7 +24,11 @@ public class JobParameter : DynamicParameter
     {
         if (UseExpression)
         {
-            return await Expression.EvaluateAsync();
+            var parameters = new Dictionary<string, object?> {
+                { "_execution_id_", Guid.Empty },
+                { "_job_id_", JobId }
+            };
+            return await Expression.EvaluateAsync(parameters);
         }
 
         return ParameterValue;

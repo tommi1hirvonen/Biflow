@@ -122,7 +122,17 @@ else
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" />
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged">
+    <div class="row mt-3">
+        <div class="col text-secondary small">
+            Job parameter expressions have the following built-in variables automatically available. They can be used to access the internal ids during execution.
+            <ul>
+                <li>_execution_id_ - The current execution id. An empty guid is passed when the expression is being tested.</li>
+                <li>_job_id_ - The id of the current job.</li>
+            </ul>
+        </div>
+    </div>
+</ExpressionEditOffcanvas>
 
 <HxOffcanvas @ref="ReferencingStepsOffcanvas" Title="@($"Steps referencing {ReferencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>

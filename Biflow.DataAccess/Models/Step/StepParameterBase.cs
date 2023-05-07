@@ -43,6 +43,10 @@ public abstract class StepParameterBase : DynamicParameter
             {
                 parameters[parameter.ParameterName] = await parameter.EvaluateAsync();
             }
+            parameters["_execution_id_"] = Guid.Empty;
+            parameters["_job_id_"] = BaseStep.JobId;
+            parameters["_step_id_"] = BaseStep.StepId;
+            parameters["_retry_attempt_index_"] = 0;
             return await Expression.EvaluateAsync(parameters);
         }
 

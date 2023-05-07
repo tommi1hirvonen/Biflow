@@ -74,6 +74,10 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         {
             var parameters = ExpressionParameters
                 .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue);
+            parameters["_execution_id_"] = ExecutionId;
+            parameters["_job_id_"] = BaseStepExecution.Execution.JobId;
+            parameters["_step_id_"] = StepId;
+            parameters["_retry_attempt_index_"] = BaseStepExecution.StepExecutionAttempts.Select(e => e.RetryAttemptIndex).Max();
             var result = await Expression.EvaluateAsync(parameters);
             EvaluationResult = result;
             Evaluated = true;
