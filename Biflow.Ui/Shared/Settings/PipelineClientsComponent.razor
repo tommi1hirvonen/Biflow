@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IHxMessengerService Messenger
 
 <style>
     tr a {
@@ -173,10 +174,19 @@
 
     private async Task DeleteClient(PipelineClient client)
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Remove(client);
-        await context.SaveChangesAsync();
-        PipelineClients?.Remove(client);
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            await context.PipelineClients
+                .Where(x => x.PipelineClientId == client.PipelineClientId)
+                .ExecuteDeleteAsync();
+            PipelineClients?.Remove(client);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting pipeline client", message);
+        }
     }
 
     private async void OnClientSubmit(PipelineClient client)

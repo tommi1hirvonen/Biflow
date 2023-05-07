@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IHxMessengerService Messenger
 
 <style>
     tr a {
@@ -214,12 +215,21 @@
 
     private async Task DeleteConnection(ConnectionInfoBase connection)
     {
-        using var context = DbFactory.CreateDbContext();
-        var conn = await context.Connections.FirstAsync(c => c.ConnectionId == connection.ConnectionId);
-        context.Connections.Remove(conn);
-        await context.SaveChangesAsync();
-        Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-        ShowConnectionString.Remove(connection.ConnectionId);
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var conn = await context.Connections.FirstAsync(c => c.ConnectionId == connection.ConnectionId);
+            await context.Connections
+                .Where(x => x.ConnectionId == connection.ConnectionId)
+                .ExecuteDeleteAsync();
+            Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            ShowConnectionString.Remove(connection.ConnectionId);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting connection", message);
+        }
     }
 
     private async void OnConnectionSubmit(ConnectionInfoBase connection)

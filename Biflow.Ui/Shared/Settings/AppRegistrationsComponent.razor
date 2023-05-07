@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject ITokenService TokenService
+@inject IHxMessengerService Messenger
 
 <style>
     tr a {
@@ -261,10 +262,19 @@
 
     private async Task DeleteAppRegistration(AppRegistration appRegistration)
     {
-        using var context = DbFactory.CreateDbContext();
-        context.Remove(appRegistration);
-        await context.SaveChangesAsync();
-        AppRegistrations?.Remove(appRegistration);
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            await context.AppRegistrations
+                .Where(x => x.AppRegistrationId == appRegistration.AppRegistrationId)
+                .ExecuteDeleteAsync();
+            AppRegistrations?.Remove(appRegistration);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting app registration", message);
+        }
     }
 
     private async void OnAppRegistrationSubmit(AppRegistration appRegistration)

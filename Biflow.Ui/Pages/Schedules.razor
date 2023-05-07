@@ -41,13 +41,30 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col">
+        <FilterDropdown TItem="Job"
+                        FilterSet="JobFilter"
+                        Items="Jobs?.Where(j => Schedules_?.Any(s => s.JobId == j.JobId) ?? false) ?? Enumerable.Empty<Job>()"
+                        IdSelector="j => j.JobId.ToString()"
+                        TextSelector="j => j.JobName"
+                        IsSearchable
+                        OnChange="StateHasChanged">
+            <TitleTemplate>
+                <CxIcon Icon="FeatherIcon.Filter" />
+                Job
+            </TitleTemplate>
+        </FilterDropdown>
+    </div>
+</div>
+
 @if (Component is null)
 {
-    <SchedulesListComponent Schedules="Schedules_" Jobs="Jobs" />
+    <SchedulesListComponent Schedules="Schedules_" Jobs="Jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else if (Component == "graph")
 {
-    <SchedulesGraphComponent Schedules="Schedules_" />
+    <SchedulesGraphComponent Schedules="Schedules_" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else
 {
@@ -60,6 +77,13 @@ else
     private List<Job>? Jobs { get; set; }
 
     private List<Schedule>? Schedules_ { get; set; }
+
+    private HashSet<Job> JobFilter { get; set; } = new();
+
+    private IEnumerable<Schedule> FilteredSchedules =>
+        Schedules_
+        ?.Where(s => !JobFilter.Any() || JobFilter.Any(f => f.JobId == s.JobId))
+        ?? Enumerable.Empty<Schedule>();
 
     protected override async Task OnInitializedAsync()
     {

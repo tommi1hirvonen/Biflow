@@ -129,7 +129,7 @@
                                         <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownHeader>Delete category?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
@@ -154,6 +154,26 @@
                         <div class="col">
                             <HighlightableText PartToHighlight="@TargetTableNameFilter" Text="@($"{table.TargetSchemaName}.{table.TargetTableName}")" />
                         </div>
+                        <div class="col">
+                            @{
+                                var lookups = Tables
+                                    .SelectMany(t => t.Lookups)
+                                    .Where(l => l.LookupTableId == table.DataTableId)
+                                    .OrderBy(l => l.Table.DataTableName)
+                                    .ThenBy(l => l.ColumnName)
+                                    .Select(l => $"[{l.Table.DataTableName}].[{l.ColumnName}]")
+                                    .ToList();
+                            }
+                            @if (lookups.Any())
+                            {
+                                var content = string.Join("\n", lookups);
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@content">
+                                    <a href="javascript:void()" class="text-body">
+                                        @lookups.Count() dependent lookup(s)
+                                    </a>
+                                </HxPopover>
+                            }
+                        </div>
                         <AuthorizeView Roles="Admin, Editor">
                             <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
@@ -165,7 +185,7 @@
                                         <CxIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownHeader>Delete table?</HxDropdownHeader>
                                         <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
@@ -229,13 +249,15 @@
         try
         {
             using var context = DbContextFactory.CreateDbContext();
-            context.MasterDataTables.Remove(table);
-            await context.SaveChangesAsync();
+            await context.MasterDataTables
+                .Where(x => x.DataTableId == table.DataTableId)
+                .ExecuteDeleteAsync();
             Tables?.Remove(table);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting data table", ex.Message);
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting data table", message);
         }
     }
 

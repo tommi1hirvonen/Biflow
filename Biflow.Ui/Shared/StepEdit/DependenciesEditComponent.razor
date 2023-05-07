@@ -71,43 +71,54 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var step in FilteredStepsOrdered)
+        @if (Step is null)
         {
-            var dependency = Step.Dependencies.FirstOrDefault(d => d.DependantOnStepId == step.StepId);
-            var className = dependency?.IsCandidateForRemoval ?? false ? "text-danger" : dependency?.IsNewAddition ?? false ? "text-primary" : null;
-            var title = dependency?.IsCandidateForRemoval ?? false ? "Dependency not found in source/target mapping" : dependency?.IsNewAddition ?? false ? "New dependency" : null;
-            <tr class="@className" title="@title">
-                <td class="align-middle">
-                    <StepTypeIconComponent StepType_="step.StepType" />
-                    <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
-                </td>
-                <td class="align-middle">
-                    <div class="form-check form-check-inline">
-                        <input @key="step" type="checkbox" class="form-check-input" id="dependency_@step.StepId"
-                               checked=@(dependency is not null)
-                               @onchange="eventArgs => ToggleDependency(step, eventArgs.Value!)">
-                        <label class="form-check-label" for="dependency_@step.StepId"></label>
-                    </div>
-                </td>
-                <td class="align-middle">
-                    @if (dependency is not null)
-                    {
-                        <InputSelect class="form-select form-select-sm" @bind-Value="dependency.DependencyType">
-                            @foreach (var type in Enum.GetValues<DependencyType>())
-                            {
-                                <option>@type</option>
-                            }
-                        </InputSelect>
-                    }
+            <tr>
+                <td class="text-center" colspan="3">
+                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                 </td>
             </tr>
+        }
+        else
+        {
+            @foreach (var step in FilteredStepsOrdered)
+            {
+                var dependency = Step.Dependencies.FirstOrDefault(d => d.DependantOnStepId == step.StepId);
+                var className = dependency?.IsCandidateForRemoval ?? false ? "text-danger" : dependency?.IsNewAddition ?? false ? "text-primary" : null;
+                var title = dependency?.IsCandidateForRemoval ?? false ? "Dependency not found in source/target mapping" : dependency?.IsNewAddition ?? false ? "New dependency" : null;
+                <tr class="@className" title="@title">
+                    <td class="align-middle">
+                        <StepTypeIconComponent StepType_="step.StepType" />
+                        <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
+                    </td>
+                    <td class="align-middle">
+                        <div class="form-check form-check-inline">
+                            <input @key="step" type="checkbox" class="form-check-input" id="dependency_@step.StepId"
+                                   checked=@(dependency is not null)
+                           @onchange="eventArgs => ToggleDependency(step, eventArgs.Value!)">
+                            <label class="form-check-label" for="dependency_@step.StepId"></label>
+                        </div>
+                    </td>
+                    <td class="align-middle">
+                        @if (dependency is not null)
+                        {
+                            <InputSelect class="form-select form-select-sm" @bind-Value="dependency.DependencyType">
+                                @foreach (var type in Enum.GetValues<DependencyType>())
+                                {
+                                    <option>@type</option>
+                                }
+                            </InputSelect>
+                        }
+                    </td>
+                </tr>
+            }
         }
     </tbody>
 </table>
 
 @code {
     [Parameter]
-    public Step Step { get; set; } = null!;
+    public Step? Step { get; set; }
 
     [Parameter]
     public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
@@ -116,16 +127,17 @@
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private string DependenciesFilterText { get; set; } = string.Empty;
     private bool ShowOnlyActiveDependencies { get; set; } = false;
+    private bool ShowOnlyActiveDependenciesIsSet { get; set; } = false;
 
     private IEnumerable<Step> FilteredSteps => Steps
-            .Where(step => step.StepId != Step.StepId) // Exclude current step => step cannot depend on itself.
+            .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
             .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
-            .Where(step => Step.Dependencies.Any(d => d.DependantOnStepId == step.StepId) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
+            .Where(step => (Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? false) || !ShowOnlyActiveDependencies) // Only show active dependencies if checked.
             ?? Enumerable.Empty<Step>();
 
-    private IEnumerable<Step> FilteredStepsOrdered => Step.Job.UseDependencyMode switch
+    private IEnumerable<Step> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
     {
         true => FilteredSteps.OrderBy(step => step, new TopologicalStepComparer(Steps)),
         _ => FilteredSteps.OrderBy(step => step) // use default comparer
@@ -133,11 +145,16 @@
 
     protected override void OnParametersSet()
     {
-        ShowOnlyActiveDependencies = Step?.Dependencies.Any() ?? false;
+        if (!ShowOnlyActiveDependenciesIsSet)
+        {
+            ShowOnlyActiveDependenciesIsSet = true;
+            ShowOnlyActiveDependencies = Step?.Dependencies.Any() ?? false;
+        }
     }
 
     private void ToggleDependency(Step step, object checkedValue)
     {
+        ArgumentNullException.ThrowIfNull(Step);
         var dependent = (bool)checkedValue;
         var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
         if (!dependent && dependency is not null)
@@ -158,6 +175,7 @@
 
     private void InferDependenciesFromDatabaseObjects()
     {
+        ArgumentNullException.ThrowIfNull(Step);
         var dependsOnSteps = Steps.Where(step => step.Targets.Any(target => Step.Sources.Any(source => target.NamesEqual(source))));
         var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
         foreach (var step in missingDependencies)
