@@ -28,6 +28,8 @@ public partial class Jobs : ComponentBase
 
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+
     private List<Job>? Jobs_ { get; set; }
     
     private List<JobCategory>? Categories { get; set; }
@@ -162,6 +164,29 @@ public partial class Jobs : ComponentBase
 
     private async Task DeleteJob(Job job)
     {
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var executingSteps = await context.JobSteps
+                .Where(s => s.JobToExecuteId == job.JobId)
+                .Include(s => s.Job)
+                .OrderBy(s => s.Job.JobName)
+                .ThenBy(s => s.StepName)
+                .ToListAsync();
+            if (executingSteps.Any())
+            {
+                var steps = string.Join("\n", executingSteps.Select(s => $"– {s.Job.JobName} – {s.StepName}"));
+                var message = $"""
+                    This job has one or more referencing steps that execute this job:
+                    {steps}
+                    Removing the job will also remove these steps. Delete anyway?
+                    """;
+                var confirmResult = await Confirmer.ConfirmAsync(message);
+                if (!confirmResult)
+                {
+                    return;
+                }
+            }
+        }
         try
         {
             using var context = await DbFactory.CreateDbContextAsync();
