@@ -23,24 +23,48 @@ public class SqlServerHelperService
         var folders = new Dictionary<long, CatalogFolder>();
         var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>("""
             SELECT
-                FolderId = [folders].[folder_id],
-                FolderName = [folders].[name],
-                ProjectId = [projects].[project_id],
-                ProjectName = [projects].[name],
-                PackageId = [packages].[package_id],
-                PackageName = [packages].[name],
-                ParameterId = [object_parameters].[parameter_id],
-                ParameterName = [object_parameters].[parameter_name],
-                ParameterType = [object_parameters].[data_type],
-                DesignDefaultValue = [object_parameters].[design_default_value],
-                DefaultValue = [object_parameters].[default_value]
-            FROM [SSISDB].[catalog].[folders]
-                LEFT JOIN [SSISDB].[catalog].[projects] ON [folders].[folder_id] = [projects].[folder_id]
-                LEFT JOIN [SSISDB].[catalog].[packages] ON [projects].[project_id] = [packages].[project_id]
-                LEFT JOIN [SSISDB].[catalog].[object_parameters] ON
-                    [packages].[project_id] = [object_parameters].[project_id] AND
-                    [packages].[name] = [object_parameters].[object_name] AND
-                    [object_parameters].[object_type] = 30
+                FolderId = [f].[folder_id],
+                FolderName = [f].[name],
+                ProjectId = [pr].[project_id],
+                ProjectName = [pr].[name],
+                PackageId = [pa].[package_id],
+                PackageName = [pa].[name],
+                ParameterId = [pap].[parameter_id],
+                ParameterName = [pap].[parameter_name],
+                ParameterType = [pap].[data_type],
+                DesignDefaultValue = [pap].[design_default_value],
+                DefaultValue = [pap].[default_value],
+                ConnectionManagerParameter = CASE WHEN [pap].[parameter_name] LIKE 'CM.%' THEN 1 ELSE 0 END,
+                ProjectParameter = 0
+            FROM [SSISDB].[catalog].[folders] AS [f]
+                LEFT JOIN [SSISDB].[catalog].[projects] AS [pr] ON [f].[folder_id] = [pr].[folder_id]
+                LEFT JOIN [SSISDB].[catalog].[packages] AS [pa] ON [pr].[project_id] = [pa].[project_id]
+                LEFT JOIN [SSISDB].[catalog].[object_parameters] AS [pap] ON
+                    [pa].[project_id] = [pap].[project_id] AND
+                    [pa].[name] = [pap].[object_name] AND
+                    [pap].[object_type] = 30
+            UNION ALL
+            SELECT
+                FolderId = [f].[folder_id],
+                FolderName = [f].[name],
+                ProjectId = [pr].[project_id],
+                ProjectName = [pr].[name],
+                PackageId = [pa].[package_id],
+                PackageName = [pa].[name],
+                ParameterId = [prp].[parameter_id],
+                ParameterName = [prp].[parameter_name],
+                ParameterType = [prp].[data_type],
+                DesignDefaultValue = [prp].[design_default_value],
+                DefaultValue = [prp].[default_value],
+                ConnectionManagerParameter = CASE WHEN [prp].[parameter_name] LIKE 'CM.%' THEN 1 ELSE 0 END,
+                ProjectParameter = 1
+            FROM [SSISDB].[catalog].[folders] AS [f]
+                INNER JOIN [SSISDB].[catalog].[projects] AS [pr] ON [f].[folder_id] = [pr].[folder_id]
+                INNER JOIN [SSISDB].[catalog].[packages] AS [pa] ON [pr].[project_id] = [pa].[project_id]
+                INNER JOIN [SSISDB].[catalog].[object_parameters] AS [prp] ON
+                    [pa].[project_id] = [prp].[project_id] AND
+                    [pr].[name] = [prp].[object_name] AND
+                    [prp].[object_type] = 20
             """,
             (folder, project, package, param) =>
             {

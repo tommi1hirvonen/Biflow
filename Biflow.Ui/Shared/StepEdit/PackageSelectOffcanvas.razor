@@ -105,13 +105,19 @@
                             {
                                 foreach (var package in packages.Where(p => p.PackageName.ContainsIgnoreCase(FilterText)).OrderBy(p => p.PackageName))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package"
+                                    var parameters = package.Parameters.Values
+                                        .Where(p => !p.ConnectionManagerParameter || ShowConnectionManagerParameters)
+                                        .OrderBy(p => p.ProjectParameter)
+                                        .ThenBy(p => p.ParameterName);
+                                    
+                                        <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package"
                                         class="@(package == SelectedPackage ? "bg-body-tertiary fw-bold" : null)">
                                         <td>
                                             <HighlightableText Text="@package.PackageName" PartToHighlight="@FilterText" />
                                         </td>
                                     </tr>
-                                    @if (package == SelectedPackage && package.Parameters.Any())
+
+                                    @if (package == SelectedPackage && parameters.Any())
                                     {
                                         <tr class="no-hover">
                                             <td colspan="2" class="bg-body-tertiary">
@@ -119,12 +125,12 @@
                                                     <div class="col">
                                                         <h6 class="mx-2">Parameters</h6>
                                                         <dl class="row mx-3 small">
-                                                            @foreach (var param in package.Parameters.Values)
+                                                            @foreach (var param in parameters)
                                                             {
+                                                                var prefix = param.ProjectParameter ? "$Project::" : "$Package::";
                                                                 var defaultValue = param.DefaultValue ?? param.DesignDefaultValue;
-                                                                var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
-                                                                <dt class="col-sm-6">@param.ParameterName</dt>
-                                                                <dd class="col-sm-6">@param.ParameterType @defaultValueText</dd>
+                                                                <dt>@prefix@param.ParameterName (@param.ParameterType)</dt>
+                                                                <dd>@defaultValue</dd>
                                                             }
                                                         </dl>
                                                     </div>
@@ -147,6 +153,13 @@
             Select
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        
+            <div class="form-check ms-auto d-flex align-items-center">
+                <input type="checkbox" class="form-check-input" id="show_connection_manager_parameters"
+                   checked=@ShowConnectionManagerParameters
+                   @onchange="args => ShowConnectionManagerParameters = (bool)args.Value!">
+                <label class="form-check-label fw-normal ms-2" for="show_connection_manager_parameters">Show connection manager parameters</label>
+            </div>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -165,6 +178,8 @@
     private CatalogFolder? SelectedFolder { get; set; }
     private CatalogProject? SelectedProject { get; set; }
     private CatalogPackage? SelectedPackage { get; set; }
+
+    private bool ShowConnectionManagerParameters { get; set; } = false;
 
     private void OnFolderChanged(CatalogFolder folder)
     {
