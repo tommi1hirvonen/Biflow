@@ -2,7 +2,7 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select pipeline">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="Select pipeline">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -110,14 +110,10 @@
 </HxOffcanvas>
 
 @code {
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    [Parameter]
-    public Guid? PipelineClientId { get; set; }
-
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
+
+    private HxOffcanvas? Offcanvas { get; set; }
 
     private Dictionary<string, List<PipelineInfo>>? Pipelines { get; set; }
 
@@ -141,26 +137,22 @@
         await Offcanvas.LetAsync(x => x.HideAsync());
     }
 
-    private void OnClosed()
+    public async Task ShowAsync(Guid pipelineClientId)
     {
         Pipelines = null;
         SelectedFolder = null;
         SelectedPipeline = null;
         FilterText = string.Empty;
-    }
 
-    public async Task ShowAsync()
-    {
         await Offcanvas.LetAsync(x => x.ShowAsync());
-        if (PipelineClientId is null || PipelineClientId == Guid.Empty) return;
+        
         try
         {
-            Guid clientId = PipelineClientId ?? throw new ArgumentNullException(nameof(clientId), "Pipeline client id cannot be null");
             using var context = DbContextFactory.CreateDbContext();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
-                .FirstAsync(c => c.PipelineClientId == clientId);
+                .FirstAsync(c => c.PipelineClientId == pipelineClientId);
             Pipelines = await client.GetPipelinesAsync(TokenService);
             StateHasChanged();
         }

@@ -51,7 +51,7 @@
                 </HxButtonGroup>
             </div>
         </div>
-        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" PipelineClientId="Step.PipelineClientId" OnPipelineSelected="OnPipelineSelected" />
+        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>

@@ -87,7 +87,11 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
         }
     }
 
-    private Task OpenPipelineSelectOffcanvas() => PipelineSelectOffcanvas.LetAsync(x => x.ShowAsync());
+    private Task OpenPipelineSelectOffcanvas()
+    {
+        ArgumentNullException.ThrowIfNull(Step?.PipelineClientId);
+        return PipelineSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.PipelineClientId));
+    }
 
     private void OnPipelineSelected(string pipelineName)
     {
