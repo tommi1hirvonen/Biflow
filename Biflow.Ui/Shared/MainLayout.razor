@@ -15,12 +15,18 @@
         margin-top: 1.5rem!important;
         z-index: 2000;
     }
+
+    #hx_message_box_host_container .modal-body {
+        white-space: pre;
+    }
 </style>
 
 <AuthorizeView Roles="Admin,Editor,Operator,Viewer">
     <Authorized>
         <HxMessenger Position="ToastContainerPosition.BottomEnd" />
-        <HxMessageBoxHost />
+        <div id="hx_message_box_host_container">
+            <HxMessageBoxHost />
+        </div>
         <SchedulerStatusComponent OnStatusMessageResolved="message => SchedulerServiceErrorMessage = message" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
