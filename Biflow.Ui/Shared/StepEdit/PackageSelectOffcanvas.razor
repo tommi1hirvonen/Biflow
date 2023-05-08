@@ -1,7 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 @inject SqlServerHelperService SqlServerHelperService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select package">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -151,14 +151,12 @@
 </HxOffcanvas>
 
 @code {
+    [Parameter]
+    public EventCallback<PackageSelectedResponse> OnPackageSelected { get; set; }
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    [Parameter]
-    public Guid? ConnectionId { get; set; }
-
-    [Parameter]
-    public EventCallback<PackageSelectedResponse> OnPackageSelected { get; set; }
+    private Guid ConnectionId { get; set; }
 
     private SSISCatalog? Catalog { get; set; }
 
@@ -167,15 +165,6 @@
     private CatalogFolder? SelectedFolder { get; set; }
     private CatalogProject? SelectedProject { get; set; }
     private CatalogPackage? SelectedPackage { get; set; }
-
-    private void OnClosed()
-    {
-        Catalog = null;
-        SelectedFolder = null;
-        SelectedProject = null;
-        SelectedPackage = null;
-        FilterText = string.Empty;
-    }
 
     private void OnFolderChanged(CatalogFolder folder)
     {
@@ -206,13 +195,20 @@
         }
     }
 
-    public async Task ShowAsync()
+    public async Task ShowAsync(Guid connectionId)
     {
+        Catalog = null;
+        SelectedFolder = null;
+        SelectedProject = null;
+        SelectedPackage = null;
+        FilterText = string.Empty;
+
         await Offcanvas.LetAsync(x => x.ShowAsync());
-        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        
         try
         {
-            Catalog = await SqlServerHelperService.GetCatalogPackages((Guid)ConnectionId);
+            Catalog = await SqlServerHelperService.GetCatalogPackages(connectionId);
+            ConnectionId = connectionId;
             StateHasChanged();
         }
         catch (Exception ex)

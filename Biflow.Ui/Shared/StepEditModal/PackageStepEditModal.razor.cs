@@ -79,7 +79,11 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         }
     }
 
-    private Task OpenPackageSelectOffcanvas() => PackageSelectOffcanvas.LetAsync(x => x.ShowAsync());
+    private Task OpenPackageSelectOffcanvas()
+    {
+        ArgumentNullException.ThrowIfNull(Step?.ConnectionId);
+        return PackageSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.ConnectionId));
+    }
 
     private void OnPackageSelected(PackageSelectedResponse package)
     {
