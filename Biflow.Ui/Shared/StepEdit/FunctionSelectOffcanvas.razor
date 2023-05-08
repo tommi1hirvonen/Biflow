@@ -3,7 +3,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" OnClosed="OnClosed" Title="Select function">
+<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="Select function">
 
     <BodyTemplate>
         <div class="row">
@@ -82,15 +82,11 @@
 </HxOffcanvas>
 
 @code {
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    [Parameter]
-    public Guid? FunctionAppId { get; set; }
-
     [Parameter]
     public EventCallback<string> OnFunctionSelected { get; set; }
 
+    private HxOffcanvas? Offcanvas { get; set; }
+    
     private List<(string FunctionName, string FunctionUrl)>? Functions { get; set; }
 
     private string? SelectedFunctionUrl { get; set; }
@@ -106,25 +102,21 @@
         }
     }
 
-    private void OnClosed()
+    public async Task ShowAsync(Guid functionAppId)
     {
         Functions = null;
         SelectedFunctionUrl = null;
         FilterText = string.Empty;
-    }
 
-    public async Task ShowAsync()
-    {
         await Offcanvas.LetAsync(x => x.ShowAsync());
-        if (FunctionAppId is null || FunctionAppId == Guid.Empty) return;
+        
         try
         {
-            Guid id = FunctionAppId ?? throw new ArgumentNullException(nameof(id), "Function App id cannot be null");
             using var context = DbContextFactory.CreateDbContext();
             var functionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
                 .Include(fa => fa.AppRegistration)
-                .FirstAsync(fa => fa.FunctionAppId == id);
+                .FirstAsync(fa => fa.FunctionAppId == functionAppId);
             Functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
             StateHasChanged();
         }

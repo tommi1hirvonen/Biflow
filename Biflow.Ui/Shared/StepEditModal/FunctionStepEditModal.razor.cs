@@ -15,7 +15,11 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     internal override string FormId => "function_step_edit_form";
 
-    private Task OpenFunctionSelectOffcanvas() => FunctionSelectOffcanvas.LetAsync(x => x.ShowAsync());
+    private Task OpenFunctionSelectOffcanvas()
+    {
+        ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
+        return FunctionSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.FunctionAppId));
+    }
 
     private void OnFunctionSelected(string functionUrl)
     {
