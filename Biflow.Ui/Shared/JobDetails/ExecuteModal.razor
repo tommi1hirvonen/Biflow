@@ -97,13 +97,13 @@
                             <tbody>
                                 @foreach (var step in StepsAvailableToExecute)
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => { if (!StepsToExecute.Any(s => s.StepId == step.StepId)) StepsToExecute.Add(step); }">
-                                        <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
+                                    <tr style="cursor: pointer;" >
+                                        <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => SelectStep(step)">
                                             <StepTypeIconComponent StepType_="@step.StepType" />
                                             &nbsp;
                                             <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                         </td>
-                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)">
+                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => SelectStep(step)">
                                             @step.ExecutionPhase
                                             &nbsp;
                                             <CxIcon Icon="FeatherIcon.Layers" />
@@ -113,9 +113,16 @@
                                             <td class="text-end">
                                                 @if (step.Dependencies?.Count > 0)
                                                 {
-                                                    <div class="hover-primary" title="Include dependencies (only enabled steps)" @onclick="() => SelectStepAndDependencies(step)">
-                                                        <CxIcon Icon="LucideIcon.Network" />
-                                                    </div>
+                                                    <HxDropdown>
+                                                        <HxDropdownToggleElement title="Include dependencies">
+                                                            <CxIcon Icon="LucideIcon.Network" />
+                                                        </HxDropdownToggleElement>
+                                                        <HxDropdownMenu>
+                                                            <HxDropdownHeader>Include dependencies (only enabled steps)</HxDropdownHeader>
+                                                            <HxDropdownItem OnClick="() => SelectStepAndDependencies(step, false)">On-success dependencies</HxDropdownItem>
+                                                            <HxDropdownItem OnClick="() => SelectStepAndDependencies(step, true)">All dependencies</HxDropdownItem>
+                                                        </HxDropdownMenu>
+                                                    </HxDropdown>
                                                 }
                                             </td>
                                         }
@@ -290,12 +297,20 @@
         StateHasChanged();
     }
 
-    private void SelectStepAndDependencies(Step step)
+    private void SelectStep(Step step)
     {
-        RecurseDependencies(step, new());
+        if (!StepsToExecute.Any(s => s.StepId == step.StepId))
+        {
+            StepsToExecute.Add(step);
+        }
     }
 
-    private void RecurseDependencies(Step step, List<Step> processedSteps)
+    private void SelectStepAndDependencies(Step step, bool includeAll)
+    {
+        RecurseDependencies(step, new(), includeAll);
+    }
+
+    private void RecurseDependencies(Step step, List<Step> processedSteps, bool includeAll)
     {
         // Add the step to the list of steps to execute if it is not there yet.
         if (!StepsToExecute.Any(s => s.StepId == step.StepId))
@@ -304,7 +319,10 @@
         }
 
         // Get dependency ids.
-        List<Guid> dependencyStepIds = step.Dependencies.Select(d => d.DependantOnStepId).ToList();
+        List<Guid> dependencyStepIds = step.Dependencies
+            .Where(d => d.DependencyType == DependencyType.OnSucceeded || includeAll)
+            .Select(d => d.DependantOnStepId)
+            .ToList();
 
         // If there are no dependencies, return true.
         if (dependencyStepIds.Count == 0)
@@ -320,12 +338,15 @@
         processedSteps.Add(step);
 
         // Get dependency steps based on ids. Only include enabled steps.
-        List<Step> dependencySteps = Steps?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id)).ToList() ?? new();
+        List<Step> dependencySteps = Steps
+            ?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
+            .ToList()
+            ?? new();
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
         {
-            RecurseDependencies(depencyStep, processedSteps);
+            RecurseDependencies(depencyStep, processedSteps, includeAll);
         }
 
     }
