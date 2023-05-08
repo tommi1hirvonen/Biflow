@@ -23,7 +23,7 @@
     },
     {
       "provider": "cdnjs",
-      "library": "bootstrap@5.3.0-alpha1",
+      "library": "bootstrap@5.3.0-alpha3",
       "destination": "wwwroot/lib/bootstrap/",
       "files": [
         "js/bootstrap.bundle.min.js",
@@ -39,6 +39,8 @@
         "scss/helpers/_clearfix.scss",
         "scss/helpers/_color-bg.scss",
         "scss/helpers/_colored-links.scss",
+        "scss/helpers/_focus-ring.scss",
+        "scss/helpers/_icon-link.scss",
         "scss/helpers/_position.scss",
         "scss/helpers/_ratio.scss",
         "scss/helpers/_stacks.scss",
