@@ -64,10 +64,16 @@
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse catalog
                     </HxButton>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync">
-                        <CxIcon Icon="FeatherIcon.AtSign" />
-                        Import parameters
-                    </HxButton>
+                    <HxDropdownButtonGroup>
+                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                            <CxIcon Icon="FeatherIcon.AtSign" />
+                            Import parameters
+                        </HxDropdownToggleButton>
+                        <HxDropdownMenu>
+                            <HxDropdownItem OnClick="() => ImportParametersAsync(false)">User defined</HxDropdownItem>
+                            <HxDropdownItem OnClick="() => ImportParametersAsync(true)">Include connection manager parameters</HxDropdownItem>
+                        </HxDropdownMenu>
+                    </HxDropdownButtonGroup>
                 </HxButtonGroup>
             </div>
         </div>

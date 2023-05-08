@@ -48,7 +48,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    private async Task ImportParametersAsync()
+    private async Task ImportParametersAsync(bool includeConnectionManagerParameters)
     {
         try
         {
@@ -56,7 +56,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             {
                 return;
             }
-            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName);
+            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for package {Step.PackageFolderName}/{Step.PackageProjectName}/{Step.PackageName}.dtsx");

@@ -103,7 +103,8 @@ public class SqlServerHelperService
         return new SSISCatalog(folders);
     }
 
-    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object? DefaultValue)>> GetPackageParameters(Guid connectionId, string folder, string project, string package)
+    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object? DefaultValue)>> GetPackageParameters(
+        Guid connectionId, string folder, string project, string package, bool includeConnectionManagerParameters)
     {
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
@@ -138,8 +139,9 @@ public class SqlServerHelperService
                     [projects].[project_id] = [object_parameters].[project_id] AND
                     [projects].[name] = [object_parameters].[object_name] AND
                     [object_parameters].[object_type] = 20
-            WHERE [object_parameters].[parameter_name] NOT LIKE 'CM.%'
-                AND [folders].[name] = @FolderName AND [projects].[name] = @ProjectName
+            WHERE [folders].[name] = @FolderName AND
+                [projects].[name] = @ProjectName AND
+                ([object_parameters].[parameter_name] NOT LIKE 'CM.%' OR @IncludeCMParams = 1)
             UNION ALL
             SELECT
                 ParameterLevel = 'Package',
@@ -156,13 +158,14 @@ public class SqlServerHelperService
             WHERE [folders].[name] = @FolderName AND
                 [projects].[name] = @ProjectName AND
                 [packages].[name] = @PackageName AND
-                [object_parameters].[parameter_name] NOT LIKE 'CM.%'
+                ([object_parameters].[parameter_name] NOT LIKE 'CM.%' OR @IncludeCMParams = 1)
             """, new
             {
                 FolderName = folder,
                 ProjectName = project,
-                PackageName = package
-            });
+                PackageName = package,
+                IncludeCMParams = includeConnectionManagerParameters
+        });
         return rows.Select(param =>
         {
             var level = Enum.Parse<ParameterLevel>(param.Level);
