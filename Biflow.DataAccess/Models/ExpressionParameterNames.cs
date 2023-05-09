@@ -5,11 +5,11 @@
 /// </summary>
 public static class ExpressionParameterNames
 {
-    public const string ExecutionId = "_execution_id_";
+    public const string ExecutionId = "ExecutionId";
 
-    public const string JobId = "_job_id_";
+    public const string JobId = "JobId";
 
-    public const string StepId = "_step_id_";
+    public const string StepId = "StepId";
 
-    public const string RetryAttemptIndex = "_retry_attempt_index_";
+    public const string RetryAttemptIndex = "RetryIndex";
 }
