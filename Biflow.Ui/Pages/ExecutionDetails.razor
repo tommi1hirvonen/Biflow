@@ -381,8 +381,12 @@
     <div class="card shadow-sm mt-3 pt-2">
         <StepExecutionsTableComponent ShowDetailed="false"
                                   Executions="FilteredExecutions
-                                                .OrderBy(e => SortMode == SortMode.DurationAsc ? e.ExecutionInSeconds : null)
-                                                .OrderByDescending(e => SortMode == SortMode.DurationDesc ? e.ExecutionInSeconds : null)
+                                                .OrderBy(e => SortMode switch
+                                                {
+                                                    SortMode.DurationAsc => e.ExecutionInSeconds,
+                                                    SortMode.DurationDesc => -e.ExecutionInSeconds,
+                                                    _ => null
+                                                })
                                                 // asc => Show not started steps last. desc => Show not started steps first.
                                                 .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
                                                 .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime : null)
