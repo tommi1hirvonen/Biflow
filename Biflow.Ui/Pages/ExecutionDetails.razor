@@ -499,8 +499,8 @@ else if (ShowReport == Report.Rerun)
                 </span>
             </li>
             <li>
-                <span class="dropdown-item" role="button">
-                    History (to be implemented)
+                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    History
                 </span>
             </li>
             <li>
@@ -513,3 +513,5 @@ else if (ShowReport == Report.Rerun)
 }
 
 <StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" StepExecutionAttempt="SelectedStepExecutionAttempt" />
+
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />

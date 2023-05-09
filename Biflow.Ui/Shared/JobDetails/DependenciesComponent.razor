@@ -99,8 +99,8 @@
                 </span>
             </li>
             <li>
-                <span class="dropdown-item" role="button">
-                    History (to be implemented)
+                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    History
                 </span>
             </li>
             <AuthorizeView Roles="Admin, Editor">
@@ -118,6 +118,8 @@
         </ul>
     </div>
 }
+
+<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
 <AuthorizeView Roles="Admin, Editor">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
@@ -175,6 +177,8 @@
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
+
+    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
     private Step? StepFilter { get; set; }
 

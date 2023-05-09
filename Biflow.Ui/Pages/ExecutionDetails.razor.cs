@@ -64,6 +64,8 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
     private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
     private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
+    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
+
     private bool GraphShouldRender { get; set; } = false;
 
     private int FilterDepthBackwards
