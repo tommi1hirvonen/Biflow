@@ -2,6 +2,8 @@
 
 @inject IJSRuntime JS
 @inject IHxMessengerService Messenger
+@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IHxMessageBoxService Confirmer
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
@@ -107,9 +109,9 @@
                     </span>
                 </li>
                 <li>
-                    <span class="dropdown-item" role="button">
+                    <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
                         <CxIcon Icon="FeatherIcon.Trash2" />
-                        Delete (to be implemented)
+                        Delete
                     </span>
                 </li>
             </AuthorizeView>
@@ -357,6 +359,37 @@
         SortSteps();
         await LoadGraph();
         StateHasChanged();
+    }
+
+    private async Task DeleteStep(Step step)
+    {
+        var result = await Confirmer.ConfirmAsync($"Are you sure you want to delete step \"{step.StepName}\"?");
+        if (!result)
+        {
+            return;    
+        }
+
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Steps.Remove(step);
+            await context.SaveChangesAsync();
+            Steps?.Remove(step);
+
+            // Remove the deleted step from dependencies.
+            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+            {
+                var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
+                dependant.Dependencies.Remove(dependency);
+            }
+
+            await LoadGraph();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting step", ex.Message);
+        }
     }
 
     private void SortSteps()
