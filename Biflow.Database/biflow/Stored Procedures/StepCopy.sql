@@ -140,8 +140,8 @@ SELECT c.ParameterIdNew,
 	a.ParameterType,
 	a.ParameterValueType,
 	a.ParameterValue,
-	JobParameterId = CASE WHEN b.JobId = @TargetJobId THEN a.InheritFromJobParameterId END,
-	a.AssignToJobParameterId,
+	InheritFromJobParameterId = CASE WHEN b.JobId = @TargetJobId THEN a.InheritFromJobParameterId END,
+	AssignToJobParameterId = CASE WHEN b.JobId = @TargetJobId THEN a.AssignToJobParameterId END,
 	a.UseExpression,
 	a.Expression
 FROM biflow.StepParameter AS a

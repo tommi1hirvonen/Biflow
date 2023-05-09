@@ -259,7 +259,7 @@ INSERT INTO biflow.StepParameter (
 	UseExpression,
 	Expression
 )
-SELECT d.ParameterIdNew,
+SELECT D.ParameterIdNew,
 	B.StepIdNew,
 	A.ParameterLevel,
 	A.ParameterName,
@@ -267,13 +267,14 @@ SELECT d.ParameterIdNew,
 	A.ParameterValueType,
 	A.ParameterValue,
 	C.ParameterIdNew,
-	A.AssignToJobParameterId,
+	E.ParameterIdNew,
 	A.UseExpression,
 	A.Expression
 FROM biflow.StepParameter AS A
 	INNER JOIN #StepIdMapping AS B ON A.StepId = B.StepId
-	INNER JOIN #StepParameterIdMapping AS d ON a.ParameterId = d.ParameterId
-	LEFT JOIN #ParameterIdMapping AS C ON A.JobParameterId = C.ParameterId
+	INNER JOIN #StepParameterIdMapping AS D ON a.ParameterId = D.ParameterId
+	LEFT JOIN #ParameterIdMapping AS C ON A.InheritFromJobParameterId = C.ParameterId
+    LEFT JOIN #ParameterIdMapping AS E ON A.AssignToJobParameterId = D.ParameterId
 
 
 -- Copy expression parameters
