@@ -95,26 +95,30 @@
             </li>
             <li>
                 <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                    <CxIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
-                </span>
-            </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    History
                 </span>
             </li>
             <AuthorizeView Roles="Admin, Editor">
                 <li>
                     <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
+                        <CxIcon Icon="FeatherIcon.Edit2" />
                         Edit
                     </span>
                 </li>
                 <li>
                     <span class="dropdown-item" role="button">
+                        <CxIcon Icon="FeatherIcon.Trash2" />
                         Delete (to be implemented)
                     </span>
                 </li>
             </AuthorizeView>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    <CxIcon Icon="LucideIcon.History" />
+                    History
+                </span>
+            </li>
         </ul>
     </div>
 }

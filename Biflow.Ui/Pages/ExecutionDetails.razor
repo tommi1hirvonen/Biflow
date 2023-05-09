@@ -495,17 +495,20 @@ else if (ShowReport == Report.Rerun)
             </li>
             <li>
                 <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                    <CxIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    History
+                <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
+                    <CxIcon Icon="FeatherIcon.Info" />
+                    Details
                 </span>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
-                    Details
+                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    <CxIcon Icon="LucideIcon.History" />
+                    History
                 </span>
             </li>
         </ul>
