@@ -179,6 +179,8 @@
 
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
+    [Parameter] public Guid? InitialStepId { get; set; }
+
     private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
@@ -205,6 +207,11 @@
     {
         if (firstRender)
         {
+            if (InitialStepId is Guid filterStepId)
+            {
+                StepFilter = Steps?.FirstOrDefault(s => s.StepId == filterStepId);
+                StateHasChanged();
+            }
             await LoadGraph();
             await JS.InvokeVoidAsync("attachDependencyGraphBodyListener");
         }

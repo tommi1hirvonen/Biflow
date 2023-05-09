@@ -19,6 +19,8 @@ public partial class StepsComponent : ComponentBase
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     
     [CascadingParameter] public Job? Job { get; set; }
     

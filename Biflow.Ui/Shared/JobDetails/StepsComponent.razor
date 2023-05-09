@@ -321,6 +321,13 @@
                                         <CxIcon Icon="FeatherIcon.Info" />
                                     </HxButton>
 
+                                    @{
+                                        var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/dependencies/{item.StepId}");
+                                    }
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="navigateToDependencies">
+                                        <CxIcon Icon="LucideIcon.Network" />
+                                    </HxButton>
+
                                     <AuthorizeView Roles="Admin, Editor">
                                         <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
