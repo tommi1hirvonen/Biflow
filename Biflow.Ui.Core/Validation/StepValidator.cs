@@ -22,7 +22,13 @@ public class StepValidator : AbstractValidator<Step>
         });
         When(step => step is IHasStepParameters, () =>
         {
-            var reservedParameterNames = new string[] { "_execution_id_", "_job_id_", "_step_id_", "_retry_attempt_index_" };
+            var reservedParameterNames = new string[]
+            {
+                ExpressionParameterNames.ExecutionId,
+                ExpressionParameterNames.JobId,
+                ExpressionParameterNames.StepId,
+                ExpressionParameterNames.RetryAttemptIndex
+            };
             foreach (var reservedName in reservedParameterNames)
             {
                 RuleForEach(step => ((IHasStepParameters)step).StepParameters)

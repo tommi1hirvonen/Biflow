@@ -41,9 +41,10 @@ public class ExecutionParameter : DynamicParameter
         }
         else if (UseExpression)
         {
-            var parameters = new Dictionary<string, object?> {
-                { "_execution_id_", ExecutionId },
-                { "_job_id_", Execution.JobId }
+            var parameters = new Dictionary<string, object?>
+            {
+                { ExpressionParameterNames.ExecutionId, ExecutionId },
+                { ExpressionParameterNames.JobId, Execution.JobId }
             };
             var result = await Expression.EvaluateAsync(parameters);
             EvaluationResult = result;

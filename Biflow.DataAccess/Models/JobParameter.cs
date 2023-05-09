@@ -25,8 +25,8 @@ public class JobParameter : DynamicParameter
         if (UseExpression)
         {
             var parameters = new Dictionary<string, object?> {
-                { "_execution_id_", Guid.Empty },
-                { "_job_id_", JobId }
+                { ExpressionParameterNames.ExecutionId, Guid.Empty },
+                { ExpressionParameterNames.JobId, JobId }
             };
             return await Expression.EvaluateAsync(parameters);
         }
