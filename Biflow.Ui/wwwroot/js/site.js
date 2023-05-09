@@ -1,4 +1,4 @@
-﻿function drawDependencyGraph(steps_, dependencies_, dotNetObject) {
+﻿function drawDependencyGraph(steps_, dependencies_) {
 
     var steps = JSON.parse(steps_);
     var dependencies = JSON.parse(dependencies_);
@@ -66,7 +66,26 @@
     var elements = document.getElementsByClassName("node");
 
     var myFunction = function (event) {
-        dotNetObject.invokeMethodAsync('HelperInvokeCaller', this.id);
+        var dropdownId = `${this.id}_dropdown`;
+        var dropdown = document.getElementById(dropdownId);
+        var menu = dropdown.querySelector('.dropdown-menu');
+
+        // Place the dropdown to the location of the mouse.
+        var bodyOffsets = document.body.getBoundingClientRect();
+        var tempX = event.pageX - bodyOffsets.left;
+        var tempY = event.pageY;
+        dropdown.style.top = `${tempY}px`;
+        dropdown.style.left = `${tempX}px`;
+
+        menu.classList.add('show');
+
+        // Close all other dependency graph dropdown menus.
+        var menus = document.querySelectorAll('.dependency-graph-dropdown-menu');
+        for (var i = 0; i < menus.length; i++) {
+            var menu = menus[i];
+            if (menu.parentElement.id == dropdownId) continue;
+            menu.classList.remove('show');
+        }
     };
 
     for (var i = 0; i < elements.length; i++) {
@@ -79,6 +98,26 @@
                 title: title_
             });
         }
+    }
+}
+
+function attachDependencyGraphBodyListener() {
+    document.body.addEventListener('click', dependencyGraphBodyOnClick);
+}
+
+function disposeDependencyGraphBodyListener() {
+    document.body.removeEventListener('click', dependencyGraphBodyOnClick);
+}
+
+function dependencyGraphBodyOnClick(event) {
+    // If the event target was a dependency graph node, skip that specific dropdown menu.
+    // Close all other dropdown menus that might be open.
+    var dropdownId = `${event.target.__data__}_dropdown`;
+    var menus = document.querySelectorAll('.dependency-graph-dropdown-menu');
+    for (var i = 0; i < menus.length; i++) {
+        var menu = menus[i];
+        if (menu.parentElement.id == dropdownId) continue;
+        menu.classList.remove('show');
     }
 }
 

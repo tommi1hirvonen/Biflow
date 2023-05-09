@@ -13,7 +13,7 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/executions/{ExecutionId:guid}")]
-public partial class ExecutionDetails : ComponentBase
+public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
@@ -64,8 +64,6 @@ public partial class ExecutionDetails : ComponentBase
     private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
     private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
-    private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
-
     private bool GraphShouldRender { get; set; } = false;
 
     private int FilterDepthBackwards
@@ -83,15 +81,6 @@ public partial class ExecutionDetails : ComponentBase
     }
 
     private int _filterDepthForwards;
-
-    protected override void OnInitialized()
-    {
-        // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
-        // This will allow JS to call back to a specific instance of this component.
-        // This needs to be done, because multiple users might be using this component concurrently.
-        var helper = new MethodInvokeHelper(ShowStepExecutionOffcanvas);
-        ObjectReference = DotNetObjectReference.Create(helper);
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -137,7 +126,13 @@ public partial class ExecutionDetails : ComponentBase
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (GraphShouldRender && ShowReport == Report.Dependencies)
+        {
             await LoadGraph();
+        }
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("attachDependencyGraphBodyListener");
+        }
     }
 
     private async Task LoadGraph()
@@ -207,21 +202,17 @@ public partial class ExecutionDetails : ComponentBase
         
 
         if (stepsJson is not null && dependenciesJson is not null)
-            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
+            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson);
 
         StateHasChanged();
     }
 
-    private async void ShowStepExecutionOffcanvas(string text)
+    private async Task ShowStepExecutionOffcanvas(StepExecution step)
     {
-        if (Guid.TryParse(text, out Guid id))
-        {
-            var step = Execution?.StepExecutions.First(s => s.StepId == id);
-            var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
-            SelectedStepExecutionAttempt = attempt;
-            StateHasChanged();
-            await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync());
-        }
+        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
+        SelectedStepExecutionAttempt = attempt;
+        StateHasChanged();
+        await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task StopJobExecutionAsync()
@@ -347,5 +338,8 @@ public partial class ExecutionDetails : ComponentBase
         return step_;
     }
 
-    public void Dispose() => ObjectReference?.Dispose();
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("disposeDependencyGraphBodyListener");
+    }
 }

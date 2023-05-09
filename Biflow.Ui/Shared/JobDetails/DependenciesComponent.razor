@@ -1,4 +1,4 @@
-﻿@implements IDisposable
+﻿@implements IAsyncDisposable
 
 @inject IJSRuntime JS
 @inject IHxMessengerService Messenger
@@ -84,6 +84,41 @@
     </div>
 </div>
 
+@foreach (var step in Steps ?? Enumerable.Empty<Step>())
+{
+    <div id="@($"{step.StepId}_dropdown")" class="dropdown position-absolute">
+        <ul class="dependency-graph-dropdown-menu dropdown-menu">
+            <li>
+                <h6 class="dropdown-header">
+                    @step.StepName
+                </h6>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                    Limit graph to this
+                </span>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button">
+                    History (to be implemented)
+                </span>
+            </li>
+            <AuthorizeView Roles="Admin, Editor">
+                <li>
+                    <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
+                        Edit
+                    </span>
+                </li>
+                <li>
+                    <span class="dropdown-item" role="button">
+                        Delete (to be implemented)
+                    </span>
+                </li>
+            </AuthorizeView>
+        </ul>
+    </div>
+}
+
 <AuthorizeView Roles="Admin, Editor">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
         Connections="SqlConnections"
@@ -139,8 +174,6 @@
 
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
-    private DotNetObjectReference<MethodInvokeHelper> ObjectReference { get; set; } = null!;
-
     private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
 
     private Step? StepFilter { get; set; }
@@ -161,20 +194,12 @@
 
     private int _filterDepthForwards;
 
-    protected override void OnInitialized()
-    {
-        // Create a DotNetObjectReference with a new helper method tied to an instance of this component.
-        // This will allow JS to call back to a specific instance of this component.
-        // This needs to be done, because multiple users might be using this component concurrently.
-        var helper = new MethodInvokeHelper(OpenStepEditModal);
-        ObjectReference = DotNetObjectReference.Create(helper);
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await LoadGraph();
+            await JS.InvokeVoidAsync("attachDependencyGraphBodyListener");
         }
     }
 
@@ -238,7 +263,7 @@
         }
 
         if (stepsJson is not null && dependenciesJson is not null)
-            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson, ObjectReference);
+            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson);
     }
 
     private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps, int depth)
@@ -309,17 +334,8 @@
         await LoadGraph();
     }
 
-    // Step edit modals can be opened from JS using JSInterop by calling this method. See site.js => drawDependencyGraph().
-    private async void OpenStepEditModal(string id)
-    {
-        ArgumentNullException.ThrowIfNull(Steps);
-        var stepId = Guid.Parse(id);
-        var step = Steps.First(s => s.StepId == stepId);
-        StateHasChanged();
-        // For users other than admins and editors the StepEditModals Dictionary might be empty.
-        // Handle that scenario with GetValueOrDefault().
-        await StepEditModals.GetValueOrDefault(step.StepType).LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
-    }
+    private Task OpenStepEditModalAsync(Step step) =>
+        StepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
 
     private async Task OnStepSubmit(Step step)
     {
@@ -378,9 +394,9 @@
         return step_;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        ObjectReference?.Dispose();
+        await JS.InvokeVoidAsync("disposeDependencyGraphBodyListener");
     }
 
 }

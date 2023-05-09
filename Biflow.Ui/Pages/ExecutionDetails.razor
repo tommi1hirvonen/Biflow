@@ -484,4 +484,32 @@ else if (ShowReport == Report.Rerun)
     </div>
 </div>
 
+@foreach (var step in Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>())
+{
+    <div id="@($"{step.StepId}_dropdown")" class="dropdown position-absolute">
+        <ul class="dependency-graph-dropdown-menu dropdown-menu">
+            <li>
+                <h6 class="dropdown-header">
+                    @step.StepName
+                </h6>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                    Limit graph to this
+                </span>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button">
+                    History (to be implemented)
+                </span>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
+                    Details
+                </span>
+            </li>
+        </ul>
+    </div>
+}
+
 <StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" StepExecutionAttempt="SelectedStepExecutionAttempt" />
