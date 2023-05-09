@@ -415,18 +415,14 @@ else if (ShowReport == Report.Dependencies)
     }
     <div class="row align-items-end mb-3">
         <div class="col-xl-5 col-lg-5 col-12">
-            <HxAutosuggest TItem="StepExecution"
-                       TValue="StepExecution"
-                       DataProvider="ProvideSuggestions"
-                       ValueSelector="ValueSelector"
-                       ItemFromValueResolver="ResolveAutosuggestItemFromValue"
-                       TextSelector="TextSelector"
-                       MinimumLength="0"
-                       Delay="1"
-                       InputSize="InputSize.Small"
-                       ValueChanged="LimitGraph"
-                       ValueExpression="() => DependencyGraphStepFilter"
-                       Placeholder="Filter step">
+            <HxAutosuggest @bind-Value="DependencyGraphStepFilter"
+                        @bind-Value:after="LoadGraph"
+                        DataProvider="ProvideSuggestions"
+                        TextSelector="TextSelector"
+                        MinimumLength="0"
+                        Delay="1"
+                        InputSize="InputSize.Small"
+                        Placeholder="Filter step">
                 <ItemTemplate Context="item">
                     <StepTypeIconComponent StepType_="item.StepType" />
                     @item.StepName
@@ -494,7 +490,7 @@ else if (ShowReport == Report.Rerun)
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                <span class="dropdown-item" role="button" @onclick="async () => { DependencyGraphStepFilter = step; await LoadGraph(); }">
                     <CxIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>

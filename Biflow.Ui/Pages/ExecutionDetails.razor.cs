@@ -251,12 +251,6 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task LimitGraph(StepExecution step)
-    {
-        DependencyGraphStepFilter = step;
-        await LoadGraph();
-    }
-
     private List<StepExecution> RecurseDependenciesBackward(StepExecution step, List<StepExecution> processedSteps, int depth)
     {
         ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
@@ -329,16 +323,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         };
     }
 
-    private StepExecution ValueSelector(StepExecution step) => step;
-
     private string TextSelector(StepExecution step) => step.StepName ?? "";
-
-    private Task<StepExecution> ResolveAutosuggestItemFromValue(StepExecution step)
-    {
-        ArgumentNullException.ThrowIfNull(Execution);
-        var step_ = Task.FromResult(Execution.StepExecutions.First(s => s.StepId == step.StepId));
-        return step_;
-    }
 
     public async ValueTask DisposeAsync()
     {

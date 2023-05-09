@@ -23,17 +23,13 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-5 col-lg-5 col-12">
-        <HxAutosuggest  TItem="Step"
-                        TValue="Step"
+        <HxAutosuggest  @bind-Value="StepFilter"
+                        @bind-Value:after="LoadGraph"
                         DataProvider="ProvideSuggestions"
-                        ValueSelector="ValueSelector"
-                        ItemFromValueResolver="ResolveAutosuggestItemFromValue"
                         TextSelector="TextSelector"
                         MinimumLength="0"
                         Delay="1"
                         InputSize="InputSize.Small"
-                        ValueChanged="LimitGraph"
-                        ValueExpression="() => StepFilter"
                         Placeholder="Filter step">
             <ItemTemplate Context="item">
                 <StepTypeIconComponent StepType_="item.StepType" />
@@ -96,7 +92,7 @@
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => LimitGraph(step)">
+                <span class="dropdown-item" role="button" @onclick="async () => { StepFilter = step; await LoadGraph();}">
                     <CxIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
@@ -337,13 +333,6 @@
         return processedSteps;
     }
 
-
-    private async Task LimitGraph(Step step)
-    {
-        StepFilter = step;
-        await LoadGraph();
-    }
-
     private Task OpenStepEditModalAsync(Step step) =>
         StepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
 
@@ -424,16 +413,7 @@
         };
     }
 
-    private Step ValueSelector(Step step) => step;
-
     private string TextSelector(Step step) => step.StepName ?? "";
-
-    private Task<Step> ResolveAutosuggestItemFromValue(Step step)
-    {
-        ArgumentNullException.ThrowIfNull(Steps);
-        var step_ = Task.FromResult(Steps.First(s => s.StepId == step.StepId));
-        return step_;
-    }
 
     public async ValueTask DisposeAsync()
     {
