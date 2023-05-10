@@ -7,7 +7,6 @@ using Quartz;
 
 namespace Biflow.Scheduler.Core;
 
-[DisallowConcurrentExecution]
 public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
