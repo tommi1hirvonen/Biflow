@@ -1,7 +1,7 @@
 ﻿
 <PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
 
-<div class="sticky-top pt-2 pb-3" style="background-color: var(--sticky-top-bg);">
+<div class="sticky-top pt-2 bg-body rounded-4" style="margin-left: -3px; margin-right: -3px; padding-left: 3px; padding-right: 3px;">
     <div class="row justify-content-between gap-3">
         <div class="col-auto">
             <div class="btn-toolbar">
@@ -162,87 +162,98 @@
         </div>
         
     </div>
-</div>
 
-<div class="row mb-3">
-    <div class="col">
-        <ol class="list-group shadow-sm">
-            @if (Steps is null || Jobs is null || Job is null)
-            {
-                <li class="list-group-item list-group-header">
-                    <div class="row">
-                        <div class="col text-center">
-                            <HxSpinner Color="ThemeColor.Secondary" />
-                        </div>
-                    </div>
-                </li>
-            }
-            else
-            {
-                var count = FilteredSteps.Count();
-                var disabledCount = FilteredSteps.Where(s => !s.IsEnabled).Count();
-                var countText = Steps.Count switch
+    <div class="row mt-3">
+        <div class="col">
+            <ol class="list-group shadow-sm">
+                @if (Steps is null || Jobs is null || Job is null)
                 {
-                    0 => "No steps",
-                    1 => count == Steps.Count ? $"Showing {count} step" : $"Showing {count} of {Steps.Count} step",
-                    > 1 => count == Steps.Count ? $"Showing all {Steps.Count} steps" : $"Showing {count} of {Steps.Count} steps",
-                    _ => string.Empty
-                };
-                var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
-                var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
-                <li class="list-group-item list-group-header">
-                    <div class="row align-items-center" style="min-height: 31px;">
-                        <AuthorizeView Roles="Admin, Editor, Operator">
-                            <div class="col text-muted d-flex align-items-center">
-                                <TriStateCheckbox Checked="@(SelectedSteps.Count == count && Steps.Any() && count > 0)"
-                                                  Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
-                                                  CheckedChanged="ToggleAllStepsSelected" />
-                                <div class="fw-bold small">@selectedText</div>
+                    <li class="list-group-item list-group-header">
+                        <div class="row">
+                            <div class="col text-center">
+                                <HxSpinner Color="ThemeColor.Secondary" />
                             </div>
-                        </AuthorizeView>
-                        <AuthorizeView Roles="Admin, Editor">
-                            <div class="col">
-                                @if (SelectedSteps.Any())
+                        </div>
+                    </li>
+                }
+                else
+                {
+                    var count = FilteredSteps.Count();
+                    var disabledCount = FilteredSteps.Where(s => !s.IsEnabled).Count();
+                    var countText = Steps.Count switch
+                    {
+                        0 => "No steps",
+                        1 => count == Steps.Count ? $"Showing {count} step" : $"Showing {count} of {Steps.Count} step",
+                        > 1 => count == Steps.Count ? $"Showing all {Steps.Count} steps" : $"Showing {count} of {Steps.Count} steps",
+                        _ => string.Empty
+                    };
+                    var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
+                    var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
+                    <li class="list-group-item list-group-header">
+                        <div class="row align-items-center" style="min-height: 31px;">
+                            <AuthorizeView Roles="Admin, Editor, Operator">
+                                <div class="col text-muted d-flex align-items-center">
+                                    <TriStateCheckbox Checked="@(SelectedSteps.Count == count && Steps.Any() && count > 0)"
+                                                      Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
+                                                      CheckedChanged="ToggleAllStepsSelected" />
+                                    <div class="fw-bold small">@selectedText</div>
+                                </div>
+                            </AuthorizeView>
+                            <AuthorizeView Roles="Admin, Editor">
+                                <div class="col">
+                                    @if (SelectedSteps.Any())
+                                    {
+                                        <div class="btn-group">
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                                                    <CxIcon Icon="FeatherIcon.Copy" />
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                    <HxDropdownHeader>Copy to</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
+                                                    <HxDropdownDivider></HxDropdownDivider>
+                                                    @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
+                                                    {
+                                                        <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
+                                                    }
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </div>
+                                    }
+                                </div>
+                            </AuthorizeView>
+                            <div class="col text-muted text-center fw-bold small">
+                                 @countText
+                            </div>
+                            <div class="col text-muted text-end fw-bold small">
+                                @if (stateFilter == StateFilter.All)
                                 {
-                                    <div class="btn-group">
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                                                <CxIcon Icon="FeatherIcon.Trash2" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu>
-                                                <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                                                <CxIcon Icon="FeatherIcon.Copy" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu CssClass="dropdown-menu-right">
-                                                <HxDropdownHeader>Copy to</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
-                                                <HxDropdownDivider></HxDropdownDivider>
-                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                                {
-                                                    <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
-                                                }
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-                                    </div>
+                                    @disabledCountText
                                 }
                             </div>
-                        </AuthorizeView>
-                        <div class="col text-muted text-center fw-bold small">
-                             @countText
                         </div>
-                        <div class="col text-muted text-end fw-bold small">
-                            @if (stateFilter == StateFilter.All)
-                            {
-                                @disabledCountText
-                            }
-                        </div>
-                    </div>
-                </li>
+                    </li>
+                }
+            </ol>
+        </div>
+    </div>
+</div>
+
+
+@if (Steps is not null && Jobs is not null && Job is not null)
+{
+    <div class="row mb-3 mt-3">
+        <div class="col">
+            <ol class="list-group shadow-sm">
                 @foreach (var item in FilteredSteps)
                 {
                     <li class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
@@ -252,7 +263,7 @@
                                     <div class="form-check me-2">
                                         <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
                                                checked=@SelectedSteps.Contains(item)
-                                               @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
+                                       @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
                                         <label class="form-check-label" for="select_step_@item.StepId"></label>
                                     </div>
                                 </AuthorizeView>
@@ -272,8 +283,8 @@
                             </div>
                             <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-between">
                                 @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
-                                    || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
-                                    || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                               || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
+                               || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
                                     <div title="Step uses job parameters" class="text-body">
                                         <CxIcon Icon="FeatherIcon.AtSign" />
@@ -368,7 +379,7 @@
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter"/></em></small>
+                                    <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter" /></em></small>
                                 </div>
                             </div>
                         }
@@ -376,13 +387,13 @@
                         {
                             <div class="row">
                                 <div class="col text-truncate">
-                                    <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter"/></small>
+                                    <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter" /></small>
                                 </div>
                             </div>
                         }
                         @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageFolder)
-                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageProject)
-                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
+                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageProject)
+                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
@@ -415,7 +426,7 @@
                             </div>
                         }
                         @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeFilePath)
-                            || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
+                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
                         {
                             <div class="row">
                                 <div class="col text-truncate">
@@ -442,18 +453,17 @@
                             var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $" \\ {tabular.TabularPartitionName}";
                             <div class="row">
                                 <div class="col text-truncate">
-                                     
+
                                     <small class="text-secondary">@tabular.TabularModelName@tableText@partitionText</small>
                                 </div>
                             </div>
                         }
                     </li>
                 }
-            }
-        </ol>
+            </ol>
+        </div>
     </div>
-</div>
-
+}
 
 <AuthorizeView Roles="Admin, Editor">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"

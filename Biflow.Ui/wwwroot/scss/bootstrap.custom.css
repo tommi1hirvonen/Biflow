@@ -12034,8 +12034,12 @@ tr .btn-auto, .list-group-item .btn-auto {
   --bs-table-hover-bg: none;
 }
 
-.list-group-header {
-  background-color: rgba(var(--bs-body-color-rgb), 0.03);
+[data-bs-theme=dark] .list-group-header {
+  background-color: #2a2e32;
+}
+
+[data-bs-theme=light] .list-group-header, [data-bs-theme=auto] .list-group-header {
+  background-color: #f4f4f4;
 }
 
 .validation-message {

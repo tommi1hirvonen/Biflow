@@ -158,9 +158,18 @@ tr .btn-auto, .list-group-item .btn-auto {
 }
 
 // Custom list group header class with a slightly darker background.
-.list-group-header {
-    background-color: $card-cap-bg;
+[data-bs-theme="dark"] {
+    .list-group-header {
+        background-color: tint-color($body-color, 4%);
+    }
 }
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .list-group-header {
+        background-color: tint-color($body-color, 95%);
+    }
+}
+
 
 // Forms and inputs
 
