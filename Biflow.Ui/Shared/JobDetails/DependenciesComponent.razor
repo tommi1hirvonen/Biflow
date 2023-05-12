@@ -106,6 +106,22 @@
                     </span>
                 </li>
                 <li>
+                    @if (step.IsEnabled)
+                    {
+                        <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
+                            <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                            Disable
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
+                            <CxIcon Icon="FeatherIcon.ToggleRight" />
+                            Enable
+                        </span>
+                    }
+                </li>
+                <li>
                     <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
                         <CxIcon Icon="FeatherIcon.Trash2" />
                         Delete
@@ -356,6 +372,22 @@
         SortSteps();
         await LoadGraph();
         StateHasChanged();
+    }
+
+    private async Task ToggleEnabled(Step step, bool value)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.Attach(step);
+            step.IsEnabled = value;
+            await context.SaveChangesAsync();
+            await LoadGraph();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling step", ex.Message);
+        }
     }
 
     private async Task DeleteStep(Step step)
