@@ -14,9 +14,8 @@ internal class JobExecutor : IJobExecutor
     private readonly ILogger<JobExecutor> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
-    private readonly IOrchestratorFactory _orchestratorFactory;
 
-    private OrchestratorBase Orchestrator { get; }
+    private JobOrchestrator Orchestrator { get; }
 
     private Execution Execution { get; }
 
@@ -32,9 +31,8 @@ internal class JobExecutor : IJobExecutor
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
-        _orchestratorFactory = orchestratorFactory;
         Execution = execution;
-        Orchestrator = _orchestratorFactory.Create(Execution);
+        Orchestrator = orchestratorFactory.Create(Execution);
     }
 
     public async Task RunAsync(Guid executionId)
@@ -76,6 +74,27 @@ internal class JobExecutor : IJobExecutor
             var errorMessage = "Execution was cancelled because of circular job executions:\n" + circularExecutions;
             await UpdateExecutionFailedAsync(errorMessage);
             _logger.LogError("{executionId} Execution was cancelled because of circular job executions: {circularExecutions}", executionId, circularExecutions);
+            return;
+        }
+
+        // Check whether there are circular dependencies between steps.
+        string? circularSteps;
+        try
+        {
+            circularSteps = await GetCircularStepDependenciesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{executionId} Error checking for possible circular step dependencies", executionId);
+            await UpdateExecutionFailedAsync("Error checking for possible circular step dependencies");
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(circularSteps))
+        {
+            var errorMessage = "Execution was cancelled because of circular step dependencies:\n" + circularSteps;
+            await UpdateExecutionFailedAsync(errorMessage);
+            _logger.LogError("{executionId} Execution was cancelled because of circular step dependencies: {circularSteps}", executionId, circularSteps);
             return;
         }
 
@@ -188,9 +207,9 @@ internal class JobExecutor : IJobExecutor
     /// </returns>
     private async Task<string?> GetCircularJobExecutionsAsync(Job job)
     {
-        var dependencies = await ReadDependenciesAsync();
+        var dependencies = await ReadJobDependenciesAsync();
         List<List<Job>> cycles = dependencies.FindCycles();
-        var jobs = cycles.Select(c => c.Select(c_ => new { c_.JobId, c_.JobName })).ToList();
+        var jobs = cycles.Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToList()).ToList();
         var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
         var json = JsonSerializer.Serialize(jobs, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
@@ -199,7 +218,20 @@ internal class JobExecutor : IJobExecutor
             ? null : json;
     }
 
-    private async Task<Dictionary<Job, List<Job>>> ReadDependenciesAsync()
+    private async Task<string?> GetCircularStepDependenciesAsync()
+    {
+        // Find circular step dependencies which are not allowed since they would block each other's executions.
+        var dependencies = await ReadStepDependenciesAsync();
+        List<List<Step>> cycles = dependencies.FindCycles();
+        var steps = cycles.Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToList()).ToList();
+
+        var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
+        var json = JsonSerializer.Serialize(steps, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
+
+        return cycles.Count == 0 ? null : json;
+    }
+
+    private async Task<Dictionary<Job, List<Job>>> ReadJobDependenciesAsync()
     {
         using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.JobSteps
@@ -215,6 +247,22 @@ internal class JobExecutor : IJobExecutor
         var dependencies = steps
             .GroupBy(key => key.Job, element => element.JobToExecute)
             .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+        return dependencies;
+    }
+
+    private async Task<Dictionary<Step, List<Step>>> ReadStepDependenciesAsync()
+    {
+        using var context = _dbContextFactory.CreateDbContext();
+        var steps = await context.Steps
+            .AsNoTrackingWithIdentityResolution()
+            .Where(step => step.JobId == Execution.JobId)
+            .Include(step => step.Dependencies)
+            .ToListAsync();
+        var dependencies = steps
+            .SelectMany(step => step.Dependencies)
+            .Select(d => new { d.Step, d.DependantOnStep})
+            .GroupBy(key => key.Step, element => element.DependantOnStep)
+            .ToDictionary(g => g.Key, g => g.ToList());
         return dependencies;
     }
 

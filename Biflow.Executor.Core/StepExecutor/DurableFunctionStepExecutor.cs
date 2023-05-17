@@ -25,7 +25,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
         IExecutionConfiguration executionConfiguration,
         IHttpClientFactory httpClientFactory,
         FunctionStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

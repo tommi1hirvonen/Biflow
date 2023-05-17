@@ -4,5 +4,5 @@ namespace Biflow.Executor.Core.Orchestrator;
 
 internal interface IOrchestratorFactory
 {
-    OrchestratorBase Create(Execution execution);
+    JobOrchestrator Create(Execution execution);
 }

@@ -20,9 +20,8 @@ internal class ExeStepExecutor : StepExecutorBase
     public ExeStepExecutor(
         ILogger<ExeStepExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        IExecutionConfiguration executionConfiguration,
         ExeStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

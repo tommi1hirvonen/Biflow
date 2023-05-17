@@ -26,7 +26,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         ITokenService tokenService,
         IDbContextFactory<BiflowContext> dbContextFactory,
         PipelineStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _executionConfiguration = executionConfiguration;

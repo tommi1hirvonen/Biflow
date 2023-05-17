@@ -14,8 +14,7 @@ internal class TabularStepExecutor : StepExecutorBase
     public TabularStepExecutor(
         ILogger<TabularStepExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        IExecutionConfiguration executionConfiguration,
-        TabularStepExecution step) : base(logger, dbContextFactory, executionConfiguration, step)
+        TabularStepExecution step) : base(logger, dbContextFactory, step)
     {
         Step = step;
     }

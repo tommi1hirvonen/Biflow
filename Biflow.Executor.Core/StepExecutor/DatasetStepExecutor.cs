@@ -20,7 +20,7 @@ internal class DatasetStepExecutor : StepExecutorBase
         ITokenService tokenService,
         IExecutionConfiguration executionConfiguration,
         DatasetStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _tokenService = tokenService;

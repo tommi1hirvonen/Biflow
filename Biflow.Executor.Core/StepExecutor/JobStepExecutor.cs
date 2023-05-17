@@ -23,7 +23,7 @@ internal class JobStepExecutor : StepExecutorBase
         IDbContextFactory<BiflowContext> dbContextFactory,
         IExecutionConfiguration executionConfiguration,
         JobStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _executionConfiguration = executionConfiguration;

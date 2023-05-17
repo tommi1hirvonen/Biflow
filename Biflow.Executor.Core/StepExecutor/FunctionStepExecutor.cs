@@ -14,9 +14,8 @@ internal class FunctionStepExecutor : FunctionStepExecutorBase
         ILogger<FunctionStepExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
         IHttpClientFactory httpClientFactory,
-        IExecutionConfiguration executionConfiguration,
         FunctionStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _httpClientFactory = httpClientFactory;
     }

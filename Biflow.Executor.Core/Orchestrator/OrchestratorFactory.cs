@@ -15,19 +15,8 @@ internal class OrchestratorFactory : IOrchestratorFactory
         _serviceProvider = serviceProvider;
     }
 
-    public OrchestratorBase Create(Execution execution)
-    {
-        OrchestratorBase orchestrator;
-        if (execution.DependencyMode)
-        {
-            _logger.LogInformation("{ExecutionId} Created orchestrator in dependency mode", execution.ExecutionId);
-            orchestrator = ActivatorUtilities.CreateInstance<DependencyModeOrchestrator>(_serviceProvider, execution);
-        }
-        else
-        {
-            _logger.LogInformation("{executionId} Created orchestrator in execution phase mode", execution.ExecutionId);
-            orchestrator = ActivatorUtilities.CreateInstance<ExecutionPhaseOrchestrator>(_serviceProvider, execution);
-        }
-        return orchestrator;
-    }
+    // TODO Handle execution phase mode orchestrator instantiation
+    public JobOrchestrator Create(Execution execution) =>
+        ActivatorUtilities.CreateInstance<JobOrchestrator>(_serviceProvider, execution);
+
 }

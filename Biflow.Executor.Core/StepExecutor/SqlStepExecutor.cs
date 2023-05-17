@@ -18,9 +18,8 @@ internal class SqlStepExecutor : StepExecutorBase
     public SqlStepExecutor(
         ILogger<SqlStepExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        IExecutionConfiguration executionConfiguration,
         SqlStepExecution step)
-        : base(logger, dbContextFactory, executionConfiguration, step)
+        : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

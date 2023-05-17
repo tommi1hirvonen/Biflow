@@ -20,7 +20,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
         ILogger<AgentJobStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        AgentJobStepExecution step) : base(logger, dbContextFactory, executionConfiguration, step)
+        AgentJobStepExecution step) : base(logger, dbContextFactory, step)
     {
         _executionConfiguration = executionConfiguration;
         Step = step;
