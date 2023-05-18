@@ -5,7 +5,7 @@ namespace Biflow.Executor.Core.Orchestrator;
 /// <summary>
 /// Observes orchestration status updates of multiple potential providers for a single StepExecution
 /// </summary>
-internal class StepExecutionStatusObserver : IObserver<StepExecutionStatusInfo>, IDisposable
+internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<StepAction> _tcs = new();
     private readonly StepExecution _stepExecution;
@@ -31,21 +31,23 @@ internal class StepExecutionStatusObserver : IObserver<StepExecutionStatusInfo>,
         await onReadyForOrchestration(_stepExecution, stepAction);
     }
 
-    public void Subscribe(IObservable<StepExecutionStatusInfo> provider)
+    public void Subscribe(IOrchestrationObservable provider)
     {
         _unsubscriber = provider.Subscribe(this);
     }    
 
-    public void Unsubscribe()
-    {
-        _unsubscriber?.Dispose();
-        _unsubscriber = null;
-    }
-
-    public void OnNext(StepExecutionStatusInfo value)
+    public void OnStepExecutionStatusChange(StepExecutionStatusInfo value)
     {
         HandleStatusInfo(value);
         CheckExecutionEligibility();
+    }
+
+    public void Dispose() => _unsubscriber?.Dispose();
+
+    private void Unsubscribe()
+    {
+        _unsubscriber?.Dispose();
+        _unsubscriber = null;
     }
 
     private void HandleStatusInfo(StepExecutionStatusInfo value)
@@ -123,20 +125,4 @@ internal class StepExecutionStatusObserver : IObserver<StepExecutionStatusInfo>,
         return StepAction.Wait;
     }
 
-    public void Dispose() => _unsubscriber?.Dispose();
-
-    #region NotImplemented
-
-    // No implementation needed: Method is not called by the StepExecutionStatusProvider class
-    public void OnCompleted()
-    {
-        throw new NotImplementedException();
-    }
-
-    // No implementation needed: Method is not called by the StepExecutionStatusProvider class
-    public void OnError(Exception error)
-    {
-        throw new NotImplementedException();
-    }
-    #endregion
 }

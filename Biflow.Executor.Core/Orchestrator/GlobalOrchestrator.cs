@@ -13,7 +13,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
     private readonly ILogger<GlobalOrchestrator> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly IStepExecutorFactory _stepExecutorFactory;
-    private readonly List<IObserver<StepExecutionStatusInfo>> _observers = new();
+    private readonly List<IOrchestrationObserver> _observers = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = new();
 
     public GlobalOrchestrator(
@@ -52,7 +52,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
             .ToList();
     }
 
-    public IDisposable Subscribe(IObserver<StepExecutionStatusInfo> observer)
+    public IDisposable Subscribe(IOrchestrationObserver observer)
     {
         lock (_lock)
         {
@@ -61,7 +61,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
                 _observers.Add(observer);
             }
         }
-        return new Unsubscriber<StepExecutionStatusInfo>(_observers, observer);
+        return new Unsubscriber(_observers, observer);
     }
 
     public void UpdateStatus(StepExecution step, OrchestrationStatus status)
@@ -78,7 +78,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
             }
             foreach (var observer in _observers.ToArray()) // Make a copy of the list as observers might unsubscribe during enumeration
             {
-                observer.OnNext(new(step, status));
+                observer.OnStepExecutionStatusChange(new(step, status));
             }
         }
     }

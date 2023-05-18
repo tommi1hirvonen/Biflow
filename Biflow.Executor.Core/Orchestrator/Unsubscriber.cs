@@ -1,11 +1,11 @@
 ﻿namespace Biflow.Executor.Core.Orchestrator;
 
-internal class Unsubscriber<TEventInfo> : IDisposable
+internal class Unsubscriber : IDisposable
 {
-    private readonly List<IObserver<TEventInfo>> _observers;
-    private readonly IObserver<TEventInfo> _observer;
+    private readonly List<IOrchestrationObserver> _observers;
+    private readonly IOrchestrationObserver _observer;
 
-    public Unsubscriber(List<IObserver<TEventInfo>> observers, IObserver<TEventInfo> observer)
+    public Unsubscriber(List<IOrchestrationObserver> observers, IOrchestrationObserver observer)
     {
         _observers = observers;
         _observer = observer;

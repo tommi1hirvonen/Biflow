@@ -3,7 +3,7 @@ using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal interface IGlobalOrchestrator : IObservable<StepExecutionStatusInfo>
+internal interface IGlobalOrchestrator : IOrchestrationObservable
 {
     /// <summary>
     /// 
