@@ -14,7 +14,7 @@ internal interface IGlobalOrchestrator : IOrchestrationObservable
     /// <returns></returns>
     public IEnumerable<Task> RegisterStepExecutionsAsync(
         ICollection<(StepExecution Step, CancellationToken Token)> stepExecutions,
-        Func<StepExecution, StepAction, Task> onReadyForOrchestration);
+        IOrchestrationListener orchestrationListener);
 
     /// <summary>
     /// 

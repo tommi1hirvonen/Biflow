@@ -28,7 +28,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
 
     public IEnumerable<Task> RegisterStepExecutionsAsync(
         ICollection<(StepExecution Step, CancellationToken Token)> stepExecutions,
-        Func<StepExecution, StepAction, Task> onReadyForOrchestration)
+        IOrchestrationListener orchestrationListener)
     {
         List<(StepExecutionStatusObserver Observer, CancellationToken Token)> observers;
         
@@ -48,7 +48,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
         }
 
         return observers
-            .Select(x => x.Observer.WaitForOrchestrationAsync(onReadyForOrchestration, x.Token))
+            .Select(x => x.Observer.WaitForOrchestrationAsync(orchestrationListener, x.Token))
             .ToList();
     }
 

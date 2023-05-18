@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Executor.Core.Orchestrator;
+﻿namespace Biflow.Executor.Core.Orchestrator;
 
 internal interface IOrchestrationObserver
 {
@@ -8,5 +6,5 @@ internal interface IOrchestrationObserver
 
     public void OnStepExecutionStatusChange(StepExecutionStatusInfo statusChange);
 
-    public Task WaitForOrchestrationAsync(Func<StepExecution, StepAction, Task> onReadyForOrchestration, CancellationToken cancellationToken);
+    public Task WaitForOrchestrationAsync(IOrchestrationListener orchestrationListener, CancellationToken cancellationToken);
 }

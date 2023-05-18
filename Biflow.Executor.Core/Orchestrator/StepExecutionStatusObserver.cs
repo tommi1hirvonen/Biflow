@@ -24,11 +24,11 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
         CheckExecutionEligibility();
     }
 
-    public async Task WaitForOrchestrationAsync(Func<StepExecution, StepAction, Task> onReadyForOrchestration, CancellationToken cancellationToken)
+    public async Task WaitForOrchestrationAsync(IOrchestrationListener orchestrationListener, CancellationToken cancellationToken)
     {
         // TODO Handle cancellation
         var stepAction = await _tcs.Task.WaitAsync(cancellationToken);
-        await onReadyForOrchestration(_stepExecution, stepAction);
+        await orchestrationListener.OnStepReadyForOrchestration(_stepExecution, stepAction);
     }
 
     public void Subscribe(IOrchestrationObservable provider)

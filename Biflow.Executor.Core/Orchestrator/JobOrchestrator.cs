@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class JobOrchestrator
+internal class JobOrchestrator : IOrchestrationListener
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IExecutionConfiguration _executionConfig;
@@ -61,7 +61,7 @@ internal class JobOrchestrator
         var steps = _execution.StepExecutions
             .Select(s => (s, _cancellationTokenSources[s].Token))
             .ToList();
-        var tasks = _globalOrchestrator.RegisterStepExecutionsAsync(steps, StepReadyForOrchestrationAsync);
+        var tasks = _globalOrchestrator.RegisterStepExecutionsAsync(steps, this);
         await Task.WhenAll(tasks);
     }
 
@@ -84,7 +84,7 @@ internal class JobOrchestrator
         }
     }
 
-    private async Task StepReadyForOrchestrationAsync(StepExecution step, StepAction stepAction)
+    public async Task OnStepReadyForOrchestration(StepExecution step, StepAction stepAction)
     {
         if (stepAction == StepAction.FailDuplicate)
         {
