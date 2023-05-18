@@ -56,15 +56,13 @@ internal class JobOrchestrator
         _targetSemaphores = targets.ToDictionary(t => t, t => new SemaphoreSlim(t.MaxConcurrentWrites, t.MaxConcurrentWrites));
     }
 
-    public Task RunAsync()
+    public async Task RunAsync()
     {
-        var tasks = _execution.StepExecutions
-            .Select(e =>
-            {
-                var onReadyForOrchestration = (StepAction stepAction) => StepReadyForOrchestrationAsync(e, stepAction);
-                return _globalOrchestrator.RegisterStepExecutionAsync(e, onReadyForOrchestration, _cancellationTokenSources[e].Token);
-            });
-        return Task.WhenAll(tasks);
+        var steps = _execution.StepExecutions
+            .Select(s => (s, _cancellationTokenSources[s].Token))
+            .ToList();
+        var tasks = _globalOrchestrator.RegisterStepExecutionsAsync(steps, StepReadyForOrchestrationAsync);
+        await Task.WhenAll(tasks);
     }
 
     public void CancelExecution(string username)

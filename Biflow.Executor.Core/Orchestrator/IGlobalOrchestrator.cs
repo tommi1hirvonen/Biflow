@@ -12,10 +12,9 @@ internal interface IGlobalOrchestrator : IObservable<StepExecutionStatusInfo>
     /// <param name="onReadyForOrchestration"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task RegisterStepExecutionAsync(
-        StepExecution stepExecution,
-        Func<StepAction, Task> onReadyForOrchestration,
-        CancellationToken cancellationToken);
+    public IEnumerable<Task> RegisterStepExecutionsAsync(
+        ICollection<(StepExecution Step, CancellationToken Token)> stepExecutions,
+        Func<StepExecution, StepAction, Task> onReadyForOrchestration);
 
     /// <summary>
     /// 

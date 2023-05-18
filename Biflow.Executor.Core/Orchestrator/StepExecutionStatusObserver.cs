@@ -14,33 +14,44 @@ internal class StepExecutionStatusObserver : IObserver<StepExecutionStatusInfo>,
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
 
-    public StepExecutionStatusObserver(
-        StepExecution stepExecution,
-        IObservable<StepExecutionStatusInfo> provider)
+    public StepExecutionStatusObserver(StepExecution stepExecution, IEnumerable<StepExecutionStatusInfo> initialStatuses)
     {
         _stepExecution = stepExecution;
-        _unsubscriber = provider.Subscribe(this);
+        foreach (var status in initialStatuses)
+        {
+            HandleStatusInfo(status);
+        }
+        CheckExecutionEligibility();
     }
 
-    public async Task WaitForOrchestrationAsync(Func<StepAction, Task> onReadyForOrchestration, CancellationToken cancellationToken)
+    public async Task WaitForOrchestrationAsync(Func<StepExecution, StepAction, Task> onReadyForOrchestration, CancellationToken cancellationToken)
     {
         // TODO Handle cancellation
         var stepAction = await _tcs.Task.WaitAsync(cancellationToken);
-        await onReadyForOrchestration(stepAction);
+        await onReadyForOrchestration(_stepExecution, stepAction);
     }
-        
+
+    public void Subscribe(IObservable<StepExecutionStatusInfo> provider)
+    {
+        _unsubscriber = provider.Subscribe(this);
+    }    
 
     public void Unsubscribe()
     {
-        _tcs.SetCanceled();
         _unsubscriber?.Dispose();
         _unsubscriber = null;
     }
 
     public void OnNext(StepExecutionStatusInfo value)
     {
+        HandleStatusInfo(value);
+        CheckExecutionEligibility();
+    }
+
+    private void HandleStatusInfo(StepExecutionStatusInfo value)
+    {
         var (step, status) = value;
-        if (step.StepId == _stepExecution.StepId)
+        if (step.StepId == _stepExecution.StepId && step.ExecutionId != _stepExecution.ExecutionId)
         {
             _duplicates[step] = status;
         }
@@ -52,12 +63,16 @@ internal class StepExecutionStatusObserver : IObserver<StepExecutionStatusInfo>,
         {
             _dependsOnThis[step] = status;
         }
+    }
+
+    private void CheckExecutionEligibility()
+    {
         var action = CalculateStepAction();
         if (action != StepAction.Wait)
         {
             Unsubscribe();
-            _tcs.SetResult(action);
-        }
+            _tcs.TrySetResult(action);
+        }     
     }
 
     private StepAction CalculateStepAction()

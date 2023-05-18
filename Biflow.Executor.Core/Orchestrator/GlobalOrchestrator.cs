@@ -9,11 +9,12 @@ namespace Biflow.Executor.Core.Orchestrator;
 
 internal class GlobalOrchestrator : IGlobalOrchestrator
 {
+    private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly IStepExecutorFactory _stepExecutorFactory;
     private readonly List<IObserver<StepExecutionStatusInfo>> _observers = new();
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _steps = new();
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = new();
 
     public GlobalOrchestrator(
         ILogger<GlobalOrchestrator> logger,
@@ -25,27 +26,61 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
         _stepExecutorFactory = stepExecutorFactory;
     }
 
-    public Task RegisterStepExecutionAsync(
-        StepExecution stepExecution,
-        Func<StepAction, Task> onReadyForOrchestration,
-        CancellationToken cancellationToken)
+    public IEnumerable<Task> RegisterStepExecutionsAsync(
+        ICollection<(StepExecution Step, CancellationToken Token)> stepExecutions,
+        Func<StepExecution, StepAction, Task> onReadyForOrchestration)
     {
-        var observer = new StepExecutionStatusObserver(stepExecution, this);
-        _steps[stepExecution] = OrchestrationStatus.NotStarted;
-        return observer.WaitForOrchestrationAsync(onReadyForOrchestration, cancellationToken);
+        List<(StepExecutionStatusObserver Observer, CancellationToken Token)> observers;
+        
+        // Acquire lock for editing the step statuses and until all observers have subscribed.
+        lock (_lock)
+        {
+            foreach (var (stepExecution, _) in stepExecutions)
+            {
+                _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
+            }
+            var statuses = _stepStatuses.Select(s => new StepExecutionStatusInfo(s.Key, s.Value)).ToList();
+            observers = stepExecutions.Select(x => (new StepExecutionStatusObserver(x.Step, statuses), x.Token)).ToList();
+            foreach (var (observer, _) in observers)
+            {
+                observer.Subscribe(this);
+            }
+        }
+
+        return observers
+            .Select(x => x.Observer.WaitForOrchestrationAsync(onReadyForOrchestration, x.Token))
+            .ToList();
     }
 
     public IDisposable Subscribe(IObserver<StepExecutionStatusInfo> observer)
     {
-        if (!_observers.Contains(observer))
+        lock (_lock)
         {
-            _observers.Add(observer);
-            foreach (var (step, status) in _steps)
+            if (!_observers.Contains(observer))
+            {
+                _observers.Add(observer);
+            }
+        }
+        return new Unsubscriber<StepExecutionStatusInfo>(_observers, observer);
+    }
+
+    public void UpdateStatus(StepExecution step, OrchestrationStatus status)
+    {
+        lock (_lock)
+        {
+            if (status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed)
+            {
+                _stepStatuses.Remove(step);
+            }
+            else
+            {
+                _stepStatuses[step] = status;
+            }
+            foreach (var observer in _observers.ToArray()) // Make a copy of the list as observers might unsubscribe during enumeration
             {
                 observer.OnNext(new(step, status));
             }
         }
-        return new Unsubscriber<StepExecutionStatusInfo>(_observers, observer);
     }
 
     public async Task QueueAsync(
@@ -54,7 +89,14 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
         Func<Task> onPostExecute,
         ExtendedCancellationTokenSource cts)
     {
-        UpdateStatus(stepExecution, OrchestrationStatus.Running);
+        try
+        {
+            UpdateStatus(stepExecution, OrchestrationStatus.Running);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating statuses");
+        }
 
         // Update the step's status to Queued.
         try
@@ -104,18 +146,6 @@ internal class GlobalOrchestrator : IGlobalOrchestrator
             var status = result ? OrchestrationStatus.Succeeded : OrchestrationStatus.Failed;
             UpdateStatus(stepExecution, status);
             await onPostExecute();
-        }
-    }
-
-    public void UpdateStatus(StepExecution step, OrchestrationStatus status)
-    {
-        if (status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed)
-        {
-            _steps.Remove(step);
-        }
-        foreach (var observer in _observers)
-        {
-            observer.OnNext(new(step, status));
         }
     }
 
