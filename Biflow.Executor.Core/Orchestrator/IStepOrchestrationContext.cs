@@ -3,5 +3,5 @@
 namespace Biflow.Executor.Core.Orchestrator;
 internal interface IStepOrchestrationContext
 {
-    public void ShouldFailWithStatus(StepExecutionStatus value);
+    public void ShouldFailWithStatus(StepExecutionStatus value, string? errorMessage = null);
 }

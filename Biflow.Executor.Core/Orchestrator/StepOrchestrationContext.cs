@@ -6,8 +6,11 @@ internal class StepOrchestrationContext : IStepOrchestrationContext
 {
     public StepExecutionStatus? FailStatus { get; private set; }
 
-    public void ShouldFailWithStatus(StepExecutionStatus value)
+    public string? ErrorMessage { get; private set; }
+
+    public void ShouldFailWithStatus(StepExecutionStatus value, string? errorMessage = null)
     {
         FailStatus = value;
+        ErrorMessage = errorMessage;
     }
 }

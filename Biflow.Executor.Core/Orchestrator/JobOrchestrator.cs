@@ -1,9 +1,6 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
@@ -11,7 +8,6 @@ internal class JobOrchestrator
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IExecutionConfiguration _executionConfig;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly IGlobalOrchestrator _globalOrchestrator;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
@@ -22,13 +18,11 @@ internal class JobOrchestrator
     public JobOrchestrator(
         ILogger<JobOrchestrator> logger,
         IExecutionConfiguration executionConfiguration,
-        IDbContextFactory<BiflowContext> dbContextFactory,
         IGlobalOrchestrator globalOrchestrator,
         Execution execution)
     {
         _logger = logger;
         _executionConfig = executionConfiguration;
-        _dbContextFactory = dbContextFactory;
         _globalOrchestrator = globalOrchestrator;
         _execution = execution;
         _cancellationTokenSources = _execution.StepExecutions

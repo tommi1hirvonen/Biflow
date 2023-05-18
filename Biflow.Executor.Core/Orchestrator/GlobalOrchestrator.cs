@@ -65,7 +65,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
 
         if (context.FailStatus is StepExecutionStatus failStatus)
         {
-            await UpdateStepAsync(stepExecution, failStatus);
+            await UpdateStepAsync(stepExecution, failStatus, context.ErrorMessage);
             UpdateStatus(stepExecution, OrchestrationStatus.Failed);
             return;
         }
@@ -97,7 +97,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
             if (context.FailStatus is StepExecutionStatus failStatus2)
             {
 
-                await UpdateStepAsync(stepExecution, failStatus2);
+                await UpdateStepAsync(stepExecution, failStatus2, context.ErrorMessage);
                 // No need to update orchestrator status, as it is updated in the finally block.
                 return;
             }
@@ -177,7 +177,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
         await context.SaveChangesAsync();
     }
 
-    private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status)
+    private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status, string? errorMessage)
     {
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
@@ -185,6 +185,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
             attempt.ExecutionStatus = status;
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.ErrorMessage = errorMessage;
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
