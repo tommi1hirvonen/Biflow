@@ -1,4 +1,5 @@
 ﻿using Biflow.DataAccess.Models;
+using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
@@ -8,15 +9,24 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<StepAction> _tcs = new();
-    private readonly StepExecution _stepExecution;
+    private readonly IOrchestrationListener _orchestrationListener;
+    private readonly ExtendedCancellationTokenSource _cancellationTokenSource;
     private IDisposable? _unsubscriber;
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
 
-    public StepExecutionStatusObserver(StepExecution stepExecution, IEnumerable<StepExecutionStatusInfo> initialStatuses)
+    public StepExecution StepExecution { get; }
+
+    public StepExecutionStatusObserver(StepExecution stepExecution, IOrchestrationListener orchestrationListener, ExtendedCancellationTokenSource cancellationTokenSource)
     {
-        _stepExecution = stepExecution;
+        StepExecution = stepExecution;
+        _orchestrationListener = orchestrationListener;
+        _cancellationTokenSource = cancellationTokenSource;
+    }
+
+    public void RegisterInitialStepExecutionStatuses(IEnumerable<StepExecutionStatusInfo> initialStatuses)
+    {
         foreach (var status in initialStatuses)
         {
             HandleStatusInfo(status);
@@ -24,17 +34,24 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
         CheckExecutionEligibility();
     }
 
-    public async Task WaitForOrchestrationAsync(IOrchestrationListener orchestrationListener, CancellationToken cancellationToken)
-    {
-        // TODO Handle cancellation
-        var stepAction = await _tcs.Task.WaitAsync(cancellationToken);
-        await orchestrationListener.OnStepReadyForOrchestration(_stepExecution, stepAction);
-    }
-
     public void Subscribe(IOrchestrationObservable provider)
     {
         _unsubscriber = provider.Subscribe(this);
-    }    
+    }
+
+    public async Task WaitForOrchestrationAsync(IStepReadyForOrchestrationListener stepReadyListener)
+    {
+        StepAction stepAction;
+        try
+        {
+            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            stepAction = StepAction.Cancel;
+        }
+        await stepReadyListener.OnStepReadyForOrchestrationAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
+    }
 
     public void OnStepExecutionStatusChange(StepExecutionStatusInfo value)
     {
@@ -53,15 +70,15 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
     private void HandleStatusInfo(StepExecutionStatusInfo value)
     {
         var (step, status) = value;
-        if (step.StepId == _stepExecution.StepId && step.ExecutionId != _stepExecution.ExecutionId)
+        if (step.StepId == StepExecution.StepId && step.ExecutionId != StepExecution.ExecutionId)
         {
             _duplicates[step] = status;
         }
-        else if (_stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
+        else if (StepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
         {
             _dependencies[step] = status;
         }
-        else if (step.ExecutionDependencies.Any(d => d.DependantOnStepId == _stepExecution.StepId))
+        else if (step.ExecutionDependencies.Any(d => d.DependantOnStepId == StepExecution.StepId))
         {
             _dependsOnThis[step] = status;
         }
@@ -80,13 +97,13 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
     private StepAction CalculateStepAction()
     {
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
-            _stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
+            StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
             return StepAction.FailDuplicate;
         }
 
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
-            _stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
+            StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
         {
             return StepAction.Wait;
         }
@@ -96,11 +113,11 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
             return StepAction.Wait;
         }
 
-        var onSucceeded = _stepExecution.ExecutionDependencies
+        var onSucceeded = StepExecution.ExecutionDependencies
             .Where(d => d.DependencyType == DependencyType.OnSucceeded)
             .Select(d => d.DependantOnStepId);
 
-        var onFailed = _stepExecution.ExecutionDependencies
+        var onFailed = StepExecution.ExecutionDependencies
             .Where(d => d.DependencyType == DependencyType.OnFailed)
             .Select(d => d.DependantOnStepId);
 
