@@ -3,10 +3,11 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class JobOrchestrator : IOrchestrationListener
+internal class JobOrchestrator
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IExecutionConfiguration _executionConfig;
@@ -58,10 +59,15 @@ internal class JobOrchestrator : IOrchestrationListener
 
     public async Task RunAsync()
     {
-        var steps = _execution.StepExecutions
-            .Select(s => (s, _cancellationTokenSources[s].Token))
+        var observers = _execution.StepExecutions
+            .Select(step =>
+            {
+                var listener = new OrchestrationListener(this, step);
+                return new StepExecutionStatusObserver(step, listener, _cancellationTokenSources[step]);
+            })
             .ToList();
-        var tasks = _globalOrchestrator.RegisterStepExecutionsAsync(steps, this);
+        var tasks = _globalOrchestrator.RegisterStepsAndObservers(observers);
+        //var tasks = observers.Select(o => o.WaitForOrchestrationAsync(this, _cancellationTokenSources[o.StepExecution].Token));
         await Task.WhenAll(tasks);
     }
 
@@ -84,88 +90,70 @@ internal class JobOrchestrator : IOrchestrationListener
         }
     }
 
-    public async Task OnStepReadyForOrchestration(StepExecution step, StepAction stepAction)
+    private class OrchestrationListener : IOrchestrationListener
     {
-        if (stepAction == StepAction.FailDuplicate)
+        private readonly JobOrchestrator _instance;
+        private readonly StepExecution _stepExecution;
+        private readonly List<SemaphoreSlim> _enteredSemaphores = new();
+
+        public OrchestrationListener(JobOrchestrator instance, StepExecution stepExecution)
         {
-            await UpdateExecutionDuplicateAsync(step);
-            _globalOrchestrator.UpdateStatus(step, OrchestrationStatus.Failed);
-            return;
-        }
-        else if (stepAction == StepAction.FailDependencies)
-        {
-            await UpdateStepDependenciesFailedAsync(step);
-            _globalOrchestrator.UpdateStatus(step, OrchestrationStatus.Failed);
-            return;
-        }
-        else if (stepAction == StepAction.Wait)
-        {
-            throw new ArgumentException($"Incorrect StepAction {stepAction} for step {step.StepId} when entering orchestration");
+            _instance = instance;
+            _stepExecution = stepExecution;
         }
 
-        var cts = _cancellationTokenSources[step];
-        var enteredSemaphores = new List<SemaphoreSlim>();
-        await _globalOrchestrator.QueueAsync(
-            stepExecution: step,
-            onPreExecute: async (cancellationTokenSource) =>
+        public Task OnPreQueuedAsync(IStepOrchestrationContext context, StepAction stepAction)
+        {
+            if (stepAction == StepAction.FailDuplicate)
             {
-                var cancellationToken = cancellationTokenSource.Token;
-
-                // Wait until the semaphores can be entered and the step can be started.
-                // Start from the most detailed semaphores and move towards the main semaphore.
-                // Keep track of semaphores that have been entered. If the step is stopped/canceled
-                // while waiting to enter one of the semaphores, they can be released afterwards.
-                foreach (var target in step.Targets)
-                {
-                    // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
-                    if (_targetSemaphores.TryGetValue(target, out var semaphore))
-                    {
-                        await semaphore.WaitAsync(cancellationToken);
-                        enteredSemaphores.Add(semaphore);
-                    }
-                }
-                var stepTypeSemaphore = _stepTypeSemaphores[step.StepType];
-                await stepTypeSemaphore.WaitAsync(cancellationToken);
-                enteredSemaphores.Add(stepTypeSemaphore);
-                await _mainSemaphore.WaitAsync(cancellationToken);
-                enteredSemaphores.Add(_mainSemaphore);
-            },
-            onPostExecute: () =>
+                context.ShouldFailWithStatus(StepExecutionStatus.Duplicate);
+            }
+            else if (stepAction == StepAction.FailDependencies)
             {
-                // Release the semaphores once to make room for new parallel executions.
-                foreach (var semaphore in enteredSemaphores)
+                context.ShouldFailWithStatus(StepExecutionStatus.DependenciesFailed);
+            }
+            else if (stepAction == StepAction.Wait)
+            {
+                throw new ArgumentException($"Incorrect StepAction {stepAction} for step {_stepExecution.StepId} when entering orchestration");
+            }
+            return Task.CompletedTask;
+        }
+
+        public async Task OnPreExecuteAsync(IStepOrchestrationContext context, ExtendedCancellationTokenSource cancellationTokenSource)
+        {
+            var cancellationToken = cancellationTokenSource.Token;
+
+            // Wait until the semaphores can be entered and the step can be started.
+            // Start from the most detailed semaphores and move towards the main semaphore.
+            // Keep track of semaphores that have been entered. If the step is stopped/canceled
+            // while waiting to enter one of the semaphores, they can be released afterwards.
+            foreach (var target in _stepExecution.Targets)
+            {
+                // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
+                if (_instance._targetSemaphores.TryGetValue(target, out var semaphore))
                 {
-                    semaphore.Release();
+                    await semaphore.WaitAsync(cancellationToken);
+                    _enteredSemaphores.Add(semaphore);
                 }
-
-                _logger.LogInformation("{ExecutionId} {step} Finished step execution", _execution.ExecutionId, step);
-                return Task.CompletedTask;
-            }, cts);
-    }
-
-    private async Task UpdateStepDependenciesFailedAsync(StepExecution step)
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        foreach (var attempt in step.StepExecutionAttempts)
-        {
-            attempt.ExecutionStatus = StepExecutionStatus.DependenciesFailed;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
-            context.Attach(attempt).State = EntityState.Modified;
+            }
+            var stepTypeSemaphore = _instance._stepTypeSemaphores[_stepExecution.StepType];
+            await stepTypeSemaphore.WaitAsync(cancellationToken);
+            _enteredSemaphores.Add(stepTypeSemaphore);
+            await _instance._mainSemaphore.WaitAsync(cancellationToken);
+            _enteredSemaphores.Add(_instance._mainSemaphore);
         }
-        await context.SaveChangesAsync();
+
+        public Task OnPostExecuteAsync(IStepOrchestrationContext context)
+        {
+            // Release the semaphores once to make room for new parallel executions.
+            foreach (var semaphore in _enteredSemaphores)
+            {
+                semaphore.Release();
+            }
+
+            _instance._logger.LogInformation("{ExecutionId} {step} Finished step execution", _instance._execution.ExecutionId, _stepExecution);
+            return Task.CompletedTask;
+        }
     }
 
-    private async Task UpdateExecutionDuplicateAsync(StepExecution step)
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        foreach (var attempt in step.StepExecutionAttempts)
-        {
-            attempt.ExecutionStatus = StepExecutionStatus.Duplicate;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
-            context.Attach(attempt).State = EntityState.Modified;
-        }
-        await context.SaveChangesAsync();
-    }
 }
