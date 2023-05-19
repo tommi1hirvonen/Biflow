@@ -9,7 +9,7 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<StepAction> _tcs = new();
-    private readonly IOrchestrationListener _orchestrationListener;
+    private readonly IStepProcessingListener _orchestrationListener;
     private readonly ExtendedCancellationTokenSource _cancellationTokenSource;
     private IDisposable? _unsubscriber;
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = new();
@@ -18,7 +18,7 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
 
     public StepExecution StepExecution { get; }
 
-    public StepExecutionStatusObserver(StepExecution stepExecution, IOrchestrationListener orchestrationListener, ExtendedCancellationTokenSource cancellationTokenSource)
+    public StepExecutionStatusObserver(StepExecution stepExecution, IStepProcessingListener orchestrationListener, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         StepExecution = stepExecution;
         _orchestrationListener = orchestrationListener;
@@ -39,7 +39,7 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
         _unsubscriber = provider.Subscribe(this);
     }
 
-    public async Task WaitForOrchestrationAsync(IStepReadyForOrchestrationListener stepReadyListener)
+    public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
     {
         StepAction stepAction;
         try
@@ -50,7 +50,7 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
         {
             stepAction = StepAction.Cancel;
         }
-        await stepReadyListener.OnStepReadyForOrchestrationAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
+        await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
     }
 
     public void OnStepExecutionStatusChange(StepExecutionStatusInfo value)

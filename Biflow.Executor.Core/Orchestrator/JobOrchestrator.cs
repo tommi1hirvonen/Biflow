@@ -56,7 +56,7 @@ internal class JobOrchestrator
         var observers = _execution.StepExecutions
             .Select(step =>
             {
-                var listener = new OrchestrationListener(this, step);
+                var listener = new StepProcessingListener(this, step);
                 return new StepExecutionStatusObserver(step, listener, _cancellationTokenSources[step]);
             })
             .ToList();
@@ -83,19 +83,19 @@ internal class JobOrchestrator
         }
     }
 
-    private class OrchestrationListener : IOrchestrationListener
+    private class StepProcessingListener : IStepProcessingListener
     {
         private readonly JobOrchestrator _instance;
         private readonly StepExecution _stepExecution;
         private readonly List<SemaphoreSlim> _enteredSemaphores = new();
 
-        public OrchestrationListener(JobOrchestrator instance, StepExecution stepExecution)
+        public StepProcessingListener(JobOrchestrator instance, StepExecution stepExecution)
         {
             _instance = instance;
             _stepExecution = stepExecution;
         }
 
-        public Task OnPreQueuedAsync(IStepOrchestrationContext context, StepAction stepAction)
+        public Task OnPreQueuedAsync(IStepProcessingContext context, StepAction stepAction)
         {
             if (stepAction == StepAction.FailDuplicate)
             {
@@ -112,7 +112,7 @@ internal class JobOrchestrator
             return Task.CompletedTask;
         }
 
-        public async Task OnPreExecuteAsync(IStepOrchestrationContext context, ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task OnPreExecuteAsync(IStepProcessingContext context, ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
 
@@ -136,7 +136,7 @@ internal class JobOrchestrator
             _enteredSemaphores.Add(_instance._mainSemaphore);
         }
 
-        public Task OnPostExecuteAsync(IStepOrchestrationContext context)
+        public Task OnPostExecuteAsync(IStepProcessingContext context)
         {
             // Release the semaphores once to make room for new parallel executions.
             foreach (var semaphore in _enteredSemaphores)

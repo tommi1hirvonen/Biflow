@@ -2,7 +2,7 @@
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class StepOrchestrationContext : IStepOrchestrationContext
+internal class StepPrcessingContext : IStepProcessingContext
 {
     public StepExecutionStatus? FailStatus { get; private set; }
 

@@ -1,7 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 
 namespace Biflow.Executor.Core.Orchestrator;
-internal interface IStepOrchestrationContext
+internal interface IStepProcessingContext
 {
     public void ShouldFailWithStatus(StepExecutionStatus value, string? errorMessage = null);
 }

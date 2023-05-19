@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrationListener
+internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessingListener
 {
     private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger;
@@ -41,7 +41,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
                 observer.RegisterInitialStepExecutionStatuses(statuses);
                 observer.Subscribe(this);
             }
-            return observers.Select(o => o.WaitForOrchestrationAsync(this)).ToList();
+            return observers.Select(o => o.WaitForProcessingAsync(this)).ToList();
         }
     }
 
@@ -57,11 +57,11 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
         return new Unsubscriber(_observers, observer);
     }
 
-    public async Task OnStepReadyForOrchestrationAsync(StepExecution stepExecution, StepAction stepAction, IOrchestrationListener orchestrationListener, ExtendedCancellationTokenSource cts)
+    public async Task OnStepReadyForProcessingAsync(StepExecution stepExecution, StepAction stepAction, IStepProcessingListener listener, ExtendedCancellationTokenSource cts)
     {
-        var context = new StepOrchestrationContext();
+        var context = new StepPrcessingContext();
 
-        await orchestrationListener.OnPreQueuedAsync(context, stepAction);
+        await listener.OnPreQueuedAsync(context, stepAction);
 
         if (context.FailStatus is StepExecutionStatus failStatus)
         {
@@ -92,7 +92,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
         bool result = false;
         try
         {
-            await orchestrationListener.OnPreExecuteAsync(context, cts);
+            await listener.OnPreExecuteAsync(context, cts);
 
             if (context.FailStatus is StepExecutionStatus failStatus2)
             {
@@ -127,7 +127,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForOrchestrat
         {
             var status = result ? OrchestrationStatus.Succeeded : OrchestrationStatus.Failed;
             UpdateStatus(stepExecution, status);
-            await orchestrationListener.OnPostExecuteAsync(context);
+            await listener.OnPostExecuteAsync(context);
         }
     }
 

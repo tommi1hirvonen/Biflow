@@ -21,10 +21,10 @@ internal interface IOrchestrationObserver
     /// <summary>
     /// Called after Subscribe()
     /// </summary>
-    /// <param name="orchestrationListener"></param>
+    /// <param name="listener"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task WaitForOrchestrationAsync(IStepReadyForOrchestrationListener orchestrationListener);
+    public Task WaitForProcessingAsync(IStepReadyForProcessingListener listener);
 
     /// <summary>
     /// Called once on every global orchestration step execution status change until the observer unsubscribes from the provider
