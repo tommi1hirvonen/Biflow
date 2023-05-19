@@ -59,7 +59,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
 
     public async Task OnStepReadyForProcessingAsync(StepExecution stepExecution, StepAction stepAction, IStepProcessingListener listener, ExtendedCancellationTokenSource cts)
     {
-        var context = new StepPrcessingContext();
+        var context = new StepProcessingContext();
 
         await listener.OnPreQueuedAsync(context, stepAction);
 
