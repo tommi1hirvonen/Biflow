@@ -43,8 +43,8 @@ public static class Extensions
         });
         services.AddSingleton<INotificationService, EmailService>();
         services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
-        services.AddSingleton<IOrchestratorFactory, OrchestratorFactory>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
+        services.AddTransient<IJobOrchestrator, JobOrchestrator>();
         services.AddSingleton<IEmailTest, EmailTest>();
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();

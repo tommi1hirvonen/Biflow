@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class JobOrchestrator
+internal class JobOrchestrator : IJobOrchestrator
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IExecutionConfiguration _executionConfig;

@@ -14,25 +14,23 @@ internal class JobExecutor : IJobExecutor
     private readonly ILogger<JobExecutor> _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
+    private readonly IJobOrchestrator _jobOrchestrator;
+    private readonly Execution _execution;
 
-    private JobOrchestrator Orchestrator { get; }
-
-    private Execution Execution { get; }
-
-    private Job Job => Execution.Job ?? throw new ArgumentNullException(nameof(Execution.Job));
+    private Job Job => _execution.Job ?? throw new ArgumentNullException(nameof(_execution.Job));
 
     public JobExecutor(
         ILogger<JobExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
         INotificationService notificationService,
-        IOrchestratorFactory orchestratorFactory,
+        IJobOrchestrator jobOrchestrator,
         Execution execution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
-        Execution = execution;
-        Orchestrator = orchestratorFactory.Create(Execution);
+        _execution = execution;
+        _jobOrchestrator = jobOrchestrator;
     }
 
     public async Task RunAsync(Guid executionId)
@@ -40,14 +38,14 @@ internal class JobExecutor : IJobExecutor
         try
         {
             var process = Process.GetCurrentProcess();
-            Execution.ExecutorProcessId = process.Id;
-            Execution.ExecutionStatus = ExecutionStatus.Running;
-            Execution.StartDateTime = DateTimeOffset.Now;
+            _execution.ExecutorProcessId = process.Id;
+            _execution.ExecutionStatus = ExecutionStatus.Running;
+            _execution.StartDateTime = DateTimeOffset.Now;
             using var context = _dbContextFactory.CreateDbContext();
-            context.Attach(Execution);
-            context.Entry(Execution).Property(e => e.ExecutorProcessId).IsModified = true;
-            context.Entry(Execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(Execution).Property(e => e.StartDateTime).IsModified = true;
+            context.Attach(_execution);
+            context.Entry(_execution).Property(e => e.ExecutorProcessId).IsModified = true;
+            context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
+            context.Entry(_execution).Property(e => e.StartDateTime).IsModified = true;
             await context.SaveChangesAsync();
         }
         catch (Exception ex)
@@ -102,7 +100,7 @@ internal class JobExecutor : IJobExecutor
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-            foreach (var parameter in Execution.ExecutionParameters.Where(p => p.UseExpression))
+            foreach (var parameter in _execution.ExecutionParameters.Where(p => p.UseExpression))
             {
                 context.Attach(parameter);
                 parameter.ParameterValue = await parameter.EvaluateAsync();
@@ -118,11 +116,11 @@ internal class JobExecutor : IJobExecutor
 
         try
         {
-            var notificationTask = Execution.OvertimeNotificationLimitMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(Execution.OvertimeNotificationLimitMinutes))
+            var notificationTask = _execution.OvertimeNotificationLimitMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(_execution.OvertimeNotificationLimitMinutes))
                 : Task.Delay(-1); // infinite timeout
 
-            var orchestrationTask = Orchestrator.RunAsync();
+            var orchestrationTask = _jobOrchestrator.RunAsync();
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
@@ -130,7 +128,7 @@ internal class JobExecutor : IJobExecutor
             // send a notification about a long running execution.
             if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotification(Execution);
+                await _notificationService.SendLongRunningExecutionNotification(_execution);
             }
 
             await orchestrationTask; // Wait for orchestration to finish.
@@ -141,7 +139,7 @@ internal class JobExecutor : IJobExecutor
         }
 
         // Get job execution status based on step execution statuses.
-        var allStepAttempts = Execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
+        var allStepAttempts = _execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
         ExecutionStatus status;
         if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
             || step.ExecutionStatus == StepExecutionStatus.Skipped
@@ -178,11 +176,11 @@ internal class JobExecutor : IJobExecutor
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            Execution.ExecutionStatus = status;
-            Execution.EndDateTime = DateTimeOffset.Now;
-            context.Attach(Execution);
-            context.Entry(Execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(Execution).Property(e => e.EndDateTime).IsModified = true;
+            _execution.ExecutionStatus = status;
+            _execution.EndDateTime = DateTimeOffset.Now;
+            context.Attach(_execution);
+            context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
+            context.Entry(_execution).Property(e => e.EndDateTime).IsModified = true;
             await context.SaveChangesAsync();
         }
         catch (Exception ex)
@@ -190,12 +188,12 @@ internal class JobExecutor : IJobExecutor
             _logger.LogError(ex, "Error updating execution status");
         }
 
-        await _notificationService.SendCompletionNotification(Execution);
+        await _notificationService.SendCompletionNotification(_execution);
     }
 
-    public void Cancel(string username) => Orchestrator?.CancelExecution(username);
+    public void Cancel(string username) => _jobOrchestrator?.CancelExecution(username);
 
-    public void Cancel(string username, Guid stepId) => Orchestrator?.CancelExecution(username, stepId);
+    public void Cancel(string username, Guid stepId) => _jobOrchestrator?.CancelExecution(username, stepId);
 
     /// <summary>
     /// Checks for circular dependencies between jobs.
@@ -255,7 +253,7 @@ internal class JobExecutor : IJobExecutor
         using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Where(step => step.JobId == Execution.JobId)
+            .Where(step => step.JobId == _execution.JobId)
             .Include(step => step.Dependencies)
             .ToListAsync();
         var dependencies = steps
@@ -270,17 +268,17 @@ internal class JobExecutor : IJobExecutor
     {
         using var context = _dbContextFactory.CreateDbContext();
         await context.StepExecutionAttempts
-            .Where(e => e.ExecutionId == Execution.ExecutionId)
+            .Where(e => e.ExecutionId == _execution.ExecutionId)
             .ExecuteUpdateAsync(attempt => attempt
             .SetProperty(p => p.StartDateTime, DateTimeOffset.Now)
             .SetProperty(p => p.EndDateTime, DateTimeOffset.Now)
             .SetProperty(p => p.ErrorMessage, errorMessage)
             .SetProperty(p => p.ExecutionStatus, StepExecutionStatus.Failed));
 
-        Execution.StartDateTime = DateTimeOffset.Now;
-        Execution.EndDateTime = DateTimeOffset.Now;
-        Execution.ExecutionStatus = ExecutionStatus.Failed;
-        context.Attach(Execution).State = EntityState.Modified;
+        _execution.StartDateTime = DateTimeOffset.Now;
+        _execution.EndDateTime = DateTimeOffset.Now;
+        _execution.ExecutionStatus = ExecutionStatus.Failed;
+        context.Attach(_execution).State = EntityState.Modified;
 
         await context.SaveChangesAsync();
     }
