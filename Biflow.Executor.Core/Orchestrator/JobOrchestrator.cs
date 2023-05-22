@@ -86,7 +86,7 @@ internal class JobOrchestrator : IJobOrchestrator
         }
     }
 
-    private class StepProcessingListener : IStepProcessingListener
+    private class StepProcessingListener : IStepExecutionListener
     {
         private readonly JobOrchestrator _instance;
         private readonly StepExecution _stepExecution;

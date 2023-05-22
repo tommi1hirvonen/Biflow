@@ -10,7 +10,7 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
 
     public ExecutionPhaseModeObserver(
         StepExecution stepExecution,
-        IStepProcessingListener orchestrationListener,
+        IStepExecutionListener orchestrationListener,
         ExtendedCancellationTokenSource cancellationTokenSource)
         : base(stepExecution, orchestrationListener, cancellationTokenSource)
     {

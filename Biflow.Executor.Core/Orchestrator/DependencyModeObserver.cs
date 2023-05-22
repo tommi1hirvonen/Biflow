@@ -11,7 +11,7 @@ internal class DependencyModeObserver : OrchestrationObserver
 
     public DependencyModeObserver(
         StepExecution stepExecution,
-        IStepProcessingListener orchestrationListener,
+        IStepExecutionListener orchestrationListener,
         ExtendedCancellationTokenSource cancellationTokenSource)
         : base(stepExecution, orchestrationListener, cancellationTokenSource)
     {

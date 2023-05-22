@@ -2,7 +2,7 @@
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal interface IStepProcessingListener
+internal interface IStepExecutionListener
 {
     public Task OnPreExecuteAsync(ExtendedCancellationTokenSource cts);
 

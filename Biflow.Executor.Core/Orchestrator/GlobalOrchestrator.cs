@@ -60,7 +60,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
     public Task OnStepReadyForProcessingAsync(
         StepExecution stepExecution,
         StepAction stepAction,
-        IStepProcessingListener listener,
+        IStepExecutionListener listener,
         ExtendedCancellationTokenSource cts) =>
         stepAction.Match(
             async (Execute execute) =>
@@ -79,7 +79,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
                 await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
             });
 
-    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepProcessingListener listener, ExtendedCancellationTokenSource cts)
+    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
     {
         // Update the step's status to Queued.
         try
