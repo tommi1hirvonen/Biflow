@@ -49,38 +49,38 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
     private void CheckExecutionEligibility()
     {
         var action = CalculateStepAction();
-        if (action != StepAction.Wait)
+        if (action is not null)
         {
             SetResult(action);
         }
     }
 
-    private StepAction CalculateStepAction()
+    private StepAction? CalculateStepAction()
     {
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
-            return StepAction.FailDuplicate;
+            return new Fail(StepExecutionStatus.Duplicate);
         }
 
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
         {
-            return StepAction.Wait;
+            return null;
         }
 
         var previousSteps = _execution.Where(p => p.Key.ExecutionPhase < StepExecution.ExecutionPhase);
         if (StepExecution.Execution.StopOnFirstError && previousSteps.Any(s => s.Value == OrchestrationStatus.Failed))
         {
-            return StepAction.FailFirstError;
+            return new Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
         }
 
         if (previousSteps.All(s => s.Value == OrchestrationStatus.Succeeded || s.Value == OrchestrationStatus.Failed))
         {
-            return StepAction.Execute;
+            return new Execute();
         }
 
         // No action should be taken with this step at this time. Wait until next round.
-        return StepAction.Wait;
+        return null;
     }
 }

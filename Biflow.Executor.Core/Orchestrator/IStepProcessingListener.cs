@@ -4,9 +4,7 @@ namespace Biflow.Executor.Core.Orchestrator;
 
 internal interface IStepProcessingListener
 {
-    public Task OnPreQueuedAsync(IStepProcessingContext context, StepAction stepAction);
+    public Task OnPreExecuteAsync(ExtendedCancellationTokenSource cts);
 
-    public Task OnPreExecuteAsync(IStepProcessingContext context, ExtendedCancellationTokenSource cts);
-
-    public Task OnPostExecuteAsync(IStepProcessingContext context);
+    public Task OnPostExecuteAsync();
 }

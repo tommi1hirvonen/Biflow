@@ -98,28 +98,7 @@ internal class JobOrchestrator : IJobOrchestrator
             _stepExecution = stepExecution;
         }
 
-        public Task OnPreQueuedAsync(IStepProcessingContext context, StepAction stepAction)
-        {
-            if (stepAction == StepAction.FailDuplicate)
-            {
-                context.ShouldFailWithStatus(StepExecutionStatus.Duplicate);
-            }
-            else if (stepAction == StepAction.FailDependencies)
-            {
-                context.ShouldFailWithStatus(StepExecutionStatus.DependenciesFailed);
-            }
-            else if (stepAction == StepAction.FailFirstError)
-            {
-                context.ShouldFailWithStatus(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
-            }
-            else if (stepAction == StepAction.Wait)
-            {
-                throw new ArgumentException($"Incorrect StepAction {stepAction} for step {_stepExecution.StepId} when entering orchestration");
-            }
-            return Task.CompletedTask;
-        }
-
-        public async Task OnPreExecuteAsync(IStepProcessingContext context, ExtendedCancellationTokenSource cancellationTokenSource)
+        public async Task OnPreExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {
             var cancellationToken = cancellationTokenSource.Token;
 
@@ -143,7 +122,7 @@ internal class JobOrchestrator : IJobOrchestrator
             _enteredSemaphores.Add(_instance._mainSemaphore);
         }
 
-        public Task OnPostExecuteAsync(IStepProcessingContext context)
+        public Task OnPostExecuteAsync()
         {
             // Release the semaphores once to make room for new parallel executions.
             foreach (var semaphore in _enteredSemaphores)

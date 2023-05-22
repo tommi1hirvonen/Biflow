@@ -39,18 +39,15 @@ internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposa
         }
         catch (OperationCanceledException)
         {
-            stepAction = StepAction.Cancel;
+            stepAction = new Cancel();
         }
         await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
     }
 
     protected void SetResult(StepAction action)
     {
-        if (action != StepAction.Wait)
-        {
-            _unsubscriber?.Dispose();
-            _unsubscriber = null;
-            _tcs.TrySetResult(action);
-        }
+        _unsubscriber?.Dispose();
+        _unsubscriber = null;
+        _tcs.TrySetResult(action);
     }
 }

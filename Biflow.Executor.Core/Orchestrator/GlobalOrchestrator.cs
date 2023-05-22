@@ -57,21 +57,30 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         return new Unsubscriber(_observers, observer);
     }
 
-    public async Task OnStepReadyForProcessingAsync(StepExecution stepExecution, StepAction stepAction, IStepProcessingListener listener, ExtendedCancellationTokenSource cts)
+    public Task OnStepReadyForProcessingAsync(
+        StepExecution stepExecution,
+        StepAction stepAction,
+        IStepProcessingListener listener,
+        ExtendedCancellationTokenSource cts) =>
+        stepAction.Match(
+            async (Execute execute) =>
+            {
+                UpdateStatus(stepExecution, OrchestrationStatus.Running);
+                await ExecuteStepAsync(stepExecution, listener, cts);
+            },
+            async (Cancel cancel) =>
+            {
+                UpdateStatus(stepExecution, OrchestrationStatus.Failed);
+                await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+            },
+            async (Fail fail) =>
+            {
+                UpdateStatus(stepExecution, OrchestrationStatus.Failed);
+                await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
+            });
+
+    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepProcessingListener listener, ExtendedCancellationTokenSource cts)
     {
-        var context = new StepProcessingContext();
-
-        await listener.OnPreQueuedAsync(context, stepAction);
-
-        if (context.FailStatus is StepExecutionStatus failStatus)
-        {
-            await UpdateStepAsync(stepExecution, failStatus, context.ErrorMessage);
-            UpdateStatus(stepExecution, OrchestrationStatus.Failed);
-            return;
-        }
-
-        UpdateStatus(stepExecution, OrchestrationStatus.Running);
-        
         // Update the step's status to Queued.
         try
         {
@@ -92,21 +101,10 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         bool result = false;
         try
         {
-            await listener.OnPreExecuteAsync(context, cts);
+            await listener.OnPreExecuteAsync(cts);
 
-            if (context.FailStatus is StepExecutionStatus failStatus2)
-            {
-
-                await UpdateStepAsync(stepExecution, failStatus2, context.ErrorMessage);
-                // No need to update orchestrator status, as it is updated in the finally block.
-                return;
-            }
-
-            // Create a new step worker.
             var executor = _stepExecutorFactory.Create(stepExecution);
-            // Execute the worker and capture the result.
-            var task = executor.RunAsync(cts);
-            result = await task;
+            result = await executor.RunAsync(cts);
         }
         catch (OperationCanceledException)
         {
@@ -127,7 +125,8 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         {
             var status = result ? OrchestrationStatus.Succeeded : OrchestrationStatus.Failed;
             UpdateStatus(stepExecution, status);
-            await listener.OnPostExecuteAsync(context);
+
+            await listener.OnPostExecuteAsync();
         }
     }
 
@@ -167,7 +166,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
     private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution)
     {
         var attempt = stepExecution.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-        if (attempt is null) return; // return is allowed here because the finally block is executed anyway.
+        if (attempt is null) return;
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartDateTime ??= DateTimeOffset.Now;

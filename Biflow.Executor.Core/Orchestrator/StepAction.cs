@@ -1,11 +1,16 @@
-﻿namespace Biflow.Executor.Core.Orchestrator;
+﻿using Biflow.DataAccess.Models;
+using OneOf;
 
-internal enum StepAction
+namespace Biflow.Executor.Core.Orchestrator;
+
+[GenerateOneOf]
+internal partial class StepAction : OneOfBase<Execute, Cancel, Fail> { }
+
+internal readonly struct Execute { }
+
+internal readonly struct Cancel { }
+
+internal readonly record struct Fail(StepExecutionStatus WithStatus, string? ErrorMessage)
 {
-    Wait,
-    Execute,
-    FailDuplicate,
-    FailDependencies,
-    Cancel,
-    FailFirstError
+    public Fail(StepExecutionStatus withStatus) : this(withStatus, null) { }
 }

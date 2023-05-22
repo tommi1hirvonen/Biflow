@@ -54,29 +54,29 @@ internal class DependencyModeObserver : OrchestrationObserver
     private void CheckExecutionEligibility()
     {
         var action = CalculateStepAction();
-        if (action != StepAction.Wait)
+        if (action is not null)
         {
            SetResult(action);
         }     
     }
 
-    private StepAction CalculateStepAction()
+    private StepAction? CalculateStepAction()
     {
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
-            return StepAction.FailDuplicate;
+            return new Fail(StepExecutionStatus.Duplicate);
         }
 
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
         {
-            return StepAction.Wait;
+            return null;
         }
 
         if (_dependsOnThis.Any(d => d.Value == OrchestrationStatus.Running))
         {
-            return StepAction.Wait;
+            return null;
         }
 
         var onSucceeded = StepExecution.ExecutionDependencies
@@ -95,17 +95,17 @@ internal class DependencyModeObserver : OrchestrationObserver
         if (onSucceeded.Any(d1 => dependencies.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)) ||
             onFailed.Any(d1 => dependencies.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
         {
-            return StepAction.FailDependencies;
+            return new Fail(StepExecutionStatus.DependenciesFailed);
         }
         // No reason to skip this step.
         // If all the step's dependencies have been completed (success or failure), the step can be executed.
         else if (_dependencies.All(d => d.Value == OrchestrationStatus.Succeeded || d.Value == OrchestrationStatus.Failed))
         {
-            return StepAction.Execute;
+            return new Execute();
         }
 
         // No action should be taken with this step at this time. Wait until next round.
-        return StepAction.Wait;
+        return null;
     }
 
 }
