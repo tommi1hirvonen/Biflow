@@ -63,8 +63,19 @@ internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposa
         await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
     }
 
+    /// <summary>
+    /// Called multiple times in succession when the observer is registering
+    /// initial statuses of all steps from global orchestration.
+    /// After that it is called once whenever orchestration updates are provided.
+    /// </summary>
+    /// <param name="value"></param>
     protected abstract void HandleUpdate(OrchestrationUpdate value);
 
+    /// <summary>
+    /// Called once after HandleUpdate() has been called for all initial statuses.
+    /// After that it is called once every time after HandleUpdate() has been called.
+    /// </summary>
+    /// <returns>null if no action should be taken with the step at this time. Otherwise a valid StepAction should be provided.</returns>
     protected abstract StepAction? GetStepAction();
 
     private void SetResult(StepAction action)
