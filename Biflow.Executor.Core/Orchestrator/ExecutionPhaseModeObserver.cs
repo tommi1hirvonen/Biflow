@@ -16,24 +16,7 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
     {
     }
 
-    public override void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
-    {
-        foreach (var status in initialStatuses)
-        {
-            HandleUpdate(status);
-        }
-        CheckExecutionEligibility();
-    }
-
-
-    public override void OnUpdate(OrchestrationUpdate value)
-    {
-        HandleUpdate(value);
-        CheckExecutionEligibility();
-    }
-
-
-    private void HandleUpdate(OrchestrationUpdate value)
+    protected override void HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         if (step.StepId == StepExecution.StepId && step.ExecutionId != StepExecution.ExecutionId)
@@ -46,16 +29,7 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
         }
     }
 
-    private void CheckExecutionEligibility()
-    {
-        var action = CalculateStepAction();
-        if (action is not null)
-        {
-            SetResult(action);
-        }
-    }
-
-    private StepAction? CalculateStepAction()
+    protected override StepAction? GetStepAction()
     {
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)

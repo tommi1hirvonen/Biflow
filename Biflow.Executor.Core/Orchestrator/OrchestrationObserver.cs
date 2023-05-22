@@ -26,9 +26,28 @@ internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposa
 
     public void Dispose() => _unsubscriber?.Dispose();
 
-    public abstract void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses);
+    public void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
+    {
+        foreach (var status in initialStatuses)
+        {
+            HandleUpdate(status);
+        }
+        var action = GetStepAction();
+        if (action is not null)
+        {
+            SetResult(action);
+        }
+    }
 
-    public abstract void OnUpdate(OrchestrationUpdate value);
+    public void OnUpdate(OrchestrationUpdate value)
+    {
+        HandleUpdate(value);
+        var action = GetStepAction();
+        if (action is not null)
+        {
+            SetResult(action);
+        }
+    }
 
     public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
     {
@@ -44,7 +63,11 @@ internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposa
         await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
     }
 
-    protected void SetResult(StepAction action)
+    protected abstract void HandleUpdate(OrchestrationUpdate value);
+
+    protected abstract StepAction? GetStepAction();
+
+    private void SetResult(StepAction action)
     {
         _unsubscriber?.Dispose();
         _unsubscriber = null;
