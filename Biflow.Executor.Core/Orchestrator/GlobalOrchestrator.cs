@@ -35,10 +35,10 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
             {
                 _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
             }
-            var statuses = _stepStatuses.Select(s => new StepExecutionStatusInfo(s.Key, s.Value)).ToList();
+            var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToList();
             foreach (var observer in observers)
             {
-                observer.RegisterInitialStepExecutionStatuses(statuses);
+                observer.RegisterInitialUpdates(statuses);
                 observer.Subscribe(this);
             }
             return observers.Select(o => o.WaitForProcessingAsync(this)).ToList();
@@ -145,7 +145,7 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
             }
             foreach (var observer in _observers.ToArray()) // Make a copy of the list as observers might unsubscribe during enumeration
             {
-                observer.OnStepExecutionStatusChange(new(step, status));
+                observer.OnUpdate(new(step, status));
             }
         }
     }

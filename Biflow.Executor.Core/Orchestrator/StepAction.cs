@@ -6,5 +6,6 @@ internal enum StepAction
     Execute,
     FailDuplicate,
     FailDependencies,
-    Cancel
+    Cancel,
+    FailFirstError
 }

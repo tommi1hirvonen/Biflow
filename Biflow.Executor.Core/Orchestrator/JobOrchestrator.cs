@@ -57,7 +57,10 @@ internal class JobOrchestrator
             .Select(step =>
             {
                 var listener = new StepProcessingListener(this, step);
-                return new StepExecutionStatusObserver(step, listener, _cancellationTokenSources[step]);
+                IOrchestrationObserver observer = step.Execution.DependencyMode
+                    ? new DependencyModeObserver(step, listener, _cancellationTokenSources[step])
+                    : new ExecutionPhaseModeObserver(step, listener, _cancellationTokenSources[step]);
+                return observer;
             })
             .ToList();
         var tasks = _globalOrchestrator.RegisterStepsAndObservers(observers);
@@ -104,6 +107,10 @@ internal class JobOrchestrator
             else if (stepAction == StepAction.FailDependencies)
             {
                 context.ShouldFailWithStatus(StepExecutionStatus.DependenciesFailed);
+            }
+            else if (stepAction == StepAction.FailFirstError)
+            {
+                context.ShouldFailWithStatus(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
             }
             else if (stepAction == StepAction.Wait)
             {

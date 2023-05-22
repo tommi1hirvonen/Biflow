@@ -10,7 +10,7 @@ internal interface IOrchestrationObserver
     /// Called once to provide current snapshot of global orchestration step execution statuses
     /// </summary>
     /// <param name="initialStatuses"></param>
-    public void RegisterInitialStepExecutionStatuses(IEnumerable<StepExecutionStatusInfo> initialStatuses);
+    public void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses);
 
     /// <summary>
     /// Called after RegisterInitialStepExecutionStatuses()
@@ -30,5 +30,5 @@ internal interface IOrchestrationObserver
     /// Called once on every global orchestration step execution status change until the observer unsubscribes from the provider
     /// </summary>
     /// <param name="statusChange"></param>
-    public void OnStepExecutionStatusChange(StepExecutionStatusInfo statusChange);
+    public void OnUpdate(OrchestrationUpdate statusChange);
 }

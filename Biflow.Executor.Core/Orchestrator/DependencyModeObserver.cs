@@ -3,71 +3,38 @@ using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-/// <summary>
-/// Observes orchestration status updates of multiple potential providers for a single StepExecution
-/// </summary>
-internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
+internal class DependencyModeObserver : OrchestrationObserver
 {
-    private readonly TaskCompletionSource<StepAction> _tcs = new();
-    private readonly IStepProcessingListener _orchestrationListener;
-    private readonly ExtendedCancellationTokenSource _cancellationTokenSource;
-    private IDisposable? _unsubscriber;
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
 
-    public StepExecution StepExecution { get; }
-
-    public StepExecutionStatusObserver(StepExecution stepExecution, IStepProcessingListener orchestrationListener, ExtendedCancellationTokenSource cancellationTokenSource)
+    public DependencyModeObserver(
+        StepExecution stepExecution,
+        IStepProcessingListener orchestrationListener,
+        ExtendedCancellationTokenSource cancellationTokenSource)
+        : base(stepExecution, orchestrationListener, cancellationTokenSource)
     {
-        StepExecution = stepExecution;
-        _orchestrationListener = orchestrationListener;
-        _cancellationTokenSource = cancellationTokenSource;
     }
 
-    public void RegisterInitialStepExecutionStatuses(IEnumerable<StepExecutionStatusInfo> initialStatuses)
+    public override void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
     {
         foreach (var status in initialStatuses)
         {
-            HandleStatusInfo(status);
+            HandleUpdate(status);
         }
         CheckExecutionEligibility();
     }
 
-    public void Subscribe(IOrchestrationObservable provider)
-    {
-        _unsubscriber = provider.Subscribe(this);
-    }
 
-    public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
+    public override void OnUpdate(OrchestrationUpdate value)
     {
-        StepAction stepAction;
-        try
-        {
-            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            stepAction = StepAction.Cancel;
-        }
-        await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
-    }
-
-    public void OnStepExecutionStatusChange(StepExecutionStatusInfo value)
-    {
-        HandleStatusInfo(value);
+        HandleUpdate(value);
         CheckExecutionEligibility();
     }
 
-    public void Dispose() => _unsubscriber?.Dispose();
 
-    private void Unsubscribe()
-    {
-        _unsubscriber?.Dispose();
-        _unsubscriber = null;
-    }
-
-    private void HandleStatusInfo(StepExecutionStatusInfo value)
+    private void HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         if (step.StepId == StepExecution.StepId && step.ExecutionId != StepExecution.ExecutionId)
@@ -89,8 +56,7 @@ internal class StepExecutionStatusObserver : IOrchestrationObserver, IDisposable
         var action = CalculateStepAction();
         if (action != StepAction.Wait)
         {
-            Unsubscribe();
-            _tcs.TrySetResult(action);
+           SetResult(action);
         }     
     }
 
