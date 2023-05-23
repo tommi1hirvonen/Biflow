@@ -2,7 +2,7 @@
   "profiles": {
     "Biflow.Executor.ConsoleApp": {
       "commandName": "Project",
-      "commandLineArgs": "execute -i 4e94058b-24ca-4e1b-ad9a-f2314d02a2d9",
+      "commandLineArgs": "execute -i bc0c188d-98fd-4d1b-b339-7818007e5b72",
       "workingDirectory": "C:\\Program Files\\Biflow\\BiflowExecutor"
     }
   }

@@ -23,14 +23,14 @@ internal class JobExecutor : IJobExecutor
         ILogger<JobExecutor> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
         INotificationService notificationService,
-        IJobOrchestrator jobOrchestrator,
+        IJobOrchestratorFactory jobOrchestratorFactory,
         Execution execution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _notificationService = notificationService;
         _execution = execution;
-        _jobOrchestrator = jobOrchestrator;
+        _jobOrchestrator = jobOrchestratorFactory.Create(execution);
     }
 
     public async Task RunAsync(Guid executionId)
