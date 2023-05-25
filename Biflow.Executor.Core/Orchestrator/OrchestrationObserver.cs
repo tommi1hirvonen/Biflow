@@ -24,7 +24,11 @@ internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposa
         _unsubscriber = provider.Subscribe(this);
     }
 
-    public void Dispose() => _unsubscriber?.Dispose();
+    public void Dispose()
+    {
+        _unsubscriber?.Dispose();
+        _unsubscriber = null;
+    }
 
     public void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
     {
