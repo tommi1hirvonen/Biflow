@@ -63,8 +63,7 @@ internal class JobOrchestrator : IJobOrchestrator
                 return observer;
             })
             .ToList();
-        var tasks = _globalOrchestrator.RegisterStepsAndObservers(observers);
-        await Task.WhenAll(tasks);
+        await _globalOrchestrator.RegisterStepsAndObservers(observers);
     }
 
     public void CancelExecution(string username)

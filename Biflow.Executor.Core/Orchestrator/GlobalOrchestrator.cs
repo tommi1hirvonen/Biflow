@@ -26,22 +26,44 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         _stepExecutorFactory = stepExecutorFactory;
     }
 
-    public IEnumerable<Task> RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers)
-    {   
-        // Acquire lock for editing the step statuses and until all observers have subscribed.
-        lock (_lock)
+    public async Task RegisterStepsAndObservers(List<IOrchestrationObserver> observers)
+    {
+        try
         {
-            foreach (var stepExecution in observers.Select(o => o.StepExecution))
+            List<Task> tasks;
+            // Acquire lock for editing the step statuses and until all observers have subscribed.
+            lock (_lock)
             {
-                _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
+                foreach (var stepExecution in observers.Select(o => o.StepExecution))
+                {
+                    _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
+                }
+                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToList();
+                foreach (var observer in observers)
+                {
+                    observer.RegisterInitialUpdates(statuses);
+                    observer.Subscribe(this);
+                }
+                tasks = observers.Select(o => o.WaitForProcessingAsync(this)).ToList();
             }
-            var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToList();
-            foreach (var observer in observers)
+            await Task.WhenAll(tasks);
+        }
+        finally
+        {
+            lock (_lock)
             {
-                observer.RegisterInitialUpdates(statuses);
-                observer.Subscribe(this);
+                // Clean up any remaining step execution statuses and observers.
+                // In normal operation there should be none remaining after orchestration.
+                foreach (var observer in observers)
+                {
+                    if (_stepStatuses.ContainsKey(observer.StepExecution))
+                    {
+                        UpdateStatus(observer.StepExecution, OrchestrationStatus.Failed);
+                        _stepStatuses.Remove(observer.StepExecution);
+                    }
+                    _observers.Remove(observer);
+                }
             }
-            return observers.Select(o => o.WaitForProcessingAsync(this)).ToList();
         }
     }
 
