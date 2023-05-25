@@ -20,14 +20,17 @@ internal class DependencyModeObserver : OrchestrationObserver
     protected override void HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
+        // Keep track of the same being possibly executed in a different execution.
         if (step.StepId == StepExecution.StepId && step.ExecutionId != StepExecution.ExecutionId)
         {
             _duplicates[step] = status;
         }
+        // Keep track of steps that this step depends on.
         else if (StepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
         {
             _dependencies[step] = status;
         }
+        // Keep track of steps that depend on this step.
         else if (step.ExecutionDependencies.Any(d => d.DependantOnStepId == StepExecution.StepId))
         {
             _dependsOnThis[step] = status;
@@ -36,6 +39,7 @@ internal class DependencyModeObserver : OrchestrationObserver
 
     protected override StepAction? GetStepAction()
     {
+        // First check for duplicate executions.
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
@@ -48,6 +52,7 @@ internal class DependencyModeObserver : OrchestrationObserver
             return null;
         }
 
+        // If there are running steps that depend on this step => wait.
         if (_dependsOnThis.Any(d => d.Value == OrchestrationStatus.Running))
         {
             return null;
@@ -61,13 +66,13 @@ internal class DependencyModeObserver : OrchestrationObserver
             .Where(d => d.DependencyType == DependencyType.OnFailed)
             .Select(d => d.DependantOnStepId);
 
-        var dependencies = _dependencies.Select(d => new { d.Key.StepId, Status = d.Value });
+        var dependencyStatuses = _dependencies.Select(d => new { d.Key.StepId, Status = d.Value });
 
         // If there are any on-success dependencies, which have been marked as failed
         // OR
         // if there are any on-failed dependencies, which have been marked as succeeded, skip this step.
-        if (onSucceeded.Any(d1 => dependencies.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)) ||
-            onFailed.Any(d1 => dependencies.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
+        if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)) ||
+            onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
         {
             return new Fail(StepExecutionStatus.DependenciesFailed);
         }

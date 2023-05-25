@@ -19,10 +19,12 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
     protected override void HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
+        // Keep track of the same being possibly executed in a different execution.
         if (step.StepId == StepExecution.StepId && step.ExecutionId != StepExecution.ExecutionId)
         {
             _duplicates[step] = status;
         }
+        // Also keep track of other step executions in the same execution.
         else if (StepExecution.ExecutionId == step.ExecutionId && StepExecution.StepId != step.StepId)
         {
             _execution[step] = status;
@@ -31,6 +33,7 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
 
     protected override StepAction? GetStepAction()
     {
+        // First check for duplicate executions.
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             StepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
@@ -43,13 +46,18 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
             return null;
         }
 
-        var previousSteps = _execution.Where(p => p.Key.ExecutionPhase < StepExecution.ExecutionPhase);
-        if (StepExecution.Execution.StopOnFirstError && previousSteps.Any(s => s.Value == OrchestrationStatus.Failed))
+        // Get statuses of previous steps according to execution phases.
+        var previousStepStatuses = _execution
+            .Where(p => p.Key.ExecutionPhase < StepExecution.ExecutionPhase)
+            .Select(p => p.Value)
+            .Distinct()
+            .ToList();
+        if (StepExecution.Execution.StopOnFirstError && previousStepStatuses.Any(status => status == OrchestrationStatus.Failed))
         {
             return new Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
         }
 
-        if (previousSteps.All(s => s.Value == OrchestrationStatus.Succeeded || s.Value == OrchestrationStatus.Failed))
+        if (previousStepStatuses.All(status => status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed))
         {
             return new Execute();
         }
