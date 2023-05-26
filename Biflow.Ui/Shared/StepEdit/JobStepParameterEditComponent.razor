@@ -33,7 +33,7 @@ else if (Step is not null && TargetJob is not null)
             @{
                 var count = 0;
             }
-            @foreach (var param in Step.StepParameters)
+            @foreach (var param in Step.StepParameters.OrderBy(p => p.ParameterName))
             {
                 var targetParam = TargetJob.JobParameters.First(p => p.ParameterId == param.AssignToJobParameterId);
                 var availableJobParams = GetAvailableJobParameters(param);
