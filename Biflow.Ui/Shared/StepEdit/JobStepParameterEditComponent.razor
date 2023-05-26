@@ -137,6 +137,7 @@ else if (Step is not null)
 
     private IEnumerable<JobParameter> AvailableTargetParameters => TargetJob?.JobParameters
         .Where(jp => !Step?.StepParameters.Cast<JobStepParameter>().Any(sp => sp.AssignToJobParameterId == jp.ParameterId) ?? false)
+        .OrderBy(jp => jp.ParameterName)
         ?? Enumerable.Empty<JobParameter>();
 
     private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
