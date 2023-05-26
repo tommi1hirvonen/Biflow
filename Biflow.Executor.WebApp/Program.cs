@@ -3,8 +3,21 @@ using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.WebExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting.WindowsServices;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (WindowsServiceHelpers.IsWindowsService())
+{
+    builder.Host.UseWindowsService();
+}
+
+if (builder.Configuration.GetSection("Serilog").Exists())
+{
+    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    builder.Logging.AddSerilog(logger, dispose: true);
+}
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
