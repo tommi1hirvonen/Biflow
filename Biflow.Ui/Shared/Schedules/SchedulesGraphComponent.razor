@@ -138,12 +138,17 @@
         get => _start;
         set
         {
-            if (value >= _end)
+            try
             {
-                var diff = value - _start;
-                _end = _end.Add(diff);
+                if (value >= _end)
+                {
+                    var diff = value - _start;
+                    _end = _end.Add(diff);
+                }
+                _start = value;
             }
-            _start = value;
+            catch (ArgumentOutOfRangeException) { }
+        
         }
     }
 
@@ -154,12 +159,16 @@
         get => _end;
         set
         {
-            if (value <= _start)
+            try
             {
-                var diff = value - _end;
-                _start = _start.Add(diff);
+                if (value <= _start)
+                {
+                    var diff = value - _end;
+                    _start = _start.Add(diff);
+                }
+                _end = value;
             }
-            _end = value;
+            catch (ArgumentOutOfRangeException) { }
         }
     }
 
