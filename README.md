@@ -111,7 +111,7 @@ There are three recommended ways to configure Biflow from an architecture point 
 
 ### On-premise
 
-The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler service), console applications and running separate processes for different executions. If an on-premise installation is possible, this is the option that allows for most control of the setup.
+The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler service). If an on-premise installation is possible, this is the option that allows for most control of the setup. The executor application can be configured to run in one of two ways, a web application or a console application. The web application option provides more features, such as global orchestration (cross-job and cross-execution dependencies, duplicate step execution monitoring etc.).
 
 ### Azure (monolithic)
 
@@ -238,7 +238,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 7 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-7.0.0-windows-hosting-bundle-installer">.NET download page</a>.
 
-### Executor console application
+### Executor console application (option 1)
+
+Note that global orchestration is not available in the console application version of the executor service. Global orchestration refers to the executor service's capability to monitor step executions across different job executions. This allows the service to check for duplicate executions and dependencies across jobs and multiple executions. If this functionality is required, then it is recommended to use the web application version of the executor service.
 
 1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
 2. Update the appsettings.json file with the correct settings for your environment.
@@ -256,6 +258,23 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - This should run without errors and return the commit SHA for the current version of the application.
 4. Test the executor application's connection to the system database by running the following command
     - `C:\Biflow\BiflowExecutor\BiflowExecutor.exe test-connection`
+
+### Executor web application (option 2)
+
+1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
+2. Update the appsettings.json file with the correct settings for your environment. Same settings apply apply for the web app as for the console app, but there are some additional settings as well.
+
+|Setting|Description|
+|-|-|
+|Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
+
+3. Open the Windows command terminal in **administrator mode**.
+    - Run the following command: `sc.exe create BiflowExecutor binpath= C:\Biflow\BiflowExecutor\BiflowExecutor.exe start= auto displayname= "Biflow Executor"`
+4. Open Windows Services, navigate to the service "Biflow Executor", right click and select Properties.
+    - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
+    - Start the service.
+5. Test the executor application by sending a GET request to the executor API to test the system database connection. This can be done with PowerShell using the following command. Replace the URL with the one used when configuring the app.
+    - `Invoke-WebRequest -URI http://localhost:4321/connection/test`
 
 ### Scheduler service
 
