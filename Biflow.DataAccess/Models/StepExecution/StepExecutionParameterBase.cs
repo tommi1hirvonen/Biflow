@@ -51,7 +51,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter
 
     public override string DisplayValue => (InheritFromExecutionParameter, UseExpression) switch
     {
-        (not null, _) => $"{InheritFromExecutionParameter.DisplayValue?.ToString() ?? "null"} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
+        (not null, _) => $"{ParameterValue} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
         (_, true) => $"{ParameterValue} ({Expression.Expression})",
         _ => base.DisplayValue
     };
