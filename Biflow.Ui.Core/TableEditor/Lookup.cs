@@ -14,6 +14,6 @@ public class Lookup
     {
         DataTableLookup = dataTableLookup;
         DisplayValueDatatype = displayValueDatatype;
-        Values = values;
+        Values = values.OrderBy(v => v.DisplayValue).ToList();
     }
 }
