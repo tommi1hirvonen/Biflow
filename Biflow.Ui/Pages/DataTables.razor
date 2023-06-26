@@ -45,10 +45,37 @@ else
             .Include(t => t.Category)
             .Include(t => t.Connection)
             .Include(t => t.Lookups)
-            .ThenInclude(t => t.LookupTable)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
-        
+
+        var lookupTableIds = Tables
+            .SelectMany(t => t.Lookups)
+            .Select(l => l.LookupTableId)
+            .Distinct()
+            .ToList();
+
+        // Instead of including lookup tables in the main query, fetch them here with IgnoreQueryFilters().
+        // This way we can ensure that all lookups are included even if the user has no authorization on all data tables.
+        var lookupTables = await context.MasterDataTables
+            .AsNoTrackingWithIdentityResolution()
+            .IgnoreQueryFilters()
+            .Include(t => t.Connection)
+            .Where(t => lookupTableIds.Contains(t.DataTableId))
+            .ToListAsync();
+
+        // Map lookup tables to the main tables list.
+        foreach (var table in Tables)
+        {
+            foreach (var lookup in table.Lookups)
+            {
+                var lt = lookupTables.FirstOrDefault(t => t.DataTableId == lookup.LookupTableId);
+                if (lt is not null)
+                {
+                    lookup.LookupTable = lt;
+                }
+            }
+        }
+
         // For admins and editors, show all available table categories.
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.IsInRole("Admin") || authState.User.IsInRole("Editor"))
