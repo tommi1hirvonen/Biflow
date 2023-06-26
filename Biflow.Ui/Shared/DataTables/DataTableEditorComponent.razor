@@ -198,6 +198,7 @@
                                 <tr>
                                     @foreach (var columnInfo in TableData.Columns.Where(c => IsColumnSelected(c.Name)))
                                     {
+                                        var isLocked = !row.IsUpdateable || columnInfo.IsLocked;
                                         var column = columnInfo.Name;
                                         var datatype = columnInfo.Datatype;
                                         var lookupValues = columnInfo.Lookup?.Values;
@@ -211,12 +212,12 @@
 
                                                 else if (datatype == typeof(byte))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.ByteIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ByteIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(short) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.ShortIndexer[column]" class="form-select form-select-sm" disabled=@columnInfo.IsLocked>
+                                                    <select @bind="row.ShortIndexer[column]" class="form-select form-select-sm" disabled=@isLocked>
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -226,12 +227,12 @@
                                                 }
                                                 else if (datatype == typeof(short))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.ShortIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ShortIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(int) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.IntIndexer[column]" disabled=@columnInfo.IsLocked class="form-select form-select-sm">
+                                                    <select @bind="row.IntIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -241,12 +242,12 @@
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.IntIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.IntIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(long) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.LongIndexer[column]" disabled=@columnInfo.IsLocked class="form-select form-select-sm">
+                                                    <select @bind="row.LongIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -256,12 +257,12 @@
                                                 }
                                                 else if (datatype == typeof(long))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.LongIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.LongIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(decimal) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.DecimalIndexer[column]" disabled=@columnInfo.IsLocked class="form-select form-select-sm">
+                                                    <select @bind="row.DecimalIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -271,21 +272,21 @@
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.DecimalIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DecimalIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(double))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.DoubleIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DoubleIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(float))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@columnInfo.IsLocked @bind-value="row.FloatIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.FloatIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(string) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.StringIndexer[column]" disabled=@columnInfo.IsLocked class="form-select form-select-sm">
+                                                    <select @bind="row.StringIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -295,14 +296,14 @@
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {
-                                                    <input class="form-control form-control-sm" type="text" disabled=@columnInfo.IsLocked @bind-value="row.StringIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="text" disabled=@isLocked @bind-value="row.StringIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(bool))
                                                 {
                                                     var id = Guid.NewGuid();
                                                     <div class="form-check">
-                                                        <input type="checkbox" disabled=@columnInfo.IsLocked class="form-check-input" id="@id"
+                                                        <input type="checkbox" disabled=@isLocked class="form-check-input" id="@id"
                                                         checked=@row.BooleanIndexer[column] @bind-value="row.BooleanIndexer[column]">
                                                         <label class="form-check-label" for="@id"></label>
                                                     </div>
@@ -310,7 +311,7 @@
 
                                                 else if (datatype == typeof(DateTime) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.DateTimeIndexer[column]" disabled=@columnInfo.IsLocked class="form-select form-select-sm">
+                                                    <select @bind="row.DateTimeIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
                                                         <option value="">null</option>
                                                         @foreach (var lookup in lookupValues)
                                                         {
@@ -320,7 +321,7 @@
                                                 }
                                                 else if (datatype == typeof(DateTime))
                                                 {
-                                                    <input class="form-control form-control-sm" type="datetime-local" disabled=@columnInfo.IsLocked @bind-value="row.DateTimeIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="datetime-local" disabled=@isLocked @bind-value="row.DateTimeIndexer[column]" />
                                                 }
                                                 else
                                                 {

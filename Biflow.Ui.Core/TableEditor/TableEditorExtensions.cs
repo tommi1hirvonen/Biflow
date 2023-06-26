@@ -62,7 +62,7 @@ public static class TableEditorExtensions
         {
             var isPk = primaryKeyColumns.Contains(c.Name);
             var isIdentity = identityColumn == c.Name;
-            var isLocked = table.LockedColumns.Contains(c.Name);
+            var isLocked = table.LockedColumnsExcludeMode ? !table.LockedColumns.Contains(c.Name) : table.LockedColumns.Contains(c.Name);
             var lookup = lookups?.GetValueOrDefault(c.Name);
             var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
             return new Column(

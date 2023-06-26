@@ -22,7 +22,7 @@ public class TableData
     {
         MasterDataTable = masterDataTable;
         Columns = columns;
-        _rows = new LinkedList<Row>(data.Select(row => new Row(this, row)));
+        _rows = new LinkedList<Row>(data.Select(row => new Row(this, masterDataTable.AllowUpdate, row)));
     }
 
     public bool IsEditable => Columns.Any(c => c.IsPrimaryKey);
@@ -71,7 +71,7 @@ public class TableData
     public void AddRow()
     {
         HasChanges = true;
-        _rows.AddFirst(new Row(this));
+        _rows.AddFirst(new Row(this, true));
     }
 
     public Stream GetExcelExportStream()

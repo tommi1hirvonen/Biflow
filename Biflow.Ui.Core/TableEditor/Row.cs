@@ -23,14 +23,19 @@ public class Row
     public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; }
 
     public bool ToBeDeleted { get; private set; }
+    
+    public bool IsUpdateable { get; }
 
     public Row(
         TableData tableData,
+        bool isUpdateable,
         IDictionary<string, object?>? initialValues = null)
     {
         _parentTable = tableData;
         _initialValues = initialValues;
         _values = _initialValues is not null ? new(_initialValues, OnValuesChanged) : new(OnValuesChanged);
+
+        IsUpdateable = isUpdateable;
         
         ByteIndexer = new(Values);
         ShortIndexer = new(Values);
@@ -108,7 +113,7 @@ public class Row
             .ToList();
 
         // Existing entity
-        if (_initialValues is not null && !ToBeDeleted)
+        if (_initialValues is not null && !ToBeDeleted && IsUpdateable)
         {
             var changes = Values
                 .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _initialValues[w.Key]?.ToString())

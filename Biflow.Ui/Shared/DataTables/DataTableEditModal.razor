@@ -86,37 +86,70 @@
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div class="form-check form-check-inline">
-                            <input type="checkbox" class="form-check-input" id="allow_insert"
-                                   checked=@EditTable.AllowInsert
-                               @bind-value="EditTable.AllowInsert">
-                            <label class="form-check-label" for="allow_insert">Allow insert</label>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="allow_insert"
+                                           checked=@EditTable.AllowInsert
+                                    @bind-value="EditTable.AllowInsert">
+                                    <label class="form-check-label" for="allow_insert">Allow insert</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="allow_delete"
+                                           checked=@EditTable.AllowDelete
+                                    @bind-value="EditTable.AllowDelete">
+                                    <label class="form-check-label" for="allow_delete">Allow delete</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="allow_update"
+                                           checked=@EditTable.AllowUpdate
+                                    @bind-value="EditTable.AllowUpdate">
+                                    <label class="form-check-label" for="allow_update">Allow update</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-check form-check-inline">
-                            <input type="checkbox" class="form-check-input" id="allow_delete"
-                                   checked=@EditTable.AllowDelete
-                               @bind-value="EditTable.AllowDelete">
-                            <label class="form-check-label" for="allow_delete">Allow delete</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input type="checkbox" class="form-check-input" id="allow_import"
-                                   checked=@EditTable.AllowImport
-                               @bind-value="EditTable.AllowImport">
-                            <label class="form-check-label" for="allow_import">Allow import</label>
+                        <div class="row mt-1">
+                            <div class="col">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="allow_import"
+                                           checked=@EditTable.AllowImport
+                                    @bind-value="EditTable.AllowImport">
+                                    <label class="form-check-label" for="allow_import">Allow import</label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col">
-                        <label class="form-label">
-                            Locked columns
-                            <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
-                                <CxIcon Icon="FeatherIcon.Info" />
-                            </HxPopover>
-                        </label>
-                        <HxInputTags
-                            Delimiters="new()"
-                            InputSize="InputSize.Small"
-                            TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                            @bind-Value="EditTable.LockedColumns" />
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">
+                                    Locked columns
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
+                                        <CxIcon Icon="FeatherIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                                <HxInputTags Delimiters="new()"
+                                             InputSize="InputSize.Small"
+                                             TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                @bind-Value="EditTable.LockedColumns" />
+                            </div>
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
+                                           checked=@EditTable.LockedColumnsExcludeMode
+                                    @bind-value="EditTable.LockedColumnsExcludeMode">
+                                    <label class="form-check-label" for="locked_columns_exclude">
+                                        Exclude mode
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
+                                            <CxIcon Icon="FeatherIcon.Info" />
+                                        </HxPopover>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
                 <div class="row">

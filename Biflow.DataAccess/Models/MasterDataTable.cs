@@ -30,6 +30,8 @@ public class MasterDataTable
 
     public bool AllowDelete { get; set; } = true;
 
+    public bool AllowUpdate { get; set; } = true;
+
     public bool AllowImport { get; set; } = true;
 
     [Required]
@@ -50,6 +52,8 @@ public class MasterDataTable
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 
     public List<string> LockedColumns { get; set; } = new();
+
+    public bool LockedColumnsExcludeMode { get; set; } = false;
 
     [Timestamp]
     public byte[]? Timestamp { get; set; }
