@@ -67,13 +67,24 @@ public partial class DataTableEditorComponent : ComponentBase
         var rows = TableData?.Rows;
         foreach (var orderBy in OrderBy)
         {
+            var column = TableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
+            var lookup = column?.Lookup;
+
+            // Helper function to retrieve lookup display value if it exists and the value itself when it does not.
+            object? lookupValueOrValue(Row r)
+            {
+                var value = r.Values[orderBy.Column];
+                var lookupValue = lookup?.Values.FirstOrDefault(v => v.Value?.Equals(value) == true);
+                return lookupValue?.DisplayValue ?? value;
+            };
+
             if (orderBy.Descending)
             {
-                rows = rows?.OrderByDescending(r => r.Values[orderBy.Column]);
+                rows = rows?.OrderByDescending(lookupValueOrValue);
             }
             else
             {
-                rows = rows?.OrderBy(r => r.Values[orderBy.Column]);
+                rows = rows?.OrderBy(lookupValueOrValue);
             }
         }
         return rows?.ToList();
