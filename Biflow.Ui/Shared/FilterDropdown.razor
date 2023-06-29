@@ -6,7 +6,7 @@
 }
 
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="@cssClass">
+    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="@cssClass" OnShown="OnShown" OnHidden="OnHidden">
         @TitleTemplate
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">
@@ -93,6 +93,12 @@
 
     [Parameter]
     public RenderFragment<TItem>? ItemTemplate { get; set; }
+
+    [Parameter]
+    public EventCallback OnShown { get; set; }
+
+    [Parameter]
+    public EventCallback OnHidden { get; set; }
 
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
 
