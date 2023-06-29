@@ -255,6 +255,7 @@ internal class JobExecutor : IJobExecutor
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == _execution.JobId)
             .Include(step => step.Dependencies)
+            .ThenInclude(d => d.DependantOnStep)
             .ToListAsync();
         var dependencies = steps
             .SelectMany(step => step.Dependencies)
