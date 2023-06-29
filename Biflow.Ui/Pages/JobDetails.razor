@@ -146,52 +146,52 @@
 
 <CascadingValue Value="Job">
     <CascadingValue Value="Steps">
-        <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated">
-            <CascadingValue Value="SortSteps" Name="SortSteps">
-                @if (DetailsPage == "steps")
-                {
-                    <StepsComponent Jobs="Jobs"
-                                    SqlConnections="SqlConnections"
-                                    AsConnections="AsConnections"
-                                    PipelineClients="PipelineClients"
-                                    AppRegistrations="AppRegistrations"
-                                    FunctionApps="FunctionApps"
-                                    InitialStepId="InitialStepId" />
-                }
-                else if (DetailsPage == "parameters")
-                {
-                    <AuthorizeView Roles="Admin, Editor, Operator">
-                        <JobParametersComponent />
-                    </AuthorizeView>
-                }
-                else if (DetailsPage == "history")
-                {
-                    <JobHistoryComponent />
-                }
-                else if (DetailsPage == "dependencies")
-                {
-                    <DependenciesComponent Jobs="Jobs"
-                                           SqlConnections="SqlConnections"
-                                           AsConnections="AsConnections"
-                                           PipelineClients="PipelineClients"
-                                           AppRegistrations="AppRegistrations"
-                                           FunctionApps="FunctionApps"
-                                           InitialStepId="InitialStepId"/>
-                }
-                else if (DetailsPage == "schedules")
-                {
-                    <SchedulesComponent />
-                }
-                else if (DetailsPage == "settings")
-                {
-                    <AuthorizeView Roles="Admin, Editor">
-                        <JobSettingsComponent />
-                    </AuthorizeView>
-                }
-                else
-                {
-                    <p>No component to show.</p>
-                }
+        <CascadingValue Value="Jobs">
+            <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated">
+                <CascadingValue Value="SortSteps" Name="SortSteps">
+                    @if (DetailsPage == "steps")
+                    {
+                        <StepsComponent SqlConnections="SqlConnections"
+                                        AsConnections="AsConnections"
+                                        PipelineClients="PipelineClients"
+                                        AppRegistrations="AppRegistrations"
+                                        FunctionApps="FunctionApps"
+                                        InitialStepId="InitialStepId" />
+                    }
+                    else if (DetailsPage == "parameters")
+                    {
+                        <AuthorizeView Roles="Admin, Editor, Operator">
+                            <JobParametersComponent />
+                        </AuthorizeView>
+                    }
+                    else if (DetailsPage == "history")
+                    {
+                        <JobHistoryComponent />
+                    }
+                    else if (DetailsPage == "dependencies")
+                    {
+                        <DependenciesComponent SqlConnections="SqlConnections"
+                                               AsConnections="AsConnections"
+                                               PipelineClients="PipelineClients"
+                                               AppRegistrations="AppRegistrations"
+                                               FunctionApps="FunctionApps"
+                                               InitialStepId="InitialStepId"/>
+                    }
+                    else if (DetailsPage == "schedules")
+                    {
+                        <SchedulesComponent />
+                    }
+                    else if (DetailsPage == "settings")
+                    {
+                        <AuthorizeView Roles="Admin, Editor">
+                            <JobSettingsComponent />
+                        </AuthorizeView>
+                    }
+                    else
+                    {
+                        <p>No component to show.</p>
+                    }
+                </CascadingValue>
             </CascadingValue>
         </CascadingValue>
     </CascadingValue>

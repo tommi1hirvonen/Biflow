@@ -179,7 +179,7 @@
 </AuthorizeView>
 
 @code {
-    [Parameter] public List<Job> Jobs { get; set; } = null!;
+    [CascadingParameter] public List<Job> Jobs { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 

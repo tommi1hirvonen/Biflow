@@ -28,7 +28,7 @@ public partial class StepsComponent : ComponentBase
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
     
-    [Parameter] public IList<Job>? Jobs { get; set; }
+    [CascadingParameter] public List<Job>? Jobs { get; set; }
     
     [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
     
