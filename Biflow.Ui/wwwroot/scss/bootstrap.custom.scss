@@ -241,8 +241,12 @@ $statuses: (
     cursor: move;
 }
 
-.dependency-graph .node {
+.dependency-graph .node.internal {
     cursor: pointer;
+}
+
+.dependency-graph .node.external {
+    cursor: default;
 }
 
 .dependency-graph .node rect {
@@ -258,6 +262,10 @@ $statuses: (
 .dependency-graph .node.disabled rect {
     fill: var(--bs-tertiary-bg);
     stroke: var(--bs-secondary);
+}
+
+.dependency-graph .node.external rect {
+    stroke-dasharray: 5;
 }
 
 .dependency-graph .node.disabled > g.label {

@@ -18,6 +18,7 @@ public record StepSlim(
     string? StepName,
     StepType StepType,
     int ExecutionPhase,
+    bool IsEnabled,
     IList<Tag> Tags,
     IList<Guid> Dependencies) : IComparable
 {

@@ -196,7 +196,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             .ToDictionaryAsync(j => j.JobId);
         StepSlims = await Context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.Tags, s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
+            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags, s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
             .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {

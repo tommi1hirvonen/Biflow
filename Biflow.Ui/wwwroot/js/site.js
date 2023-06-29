@@ -63,7 +63,10 @@
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
     // Set event listeners to pass the clicked node's id back to Blazor.
-    var elements = document.getElementsByClassName("node");
+    // Set onClick listeners only for internal steps (steps belonging to current job).
+    var onClickElements = document.getElementsByClassName("node internal");
+    // Enable tooltips for all steps (steps belonging to other jobs as well).
+    var tooltipElements = document.getElementsByClassName("node");
 
     var myFunction = function (event) {
         var dropdownId = `${this.id}_dropdown`;
@@ -88,10 +91,12 @@
         }
     };
 
-    for (var i = 0; i < elements.length; i++) {
-        var element = elements[i];
+    for (var i = 0; i < onClickElements.length; i++) {
+        var element = onClickElements[i];
         element.addEventListener('click', myFunction, false);
-
+    }
+    for (var i = 0; i < tooltipElements.length; i++) {
+        var element = tooltipElements[i];
         var title_ = steps.find(s => s.Id == element.id).Tooltip;
         if (typeof title_ == 'string') {
             var tooltip = new bootstrap.Tooltip(element, {

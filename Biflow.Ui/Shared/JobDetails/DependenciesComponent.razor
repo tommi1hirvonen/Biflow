@@ -178,8 +178,6 @@
 </AuthorizeView>
 
 @code {
-    [CascadingParameter] public List<Job> Jobs { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -237,17 +235,26 @@
         string? stepsJson = null;
         string? dependenciesJson = null;
 
+        ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(Steps);
+
+        using var context = await DbFactory.CreateDbContextAsync();
+        var stepSlims = await context.Steps
+            .AsNoTrackingWithIdentityResolution()
+            .IgnoreQueryFilters()
+            .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
+            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, new List<Tag>(), new List<Guid>()))
+            .ToListAsync();
 
         if (StepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            var steps = Steps.Select(step => new
+            var steps = stepSlims.Select(step => new
             {
                 Id = step.StepId,
                 Name = step.StepName,
-                ClassName = step.IsEnabled ? "enabled" : "disabled",
-                Tooltip = $"{step.StepType}"
+                ClassName = $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
+                Tooltip = step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, external"
             });
             var dependencies = Steps
                 .SelectMany(step => step.Dependencies)
