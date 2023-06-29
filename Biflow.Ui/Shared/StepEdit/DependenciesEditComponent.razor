@@ -64,8 +64,8 @@
                 <tbody>
                     @foreach (var step in FilteredStepsOrdered)
                     {
-                        <tr @onclick="() => AddDependency(step)">
-                            <td class="align-middle">
+                        <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
+                            <td class="align-middle small">
                                 <StepTypeIconComponent StepType_="step.StepType" />
                                 <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
                             </td>
@@ -101,7 +101,7 @@
                             }
                             var title = dependency.IsCandidateForRemoval ? "Dependency not found in source/target mapping" : dependency.IsNewAddition ? "New dependency" : null;
                             <tr>
-                                <td class="align-middle">
+                                <td class="align-middle small">
                                     <StepTypeIconComponent StepType_="step.StepType" />
                                     @step.StepName
                                 </td>
@@ -116,6 +116,20 @@
                                     }
                                 </td>
                                 <td class="align-middle">
+                                    @{
+                                        var (className, icon) = dependency.DependencyType switch
+                                        {
+                                            DependencyType.OnSucceeded => ("text-success", FeatherIcon.CheckCircle),
+                                            DependencyType.OnCompleted => ("text-primary", FeatherIcon.ArrowRight),
+                                            DependencyType.OnFailed => ("text-danger", FeatherIcon.AlertOctagon),
+                                            _ => ("text-secondary", FeatherIcon.HelpCircle)
+                                        };
+                                    }
+                                    <span class="@className">
+                                        <CxIcon Icon="icon" />
+                                    </span>
+                                </td>
+                                <td class="align-middle">
                                     <InputSelect class="form-select form-select-sm" @bind-Value="dependency.DependencyType">
                                         @foreach (var type in Enum.GetValues<DependencyType>())
                                         {
@@ -125,7 +139,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <HxButton Size="ButtonSize.Small" CssClass="btn-auto" OnClick="() => RemoveDependency(step)">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        <CxIcon Icon="FeatherIcon.Delete" />
                                     </HxButton>
                                 </td>
                             </tr>
