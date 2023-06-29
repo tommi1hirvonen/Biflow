@@ -34,6 +34,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal StepEditModalView CurrentView { get; set; } = StepEditModalView.Settings;
 
+    internal Dictionary<Guid, JobSlim>? JobSlims { get; set; }
+
+    internal Dictionary<Guid, StepSlim>? StepSlims { get; set; }
+
     private BiflowContext Context { get; set; } = null!;
 
     protected IEnumerable<Tag>? AllTags { get; private set; }
@@ -105,6 +109,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         Step = null;
         AllTags = null;
         DataObjects = null;
+        JobSlims = null;
+        StepSlims = null;
     }
 
     internal async Task SubmitStep()
@@ -182,6 +188,16 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         CurrentView = startView;
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
+        // Use slim classes to only load selected columns from the db.
+        // When loading all steps from the db, the number of steps may be very high.
+        JobSlims = await Context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .Select(j => new JobSlim(j.JobId, j.JobName, j.CategoryId, j.Category))
+            .ToDictionaryAsync(j => j.JobId);
+        StepSlims = await Context.Steps
+            .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.Tags, s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
+            .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {
             Step = await GetExistingStepAsync(Context, stepId);

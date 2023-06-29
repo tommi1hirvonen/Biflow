@@ -1,4 +1,5 @@
-﻿
+﻿@inject IDbContextFactory<BiflowContext> DbContextFactory
+
 <div class="row">
     <div class="col">
         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="InferDependenciesFromDatabaseObjects">
@@ -12,7 +13,7 @@
         <CxIcon Icon="FeatherIcon.Tag" />
         <span class="me-3">Tags</span>
         @{
-            var tags = Steps
+            var tags = StepSlims.Values
                 .SelectMany(step => step.Tags)
                 .DistinctBy(t => t.TagName)
                 .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
@@ -33,27 +34,53 @@
 </div>
 
 <div class="row mt-3 align-items-center">
+    <div class="col-auto">
+        <HxButtonGroup>
+            <FilterDropdown TItem="JobSlim"
+                            Items="JobSlims.Values"
+                            FilterSet="JobFilter"                            
+                            IdSelector="x => x.JobId.ToString()"
+                            TextSelector="x => x.JobName"
+                            OnChange="StateHasChanged"
+                            IsSearchable>
+                <TitleTemplate>
+                    @if (JobsLoading && JobSlims is null)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        <span>Loading...</span>
+                    }
+                    else
+                    {
+                        <CxIcon Icon="LucideIcon.ClipboardList" />
+                        <span>Job</span>
+                    }
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    @item.JobName
+                </ItemTemplate>
+            </FilterDropdown>
+
+            <FilterDropdown TItem="StepType"
+                            FilterSet="StepTypeFilter"
+                            Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Tool" />
+                    Step type
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    <StepTypeIconComponent StepType_="item" />
+                    @item.ToString()
+                </ItemTemplate>
+            </FilterDropdown>
+        </HxButtonGroup>
+    </div>
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
             <CxIcon Icon="FeatherIcon.Search" />
         </div>
         <input type="search" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
-    </div>
-    <div class="col-auto">
-        <FilterDropdown TItem="StepType"
-                        FilterSet="StepTypeFilter"
-                        Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
-                        OnChange="StateHasChanged">
-            <TitleTemplate>
-                <CxIcon Icon="FeatherIcon.Tool" />
-                Step type
-            </TitleTemplate>
-            <ItemTemplate Context="item">
-                <StepTypeIconComponent StepType_="item" />
-                @item.ToString()
-            </ItemTemplate>
-        </FilterDropdown>
-    </div>
+    </div>    
 </div>
 
 <div class="row mt-3">
@@ -62,12 +89,22 @@
         <div style="overflow-y: scroll; height: calc(100vh - 485px);">
             <table class="table table-sm table-hover">
                 <tbody>
-                    @foreach (var step in FilteredStepsOrdered)
+                    @{
+                        var steps = FilteredStepsOrdered.ToList();
+                        var multiJobAvailable = steps.Select(s => s.JobId).Distinct().Count() > 1;
+                    }
+                    @foreach (var step in steps)
                     {
                         <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
                             <td class="align-middle small">
                                 <StepTypeIconComponent StepType_="step.StepType" />
                                 <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
+                                @if (multiJobAvailable)
+                                {
+                                    var job = JobSlims.GetValueOrDefault(step.JobId);
+                                    <br />
+                                    <span class="small">@job?.JobName</span>
+                                }
                             </td>
                         </tr>
                     }
@@ -91,12 +128,13 @@
                     }
                     else
                     {
+                        var multiJobDependencies = Step.Dependencies.Select(d => StepSlims.GetValueOrDefault(d.DependantOnStepId)?.JobId).Distinct().Count() > 1;
                         @foreach (var dependency in Step.Dependencies)
                         {
-                            var step = Steps.FirstOrDefault(s => s.StepId == dependency.DependantOnStepId);
+                            var step = StepSlims.GetValueOrDefault(dependency.DependantOnStepId);
                             if (step is null)
                             {
-                                <tr><td colspan="3">Error getting step</td></tr>
+                                <tr><td colspan="5">Error getting step</td></tr>
                                 continue;
                             }
                             var title = dependency.IsCandidateForRemoval ? "Dependency not found in source/target mapping" : dependency.IsNewAddition ? "New dependency" : null;
@@ -104,15 +142,21 @@
                                 <td class="align-middle small">
                                     <StepTypeIconComponent StepType_="step.StepType" />
                                     @step.StepName
+                                    @if (multiJobDependencies)
+                                    {
+                                        var job = JobSlims.GetValueOrDefault(step.JobId);
+                                        <br />
+                                        <span class="small">@job?.JobName</span>
+                                    }
                                 </td>
                                 <td class="align-middle text-center" title="@title">
                                     @if (dependency.IsCandidateForRemoval)
                                     {
-                                        <span class="text-danger fw-bold pb-1">–</span>
+                                        <span class="text-danger fw-bold fs-5 pb-1">–</span>
                                     }
                                     else if (dependency.IsNewAddition)
                                     {
-                                        <span class="text-success fw-bold pb-1">+</span>
+                                        <span class="text-success fw-bold fs-5 pb-1">+</span>
                                     }
                                 </td>
                                 <td class="align-middle">
@@ -157,28 +201,57 @@
     [Parameter]
     public Step? Step { get; set; }
 
+    private Step? previousStep;
+
     [Parameter]
     public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
+
+    [Parameter]
+    public Dictionary<Guid, StepSlim> StepSlims { get; set; } = new Dictionary<Guid, StepSlim>();
+
+    [Parameter]
+    public Dictionary<Guid, JobSlim> JobSlims { get; set; } = new Dictionary<Guid, JobSlim>();
 
     private HashSet<Tag> TagFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
     private string DependenciesFilterText { get; set; } = string.Empty;
 
-    private IEnumerable<Step> FilteredSteps => Steps
+    private bool JobsLoading { get; set; } = false;
+
+    private HashSet<JobSlim> JobFilter { get; } = new();
+
+    private IEnumerable<StepSlim> FilteredSteps => StepSlims.Values
+            .Where(step => !JobFilter.Any() || JobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
             .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
-            ?? Enumerable.Empty<Step>();
+            ?? Enumerable.Empty<StepSlim>();
 
-    private IEnumerable<Step> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
+    private IEnumerable<StepSlim> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
     {
-        true => FilteredSteps.OrderBy(step => step, new TopologicalStepComparer(Steps)),
+        true => FilteredSteps.OrderBy(step => step,
+            new TopologicalComparer<StepSlim, Guid>(
+                StepSlims.Values,
+                s => s?.StepId ?? Guid.Empty,
+                s => s.Dependencies)),
         _ => FilteredSteps.OrderBy(step => step) // use default comparer
     };
 
-    private void RemoveDependency(Step step)
+    protected override void OnParametersSet()
+    {
+        if (Step is not null && previousStep != Step)
+        {
+            previousStep = Step;
+            JobFilter.Clear();
+            var job = JobSlims.GetValueOrDefault(Step.JobId);
+            if (job is not null)
+                JobFilter.Add(job);
+        }
+    }
+
+    private void RemoveDependency(StepSlim step)
     {
         ArgumentNullException.ThrowIfNull(Step);
         var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
@@ -188,7 +261,7 @@
         }
     }
 
-    private void AddDependency(Step step)
+    private void AddDependency(StepSlim step)
     {
         ArgumentNullException.ThrowIfNull(Step);
         if (!Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))

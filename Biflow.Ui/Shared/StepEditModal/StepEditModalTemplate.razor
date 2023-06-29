@@ -85,11 +85,14 @@
                         <CascadingValue Value="StepValidator" Name="StepValidator">
                             @if (Modal.CurrentView == StepEditModalView.Dependencies)
                             {
-                                @if (Modal.Steps is not null)
+                                @if (Modal.Steps is not null && Modal.StepSlims is not null && Modal.JobSlims is not null)
                                 {
                                     <div class="row">
                                         <div class="col">
-                                            <DependenciesEditComponent Step="Modal.Step" Steps="Modal.Steps" />
+                                            <DependenciesEditComponent Step="Modal.Step"
+                                                                       Steps="Modal.Steps"
+                                                                       JobSlims="Modal.JobSlims"
+                                                                       StepSlims="Modal.StepSlims" />
                                         </div>
                                     </div>
                                 }

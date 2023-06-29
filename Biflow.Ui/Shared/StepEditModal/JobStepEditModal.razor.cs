@@ -2,24 +2,22 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web.Bootstrap;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class JobStepEditModal : StepEditModal<JobStep>
 {
-    [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
-
     internal override string FormId => "job_step_edit_form";
 
     private List<string> TagFilters { get; set; } = new();
 
-    private IEnumerable<JobCategory?> JobCategories => Jobs
+    private IEnumerable<JobCategory?> JobCategories => JobSlims?.Values
         .Select(j => j.Category)
         .Distinct()
         .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName);
+        .ThenBy(c => c?.CategoryName)
+        ?? Enumerable.Empty<JobCategory?>();
 
     private async Task<InputTagsDataProviderResult> GetTagFilterSuggestions(InputTagsDataProviderRequest request)
     {
