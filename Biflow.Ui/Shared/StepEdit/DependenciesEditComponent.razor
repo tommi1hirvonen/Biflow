@@ -128,7 +128,7 @@
                     }
                     else
                     {
-                        var multiJobDependencies = Step.Dependencies.Select(d => StepSlims.GetValueOrDefault(d.DependantOnStepId)?.JobId).Distinct().Count() > 1;
+                        var externalDependencies = Step.Dependencies.Any(d => StepSlims.GetValueOrDefault(d.DependantOnStepId)?.JobId != Step.JobId);
                         @foreach (var dependency in Step.Dependencies)
                         {
                             var step = StepSlims.GetValueOrDefault(dependency.DependantOnStepId);
@@ -142,7 +142,7 @@
                                 <td class="align-middle small">
                                     <StepTypeIconComponent StepType_="step.StepType" />
                                     @step.StepName
-                                    @if (multiJobDependencies)
+                                    @if (externalDependencies)
                                     {
                                         var job = JobSlims.GetValueOrDefault(step.JobId);
                                         <br />
