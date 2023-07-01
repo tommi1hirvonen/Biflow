@@ -38,7 +38,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
 
     private Report ShowReport { get; set; } = Report.Table;
 
-    private enum Report { Table, Gantt, Dependencies, Rerun }
+    private enum Report { Table, Gantt, Dependencies, Rerun, History }
 
     private bool Loading { get; set; } = false;
 

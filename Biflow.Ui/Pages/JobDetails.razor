@@ -164,9 +164,9 @@
                             <JobParametersComponent />
                         </AuthorizeView>
                     }
-                    else if (DetailsPage == "history")
+                    else if (DetailsPage == "history" && Job is not null)
                     {
-                        <JobHistoryComponent />
+                        <JobHistoryComponent JobId="Job.JobId" JobName="Job.JobName" />
                     }
                     else if (DetailsPage == "dependencies")
                     {

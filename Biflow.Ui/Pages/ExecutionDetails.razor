@@ -63,8 +63,14 @@
         Refresh
     </HxButton>
 
+    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.History ? "active ms-auto" : "ms-auto")"
+            @onclick="() => ShowReport = Report.History" Enabled="!Loading">
+        <CxIcon Icon="LucideIcon.History" />
+        History
+    </HxButton>
+
     <AuthorizeView Roles="Admin, Editor, Operator">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-auto" : "ms-auto")"
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-3" : "ms-3")"
                   @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
             <CxIcon Icon="FeatherIcon.Repeat" />
             Rerun
@@ -222,7 +228,7 @@
     }
 }
 
-@if (ShowReport != Report.Rerun)
+@if (ShowReport != Report.Rerun && ShowReport != Report.History)
 {
     <div class="row">
         <div class="col-6">
@@ -470,6 +476,10 @@ else if (ShowReport == Report.Rerun)
     <AuthorizeView Roles="Admin, Editor, Operator">
         <RerunComponent Execution="Execution" />
     </AuthorizeView>
+}
+else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
+{
+    <JobHistoryComponent JobId="jobId" JobName="Execution.JobName" />
 }
 
 <div class="border mt-3" hidden=@(ShowReport != Report.Dependencies) style="resize: both; overflow: hidden;">

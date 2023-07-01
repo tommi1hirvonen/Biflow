@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>@Job?.JobName | History | Biflow</PageTitle>
+<PageTitle>@JobName | History | Biflow</PageTitle>
 
 <div class="row">
     <div class="col">
@@ -108,7 +108,9 @@
 </div>
 
 @code {
-    [CascadingParameter] public Job? Job { get; set; }
+    [Parameter] public Guid JobId { get; set; }
+
+    [Parameter] public string? JobName { get; set; }
 
     public IList<Execution>? Executions { get; set; }
 
@@ -134,14 +136,14 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Executions is null && Job is not null)
+        if (Executions is null && JobId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
                 .Include(execution => execution.StepExecutions)
                 .ThenInclude(execution => execution.StepExecutionAttempts)
-                .Where(execution => execution.JobId == Job.JobId)
+                .Where(execution => execution.JobId == JobId)
                 .OrderByDescending(execution => execution.CreatedDateTime)
                 .Take(MaxExecutions)
                 .ToListAsync();
