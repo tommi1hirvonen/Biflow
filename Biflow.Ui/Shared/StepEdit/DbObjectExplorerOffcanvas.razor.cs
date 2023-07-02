@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace Biflow.Ui.Shared.StepEdit;
 
-public partial class DbObjectExplorerOffcanvas : ComponentBase
+public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 {
     [Inject] public IHxMessengerService Messenger { get; set; } = null!;
 
@@ -74,5 +74,10 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase
         ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
         await Offcanvas.LetAsync(x => x.ShowAsync());
         await RunQueryAsync();
+    }
+
+    public void Dispose()
+    {
+        Cts.Dispose();
     }
 }
