@@ -56,6 +56,10 @@ public class Execution
     [Display(Name = "Schedule id")]
     public Guid? ScheduleId { get; set; }
 
+    public string? ScheduleName { get; set; }
+
+    public string? CronExpression { get; set; }
+
     [Display(Name = "Executor PID")]
     public int? ExecutorProcessId { get; set; }
 
@@ -75,6 +79,8 @@ public class Execution
     public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; set; } = null!;
 
     public Job? Job { get; set; }
+
+    public Schedule? Schedule { get; set; }
 
     [NotMapped]
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;

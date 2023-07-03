@@ -139,6 +139,8 @@ INSERT INTO biflow.Execution (
 	OvertimeNotificationLimitMinutes,
 	CreatedBy,
 	ScheduleId,
+	ScheduleName,
+	CronExpression,
 	Notify,
 	NotifyCaller,
 	NotifyCallerOvertime
@@ -157,10 +159,13 @@ SELECT
 	OvertimeNotificationLimitMinutes = a.OvertimeNotificationLimitMinutes,
 	CreatedBy = @Username,
 	ScheduleId = @ScheduleId,
+	ScheduleName = b.ScheduleName,
+	CronExpression = b.CronExpression,
 	Notify = @Notify,
 	NotifyCaller = @NotifyCaller,
 	NotifyCallerOvertime = @NotifyCallerOvertime
 FROM biflow.Job AS a
+	LEFT JOIN biflow.Schedule AS b ON b.ScheduleId = @ScheduleId
 WHERE a.JobId = @JobId
 
 
