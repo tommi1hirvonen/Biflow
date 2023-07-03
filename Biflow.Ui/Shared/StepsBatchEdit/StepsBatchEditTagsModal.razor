@@ -54,7 +54,7 @@
         <HxButton Color="ThemeColor.Success" Spinner="Saving" Enabled="!Saving" OnClick="SubmitStepsAsync">
             Save
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -99,6 +99,13 @@
         Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        Tags.Clear();
+        SetEditMode(EditMode.Add);
+        await Modal.LetAsync(x => x.HideAsync());
     }
 
     private void SetEditMode(EditMode editMode)
@@ -182,9 +189,7 @@
             }
         }
 
-        Tags.Clear();
-        SetEditMode(EditMode.Add);
-        await Modal.LetAsync(x => x.HideAsync());
+        await CloseAsync();
     }
 
     public void Dispose() => Context?.Dispose();
