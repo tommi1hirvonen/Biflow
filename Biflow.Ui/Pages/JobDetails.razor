@@ -145,10 +145,10 @@
 </div>
 
 <CascadingValue Value="Job">
-    <CascadingValue Value="Steps">
-        <CascadingValue Value="Jobs">
-            <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated">
-                <CascadingValue Value="SortSteps" Name="SortSteps">
+    <CascadingValue Value="Steps" IsFixed>
+        <CascadingValue Value="Jobs" IsFixed>
+            <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated" IsFixed>
+                <CascadingValue Value="SortSteps" Name="SortSteps" IsFixed>
                     @if (DetailsPage == "steps")
                     {
                         <StepsComponent SqlConnections="SqlConnections"
