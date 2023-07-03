@@ -6,12 +6,6 @@
 <div class="row">
     <div class="col">
         <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="radio_all"
-                    checked=@(StartTypeFilter == StartType.All)
-                    @onchange="() => StartTypeFilter = StartType.All">
-            <label class="form-check-label" for="radio_all">All</label>
-        </div>
-        <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_scheduled"
                     checked=@(StartTypeFilter == StartType.Scheduled)
                     @onchange="() => StartTypeFilter = StartType.Scheduled">
@@ -22,6 +16,12 @@
                     checked=@(StartTypeFilter == StartType.Manual)
                     @onchange="() => StartTypeFilter = StartType.Manual">
             <label class="form-check-label" for="radio_manual">Manual</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_all"
+                   checked=@(StartTypeFilter == StartType.All)
+                    @onchange="() => StartTypeFilter = StartType.All">
+            <label class="form-check-label" for="radio_all">All</label>
         </div>
     </div>
 </div>
@@ -116,7 +116,7 @@
 
     private const int MaxExecutions = 50;
 
-    private StartType StartTypeFilter { get; set; } = StartType.All;
+    private StartType StartTypeFilter { get; set; } = StartType.Scheduled;
 
     private IEnumerable<Execution> FilteredExecutions =>
         Executions?
