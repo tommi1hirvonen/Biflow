@@ -1,0 +1,39 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop;
+@using System.Timers;
+
+@inherits InputText
+
+<input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="Clear" />
+
+@code {
+    private string inputText = "";
+    private Timer timer = new Timer(550); // Debounce (delay) time in ms
+
+    protected override void OnInitialized()
+    {
+        timer.Elapsed += UpdateCurrentValue;
+        timer.AutoReset = false;
+    }
+
+    private void Clear()
+    {
+        inputText = "";
+        CurrentValueAsString = inputText;
+    }
+
+    private void ResetTimer(KeyboardEventArgs e)
+    {
+        timer.Stop();
+        timer.Start();
+    }
+
+    private async void UpdateCurrentValue(object? source, ElapsedEventArgs e)
+    {
+        await InvokeAsync(() =>
+        {
+            CurrentValueAsString = inputText;
+        }); 
+    }
+}
