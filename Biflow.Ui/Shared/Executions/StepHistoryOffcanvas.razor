@@ -2,53 +2,73 @@
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
     <BodyTemplate>
-        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
-        <table class="table table-sm table-hover">
-            <thead>
-                <tr>
-                    <th>Started</th>
-                    <th>Ended</th>
-                    <th>Duration</th>
-                    <th>Status</th>
-                </tr>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th>@AverageDurationInSeconds.SecondsToReadableFormat()</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Executions is null)
-                {
-                    <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
-                }
-                else if (Executions.Count == 0)
-                {
-                    <tr><td colspan="4">No executions</td></tr>
-                }
-                else
-                {
-                    @foreach (var execution in Executions)
-                    {
-                        <tr class="@(SelectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
-                            <td>@execution.StartDateTime?.LocalDateTime</td>
-                            <td>@execution.EndDateTime?.LocalDateTime</td>
-                            <td>@execution.GetDurationInReadableFormat()</td>
-                            <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+        <div class="row">
+            <div class="col-auto d-inline-flex align-items-center">
+                <label>No of executions</label>
+                <input @bind-value="MaxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+            </div>
+            <div class="col">
+                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
+                    <CxIcon Icon="FeatherIcon.RefreshCw" />
+                    Refresh
+                </HxButton>
+            </div>
+        </div>
+        <div class="row mt-1">
+            <div class="col">
+                <small class="text-muted">Actual no of executions: @Executions?.Count</small>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Started</th>
+                            <th>Ended</th>
+                            <th>Duration</th>
+                            <th>Status</th>
                         </tr>
-                        @if (SelectedStepExecution == execution)
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>@AverageDurationInSeconds.SecondsToReadableFormat()</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Executions is null)
                         {
-                            <tr class="table-borderless no-hover bg-body-tertiary">
-                                <td colspan="4">
-                                    <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
-                                </td>
-                            </tr>
+                            <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                    }
-                }
-            </tbody>
-        </table>
+                        else if (Executions.Count == 0)
+                        {
+                            <tr><td colspan="4">No executions</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var execution in Executions)
+                            {
+                                <tr class="@(SelectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                                    <td>@execution.StartDateTime?.LocalDateTime</td>
+                                    <td>@execution.EndDateTime?.LocalDateTime</td>
+                                    <td>@execution.GetDurationInReadableFormat()</td>
+                                    <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+                                </tr>
+                                @if (SelectedStepExecution == execution)
+                                {
+                                    <tr class="table-borderless no-hover bg-body-tertiary">
+                                        <td colspan="4">
+                                            <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
@@ -62,9 +82,13 @@
 
     private List<StepExecutionAttempt>? Executions { get; set; }
 
-    public const int MaxExecutions = 50;
+    private const int DefaultMaxExecutions = 50;
+
+    private int MaxExecutions = DefaultMaxExecutions;
 
     private StepExecutionAttempt? SelectedStepExecution { get; set; }
+
+    private Guid StepId;
 
     private double AverageDurationInSeconds =>
         (int)(Executions
@@ -80,8 +104,16 @@
 
     public async Task ShowAsync(Guid stepId)
     {
+        StepId = stepId;
         Executions = null;
+        MaxExecutions = DefaultMaxExecutions;
         await Offcanvas.LetAsync(x => x.ShowAsync());
+        await ReloadAsync();
+        StateHasChanged();
+    }
+
+    private async Task ReloadAsync()
+    {
         var context = await DbFactory.CreateDbContextAsync();
         Executions = await context.StepExecutionAttempts
             .AsNoTrackingWithIdentityResolution()
@@ -93,11 +125,10 @@
             .Include(e => e.StepExecution)
             .ThenInclude(e => e.ExecutionConditionParameters)
             .ThenInclude(p => p.ExecutionParameter)
-            .Where(e => e.StepId == stepId)
+            .Where(e => e.StepId == StepId)
             .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
             .ThenByDescending(Execution => Execution.StartDateTime)
             .Take(MaxExecutions)
             .ToListAsync();
-        StateHasChanged();
     }
 }
