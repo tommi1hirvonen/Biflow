@@ -63,7 +63,7 @@
 @code {
     [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
 
-    [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
+    [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
     private HxModal? Modal { get; set; }
 
@@ -182,11 +182,7 @@
             }
 
             await Context.SaveChangesAsync();
-
-            foreach (var step in Steps)
-            {
-                await OnStepSubmit.InvokeAsync(step);
-            }
+            await OnStepsSubmit.InvokeAsync(Steps);
         }
 
         await CloseAsync();

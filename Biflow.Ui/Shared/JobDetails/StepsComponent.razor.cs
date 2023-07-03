@@ -296,6 +296,20 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
+    private void OnStepsSubmit(IEnumerable<Step> steps)
+    {
+        var existingSteps = Steps?.Where(s1 => steps.Any(s2 => s1.StepId == s2.StepId)).ToList();
+        foreach (var s in existingSteps ?? Enumerable.Empty<Step>())
+        {
+            Steps?.Remove(s);
+        }
+        
+        Steps?.AddRange(steps);
+        SortSteps?.Invoke();
+
+        SelectedSteps = steps.ToHashSet();
+    }
+
     private void OnExecutionStarted(Guid executionId)
     {
         LastStartedExecutionId = executionId;
