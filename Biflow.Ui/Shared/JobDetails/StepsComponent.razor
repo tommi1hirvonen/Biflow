@@ -236,6 +236,9 @@
                                                     <HxDropdownItem OnClick="() => BatchEditTagsModal.LetAsync(x => x.ShowAsync())">
                                                         Tags
                                                     </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => BatchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
+                                                        Execution phase
+                                                    </HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         </div>
@@ -479,6 +482,11 @@
 <AuthorizeView Roles="Admin, Editor">
     <StepsBatchEditTagsModal
         @ref="BatchEditTagsModal"
+        SelectedSteps="SelectedSteps"
+        OnStepSubmit="OnStepSubmit" />
+
+    <StepsBatchEditExecPhaseModal
+        @ref="BatchEditExecPhaseModal"
         SelectedSteps="SelectedSteps"
         OnStepSubmit="OnStepSubmit" />
 

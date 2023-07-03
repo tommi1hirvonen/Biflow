@@ -1,0 +1,142 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<HxModal @ref="Modal" Title="Edit tags">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_exec_phase_abs"
+                           checked=@(editMode == EditMode.Absolute)
+                    @onchange="() => editMode = EditMode.Absolute">
+                    <label class="form-check-label" for="radio_batch_edit_exec_phase_abs">
+                        Absolute
+                        &nbsp;
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Set an absolute value to replace current execution phase value for selected steps.">
+                            <CxIcon Icon="FeatherIcon.Info" />
+                        </HxPopover>
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_exec_phase_shift"
+                           checked=@(editMode == EditMode.Shift)
+                    @onchange="() => editMode = EditMode.Shift">
+                    <label class="form-check-label" for="radio_batch_edit_exec_phase_shift">
+                        Shift
+                        &nbsp;
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Shift the current execution phase value by the input value for each of the selected steps. Positive values increase and negative values decrease the current execution phase values.">
+                            <CxIcon Icon="FeatherIcon.Info" />
+                        </HxPopover>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                @if (Steps is not null)
+                {
+                    <input class="form-control" type="number" placeholder="Execution phase" @bind-value="ExecutionPhase" />
+                }
+                else
+                {
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                }
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Success" Spinner="Saving" Enabled="!Saving" OnClick="SubmitStepsAsync">
+            Save
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+
+    [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private bool Saving { get; set; } = false;
+
+    private BiflowContext? Context { get; set; }
+
+    private List<Step>? Steps { get; set; }
+
+    private EditMode editMode = EditMode.Absolute;
+
+    private enum EditMode { Absolute, Shift }
+
+    private int? ExecutionPhase { get; set; }
+
+    public async Task ShowAsync()
+    {
+        if (!SelectedSteps.Any())
+        {
+            return;
+        }
+
+        await Modal.LetAsync(x => x.ShowAsync());
+
+        if (Context is not null)
+        {
+            await Context.DisposeAsync();
+        }
+        Context = await DbContextFactory.CreateDbContextAsync();
+        var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
+        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+            .Where(s => stepIds.Contains(s.StepId))
+            .ToListAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        editMode = EditMode.Absolute;
+        ExecutionPhase = null;
+        await Modal.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task SubmitStepsAsync()
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(Context);
+
+        int executionPhase;
+        if (ExecutionPhase is int i)
+        {
+            executionPhase = i;
+        }
+        else
+        {
+            return;
+        }
+
+        foreach (var step in Steps)
+        {
+            step.ExecutionPhase = editMode switch
+            {
+                EditMode.Absolute => executionPhase,
+                EditMode.Shift => step.ExecutionPhase + executionPhase,
+                _ => step.ExecutionPhase
+            };
+        }
+
+        await Context.SaveChangesAsync();
+
+        foreach (var step in Steps)
+        {
+            await OnStepSubmit.InvokeAsync(step);
+        }
+
+        ExecutionPhase = null;
+        editMode = EditMode.Absolute;
+        await CloseAsync();
+    }
+
+    public void Dispose() => Context?.Dispose();
+}
