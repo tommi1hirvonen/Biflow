@@ -114,9 +114,9 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Filter" />
                 </div>
-                <input type="search" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
-                <input type="search" class="form-control" @bind-value="StepDescriptionFilter" @bind-value:event="oninput" placeholder="Filter by description" />
-                <input type="search" class="form-control" @bind-value="SqlStatementFilter" @bind-value:event="oninput" placeholder="Filter by SQL statement" />
+                <DebounceTextInput type="search" class="form-control" @bind-Value="StepNameFilter" placeholder="Filter by name" />
+                <DebounceTextInput type="search" class="form-control" @bind-Value="StepDescriptionFilter" placeholder="Filter by description" />
+                <DebounceTextInput type="search" class="form-control" @bind-Value="SqlStatementFilter" placeholder="Filter by SQL statement" />
             </div>
         </div>
         
