@@ -1,0 +1,191 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<HxModal @ref="Modal" Title="Edit tags">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_tags_add"
+                           checked=@(editMode == EditMode.Add)
+                    @onchange="() => SetEditMode(EditMode.Add)">
+                    <label class="form-check-label" for="radio_batch_edit_tags_add">
+                        Add
+                        &nbsp;
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Tags listed will be added to all selected steps where they are not present. New tags can also be added.">
+                            <CxIcon Icon="FeatherIcon.Info" />
+                        </HxPopover>
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_tags_remove"
+                           checked=@(editMode == EditMode.Remove)
+                    @onchange="() => SetEditMode(EditMode.Remove)">
+                    <label class="form-check-label" for="radio_batch_edit_tags_remove">
+                        Remove
+                        &nbsp;
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Remove tags from the list to remove them from selected steps where they are present.">
+                            <CxIcon Icon="FeatherIcon.Info" />
+                        </HxPopover>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                @if (Steps is not null)
+                {
+                    <HxInputTags
+                        @bind-Value="Tags"
+                        DataProvider="GetTagSuggestions"
+                        SuggestMinimumLength="0"
+                        SuggestDelay="0"
+                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                }
+                else
+                {
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                }
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Success" Spinner="Saving" Enabled="!Saving" OnClick="SubmitStepsAsync">
+            Save
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+
+    [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private bool Saving { get; set; } = false;
+
+    private BiflowContext? Context { get; set; }
+
+    protected HashSet<Tag>? AllTags { get; set; }
+
+    private List<string> Tags { get; set; } = new();
+
+    private List<Step>? Steps { get; set; }
+
+    private EditMode editMode = EditMode.Add;
+
+    private enum EditMode { Add, Remove }
+
+    public async Task ShowAsync()
+    {
+        if (!SelectedSteps.Any())
+        {
+            return;
+        }
+
+        await Modal.LetAsync(x => x.ShowAsync());
+
+        if (Context is not null)
+        {
+            await Context.DisposeAsync();
+        }
+        Context = await DbContextFactory.CreateDbContextAsync();
+        var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
+        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+            .Where(s => stepIds.Contains(s.StepId))
+            .ToListAsync();
+    }
+
+    private void SetEditMode(EditMode editMode)
+    {
+        if (this.editMode == editMode)
+        {
+            return;
+        }
+        this.editMode = editMode;
+        if (editMode == EditMode.Add)
+        {
+            Tags.Clear();
+        }
+        else if (editMode == EditMode.Remove)
+        {
+            Tags = Steps?
+                .SelectMany(s => s.Tags)
+                .Select(t => t.TagName)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToList() ?? new();
+        }
+    }
+
+    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
+    {
+        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
+        await EnsureAllTagsInitialized();
+        return new InputTagsDataProviderResult
+            {
+                Data = AllTags?
+                .Select(t => t.TagName)
+                .Where(t => t.ContainsIgnoreCase(request.UserInput))
+                .Where(t => !Tags.Any(tag => t == tag))
+                .OrderBy(t => t) ?? Enumerable.Empty<string>()
+            };
+    }
+
+    private async Task EnsureAllTagsInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(Context);
+        AllTags ??= (await Context.Tags.ToListAsync()).ToHashSet();
+    }
+
+    private async Task SubmitStepsAsync()
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(Context);
+
+        if (Tags.Any())
+        {
+            if (editMode == EditMode.Add)
+            {
+                var stepTagsToAdd = Steps
+                    .SelectMany(s => Tags, (s, t) => (Step: s, Tag: t))
+                    .Where(st => !st.Step.Tags.Any(t => t.TagName == st.Tag))
+                    .ToArray();
+                foreach (var (step, tagName) in stepTagsToAdd)
+                {
+                    var tag = AllTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
+                    AllTags?.Add(tag); // In case of new tag, add it to the list.
+                    step.Tags.Add(tag);
+                }
+            }
+            else if (editMode == EditMode.Remove)
+            {
+                var stepTagsToRemove = Steps
+                    .SelectMany(s => s.Tags.Where(t => !Tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
+                    .ToArray();
+                foreach (var (step, tag) in stepTagsToRemove)
+                {
+                    step.Tags.Remove(tag);
+                }
+            }
+
+            await Context.SaveChangesAsync();
+
+            foreach (var step in Steps)
+            {
+                await OnStepSubmit.InvokeAsync(step);
+            }
+        }
+
+        Tags.Clear();
+        SetEditMode(EditMode.Add);
+        await Modal.LetAsync(x => x.HideAsync());
+    }
+
+    public void Dispose() => Context?.Dispose();
+}

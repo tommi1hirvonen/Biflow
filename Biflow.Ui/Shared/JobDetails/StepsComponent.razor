@@ -217,7 +217,7 @@
                                                 <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
                                                     <CxIcon Icon="FeatherIcon.Copy" />
                                                 </HxDropdownToggleButton>
-                                                <HxDropdownMenu CssClass="dropdown-menu-right">
+                                                <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Copy to</HxDropdownHeader>
                                                     <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
                                                     <HxDropdownDivider></HxDropdownDivider>
@@ -225,6 +225,17 @@
                                                     {
                                                         <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
                                                     }
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
+                                                    <HxDropdownHeader>Batch edit</HxDropdownHeader>
+                                                    <HxDropdownItem OnClick="() => BatchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                                                        Tags
+                                                    </HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         </div>
@@ -466,6 +477,11 @@
 }
 
 <AuthorizeView Roles="Admin, Editor">
+    <StepsBatchEditTagsModal
+        @ref="BatchEditTagsModal"
+        SelectedSteps="SelectedSteps"
+        OnStepSubmit="OnStepSubmit" />
+
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />

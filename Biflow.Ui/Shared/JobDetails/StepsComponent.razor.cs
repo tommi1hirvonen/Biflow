@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.Executions;
 using Biflow.Ui.Shared.StepEditModal;
+using Biflow.Ui.Shared.StepsBatchEdit;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -62,6 +63,8 @@ public partial class StepsComponent : ComponentBase
     private HashSet<Step> SelectedSteps { get; set; } = new();
 
     private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
+
+    private StepsBatchEditTagsModal? BatchEditTagsModal { get; set; }
 
     private StepDetailsModal? StepDetailsModal { get; set; }
 

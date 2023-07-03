@@ -36,6 +36,20 @@ public partial class JobDetails : ComponentBase
 
     private bool DescriptionOpen { get; set; }
 
+    public static IQueryable<Step> BuildStepsQueryWithIncludes(BiflowContext context)
+    {
+        return context.Steps
+            .Include(step => step.Dependencies)
+            .Include(step => step.Sources)
+            .Include(step => step.Targets)
+            .Include(step => step.Tags)
+            .Include(step => step.ExecutionConditionParameters)
+            .ThenInclude(p => p.JobParameter)
+            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
+            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
+            .Include(step => step.ExecutionConditionParameters);
+    }
+
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
@@ -63,18 +77,9 @@ public partial class JobDetails : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
             .FirstAsync(job => job.JobId == Id);
-        Steps = await context.Steps
-            .AsNoTrackingWithIdentityResolution()
-            .Include(step => step.Dependencies)
-            .Include(step => step.Sources)
-            .Include(step => step.Targets)
-            .Include(step => step.Tags)
-            .Include(step => step.ExecutionConditionParameters)
-            .ThenInclude(p => p.JobParameter)
-            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
-            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
-            .Include(step => step.ExecutionConditionParameters)
+        Steps = await BuildStepsQueryWithIncludes(context)
             .Where(step => step.JobId == Job.JobId)
+            .AsNoTrackingWithIdentityResolution()
             .ToListAsync();
         Jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
