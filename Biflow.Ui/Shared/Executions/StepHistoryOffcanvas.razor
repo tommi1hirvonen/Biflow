@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IJSRuntime JS
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
     <BodyTemplate>
@@ -19,6 +20,13 @@
                 <small class="text-muted">Actual no of executions: @Executions?.Count</small>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col">
+                <canvas class="w-100" id="myChart1" width="900" height="400"></canvas>
+            </div>
+        </div>
+
         <div class="row mt-3">
             <div class="col">
                 <table class="table table-sm table-hover">
@@ -130,5 +138,28 @@
             .ThenByDescending(Execution => Execution.StartDateTime)
             .Take(MaxExecutions)
             .ToListAsync();
+
+        var durations = Executions
+            .Where(e => e.StartDateTime is not null)
+            .GroupBy(group => ((DateTimeOffset)group.StartDateTime!).Date)
+            .Select(select => new
+            {
+                DurationInMinutes = select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60),
+                Date = select.Key.Date
+            });
+        var durationDataset = new[]
+        {
+            new
+            {
+                label = "Avg. duration",
+                fill = false,
+                backgroundColor = "#727cf5", // indigo
+                borderColor = "#727cf5",
+                data = durations.Select(v => new { x = v.Date.ToString("o"), y = v.DurationInMinutes }),
+                tension = 0.3
+            }
+        };
+        var durationDatasetJson = JsonSerializer.Serialize(durationDataset);
+        await JS.InvokeVoidAsync("drawDurationGraph", durationDatasetJson);
     }
 }
