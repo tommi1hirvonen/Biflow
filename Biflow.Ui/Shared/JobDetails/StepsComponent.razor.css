@@ -10,3 +10,14 @@
 .list-group-item-action:hover a {
     text-decoration: underline;
 }
+
+/*Handle virtualized item list styling taking into account spacer element*/
+.steps-list li:nth-child(2) {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+
+.steps-list li:nth-last-child(2) {
+    border-bottom-left-radius: inherit;
+    border-bottom-right-radius: inherit;
+}
