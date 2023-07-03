@@ -173,7 +173,22 @@
             Created by
         </dt>
         <dd class="col-sm-9">
-            @Execution.CreatedBy
+            @if (Execution.Schedule is not null)
+            {
+                <text>@Execution.Schedule.ScheduleName (schedule, @Execution.Schedule.GetScheduleDescription())</text>
+            }
+            else if (Execution.ScheduleName is not null)
+            {
+                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
+            }
+            else if (Execution.ScheduleId is not null)
+            {
+                <text>Removed schedule (name not available)</text>
+            }
+            else
+            {
+                <text>@Execution.CreatedBy (user)</text>
+            }
         </dd>
         <dt class="col-sm-3">
             Created
