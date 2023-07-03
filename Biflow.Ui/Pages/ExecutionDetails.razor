@@ -181,6 +181,24 @@
         <dd class="col-sm-9">
             @Execution.CreatedDateTime.LocalDateTime
         </dd>
+        @if (Execution.Schedule is not null)
+        {
+            <dt class="col-sm-3">
+                Schedule
+            </dt>
+            <dd class="col-sm-9">
+                @Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())
+            </dd>
+        }
+        else if (!string.IsNullOrEmpty(Execution.ScheduleName))
+        {
+            <dt class="col-sm-3">
+                Schedule
+            </dt>
+            <dd class="col-sm-9">
+                @Execution.ScheduleName (@Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))
+            </dd>
+        }
         <dt class="col-sm-3">
             Number of steps
         </dt>

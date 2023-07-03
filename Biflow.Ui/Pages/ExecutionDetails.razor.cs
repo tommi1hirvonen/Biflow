@@ -104,6 +104,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
             Execution = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
                 .Include(e => e.Job)
+                .Include(e => e.Schedule)
                 .Include(e => e.ExecutionParameters)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.StepExecutionAttempts)

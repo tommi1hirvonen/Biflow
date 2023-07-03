@@ -276,17 +276,19 @@ public static partial class Extensions
         return allCount > 0 ? (int)Math.Round(completedCount / (double)allCount * 100) : 0;
     }
 
-    public static string GetScheduleDescription(this Schedule schedule)
+    public static string GetScheduleDescription(this Schedule schedule) => GetCronExpressionDescription(schedule.CronExpression);
+
+    public static string GetCronExpressionDescription(string? expression)
     {
-        if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
+        if (expression is not null && CronExpression.IsValidExpression(expression))
         {
-            return ExpressionDescriptor.GetDescription(schedule.CronExpression, new Options
+            return ExpressionDescriptor.GetDescription(expression, new Options
             {
                 ThrowExceptionOnParseError = false,
                 Use24HourTimeFormat = true,
                 Locale = "en",
                 DayOfWeekStartIndexZero = false
-            }); ;
+            });
         }
         else
         {
