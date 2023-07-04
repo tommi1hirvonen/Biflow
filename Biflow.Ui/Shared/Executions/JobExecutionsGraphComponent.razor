@@ -49,10 +49,11 @@
                         }
                         @foreach (var execution in group)
                         {
-                            (var offset, var width) = execution.GetGanttGraphDimensions(Executions);
+                            (var offset, var width) = (execution.StartDateTime, execution.EndDateTime)
+                                .GetGanttGraphDimensions(Executions.Select(e => (e.StartDateTime, e.EndDateTime)));
                             <div class="progress hover @execution.ExecutionStatus.ToString().ToLower()"
                                  style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
-                                 title="@($"{execution.ExecutionStatus}, {execution.GetDurationInReadableFormat()}")"
+                                 title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
                                  @onclick="() => GoToExecutionDetails(execution.ExecutionId)">
                                 <div class="progress-bar" style="width: 100%;"></div>
                             </div>
@@ -65,7 +66,7 @@
 </div>
 
 @code {
-    [Parameter] public IEnumerable<Execution>? Executions { get; set; }
+    [Parameter] public IEnumerable<ExecutionSlim>? Executions { get; set; }
 
     private const int Columns = 12;
 

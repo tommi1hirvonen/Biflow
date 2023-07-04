@@ -432,8 +432,8 @@
                                                 .ThenByDescending(e => SortMode == SortMode.StartedDesc ? e.StartDateTime : null)
                                                 .ThenBy(e => e.EndDateTime is null)
                                                 .ThenBy(e => e.EndDateTime)
-                                                .ThenBy(e => e.StepExecution.ExecutionPhase)
-                                                .ThenBy(e => e.StepExecution.StepName)" />
+                                                .ThenBy(e => e.ExecutionPhase)
+                                                .ThenBy(e => e.StepName)" />
     </div>
     
 }

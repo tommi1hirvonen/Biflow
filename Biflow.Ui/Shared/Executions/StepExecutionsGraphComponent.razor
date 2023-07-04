@@ -33,7 +33,7 @@
                     var overlapsWithSelf = Executions
                         .Where(other => other.StepId == e.StepId && e.ExecutionId != other.ExecutionId)
                         .Any(other => e.StartDateTime >= other.StartDateTime && e.StartDateTime <= (other.EndDateTime ?? DateTime.Now));
-                    return (e.StepId, e.StepExecution.StepName, e.StepType, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
+                    return (e.StepId, e.StepName, e.StepType, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
                 })
                 .OrderBy(g => SortMode == SortMode.DurationAsc ? g.Max(e => e.ExecutionInSeconds) : null)
                 .OrderByDescending(g => SortMode == SortMode.DurationDesc ? g.Max(e => e.ExecutionInSeconds) : null)
@@ -57,16 +57,18 @@
                         }
                         @foreach (var execution in group)
                         {
-                            (var offset, var width) = execution.GetGanttGraphDimensions(Executions);
+                            (var offset, var width) = (execution.StartDateTime, execution.EndDateTime)
+                                .GetGanttGraphDimensions(Executions.Select(e => (e.StartDateTime, e.EndDateTime)));
                             <div class="progress hover @(execution == SelectedStepExecution ? "active" : null) @execution.ExecutionStatus.ToString().ToLower()"
                                  style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
-                                 title="@($"{execution.ExecutionStatus}, {execution.GetDurationInReadableFormat()}")"
+                                 title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
                                  @onclick="() => ToggleSelectedStepExecution(execution)">
                                 <div class="progress-bar" style="width: 100%;"></div>
                             </div>
                         }
                     </div>
                 </div>
+@*
                 @if (SelectedStepExecution is not null && group.Contains(SelectedStepExecution))
                 {
                     <div class="row bg-body-tertiary">
@@ -100,6 +102,7 @@
                         </div>
                     </div>
                 }
+*@
             </Virtualize>
         }
     </div>
@@ -108,29 +111,29 @@
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
 @code {
-    [Parameter] public IEnumerable<StepExecutionAttempt>? Executions { get; set; }
+    [Parameter] public IEnumerable<StepExecutionSlim>? Executions { get; set; }
 
     [Parameter] public SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     private const int Columns = 12;
 
-    private StepExecutionAttempt? SelectedStepExecution { get; set; }
+    private StepExecutionSlim? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
-    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    private void ToggleSelectedStepExecution(StepExecutionSlim execution)
     {
         SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
         StateHasChanged();
     }
 
-    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
+    private async Task StopStepExecutionAsync(StepExecutionSlim stepExecution)
     {
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await ExecutorService.StopExecutionAsync(stepExecution, username);
+            await ExecutorService.StopExecutionAsync(stepExecution.ExecutionId, stepExecution.StepId, username);
             if (stepExecution.ExecutionStatus == StepExecutionStatus.NotStarted)
             {
                 Messenger.AddInformation("Stop request sent successfully to the executor service. The step will be stopped once it reaches the 'Queued' status.");

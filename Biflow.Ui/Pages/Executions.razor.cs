@@ -1,11 +1,13 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
+using Biflow.Ui.Shared.Executions;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using System.Linq;
 using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
@@ -43,7 +45,9 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
-    private List<Execution>? Executions_ { get; set; }
+    private List<ExecutionSlim>? Executions_ { get; set; }
+
+    private List<StepExecutionSlim>? StepExecutions { get; set; }
 
     private HashSet<ExecutionStatus> JobStatusFilter { get; set; } = new();
     
@@ -59,27 +63,22 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
-    private IEnumerable<Execution>? FilteredExecutions => Executions_?
-                        .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
-                        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
-                        .Where(e => StartTypeFilter == StartType.All ||
-                        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        StartTypeFilter == StartType.Manual && e.ScheduleId is null);
+    private IEnumerable<ExecutionSlim>? FilteredExecutions => Executions_?
+        .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
+        .Where(e => StartTypeFilter == StartType.All ||
+        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        StartTypeFilter == StartType.Manual && e.ScheduleId is null);
 
-    private IEnumerable<StepExecutionAttempt>? FilteredStepExecutions => Executions_?
-                        .Where(e => StartTypeFilter == StartType.All ||
-                        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-                        .SelectMany(e => e.StepExecutions)
-                        .Where(e => !TagFilter.Any() || e.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-                        .SelectMany(s => s.StepExecutionAttempts)
-                        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-                        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.StepExecution.Execution.JobName))
-                        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-                        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
-                        .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
-                        .ThenByDescending(e => e.StartDateTime)
-                        .ThenByDescending(e => e.StepExecution.ExecutionPhase);
+    private IEnumerable<StepExecutionSlim>? FilteredStepExecutions => StepExecutions?
+        .Where(e => StartTypeFilter == StartType.All ||
+        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        StartTypeFilter == StartType.Manual && e.ScheduleId is null)
+        .Where(e => !TagFilter.Any() || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
+        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepName, e.StepType)))
+        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepType));
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -96,11 +95,25 @@ public partial class Executions : ComponentBase, IAsyncDisposable
 
             SessionStorageRetrieved = true;
             StateHasChanged();
-            await LoadData();
+            await LoadDataAsync();
         }
     }
 
-    private async Task LoadData()
+    private async Task ShowExecutionsAsync()
+    {
+        Executions_ = null;
+        ShowSteps = false;
+        await LoadDataAsync();
+    }
+
+    private async Task ShowStepExecutionsAsync()
+    {
+        Executions_ = null;
+        ShowSteps = true;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
     {
         Loading = true;
         StateHasChanged();
@@ -112,35 +125,94 @@ public partial class Executions : ComponentBase, IAsyncDisposable
 
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
 
-        var query = context.Executions
-            // Index optimized way of querying executions without having to scan the entire table.
-            .Where(e => e.CreatedDateTime <= ToDateTime && e.EndDateTime >= FromDateTime)
-            .Union(context.Executions
-                // Adds executions that were not started.
-                .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null))
-            .Union(context.Executions
-                // Adds currently running executions if current time fits in the time window.
-                .Where(e => DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime && e.ExecutionStatus == ExecutionStatus.Running));
+        if (!ShowSteps)
+        {
+            var query = context.Executions
+                // Index optimized way of querying executions without having to scan the entire table.
+                .Where(e => e.CreatedDateTime <= ToDateTime && e.EndDateTime >= FromDateTime);
 
-        var executions = await query
-            .AsNoTrackingWithIdentityResolution()
-            .Include(e => e.ExecutionParameters)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(exec => exec.StepExecutionAttempts)
-            .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-            .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => e.ExecutionConditionParameters)
-            .ThenInclude(p => p.ExecutionParameter)
-            .Include(execution => execution.StepExecutions)
-            .ThenInclude(exec => exec.Step)
-            .ThenInclude(s => s!.Tags)
-            .OrderByDescending(execution => execution.CreatedDateTime)
-            .ThenByDescending(execution => execution.StartDateTime)
-            .Select(execution => new { Execution = execution, execution.Job!.JobName })
-            .ToListAsync();
-        executions.ForEach(e => e.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.JobName);
-        Executions_ = executions.Select(e => e.Execution).ToList();
+            if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
+            {
+                query = query
+                    .Concat(context.Executions
+                        // Adds executions that were not started.
+                        .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null && e.ExecutionStatus != ExecutionStatus.Running))
+                    .Concat(context.Executions
+                        // Adds currently running executions if current time fits in the time window.
+                        .Where(e => e.ExecutionStatus == ExecutionStatus.Running));
+            }
+            else
+            {
+                query = query
+                    .Concat(context.Executions
+                        // Adds executions that were not started and executions that may still be running.
+                        .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null));
+            }
+            Executions_ = await query
+                .AsNoTracking()
+                .AsSingleQuery()
+                .OrderByDescending(e => e.CreatedDateTime)
+                .ThenByDescending(e => e.StartDateTime)
+                .Select(e => new ExecutionSlim(
+                    e.ExecutionId,
+                    e.JobId,
+                    e.Job!.JobName ?? e.JobName,
+                    e.ScheduleId,
+                    e.CreatedDateTime,
+                    e.StartDateTime,
+                    e.EndDateTime,
+                    e.ExecutionStatus,
+                    e.StepExecutions.Count()))
+                .ToListAsync();
+        }
+        else
+        {
+            var query = context.StepExecutionAttempts
+                .Where(e => e.StepExecution.Execution.CreatedDateTime <= ToDateTime && e.StepExecution.Execution.EndDateTime >= FromDateTime);
+
+            if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
+            {
+                query = query
+                    // Adds executions that were not started.
+                    .Union(context.StepExecutionAttempts
+                        .Where(e => e.StepExecution.Execution.CreatedDateTime >= FromDateTime
+                        && e.StepExecution.Execution.CreatedDateTime <= ToDateTime
+                        && e.EndDateTime == null
+                        && e.ExecutionStatus != StepExecutionStatus.Running))
+                    // Adds currently running executions if current time fits in the time window.
+                    .Union(context.StepExecutionAttempts
+                        .Where(e => e.ExecutionStatus == StepExecutionStatus.Running));
+            }
+            else
+            {
+                query = query
+                    // Adds executions that were not started and executions that may still be running.
+                    .Union(context.StepExecutionAttempts
+                        .Where(e => e.StepExecution.Execution.CreatedDateTime >= FromDateTime
+                        && e.StepExecution.Execution.CreatedDateTime <= ToDateTime
+                        && e.EndDateTime == null));
+            }
+            StepExecutions = await query
+                .AsNoTracking()
+                .Select(e => new StepExecutionSlim(
+                    e.StepExecution.ExecutionId,
+                    e.StepExecution.StepId,
+                    e.RetryAttemptIndex,
+                    e.StepExecution.Step!.StepName ?? e.StepExecution.StepName,
+                    e.StepType,
+                    e.StepExecution.ExecutionPhase,
+                    e.StartDateTime,
+                    e.EndDateTime,
+                    e.ExecutionStatus,
+                    e.StepExecution.Execution.ExecutionStatus,
+                    e.StepExecution.Execution.DependencyMode,
+                    e.StepExecution.Execution.ScheduleId,
+                    e.StepExecution.Execution.JobId,
+                    e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
+                    e.StepExecution.Step.Tags.ToList()))
+                .ToListAsync();
+        }
+
         Loading = false;
         StateHasChanged();
     }
@@ -149,7 +221,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     {
         (FromDateTime, ToDateTime) = GetPreset(preset);
         ActivePreset = preset;
-        await LoadData();
+        await LoadDataAsync();
     }
 
     private (DateTime From, DateTime To) GetPreset(Preset preset)

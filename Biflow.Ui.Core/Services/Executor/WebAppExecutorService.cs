@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using System.Web;
 
 namespace Biflow.Ui.Core;
@@ -26,18 +25,18 @@ public class WebAppExecutorService : IExecutorService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task StopExecutionAsync(StepExecutionAttempt attempt, string username)
+    public async Task StopExecutionAsync(Guid executionId, Guid stepId, string username)
     {
         var encodedUsername = HttpUtility.UrlEncode(username);
-        var url = $"{Url}/execution/stop/{attempt.ExecutionId}/{attempt.StepId}?username={encodedUsername}";
+        var url = $"{Url}/execution/stop/{executionId}/{stepId}?username={encodedUsername}";
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task StopExecutionAsync(Execution execution, string username)
+    public async Task StopExecutionAsync(Guid executionId, string username)
     {
         var encodedUsername = HttpUtility.UrlEncode(username);
-        var url = $"{Url}/execution/stop/{execution.ExecutionId}?username={encodedUsername}";
+        var url = $"{Url}/execution/stop/{executionId}?username={encodedUsername}";
         var response = await _httpClient.GetAsync(url);
         response.EnsureSuccessStatusCode();
     }

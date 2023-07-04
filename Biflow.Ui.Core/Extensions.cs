@@ -18,6 +18,7 @@ using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using StartEnd = System.ValueTuple<System.DateTimeOffset?, System.DateTimeOffset?>;
 
 namespace Biflow.Ui.Core;
 
@@ -201,38 +202,18 @@ public static partial class Extensions
     }
 
     public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
-    {
-        if (!allAttempts.Any())
-            return (0, 0);
-
-        var minTime = allAttempts.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
-        var maxTime = allAttempts.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now);
-
-        var minTicks = minTime.Ticks;
-        var maxTicks = maxTime.Ticks;
-
-        if (minTicks == maxTicks)
-            return (0, 0);
-
-        var startTicks = (attempt.StartDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
-        var endTicks = (attempt.EndDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
-
-        var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
-        var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;
-        var width = end - start;
-        width = width < 1 ? 1 : width; // check that width is not 0
-        start = start > 99 ? 99 : start; // check that start is not 100
-
-        return (start, width);
-    }
+        => (attempt.StartDateTime, attempt.EndDateTime).GetGanttGraphDimensions(allAttempts.Select(a => (a.StartDateTime, a.EndDateTime)));
 
     public static (double Offset, double Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
+        => (execution.StartDateTime, execution.EndDateTime).GetGanttGraphDimensions(allExecutions.Select(e => (e.StartDateTime, e.EndDateTime)));
+
+    public static (double Offset, double Width) GetGanttGraphDimensions(this StartEnd execution, IEnumerable<StartEnd> allExecutions)
     {
         if (!allExecutions.Any())
             return (0, 0);
 
-        var minTime = allExecutions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now;
-        var maxTime = allExecutions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now);
+        var minTime = allExecutions.Min(e => e.Item1?.LocalDateTime) ?? DateTime.Now;
+        var maxTime = allExecutions.Max(e => e.Item2?.LocalDateTime ?? DateTime.Now);
 
         var minTicks = minTime.Ticks;
         var maxTicks = maxTime.Ticks;
@@ -240,8 +221,8 @@ public static partial class Extensions
         if (minTicks == maxTicks)
             return (0, 0);
 
-        var startTicks = (execution.StartDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
-        var endTicks = (execution.EndDateTime?.LocalDateTime ?? DateTime.Now).Ticks;
+        var startTicks = (execution.Item1?.LocalDateTime ?? DateTime.Now).Ticks;
+        var endTicks = (execution.Item2?.LocalDateTime ?? DateTime.Now).Ticks;
 
         var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
         var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;

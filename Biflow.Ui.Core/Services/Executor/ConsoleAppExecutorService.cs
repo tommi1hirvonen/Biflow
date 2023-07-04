@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Utilities;
+﻿using Biflow.Utilities;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.IO.Pipes;
@@ -43,23 +42,23 @@ public class ConsoleAppExecutorService : IExecutorService
         return Task.CompletedTask;
     }
 
-    public async Task StopExecutionAsync(StepExecutionAttempt attempt, string username)
+    public async Task StopExecutionAsync(Guid executionId, Guid stepId, string username)
     {
         // Connect to the pipe server set up by the executor process.
-        using var pipeClient = new NamedPipeClientStream(".", attempt.ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+        using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
         await pipeClient.ConnectAsync(10000); // wait for 10 seconds
         using var streamWriter = new StreamWriter(pipeClient);
         // Send cancel command.
         var username_ = string.IsNullOrWhiteSpace(username) ? "unknown" : username;
-        var cancelCommand = new CancelCommand(attempt.StepId, username);
+        var cancelCommand = new CancelCommand(stepId, username);
         var json = JsonSerializer.Serialize(cancelCommand);
         streamWriter.WriteLine(json);
     }
 
-    public async Task StopExecutionAsync(Execution execution, string username)
+    public async Task StopExecutionAsync(Guid executionId, string username)
     {
         // Connect to the pipe server set up by the executor process.
-        using var pipeClient = new NamedPipeClientStream(".", execution.ExecutionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
+        using var pipeClient = new NamedPipeClientStream(".", executionId.ToString().ToLower(), PipeDirection.Out); // "." => the pipe server is on the same computer
         await pipeClient.ConnectAsync(10000); // wait for 10 seconds
         using var streamWriter = new StreamWriter(pipeClient);
         // Send cancel command.

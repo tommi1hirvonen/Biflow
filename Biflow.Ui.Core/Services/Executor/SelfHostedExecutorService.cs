@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.WebExtensions;
+﻿using Biflow.Executor.Core.WebExtensions;
 
 namespace Biflow.Ui.Core;
 
@@ -17,15 +16,15 @@ public class SelfHostedExecutorService : IExecutorService
         await _executionManager.StartExecutionAsync(executionId);
     }
 
-    public Task StopExecutionAsync(StepExecutionAttempt attempt, string username)
+    public Task StopExecutionAsync(Guid executionId, Guid stepId, string username)
     {
-        _executionManager.CancelExecution(attempt.ExecutionId, username, attempt.StepId);
+        _executionManager.CancelExecution(executionId, username, stepId);
         return Task.CompletedTask;
     }
 
-    public Task StopExecutionAsync(Execution execution, string username)
+    public Task StopExecutionAsync(Guid executionId, string username)
     {
-        _executionManager.CancelExecution(execution.ExecutionId, username);
+        _executionManager.CancelExecution(executionId, username);
         return Task.CompletedTask;
     }
 }

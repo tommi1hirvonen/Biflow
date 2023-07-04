@@ -30,11 +30,27 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         .SelectMany(e => e.StepExecutionAttempts)
         ?? Enumerable.Empty<StepExecutionAttempt>();
 
-    private IEnumerable<StepExecutionAttempt> FilteredExecutions => Executions
+    private IEnumerable<StepExecutionSlim> FilteredExecutions => Executions
         .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
         .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType));
+        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+        .Select(e => new StepExecutionSlim(
+            e.StepExecution.ExecutionId,
+            e.StepExecution.StepId,
+            e.RetryAttemptIndex,
+            e.StepExecution.Step!.StepName ?? e.StepExecution.StepName,
+            e.StepType,
+            e.StepExecution.ExecutionPhase,
+            e.StartDateTime,
+            e.EndDateTime,
+            e.ExecutionStatus,
+            e.StepExecution.Execution.ExecutionStatus,
+            e.StepExecution.Execution.DependencyMode,
+            e.StepExecution.Execution.ScheduleId,
+            e.StepExecution.Execution.JobId,
+            e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
+            e.StepExecution.Step.Tags));
 
     private Report ShowReport { get; set; } = Report.Table;
 
@@ -237,7 +253,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await ExecutorService.StopExecutionAsync(Execution, username);
+            await ExecutorService.StopExecutionAsync(Execution.ExecutionId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)

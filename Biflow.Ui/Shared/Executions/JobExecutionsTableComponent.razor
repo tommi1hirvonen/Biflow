@@ -22,9 +22,6 @@
                 Number of steps
             </th>
             <th>
-                Success percent
-            </th>
-            <th>
                 Status
             </th>
         </tr>
@@ -36,11 +33,11 @@
         }
         else if (!Executions.Any())
         {
-            <tr><td colspan="8">No executions</td></tr>
+            <tr><td colspan="7">No executions</td></tr>
         }
         else
         {
-            <Virtualize TItem="Execution" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
+            <Virtualize TItem="ExecutionSlim" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
                 <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
                         @item.JobName
@@ -55,13 +52,10 @@
                         @item.EndDateTime?.LocalDateTime
                     </td>
                     <td>
-                        <text>@item.GetDurationInReadableFormat()</text>
+                        <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
                     </td>
-                    <td style="text-align: right;">
-                        @item.StepExecutions.Count
-                    </td>
-                    <td style="text-align: right;">
-                        @item.GetSuccessPercent().FormatPercentage(2)
+                    <td>
+                        @item.StepExecutionCount
                     </td>
                     <td>
                         <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
@@ -73,7 +67,7 @@
 </table>
 
 @code {
-    [Parameter] public IEnumerable<Execution>? Executions { get; set; }
+    [Parameter] public IEnumerable<ExecutionSlim>? Executions { get; set; }
 
     private void GoToExecutionDetails(Guid executionId)
     {

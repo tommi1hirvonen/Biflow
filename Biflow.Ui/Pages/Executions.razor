@@ -10,13 +10,13 @@
         <HxButtonToolbar>
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                @onclick="() => ShowSteps = false"
+                @onclick="ShowExecutionsAsync"
                 CssClass="@(!ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ClipboardList" />
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                @onclick="() => ShowSteps = true"
+                @onclick="ShowStepExecutionsAsync"
                 CssClass="@(ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ListChecks" />
                     Steps
@@ -74,7 +74,7 @@
 
 <div class="row mt-3">
     <div class="col">
-        <form class="d-inline-flex align-items-center" id="executions_form" @onsubmit="LoadData" style="flex-direction: unset !important;">
+        <form class="d-inline-flex align-items-center" id="executions_form" @onsubmit="LoadDataAsync" style="flex-direction: unset !important;">
             <label class="me-3">From</label>
             <div class="input-group">
                 <div class="input-group-text">
@@ -130,20 +130,30 @@
         <span class="me-3">Filters</span>
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
-
+            @{
+                IEnumerable<string>? jobNames = ShowSteps switch
+                {
+                    true => StepExecutions?
+                        .Where(e => StartTypeFilter == StartType.All ||
+                        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
+                        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepName, e.StepType))) // Limit visible jobs based on step filter
+                        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepType)) // Limit visible jobs based on step type filter
+                        //.Where(e => !TagFilter.Any() || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible jobs based on tag filter
+                        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on step status filter
+                        .Select(e => e.JobName),
+                    false => Executions_?
+                        .Where(e => StartTypeFilter == StartType.All ||
+                        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
+                        .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
+                        .Select(e => e.JobName)
+                };
+                jobNames = jobNames?.Distinct().OrderBy(j => j) ?? Enumerable.Empty<string>();
+            }
             <FilterDropdown TItem="string"
                             FilterSet="JobFilter"
-                            Items="Executions_?
-                               .Where(e => StartTypeFilter == StartType.All ||
-                                    StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
-                               .Where(e => !StepFilter.Any() || e.StepExecutions.Any(s => StepFilter.Contains((s.StepName, s.StepType)))) // Limit visible jobs based on step filter
-                               .Where(e => !StepTypeFilter.Any() || e.StepExecutions.Any(s => StepTypeFilter.Contains(s.StepType))) // Limit visible jobs based on step type filter
-                               .Where(e => !TagFilter.Any() || e.StepExecutions.Any(s => s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)) // Limit visible jobs based on tag filter
-                               .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
-                               .Select(e => e.JobName)
-                               .Distinct()
-                               .OrderBy(j => j) ?? Enumerable.Empty<string>()"
+                            Items="jobNames"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="LucideIcon.ClipboardList" />
@@ -155,15 +165,13 @@
             {
                 <FilterDropdown TItem="(string StepName, StepType StepType)"
                                 FilterSet="StepFilter"
-                                Items="Executions_?
+                                Items="StepExecutions?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible steps based on start type filter
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
-                                   .SelectMany(e => e.StepExecutions)
-                                   .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
-                                   .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                        StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
+                                   .Where(s => !StepStatusFilter.Any() || StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible steps based on step status filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
                                    .Select(s => (s.StepName, s.StepType))
                                    .Distinct()
@@ -181,15 +189,13 @@
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
                                 FilterSet="StepTypeFilter"
-                                Items="Executions_?
+                                Items="StepExecutions?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step types based on start type filter
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step types based on job filter
-                                   .SelectMany(e => e.StepExecutions)
-                                   .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
-                                   .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                        StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
+                                   .Where(s => !StepStatusFilter.Any() || StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible step types based on step status filter
                                    .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                    .Select(s => s.StepType)
                                    .Distinct()
@@ -232,16 +238,14 @@
             {
                 <FilterDropdown TItem="StepExecutionStatus"
                                 FilterSet="StepStatusFilter"
-                                Items="Executions_?
+                                Items="StepExecutions?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step statuses based on start type filter
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
-                                   .SelectMany(e => e.StepExecutions)
-                                   .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
+                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
                                    .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
-                                   .SelectMany(s => s.StepExecutionAttempts)
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
@@ -256,17 +260,15 @@
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
                                 FilterSet="TagFilter"
-                                Items="Executions_?
+                                Items="StepExecutions?
                                    .Where(e => StartTypeFilter == StartType.All ||
                                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                                     StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
                                    .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
-                                   .SelectMany(e => e.StepExecutions)
                                    .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
-                                   .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                                StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
-                                   .SelectMany(e => e.Step?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
+                                   .Where(s => !StepStatusFilter.Any() || StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible tags based on step status filter
+                                   .SelectMany(e => e.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
@@ -275,6 +277,7 @@
                         Tag
                     </TitleTemplate>
                 </FilterDropdown>
+
             }
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"

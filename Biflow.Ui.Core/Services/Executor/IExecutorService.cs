@@ -1,12 +1,10 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public interface IExecutorService
 {
     public Task StartExecutionAsync(Guid executionId);
 
-    public Task StopExecutionAsync(StepExecutionAttempt attempt, string username);
+    public Task StopExecutionAsync(Guid executionId, Guid stepId, string username);
 
-    public Task StopExecutionAsync(Execution execution, string username);
+    public Task StopExecutionAsync(Guid executionId, string username);
 }

@@ -42,21 +42,21 @@
         }
         else
         {
-            <Virtualize TItem="StepExecutionAttempt" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
+            <Virtualize TItem="StepExecutionSlim" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
                 <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
                     @if (ShowDetailed)
                     {
                         <td>
-                            @item.StepExecution.Execution.JobName
+                            @item.JobName
                         </td>
                     }
                     <td>
                         <StepTypeIconComponent StepType_="item.StepType" />
                         &nbsp;
-                        @item.StepExecution.StepName
+                        @item.StepName
                     </td>
-                    <td class="@(item.StepExecution.Execution.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
-                        @item.StepExecution.ExecutionPhase
+                    <td class="@(item.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
+                        @item.ExecutionPhase
                         &nbsp;
                         <CxIcon Icon="FeatherIcon.Layers" />
                     </td>
@@ -67,12 +67,13 @@
                         @item.EndDateTime?.LocalDateTime
                     </td>
                     <td>
-                        <text>@item.GetDurationInReadableFormat()</text>
+                        <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
                     </td>
                     <td>
                         <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                     </td>
                 </tr>
+@*
                 @if (SelectedStepExecution == item)
                 {
                     <tr class="table-borderless no-hover bg-body-tertiary">
@@ -102,6 +103,7 @@
                         </td>
                     </tr>
                 }
+*@
             </Virtualize>
         }
     </tbody>
@@ -111,16 +113,16 @@
 
 @code {
     [Parameter]
-    public IEnumerable<StepExecutionAttempt>? Executions { get; set; }
+    public IEnumerable<StepExecutionSlim>? Executions { get; set; }
 
     [Parameter]
     public bool ShowDetailed { get; set; } = true;
 
-    private StepExecutionAttempt? SelectedStepExecution { get; set; }
+    private StepExecutionSlim? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
-    private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
+    private void ToggleSelectedStepExecution(StepExecutionSlim execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.
@@ -128,13 +130,13 @@
         StateHasChanged();
     }
 
-    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
+    private async Task StopStepExecutionAsync(StepExecutionSlim stepExecution)
     {
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
-            await ExecutorService.StopExecutionAsync(stepExecution, username);
+            await ExecutorService.StopExecutionAsync(stepExecution.ExecutionId, stepExecution.StepId, username);
             if (stepExecution.ExecutionStatus == StepExecutionStatus.NotStarted)
             {
                 Messenger.AddInformation("Stop request sent successfully to the executor service. The step will be stopped once it reaches the 'Queued' status.");
