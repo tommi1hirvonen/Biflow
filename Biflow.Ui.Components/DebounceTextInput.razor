@@ -5,7 +5,7 @@
 
 @inherits InputText
 
-<input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="Clear" />
+<input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="OnSearchEvent" />
 
 @code {
     private string inputText = "";
@@ -17,10 +17,14 @@
         timer.AutoReset = false;
     }
 
-    private void Clear()
+    private void OnSearchEvent()
     {
-        inputText = "";
-        CurrentValueAsString = inputText;
+        if (string.IsNullOrEmpty(inputText))
+        {
+            // The input value was cleared using the type="search" input clear button.
+            // Clear the internal value as well.
+            CurrentValueAsString = inputText;
+        }
     }
 
     private void ResetTimer(KeyboardEventArgs e)
