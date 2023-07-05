@@ -26,7 +26,10 @@ public static class Extensions
             var configuration = services.GetRequiredService<IConfiguration>();
             var sensitiveDataLogging = (baseSection ?? configuration).GetValue<bool>("SensitiveDataLogging");
             options.EnableSensitiveDataLogging(sensitiveDataLogging)
-            .UseSqlServer(biflowConnectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));    
+            .UseSqlServer(biflowConnectionString, options => 
+                options
+                .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+                .EnableRetryOnFailure());
         });
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
