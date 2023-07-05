@@ -46,9 +46,6 @@
                     Number of steps
                 </th>
                 <th>
-                    Success percent
-                </th>
-                <th>
                     Status
                 </th>
             </tr>
@@ -58,18 +55,33 @@
                 <th></th>
                 <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
                 <th></th>
-                <th style="text-align: right;">@AverageSuccessRate.FormatPercentage(2)</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
+            @{
+                var executions = FilteredExecutions.ToList();
+            }
             @if (Executions is null)
             {
                 <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
             }
-            else if (Executions.Count == 0)
+            else if (executions.Count == 0)
             {
-                <tr><td colspan="7">No executions</td></tr>
+                <tr>
+                    <td colspan="6">
+                        @{
+                            RenderFragment renderFragment = StartTypeFilter switch
+                            {
+                                StartType.All => @<span>No executions</span>,
+                                StartType.Scheduled => @<span>No <strong>scheduled</strong> executions</span>,
+                                StartType.Manual => @<span>No <strong>manual</strong> executions</span>,
+                                _ => @<span>No executions</span>
+                            };
+                        }
+                        @renderFragment
+                    </td>
+                </tr>
             }
             else
             {
@@ -86,13 +98,10 @@
                             @item.EndDateTime?.LocalDateTime
                         </td>
                         <td>
-                            <text>@item.GetDurationInReadableFormat()</text>
+                            <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
                         </td>
-                        <td style="text-align: right;">
-                            @item.StepExecutions.Count
-                        </td>
-                        <td style="text-align: right;">
-                            @item.GetSuccessPercent().FormatPercentage(2)
+                        <td>
+                            @item.StepExecutionCount
                         </td>
                         <td>
                             <JobExecutionStatusBadgeComponent ExecutionStatus_="@item.ExecutionStatus" />
@@ -112,24 +121,18 @@
 
     [Parameter] public string? JobName { get; set; }
 
-    public IList<Execution>? Executions { get; set; }
+    public IList<ExecutionProjection>? Executions { get; set; }
 
     private const int MaxExecutions = 50;
 
-    private StartType StartTypeFilter { get; set; } = StartType.Scheduled;
+    private StartType StartTypeFilter { get; set; } = StartType.All;
 
-    private IEnumerable<Execution> FilteredExecutions =>
+    private IEnumerable<ExecutionProjection> FilteredExecutions =>
         Executions?
         .Where(e => StartTypeFilter == StartType.All ||
                     StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
                     StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-        ?? Enumerable.Empty<Execution>();
-
-    public decimal AverageSuccessRate => FilteredExecutions.Any() switch
-    {
-        true => (decimal)FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Count() / FilteredExecutions.Count() * 100,
-        false => 0
-    };
+        ?? Enumerable.Empty<ExecutionProjection>();
 
     public double AverageDurationInSeconds =>
         (int)(FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
@@ -140,13 +143,23 @@
         {
             using var context = DbFactory.CreateDbContext();
             Executions = await context.Executions
-                .AsNoTrackingWithIdentityResolution()
-                .Include(execution => execution.StepExecutions)
-                .ThenInclude(execution => execution.StepExecutionAttempts)
-                .Where(execution => execution.JobId == JobId)
-                .OrderByDescending(execution => execution.CreatedDateTime)
+                .AsNoTracking()
+                .AsSingleQuery()
+                .Where(e => e.JobId == JobId)
+                .OrderByDescending(e => e.CreatedDateTime)
                 .Take(MaxExecutions)
+                .Select(e => new ExecutionProjection(
+                    e.ExecutionId,
+                    e.JobId,
+                    e.JobName,
+                    e.ScheduleId,
+                    e.CreatedDateTime,
+                    e.StartDateTime,
+                    e.EndDateTime,
+                    e.ExecutionStatus,
+                    e.StepExecutions.Count()))
                 .ToListAsync();
+            StateHasChanged();
         }
     }
 
