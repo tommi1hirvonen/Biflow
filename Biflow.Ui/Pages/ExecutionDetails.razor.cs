@@ -103,7 +103,9 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ShowReport == Report.Rerun)
+        // If the ExecutionId parameter is updated when either the rerun or history view is being shown,
+        // go back to the table view and refresh (the execution displayed was changed).
+        if (ShowReport == Report.Rerun || ShowReport == Report.History)
         {
             ShowReport = Report.Table;
             StateHasChanged();
