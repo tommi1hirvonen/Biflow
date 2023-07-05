@@ -194,6 +194,9 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             }
             StepExecutions = await query
                 .AsNoTracking()
+                .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
+                .ThenByDescending(e => e.StartDateTime)
+                .ThenByDescending(e => e.StepExecution.ExecutionPhase)
                 .Select(e => new StepExecutionSlim(
                     e.StepExecution.ExecutionId,
                     e.StepExecution.StepId,
