@@ -418,29 +418,34 @@
 @if (ShowReport == Report.Table)
 {
     <div class="card shadow-sm mt-3 pt-2">
-        <StepExecutionsTableComponent ShowDetailed="false"
-                                  Executions="FilteredExecutions
-                                                .OrderBy(e => SortMode switch
-                                                {
-                                                    SortMode.DurationAsc => e.ExecutionInSeconds,
-                                                    SortMode.DurationDesc => -e.ExecutionInSeconds,
-                                                    _ => null
-                                                })
-                                                // asc => Show not started steps last. desc => Show not started steps first.
-                                                .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
-                                                .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime : null)
-                                                .ThenByDescending(e => SortMode == SortMode.StartedDesc ? e.StartDateTime : null)
-                                                .ThenBy(e => e.EndDateTime is null)
-                                                .ThenBy(e => e.EndDateTime)
-                                                .ThenBy(e => e.ExecutionPhase)
-                                                .ThenBy(e => e.StepName)" />
+        <StepExecutionsTableComponent
+            ShowDetailed="false"
+            Executions="FilteredExecutions
+                        .OrderBy(e => SortMode switch
+                        {
+                            SortMode.DurationAsc => e.ExecutionInSeconds,
+                            SortMode.DurationDesc => -e.ExecutionInSeconds,
+                            _ => null
+                        })
+                        // asc => Show not started steps last. desc => Show not started steps first.
+                        .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
+                        .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime : null)
+                        .ThenByDescending(e => SortMode == SortMode.StartedDesc ? e.StartDateTime : null)
+                        .ThenBy(e => e.EndDateTime is null)
+                        .ThenBy(e => e.EndDateTime)
+                        .ThenBy(e => e.ExecutionPhase)
+                        .ThenBy(e => e.StepName)"
+            DetailStepProvider="e => Executions.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
     </div>
     
 }
 else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3">
-        <StepExecutionsGraphComponent Executions="FilteredExecutions" SortMode="SortMode"/>
+        <StepExecutionsGraphComponent
+            Executions="FilteredExecutions"
+            SortMode="SortMode"
+            DetailStepProvider="e => Executions.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
     </div>
     
 }

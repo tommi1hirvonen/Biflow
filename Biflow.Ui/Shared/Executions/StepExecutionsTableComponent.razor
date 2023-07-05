@@ -128,6 +128,9 @@
     [Parameter]
     public bool ShowDetailed { get; set; } = true;
 
+    [Parameter]
+    public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
+
     private StepExecutionProjection? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
@@ -146,20 +149,28 @@
         else
         {
             SelectedStepExecution = execution;
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            DetailStep = await context.StepExecutionAttempts
-                .AsNoTrackingWithIdentityResolution()
-                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .Include(e => e.StepExecution)
-                .ThenInclude(e => e.Execution)
-                .ThenInclude(e => e.ExecutionParameters)
-                .Include(e => e.StepExecution)
-                .ThenInclude(e => e.ExecutionConditionParameters)
-                .ThenInclude(e => e.ExecutionParameter)
-                .Include(e => e.StepExecution)
-                .ThenInclude(e => e.Step)
-                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+
+            if (DetailStepProvider is not null)
+            {
+                DetailStep = DetailStepProvider(execution);
+            }
+            else
+            {
+                using var context = await DbContextFactory.CreateDbContextAsync();
+                DetailStep = await context.StepExecutionAttempts
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.Execution)
+                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.ExecutionConditionParameters)
+                    .ThenInclude(e => e.ExecutionParameter)
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.Step)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+            }   
         }
         StateHasChanged();
     }
