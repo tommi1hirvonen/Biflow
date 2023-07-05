@@ -41,7 +41,7 @@
                 .ThenBy(g => SortMode == SortMode.StartedAsc ? g.Min(e => e.StartDateTime) : null)
                 .ThenByDescending(g => SortMode == SortMode.StartedDesc ? g.Min(e => e.StartDateTime) : null)
                 .ToList();
-            <Virtualize Context="group" Items="executions">
+            <Virtualize Context="group" Items="executions" ItemSize="32.5714f">
                 <div class="row border-top">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                         <small>

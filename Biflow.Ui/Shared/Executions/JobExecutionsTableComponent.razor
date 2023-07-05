@@ -37,7 +37,7 @@
         }
         else
         {
-            <Virtualize TItem="ExecutionProjection" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
+            <Virtualize TItem="ExecutionProjection" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()" ItemSize="34.2321f">
                 <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
                         @item.JobName

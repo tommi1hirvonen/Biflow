@@ -43,7 +43,7 @@
         }
         else
         {
-            <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
+            <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20" ItemSize="34.2321f">
                 <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     @if (ShowDetailed)
                     {
