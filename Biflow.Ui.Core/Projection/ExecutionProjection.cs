@@ -1,8 +1,11 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Shared.Executions;
+namespace Biflow.Ui.Core.Projection;
 
-public record ExecutionSlim(
+/// <summary>
+/// Lightweight Execution class replacement which can be used to only load selected attributes from the database using projection
+/// </summary>
+public record ExecutionProjection(
     Guid ExecutionId,
     Guid? JobId,
     string JobName,

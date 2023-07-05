@@ -1,18 +1,11 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Shared.StepEditModal;
+namespace Biflow.Ui.Core.Projection;
 
 /// <summary>
-/// Lightweight Step class replacement which can be used to only load selected attributes from the database
+/// Lightweight Step class replacement which can be used to only load selected attributes from the database using projection
 /// </summary>
-/// <param name="StepId"></param>
-/// <param name="JobId"></param>
-/// <param name="StepName"></param>
-/// <param name="StepType"></param>
-/// <param name="ExecutionPhase"></param>
-/// <param name="Tags"></param>
-/// <param name="Dependencies"></param>
-public record StepSlim(
+public record StepProjection(
     Guid StepId,
     Guid JobId,
     string? StepName,
@@ -26,7 +19,7 @@ public record StepSlim(
     {
         if (obj is null) return 1;
 
-        if (obj is StepSlim other)
+        if (obj is StepProjection other)
         {
             int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
             if (result == 0)

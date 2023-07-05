@@ -243,7 +243,7 @@
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
-            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, new List<Tag>(), new List<Guid>()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, new List<Tag>(), new List<Guid>()))
             .ToListAsync();
 
         if (StepFilter is null)

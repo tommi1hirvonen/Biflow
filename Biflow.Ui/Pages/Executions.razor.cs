@@ -1,13 +1,12 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
-using Biflow.Ui.Shared.Executions;
+using Biflow.Ui.Core.Projection;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
-using System.Linq;
 using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
@@ -45,9 +44,9 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
-    private List<ExecutionSlim>? Executions_ { get; set; }
+    private List<ExecutionProjection>? Executions_ { get; set; }
 
-    private List<StepExecutionSlim>? StepExecutions { get; set; }
+    private List<StepExecutionProjection>? StepExecutions { get; set; }
 
     private HashSet<ExecutionStatus> JobStatusFilter { get; set; } = new();
     
@@ -63,14 +62,14 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
-    private IEnumerable<ExecutionSlim>? FilteredExecutions => Executions_?
+    private IEnumerable<ExecutionProjection>? FilteredExecutions => Executions_?
         .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
         .Where(e => StartTypeFilter == StartType.All ||
         StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         StartTypeFilter == StartType.Manual && e.ScheduleId is null);
 
-    private IEnumerable<StepExecutionSlim>? FilteredStepExecutions => StepExecutions?
+    private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => StepExecutions?
         .Where(e => StartTypeFilter == StartType.All ||
         StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         StartTypeFilter == StartType.Manual && e.ScheduleId is null)
@@ -153,7 +152,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 .AsSingleQuery()
                 .OrderByDescending(e => e.CreatedDateTime)
                 .ThenByDescending(e => e.StartDateTime)
-                .Select(e => new ExecutionSlim(
+                .Select(e => new ExecutionProjection(
                     e.ExecutionId,
                     e.JobId,
                     e.Job!.JobName ?? e.JobName,
@@ -197,7 +196,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
                 .ThenByDescending(e => e.StartDateTime)
                 .ThenByDescending(e => e.StepExecution.ExecutionPhase)
-                .Select(e => new StepExecutionSlim(
+                .Select(e => new StepExecutionProjection(
                     e.StepExecution.ExecutionId,
                     e.StepExecution.StepId,
                     e.RetryAttemptIndex,

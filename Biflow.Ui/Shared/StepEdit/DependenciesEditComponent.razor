@@ -36,7 +36,7 @@
 <div class="row mt-3 align-items-center">
     <div class="col-auto">
         <HxButtonGroup>
-            <FilterDropdown TItem="JobSlim"
+            <FilterDropdown TItem="JobProjection"
                             Items="JobSlims.Values"
                             FilterSet="JobFilter"                            
                             IdSelector="x => x.JobId.ToString()"
@@ -207,10 +207,10 @@
     public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
 
     [Parameter]
-    public Dictionary<Guid, StepSlim> StepSlims { get; set; } = new Dictionary<Guid, StepSlim>();
+    public Dictionary<Guid, StepProjection> StepSlims { get; set; } = new Dictionary<Guid, StepProjection>();
 
     [Parameter]
-    public Dictionary<Guid, JobSlim> JobSlims { get; set; } = new Dictionary<Guid, JobSlim>();
+    public Dictionary<Guid, JobProjection> JobSlims { get; set; } = new Dictionary<Guid, JobProjection>();
 
     private HashSet<Tag> TagFilter { get; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
@@ -218,21 +218,21 @@
 
     private bool JobsLoading { get; set; } = false;
 
-    private HashSet<JobSlim> JobFilter { get; } = new();
+    private HashSet<JobProjection> JobFilter { get; } = new();
 
-    private IEnumerable<StepSlim> FilteredSteps => StepSlims.Values
+    private IEnumerable<StepProjection> FilteredSteps => StepSlims.Values
             .Where(step => !JobFilter.Any() || JobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
             .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
-            ?? Enumerable.Empty<StepSlim>();
+            ?? Enumerable.Empty<StepProjection>();
 
-    private IEnumerable<StepSlim> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
+    private IEnumerable<StepProjection> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
     {
         true => FilteredSteps.OrderBy(step => step,
-            new TopologicalComparer<StepSlim, Guid>(
+            new TopologicalComparer<StepProjection, Guid>(
                 StepSlims.Values,
                 s => s?.StepId ?? Guid.Empty,
                 s => s.Dependencies)),
@@ -251,7 +251,7 @@
         }
     }
 
-    private void RemoveDependency(StepSlim step)
+    private void RemoveDependency(StepProjection step)
     {
         ArgumentNullException.ThrowIfNull(Step);
         var dependency = Step.Dependencies.FirstOrDefault(dep => dep.DependantOnStepId == step.StepId);
@@ -261,7 +261,7 @@
         }
     }
 
-    private void AddDependency(StepSlim step)
+    private void AddDependency(StepProjection step)
     {
         ArgumentNullException.ThrowIfNull(Step);
         if (!Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))

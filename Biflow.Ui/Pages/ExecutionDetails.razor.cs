@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
+using Biflow.Ui.Core.Projection;
 using Biflow.Ui.Shared.Executions;
 using Biflow.Utilities;
 using Havit.Blazor.Components.Web;
@@ -30,12 +31,12 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         .SelectMany(e => e.StepExecutionAttempts)
         ?? Enumerable.Empty<StepExecutionAttempt>();
 
-    private IEnumerable<StepExecutionSlim> FilteredExecutions => Executions
+    private IEnumerable<StepExecutionProjection> FilteredExecutions => Executions
         .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
         .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
-        .Select(e => new StepExecutionSlim(
+        .Select(e => new StepExecutionProjection(
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
             e.RetryAttemptIndex,

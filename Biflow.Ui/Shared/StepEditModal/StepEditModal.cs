@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
+using Biflow.Ui.Core.Projection;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -34,9 +35,9 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal StepEditModalView CurrentView { get; set; } = StepEditModalView.Settings;
 
-    internal Dictionary<Guid, JobSlim>? JobSlims { get; set; }
+    internal Dictionary<Guid, JobProjection>? JobSlims { get; set; }
 
-    internal Dictionary<Guid, StepSlim>? StepSlims { get; set; }
+    internal Dictionary<Guid, StepProjection>? StepSlims { get; set; }
 
     private BiflowContext Context { get; set; } = null!;
 
@@ -192,11 +193,11 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         // When loading all steps from the db, the number of steps may be very high.
         JobSlims = await Context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Select(j => new JobSlim(j.JobId, j.JobName, j.CategoryId, j.Category))
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.CategoryId, j.Category))
             .ToDictionaryAsync(j => j.JobId);
         StepSlims = await Context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Select(s => new StepSlim(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags, s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags, s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
             .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {

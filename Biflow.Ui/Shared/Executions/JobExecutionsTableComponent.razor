@@ -37,7 +37,7 @@
         }
         else
         {
-            <Virtualize TItem="ExecutionSlim" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
+            <Virtualize TItem="ExecutionProjection" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()">
                 <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
                         @item.JobName
@@ -67,7 +67,7 @@
 </table>
 
 @code {
-    [Parameter] public IEnumerable<ExecutionSlim>? Executions { get; set; }
+    [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
 
     private void GoToExecutionDetails(Guid executionId)
     {

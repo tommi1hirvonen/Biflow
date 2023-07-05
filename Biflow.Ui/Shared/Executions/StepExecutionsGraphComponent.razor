@@ -121,19 +121,19 @@
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
 @code {
-    [Parameter] public IEnumerable<StepExecutionSlim>? Executions { get; set; }
+    [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
 
     [Parameter] public SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     private const int Columns = 12;
 
-    private StepExecutionSlim? SelectedStepExecution { get; set; }
+    private StepExecutionProjection? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
     private StepExecutionAttempt? DetailStep { get; set; }
 
-    private async Task ToggleSelectedStepExecutionAsync(StepExecutionSlim execution)
+    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
         if (SelectedStepExecution == execution)
         {

@@ -43,7 +43,7 @@
         }
         else
         {
-            <Virtualize TItem="StepExecutionSlim" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
+            <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
                 <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     @if (ShowDetailed)
                     {
@@ -123,18 +123,18 @@
 
 @code {
     [Parameter]
-    public IEnumerable<StepExecutionSlim>? Executions { get; set; }
+    public IEnumerable<StepExecutionProjection>? Executions { get; set; }
 
     [Parameter]
     public bool ShowDetailed { get; set; } = true;
 
-    private StepExecutionSlim? SelectedStepExecution { get; set; }
+    private StepExecutionProjection? SelectedStepExecution { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
     private StepExecutionAttempt? DetailStep { get; set; }
 
-    private async Task ToggleSelectedStepExecutionAsync(StepExecutionSlim execution)
+    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.

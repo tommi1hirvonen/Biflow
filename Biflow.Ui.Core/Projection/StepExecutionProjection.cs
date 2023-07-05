@@ -1,8 +1,11 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Shared.Executions;
+namespace Biflow.Ui.Core.Projection;
 
-public record StepExecutionSlim(
+/// <summary>
+/// Lightweight StepExecutionAttempt class replacement which can be used to only load selected attributes from the database using projection
+/// </summary>
+public record StepExecutionProjection(
     Guid ExecutionId,
     Guid StepId,
     int RetryAttemptIndex,
