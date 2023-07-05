@@ -1,5 +1,10 @@
 ﻿namespace Biflow.Ui.Core;
 
+/// <summary>
+/// Compares items topologically based on their dependencies
+/// </summary>
+/// <typeparam name="TItem">Type of the items to compare</typeparam>
+/// <typeparam name="TKey">Type of the key used to uniquely identify each item</typeparam>
 public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     where TKey : notnull
 {
@@ -8,7 +13,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     private readonly Func<TItem, IEnumerable<TKey>> _dependenciesSelector;
 
     /// <summary>
-    /// Compares items topologically based on their dependencies
+    /// 
     /// </summary>
     /// <param name="items">Items to compare</param>
     /// <param name="keySelector">Delegate to fetch a unique key for an item</param>
@@ -20,7 +25,6 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
         _topologicalList = InTopologicalOrder(items.ToList())
             .Select(keySelector)
             .ToArray();
-        
     }
 
     public int Compare(TItem? x, TItem? y)
