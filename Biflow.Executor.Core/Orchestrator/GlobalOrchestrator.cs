@@ -193,7 +193,8 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartDateTime ??= DateTimeOffset.Now;
         attempt.EndDateTime = DateTimeOffset.Now;
-        attempt.ErrorMessage = $"Unhandled error caught in global orchestrator:\n\n{ex.Message}\n\n{ex.StackTrace}\n\n{attempt.ErrorMessage}";
+        attempt.ErrorMessage = $"Unhandled error caught in global orchestrator:\n\n{ex.Message}\n\n{attempt.ErrorMessage}";
+        attempt.ErrorStackTrace = $"{ex.StackTrace}\n\n{attempt.ErrorStackTrace}";
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
