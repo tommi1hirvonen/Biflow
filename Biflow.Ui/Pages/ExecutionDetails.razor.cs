@@ -175,7 +175,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
                     {
                         Id = step.StepId,
                         Name = step.StepName,
-                        ClassName = $"enabled {status.ToLower()}",
+                        ClassName = $"enabled {status.ToLower()} internal",
                         Tooltip = $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
                     };
                 });
