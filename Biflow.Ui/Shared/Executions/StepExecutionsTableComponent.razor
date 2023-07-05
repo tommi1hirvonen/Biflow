@@ -1,6 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutorService ExecutorService
+@inject IDbContextFactory<BiflowContext> DbContextFactory
 
 <table class="table table-sm table-hover">
     <thead>
@@ -43,7 +44,7 @@
         else
         {
             <Virtualize TItem="StepExecutionSlim" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20">
-                <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(item)">
+                <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     @if (ShowDetailed)
                     {
                         <td>
@@ -73,37 +74,46 @@
                         <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                     </td>
                 </tr>
-@*
                 @if (SelectedStepExecution == item)
                 {
-                    <tr class="table-borderless no-hover bg-body-tertiary">
-                        <td colspan="7">
-                            <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                    <CxIcon Icon="LucideIcon.History" />
-                                    History
-                                </HxButton>
-                                <AuthorizeView Roles="Admin, Editor, Operator">
-                                    @if (item.CanBeStopped)
-                                    {
-                                        <HxDropdownButtonGroup CssClass="ms-3">
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger">
-                                                <CxIcon Icon="FeatherIcon.XOctagon" />
-                                                Stop
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu>
-                                                <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(item)">Confirm</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-                                    }
-                                </AuthorizeView>
-                            </HxButtonToolbar>
+                    if (DetailStep is null)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr class="table-borderless no-hover bg-body-tertiary">
+                            <td colspan="7">
+                                <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(DetailStep.StepId))">
+                                        <CxIcon Icon="LucideIcon.History" />
+                                        History
+                                    </HxButton>
+                                    <AuthorizeView Roles="Admin, Editor, Operator">
+                                        @if (DetailStep.CanBeStopped)
+                                        {
+                                            <HxDropdownButtonGroup CssClass="ms-3">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger">
+                                                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                                                    Stop
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(DetailStep)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        }
+                                    </AuthorizeView>
+                                </HxButtonToolbar>
 
-                            <StepExecutionDetailsComponent StepExecutionAttempt="item" />
-                        </td>
-                    </tr>
+                                <StepExecutionDetailsComponent StepExecutionAttempt="DetailStep" />
+                            </td>
+                        </tr>
+                    }
                 }
-*@
             </Virtualize>
         }
     </tbody>
@@ -122,15 +132,39 @@
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
-    private void ToggleSelectedStepExecution(StepExecutionSlim execution)
+    private StepExecutionAttempt? DetailStep { get; set; }
+
+    private async Task ToggleSelectedStepExecutionAsync(StepExecutionSlim execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.
-        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        if (SelectedStepExecution == execution)
+        {
+            SelectedStepExecution = null;
+            DetailStep = null;
+        }
+        else
+        {
+            SelectedStepExecution = execution;
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            DetailStep = await context.StepExecutionAttempts
+                .AsNoTrackingWithIdentityResolution()
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .Include(e => e.StepExecution)
+                .ThenInclude(e => e.Execution)
+                .ThenInclude(e => e.ExecutionParameters)
+                .Include(e => e.StepExecution)
+                .ThenInclude(e => e.ExecutionConditionParameters)
+                .ThenInclude(e => e.ExecutionParameter)
+                .Include(e => e.StepExecution)
+                .ThenInclude(e => e.Step)
+                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+        }
         StateHasChanged();
     }
 
-    private async Task StopStepExecutionAsync(StepExecutionSlim stepExecution)
+    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
     {
         try
         {
