@@ -3,6 +3,8 @@
 @using Microsoft.JSInterop;
 @using System.Timers;
 
+@namespace Biflow.Ui.Components
+
 @inherits InputText
 
 <input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="OnSearchEvent" />

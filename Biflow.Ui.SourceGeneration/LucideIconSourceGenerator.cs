@@ -28,7 +28,7 @@ namespace Biflow.Ui.Components
         }
 ");
 
-                var iconsDirectory = Path.Combine(Path.GetDirectoryName(tree.FilePath), "wwwroot", "icons", "lucide");
+                var iconsDirectory = Path.Combine(Path.GetDirectoryName(tree.FilePath), "..\\", "wwwroot", "icons", "lucide");
                 var svgFiles = Directory.GetFiles(iconsDirectory, "*.svg");
 
                 foreach (var file in svgFiles)

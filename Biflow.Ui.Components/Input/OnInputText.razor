@@ -1,6 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 
+@namespace Biflow.Ui.Components
+
 @inherits InputText
 
 <input @attributes="@AdditionalAttributes" class="@CssClass" @bind="@CurrentValueAsString" @bind:event="oninput" />
