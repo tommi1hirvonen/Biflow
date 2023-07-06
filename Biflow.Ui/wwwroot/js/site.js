@@ -72,15 +72,17 @@
         var dropdownId = `${this.id}_dropdown`;
         var dropdown = document.getElementById(dropdownId);
         var menu = dropdown.querySelector('.dropdown-menu');
-
+        menu.classList.add('show');
         // Place the dropdown to the location of the mouse.
-        var bodyOffsets = document.body.getBoundingClientRect();
-        var tempX = event.pageX - bodyOffsets.left;
-        var tempY = event.pageY;
+        var bodyRect = document.body.getBoundingClientRect();
+        // Check whether the dropdown menu would overflow over the right side of the window.
+        var tempX = event.pageX + menu.clientWidth <= bodyRect.width ? event.pageX : event.pageX - menu.clientWidth;
+        // Check whether the dropdown menu would overflow over the bottom of the window.
+        var tempY = event.pageY + bodyRect.top + menu.clientHeight <= bodyRect.height ? event.pageY : event.pageY - menu.clientHeight;
         dropdown.style.top = `${tempY}px`;
         dropdown.style.left = `${tempX}px`;
 
-        menu.classList.add('show');
+        
 
         // Close all other dependency graph dropdown menus.
         var menus = document.querySelectorAll('.dependency-graph-dropdown-menu');
