@@ -1,7 +1,4 @@
-﻿@implements IAsyncDisposable
-
-@inject IJSRuntime JS
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
 @inject IDbContextFactory<BiflowContext> DbFactory
 @inject IHxMessageBoxService Confirmer
 
@@ -70,69 +67,63 @@
 
 </div>
 
-<div class="border" style="resize: both; overflow: hidden;">
-    <div class="p-1 dependency-graph" id="div_dependency_graph">
-        <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
-            <g id="g_dependency_graph" />
-        </svg>
-    </div>
-</div>
-
-@foreach (var step in Steps ?? Enumerable.Empty<Step>())
-{
-    <div id="@($"{step.StepId}_dropdown")" class="dropdown position-absolute">
-        <ul class="dependency-graph-dropdown-menu dropdown-menu">
+<DependencyGraph @ref="DependencyGraph"
+                 TItem="Step"
+                 Items="Steps ?? Enumerable.Empty<Step>()"
+                 KeySelector="s => s.StepId.ToString()"
+                 AfterRender="LoadGraph"
+                 CssClass="dependency-graph">
+    <DropdownMenuTemplate Context="step">
+        <li>
+            <h6 class="dropdown-header">
+                <StepTypeIconComponent StepType_="step.StepType" />
+                @step.StepName
+            </h6>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="async () => { StepFilter = step; await LoadGraph();}">
+                <CxIcon Icon="FeatherIcon.Filter" />
+                Limit graph to this
+            </span>
+        </li>
+        <AuthorizeView Roles="Admin, Editor">
             <li>
-                <h6 class="dropdown-header">
-                    <StepTypeIconComponent StepType_="step.StepType" />
-                    @step.StepName
-                </h6>
-            </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { StepFilter = step; await LoadGraph();}">
-                    <CxIcon Icon="FeatherIcon.Filter" />
-                    Limit graph to this
+                <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
+                    <CxIcon Icon="FeatherIcon.Edit2" />
+                    Edit
                 </span>
             </li>
-            <AuthorizeView Roles="Admin, Editor">
-                <li>
-                    <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
-                        <CxIcon Icon="FeatherIcon.Edit2" />
-                        Edit
-                    </span>
-                </li>
-                <li>
-                    @if (step.IsEnabled)
-                    {
-                        <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
-                            <CxIcon Icon="FeatherIcon.ToggleLeft" />
-                            Disable
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
-                            <CxIcon Icon="FeatherIcon.ToggleRight" />
-                            Enable
-                        </span>
-                    }
-                </li>
-                <li>
-                    <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
-                        <CxIcon Icon="FeatherIcon.Trash2" />
-                        Delete
-                    </span>
-                </li>
-            </AuthorizeView>
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    <CxIcon Icon="LucideIcon.History" />
-                    History
+                @if (step.IsEnabled)
+                {
+                    <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
+                        <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                        Disable
+                    </span>
+                }
+                else
+                {
+                    <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
+                        <CxIcon Icon="FeatherIcon.ToggleRight" />
+                        Enable
+                    </span>
+                }
+            </li>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
+                    <CxIcon Icon="FeatherIcon.Trash2" />
+                    Delete
                 </span>
             </li>
-        </ul>
-    </div>
-}
+        </AuthorizeView>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                <CxIcon Icon="LucideIcon.History" />
+                History
+            </span>
+        </li>
+    </DropdownMenuTemplate>
+</DependencyGraph>
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
@@ -190,6 +181,8 @@
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private DependencyGraph<Step>? DependencyGraph { get; set; }
+
     private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
@@ -212,7 +205,7 @@
 
     private int _filterDepthForwards;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
@@ -221,84 +214,78 @@
                 StepFilter = Steps?.FirstOrDefault(s => s.StepId == filterStepId);
                 StateHasChanged();
             }
-            await LoadGraph();
-            await JS.InvokeVoidAsync("attachDependencyGraphBodyListener");
         }
     }
 
     private async Task LoadGraph()
     {
-        string? stepsJson = null;
-        string? dependenciesJson = null;
-
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(DependencyGraph);
 
         using var context = await DbFactory.CreateDbContextAsync();
         var stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, new List<Tag>(), new List<Guid>()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, new List<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToList()))
             .ToListAsync();
 
+        List<DependencyGraphNode> nodes;
+        List<DependencyGraphEdge> edges;
         if (StepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            var steps = stepSlims.Select(step => new
-            {
-                Id = step.StepId,
-                Name = step.StepName,
-                ClassName = $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
-                Tooltip = step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, external"
-            });
-            var dependencies = Steps
+            nodes = stepSlims.Select(step => new DependencyGraphNode(
+                Id: step.StepId.ToString(),
+                Name: step.StepName ?? "",
+                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
+                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, external",
+                EnableOnClick: step.JobId == Job.JobId
+            )).ToList();
+            edges = Steps
                 .SelectMany(step => step.Dependencies)
-                .Select(dep => new
-                {
-                    StepId = dep.StepId,
-                    DependantOnStepId = dep.DependantOnStepId,
-                    ClassName = dep.DependencyType.ToString().ToLower()
-                });
-
-            stepsJson = JsonSerializer.Serialize(steps);
-            dependenciesJson = JsonSerializer.Serialize(dependencies);
+                .Select(dep => new DependencyGraphEdge(
+                    Id: dep.StepId.ToString(),
+                    DependsOnId: dep.DependantOnStepId.ToString(),
+                    CssClass: dep.DependencyType.ToString().ToLower()
+                )).ToList();
         }
         else
         {
-            var startStep = Steps.FirstOrDefault(s => s.StepId == StepFilter.StepId);
+            var startStep = stepSlims.FirstOrDefault(s => s.StepId == StepFilter.StepId);
             if (startStep is not null)
             {
-                var steps = RecurseDependenciesBackward(startStep, new(), 0);
+                var steps = RecurseDependenciesBackward(startStep, stepSlims, new(), 0);
                 steps.Remove(startStep);
-                steps = RecurseDependenciesForward(startStep, steps, 0);
+                steps = RecurseDependenciesForward(startStep, stepSlims, steps, 0);
 
-                var dependencies = steps
+                nodes = steps.Select(step => new DependencyGraphNode(
+                    Id: step.StepId.ToString(),
+                    Name: step.StepName ?? "",
+                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
+                    TooltipText: $"{step.StepType}",
+                    EnableOnClick: step.JobId == Job.JobId
+                )).ToList();
+                edges = Steps
                     .SelectMany(step => step.Dependencies)
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
-                    .Select(dep => new
-                    {
-                        StepId = dep.StepId,
-                        DependantOnStepId = dep.DependantOnStepId,
-                        ClassName = dep.DependencyType.ToString().ToLower()
-                    });
-
-                stepsJson = JsonSerializer.Serialize(steps.Select(step => new
-                {
-                    Id = step.StepId,
-                    Name = step.StepName,
-                    ClassName = $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
-                    Tooltip = $"{step.StepType}"
-                }));
-                dependenciesJson = JsonSerializer.Serialize(dependencies);
+                    .Select(dep => new DependencyGraphEdge(
+                        Id: dep.StepId.ToString(),
+                        DependsOnId: dep.DependantOnStepId.ToString(),
+                        CssClass: dep.DependencyType.ToString().ToLower()
+                    )).ToList();
+            }
+            else
+            {
+                return;
             }
         }
 
-        if (stepsJson is not null && dependenciesJson is not null)
-            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson);
+        await DependencyGraph.DrawAsync(nodes, edges);
     }
 
-    private List<Step> RecurseDependenciesBackward(Step step, List<Step> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
@@ -318,12 +305,12 @@
         processedSteps.Add(step);
 
         // Get dependency steps.
-        List<Step> dependencySteps = Steps.Where(s => step.Dependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
+        List<StepProjection> dependencySteps = allSteps.Where(s => step.Dependencies.Contains(s.StepId)).ToList();
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
         {
-            RecurseDependenciesBackward(depencyStep, processedSteps, depth);
+            RecurseDependenciesBackward(depencyStep, allSteps, processedSteps, depth);
         }
 
         depth--;
@@ -331,7 +318,7 @@
         return processedSteps;
     }
 
-    private List<Step> RecurseDependenciesForward(Step step, List<Step> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
         if (processedSteps.Any(s => s.StepId == step.StepId))
@@ -347,11 +334,11 @@
 
         processedSteps.Add(step);
 
-        List<Step> dependencySteps = Steps.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
+        List<StepProjection> dependencySteps = allSteps.Where(s => s.Dependencies.Contains(step.StepId)).ToList();
 
         foreach (var depencyStep in dependencySteps)
         {
-            RecurseDependenciesForward(depencyStep, processedSteps, depth);
+            RecurseDependenciesForward(depencyStep, allSteps, processedSteps, depth);
         }
 
         depth--;
@@ -456,10 +443,5 @@
     }
 
     private string TextSelector(Step step) => step.StepName ?? "";
-
-    public async ValueTask DisposeAsync()
-    {
-        await JS.InvokeVoidAsync("disposeDependencyGraphBodyListener");
-    }
 
 }

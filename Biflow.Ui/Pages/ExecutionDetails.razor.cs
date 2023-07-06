@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Biflow.Ui.Core.Projection;
 using Biflow.Ui.Shared.Executions;
@@ -14,15 +15,19 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/executions/{ExecutionId:guid}")]
-public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
+public partial class ExecutionDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
+    
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
 
     [Parameter] public Guid ExecutionId { get; set; }
+
+    private DependencyGraph<StepExecution>? DependencyGraph { get; set; }
 
     private Execution? Execution { get; set; }
 
@@ -151,46 +156,39 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
         {
             await LoadGraph();
         }
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("attachDependencyGraphBodyListener");
-        }
     }
 
     private async Task LoadGraph()
     {
+        ArgumentNullException.ThrowIfNull(DependencyGraph);
+        ArgumentNullException.ThrowIfNull(Execution);
         GraphShouldRender = false;
 
-        string? stepsJson = null;
-        string? dependenciesJson = null;
-
+        List<DependencyGraphNode> nodes;
+        List<DependencyGraphEdge> edges;
         if (DependencyGraphStepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            var steps = Execution?.StepExecutions
+            nodes = Execution.StepExecutions
                 .Select(step =>
                 {
                     var status = step.ExecutionStatus.ToString() ?? "";
-                    return new
-                    {
-                        Id = step.StepId,
-                        Name = step.StepName,
-                        ClassName = $"enabled {status.ToLower()} internal",
-                        Tooltip = $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}"
-                    };
-                });
-            var dependencies = Execution?.StepExecutions
+                    return new DependencyGraphNode(
+                        Id: step.StepId.ToString(),
+                        Name: step.StepName,
+                        CssClass: $"enabled {status.ToLower()} internal",
+                        TooltipText: $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}",
+                        EnableOnClick: true
+                    );
+                }).ToList();
+            edges = Execution.StepExecutions
                 .SelectMany(step => step.ExecutionDependencies)
                 .Where(dep => dep.DependantOnStepExecution is not null)
-                .Select(dep => new
-                {
-                    dep.StepId,
-                    dep.DependantOnStepId,
-                    ClassName = dep.DependencyType.ToString().ToLower()
-                });
-
-            stepsJson = JsonSerializer.Serialize(steps);
-            dependenciesJson = JsonSerializer.Serialize(dependencies);
+                .Select(dep => new DependencyGraphEdge(
+                    Id: dep.StepId.ToString(),
+                    DependsOnId: dep.DependantOnStepId.ToString(),
+                    CssClass: dep.DependencyType.ToString().ToLower()
+                )).ToList();
         }
         else
         {
@@ -201,31 +199,28 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
                 steps.Remove(startStep);
                 steps = RecurseDependenciesForward(startStep, steps, 0);
 
-                var dependencies = steps
+                nodes = steps.Select(step => new DependencyGraphNode(
+                    Id: step.StepId.ToString(),
+                    Name: step.StepName,
+                    CssClass: $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""} internal",
+                    TooltipText: $"{step.StepType}",
+                    EnableOnClick: true
+                )).ToList();
+                edges = steps
                     .SelectMany(step => step.ExecutionDependencies)
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
-                    .Select(dep => new
-                    {
-                        dep.StepId,
-                        dep.DependantOnStepId,
-                        ClassName = dep.DependencyType.ToString().ToLower()
-                    });
-
-                stepsJson = JsonSerializer.Serialize(steps.Select(step => new
-                {
-                    Id = step.StepId,
-                    Name = step.StepName,
-                    ClassName = $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""} internal",
-                    Tooltip = $"{step.StepType}"
-                }));
-                dependenciesJson = JsonSerializer.Serialize(dependencies);
+                    .Select(dep => new DependencyGraphEdge(
+                        Id: dep.StepId.ToString(),
+                        DependsOnId: dep.DependantOnStepId.ToString(),
+                        CssClass: dep.DependencyType.ToString().ToLower()
+                    )).ToList();                
+            }
+            else
+            {
+                return;
             }
         }
-        
-
-        if (stepsJson is not null && dependenciesJson is not null)
-            await JS.InvokeVoidAsync("drawDependencyGraph", stepsJson, dependenciesJson);
-
+        await DependencyGraph.DrawAsync(nodes, edges);
         StateHasChanged();
     }
 
@@ -345,8 +340,4 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
 
     private string TextSelector(StepExecution step) => step.StepName ?? "";
 
-    public async ValueTask DisposeAsync()
-    {
-        await JS.InvokeVoidAsync("disposeDependencyGraphBodyListener");
-    }
 }

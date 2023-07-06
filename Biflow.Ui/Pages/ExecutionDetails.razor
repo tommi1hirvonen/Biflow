@@ -516,45 +516,39 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
     <JobHistoryComponent JobId="jobId" JobName="Execution.JobName" />
 }
 
-<div class="border mt-3" hidden=@(ShowReport != Report.Dependencies) style="resize: both; overflow: hidden;">
-    <div class="p-1 dependency-graph" id="div_dependency_graph">
-        <svg id="svg_dependency_graph" viewBox="0 0 2000 1000">
-            <g id="g_dependency_graph" />
-        </svg>
-    </div>
-</div>
-
-@foreach (var step in Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>())
-{
-    <div id="@($"{step.StepId}_dropdown")" class="dropdown position-absolute">
-        <ul class="dependency-graph-dropdown-menu dropdown-menu">
-            <li>
-                <h6 class="dropdown-header">
-                    <StepTypeIconComponent StepType_="step.StepType" />
-                    @step.StepName
-                </h6>
-            </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { DependencyGraphStepFilter = step; await LoadGraph(); }">
-                    <CxIcon Icon="FeatherIcon.Filter" />
-                    Limit graph to this
-                </span>
-            </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
-                    <CxIcon Icon="FeatherIcon.Info" />
-                    Details
-                </span>
-            </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    <CxIcon Icon="LucideIcon.History" />
-                    History
-                </span>
-            </li>
-        </ul>
-    </div>
-}
+<DependencyGraph @ref="DependencyGraph"
+                 TItem="StepExecution"
+                 Items="Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
+                 KeySelector="s => s.StepId.ToString()"
+                 CssClass="dependency-graph"
+                 hidden=@(ShowReport != Report.Dependencies)>
+    <DropdownMenuTemplate Context="step">
+        <li>
+            <h6 class="dropdown-header">
+                <StepTypeIconComponent StepType_="step.StepType" />
+                @step.StepName
+            </h6>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="async () => { DependencyGraphStepFilter = step; await LoadGraph(); }">
+                <CxIcon Icon="FeatherIcon.Filter" />
+                Limit graph to this
+            </span>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
+                <CxIcon Icon="FeatherIcon.Info" />
+                Details
+            </span>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                <CxIcon Icon="LucideIcon.History" />
+                History
+            </span>
+        </li>
+    </DropdownMenuTemplate>
+</DependencyGraph>
 
 <StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" StepExecutionAttempt="SelectedStepExecutionAttempt" />
 
