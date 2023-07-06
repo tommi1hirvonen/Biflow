@@ -268,11 +268,8 @@
     <div class="row mb-3 mt-3">
         <div class="col">
             <ol class="list-group shadow-sm steps-list">
-                @{
-                    var steps = FilteredSteps.ToList();
-                }
-                @* Set ItemSize to the height of the li element when rendered and calculated (taken from browser dev tools) *@
-                <Virtualize Items="steps" Context="item" ItemSize="46.1429f" OverscanCount="10">
+                @foreach (var item in FilteredSteps)
+                {
                     <li @key="item.StepId" class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
                         <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
@@ -476,7 +473,7 @@
                             </div>
                         }
                     </li>
-                </Virtualize>
+                }
             </ol>
         </div>
     </div>
