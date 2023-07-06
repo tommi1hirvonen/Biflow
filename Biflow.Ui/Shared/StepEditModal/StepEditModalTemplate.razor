@@ -259,12 +259,12 @@
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore database module definitions (e.g. stored procedures)"
                       @onclick="async () => await SqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                 <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                Definition explorer
+                SQL definition explorer
             </HxButton>
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore references between database objects"
                       @onclick="async () => await SqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
                 <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                Reference explorer
+                SQL reference explorer
             </HxButton>
         </HxButtonGroup>
 
