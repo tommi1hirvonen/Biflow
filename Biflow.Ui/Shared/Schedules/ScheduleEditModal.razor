@@ -53,13 +53,17 @@
                     </div>
                     <ValidationMessage For="() => Schedule.ScheduleName" />
                     <div class="mt-3">
-                        <label class="form-label">Cron expression</label>
+                        <label class="form-label">
+                            Cron expression
+                            <HxPopover Trigger="PopoverTrigger.Hover" Content="Schedule cron expression cannot be edited once the schedule has been created. To change the expression, a new schedule needs to be created and the old one removed.">
+                                <CxIcon Icon="FeatherIcon.Info" />
+                            </HxPopover>
+                        </label>
                         <div class="input-group">
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Calendar" />
                             </div>
                             <OnInputText class="form-control" @bind-Value="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty) />
-                            @*<input class="form-control" type="text" @bind:event="oninput" @bind="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty)></input>*@
                         </div>
                     </div>
                     <ValidationMessage For="() => Schedule.CronExpression" />
