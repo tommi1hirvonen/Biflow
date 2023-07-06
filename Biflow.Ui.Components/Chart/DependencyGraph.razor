@@ -1,0 +1,82 @@
+@using Microsoft.JSInterop
+@using System.Text.Json
+
+@namespace Biflow.Ui.Components
+
+@typeparam TItem
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime JS
+
+<div @attributes="AdditionalAttributes" class="border" style="resize: both; overflow: hidden;">
+    <div class="p-1 @CssClass">
+        <svg id="@svgId" viewBox="0 0 2000 1000">
+            <g @ref="graphContainer" id="g_dependency_graph" />
+        </svg>
+    </div>
+</div>
+
+@if (Items is not null && DropdownMenuTemplate is not null)
+{
+    foreach (var item in Items)
+    {
+        var key = KeySelector is not null ? KeySelector(item) : item.ToString();
+        <div id="@($"{key}_dropdown")" class="dropdown position-absolute">
+            <ul class="dependency-graph-dropdown-menu dropdown-menu">
+                @DropdownMenuTemplate(item)
+            </ul>
+        </div>
+    }
+}
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+
+    [Parameter] public RenderFragment<TItem>? DropdownMenuTemplate { get; set; }
+
+    [Parameter] public Func<TItem, string>? KeySelector { get; set; }
+
+    [Parameter] public EventCallback AfterRender { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    private ElementReference graphContainer;
+
+    private string svgId = $"svg-{Guid.NewGuid().ToString()}";
+
+    private IJSObjectReference? jsObject;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
+            await jsObject.InvokeVoidAsync("attachDependencyGraphBodyListener");
+            await AfterRender.InvokeAsync();
+        }
+    }
+
+    public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges)
+    {
+        ArgumentNullException.ThrowIfNull(jsObject);
+        var nodesJson = JsonSerializer.Serialize(nodes);
+        var edgesJson = JsonSerializer.Serialize(edges);
+        await jsObject.InvokeVoidAsync("drawDependencyGraph", graphContainer, svgId, nodesJson, edgesJson);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObject is not null)
+        {
+            try
+            {
+                await jsObject.InvokeVoidAsync("disposeDependencyGraphBodyListener");
+            }
+            catch (JSDisconnectedException) { }
+            await jsObject.DisposeAsync();
+        }
+    }
+}
