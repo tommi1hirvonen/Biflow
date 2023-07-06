@@ -19,8 +19,9 @@
                 <tr>
                     <th>Step</th>
                     <th>Depends on</th>
-                    <th>Type</th>
                     <th>Action</th>
+                    <th></th>
+                    <th>Type</th>
                     <th></th>
                 </tr>
             </thead>
@@ -28,22 +29,31 @@
                 @if (DependenciesToAdd is null || DependenciesToRemove is null)
                 {
                     <tr class="text-secondary small">
-                        <td colspan="5">Click on Calculate changes to preview modifications</td>
+                        <td colspan="6">Click on Calculate changes to preview modifications</td>
                     </tr>
                 }
                 else if (!DependenciesToAdd.Any() && !DependenciesToRemove.Any())
                 {
                     <tr>
-                        <td colspan="5">No changes detected</td>
+                        <td colspan="6">No changes detected</td>
                     </tr>
                 }
                 else
                 {
+                    var dependencies = DependenciesToAdd
+                        .Select(d => (Dependency: d, Add: true))
+                        .Concat(DependenciesToRemove.Select(d => (Dependency: d, Add: false)))
+                        .OrderBy(d => d.Dependency.Step.StepName)
+                        .ThenBy(d => d.Dependency.DependantOnStep.StepName);
                     <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-                    @foreach (var dep in DependenciesToAdd)
+                    @foreach (var (dep, add) in dependencies)
                     {
-                        var addCheckId = $"strict_{dep.StepId}_{dep.DependantOnStepId}";
-                        <tr class="text-primary">
+                        var (commitTask, discardAction) = add switch
+                        {
+                            true => ((Func<Task>)(() => AddDependencyAsync(dep)), (Func<bool>)(() => DependenciesToAdd.Remove(dep))),
+                            false => (() => RemoveDependencyAsync(dep), () => DependenciesToRemove.Remove(dep))
+                        };
+                        <tr>
                             <td class="align-middle">
                                 <StepTypeIconComponent StepType_="dep.Step.StepType" />
                                 @dep.Step.StepName
@@ -51,6 +61,30 @@
                             <td class="align-middle">
                                 <StepTypeIconComponent StepType_="dep.DependantOnStep.StepType" />
                                 @dep.DependantOnStep.StepName
+                            </td>
+                            <td class="align-middle">
+                                @if (add)
+                                {
+                                    <span class="text-success fw-bold fs-5 pb-1">+</span>
+                                }
+                                else
+                                {
+                                    <span class="text-danger fw-bold fs-5 pb-1">–</span>
+                                }
+                            </td>
+                            <td class="align-middle text-end">
+                                @{
+                                    var (className, icon) = dep.DependencyType switch
+                                    {
+                                        DependencyType.OnSucceeded => ("text-success", FeatherIcon.CheckCircle),
+                                        DependencyType.OnCompleted => ("text-primary", FeatherIcon.ArrowRight),
+                                        DependencyType.OnFailed => ("text-danger", FeatherIcon.AlertOctagon),
+                                        _ => ("text-secondary", FeatherIcon.HelpCircle)
+                                    };
+                                }
+                                <span class="@className">
+                                    <CxIcon Icon="icon" />
+                                </span>
                             </td>
                             <td class="align-middle">
                                 <select class="form-select form-select-sm" @bind="dep.DependencyType">
@@ -60,53 +94,16 @@
                                     }
                                 </select>
                             </td>
-                            <td class="align-middle">
-                                Add
-                            </td>
                             <td>
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                        title="Commit this modification"
-                                        CssClass="btn-auto text-success" OnClick="async () => await AddDependencyAsync(dep)">
+                                              title="Commit this modification"
+                                              CssClass="btn-auto text-success" OnClick="async () => await commitTask()">
                                         <CxIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                        title="Discard this modification"
-                                        CssClass="btn-auto text-danger" OnClick="() => DependenciesToAdd.Remove(dep)">
-                                        <CxIcon Icon="FeatherIcon.X" />
-                                    </HxButton>
-                                </HxButtonGroup>
-                            </td>
-                        </tr>
-                    }
-                    @foreach (var dep in DependenciesToRemove)
-                    {
-                        var removeCheckId = $"strict_{dep.StepId}_{dep.DependantOnStepId}";
-                        <tr class="text-danger">
-                            <td class="align-middle">
-                                <StepTypeIconComponent StepType_="dep.Step.StepType" />
-                                @dep.Step.StepName
-                            </td>
-                            <td class="align-middle">
-                                <StepTypeIconComponent StepType_="dep.DependantOnStep.StepType" />
-                                @dep.DependantOnStep.StepName
-                            </td>
-                            <td class="align-middle">
-                                @dep.DependencyType
-                            </td>
-                            <td class="align-middle">
-                                Remove
-                            </td>
-                            <td>
-                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                        title="Commit this modification"
-                                        CssClass="btn-auto text-success" OnClick="async () => await RemoveDependencyAsync(dep)">
-                                        <CxIcon Icon="FeatherIcon.Check" />
-                                    </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                        title="Discard this modification"
-                                        CssClass="btn-auto text-danger" OnClick="() => DependenciesToRemove.Remove(dep)">
+                                              title="Discard this modification"
+                                              CssClass="btn-auto text-danger" OnClick="() => discardAction()">
                                         <CxIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
