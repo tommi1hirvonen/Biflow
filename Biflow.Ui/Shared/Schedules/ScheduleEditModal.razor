@@ -67,14 +67,15 @@
                         </div>
                     </div>
                     <ValidationMessage For="() => Schedule.CronExpression" />
-                    <div class="row mt-3">
-                        @if (CronExpression.IsValidExpression(Schedule.CronExpression ?? string.Empty))
-                        {
-                            var nextFireTimes = Schedule.GetNextFireTimes(10).ToList();
-
-                            <small class="text-secondary">Description:</small>
-                            <small class="text-secondary ms-3">@Schedule.GetScheduleDescription()</small>
-                            <small class="text-secondary mt-2">Next execution(s) (showing first 10):</small>
+                    @if (CronExpression.IsValidExpression(Schedule.CronExpression ?? string.Empty))
+                    {
+                        var nextFireTimes = Schedule.GetNextFireTimes(10).ToList();
+                        <small class="text-secondary">Description:</small>
+                        <br />
+                        <small class="text-secondary ms-3">@Schedule.GetScheduleDescription()</small>
+                        <br />
+                        <small class="text-secondary mt-2">Next execution(s) (showing first 10):</small>
+                        <div class="row">
                             <div class="col">
                                 @foreach (var fireTime in nextFireTimes.Take(5))
                                 {
@@ -87,8 +88,8 @@
                                     <small class="row text-secondary ms-3">@fireTime</small>
                                 }
                             </div>
-                        }
-                    </div>
+                        </div>
+                    }
                     <div class="row mt-3">
                         <label class="form-label">Tag filters</label>
                         <HxInputTags @bind-Value="Tags"
