@@ -291,7 +291,7 @@
                 {
                     Id = step.StepId,
                     Name = step.StepName,
-                    ClassName = step.IsEnabled ? "enabled" : "disabled",
+                    ClassName = $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
                     Tooltip = $"{step.StepType}"
                 }));
                 dependenciesJson = JsonSerializer.Serialize(dependencies);

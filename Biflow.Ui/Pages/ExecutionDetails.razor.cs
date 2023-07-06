@@ -215,7 +215,7 @@ public partial class ExecutionDetails : ComponentBase, IAsyncDisposable
                 {
                     Id = step.StepId,
                     Name = step.StepName,
-                    ClassName = $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""}",
+                    ClassName = $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""} internal",
                     Tooltip = $"{step.StepType}"
                 }));
                 dependenciesJson = JsonSerializer.Serialize(dependencies);
