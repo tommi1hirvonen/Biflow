@@ -13,9 +13,9 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
 
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -145,7 +145,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Confirmer.ConfirmAsync("Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();
