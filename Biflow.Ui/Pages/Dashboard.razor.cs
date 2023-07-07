@@ -1,9 +1,11 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using System.Linq;
 using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
@@ -37,6 +39,10 @@ public partial class Dashboard : ComponentBase
     private const string ReportNotLoadedMessage = "Load report to show data.";
 
     private const string ReportNotLoadedClass = "text-secondary small fst-italic";
+
+    private LineChartDataset? DurationDataset { get; set; }
+
+    private LineChartDataset? NoOfExecutionsDataset { get; set; }
 
     private async Task LoadData()
     {
@@ -121,9 +127,10 @@ public partial class Dashboard : ComponentBase
 
         // Get a temporary list of all job names to retrieve their colors.
         var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
+        var colors = ChartColors.AsArray();
         JobColors = jobNames
             .Select((name, index) => new { Item = name, Index = index })
-            .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Count]);
+            .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Length]);
 
 
         // Get top failed steps
@@ -173,29 +180,24 @@ public partial class Dashboard : ComponentBase
             .ToList();
 
         // Create JSON dataset objects that are passed to the JS code in site.js via JSInterop.
-        var durationDataset = TimeSeriesItems.Select((e, index) =>
-        new
-        {
-            label = e.Key,
-            fill = false,
-            backgroundColor = JobColors[e.Key],
-            borderColor = JobColors[e.Key],
-            data = e.Value.Select(v => new { x = v.Date.ToString("o"), y = v.DurationInMinutes }),
-            tension = 0.3
-        });
-        var durationDatasetJson = JsonSerializer.Serialize(durationDataset);
 
-        var noOfExecutionsDataset = TimeSeriesItems.Select((e, index) =>
-        new
-        {
-            label = e.Key,
-            fill = false,
-            backgroundColor = JobColors[e.Key],
-            borderColor = JobColors[e.Key],
-            data = e.Value.Select(v => new { x = v.Date.ToString("o"), y = v.NumberOfExecutions }),
-            tension = 0.3
-        });
-        var noOfExecutionsJson = JsonSerializer.Serialize(noOfExecutionsDataset);
+        var durationSeries = TimeSeriesItems
+            .Select((e, index) =>
+            {
+                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.DurationInMinutes)).ToList();
+                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
+            })
+            .ToList();
+        DurationDataset = new LineChartDataset(durationSeries, "min", 0);
+
+        var noOfExecutionsSeries = TimeSeriesItems
+            .Select((e, index) =>
+            {
+                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.NumberOfExecutions)).ToList();
+                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
+            })
+            .ToList();
+        NoOfExecutionsDataset = new LineChartDataset(noOfExecutionsSeries, YMin: 0, YStepSize: 1);
 
         var successRateDataset = Jobs.Select(job =>
         new
@@ -208,26 +210,10 @@ public partial class Dashboard : ComponentBase
 
         ReportLoaded = true;
 
-        await JS.InvokeVoidAsync("drawDurationGraph", durationDatasetJson);
-        await JS.InvokeVoidAsync("drawNoOfExecutionsGraph", noOfExecutionsJson);
         await JS.InvokeVoidAsync("drawSuccessRateGraph", successRateDatasetJson);
 
         Loading = false;
     }
-
-    private readonly List<string> colors = new()
-    {
-            "#727cf5", // indigo
-            "#0acf97", // teal
-            "#007bff", // blue
-            "#fa5c7c", // red
-            "#ffc107", // yellow
-            "#28a745", // green
-            "#fd7e14", // orange
-            "#17a2b8", // cyan
-            "#e83e8c", // pink
-            "#6f42c1" // purple
-        };
 
     public class TimeSeriesItem
     {
