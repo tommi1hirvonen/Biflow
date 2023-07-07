@@ -1,0 +1,78 @@
+@using Microsoft.JSInterop;
+@using System.Text.Json;
+
+@namespace Biflow.Ui.Components
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime JS
+
+<canvas class="w-100" id="@canvasId" width="900" height="400"></canvas>
+
+@code {
+    [Parameter] public EventCallback AfterFirstRender { get; set; }
+
+    [Parameter] public LineChartDataset? Dataset { get; set; }
+
+    private LineChartDataset? prevDataset;
+
+    private string canvasId = $"chart_{Guid.NewGuid().ToString()}";
+
+    private IJSObjectReference? jsObject;
+
+    private JsonSerializerOptions serializationOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    private bool shouldRender = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Dataset is not null && Dataset != prevDataset)
+        {
+            prevDataset = Dataset;
+            shouldRender = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/LineChart.js");
+            await AfterFirstRender.InvokeAsync();
+        }
+        if (shouldRender)
+        {
+            shouldRender = false;
+            await DrawAsync();
+        }
+    }
+
+    public async Task DrawAsync()
+    {
+        ArgumentNullException.ThrowIfNull(jsObject);
+        if (Dataset is null)
+        {
+            return;
+        }
+
+        var series = Dataset.Series.Select(s => new
+        {
+            label = s.Label,
+            fill = s.Fill,
+            backgroundColor = s.Color,
+            borderColor = s.Color,
+            data = s.DataPoints.Select(d => new { x = d.XValue.ToString("o"), y = d.YValue }),
+            tension = s.Tension
+        });
+        var seriesJson = JsonSerializer.Serialize(series, serializationOptions);
+        await jsObject.InvokeVoidAsync("draw", canvasId, seriesJson, Dataset.YAxisTitle, Dataset.YMin, Dataset.YStepSize);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObject is not null)
+        {
+            await jsObject.DisposeAsync();
+        }
+    }
+}
