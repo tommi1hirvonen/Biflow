@@ -3,6 +3,8 @@
 
 @namespace Biflow.Ui.Components
 
+@implements IAsyncDisposable
+
 @inject IJSRuntime jsRuntime
 
 <div class="form-check form-check-inline">
@@ -26,12 +28,17 @@
 
     private ElementReference _inputElement;
     private Guid _elementId = Guid.NewGuid();
+    private IJSObjectReference? jsObject;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (Indeterminate.HasValue)
+        if (firstRender)
         {
-            await jsRuntime.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
+            jsObject = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TriStateCheckbox.js");
+        }
+        if (Indeterminate.HasValue && jsObject is not null)
+        {
+            await jsObject.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -40,5 +47,13 @@
     {
         Checked = (bool)e.Value!;
         await CheckedChanged.InvokeAsync(Checked);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObject is not null)
+        {
+            await jsObject.DisposeAsync();
+        }
     }
 }

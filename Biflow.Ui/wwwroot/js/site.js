@@ -124,10 +124,6 @@ function drawSuccessRateGraph(datasets_) {
 
 }
 
-function setPropByElement(element, property, value) {
-    element[property] = value;
-}
-
 function highlightCode() {
     document.querySelectorAll('pre code').forEach((el) => {
         hljs.highlightElement(el);
