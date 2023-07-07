@@ -4,25 +4,41 @@
 <PageTitle>@JobName | History | Biflow</PageTitle>
 
 <div class="row">
-    <div class="col">
+    <div class="col-auto d-inline-flex align-items-center">
+        <label>No of executions</label>
+        <input @bind-value="MaxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
+            <CxIcon Icon="FeatherIcon.RefreshCw" />
+            Refresh
+        </HxButton>
+    </div>
+    <div class="col-auto align-items-center d-flex">
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_scheduled"
                     checked=@(StartTypeFilter == StartType.Scheduled)
                     @onchange="() => StartTypeFilter = StartType.Scheduled">
             <label class="form-check-label" for="radio_scheduled">Scheduled</label>
         </div>
-        <div class="form-check form-check-inline">
+        <div class="form-check form-check-inline ms-2">
             <input type="radio" class="form-check-input" id="radio_manual"
                     checked=@(StartTypeFilter == StartType.Manual)
                     @onchange="() => StartTypeFilter = StartType.Manual">
             <label class="form-check-label" for="radio_manual">Manual</label>
         </div>
-        <div class="form-check form-check-inline">
+        <div class="form-check form-check-inline ms-2">
             <input type="radio" class="form-check-input" id="radio_all"
                    checked=@(StartTypeFilter == StartType.All)
                     @onchange="() => StartTypeFilter = StartType.All">
             <label class="form-check-label" for="radio_all">All</label>
         </div>
+    </div>
+</div>
+
+<div class="row mt-1">
+    <div class="col">
+        <small class="text-muted">Actual no of executions: @Executions?.Count</small>
     </div>
 </div>
 
@@ -111,9 +127,6 @@
             }
         </tbody>
     </table>
-    <div class="px-3">
-        <p class="text-secondary">Showing @MaxExecutions latest executions</p>
-    </div>
 </div>
 
 @code {
@@ -123,7 +136,9 @@
 
     public IList<ExecutionProjection>? Executions { get; set; }
 
-    private const int MaxExecutions = 50;
+    private const int DefaultMaxExecutions = 50;
+
+    private int MaxExecutions = DefaultMaxExecutions;
 
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
@@ -141,26 +156,31 @@
     {
         if (Executions is null && JobId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
-            Executions = await context.Executions
-                .AsNoTracking()
-                .AsSingleQuery()
-                .Where(e => e.JobId == JobId)
-                .OrderByDescending(e => e.CreatedDateTime)
-                .Take(MaxExecutions)
-                .Select(e => new ExecutionProjection(
-                    e.ExecutionId,
-                    e.JobId,
-                    e.JobName,
-                    e.ScheduleId,
-                    e.CreatedDateTime,
-                    e.StartDateTime,
-                    e.EndDateTime,
-                    e.ExecutionStatus,
-                    e.StepExecutions.Count()))
-                .ToListAsync();
-            StateHasChanged();
+            await ReloadAsync();
         }
+    }
+
+    private async Task ReloadAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Executions = await context.Executions
+            .AsNoTracking()
+            .AsSingleQuery()
+            .Where(e => e.JobId == JobId)
+            .OrderByDescending(e => e.CreatedDateTime)
+            .Take(MaxExecutions)
+            .Select(e => new ExecutionProjection(
+                e.ExecutionId,
+                e.JobId,
+                e.JobName,
+                e.ScheduleId,
+                e.CreatedDateTime,
+                e.StartDateTime,
+                e.EndDateTime,
+                e.ExecutionStatus,
+                e.StepExecutions.Count()))
+            .ToListAsync();
+        StateHasChanged();
     }
 
     private void GoToExecutionDetails(Guid executionId)
