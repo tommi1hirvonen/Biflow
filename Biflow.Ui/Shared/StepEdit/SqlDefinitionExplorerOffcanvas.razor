@@ -52,12 +52,11 @@
             <div class="row">
                 <div class="col">
                     <a class="text-secondary small" href="javascript:void(0)" @onclick="CopyToClipboard">Copy to clipboard</a>
-                    <a class="text-secondary small ms-3" href="javascript:void(0)" @onclick="HighlightAsync">Apply syntax highlighting</a>
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <pre><code class="language-tsql">@ObjectDefinition</code></pre>
+                    <SyntaxHighlightedCode LanguageClass="language-tsql" Code="@ObjectDefinition" />
                 </div>
             </div>
         }
@@ -167,11 +166,6 @@
         {
             Messenger.AddError("Error copying to clipboard", ex.Message);
         }
-    }
-
-    private async Task HighlightAsync()
-    {
-        await JS.InvokeVoidAsync("highlightCode");
     }
 
     public async Task ShowAsync(Guid? connectionId = null, string? sqlStatement = null)
