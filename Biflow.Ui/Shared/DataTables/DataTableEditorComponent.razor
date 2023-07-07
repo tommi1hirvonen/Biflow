@@ -194,7 +194,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <Virtualize Items="rows" Context="row" SpacerElement="tr">
+                            <Virtualize Items="rows" Context="row" SpacerElement="tr" ItemSize="39.5f">
                                 <tr>
                                     @foreach (var columnInfo in TableData.Columns.Where(c => IsColumnSelected(c.Name)))
                                     {
