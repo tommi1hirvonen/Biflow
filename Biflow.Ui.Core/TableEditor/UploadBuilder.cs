@@ -75,7 +75,7 @@ public class UploadBuilder
                 }
                 else
                 {
-                    throw new NotSupportedException($"Unsupported datatype {type} for column {col}");
+                    throw new NotSupportedException($"Unsupported datatype [{column.DbDatatype}] for column {col}");
                 }
             }
             data.Add(dataRow);

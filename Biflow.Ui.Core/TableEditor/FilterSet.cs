@@ -56,7 +56,7 @@ public class FilterSet
             else if (datatype == typeof(DateTime))
                 DateTimeIndexer[column] = new ValueFilter<DateTime, NumberFilterOperator>(NumberFilterOperator.Equals);
             else
-                throw new ArgumentException($"Unsupported datatype {datatype}");
+                throw new ArgumentException($"Unsupported datatype [{columnInfo.DbDatatype}]");
         }
     }
 }
