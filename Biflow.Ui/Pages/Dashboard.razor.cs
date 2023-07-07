@@ -4,8 +4,6 @@ using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
-using System.Linq;
 using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
@@ -13,8 +11,6 @@ namespace Biflow.Ui.Pages;
 public partial class Dashboard : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-
-    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
 
@@ -43,6 +39,8 @@ public partial class Dashboard : ComponentBase
     private LineChartDataset? DurationDataset { get; set; }
 
     private LineChartDataset? NoOfExecutionsDataset { get; set; }
+
+    private BarChartDataset? SuccessRateDataset { get; set; }
 
     private async Task LoadData()
     {
@@ -199,18 +197,12 @@ public partial class Dashboard : ComponentBase
             .ToList();
         NoOfExecutionsDataset = new LineChartDataset(noOfExecutionsSeries, YMin: 0, YStepSize: 1);
 
-        var successRateDataset = Jobs.Select(job =>
-        new
-        {
-            label = job.JobName,
-            data = decimal.Round(job.SuccessPercent, 2),
-            color = JobColors[job.JobName]
-        });
-        var successRateDatasetJson = JsonSerializer.Serialize(successRateDataset);
+        var successRateSeries = Jobs
+            .Select(job => new BarChartDataPoint(job.JobName, decimal.Round(job.SuccessPercent, 2), JobColors[job.JobName]))
+            .ToList();
+        SuccessRateDataset = new BarChartDataset(successRateSeries, 0, 100, 10, "%", true);
 
         ReportLoaded = true;
-
-        await JS.InvokeVoidAsync("drawSuccessRateGraph", successRateDatasetJson);
 
         Loading = false;
     }
