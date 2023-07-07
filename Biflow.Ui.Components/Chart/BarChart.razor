@@ -1,0 +1,75 @@
+@using Microsoft.JSInterop
+@using System.Text.Json;
+
+@namespace Biflow.Ui.Components
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime JS
+
+<canvas class="w-100" id="@canvasId" width="900" height="400"></canvas>
+
+@code {
+    [Parameter] public EventCallback AfterFirstRender { get; set; }
+
+    [Parameter] public BarChartDataset? Dataset { get; set; }
+
+    private BarChartDataset? prevDataset;
+
+    private string canvasId = $"chart_{Guid.NewGuid().ToString()}";
+
+    private IJSObjectReference? jsObject;
+
+    private JsonSerializerOptions serializationOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    private bool shouldRender = false;
+
+    protected override void OnParametersSet()
+    {
+        if (Dataset is not null && Dataset != prevDataset)
+        {
+            prevDataset = Dataset;
+            shouldRender = true;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/BarChart.js");
+            await AfterFirstRender.InvokeAsync();
+        }
+        if (shouldRender)
+        {
+            shouldRender = false;
+            await DrawAsync();
+        }
+    }
+
+    public async Task DrawAsync()
+    {
+        ArgumentNullException.ThrowIfNull(jsObject);
+        if (Dataset is null)
+        {
+            return;
+        }
+
+        var series = Dataset.DataPoints.Select(s => new
+        {
+            label = s.Label,
+            data = s.Value,
+            color = s.Color
+        });
+        var seriesJson = JsonSerializer.Serialize(series, serializationOptions);
+        await jsObject.InvokeVoidAsync("draw", canvasId, seriesJson, Dataset.Min, Dataset.Max, Dataset.StepSize, Dataset.TickSuffix, Dataset.Horizontal);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObject is not null)
+        {
+            await jsObject.DisposeAsync();
+        }
+    }
+}
