@@ -1,0 +1,107 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<HxModal @ref="Modal" Title="Edit tags" Size="ModalSize.Small">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                @if (Steps is not null)
+                {
+                    <input class="form-control" type="number" placeholder="Retry attempts" min="0" @bind-value="RetryAttempts" />
+                }
+                else
+                {
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                }
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Success" OnClick="SubmitStepsAsync">
+            Save
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+
+    [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private List<Step>? Steps { get; set; }
+
+    private int? RetryAttempts
+    {
+        get => retries;
+        set
+        {
+            if (value is null || value >= 0)
+            {
+                retries = value;
+            }
+        }
+    }
+
+    private int? retries;
+
+    public async Task ShowAsync()
+    {
+        if (!SelectedSteps.Any())
+        {
+            return;
+        }
+
+        await Modal.LetAsync(x => x.ShowAsync());
+
+        if (Context is not null)
+        {
+            await Context.DisposeAsync();
+        }
+        Context = await DbContextFactory.CreateDbContextAsync();
+        var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
+        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+            .Where(s => stepIds.Contains(s.StepId))
+            .ToListAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        RetryAttempts = null;
+        await Modal.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task SubmitStepsAsync()
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(Context);
+
+        int retries;
+        if (RetryAttempts is int i)
+        {
+            retries = i;
+        }
+        else
+        {
+            return;
+        }
+
+        foreach (var step in Steps)
+        {
+            step.RetryAttempts = retries;
+        }
+
+        await Context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(Steps);
+        await CloseAsync();
+    }
+
+    public void Dispose() => Context?.Dispose();
+}

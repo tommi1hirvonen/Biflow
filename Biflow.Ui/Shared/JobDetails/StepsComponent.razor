@@ -242,6 +242,12 @@
                                                     <HxDropdownItem OnClick="() => BatchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
                                                         Execution phase
                                                     </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => BatchEditRetriesModal.LetAsync(x => x.ShowAsync())">
+                                                        Retry attempts
+                                                    </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => BatchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
+                                                        Retry interval
+                                                    </HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         </div>
@@ -495,6 +501,16 @@
 
     <StepsBatchEditRenameModal
         @ref="BatchEditRenameModal"
+        SelectedSteps="SelectedSteps"
+        OnStepsSubmit="OnStepsSubmit" />
+
+    <StepsBatchEditRetriesModal
+        @ref="BatchEditRetriesModal"
+        SelectedSteps="SelectedSteps"
+        OnStepsSubmit="OnStepsSubmit" />
+
+    <StepsBatchEditRetryIntervalModal
+        @ref="BatchEditRetryIntervalModal"
         SelectedSteps="SelectedSteps"
         OnStepsSubmit="OnStepsSubmit" />
 
