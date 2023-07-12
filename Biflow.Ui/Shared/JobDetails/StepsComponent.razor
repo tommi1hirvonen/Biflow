@@ -233,6 +233,9 @@
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Batch edit</HxDropdownHeader>
+                                                    <HxDropdownItem OnClick="() => BatchEditRenameModal.LetAsync(x => x.ShowAsync())">
+                                                        Name
+                                                    </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => BatchEditTagsModal.LetAsync(x => x.ShowAsync())">
                                                         Tags
                                                     </HxDropdownItem>
@@ -487,6 +490,11 @@
 
     <StepsBatchEditExecPhaseModal
         @ref="BatchEditExecPhaseModal"
+        SelectedSteps="SelectedSteps"
+        OnStepsSubmit="OnStepsSubmit" />
+
+    <StepsBatchEditRenameModal
+        @ref="BatchEditRenameModal"
         SelectedSteps="SelectedSteps"
         OnStepsSubmit="OnStepsSubmit" />
 

@@ -46,7 +46,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" Spinner="Saving" Enabled="!Saving" OnClick="SubmitStepsAsync">
+        <HxButton Color="ThemeColor.Success" OnClick="SubmitStepsAsync">
             Save
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
@@ -61,8 +61,6 @@
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
     private HxModal? Modal { get; set; }
-
-    private bool Saving { get; set; } = false;
 
     private BiflowContext? Context { get; set; }
 
@@ -128,9 +126,6 @@
 
         await Context.SaveChangesAsync();
         await OnStepsSubmit.InvokeAsync(Steps);
-
-        ExecutionPhase = null;
-        editMode = EditMode.Absolute;
         await CloseAsync();
     }
 

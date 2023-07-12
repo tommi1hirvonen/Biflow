@@ -68,6 +68,8 @@ public partial class StepsComponent : ComponentBase
 
     private StepsBatchEditExecPhaseModal? BatchEditExecPhaseModal { get; set; }
 
+    private StepsBatchEditRenameModal? BatchEditRenameModal { get; set; }
+
     private StepDetailsModal? StepDetailsModal { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }

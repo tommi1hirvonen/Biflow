@@ -1,0 +1,235 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<HxModal @ref="Modal" Title="Rename steps" Scrollable="true" Size="ModalSize.Large">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_rename_replace"
+                           checked=@(EditMode_ == EditMode.Replace)
+                    @onchange="() => EditMode_ = EditMode.Replace">
+                    <label class="form-check-label" for="radio_batch_edit_rename_replace">
+                        Replace
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_rename_prepend"
+                           checked=@(EditMode_ == EditMode.Prepend)
+                    @onchange="() => EditMode_ = EditMode.Prepend">
+                    <label class="form-check-label" for="radio_batch_edit_rename_prepend">
+                        Prepend
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_batch_edit_rename_append"
+                           checked=@(EditMode_ == EditMode.Append)
+                    @onchange="() => EditMode_ = EditMode.Append">
+                    <label class="form-check-label" for="radio_batch_edit_rename_append">
+                        Append
+                    </label>
+                </div>
+                @if (EditMode_ == EditMode.Replace)
+                {
+                    <div class="form-check form-check-inline ms-4">
+                        <input type="checkbox" class="form-check-input" id="check_batch_edit_rename_case_sensitive"
+                               checked=@CaseSensitive
+                        @onchange="() => CaseSensitive = !CaseSensitive">
+                        <label class="form-check-label" for="check_batch_edit_rename_case_sensitive">
+                            Case sensitive
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="row mt-3">
+            @if (EditMode_ == EditMode.Prepend || EditMode_ == EditMode.Append)
+            {
+                <div class="col">
+                    <input class="form-control" type="text" @bind-value="PrependAppendString" @bind-value:event="oninput" />
+                </div>
+            }
+            else if (EditMode_ == EditMode.Replace)
+            {
+                <div class="col">
+                    <input class="form-control" type="text" placeholder="Old text" @bind-value="OldString" @bind-value:event="oninput" />
+                </div>
+                <div class="col">
+                    <input class="form-control" type="text" placeholder="New text" @bind-value="NewString" @bind-value:event="oninput" />
+                </div>
+            }
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <h6>Preview</h6>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm">
+                    <tbody>
+                        @if ((EditMode_ == EditMode.Prepend || EditMode_ == EditMode.Append) && !string.IsNullOrEmpty(PrependAppendString))
+                        {
+                            foreach (var step in Steps?.OrderBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                            {
+                                var after = EditMode_ switch
+                                {
+                                    EditMode.Prepend => $"{PrependAppendString}{step.StepName}",
+                                    EditMode.Append => $"{step.StepName}{PrependAppendString}",
+                                    _ => step.StepName
+                                };
+                                <tr>
+                                    <td>
+                                        <StepTypeIconComponent StepType_="step.StepType" />
+                                        @step.StepName
+                                    </td>
+                                    <td>
+                                        <span><CxIcon Icon="FeatherIcon.ArrowRight" /></span>
+                                    </td>
+                                    <td>
+                                        <StepTypeIconComponent StepType_="step.StepType" />
+                                        @after
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else if (EditMode_ == EditMode.Replace && !string.IsNullOrEmpty(OldString))
+                        {
+                            if (AffectedSteps.Any())
+                            {
+                                foreach (var step in AffectedSteps)
+                                {
+                                    <tr>
+                                        <td>
+                                            <StepTypeIconComponent StepType_="step.StepType" />
+                                            @step.StepName
+                                        </td>
+                                        <td>
+                                            <span><CxIcon Icon="FeatherIcon.ArrowRight" /></span>
+                                        </td>
+                                        <td>
+                                            <StepTypeIconComponent StepType_="step.StepType" />
+                                            @step.StepName?.Replace(OldString, NewString, Comparison)
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td>
+                                        No changes
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td>
+                                    No changes
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Success" OnClick="SubmitStepsAsync">
+            Save
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+
+    [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
+
+    private HxModal? Modal { get; set; }
+
+    private BiflowContext? Context { get; set; }
+
+    private List<Step>? Steps { get; set; }
+
+    private EditMode EditMode_ { get; set; } = EditMode.Replace;
+
+    private enum EditMode { Replace, Prepend, Append };
+
+    private bool CaseSensitive { get; set; } = true;
+
+    private string PrependAppendString { get; set; } = "";
+
+    private string OldString { get; set; } = "";
+
+    private string NewString { get; set; } = "";
+
+    private StringComparison Comparison =>
+        CaseSensitive ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+
+    private IEnumerable<Step> AffectedSteps => Steps
+        ?.Where(s => s.StepName?.Contains(OldString, Comparison) == true)
+        .OrderBy(s => s.StepName)
+        ?? Enumerable.Empty<Step>();
+
+    public async Task ShowAsync()
+    {
+        if (!SelectedSteps.Any())
+        {
+            return;
+        }
+
+        await Modal.LetAsync(x => x.ShowAsync());
+
+        if (Context is not null)
+        {
+            await Context.DisposeAsync();
+        }
+        Context = await DbContextFactory.CreateDbContextAsync();
+        var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
+        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+            .Where(s => stepIds.Contains(s.StepId))
+            .ToListAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        (EditMode_, PrependAppendString, OldString, NewString, CaseSensitive) =
+            (EditMode.Replace, "", "", "", true);
+        await Modal.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task SubmitStepsAsync()
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(Context);
+
+        var steps = EditMode_ switch
+        {
+            EditMode.Replace => AffectedSteps,
+            _ => Steps
+        };
+        foreach (var step in Steps)
+        {
+            step.StepName = EditMode_ switch
+            {
+                EditMode.Prepend => $"{PrependAppendString}{step.StepName}",
+                EditMode.Append => $"{step.StepName}{PrependAppendString}",
+                EditMode.Replace => step.StepName?.Replace(OldString, NewString, Comparison),
+                _ => step.StepName
+            };
+        }
+
+        await Context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(Steps);
+        await CloseAsync();
+    }
+
+    public void Dispose() => Context?.Dispose();
+}
