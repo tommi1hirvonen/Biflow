@@ -193,7 +193,7 @@
                         <div class="row align-items-center" style="min-height: 31px;">
                             <AuthorizeView Roles="Admin, Editor, Operator">
                                 <div class="col text-muted d-flex align-items-center">
-                                    <TriStateCheckbox Checked="@(SelectedSteps.Count == count && Steps.Any() && count > 0)"
+                                    <TriStateCheckbox Checked="@(SelectedSteps.Count > 0 && Steps.Any() && count > 0)"
                                                       Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
                                                       CheckedChanged="ToggleAllStepsSelected" />
                                     <div class="fw-bold small">@selectedText</div>
