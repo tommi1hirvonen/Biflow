@@ -9,8 +9,6 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
-using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
 
@@ -31,13 +29,10 @@ public partial class ExecutionDetails : ComponentBase
 
     private Execution? Execution { get; set; }
 
-    private IEnumerable<StepExecutionAttempt> Executions =>
-        Execution?.StepExecutions
-        .SelectMany(e => e.StepExecutionAttempts)
-        ?? Enumerable.Empty<StepExecutionAttempt>();
+    private IEnumerable<StepExecutionAttempt>? Executions => Execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
-    private IEnumerable<StepExecutionProjection> FilteredExecutions => Executions
-        .Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+    private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
+        ?.Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
         .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))

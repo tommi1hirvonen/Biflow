@@ -421,7 +421,7 @@
         <StepExecutionsTableComponent
             ShowDetailed="false"
             Executions="FilteredExecutions
-                        .OrderBy(e => SortMode switch
+                        ?.OrderBy(e => SortMode switch
                         {
                             SortMode.DurationAsc => e.ExecutionInSeconds,
                             SortMode.DurationDesc => -e.ExecutionInSeconds,
@@ -435,7 +435,7 @@
                         .ThenBy(e => e.EndDateTime)
                         .ThenBy(e => e.ExecutionPhase)
                         .ThenBy(e => e.StepName)"
-            DetailStepProvider="e => Executions.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
     </div>
     
 }
@@ -445,7 +445,7 @@ else if (ShowReport == Report.Gantt)
         <StepExecutionsGraphComponent
             Executions="FilteredExecutions"
             SortMode="SortMode"
-            DetailStepProvider="e => Executions.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
     </div>
     
 }
