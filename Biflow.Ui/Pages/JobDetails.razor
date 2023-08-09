@@ -149,16 +149,18 @@
         <CascadingValue Value="Jobs" IsFixed>
             <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated" IsFixed>
                 <CascadingValue Value="SortSteps" Name="SortSteps" IsFixed>
-                    @if (DetailsPage == "steps")
-                    {
+
+                    @* Leave steps component rendered but only update the visibility css class. This way rendering is quicker when returning to the component. *@
+                    <div class="@(DetailsPage == "steps" ? null : "d-none")">
                         <StepsComponent SqlConnections="SqlConnections"
                                         AsConnections="AsConnections"
                                         PipelineClients="PipelineClients"
                                         AppRegistrations="AppRegistrations"
                                         FunctionApps="FunctionApps"
                                         InitialStepId="InitialStepId" />
-                    }
-                    else if (DetailsPage == "parameters")
+                    </div>
+
+                    @if (DetailsPage == "parameters")
                     {
                         <AuthorizeView Roles="Admin, Editor, Operator">
                             <JobParametersComponent />
@@ -186,10 +188,6 @@
                         <AuthorizeView Roles="Admin, Editor">
                             <JobSettingsComponent />
                         </AuthorizeView>
-                    }
-                    else
-                    {
-                        <p>No component to show.</p>
                     }
                 </CascadingValue>
             </CascadingValue>
