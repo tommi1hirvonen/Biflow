@@ -157,7 +157,7 @@
                                         PipelineClients="PipelineClients"
                                         AppRegistrations="AppRegistrations"
                                         FunctionApps="FunctionApps"
-                                        InitialStepId="InitialStepId" />
+                                        InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
                     </div>
 
                     @if (DetailsPage == "parameters")
