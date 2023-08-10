@@ -52,13 +52,14 @@ public class UploadBuilder
         foreach (var row in rows)
         {
             var dataRow = new Dictionary<string, object?>();
-            foreach (var column in _columns)
+            foreach (var column in columns)
             {
-                var (col, type) = (column.Name, column.Datatype);
+                var (col, type, nullable) = (column.Name, column.Datatype, column.IsNullable);
                 var cell = row.Field(col);
                 if (type == typeof(string))
                 {
-                    dataRow[col] = cell.GetValue<string?>();
+                    var text = cell.GetValue<string?>(); // If the column is nullable, replace empty string with null.
+                    dataRow[col] = string.IsNullOrEmpty(text) && nullable ? null : text;
                 }
                 else if (type == typeof(byte))
                 {
