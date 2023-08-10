@@ -25,6 +25,29 @@ public class UploadBuilder
             .Table(0)
             .DataRange
             .Rows();
+        
+        var headerRow = workbook
+            .Worksheet(1)
+            .Table(0)
+            .HeadersRow();
+        var headers = new List<string>();
+        foreach (var cell in headerRow.Cells())
+        {
+            var header = cell.GetValue<string>();
+            headers.Add(header);
+        }
+
+        // Check that all primary key columns are included
+        foreach (var pk in _columns.Where(c => c.IsPrimaryKey).Select(c => c.Name))
+        {
+            if (!headers.Contains(pk))
+            {
+                throw new PrimaryKeyNotFoundException(pk);
+            }
+        }
+
+        // Limit uploaded columns to only those found in the Excel file.
+        var columns = _columns.Where(c => headers.Contains(c.Name)).ToList();
         var data = new List<IDictionary<string, object?>>();
         foreach (var row in rows)
         {
@@ -80,7 +103,7 @@ public class UploadBuilder
             }
             data.Add(dataRow);
         }
-        return new Upload(_table, _columns, data);
+        return new Upload(_table, columns, data);
     }
 
     public static async Task<UploadBuilder> FromTableAsync(MasterDataTable table)
