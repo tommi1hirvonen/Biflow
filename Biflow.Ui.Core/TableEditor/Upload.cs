@@ -10,7 +10,9 @@ public class Upload
     private readonly List<Column> _columns;
     private readonly MasterDataTable _table;
     private readonly string[] _pkColumns;
-    
+
+    public IEnumerable<string> Columns => _columns.Select(c => c.Name);
+
     public ICollection<IDictionary<string, object?>> Data { get; }
 
     internal Upload(MasterDataTable table, List<Column> columns, ICollection<IDictionary<string, object?>> data)

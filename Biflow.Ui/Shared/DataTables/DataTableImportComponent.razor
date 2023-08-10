@@ -87,7 +87,7 @@
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                            @foreach (var column in Builder?.Columns ?? Enumerable.Empty<string>())
+                            @foreach (var column in Upload?.Columns ?? Builder?.Columns ?? Enumerable.Empty<string>())
                             {
                                 <th>@column</th>
                             }
@@ -113,7 +113,7 @@
                         {
                             <Virtualize Items="Upload.Data" Context="row" SpacerElement="tr"> 
                                 <tr>
-                                    @foreach (var column in Builder?.Columns ?? Enumerable.Empty<string>())
+                                    @foreach (var column in Upload.Columns)
                                     {
                                         <td>@row[column]</td>
                                     }
