@@ -91,7 +91,7 @@
                                     {
                                         continue;
                                     }
-                                    var nextFireTimes = schedule.NextFireTimesSequence(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
+                                    var nextFireTimes = schedule.NextFireTimes(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
                                     foreach (var dt in nextFireTimes)
                                     {
                                         var offset = GetOffset(dt);

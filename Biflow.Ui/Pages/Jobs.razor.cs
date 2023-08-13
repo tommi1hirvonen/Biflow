@@ -121,7 +121,7 @@ public partial class Jobs : ComponentBase
 
     private static DateTime? GetNextStartTime(Job job)
     {
-        var dateTimes = job.Schedules.Where(s => s.IsEnabled).Select(s => s.GetNextFireTime());
+        var dateTimes = job.Schedules.Where(s => s.IsEnabled).Select(s => s.NextFireTimes().FirstOrDefault());
         return dateTimes.Any() ? dateTimes.Min() : null;
     }
 

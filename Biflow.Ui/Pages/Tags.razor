@@ -229,7 +229,7 @@
                                     @schedule.CronExpression
                                 </td>
                                 <td>
-                                    @schedule.GetNextFireTime()
+                                    @schedule.NextFireTimes().FirstOrDefault()
                                 </td>
                                 <td>
                                     <div class="form-check form-switch">

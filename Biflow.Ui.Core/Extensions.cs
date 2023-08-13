@@ -335,17 +335,13 @@ public static partial class Extensions
         }
     }
 
-    public static DateTime? GetNextFireTime(this Schedule schedule) => schedule.NextFireTimesSequence().FirstOrDefault();
-
-    public static IEnumerable<DateTime?> GetNextFireTimes(this Schedule schedule, int count) => schedule.NextFireTimesSequence().Take(count);
-
     /// <summary>
     /// Generates a sequence of DateTimes for when the schedule is triggered
     /// </summary>
     /// <param name="schedule"><see cref="">Schedule</see> object whose Cron is used to parse DateTimes</param>
     /// <param name="start">Optionally provide start time to filter generated sequence to only include DateTimes beyond a certain point. By default DateTimeOffset.UtcNow is used.</param>
     /// <returns></returns>
-    public static IEnumerable<DateTime?> NextFireTimesSequence(this Schedule schedule, DateTimeOffset? start = null)
+    public static IEnumerable<DateTime?> NextFireTimes(this Schedule schedule, DateTimeOffset? start = null)
     {
         if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
         {

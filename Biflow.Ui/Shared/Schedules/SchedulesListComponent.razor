@@ -95,12 +95,12 @@
                         </td>
                         <td>
                             <div class="d-inline-flex @(!item.IsEnabled || !item.Job.IsEnabled ? "text-body-tertiary" : null)">
-                                @item.GetNextFireTime()
+                                @item.NextFireTimes().FirstOrDefault()
                                 @(!item.IsEnabled ? "(Schedule disabled)" : null)
                                 @(!item.Job.IsEnabled ? "(Job disabled)" : null)
                                 &nbsp;&nbsp;
                                 <HxTooltip Placement="TooltipPlacement.Auto"
-                                   Text="@("Next execution(s) (first 10):\n" + string.Join("\n", item.GetNextFireTimes(15)))"
+                                   Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
                                    CssClass="white-space-pre">
                                     <CxIcon Icon="FeatherIcon.Info" />
                                 </HxTooltip>
