@@ -1,9 +1,6 @@
-﻿using Dapper;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
@@ -12,6 +9,7 @@ internal class ClaimsTransformer : IClaimsTransformation
 {
     private readonly IMemoryCache _memoryCache;
     private readonly DbHelperService _dbHelper;
+    private const string Issuer = "Biflow";
 
     public ClaimsTransformer(IMemoryCache memoryCache, DbHelperService dbHelper)
     {
@@ -26,7 +24,7 @@ internal class ClaimsTransformer : IClaimsTransformation
         {
             return principal;
         }
-        if (principal.Claims.Any(c => c.Type == ClaimTypes.Role && c.Issuer == "Biflow"))
+        if (principal.Claims.Any(c => c.Type == ClaimTypes.Role && c.Issuer == Issuer))
         {
             return principal;
         }
@@ -43,7 +41,7 @@ internal class ClaimsTransformer : IClaimsTransformation
         }
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, "Biflow")
+            new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, Issuer)
         };
         var claimIdentity = new ClaimsIdentity(claims, NegotiateDefaults.AuthenticationScheme);
         principal.AddIdentity(claimIdentity);
