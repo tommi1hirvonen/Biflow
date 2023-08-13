@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class MasterDataTable
 {
     [Key]
-    public Guid DataTableId { get; set; }
+    public Guid DataTableId { get; private set; }
 
     [Required]
     [MinLength(1)]

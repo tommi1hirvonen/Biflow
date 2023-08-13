@@ -11,19 +11,19 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     }
 
     [Display(Name = "File path")]
-    public string ExeFileName { get; set; }
+    public string ExeFileName { get; private set; }
 
     [Display(Name = "Arguments")]
-    public string? ExeArguments { get; set; }
+    public string? ExeArguments { get; private set; }
 
     [Display(Name = "Working directory")]
-    public string? ExeWorkingDirectory { get; set; }
+    public string? ExeWorkingDirectory { get; private set; }
 
     [Display(Name = "Success exit code")]
-    public int? ExeSuccessExitCode { get; set; }
+    public int? ExeSuccessExitCode { get; private set; }
 
     [Column("TimeoutMinutes")]
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; private set; }
 
     public IList<ExeStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

@@ -171,8 +171,7 @@ internal abstract class StepExecutorBase
                 await UpdateExecutionFailedAsync(executionAttempt, failure, StepExecutionStatus.Retry);
 
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                var nextExecution = executionAttempt.Clone();
-                nextExecution.RetryAttemptIndex++;
+                var nextExecution = executionAttempt.Clone(executionAttempt.RetryAttemptIndex + 1);
                 nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
                 StepExecution.StepExecutionAttempts.Add(nextExecution);
                 using (var context = _dbContextFactory.CreateDbContext())

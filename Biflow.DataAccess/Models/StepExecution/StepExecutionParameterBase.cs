@@ -15,11 +15,11 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         ParameterType = parameterType;
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
-    public Guid StepId { get; set; }
+    public Guid StepId { get; private set; }
 
-    public ParameterType ParameterType { get; set; }
+    public ParameterType ParameterType { get; private set; }
 
     [Column(TypeName = "sql_variant")]
     public override object? ParameterValue
@@ -38,7 +38,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter
 
     private ParameterValueType _parameterValueType = ParameterValueType.String;
 
-    public Guid? InheritFromExecutionParameterId { get; set; }
+    public Guid? InheritFromExecutionParameterId { get; private set; }
 
     [Column(TypeName = "sql_variant")]
     public object? ExecutionParameterValue { get; set; }

@@ -11,15 +11,15 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     }
 
     [Display(Name = "Pipeline name")]
-    public string PipelineName { get; set; }
+    public string PipelineName { get; private set; }
 
     [Display(Name = "Pipeline client id")]
-    public Guid PipelineClientId { get; set; }
+    public Guid PipelineClientId { get; private set; }
 
     public PipelineClient PipelineClient { get; set; } = null!;
 
     [Column("TimeoutMinutes")]
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; private set; }
 
     public IList<PipelineStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

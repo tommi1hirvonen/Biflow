@@ -119,7 +119,7 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule Schedule { get; set; } = new() { Tags = new List<Tag>() };
+    private Schedule Schedule { get; set; } = new(Guid.Empty) { Tags = new List<Tag>() }; // assign placeholder
 
     private HxOffcanvas? Offcanvas { get; set; }
 
@@ -237,11 +237,12 @@
         }
         else if (scheduleId == Guid.Empty)
         {
-            Schedule = new()
+            var jobId = Job?.JobId ?? Jobs.FirstOrDefault()?.JobId;
+            ArgumentNullException.ThrowIfNull(jobId);
+            Schedule = new((Guid)jobId)
             {
                 IsEnabled = true,
-                Tags = new List<Tag>(),
-                JobId = Job?.JobId
+                Tags = new List<Tag>()
             };
         }
 

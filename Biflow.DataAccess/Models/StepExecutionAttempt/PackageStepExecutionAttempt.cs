@@ -14,5 +14,5 @@ public class PackageStepExecutionAttempt : StepExecutionAttempt
 
     public long? PackageOperationId { get; set; }
 
-    public override StepExecutionAttempt Clone() => new PackageStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new PackageStepExecutionAttempt(this);
 }

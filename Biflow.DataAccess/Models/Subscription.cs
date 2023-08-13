@@ -8,15 +8,24 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("JobId", "Username")]
 public class Subscription
 {
+    public Subscription(Guid jobId, string username)
+    {
+        JobId = jobId;
+        Username = username;
+    }
+
     [Required]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; }
 
     public Job Job { get; set; } = null!;
 
     [Required]
     [ForeignKey("User")]
-    public string? Username { get; set; }
+    public string Username { get; }
 
+    /// <summary>
+    /// null if regular subscription is not enabled
+    /// </summary>
     public SubscriptionType? SubscriptionType { get; set; }
 
     public bool NotifyOnOvertime { get; set; }

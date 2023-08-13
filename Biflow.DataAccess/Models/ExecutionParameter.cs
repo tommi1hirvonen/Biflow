@@ -14,7 +14,7 @@ public class ExecutionParameter : DynamicParameter
         ParameterValueType = parameterValueType;
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
     public Execution Execution { get; set; } = null!;
 

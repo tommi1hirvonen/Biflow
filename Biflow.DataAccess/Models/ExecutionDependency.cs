@@ -8,14 +8,14 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "StepId", "DependantOnStepId")]
 public class ExecutionDependency
 {
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
-    public Guid StepId { get; set; }
+    public Guid StepId { get; private set; }
 
-    public Guid DependantOnStepId { get; set; }
+    public Guid DependantOnStepId { get; private set; }
 
     [Display(Name = "Type")]
-    public DependencyType DependencyType { get; set; }
+    public DependencyType DependencyType { get; private set; }
 
     public StepExecution StepExecution { get; set; } = null!;
 

@@ -80,6 +80,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step1 = new SqlStep
         {
+            JobId = job.JobId,
             StepName = "Test step 1",
             ExecutionPhase = 10,
             SqlStatement = "select 1",
@@ -89,6 +90,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step2 = new SqlStep
         {
+            JobId = job.JobId,
             StepName = "Test step 2",
             StepDescription = "Test step 2 description",
             ExecutionPhase = 20,
@@ -96,7 +98,7 @@ public class DatabaseFixture : IAsyncLifetime
             Connection = connection,
             Tags = new List<Tag> { tag }
         };
-        var step2Dependency = new Dependency { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
+        var step2Dependency = new Dependency(step2.StepId, step1.StepId) { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
         step2.Dependencies = new List<Dependency> { step2Dependency };
         var step2Parameter = new SqlStepParameter
         {
@@ -109,6 +111,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step3 = new SqlStep
         {
+            JobId = job.JobId,
             StepName = "Test step 3",
             ExecutionPhase = 20,
             SqlStatement = "select @param",
@@ -126,13 +129,14 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step4 = new SqlStep
         {
+            JobId = job.JobId,
             StepName = "Test step 4",
             ExecutionPhase = 30,
             SqlStatement = "select @param",
             Connection = connection,
             Tags = new List<Tag> { tag }
         };
-        var step4Dependency = new Dependency { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
+        var step4Dependency = new Dependency(step4.StepId, step3.StepId) { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
         step4.Dependencies = new List<Dependency> { step4Dependency };
         var step4Parameter = new SqlStepParameter
         {

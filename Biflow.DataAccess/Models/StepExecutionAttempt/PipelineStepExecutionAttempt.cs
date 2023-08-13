@@ -14,5 +14,5 @@ public class PipelineStepExecutionAttempt : StepExecutionAttempt
 
     public string? PipelineRunId { get; set; }
 
-    public override StepExecutionAttempt Clone() => new PipelineStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new PipelineStepExecutionAttempt(this);
 }

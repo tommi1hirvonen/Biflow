@@ -14,14 +14,14 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
     [Required]
     [MinLength(1)]
     [MaxLength(128)]
-    public string AgentJobName { get; set; }
+    public string AgentJobName { get; private set; }
 
     [Column("TimeoutMinutes")]
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; private set; }
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    public Guid? ConnectionId { get; private set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 

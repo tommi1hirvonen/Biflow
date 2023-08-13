@@ -13,10 +13,10 @@ public abstract class Step : IComparable
 
     [Key]
     [Required]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; private set; }
 
     [Required]
-    public Guid JobId { get; set; }
+    public required Guid JobId { get; init; }
 
     public Job Job { get; set; } = null!;
 
@@ -78,7 +78,7 @@ public abstract class Step : IComparable
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]
-    public byte[]? Timestamp { get; set; }
+    public byte[]? Timestamp { get; private set; }
 
     public IList<Dependency> Dependencies { get; set; } = null!;
 

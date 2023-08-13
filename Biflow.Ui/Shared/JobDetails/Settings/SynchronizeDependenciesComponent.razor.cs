@@ -37,6 +37,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             .Include(step => step.Sources)
             .Include(step => step.Targets)
             .Include(step => step.Dependencies)
+            .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
 
         DependenciesToAdd = new();
@@ -49,11 +50,9 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {
-                var dependency = new Dependency
+                var dependency = new Dependency(step.StepId, missing.StepId)
                 {
-                    StepId = step.StepId,
                     Step = step,
-                    DependantOnStepId = missing.StepId,
                     DependantOnStep = missing
                 };
                 DependenciesToAdd.Add(dependency);

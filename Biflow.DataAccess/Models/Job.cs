@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class Job
 {
     [Key]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; private set; }
 
     [Required]
     [MaxLength(250)]
@@ -85,5 +85,5 @@ public class Job
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]
-    public byte[]? Timestamp { get; set; }
+    public byte[]? Timestamp { get; private set; }
 }

@@ -17,5 +17,5 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
 
-    public override StepExecutionAttempt Clone() => new FunctionStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new FunctionStepExecutionAttempt(this);
 }

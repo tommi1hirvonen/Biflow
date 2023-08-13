@@ -11,5 +11,5 @@ public class AgentJobStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    public override StepExecutionAttempt Clone() => new AgentJobStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new AgentJobStepExecutionAttempt(this);
 }

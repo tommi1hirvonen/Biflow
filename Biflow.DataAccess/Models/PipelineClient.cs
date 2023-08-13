@@ -12,7 +12,7 @@ public abstract class PipelineClient
     }
 
     [Key]
-    public Guid PipelineClientId { get; set; }
+    public Guid PipelineClientId { get; private set; }
 
     public string? PipelineClientName { get; set; }
 

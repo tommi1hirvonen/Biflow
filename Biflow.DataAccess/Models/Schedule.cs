@@ -6,15 +6,19 @@ namespace Biflow.DataAccess.Models;
 [Table("Schedule")]
 public class Schedule
 {
+    public Schedule(Guid jobId)
+    {
+        JobId = jobId;
+    }
+
     [Key]
-    public Guid ScheduleId { get; set; }
+    public Guid ScheduleId { get; private set; }
 
-    [Required]
-    public Guid? JobId { get; set; }
+    [NotEmptyGuid]
+    public Guid JobId { get; set; }
 
-    [Required]
+    [Required(AllowEmptyStrings = false)]
     [MaxLength(250)]
-    [MinLength(1)]
     public string ScheduleName { get; set; } = string.Empty;
 
     public Job Job { get; set; } = null!;

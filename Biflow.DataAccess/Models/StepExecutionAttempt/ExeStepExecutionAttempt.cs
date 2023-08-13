@@ -13,5 +13,5 @@ public class ExeStepExecutionAttempt : StepExecutionAttempt
 
     public int? ExeProcessId { get; set; }
 
-    public override StepExecutionAttempt Clone() => new ExeStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new ExeStepExecutionAttempt(this);
 }

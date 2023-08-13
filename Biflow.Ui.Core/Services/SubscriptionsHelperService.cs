@@ -37,7 +37,7 @@ namespace Biflow.Ui.Core
             }
             else
             {
-                var newSub = new Subscription { JobId = job.JobId, Username = user.Username, SubscriptionType = subscriptionType };
+                var newSub = new Subscription(job.JobId, user.Username) { SubscriptionType = subscriptionType };
                 context.Subscriptions.Add(newSub);
                 user.Subscriptions.Add(newSub);
             }
@@ -60,7 +60,7 @@ namespace Biflow.Ui.Core
             }
             else
             {
-                var newSub = new Subscription { JobId = job.JobId, Username = user.Username, SubscriptionType = null, NotifyOnOvertime = onOvertime };
+                var newSub = new Subscription(job.JobId, user.Username) { SubscriptionType = null, NotifyOnOvertime = onOvertime };
                 context.Subscriptions.Add(newSub);
                 user.Subscriptions.Add(newSub);
             }

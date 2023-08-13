@@ -11,5 +11,5 @@ public class TabularStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    public override StepExecutionAttempt Clone() => new TabularStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new TabularStepExecutionAttempt(this);
 }

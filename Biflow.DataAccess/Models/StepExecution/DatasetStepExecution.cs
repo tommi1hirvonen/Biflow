@@ -11,14 +11,14 @@ public class DatasetStepExecution : StepExecution
     }
 
     [Display(Name = "App registration id")]
-    public Guid AppRegistrationId { get; set; }
+    public Guid AppRegistrationId { get; private set; }
 
     public AppRegistration AppRegistration { get; set; } = null!;
 
     [Display(Name = "Group id")]
-    public string DatasetGroupId { get; set; }
+    public string DatasetGroupId { get; private set; }
 
     [Display(Name = "Dataset id")]
-    public string DatasetId { get; set; }
+    public string DatasetId { get; private set; }
 
 }

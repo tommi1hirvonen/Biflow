@@ -8,13 +8,17 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("StepId", "DependantOnStepId")]
 public class Dependency
 {
-    [Required]
-    public Guid StepId { get; set; }
+    public Dependency(Guid stepId, Guid dependantOnStepId)
+    {
+        StepId = stepId;
+        DependantOnStepId = dependantOnStepId;
+    }
+
+    public Guid StepId { get; }
 
     public Step Step { get; set; } = null!;
 
-    [Required]
-    public Guid DependantOnStepId { get; set; }
+    public Guid DependantOnStepId { get; }
 
     public Step DependantOnStep { get; set; } = null!;
 

@@ -15,26 +15,26 @@ public abstract class StepExecution
     }
 
     [Display(Name = "Execution id")]
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
     [Display(Name = "Step id")]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; private set; }
 
     [Display(Name = "Step")]
-    public string StepName { get; set; }
+    public string StepName { get; private set; }
 
     [Display(Name = "Step type")]
     public StepType StepType { get; }
 
-    public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; }
+    public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; private set; }
 
-    public int ExecutionPhase { get; set; }
+    public int ExecutionPhase { get; private set; }
 
-    public int RetryAttempts { get; set; }
+    public int RetryAttempts { get; private set; }
 
-    public double RetryIntervalMinutes { get; set; }
+    public double RetryIntervalMinutes { get; private set; }
 
-    public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
+    public EvaluationExpression ExecutionConditionExpression { get; private set; } = new();
 
     public Execution Execution { get; set; } = null!;
 

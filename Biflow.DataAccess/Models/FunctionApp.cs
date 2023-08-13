@@ -11,7 +11,7 @@ public class FunctionApp
 {
     [Required]
     [Display(Name = "Function app id")]
-    public Guid FunctionAppId { get; set; }
+    public Guid FunctionAppId { get; private set; }
 
     [Required]
     [Display(Name = "Function app name")]

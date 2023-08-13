@@ -9,10 +9,10 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     }
 
     [Display(Name = "Job to execute")]
-    public Guid JobToExecuteId { get; set; }
+    public Guid JobToExecuteId { get; private set; }
 
     [Display(Name = "Synchronized")]
-    public bool JobExecuteSynchronized { get; set; }
+    public bool JobExecuteSynchronized { get; private set; }
 
     public IList<JobStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 

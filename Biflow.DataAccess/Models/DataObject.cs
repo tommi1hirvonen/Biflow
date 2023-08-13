@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class DataObject
 {
     [Key]
-    public Guid ObjectId { get; set; }
+    public Guid ObjectId { get; private set; }
 
     [Required]
     [MinLength(1)]

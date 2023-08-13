@@ -13,7 +13,7 @@ public class Tag
     }
 
     [Key]
-    public Guid TagId { get; set; }
+    public Guid TagId { get; private set; }
 
     [Required]
     [MaxLength(250)]

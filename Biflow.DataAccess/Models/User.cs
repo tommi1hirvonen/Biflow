@@ -9,7 +9,7 @@ public class User
     [Key]
     [Required]
     [MaxLength(250)]
-    public string? Username { get; set; }
+    public required string Username { get; set; }
 
     [MaxLength(254)]
     [DataType(DataType.EmailAddress)]

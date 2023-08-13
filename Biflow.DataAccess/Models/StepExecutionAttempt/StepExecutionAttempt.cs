@@ -24,11 +24,11 @@ public abstract class StepExecutionAttempt
         StepExecution = other.StepExecution;
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
-    public Guid StepId { get; set; }
+    public Guid StepId { get; private set; }
 
-    public int RetryAttemptIndex { get; set; }
+    public int RetryAttemptIndex { get; private set; }
 
     public DateTimeOffset? StartDateTime { get; set; }
 
@@ -65,7 +65,14 @@ public abstract class StepExecutionAttempt
     /// The returned new instance can act as a placeholder for a new execution attempt.
     /// </summary>
     /// <returns>New instance where non-attempt specific properties have been copied from this instance.</returns>
-    public abstract StepExecutionAttempt Clone();
+    public StepExecutionAttempt Clone(int retryAttemptIndex)
+    {
+        var clone = Clone();
+        clone.RetryAttemptIndex = retryAttemptIndex;
+        return clone;
+    }
+
+    protected abstract StepExecutionAttempt Clone(); 
 
     [NotMapped]
     public bool CanBeStopped =>

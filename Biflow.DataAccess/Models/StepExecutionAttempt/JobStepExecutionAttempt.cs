@@ -13,5 +13,5 @@ public class JobStepExecutionAttempt : StepExecutionAttempt
 
     public Guid? ChildJobExecutionId { get; set; }
 
-    public override StepExecutionAttempt Clone() => new JobStepExecutionAttempt(this);
+    protected override StepExecutionAttempt Clone() => new JobStepExecutionAttempt(this);
 }

@@ -7,7 +7,7 @@ public abstract class ParameterBase
 {
     [Required]
     [Display(Name = "Id")]
-    public Guid ParameterId { get; set; }
+    public Guid ParameterId { get; private set; }
 
     [Required]
     [MaxLength(128)]

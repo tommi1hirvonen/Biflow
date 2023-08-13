@@ -2,5 +2,5 @@
 
 public interface IHasTimeout
 {
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; }
 }

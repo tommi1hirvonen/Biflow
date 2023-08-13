@@ -14,7 +14,7 @@ public class AppRegistration
     [Key]
     [Required]
     [Display(Name = "App registration id")]
-    public Guid AppRegistrationId { get; set; }
+    public Guid AppRegistrationId { get; private set; }
 
     [Required]
     [Display(Name = "Power BI Service name")]

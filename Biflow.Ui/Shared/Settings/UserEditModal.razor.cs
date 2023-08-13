@@ -165,6 +165,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
             await ResetContext();
             User = new()
             {
+                Username = "",
                 Role = "Viewer",
                 Jobs = new List<Job>(),
                 DataTables = new List<MasterDataTable>()

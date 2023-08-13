@@ -15,7 +15,7 @@ public abstract class ConnectionInfoBase : IComparable
 
     [Key]
     [Display(Name = "Connection id")]
-    public Guid ConnectionId { get; set; }
+    public Guid ConnectionId { get; private set; }
 
     [Required]
     [Display(Name = "Connection type")]

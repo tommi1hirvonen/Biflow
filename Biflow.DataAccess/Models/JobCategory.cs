@@ -8,7 +8,7 @@ public class JobCategory
 {
     [Key]
     [Column("JobCategoryId")]
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId { get; private set; }
 
     [Required]
     [MaxLength(250)]

@@ -11,21 +11,21 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     }
 
     [Column("ConnectionId")]
-    public Guid ConnectionId { get; set; }
+    public Guid ConnectionId { get; private set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [Display(Name = "SQL statement")]
-    public string SqlStatement { get; set; }
+    public string SqlStatement { get; private set; }
 
     [Display(Name = "Result capture job parameter")]
-    public Guid? ResultCaptureJobParameterId { get; set; }
+    public Guid? ResultCaptureJobParameterId { get; private set; }
 
     [Column(TypeName = "sql_variant")]
     public object? ResultCaptureJobParameterValue { get; set; }
 
     [Column("TimeoutMinutes")]
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; private set; }
 
     public IList<SqlStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 }

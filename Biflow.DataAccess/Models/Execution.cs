@@ -15,10 +15,10 @@ public class Execution
     }
 
     [Key]
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; private set; }
 
     [Display(Name = "Job id")]
-    public Guid? JobId { get; set; }
+    public Guid? JobId { get; private set; }
 
     [Display(Name = "Job")]
     public string JobName { get; set; }
@@ -39,38 +39,38 @@ public class Execution
     public ExecutionStatus ExecutionStatus { get; set; }
 
     [Display(Name = "Dependency mode")]
-    public bool DependencyMode { get; set; }
+    public bool DependencyMode { get; private set; }
 
     [Display(Name = "Stop on first error")]
-    public bool StopOnFirstError { get; set; }
+    public bool StopOnFirstError { get; private set; }
 
     [Display(Name = "Max parallel steps (0 = use default)")]
-    public int MaxParallelSteps { get; set; }
+    public int MaxParallelSteps { get; private set; }
 
     [Display(Name = "Notification time limit (min, 0 = indefinite)")]
-    public int OvertimeNotificationLimitMinutes { get; set; }
+    public int OvertimeNotificationLimitMinutes { get; private set; }
 
     [Display(Name = "Created by")]
-    public string? CreatedBy { get; set; }
+    public string? CreatedBy { get; private set; }
 
     [Display(Name = "Schedule id")]
-    public Guid? ScheduleId { get; set; }
+    public Guid? ScheduleId { get; private set; }
 
-    public string? ScheduleName { get; set; }
+    public string? ScheduleName { get; private set; }
 
-    public string? CronExpression { get; set; }
+    public string? CronExpression { get; private set; }
 
     [Display(Name = "Executor PID")]
     public int? ExecutorProcessId { get; set; }
 
     [Display(Name = "Notify")]
-    public bool Notify { get; set; }
+    public bool Notify { get; private set; }
 
     [Display(Name = "Notify caller")]
-    public SubscriptionType? NotifyCaller { get; set; }
+    public SubscriptionType? NotifyCaller { get; private set; }
 
     [Display(Name = "Notify caller overtime")]
-    public bool NotifyCallerOvertime { get; set; }
+    public bool NotifyCallerOvertime { get; private set; }
 
     public ICollection<StepExecution> StepExecutions { get; set; } = null!;
 
