@@ -24,6 +24,13 @@ namespace Biflow.Ui.Core;
 
 public static partial class Extensions
 {
+
+    /// <summary>
+    /// If the UI application uses the self-hosted scheduler service to launch executions, this method should be called right before app.Run().
+    /// Loads all schedules from the database to the in-memory scheduler service.
+    /// </summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
     public static async Task ReadAllSchedulesAsync(this WebApplication app)
     {
         // Read all schedules into the schedules manager.
@@ -32,6 +39,12 @@ public static partial class Extensions
         await scheduler.SynchronizeAsync();
     }
 
+    /// <summary>
+    /// Adds authentication services based on settings defined in configuration
+    /// </summary>
+    /// <param name="configuration">Top level configuration object</param>
+    /// <returns>The IServiceCollection passed as parameter</returns>
+    /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var authentication = configuration.GetValue<string>("Authentication");
@@ -83,6 +96,12 @@ public static partial class Extensions
         return services;
     }
 
+    /// <summary>
+    /// Adds services that provide core functionality in the UI application
+    /// </summary>
+    /// <param name="configuration">Top level configuration object</param>
+    /// <returns>The IServiceCollection passed as parameter</returns>
+    /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("BiflowContext");
@@ -142,6 +161,10 @@ public static partial class Extensions
         return services;
     }
 
+    /// <summary>
+    /// Adds validation services used for more complex validation rules for some entities
+    /// </summary>
+    /// <returns>The IServiceCollection passed as parameter</returns>
     public static IServiceCollection AddValidationServices(this IServiceCollection services)
     {
         services.AddScoped<StepParametersValidator>();
@@ -150,6 +173,11 @@ public static partial class Extensions
         return services;
     }
 
+    /// <summary>
+    /// Try to identify and parse a SQL stored procedure from a SQL statement
+    /// </summary>
+    /// <remarks>For example, SQL statement <c>exec [dbo].[MyProc]</c> would return a schema of dbo and procedure name MyProc</remarks>
+    /// <returns>Tuple of strings if the stored procedure was parsed successfully, null if not. The schema is null if the SQL statement did not include a schema.</returns>
     public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
     {
         // Can handle white space inside object names
@@ -202,12 +230,24 @@ public static partial class Extensions
         return attempt.GetGanttGraphDimensions(allAttempts);
     }
 
+    /// <summary>
+    /// Calculate Gantt graph dimensions for an execution attempt. The start and end time are compared to the list of all attempts provider as an argument.
+    /// The method assumes constant width of 100 for the Gantt graph.
+    /// </summary>
+    /// <param name="allAttempts">List of all execution attempts shown on the Gantt graph</param>
+    /// <returns>Offset (between 0 and 99) and width (between 1 and 100) of the element in the Gantt graph</returns>
     public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
         => (attempt.StartDateTime, attempt.EndDateTime).GetGanttGraphDimensions(allAttempts.Select(a => (a.StartDateTime, a.EndDateTime)));
 
     public static (double Offset, double Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
         => (execution.StartDateTime, execution.EndDateTime).GetGanttGraphDimensions(allExecutions.Select(e => (e.StartDateTime, e.EndDateTime)));
 
+    /// <summary>
+    /// Calculate Gantt graph dimensions for a tuple of DateTimeOffsets (start and end time). The start and end time are compared to the list of all tuples provided as an argument.
+    /// The method assumes constant width of 100 for the Gantt graph.
+    /// </summary>
+    /// <param name="allExecutions">List of all executions (start and end times) shown on the Gantt graph</param>
+    /// <returns>Offset (between 0 and 99) and width (between 1 and 100) of the element in the Gantt graph</returns>
     public static (double Offset, double Width) GetGanttGraphDimensions(this StartEnd execution, IEnumerable<StartEnd> allExecutions)
     {
         if (!allExecutions.Any())
@@ -234,6 +274,10 @@ public static partial class Extensions
         return (start, width);
     }
 
+    /// <summary>
+    /// Calculate progress percentage based on the <see cref="Execution.StepExecutions"/> and <see cref="StepExecution.StepExecutionAttempts"/> list of steps and their statuses
+    /// </summary>
+    /// <returns>Success percentage between 0 and 100</returns>
     public static decimal GetSuccessPercent(this Execution execution)
     {
         var successCount = execution.StepExecutions
@@ -244,6 +288,10 @@ public static partial class Extensions
         return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
     }
 
+    /// <summary>
+    /// Calculate progress percentage based on the <see cref="Execution.StepExecutions"/> and <see cref="StepExecution.StepExecutionAttempts"/> list of steps and their statuses
+    /// </summary>
+    /// <returns>Progress percentage between 0 and 100 rounded to the nearest integer</returns>
     public static int GetProgressPercent(this Execution execution)
     {
         var allCount = execution.StepExecutions?.Count ?? 0;
@@ -258,8 +306,17 @@ public static partial class Extensions
         return allCount > 0 ? (int)Math.Round(completedCount / (double)allCount * 100) : 0;
     }
 
+    /// <summary>
+    /// Get a string describing the schedule's underlying Cron expression
+    /// </summary>
+    /// <returns>Descriptive text if the Cron expression is valid. Otherwise an error message string is returned.</returns>
     public static string GetScheduleDescription(this Schedule schedule) => GetCronExpressionDescription(schedule.CronExpression);
 
+    /// <summary>
+    /// Get a string describing a Cron expression
+    /// </summary>
+    /// <param name="expression">String to read as Cron expression</param>
+    /// <returns>Descriptive text if the Cron expression is valid. Otherwise an error message string is returned.</returns>
     public static string GetCronExpressionDescription(string? expression)
     {
         if (expression is not null && CronExpression.IsValidExpression(expression))
@@ -282,6 +339,12 @@ public static partial class Extensions
 
     public static IEnumerable<DateTime?> GetNextFireTimes(this Schedule schedule, int count) => schedule.NextFireTimesSequence().Take(count);
 
+    /// <summary>
+    /// Generates a sequence of DateTimes for when the schedule is triggered
+    /// </summary>
+    /// <param name="schedule"><see cref="">Schedule</see> object whose Cron is used to parse DateTimes</param>
+    /// <param name="start">Optionally provide start time to filter generated sequence to only include DateTimes beyond a certain point. By default DateTimeOffset.UtcNow is used.</param>
+    /// <returns></returns>
     public static IEnumerable<DateTime?> NextFireTimesSequence(this Schedule schedule, DateTimeOffset? start = null)
     {
         if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
@@ -304,6 +367,18 @@ public static partial class Extensions
         return decimal.Round(value, decimalPlaces).ToString() + "%";
     }
 
+    /// <summary>
+    /// Round DateTime backwards based on ticks parameter
+    /// </summary>
+    /// <remarks>
+    /// Example usage to round to nearest minute
+    /// <code>
+    /// var rounded = DateTime.Now.Trim(TimeSpan.TicksPerMinute);
+    /// </code>
+    /// </remarks>
+    /// <param name="date">DateTime to round</param>
+    /// <param name="roundTicks">Number of ticks to use for rounding, e.g. TimeSpan.TicksPerMinute to round to nearest minute</param>
+    /// <returns>Rounded DateTime</returns>
     public static DateTime Trim(this DateTime date, long roundTicks)
     {
         return new DateTime(date.Ticks - date.Ticks % roundTicks, date.Kind);
