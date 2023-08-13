@@ -2,7 +2,7 @@
 
 namespace Biflow.Utilities;
 
-public static class CommonUtility
+public static class Extensions
 {
     public static string? GetDurationInReadableFormat(this StepExecutionAttempt attempt) => attempt.ExecutionInSeconds?.SecondsToReadableFormat();
 
