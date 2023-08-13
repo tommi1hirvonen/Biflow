@@ -141,6 +141,7 @@ public static partial class Extensions
 
         return services;
     }
+
     public static IServiceCollection AddValidationServices(this IServiceCollection services)
     {
         services.AddScoped<StepParametersValidator>();
@@ -306,21 +307,6 @@ public static partial class Extensions
     public static DateTime Trim(this DateTime date, long roundTicks)
     {
         return new DateTime(date.Ticks - date.Ticks % roundTicks, date.Kind);
-    }
-
-    public static string Left(this string value, int length)
-    {
-        if (value.Length > length)
-        {
-            return value[..length];
-        }
-
-        return value;
-    }
-
-    public static DateTime ToDateTime(this long value)
-    {
-        return new DateTime(value);
     }
 
     public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
