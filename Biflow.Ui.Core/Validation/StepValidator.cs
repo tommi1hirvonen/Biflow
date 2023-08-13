@@ -22,6 +22,7 @@ public class StepValidator : AbstractValidator<Step>
         });
         When(step => step is IHasStepParameters, () =>
         {
+            // Built-in parameter names used in step expressions are reserved and cannot be used as user-defined parameter names.
             var reservedParameterNames = new string[]
             {
                 ExpressionParameterNames.ExecutionId,
