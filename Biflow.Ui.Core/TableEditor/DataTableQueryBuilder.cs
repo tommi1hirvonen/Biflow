@@ -17,6 +17,8 @@ internal class DataTableQueryBuilder
         _top = top;
     }
 
+    private string QuotedSchemaAndTable => $"{_table.TargetSchemaName.QuoteName()}.{_table.TargetTableName.QuoteName()}";
+
     public (string, DynamicParameters parameters) Build()
     {
         var cmdBuilder = new StringBuilder();
@@ -24,40 +26,41 @@ internal class DataTableQueryBuilder
 
         cmdBuilder.Append($"""
             SELECT TOP {_top} [main].*
-            FROM [{_table.TargetSchemaName}].[{_table.TargetTableName}] AS [main]
+            FROM {QuotedSchemaAndTable} AS [main]
 
             """);
 
-        IEnumerable<(IFilter, Column, int)> activeFilters = _filters?.Filters
+        (IFilter, Column, int)[] activeFilters = _filters?.Filters
             .Where(f => f.Value.Enabled1)
             .Join(_filters.Columns,
                 filter => filter.Key,
                 column => column.Name,
                 (filter, column) => (filter.Value, column))
             .Select((f, i) => (f.Value, f.column, i))
-            ?? Enumerable.Empty<(IFilter, Column, int)>();
+            .ToArray()
+            ?? Array.Empty<(IFilter, Column, int)>();
 
         foreach (var (_, column, index) in activeFilters)
         {
             if (column.Lookup is null) continue;
             var dataTableLookup = column.Lookup.DataTableLookup;
-            var columnName = dataTableLookup.ColumnName;
-            var lookupSchema = dataTableLookup.LookupTable.TargetSchemaName;
-            var lookupTable = dataTableLookup.LookupTable.TargetTableName;
-            var lookupValueColumn = dataTableLookup.LookupValueColumn;
+            var columnName = dataTableLookup.ColumnName.QuoteName();
+            var lookupSchema = dataTableLookup.LookupTable.TargetSchemaName.QuoteName();
+            var lookupTable = dataTableLookup.LookupTable.TargetTableName.QuoteName();
+            var lookupValueColumn = dataTableLookup.LookupValueColumn.QuoteName();
             var lookupFilterColumn = dataTableLookup.LookupDisplayType switch
             {
-                LookupDisplayType.Value => $"[{dataTableLookup.LookupValueColumn}]",
-                LookupDisplayType.Description => $"[{dataTableLookup.LookupDescriptionColumn}]",
-                LookupDisplayType.ValueAndDescription => $"CONCAT([{dataTableLookup.LookupValueColumn}], ' ', [{dataTableLookup.LookupDescriptionColumn}])",
+                LookupDisplayType.Value => dataTableLookup.LookupValueColumn.QuoteName(),
+                LookupDisplayType.Description => dataTableLookup.LookupDescriptionColumn.QuoteName(),
+                LookupDisplayType.ValueAndDescription => $"CONCAT({dataTableLookup.LookupValueColumn.QuoteName()}, ' ', {dataTableLookup.LookupDescriptionColumn.QuoteName()})",
                 _ => throw new NotSupportedException($"Unsupoorted {nameof(LookupDisplayType)} value {dataTableLookup.LookupDisplayType}")
             };
             var lookupJoin = $"""
                 LEFT JOIN (
-                    SELECT [{lookupValueColumn}] AS [v], MAX({lookupFilterColumn}) AS [d]
-                    FROM [{lookupSchema}].[{lookupTable}]
-                    GROUP BY [{lookupValueColumn}]
-                ) AS [lookup{index}] ON [main].[{columnName}] = [lookup{index}].[v]
+                    SELECT {lookupValueColumn} AS [v], MAX({lookupFilterColumn}) AS [d]
+                    FROM {lookupSchema}.{lookupTable}
+                    GROUP BY {lookupValueColumn}
+                ) AS [lookup{index}] ON [main].{columnName} = [lookup{index}].[v]
 
                 """;
             cmdBuilder.Append(lookupJoin);
@@ -76,7 +79,7 @@ internal class DataTableQueryBuilder
                 cmdBuilder.Append('(');
                 var filterColumnIdentifier = column.Lookup is not null
                     ? $"[lookup{index}].[d]"
-                    : $"[main].[{column.Name}]";
+                    : $"[main].{column.Name.QuoteName()}";
                 var (statement1, paramsToAdd1) = GenerateFilterStatement(filterColumnIdentifier, filter.Operator1, filter.FilterValue1, parameterIndex);
                 cmdBuilder.Append(statement1);
                 parameters.AddDynamicParams(paramsToAdd1);

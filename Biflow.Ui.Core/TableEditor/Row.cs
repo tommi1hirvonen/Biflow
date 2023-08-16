@@ -85,6 +85,9 @@ public class Row
         }
     }
 
+    private string QuotedSchemaAndTable =>
+        $"{_parentTable.MasterDataTable.TargetSchemaName.QuoteName()}.{_parentTable.MasterDataTable.TargetTableName.QuoteName()}";
+
     private void OnValuesChanged() => _parentTable.HasChanges = true;
 
     public void Delete()
@@ -101,23 +104,21 @@ public class Row
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var (schema, table) = (_parentTable.MasterDataTable.TargetSchemaName, _parentTable.MasterDataTable.TargetTableName);
-
         var upsertableColumns = _parentTable.Columns
             .Where(c => !c.IsIdentity && !c.IsComputed)
             .Select(c => c.Name)
-            .ToList();
+            .ToArray();
         var primaryKey = _parentTable.Columns
             .Where(c => c.IsPrimaryKey)
             .Select(c => c.Name)
-            .ToList();
+            .ToArray();
 
         // Existing entity
         if (_initialValues is not null && !ToBeDeleted && IsUpdateable)
         {
             var changes = Values
                 .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _initialValues[w.Key]?.ToString())
-                .ToList();
+                .ToArray();
                         
             // No changes => skip this record
             if (!changes.Any())
@@ -128,12 +129,12 @@ public class Row
             var parameters = new DynamicParameters();
             var builder = new StringBuilder();
 
-            builder.Append("UPDATE [").Append(schema).Append("].[").Append(table).Append("] SET ");
+            builder.Append("UPDATE ").Append(QuotedSchemaAndTable).Append(" SET ");
             foreach (var (value, index) in changes.Select((c, i) => (c, i + 1)))
             {
-                builder.Append('[').Append(value.Key).Append(']').Append(" = @Working_").Append(index);
+                builder.Append(value.Key.QuoteName()).Append(" = @Working_").Append(index);
                 parameters.Add($"Working_{index}", value.Value);
-                if (index < changes.Count)
+                if (index < changes.Length)
                 {
                     builder.Append(',');
                 }
@@ -142,9 +143,9 @@ public class Row
             foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _initialValues[pk];
-                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
+                builder.Append(pk.QuoteName()).Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < primaryKey.Count)
+                if (index < primaryKey.Length)
                 {
                     builder.Append(" AND ");
                 }
@@ -157,13 +158,13 @@ public class Row
             // Existing record to be deleted
             var builder = new StringBuilder();
             var parameters = new DynamicParameters();
-            builder.Append("DELETE [").Append(schema).Append("].[").Append(table).Append("] WHERE ");
+            builder.Append("DELETE ").Append(QuotedSchemaAndTable).Append(" WHERE ");
             foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _initialValues[pk];
-                builder.Append('[').Append(pk).Append(']').Append(" = @Orig_").Append(index);
+                builder.Append(pk.QuoteName()).Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < primaryKey.Count)
+                if (index < primaryKey.Length)
                 {
                     builder.Append(" AND ");
                 }
@@ -177,19 +178,17 @@ public class Row
             var parameters = new DynamicParameters();
             var builder = new StringBuilder();
             builder
-                .Append("INSERT INTO [")
-                .Append(schema)
-                .Append("].[")
-                .Append(table)
-                .Append("] (")
-                .AppendJoin(',', upsertableColumns.Select(c => $"[{c}]"))
+                .Append("INSERT INTO ")
+                .Append(QuotedSchemaAndTable)
+                .Append(" (")
+                .AppendJoin(',', upsertableColumns.Select(c => c.QuoteName()))
                 .Append(") VALUES (");
             foreach (var (column, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
             {
                 var value = Values[column];
                 builder.Append("@Working_").Append(index);
                 parameters.Add($"Working_{index}", value);
-                if (index < upsertableColumns.Count)
+                if (index < upsertableColumns.Length)
                 {
                     builder.Append(',');
                 }

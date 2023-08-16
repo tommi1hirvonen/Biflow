@@ -23,13 +23,17 @@ public class Upload
         _pkColumns = _columns.Where(c => c.IsPrimaryKey).Select(c => c.Name).ToArray();
     }
 
+    private IEnumerable<string> QuotedPkColumns => _pkColumns.Select(pk => pk.QuoteName());
+
+    private string QuotedSchemaAndTable => $"{_table.TargetSchemaName.QuoteName()}.{_table.TargetTableName.QuoteName()}";
+
     public async Task<(int Inserted, int Updated, int Deleted)> SaveUploadToDbAsync(UploadType uploadType)
     {
         using var connection = new SqlConnection(_table.Connection.ConnectionString);
         await connection.OpenAsync();
 
-        var uploadedColumns = _columns.Where(c => !c.IsComputed).ToList();
-        var columnDefinitions = uploadedColumns.Select(c => $"[{c.Name}] {c.DbCreateDatatype}");
+        var uploadedColumns = _columns.Where(c => !c.IsComputed).ToArray();
+        var columnDefinitions = uploadedColumns.Select(c => $"{c.Name.QuoteName()} {c.DbCreateDatatype}");
         var command = $"""
             CREATE TABLE #temp (
             {string.Join(",\n", columnDefinitions)}
@@ -66,7 +70,7 @@ public class Upload
                     updated = await ExecuteUpdateAsync(connection, transaction);
                     break;
                 case UploadType.Full:
-                    await connection.ExecuteAsync($"TRUNCATE TABLE [{_table.TargetSchemaName}].[{_table.TargetTableName}]", transaction: transaction);
+                    await connection.ExecuteAsync($"TRUNCATE TABLE {QuotedSchemaAndTable}", transaction: transaction);
                     inserted = await ExecuteInsertAsync(connection, transaction);
                     break;
                 case UploadType.DeleteMissing:
@@ -91,46 +95,46 @@ public class Upload
         {
             throw new InvalidOperationException("Insert operation rejected because the table does not allow inserts. No changes were made.");
         }
-        var insertColumns = _columns
+        var quotedInsertColumns = _columns
             .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked)
-            .Select(c => c.Name)
-            .ToList();
-        if (!insertColumns.Any())
+            .Select(c => c.Name.QuoteName())
+            .ToArray();
+        if (!quotedInsertColumns.Any())
         {
             throw new InvalidOperationException("No insertable columns detected. No changes were made.");
         }
         var insertCommand = $"""
-            INSERT INTO [{_table.TargetSchemaName}].[{_table.TargetTableName}] (
-            {string.Join(",\n", insertColumns.Select(c => $"[{c}]"))}
+            INSERT INTO {QuotedSchemaAndTable} (
+            {string.Join(",\n", quotedInsertColumns)}
             )
-            SELECT {string.Join(",\n", insertColumns.Select(c => $"src.[{c}]"))}
+            SELECT {string.Join(",\n", quotedInsertColumns.Select(c => $"src.{c}"))}
             FROM #temp AS src
-                LEFT JOIN [{_table.TargetSchemaName}].[{_table.TargetTableName}] AS target ON
-                    {string.Join(" AND ", _pkColumns.Select(c => $"target.[{c}] = src.[{c}]"))}
-            WHERE {string.Join(" AND ", _pkColumns.Select(c => $"target.[{c}] IS NULL"))}
+                LEFT JOIN {QuotedSchemaAndTable} AS target ON
+                    {string.Join(" AND ", QuotedPkColumns.Select(c => $"target.{c} = src.{c}"))}
+            WHERE {string.Join(" AND ", QuotedPkColumns.Select(c => $"target.{c} IS NULL"))}
             """;
         return await connection.ExecuteAsync(insertCommand, transaction: transaction);
     }
 
     private async Task<int> ExecuteUpdateAsync(SqlConnection connection, IDbTransaction transaction)
     {
-        var updateColumns = _columns
+        var quotedUpdateColumns = _columns
             .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked)
-            .Select(c => c.Name)
-            .ToList();
-        if (!updateColumns.Any())
+            .Select(c => c.Name.QuoteName())
+            .ToArray();
+        if (!quotedUpdateColumns.Any())
         {
             throw new InvalidOperationException("No updateable columns detected. No changes were made.");
         }
         var updateCommand = $"""
             UPDATE target
-            SET {string.Join(",\n", updateColumns.Select(c => $"[{c}] = src.[{c}]"))}
-            FROM [{_table.TargetSchemaName}].[{_table.TargetTableName}] AS target
-                INNER JOIN #temp AS src ON {string.Join(" AND ", _pkColumns.Select(c => $"target.[{c}] = src.[{c}]"))}
+            SET {string.Join(",\n", quotedUpdateColumns.Select(c => $"{c} = src.{c}"))}
+            FROM {QuotedSchemaAndTable} AS target
+                INNER JOIN #temp AS src ON {string.Join(" AND ", QuotedPkColumns.Select(c => $"target.{c} = src.{c}"))}
             WHERE NOT EXISTS (
-                SELECT {string.Join(',', updateColumns.Select(c => $"target.[{c}]"))}
+                SELECT {string.Join(',', quotedUpdateColumns.Select(c => $"target.{c}"))}
                 INTERSECT
-                SELECT {string.Join(',', updateColumns.Select(c => $"src.[{c}]"))}
+                SELECT {string.Join(',', quotedUpdateColumns.Select(c => $"src.{c}"))}
             )
             """;
         return await connection.ExecuteAsync(updateCommand, transaction: transaction);
@@ -144,9 +148,9 @@ public class Upload
         }
         var deleteCommand = $"""
             DELETE FROM target
-            FROM [{_table.TargetSchemaName}].[{_table.TargetTableName}] AS target
-                LEFT JOIN #temp AS src ON {string.Join(" AND ", _pkColumns.Select(c => $"target.[{c}] = src.[{c}]"))}
-            WHERE {string.Join(" AND ", _pkColumns.Select(c => $"src.[{c}] IS NULL"))}
+            FROM {QuotedSchemaAndTable} AS target
+                LEFT JOIN #temp AS src ON {string.Join(" AND ", QuotedPkColumns.Select(c => $"target.{c} = src.{c}"))}
+            WHERE {string.Join(" AND ", QuotedPkColumns.Select(c => $"src.{c} IS NULL"))}
             """;
         return await connection.ExecuteAsync(deleteCommand, transaction: transaction);
     }

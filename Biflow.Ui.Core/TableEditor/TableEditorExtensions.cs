@@ -125,8 +125,8 @@ public static class TableEditorExtensions
             ArgumentNullException.ThrowIfNull(lookupDisplayValueDatatype);
 
             var results = await connection.QueryAsync<(object? Value, object? Description)>($"""
-                SELECT [{lookup.LookupValueColumn}], [{lookup.LookupDescriptionColumn}]
-                FROM [{lookup.LookupTable.TargetSchemaName}].[{lookup.LookupTable.TargetTableName}]
+                SELECT {QuoteName(lookup.LookupValueColumn)}, {QuoteName(lookup.LookupDescriptionColumn)}
+                FROM {QuoteName(lookup.LookupTable.TargetSchemaName)}.{QuoteName(lookup.LookupTable.TargetTableName)}
                 """);
 
             var data = results.Select(value =>
@@ -221,5 +221,26 @@ public static class TableEditorExtensions
         { "datetime2", typeof(DateTime) },
         { "date", typeof(DateTime) },
         { "bit", typeof(bool) }
+    };
+
+    private const int SysnameLength = 128;
+
+    /// <summary>
+    /// Returns a string with the delimiters added to make the input string
+    /// a valid SQL Server delimited identifier. Unlike the T-SQL version,
+    /// an ArgumentException is thrown instead of returning a null for
+    /// invalid arguments.
+    /// </summary>
+    /// <param name="name">sysname, limited to 128 characters.</param>
+    /// <param name="quoteCharacter">Can be a single quotation mark ( ' ), a
+    /// left or right bracket ( [] ), or a double quotation mark ( " ).</param>
+    /// <returns>An escaped identifier, no longer than 258 characters.</returns>
+    internal static string QuoteName(this string name, char quoteCharacter = '[') => (name, quoteCharacter) switch
+    {
+        ({ Length: > SysnameLength }, _) => throw new ArgumentException($"{nameof(name)} is longer than {SysnameLength} characters"),
+        (_, '\'') => string.Format("'{0}'", name.Replace("'", "''")),
+        (_, '"') => string.Format("\"{0}\"", name.Replace("\"", "\"\"")),
+        (_, '[' or ']') => string.Format("[{0}]", name.Replace("]", "]]")),
+        _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]"),
     };
 }
