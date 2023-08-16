@@ -6,12 +6,12 @@ namespace Biflow.Ui.Core;
 
 public class UploadBuilder
 {
-    private readonly List<Column> _columns;
+    private readonly Column[] _columns;
     private readonly MasterDataTable _table;
 
     public IEnumerable<string> Columns => _columns.Select(c => c.Name);
 
-    private UploadBuilder(MasterDataTable table, List<Column> columns)
+    private UploadBuilder(MasterDataTable table, Column[] columns)
     {
         _table = table;
         _columns = columns;
@@ -109,7 +109,7 @@ public class UploadBuilder
 
     public static async Task<UploadBuilder> FromTableAsync(MasterDataTable table)
     {
-        var columns = (await table.GetColumnsAsync(includeLookups: false)).ToList();
+        var columns = (await table.GetColumnsAsync(includeLookups: false)).ToArray();
         var notSupportedColumns = columns.Where(c => c.Datatype is null).Select(c => $"c.Name ({c.DbDatatype})");
         if (notSupportedColumns.Any())
         {

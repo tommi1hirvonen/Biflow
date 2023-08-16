@@ -7,7 +7,10 @@ public class CatalogPackage
         PackageId = packageId;
         PackageName = packageName;
     }
+
     public long PackageId { get; }
+    
     public string PackageName { get; }
+    
     public Dictionary<long, CatalogParameter> Parameters { get; } = new();
 }

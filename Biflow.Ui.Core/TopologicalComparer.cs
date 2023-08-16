@@ -22,7 +22,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     {
         _keySelector = keySelector;
         _dependenciesSelector = dependenciesSelector;
-        _topologicalList = InTopologicalOrder(items.ToList())
+        _topologicalList = InTopologicalOrder(items.ToArray())
             .Select(keySelector)
             .ToArray();
     }
@@ -34,31 +34,12 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
         return xPos.CompareTo(yPos);
     }
 
-    private enum VisitState { NotVisited, Visiting, Visited }
-
-    private bool DepthFirstSearch(TItem current, IEnumerable<TItem> items, Dictionary<TKey, VisitState> visited, Stack<TItem> stack)
-    {
-        var state = VisitState.NotVisited;
-        var key = _keySelector(current);
-        visited.TryGetValue(key, out state);
-        if (state != VisitState.NotVisited)
-        {
-            return state == VisitState.Visited; // returns false if already visiting => cycles
-        }
-        visited[key] = VisitState.Visiting;
-        var dependencies = items.Where(item => _dependenciesSelector(current).Any(key => key.Equals(_keySelector(item)))).ToList();
-        var result = dependencies.Aggregate(true, (accumulator, item) => accumulator && DepthFirstSearch(item, items, visited, stack));
-        visited[key] = VisitState.Visited;
-        stack.Push(current);
-        return result;
-    }
-
     /// <summary>
     /// Orders an IEnumerable of TItem in a topological order based on their dependencies.
     /// </summary>
     /// <param name="steps">IEnumerable of items to be ordered</param>
     /// <returns>IEnumerable of TItem in topological order. InvalidOperationException will be thrown if cyclic dependencies are detected.</returns>
-    private IEnumerable<TItem> InTopologicalOrder(IEnumerable<TItem> items)
+    private IEnumerable<TItem> InTopologicalOrder(TItem[] items)
     {
         var stack = new Stack<TItem>();
         var visited = new Dictionary<TKey, VisitState>();
@@ -70,5 +51,26 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
             }
         }
         return stack.Reverse();
+    }
+
+    private enum VisitState { NotVisited, Visiting, Visited }
+
+    private bool DepthFirstSearch(TItem current, TItem[] items, Dictionary<TKey, VisitState> visited, Stack<TItem> stack)
+    {
+        var state = VisitState.NotVisited;
+        var key = _keySelector(current);
+        visited.TryGetValue(key, out state);
+        if (state != VisitState.NotVisited)
+        {
+            return state == VisitState.Visited; // returns false if already visiting => cycles
+        }
+        visited[key] = VisitState.Visiting;
+        var dependencies = items
+            .Where(item => _dependenciesSelector(current).Any(key => key.Equals(_keySelector(item))))
+            .ToArray();
+        var result = dependencies.Aggregate(true, (accumulator, item) => accumulator && DepthFirstSearch(item, items, visited, stack));
+        visited[key] = VisitState.Visited;
+        stack.Push(current);
+        return result;
     }
 }

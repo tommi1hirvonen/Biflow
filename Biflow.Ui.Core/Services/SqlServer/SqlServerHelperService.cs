@@ -179,10 +179,10 @@ public class SqlServerHelperService
                 };
             }
             return (level, param.Name, datatype, param.Default);
-        });
+        }).ToArray();
     }
 
-    public async Task<List<StoredProcedure>> GetStoredProcedures(Guid connectionId)
+    public async Task<IEnumerable<StoredProcedure>> GetStoredProcedures(Guid connectionId)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -220,7 +220,7 @@ public class SqlServerHelperService
                 return storedProc;
             },
             splitOn: "ParameterId");
-        return procedures.Values.ToList();
+        return procedures.Values.ToArray();
     }
 
     public async Task<IEnumerable<(string ParameterName, ParameterValueType ParameterType)>> GetStoredProcedureParameters(Guid connectionId, string schema, string procedure)
@@ -263,16 +263,16 @@ public class SqlServerHelperService
                 _ => ParameterValueType.String
             };
             return (param.Name, datatype);
-        });
+        }).ToArray();
     }
 
-    public async Task<List<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
+    public async Task<IEnumerable<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var rows = await sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job");
-        var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToList();
+        var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToArray();
         return agentJobs;
     }
 
@@ -543,7 +543,7 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<List<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
+    public async Task<IEnumerable<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         var connectionString = await GetAsConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -558,18 +558,20 @@ public class SqlServerHelperService
             {
                 var database = databases[dbi];
                 var model = database.Model;
-                var asModel = new AsModel(database.Name, new());
+                var tables = new List<AsTable>();
+                var asModel = new AsModel(database.Name, tables);
                 for (int tbi = 0; tbi < model.Tables.Count; tbi++)
                 {
                     var table = model.Tables[tbi];
-                    var asTable = new AsTable(table.Name, asModel, new());
+                    var partitions = new List<AsPartition>();
+                    var asTable = new AsTable(table.Name, asModel, partitions);
                     for (int pi = 0; pi < table.Partitions.Count; pi++)
                     {
                         var partition = table.Partitions[pi];
                         var asPartition = new AsPartition(partition.Name, asTable);
-                        asTable.Partitions.Add(asPartition);
+                        partitions.Add(asPartition);
                     }
-                    asModel.Tables.Add(asTable);
+                    tables.Add(asTable);
                 }
                 models.Add(asModel);
             }

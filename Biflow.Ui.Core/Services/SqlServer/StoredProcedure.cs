@@ -8,8 +8,12 @@ public class StoredProcedure
         SchemaName = schemaName;
         ProcedureName = procedureName;
     }
+
     public int ProcedureId { get; }
+    
     public string SchemaName { get; }
+    
     public string ProcedureName { get; }
+    
     public List<StoredProcedureParameter> Parameters { get; } = new();
 }

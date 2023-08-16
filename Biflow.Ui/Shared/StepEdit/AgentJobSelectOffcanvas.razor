@@ -86,7 +86,7 @@
     [Parameter]
     public EventCallback<string> OnAgentJobSelected { get; set; }
 
-    private List<(string AgentJobName, bool IsEnabled)>? AgentJobs { get; set; }
+    private IEnumerable<(string AgentJobName, bool IsEnabled)>? AgentJobs { get; set; }
 
     private string FilterTextName { get; set; } = string.Empty;
 

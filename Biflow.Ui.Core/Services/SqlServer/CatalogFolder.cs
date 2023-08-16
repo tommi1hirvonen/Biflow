@@ -7,7 +7,10 @@ public class CatalogFolder
         FolderId = folderId;
         FolderName = folderName;
     }
+
     public long FolderId { get; }
+    
     public string FolderName { get; }
+    
     public Dictionary<long, CatalogProject> Projects { get; } = new();
 }

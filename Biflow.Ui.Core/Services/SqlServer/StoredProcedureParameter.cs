@@ -8,7 +8,10 @@ public class StoredProcedureParameter
         ParameterName = parameterName; 
         ParameterType = parameterType;
     }
+    
     public int ParameterId { get; }
+    
     public string ParameterName { get; }
+    
     public string ParameterType { get; }
 }

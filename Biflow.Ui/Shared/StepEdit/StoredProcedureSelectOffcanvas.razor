@@ -31,7 +31,7 @@
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Procedures.Count == 0)
+                        else if (Procedures.Count() == 0)
                         {
                             <tr><td>No stored procedures</td></tr>
                         }
@@ -92,7 +92,7 @@
     [Parameter]
     public EventCallback<string> OnProcedureSelected { get; set; }
 
-    private List<StoredProcedure>? Procedures { get; set; }
+    private IEnumerable<StoredProcedure>? Procedures { get; set; }
 
     private IEnumerable<StoredProcedure> ProceduresFiltered => Procedures?
         .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(FilterTextSchema))

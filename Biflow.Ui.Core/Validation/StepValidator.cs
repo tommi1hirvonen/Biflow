@@ -46,8 +46,8 @@ public class StepValidator : AbstractValidator<Step>
             .ThenBy(x => x.DatabaseName)
             .ThenBy(x => x.SchemaName)
             .ThenBy(x => x.ObjectName)
-            .ToList();
-        for (int i = 0; i < ordered.Count - 1; i++)
+            .ToArray();
+        for (int i = 0; i < ordered.Length - 1; i++)
         {
             var current = ordered.ElementAt(i);
             var next = ordered.ElementAt(i + 1);

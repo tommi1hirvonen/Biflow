@@ -19,11 +19,18 @@ public class CatalogParameter
         ConnectionManagerParameter = connectionManagerParameter > 0;
         ProjectParameter = projectParameter > 0;
     }
+
     public long ParameterId { get; }
+    
     public string ParameterName { get; }
+    
     public string ParameterType { get; }
+    
     public object? DesignDefaultValue { get; }
+    
     public object? DefaultValue { get; }
+    
     public bool ConnectionManagerParameter { get; }
+    
     public bool ProjectParameter { get; }
 }

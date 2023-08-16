@@ -6,5 +6,6 @@ public class SSISCatalog
     {
         Folders = folders;
     }
+
     public Dictionary<long, CatalogFolder> Folders { get; }
 }
