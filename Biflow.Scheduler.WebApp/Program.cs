@@ -56,16 +56,14 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
 
-var connectionString = builder.Configuration.GetConnectionString("BiflowContext");
-ArgumentException.ThrowIfNullOrEmpty(connectionString);
 var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
 if (executorType == "ConsoleApp")
 {
-    builder.Services.AddSchedulerServices<ConsoleAppExecutionJob>(connectionString);
+    builder.Services.AddSchedulerServices<ConsoleAppExecutionJob>();
 }
 else if (executorType == "WebApp")
 {
-    builder.Services.AddSchedulerServices<WebAppExecutionJob>(connectionString);
+    builder.Services.AddSchedulerServices<WebAppExecutionJob>();
 }
 else
 {

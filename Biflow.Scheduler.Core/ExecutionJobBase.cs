@@ -1,6 +1,6 @@
-﻿using Dapper;
+﻿using Biflow.Core;
 using Biflow.DataAccess;
-using Microsoft.Data.SqlClient;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -11,17 +11,17 @@ public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
-
-    protected abstract string BiflowConnectionString { get; }
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
 
     protected abstract Task StartExecutorAsync(Guid executionId);
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
 
-    public ExecutionJobBase(ILogger logger, IDbContextFactory<BiflowContext> dbContextFactory)
+    public ExecutionJobBase(ILogger logger, IDbContextFactory<BiflowContext> dbContextFactory, ISqlConnectionFactory sqlConnectionFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -50,7 +50,7 @@ public abstract class ExecutionJobBase : IJob
             Guid executionId;
             try
             {
-                using var sqlConnection = new SqlConnection(BiflowConnectionString);
+                using var sqlConnection = _sqlConnectionFactory.Create();
                 await sqlConnection.OpenAsync();
                 executionId = await sqlConnection.ExecuteScalarAsync<Guid>(
                     "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_, @Notify = @Notify_",

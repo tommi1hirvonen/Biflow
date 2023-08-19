@@ -1,9 +1,16 @@
 ﻿using Biflow.DataAccess.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Core;
 
 public static class Extensions
 {
+    public static IServiceCollection AddSqlConnectionFactory(this IServiceCollection services)
+    {
+        services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
+        return services;
+    }
+
     public static string? GetDurationInReadableFormat(this StepExecutionAttempt attempt) => attempt.ExecutionInSeconds?.SecondsToReadableFormat();
 
     public static string? GetDurationInReadableFormat(this Execution execution) => execution.ExecutionInSeconds?.SecondsToReadableFormat();

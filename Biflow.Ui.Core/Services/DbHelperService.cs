@@ -1,18 +1,17 @@
-﻿using Dapper;
+﻿using Biflow.Core;
 using Biflow.DataAccess.Models;
-using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+using Dapper;
 
 namespace Biflow.Ui.Core;
 
 public class DbHelperService
 {
-    private readonly IConfiguration _configuration;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
     private readonly IExecutorService _executor;
 
-    public DbHelperService(IConfiguration configuration, IExecutorService executor)
+    public DbHelperService(ISqlConnectionFactory sqlConnectionFactory, IExecutorService executor)
     {
-        _configuration = configuration;
+        _sqlConnectionFactory = sqlConnectionFactory;
         _executor = executor;
     }
 
@@ -25,7 +24,7 @@ public class DbHelperService
         bool notifyMeOvertime = false)
     {
         Guid executionId;
-        using (var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext")))
+        using (var sqlConnection = _sqlConnectionFactory.Create())
         {
             CommandDefinition command;
             var parameters = new DynamicParameters();
@@ -73,7 +72,7 @@ public class DbHelperService
 
     public async Task<Guid> JobCopyAsync(Guid jobId, string username)
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         var createdJobId = await sqlConnection.ExecuteScalarAsync<Guid>(
             "EXEC [biflow].[JobCopy] @JobId = @JobId_, @Username = @Username_",
             new { JobId_ = jobId, Username_ = username });
@@ -82,7 +81,7 @@ public class DbHelperService
 
     public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username, string nameSuffix = "")
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         var createdStepId = await sqlConnection.ExecuteScalarAsync<Guid>(
             "EXEC [biflow].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_, @NameSuffix = @NameSuffix_",
             new { StepId_ = stepId, TargetJobId_ = targetJobId, Username_ = username, NameSuffix_ = nameSuffix });
@@ -97,7 +96,7 @@ public class DbHelperService
     /// <exception cref="ArgumentException">If no user was found with the provided username</exception>
     public async Task UpdatePasswordAsync(string username, string password)
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         var affectedRows = await sqlConnection.ExecuteScalarAsync<int>(
             "EXEC [biflow].[UserUpdatePassword] @Username = @Username_, @Password = @Password_",
             new { Username_ = username, Password_ = password });
@@ -109,7 +108,7 @@ public class DbHelperService
 
     public async Task AddUserAsync(User user, string password)
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         await sqlConnection.ExecuteAsync(
             "EXEC [biflow].[UserAdd] @Username = @Username_, @Password = @Password_, @Role = @Role_, @Email = @Email_",
             new { Username_ = user.Username, Password_ = password, Role_ = user.Role, Email_ = user.Email });
@@ -117,7 +116,7 @@ public class DbHelperService
 
     public async Task<string?> AuthenticateUserAsync(string username, string password)
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         var role = await sqlConnection.ExecuteScalarAsync<string?>(
             "EXEC [biflow].[UserAuthenticate] @Username = @Username_, @Password = @Password_",
             new { Username_ = username, Password_ = password });
@@ -126,7 +125,7 @@ public class DbHelperService
 
     public async Task<string?> GetUserRoleAsync(string username)
     {
-        using var sqlConnection = new SqlConnection(_configuration.GetConnectionString("BiflowContext"));
+        using var sqlConnection = _sqlConnectionFactory.Create();
         return await sqlConnection.ExecuteScalarAsync<string?>("""
             SELECT TOP 1 [Role]
             FROM [biflow].[User]

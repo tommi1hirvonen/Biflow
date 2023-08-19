@@ -1,28 +1,23 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Ui.Core;
 
 public class ExecutionJob : ExecutionJobBase
 {
-    private readonly IConfiguration _configuration;
     private readonly ExecutionManager _executionManager;
 
 
-    public ExecutionJob(IConfiguration configuration, ExecutionManager executionManager,
-        ILogger<ExecutionJob> logger, IDbContextFactory<BiflowContext> dbContextFactory)
-        : base(logger, dbContextFactory)
+    public ExecutionJob(ExecutionManager executionManager,
+        ILogger<ExecutionJob> logger, IDbContextFactory<BiflowContext> dbContextFactory, ISqlConnectionFactory sqlConnectionFactory)
+        : base(logger, dbContextFactory, sqlConnectionFactory)
     {
-        _configuration = configuration;
         _executionManager = executionManager;
     }
-
-    protected override string BiflowConnectionString =>
-        _configuration.GetConnectionString("BiflowContext") ?? throw new ArgumentNullException(nameof(BiflowConnectionString));
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {

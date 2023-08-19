@@ -1,23 +1,23 @@
-﻿using Biflow.Executor.Core.Common;
+﻿using Biflow.Core;
+using Biflow.Executor.Core.Common;
 using Microsoft.Data.SqlClient;
 
 namespace Biflow.Executor.Core.ConnectionTest;
 
 internal class ConnectionTest : IConnectionTest
 {
-    private readonly IExecutionConfiguration _executionConfiguration;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
 
-    public ConnectionTest(IExecutionConfiguration executionConfiguration)
+    public ConnectionTest(ISqlConnectionFactory sqlConnectionFactory)
     {
-        _executionConfiguration = executionConfiguration;
+        _sqlConnectionFactory = sqlConnectionFactory;
     }
 
     public async Task RunAsync()
     {
         try
         {
-            var connectionString = _executionConfiguration.ConnectionString;
-            using var connection = new SqlConnection(connectionString);
+            using var connection = _sqlConnectionFactory.Create();
             await connection.OpenAsync();
             Console.WriteLine("Connection test succeeded.");
         }

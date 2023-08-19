@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -10,17 +11,18 @@ public class ConsoleAppExecutionJob : ExecutionJobBase
     private readonly ILogger<ConsoleAppExecutionJob> _logger;
     private readonly IConfiguration _configuration;
 
-    public ConsoleAppExecutionJob(ILogger<ConsoleAppExecutionJob> logger, IConfiguration configuration, IDbContextFactory<BiflowContext> dbContextFactory)
-        : base(logger, dbContextFactory)
+    public ConsoleAppExecutionJob(
+        ILogger<ConsoleAppExecutionJob> logger,
+        IConfiguration configuration,
+        IDbContextFactory<BiflowContext> dbContextFactory,
+        ISqlConnectionFactory sqlConnectionFactory)
+        : base(logger, dbContextFactory, sqlConnectionFactory)
     {
         _logger = logger;
         _configuration = configuration;
     }
 
     private Process? ExecutorProcess { get; set; }
-
-    protected override string BiflowConnectionString => _configuration.GetConnectionString("BiflowContext")
-                ?? throw new ArgumentNullException("BiflowConnectionString", "Connection string cannot be null");
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {

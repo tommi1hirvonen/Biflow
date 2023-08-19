@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core;
 using Biflow.Executor.Core.WebExtensions;
@@ -75,8 +76,6 @@ public static partial class Extensions
             services.AddControllersWithViews().AddMicrosoftIdentityUI();
             services.AddAuthorization(options =>
             {
-                var connectionString = configuration.GetConnectionString("BiflowContext");
-                ArgumentNullException.ThrowIfNull(connectionString);
                 options.FallbackPolicy = options.DefaultPolicy;
             });
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
@@ -104,14 +103,10 @@ public static partial class Extensions
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSqlConnectionFactory();
         var connectionString = configuration.GetConnectionString("BiflowContext");
         ArgumentException.ThrowIfNullOrEmpty(connectionString);
-        services.AddDbContextFactory<BiflowContext>(options =>
-        {
-            options.UseSqlServer(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
-            //options.EnableSensitiveDataLogging();
-        });
-
+        services.AddDbContextFactory<BiflowContext>();
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.
@@ -146,7 +141,7 @@ public static partial class Extensions
         }
         else if (schedulerType == "SelfHosted")
         {
-            services.AddSchedulerServices<ExecutionJob>(connectionString);
+            services.AddSchedulerServices<ExecutionJob>();
             services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
         }
         else

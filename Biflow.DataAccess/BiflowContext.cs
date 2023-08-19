@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace Biflow.DataAccess;
@@ -9,11 +10,14 @@ namespace Biflow.DataAccess;
 public class BiflowContext : DbContext
 {
     private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly string _connectionString;
 
-    public BiflowContext(DbContextOptions<BiflowContext> options, IHttpContextAccessor? httpContextAccessor = null)
+    public BiflowContext(DbContextOptions<BiflowContext> options, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
         : base(options)
     {
         _httpContextAccessor = httpContextAccessor;
+        _connectionString = configuration.GetConnectionString("BiflowContext")
+            ?? throw new ApplicationException("Connection string not found");
     }
 
     public DbSet<Job> Jobs => Set<Job>();
@@ -50,6 +54,11 @@ public class BiflowContext : DbContext
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlServer(_connectionString, options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

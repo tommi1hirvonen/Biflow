@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,16 +17,14 @@ public class WebAppExecutionJob : ExecutionJobBase
         IConfiguration configuration,
         ILogger<WebAppExecutionJob> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
+        ISqlConnectionFactory sqlConnectionFactory,
         IHttpClientFactory httpClientFactory)
-        : base(logger, dbContextFactory)
+        : base(logger, dbContextFactory, sqlConnectionFactory)
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
         _logger = logger;
     }
-
-    protected override string BiflowConnectionString => _configuration.GetConnectionString("BiflowContext")
-                ?? throw new ArgumentNullException("BiflowConnectionString", "Connection string cannot be null");
 
     private string Url => _configuration
         .GetSection("Executor")

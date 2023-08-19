@@ -1,8 +1,8 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Dapper;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +11,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class JobStepExecutor : StepExecutorBase
 {
     private readonly ILogger<JobStepExecutor> _logger;
-    private readonly IExecutionConfiguration _executionConfiguration;
+    private readonly ISqlConnectionFactory _sqlConnectionFactory;
     private readonly IExecutorLauncher _executorLauncher;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
@@ -21,12 +21,12 @@ internal class JobStepExecutor : StepExecutorBase
         ILogger<JobStepExecutor> logger,
         IExecutorLauncher executorLauncher,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        IExecutionConfiguration executionConfiguration,
+        ISqlConnectionFactory sqlConnectionFactory,
         JobStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
-        _executionConfiguration = executionConfiguration;
+        _sqlConnectionFactory = sqlConnectionFactory;
         _executorLauncher = executorLauncher;
         _dbContextFactory = dbContextFactory;
         Step = step;
@@ -67,7 +67,7 @@ internal class JobStepExecutor : StepExecutorBase
         Guid jobExecutionId;
         try
         {
-            using var connection = new SqlConnection(_executionConfiguration.ConnectionString);
+            using var connection = _sqlConnectionFactory.Create();
             await connection.OpenAsync(CancellationToken.None);
             jobExecutionId = await connection.ExecuteScalarAsync<Guid>(
                 "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
