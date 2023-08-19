@@ -1,7 +1,6 @@
-﻿using Dapper;
-using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -19,7 +18,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
     public AgentJobStepExecutor(
         ILogger<AgentJobStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         AgentJobStepExecution step) : base(logger, dbContextFactory, step)
     {
         _executionConfiguration = executionConfiguration;

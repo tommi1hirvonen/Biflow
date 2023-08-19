@@ -16,7 +16,7 @@ internal class DatasetStepExecutor : StepExecutorBase
 
     public DatasetStepExecutor(
         ILogger<DatasetStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         ITokenService tokenService,
         IExecutionConfiguration executionConfiguration,
         DatasetStepExecution step)

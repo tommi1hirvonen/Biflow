@@ -1,5 +1,4 @@
 ﻿using Biflow.Core;
-using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,10 +12,10 @@ internal class EmailService : INotificationService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly IEmailConfiguration _emailConfiguration;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
 
-    public EmailService(ILogger<EmailService> logger, IEmailConfiguration emailConfiguration, IDbContextFactory<BiflowContext> dbContextFactory)
+    public EmailService(ILogger<EmailService> logger, IEmailConfiguration emailConfiguration, IDbContextFactory<ExecutorDbContext> dbContextFactory)
     {
         _logger = logger;
         _emailConfiguration = emailConfiguration;

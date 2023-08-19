@@ -1,5 +1,4 @@
 ﻿using Biflow.Core;
-using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Dapper;
@@ -13,14 +12,14 @@ internal class JobStepExecutor : StepExecutorBase
     private readonly ILogger<JobStepExecutor> _logger;
     private readonly ISqlConnectionFactory _sqlConnectionFactory;
     private readonly IExecutorLauncher _executorLauncher;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
     private JobStepExecution Step { get; }
 
     public JobStepExecutor(
         ILogger<JobStepExecutor> logger,
         IExecutorLauncher executorLauncher,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         ISqlConnectionFactory sqlConnectionFactory,
         JobStepExecution step)
         : base(logger, dbContextFactory, step)

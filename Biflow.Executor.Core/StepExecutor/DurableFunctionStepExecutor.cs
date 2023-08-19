@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,7 +10,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
 {
     private readonly ILogger<DurableFunctionStepExecutor> _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IHttpClientFactory _httpClientFactory;
 
@@ -21,7 +20,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
 
     public DurableFunctionStepExecutor(
         ILogger<DurableFunctionStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         IExecutionConfiguration executionConfiguration,
         IHttpClientFactory httpClientFactory,
         FunctionStepExecution step)

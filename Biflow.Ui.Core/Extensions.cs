@@ -104,8 +104,6 @@ public static partial class Extensions
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSqlConnectionFactory();
-        var connectionString = configuration.GetConnectionString("BiflowContext");
-        ArgumentException.ThrowIfNullOrEmpty(connectionString);
         services.AddDbContextFactory<BiflowContext>();
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
@@ -125,7 +123,7 @@ public static partial class Extensions
         }
         else if (executorType == "SelfHosted")
         {
-            services.AddExecutorServices<ExecutorLauncher>(connectionString, configuration.GetSection("Executor").GetSection("SelfHosted"));
+            services.AddExecutorServices<ExecutorLauncher>(configuration.GetSection("Executor").GetSection("SelfHosted"));
             services.AddSingleton<ExecutionManager>();
             services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
         }

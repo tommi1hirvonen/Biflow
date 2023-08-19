@@ -6,7 +6,6 @@ using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using CommandLine;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,9 +29,7 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        var connectionString = context.Configuration.GetConnectionString("BiflowContext");
-        ArgumentException.ThrowIfNullOrEmpty(connectionString);
-        services.AddExecutorServices<ExecutorLauncher>(connectionString);
+        services.AddExecutorServices<ExecutorLauncher>();
         services.AddSingleton<IExecutionStopper, ExecutionStopper>();
     })
     .Build();

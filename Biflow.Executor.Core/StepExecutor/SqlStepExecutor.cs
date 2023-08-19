@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -11,13 +10,13 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class SqlStepExecutor : StepExecutorBase
 {
     private readonly ILogger<SqlStepExecutor> _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
     
     private SqlStepExecution Step { get; }
 
     public SqlStepExecutor(
         ILogger<SqlStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         SqlStepExecution step)
         : base(logger, dbContextFactory, step)
     {

@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,9 +7,9 @@ namespace Biflow.Executor.Core.JobExecutor;
 internal class JobExecutorFactory : IJobExecutorFactory
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
-    public JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFactory<BiflowContext> dbContextFactory)
+    public JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFactory<ExecutorDbContext> dbContextFactory)
     {
         _serviceProvider = serviceProvider;
         _dbContextFactory = dbContextFactory;

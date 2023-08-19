@@ -2,7 +2,6 @@ using Biflow.Executor.Core;
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.WebExtensions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
@@ -22,9 +21,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = builder.Configuration.GetConnectionString("BiflowContext");
-ArgumentException.ThrowIfNullOrEmpty(connectionString);
-builder.Services.AddExecutorServices<ExecutorLauncher>(connectionString);
+builder.Services.AddExecutorServices<ExecutorLauncher>();
 builder.Services.AddSingleton<ExecutionManager>();
 
 var app = builder.Build();

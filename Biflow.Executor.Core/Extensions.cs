@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.ConnectionTest;
@@ -6,7 +7,6 @@ using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Biflow.Executor.Core.StepExecutor;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,21 +16,11 @@ public static class Extensions
 {
     public static void AddExecutorServices<TExecutorLauncher>(
         this IServiceCollection services,
-        string biflowConnectionString,
         IConfigurationSection? baseSection = null)
         where TExecutorLauncher : class, IExecutorLauncher
     {
-        
-        services.AddDbContextFactory<BiflowContext>((services, options) =>
-        {
-            var configuration = services.GetRequiredService<IConfiguration>();
-            var sensitiveDataLogging = (baseSection ?? configuration).GetValue<bool>("SensitiveDataLogging");
-            options.EnableSensitiveDataLogging(sensitiveDataLogging)
-            .UseSqlServer(biflowConnectionString, options => 
-                options
-                .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-                .EnableRetryOnFailure());
-        });
+        services.AddSqlConnectionFactory();
+        services.AddDbContextFactory<ExecutorDbContext>();
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<ITokenService, TokenService>();

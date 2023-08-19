@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,7 +10,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class ExeStepExecutor : StepExecutorBase
 {
     private readonly ILogger<ExeStepExecutor> _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
     private ExeStepExecution Step { get; }
 
@@ -19,7 +18,7 @@ internal class ExeStepExecutor : StepExecutorBase
 
     public ExeStepExecutor(
         ILogger<ExeStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         ExeStepExecution step)
         : base(logger, dbContextFactory, step)
     {

@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.AnalysisServices.Tabular;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +12,7 @@ internal class TabularStepExecutor : StepExecutorBase
 
     public TabularStepExecutor(
         ILogger<TabularStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         TabularStepExecution step) : base(logger, dbContextFactory, step)
     {
         Step = step;

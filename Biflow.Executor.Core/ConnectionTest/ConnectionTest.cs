@@ -1,6 +1,4 @@
 ﻿using Biflow.Core;
-using Biflow.Executor.Core.Common;
-using Microsoft.Data.SqlClient;
 
 namespace Biflow.Executor.Core.ConnectionTest;
 

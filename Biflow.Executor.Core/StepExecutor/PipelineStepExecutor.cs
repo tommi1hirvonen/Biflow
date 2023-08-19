@@ -12,7 +12,7 @@ internal class PipelineStepExecutor : StepExecutorBase
     private readonly ILogger<PipelineStepExecutor> _logger;
     private readonly IExecutionConfiguration _executionConfiguration;
     private readonly ITokenService _tokenService;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
     private PipelineStepExecution Step { get; }
     
@@ -24,7 +24,7 @@ internal class PipelineStepExecutor : StepExecutorBase
         ILogger<PipelineStepExecutor> logger,
         IExecutionConfiguration executionConfiguration,
         ITokenService tokenService,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         PipelineStepExecution step)
         : base(logger, dbContextFactory, step)
     {

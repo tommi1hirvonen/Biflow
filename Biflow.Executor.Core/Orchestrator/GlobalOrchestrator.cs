@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.StepExecutor;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +10,14 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
 {
     private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
     private readonly IStepExecutorFactory _stepExecutorFactory;
     private readonly List<IOrchestrationObserver> _observers = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = new();
 
     public GlobalOrchestrator(
         ILogger<GlobalOrchestrator> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         IStepExecutorFactory stepExecutorFactory)
     {
         _logger = logger;

@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +11,7 @@ namespace Biflow.Executor.Core.JobExecutor;
 internal class JobExecutor : IJobExecutor
 {
     private readonly ILogger<JobExecutor> _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
     private readonly INotificationService _notificationService;
     private readonly IJobOrchestrator _jobOrchestrator;
     private readonly Execution _execution;
@@ -21,7 +20,7 @@ internal class JobExecutor : IJobExecutor
 
     public JobExecutor(
         ILogger<JobExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         INotificationService notificationService,
         IJobOrchestratorFactory jobOrchestratorFactory,
         Execution execution)

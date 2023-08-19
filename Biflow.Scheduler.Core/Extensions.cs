@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 
@@ -12,6 +13,7 @@ public static class Extensions
         services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
         services.AddDbContextFactory<BiflowContext>();
+        services.AddSqlConnectionFactory();
         services.AddSingleton<ISchedulesManager, SchedulesManager<TExecutionJob>>();
     }
 }

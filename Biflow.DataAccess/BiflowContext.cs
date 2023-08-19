@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
@@ -12,8 +13,8 @@ public class BiflowContext : DbContext
     private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly string _connectionString;
 
-    public BiflowContext(DbContextOptions<BiflowContext> options, IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
-        : base(options)
+    public BiflowContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
+        : base()
     {
         _httpContextAccessor = httpContextAccessor;
         _connectionString = configuration.GetConnectionString("BiflowContext")
@@ -55,9 +56,14 @@ public class BiflowContext : DbContext
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
 
+    protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
+    {
+        options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(_connectionString, options => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+        optionsBuilder.UseSqlServer(_connectionString, ConfigureSqlServer);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

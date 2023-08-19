@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.Notification;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +14,7 @@ internal class EmailStepExecutor : StepExecutorBase
 
     public EmailStepExecutor(
         ILogger<EmailStepExecutor> logger,
-        IDbContextFactory<BiflowContext> dbContextFactory,
+        IDbContextFactory<ExecutorDbContext> dbContextFactory,
         INotificationService notificationService,
         EmailStepExecution stepExecution)
         : base(logger, dbContextFactory, stepExecution)
