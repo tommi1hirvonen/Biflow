@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biflow.Utilities\Biflow.Utilities.csproj" />
+    <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
   </ItemGroup>
 
 </Project>

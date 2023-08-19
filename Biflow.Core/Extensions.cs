@@ -1,6 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Utilities;
+namespace Biflow.Core;
 
 public static class Extensions
 {

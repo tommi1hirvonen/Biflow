@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Biflow.Utilities.Test;
+namespace Biflow.Core.Test;
 
 public class CommonUtilityTests
 {

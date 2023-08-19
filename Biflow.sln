@@ -9,7 +9,7 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Biflow.Database", "Biflow.D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui", "Biflow.Ui\Biflow.Ui.csproj", "{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Utilities", "Biflow.Utilities\Biflow.Utilities.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Core", "Biflow.Core\Biflow.Core.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess", "Biflow.DataAccess\Biflow.DataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
 EndProject
@@ -33,7 +33,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.Components", "Bif
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess.Test", "Biflow.DataAccess.Test\Biflow.DataAccess.Test.csproj", "{0A3EF0A6-145B-4807-AC0A-498496B431AB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Utilities.Test", "Biflow.Utilities.Test\Biflow.Utilities.Test.csproj", "{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Core.Test", "Biflow.Core.Test\Biflow.Core.Test.csproj", "{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

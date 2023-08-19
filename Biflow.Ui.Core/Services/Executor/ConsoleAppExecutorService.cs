@@ -1,4 +1,4 @@
-﻿using Biflow.Utilities;
+﻿using Biflow.Core;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.IO.Pipes;
