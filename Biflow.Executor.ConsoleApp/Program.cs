@@ -29,7 +29,7 @@ var host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices((context, services) =>
     {
-        services.AddExecutorServices<ExecutorLauncher>();
+        services.AddExecutorServices<ExecutorLauncher>(context.Configuration);
         services.AddSingleton<IExecutionStopper, ExecutionStopper>();
     })
     .Build();

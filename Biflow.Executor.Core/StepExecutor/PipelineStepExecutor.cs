@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
@@ -10,9 +11,9 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class PipelineStepExecutor : StepExecutorBase
 {
     private readonly ILogger<PipelineStepExecutor> _logger;
-    private readonly IExecutionConfiguration _executionConfiguration;
     private readonly ITokenService _tokenService;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly int _pollingIntervalMs;
 
     private PipelineStepExecution Step { get; }
     
@@ -22,16 +23,16 @@ internal class PipelineStepExecutor : StepExecutorBase
 
     public PipelineStepExecutor(
         ILogger<PipelineStepExecutor> logger,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         ITokenService tokenService,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         PipelineStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
-        _executionConfiguration = executionConfiguration;
         _tokenService = tokenService;
         _dbContextFactory = dbContextFactory;
+        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         Step = step;
     }
 
@@ -103,7 +104,7 @@ internal class PipelineStepExecutor : StepExecutorBase
                 (status, message) = await GetPipelineRunWithRetriesAsync(runId, linkedCts.Token);
                 if (status == "InProgress" || status == "Queued")
                 {
-                    await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
+                    await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 }
                 else
                 {
@@ -140,7 +141,7 @@ internal class PipelineStepExecutor : StepExecutorBase
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, waitDuration) =>
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", Step.ExecutionId, Step, runId));
 

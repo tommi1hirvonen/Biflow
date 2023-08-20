@@ -2,6 +2,7 @@
 using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Runtime.CompilerServices;
 
@@ -11,14 +12,14 @@ namespace Biflow.Executor.Core.Notification;
 internal class EmailService : INotificationService
 {
     private readonly ILogger<EmailService> _logger;
-    private readonly IEmailConfiguration _emailConfiguration;
+    private readonly IOptionsMonitor<EmailOptions> _options;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
 
-    public EmailService(ILogger<EmailService> logger, IEmailConfiguration emailConfiguration, IDbContextFactory<ExecutorDbContext> dbContextFactory)
+    public EmailService(ILogger<EmailService> logger, IOptionsMonitor<EmailOptions> options, IDbContextFactory<ExecutorDbContext> dbContextFactory)
     {
         _logger = logger;
-        _emailConfiguration = emailConfiguration;
+        _options = options;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -180,12 +181,12 @@ internal class EmailService : INotificationService
             _logger.LogError(ex, "{ExecutionId} Error building notification message body", execution.ExecutionId);
             // Do not return. The notification can be sent even without a body.
         }
-        
 
+        var options = _options.CurrentValue;
         SmtpClient client;
         try
         {
-            client = _emailConfiguration.Client;
+            client = options.Client;
         }
         catch (Exception ex)
         {
@@ -196,10 +197,10 @@ internal class EmailService : INotificationService
         MailMessage mailMessage;
         try
         {
-            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
+            ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
             mailMessage = new MailMessage
             {
-                From = new MailAddress(_emailConfiguration.FromAddress),
+                From = new MailAddress(options.FromAddress),
                 Subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – Biflow notification",
                 IsBodyHtml = true,
                 Body = messageBody
@@ -270,10 +271,11 @@ internal class EmailService : INotificationService
         if (!recipients.Any())
             return;
 
+        var options = _options.CurrentValue;
         SmtpClient client;
         try
         {
-            client = _emailConfiguration.Client;
+            client = options.Client;
         }
         catch (Exception ex)
         {
@@ -284,10 +286,10 @@ internal class EmailService : INotificationService
         MailMessage mailMessage;
         try
         {
-            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
+            ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
             mailMessage = new MailMessage
             {
-                From = new MailAddress(_emailConfiguration.FromAddress),
+                From = new MailAddress(options.FromAddress),
                 Subject = $"\"{execution.JobName}\" execution is running long – Biflow notification",
                 IsBodyHtml = true,
                 Body = $"Execution of job \"{execution.JobName}\" started at {execution.StartDateTime?.LocalDateTime}"
@@ -315,11 +317,12 @@ internal class EmailService : INotificationService
 
     public async Task SendNotification(IEnumerable<string> recipients, string subject, string body, CancellationToken cancellationToken)
     {
-        ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
-        var client = _emailConfiguration.Client;
+        var options = _options.CurrentValue;
+        ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
+        var client = options.Client;
         var mailMessage = new MailMessage
         {
-            From = new MailAddress(_emailConfiguration.FromAddress),
+            From = new MailAddress(options.FromAddress),
             Subject = subject,
             Body = body
         };

@@ -1,7 +1,6 @@
 ﻿using Biflow.Core;
 using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
@@ -16,7 +15,7 @@ public static class Extensions
 {
     public static void AddExecutorServices<TExecutorLauncher>(
         this IServiceCollection services,
-        IConfigurationSection? baseSection = null)
+        IConfiguration executorConfiguration)
         where TExecutorLauncher : class, IExecutorLauncher
     {
         services.AddSqlConnectionFactory();
@@ -25,16 +24,11 @@ public static class Extensions
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<ITokenService, TokenService>();
-        services.AddSingleton<IExecutionConfiguration, ExecutionConfiguration>(services =>
-        {
-            var configuration = services.GetRequiredService<IConfiguration>();
-            return new ExecutionConfiguration(configuration, baseSection);
-        });
-        services.AddSingleton<IEmailConfiguration, EmailConfiguration>(services =>
-        {
-            var configuration = services.GetRequiredService<IConfiguration>();
-            return new EmailConfiguration(configuration, baseSection);
-        });
+        services.AddOptions<ExecutionOptions>()
+            .Bind(executorConfiguration)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.Configure<EmailOptions>(executorConfiguration);
         services.AddSingleton<INotificationService, EmailService>();
         services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();

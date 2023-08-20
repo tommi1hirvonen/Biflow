@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -10,7 +11,7 @@ internal class DatasetStepExecutor : StepExecutorBase
 {
     private readonly ILogger<DatasetStepExecutor> _logger;
     private readonly ITokenService _tokenService;
-    private readonly IExecutionConfiguration _executionConfiguration;
+    private readonly int _pollingIntervalMs;
 
     private DatasetStepExecution Step { get; }
 
@@ -18,13 +19,13 @@ internal class DatasetStepExecutor : StepExecutorBase
         ILogger<DatasetStepExecutor> logger,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         ITokenService tokenService,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         DatasetStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _tokenService = tokenService;
-        _executionConfiguration = executionConfiguration;
+        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         Step = step;
     }
 
@@ -67,7 +68,7 @@ internal class DatasetStepExecutor : StepExecutorBase
                 }
                 else
                 {
-                    await Task.Delay(_executionConfiguration.PollingIntervalMs, cancellationToken);
+                    await Task.Delay(_pollingIntervalMs, cancellationToken);
                 }
             }
             catch (OperationCanceledException ex)

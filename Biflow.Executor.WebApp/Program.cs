@@ -21,7 +21,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddExecutorServices<ExecutorLauncher>();
+builder.Services.AddExecutorServices<ExecutorLauncher>(builder.Configuration);
 builder.Services.AddSingleton<ExecutionManager>();
 
 var app = builder.Build();

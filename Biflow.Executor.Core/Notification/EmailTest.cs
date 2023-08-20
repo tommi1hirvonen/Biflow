@@ -1,13 +1,15 @@
-﻿using System.Net.Mail;
+﻿using Microsoft.Extensions.Options;
+using System.Net.Mail;
 
 namespace Biflow.Executor.Core.Notification;
 
 internal class EmailTest : IEmailTest
 {
-    private readonly IEmailConfiguration _emailConfiguration;
-    public EmailTest(IEmailConfiguration emailConfiguration)
+    private readonly IOptions<EmailOptions> _options;
+
+    public EmailTest(IOptions<EmailOptions> options)
     {
-        _emailConfiguration = emailConfiguration;
+        _options = options;
     }
 
     public async Task RunAsync(string toAddress)
@@ -15,7 +17,7 @@ internal class EmailTest : IEmailTest
         SmtpClient client;
         try
         {
-            client = _emailConfiguration.Client;
+            client = _options.Value.Client;
         }
         catch (Exception ex)
         {
@@ -26,10 +28,10 @@ internal class EmailTest : IEmailTest
         MailMessage mailMessage;
         try
         {
-            ArgumentException.ThrowIfNullOrEmpty(_emailConfiguration.FromAddress);
+            ArgumentException.ThrowIfNullOrEmpty(_options.Value.FromAddress);
             mailMessage = new MailMessage
             {
-                From = new MailAddress(_emailConfiguration.FromAddress),
+                From = new MailAddress(_options.Value.FromAddress),
                 Subject = "Biflow Test Mail",
                 IsBodyHtml = true,
                 Body = "This is a test email sent from Biflow."

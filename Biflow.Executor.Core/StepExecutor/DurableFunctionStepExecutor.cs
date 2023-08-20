@@ -2,6 +2,7 @@
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly;
 using System.Text.Json;
 
@@ -11,8 +12,8 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
 {
     private readonly ILogger<DurableFunctionStepExecutor> _logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly int _pollingIntervalMs;
 
     private const int MaxRefreshRetries = 3;
 
@@ -21,15 +22,15 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
     public DurableFunctionStepExecutor(
         ILogger<DurableFunctionStepExecutor> logger,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         IHttpClientFactory httpClientFactory,
         FunctionStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
-        _executionConfiguration = executionConfiguration;
         _httpClientFactory = httpClientFactory;
+        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
@@ -112,7 +113,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
                 status = await GetStatusWithRetriesAsync(client, startResponse.StatusQueryGetUri, linkedCts.Token);
                 if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
                 {
-                    await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
+                    await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 }
                 else
                 {
@@ -170,7 +171,7 @@ internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, waitDuration) =>
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", Step.ExecutionId, Step));
 

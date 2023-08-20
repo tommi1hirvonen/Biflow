@@ -4,6 +4,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly;
 using System.Text;
 
@@ -12,8 +13,8 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class PackageStepExecutor : StepExecutorBase
 {
     private readonly ILogger<PackageStepExecutor> _logger;
-    private readonly IExecutionConfiguration _executionConfiguration;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly int _pollingIntervalMs;
 
     private PackageStepExecution Step { get; }
 
@@ -21,14 +22,14 @@ internal class PackageStepExecutor : StepExecutorBase
 
     public PackageStepExecutor(
         ILogger<PackageStepExecutor> logger,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         PackageStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
-        _executionConfiguration = executionConfiguration;
         _dbContextFactory = dbContextFactory;
+        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         Step = step;
     }
 
@@ -92,7 +93,7 @@ internal class PackageStepExecutor : StepExecutorBase
             {
                 (completed, success) = await GetStatusWithRetriesAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
                 if (!completed)
-                    await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
+                    await Task.Delay(_pollingIntervalMs, linkedCts.Token);
             }
         }
         catch (OperationCanceledException ex)
@@ -205,7 +206,7 @@ internal class PackageStepExecutor : StepExecutorBase
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_executionConfiguration.PollingIntervalMs),
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, waitDuration) =>
                 _logger.LogWarning(ex, "Error getting package operation status for operation id {operationId}", packageOperationId));
 

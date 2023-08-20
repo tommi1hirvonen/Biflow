@@ -4,6 +4,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -11,17 +12,17 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class AgentJobStepExecutor : StepExecutorBase
 {
-    private readonly IExecutionConfiguration _executionConfiguration;
+    private readonly int _pollingIntervalMs;
 
     private AgentJobStepExecution Step { get; }
 
     public AgentJobStepExecutor(
         ILogger<AgentJobStepExecutor> logger,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         AgentJobStepExecution step) : base(logger, dbContextFactory, step)
     {
-        _executionConfiguration = executionConfiguration;
+        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         Step = step;
     }
 
@@ -56,7 +57,7 @@ internal class AgentJobStepExecutor : StepExecutorBase
         {
             while (historyId is null)
             {
-                await Task.Delay(_executionConfiguration.PollingIntervalMs, linkedCts.Token);
+                await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 using var connection = new SqlConnection(connectionString);
                 // [sp_help_jobactivity] returns one row describing the agent job's status.
                 // Column [job_history_id] will contain the history id of the agent job outcome when it has completed.

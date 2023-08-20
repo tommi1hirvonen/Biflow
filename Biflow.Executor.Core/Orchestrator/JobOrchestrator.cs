@@ -1,13 +1,13 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
 internal class JobOrchestrator : IJobOrchestrator
 {
     private readonly ILogger<JobOrchestrator> _logger;
-    private readonly IExecutionConfiguration _executionConfig;
     private readonly IGlobalOrchestrator _globalOrchestrator;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
@@ -17,19 +17,18 @@ internal class JobOrchestrator : IJobOrchestrator
 
     public JobOrchestrator(
         ILogger<JobOrchestrator> logger,
-        IExecutionConfiguration executionConfiguration,
+        IOptionsMonitor<ExecutionOptions> options,
         IGlobalOrchestrator globalOrchestrator,
         Execution execution)
     {
         _logger = logger;
-        _executionConfig = executionConfiguration;
         _globalOrchestrator = globalOrchestrator;
         _execution = execution;
         _cancellationTokenSources = _execution.StepExecutions
             .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
 
         // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-        var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : _executionConfig.MaxParallelSteps;
+        var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : options.CurrentValue.MaximumParallelSteps;
         _mainSemaphore = new SemaphoreSlim(maxParallelStepsMain, maxParallelStepsMain);
 
         // Create a Dictionary with max parallel steps for each step type.
