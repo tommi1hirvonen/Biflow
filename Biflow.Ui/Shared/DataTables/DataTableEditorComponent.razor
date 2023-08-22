@@ -109,7 +109,9 @@
         <div class="row">
             <div class="col-auto d-inline-flex align-items-center">
                 <label>Limit rows</label>
-                <input class="form-control form-control-sm ms-3" type="number" @bind-value="TopRows" style="max-width: 100px;" />
+                <form @onsubmit="ReloadDataAsync">
+                    <input class="form-control form-control-sm ms-3" type="number" @bind-value="TopRows" style="max-width: 100px;" />
+                </form>
             </div>
             <div class="col-auto align-items-center">
                 <div class="form-check form-check-inline">
