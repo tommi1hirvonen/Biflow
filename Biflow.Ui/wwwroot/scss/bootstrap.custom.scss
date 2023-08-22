@@ -67,20 +67,6 @@ $body-bg-dark-custom: shade-color($dark, 15%);
     }
 }
 
-// HxAutosuggest and HxInputTags
-[data-bs-theme="dark"] {
-    --hx-autosuggest-item-highlighted-background-color: #{$gray-800};
-    --hx-input-tags-dropdown-item-highlighted-background-color: #{$gray-800};
-    
-    .hx-input-tags-control input {
-        color: var(--bs-body-color);
-    }
-
-    .toast.bg-warning {
-        color: $white;
-    }
-}
-
 $navbar-gradient: #8F75DA;
 
 // Offcanvas customizations. Increase width from the default.

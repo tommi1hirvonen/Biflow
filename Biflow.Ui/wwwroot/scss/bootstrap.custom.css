@@ -11958,17 +11958,6 @@ textarea.form-control-lg {
   --bs-btn-disabled-border-color: #babbbc;
 }
 
-[data-bs-theme=dark] {
-  --hx-autosuggest-item-highlighted-background-color: #343a40;
-  --hx-input-tags-dropdown-item-highlighted-background-color: #343a40;
-}
-[data-bs-theme=dark] .hx-input-tags-control input {
-  color: var(--bs-body-color);
-}
-[data-bs-theme=dark] .toast.bg-warning {
-  color: #fff;
-}
-
 .offcanvas {
   width: 600px !important;
 }
