@@ -140,7 +140,17 @@
                 }
                 @if (rows?.Any() ?? false)
                 {
-                    <small class="text-secondary px-3">@rows.Count record(s)</small>
+                    <span class="px-3">
+                        <small class="text-secondary">@rows.Count record(s)</small>
+                        @if (TableData?.HasMoreRows ?? false)
+                        {
+                            <span class="text-warning ms-2" style="cursor: pointer;">
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Table contains more records with applied filters than is currently shown. Increase row limit to show more records.">
+                                    <CxIcon Icon="FeatherIcon.AlertCircle" />
+                                </HxPopover>
+                            </span>
+                        }
+                    </span>
                 }
                 @if (!TableData?.IsEditable ?? false)
                 {

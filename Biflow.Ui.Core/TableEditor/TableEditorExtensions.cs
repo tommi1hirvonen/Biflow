@@ -37,11 +37,14 @@ public static class TableEditorExtensions
 
         var columns = (await table.GetColumnsAsync(connection)).ToHashSet();
 
-        var (query, parameters) = new DataTableQueryBuilder(table, (int)top, filters).Build();
+        var (query, parameters) = new DataTableQueryBuilder(table, (int)top + 1, filters).Build();
         var rows = await connection.QueryAsync(query, parameters);
-        var initialValues = rows.Cast<IDictionary<string, object?>>();
-        
-        return new TableData(table, columns, initialValues);
+        var initialValues = rows
+            .Take((int)top)
+            .Cast<IDictionary<string, object?>>();
+
+        var hasMoreRows = rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
+        return new TableData(table, columns, initialValues, hasMoreRows);
     }
 
     internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)

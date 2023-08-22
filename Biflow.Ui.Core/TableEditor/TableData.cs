@@ -15,14 +15,18 @@ public class TableData
 
     public bool HasChanges { get; internal set; }
 
+    public bool HasMoreRows { get; }
+
     internal TableData(
         MasterDataTable masterDataTable,
         HashSet<Column> columns,
-        IEnumerable<IDictionary<string, object?>> data)
+        IEnumerable<IDictionary<string, object?>> data,
+        bool hasMoreRows)
     {
         MasterDataTable = masterDataTable;
         Columns = columns;
         _rows = new LinkedList<Row>(data.Select(row => new Row(this, masterDataTable.AllowUpdate, row)));
+        HasMoreRows = hasMoreRows;
     }
 
     public bool IsEditable => Columns.Any(c => c.IsPrimaryKey);
