@@ -380,33 +380,30 @@
         StateHasChanged();
     }
 
-    private async Task<AutosuggestDataProviderResult<string>> GetColumnSuggestions(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<string>> GetColumnSuggestions(AutosuggestDataProviderRequest request)
     {
-        await Task.Delay(150);
-        return new AutosuggestDataProviderResult<string>
+        return Task.FromResult(new AutosuggestDataProviderResult<string>
         {
             Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
-    private async Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)
     {
-        await Task.Delay(150);
-        return new AutosuggestDataProviderResult<MasterDataTable>
-            {
-                Data = Tables
-                    ?.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput) || (t.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
-                    ?? Enumerable.Empty<MasterDataTable>()
-            };
+        return Task.FromResult(new AutosuggestDataProviderResult<MasterDataTable>
+        {
+            Data = Tables
+                ?.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput) || (t.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
+                ?? Enumerable.Empty<MasterDataTable>()
+        });
     }
 
-    private async Task<AutosuggestDataProviderResult<string>> GetLookupColumnSuggestions(AutosuggestDataProviderRequest request, MasterDataTableLookup lookup)
+    private Task<AutosuggestDataProviderResult<string>> GetLookupColumnSuggestions(AutosuggestDataProviderRequest request, MasterDataTableLookup lookup)
     {
-        await Task.Delay(150);
-        return new AutosuggestDataProviderResult<string>
+        return Task.FromResult(new AutosuggestDataProviderResult<string>
         {
             Data = LookupColumns.GetValueOrDefault(lookup)?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
     private async Task SubmitEditTableAsync()

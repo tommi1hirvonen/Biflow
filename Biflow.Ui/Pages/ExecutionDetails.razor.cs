@@ -322,15 +322,14 @@ public partial class ExecutionDetails : ComponentBase
         return processedSteps;
     }
 
-    private async Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
         ArgumentNullException.ThrowIfNull(Execution);
-        await Task.Delay(150);
         var filtered = Execution.StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
-        return new AutosuggestDataProviderResult<StepExecution>
+        return Task.FromResult(new AutosuggestDataProviderResult<StepExecution>
         {
             Data = filtered
-        };
+        });
     }
 
     private string TextSelector(StepExecution step) => step.StepName ?? "";

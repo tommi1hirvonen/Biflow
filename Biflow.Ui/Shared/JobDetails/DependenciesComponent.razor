@@ -431,15 +431,14 @@
         }
     }
 
-    private async Task<AutosuggestDataProviderResult<Step>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<Step>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
         ArgumentNullException.ThrowIfNull(Steps);
-        await Task.Delay(100);
         var filteredModules = Steps.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
-        return new AutosuggestDataProviderResult<Step>
+        return Task.FromResult(new AutosuggestDataProviderResult<Step>
         {
             Data = filteredModules
-        };
+        });
     }
 
     private string TextSelector(Step step) => step.StepName ?? "";
