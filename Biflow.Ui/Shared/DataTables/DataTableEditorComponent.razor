@@ -30,13 +30,15 @@
                     Filters
                 </HxButton>
 
-                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                          Enabled="ColumnSelections is not null"
-                          CssClass="@(ColumnSelections?.Values.Any(b => !b) ?? false ? "fw-bold" : null)"
-                          OnClick="async () => await SelectColumnsOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.Columns" />
-                    Columns
-                </HxButton>
+                <FilterDropdown FilterSet="ColumnSelections"
+                                Items="TableData?.Columns.Select(c => c.Name) ?? Enumerable.Empty<string>()"
+                                OnChange="StateHasChanged"
+                                TitleCssClass="btn-secondary">
+                    <TitleTemplate>
+                        <CxIcon Icon="FeatherIcon.Columns" />
+                        Columns
+                    </TitleTemplate>
+                </FilterDropdown>
 
                 <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Spinner="Exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!Exporting">
@@ -377,5 +379,3 @@
 </HxOffcanvas>
 
 <FilterSetOffcanvas @ref="FilterSetOffcanvas" Filters="FilterSet" />
-
-<SelectColumnsOffcanvas @ref="SelectColumnsOffcanvas" ColumnSelections="ColumnSelections" OnSelectionsChanged="StateHasChanged" />

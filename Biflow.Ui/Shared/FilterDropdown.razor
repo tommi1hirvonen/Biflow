@@ -1,8 +1,8 @@
 ﻿@typeparam TItem
 
 @{
-    var fontWeigth = FilterSet.Any() ? "fw-bold" : null;
-    var cssClass = $"btn-auto {fontWeigth}";
+    var fontWeight = FilterSet.Any() ? "fw-bold" : null;
+    var cssClass = $"{TitleCssClass} {fontWeight}";
 }
 
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
@@ -99,6 +99,12 @@
 
     [Parameter]
     public EventCallback OnHidden { get; set; }
+
+    /// <summary>
+    /// Default value "btn-auto"
+    /// </summary>
+    [Parameter]
+    public string? TitleCssClass { get; set; } = "btn-auto";
 
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
 

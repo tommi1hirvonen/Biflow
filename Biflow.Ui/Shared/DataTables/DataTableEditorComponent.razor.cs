@@ -34,15 +34,14 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private FilterSet? FilterSet { get; set; }
 
-    private Dictionary<string, bool>? ColumnSelections { get; set; }
+    private HashSet<string> ColumnSelections { get; } = new();
 
-    private bool IsColumnSelected(string column) => (ColumnSelections?.ContainsKey(column) ?? false) && ColumnSelections[column];
+    private bool IsColumnSelected(string column) =>
+        ColumnSelections is null || !ColumnSelections.Any() || ColumnSelections.Contains(column);
 
     private FilterSetOffcanvas? FilterSetOffcanvas { get; set; }
 
     private HxOffcanvas? TableInfoOffcanvas { get; set; }
-
-    private SelectColumnsOffcanvas? SelectColumnsOffcanvas { get; set; }
 
     private bool EditModeEnabled { get; set; } = true;
 
@@ -133,7 +132,6 @@ public partial class DataTableEditorComponent : ComponentBase
         {
             TableData = await Table.LoadDataAsync(TopRows, FilterSet);
             FilterSet ??= TableData.EmptyFilterSet;
-            ColumnSelections ??= TableData.Columns.ToDictionary(x => x.Name, x => true);
         }
         catch (Exception ex)
         {
