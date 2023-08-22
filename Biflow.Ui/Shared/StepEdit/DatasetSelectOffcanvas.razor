@@ -26,7 +26,7 @@
                         }
                         else
                         {
-                            foreach (var group in Datasets.Keys.OrderBy(folder => folder))
+                            foreach (var group in Datasets.Keys.OrderBy(folder => folder.GroupName))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == SelectedGroup ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@group.GroupName</td>
@@ -58,7 +58,7 @@
                             }
                             else
                             {
-                                foreach (var dataset in datasets.OrderBy(p => p))
+                                foreach (var dataset in datasets.OrderBy(p => p.DatasetName))
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-body-tertiary fw-bold" : null)">
                                         <td>@dataset.DatasetName</td>
