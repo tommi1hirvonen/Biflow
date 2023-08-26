@@ -11,5 +11,9 @@ public class SqlStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public SqlStepExecutionAttempt(SqlStepExecution execution) : base(execution)
+    {
+    }
+
     protected override StepExecutionAttempt Clone() => new SqlStepExecutionAttempt(this);
 }

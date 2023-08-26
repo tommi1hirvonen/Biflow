@@ -10,6 +10,20 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         PipelineName = pipelineName;
     }
 
+    public PipelineStepExecution(PipelineStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.PipelineName);
+        ArgumentNullException.ThrowIfNull(step.PipelineClientId);
+
+        PipelineName = step.PipelineName;
+        PipelineClientId = (Guid)step.PipelineClientId;
+        TimeoutMinutes = step.TimeoutMinutes;
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new PipelineStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new PipelineStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "Pipeline name")]
     public string PipelineName { get; private set; }
 

@@ -8,6 +8,11 @@ public class EmailStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public EmailStepExecutionParameter(EmailStepParameter parameter, EmailStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+    }
+
     public EmailStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

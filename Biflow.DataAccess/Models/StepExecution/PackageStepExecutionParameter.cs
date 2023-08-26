@@ -8,6 +8,12 @@ public class PackageStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public PackageStepExecutionParameter(PackageStepParameter parameter, PackageStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+        ParameterLevel = parameter.ParameterLevel;
+    }
+
     public PackageStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

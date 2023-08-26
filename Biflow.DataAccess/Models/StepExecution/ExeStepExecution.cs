@@ -10,6 +10,22 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         ExeFileName = exeFileName;
     }
 
+    public ExeStepExecution(ExeStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.ExeFileName);
+
+        ExeFileName = step.ExeFileName;
+        ExeArguments = step.ExeArguments;
+        ExeWorkingDirectory = step.ExeWorkingDirectory;
+        ExeSuccessExitCode = step.ExeSuccessExitCode;
+        TimeoutMinutes = step.TimeoutMinutes;
+
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new ExeStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new ExeStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "File path")]
     public string ExeFileName { get; private set; }
 

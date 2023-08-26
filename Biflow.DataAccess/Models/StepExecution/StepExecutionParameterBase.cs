@@ -15,6 +15,23 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         ParameterType = parameterType;
     }
 
+    public StepExecutionParameterBase(StepParameterBase parameter, StepExecution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        StepId = parameter.StepId;
+        ParameterId = parameter.ParameterId;
+        ParameterType = parameter.ParameterType;
+        ParameterName = parameter.ParameterName;
+        ParameterValue = parameter.ParameterValue;
+        ParameterValueType = parameter.ParameterValueType;
+        InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
+        InheritFromExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.InheritFromJobParameterId);
+        Expression = parameter.Expression;
+        ExpressionParameters = parameter.ExpressionParameters
+            .Select(p => new StepExecutionParameterExpressionParameter(p, this))
+            .ToArray();
+    }
+
     public Guid ExecutionId { get; private set; }
 
     public Guid StepId { get; private set; }

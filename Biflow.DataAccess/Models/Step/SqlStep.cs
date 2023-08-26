@@ -28,4 +28,6 @@ public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHa
 
     [ValidateComplexType]
     public IList<SqlStepParameter> StepParameters { get; set; } = null!;
+
+    public override StepExecution ToStepExecution(Execution execution) => new SqlStepExecution(this, execution);
 }

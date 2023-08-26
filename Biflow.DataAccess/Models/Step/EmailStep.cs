@@ -29,4 +29,6 @@ public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
         Recipients
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .ToList();
+
+    public override StepExecution ToStepExecution(Execution execution) => new EmailStepExecution(this, execution);
 }

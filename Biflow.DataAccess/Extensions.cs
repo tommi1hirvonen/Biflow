@@ -1,7 +1,15 @@
-﻿namespace Biflow.DataAccess;
+﻿using Microsoft.Extensions.DependencyInjection;
 
-internal static class Extensions
+namespace Biflow.DataAccess;
+
+public static class Extensions
 {
-    public static bool EqualsIgnoreCase(this string text, string? compareTo) =>
+    public static IServiceCollection AddExecutionBuilder(this IServiceCollection services)
+    {
+        services.AddSingleton<IExecutionBuilderFactory, ExecutionBuilderFactory>();
+        return services;
+    }
+
+    internal static bool EqualsIgnoreCase(this string text, string? compareTo) =>
         string.Equals(text, compareTo, StringComparison.OrdinalIgnoreCase);
 }

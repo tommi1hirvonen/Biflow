@@ -11,6 +11,18 @@ public class TabularStepExecution : StepExecution, IHasTimeout
         TabularModelName = tabularModelName;
     }
 
+    public TabularStepExecution(TabularStep step, Execution execution) : base(step, execution)
+    {
+        TabularModelName = step.TabularModelName;
+        TabularTableName = step.TabularTableName;
+        TabularPartitionName = step.TabularPartitionName;
+        TimeoutMinutes = step.TimeoutMinutes;
+        ConnectionId = step.ConnectionId;
+        Connection = step.Connection;
+
+        StepExecutionAttempts = new[] { new TabularStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "Model name")]
     [Required]
     [MinLength(1)]

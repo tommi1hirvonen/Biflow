@@ -8,6 +8,21 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     {
     }
 
+    public JobStepExecution(JobStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.JobToExecuteId);
+
+        JobToExecuteId = (Guid)step.JobToExecuteId;
+        JobExecuteSynchronized = step.JobExecuteSynchronized;
+        TagFilters = step.TagFilters
+            .Select(t => new TagFilter(t.TagId, t.TagName))
+            .ToList();
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new JobStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new JobStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "Job to execute")]
     public Guid JobToExecuteId { get; private set; }
 
@@ -16,5 +31,10 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
 
     public IList<JobStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
 
-    public IList<Tag> TagFilters { get; set; } = null!;
+    /// <summary>
+    /// List of tag tuples that should be used to filter steps in executed job.
+    /// </summary>
+    public IList<TagFilter> TagFilters { get; set; } = new List<TagFilter>();
+
+    public record TagFilter(Guid TagId, string TagName);
 }

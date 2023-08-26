@@ -10,6 +10,21 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         SqlStatement = sqlStatement;
     }
 
+    public SqlStepExecution(SqlStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.SqlStatement);
+        ArgumentNullException.ThrowIfNull(step.ConnectionId);
+
+        SqlStatement = step.SqlStatement;
+        ConnectionId = (Guid)step.ConnectionId;
+        ResultCaptureJobParameterId = step.ResultCaptureJobParameterId;
+        TimeoutMinutes = step.TimeoutMinutes;
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new SqlStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new SqlStepExecutionAttempt(this) };
+    }
+
     [Column("ConnectionId")]
     public Guid ConnectionId { get; private set; }
 

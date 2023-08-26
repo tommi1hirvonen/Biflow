@@ -22,4 +22,6 @@ public class DatasetStep : Step
     public string? DatasetId { get; set; }
 
     public AppRegistration? AppRegistration { get; set; }
+
+    public override StepExecution ToStepExecution(Execution execution) => new DatasetStepExecution(this, execution);
 }

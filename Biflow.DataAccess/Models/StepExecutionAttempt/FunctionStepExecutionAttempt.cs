@@ -14,6 +14,8 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public FunctionStepExecutionAttempt(FunctionStepExecution execution) : base(execution) { }
+
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
 

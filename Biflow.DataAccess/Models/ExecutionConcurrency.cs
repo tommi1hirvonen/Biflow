@@ -8,6 +8,15 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "StepType")]
 public class ExecutionConcurrency
 {
+    public ExecutionConcurrency() { }
+
+    public ExecutionConcurrency(JobConcurrency jobConcurrency, Execution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        StepType = jobConcurrency.StepType;
+        MaxParallelSteps = jobConcurrency.MaxParallelSteps;
+    }
+
     public Guid ExecutionId { get; private set; }
 
     public StepType StepType { get; private set; }

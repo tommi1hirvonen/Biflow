@@ -24,6 +24,14 @@ public abstract class StepExecutionAttempt
         StepExecution = other.StepExecution;
     }
 
+    protected StepExecutionAttempt(StepExecution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        StepId = execution.StepId;
+        ExecutionStatus = StepExecutionStatus.NotStarted;
+        StepType = execution.StepType;
+    }
+
     public Guid ExecutionId { get; private set; }
 
     public Guid StepId { get; private set; }

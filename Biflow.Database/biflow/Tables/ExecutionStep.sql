@@ -15,7 +15,7 @@
     [PackageFolderName]                 NVARCHAR(128)       NULL,
     [PackageProjectName]                NVARCHAR(128)       NULL,
     [PackageName]                       NVARCHAR(260)       NULL,
-    [ExecuteIn32BitMode]                BIT                 NOT NULL,
+    [ExecuteIn32BitMode]                BIT                 NOT NULL CONSTRAINT [DF_ExecutionStep_ExecuteIn32BitMode] DEFAULT(0),
     [ExecuteAsLogin]                    NVARCHAR(128)       NULL,
     [PipelineClientId]                  UNIQUEIDENTIFIER    NULL,
     [PipelineName]                      NVARCHAR(250)       NULL,
@@ -40,6 +40,7 @@
     [EmailSubject]                      NVARCHAR(MAX)       NULL,
     [EmailBody]                         NVARCHAR(MAX)       NULL,
     [DuplicateExecutionBehaviour]       VARCHAR(20)         CONSTRAINT [DF_ExecutionStep_DuplicateExecutionBehaviour] DEFAULT ('Wait') NOT NULL,
+    [TagFilters]                        VARCHAR(MAX)        NULL, -- JSON array of tag ids
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
     CONSTRAINT [CK_ExecutionStep_StepType] CHECK (

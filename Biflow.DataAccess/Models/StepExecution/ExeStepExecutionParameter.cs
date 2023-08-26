@@ -8,6 +8,11 @@ public class ExeStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public ExeStepExecutionParameter(ExeStepParameter parameter, ExeStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+    }
+
     public ExeStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

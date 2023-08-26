@@ -7,6 +7,19 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "ObjectId")]
 public class ExecutionDataObject
 {
+    public ExecutionDataObject() { }
+
+    public ExecutionDataObject(DataObject dataObject, Execution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        ObjectId = dataObject.ObjectId;
+        ServerName = dataObject.ServerName;
+        DatabaseName = dataObject.DatabaseName;
+        SchemaName = dataObject.SchemaName;
+        ObjectName = dataObject.ObjectName;
+        MaxConcurrentWrites = dataObject.MaxConcurrentWrites;
+    }
+
     public Guid ExecutionId { get; private set; }
 
     public Guid ObjectId { get; private set; }

@@ -40,4 +40,6 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 
     [ValidateComplexType]
     public IList<ExeStepParameter> StepParameters { get; set; } = null!;
+
+    public override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
 }

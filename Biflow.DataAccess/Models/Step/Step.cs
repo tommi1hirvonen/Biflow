@@ -127,4 +127,6 @@ public abstract class Step : IComparable
         var result = await ExecutionConditionExpression.EvaluateAsync(parameters);
         return result;
     }
+
+    public abstract StepExecution ToStepExecution(Execution execution);
 }

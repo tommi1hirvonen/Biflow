@@ -11,6 +11,23 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         FunctionUrl = functionUrl;
     }
 
+    public FunctionStepExecution(FunctionStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.FunctionAppId);
+        ArgumentNullException.ThrowIfNull(step.FunctionUrl);
+
+        FunctionAppId = (Guid)step.FunctionAppId;
+        FunctionUrl = step.FunctionUrl;
+        FunctionInput = step.FunctionInput;
+        FunctionIsDurable = step.FunctionIsDurable;
+        TimeoutMinutes = step.TimeoutMinutes;
+
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new FunctionStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new FunctionStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "Function app id")]
     public Guid FunctionAppId { get; private set; }
 

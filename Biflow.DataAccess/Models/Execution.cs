@@ -6,12 +6,44 @@ namespace Biflow.DataAccess.Models;
 [Table("Execution")]
 public class Execution
 {
-
     public Execution(string jobName, DateTimeOffset createdDateTime, ExecutionStatus executionStatus)
     {
         JobName = jobName;
         CreatedDateTime = createdDateTime;
         ExecutionStatus = executionStatus;
+    }
+
+    public Execution(Job job, string createdBy) : this(job)
+    {
+        CreatedBy = createdBy;
+    }
+
+    public Execution(Job job, Schedule schedule) : this(job)
+    {
+        ScheduleId = schedule.ScheduleId;
+        ScheduleName = schedule.ScheduleName;
+        CronExpression = schedule.CronExpression;
+        Notify = true;
+    }
+
+    private Execution(Job job)
+    {
+        ExecutionId = Guid.NewGuid();
+        JobId = job.JobId;
+        JobName = job.JobName;
+        CreatedDateTime = DateTimeOffset.Now;
+        ExecutionStatus = ExecutionStatus.NotStarted;
+        DependencyMode = job.UseDependencyMode;
+        StopOnFirstError = job.StopOnFirstError;
+        MaxParallelSteps = job.MaxParallelSteps;
+        OvertimeNotificationLimitMinutes = job.OvertimeNotificationLimitMinutes;
+        StepExecutions = new List<StepExecution>();
+        ExecutionConcurrencies = job.JobConcurrencies
+            .Select(c => new ExecutionConcurrency(c, this))
+            .ToArray();
+        ExecutionParameters = job.JobParameters
+            .Select(p => new ExecutionParameter(p, this))
+            .ToArray();
     }
 
     [Key]
@@ -64,13 +96,13 @@ public class Execution
     public int? ExecutorProcessId { get; set; }
 
     [Display(Name = "Notify")]
-    public bool Notify { get; private set; }
+    public bool Notify { get; set; }
 
     [Display(Name = "Notify caller")]
-    public SubscriptionType? NotifyCaller { get; private set; }
+    public SubscriptionType? NotifyCaller { get; set; }
 
     [Display(Name = "Notify caller overtime")]
-    public bool NotifyCallerOvertime { get; private set; }
+    public bool NotifyCallerOvertime { get; set; }
 
     public ICollection<StepExecution> StepExecutions { get; set; } = null!;
 

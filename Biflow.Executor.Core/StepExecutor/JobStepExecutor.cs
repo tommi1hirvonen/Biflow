@@ -44,7 +44,7 @@ internal class JobStepExecutor : StepExecutorBase
                 using var context = await _dbContextFactory.CreateDbContextAsync();
                 var steps = await context.Steps
                     .Where(step => step.JobId == Step.JobToExecuteId)
-                    .Where(step => step.Tags.Any(tag => Step.TagFilters.Select(filter => filter.TagId).Contains(tag.TagId)))
+                    .Where(step => step.Tags.Any(tag => Step.TagFilters.Select(t => t.TagId).Contains(tag.TagId)))
                     .Select(step => step.StepId)
                     .ToListAsync();
                 if (steps.Any())

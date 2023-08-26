@@ -11,5 +11,7 @@ public class EmailStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public EmailStepExecutionAttempt(EmailStepExecution execution) : base(execution) { }
+
     protected override StepExecutionAttempt Clone() => new EmailStepExecutionAttempt(this);
 }

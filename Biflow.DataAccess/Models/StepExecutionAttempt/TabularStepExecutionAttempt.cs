@@ -11,5 +11,7 @@ public class TabularStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public TabularStepExecutionAttempt(TabularStepExecution execution) : base(execution) { }
+
     protected override StepExecutionAttempt Clone() => new TabularStepExecutionAttempt(this);
 }

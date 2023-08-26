@@ -7,11 +7,20 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "ParameterId")]
 public class ExecutionParameter : DynamicParameter
 {
-    public ExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
+    public ExecutionParameter(string parameterName, object? parameterValue, ParameterValueType parameterValueType)
     {
         ParameterName = parameterName;
         ParameterValue = parameterValue;
         ParameterValueType = parameterValueType;
+    }
+
+    public ExecutionParameter(JobParameter parameter, Execution execution)
+        : this(parameter.ParameterName, parameter.ParameterValue, parameter.ParameterValueType)
+    {
+        ExecutionId = execution.ExecutionId;
+        UseExpression = parameter.UseExpression;
+        Expression = parameter.Expression;
+        ParameterId = parameter.ParameterId;
     }
 
     public Guid ExecutionId { get; private set; }

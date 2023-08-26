@@ -27,4 +27,6 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     public Guid? ConnectionId { get; set; }
 
     public SqlConnectionInfo Connection { get; set; } = null!;
+
+    public override StepExecution ToStepExecution(Execution execution) => new AgentJobStepExecution(this, execution);
 }

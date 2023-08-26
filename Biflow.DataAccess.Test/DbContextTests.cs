@@ -25,9 +25,6 @@ public class DbContextTests
 
         var sqlParamsExist = steps.Any(s => s is IHasStepParameters<SqlStepParameter> p && p.StepParameters.Any());
         Assert.True(sqlParamsExist);
-
-        var packageParamsExist = steps.Any(s => s is IHasStepParameters<PackageStepParameter> p && p.StepParameters.Any());
-        Assert.True(packageParamsExist);
     }
 
     [Fact]

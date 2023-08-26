@@ -25,4 +25,6 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
 
     [ValidateComplexType]
     public IList<PipelineStepParameter> StepParameters { get; set; } = null!;
+
+    public override StepExecution ToStepExecution(Execution execution) => new PipelineStepExecution(this, execution);
 }

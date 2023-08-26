@@ -10,6 +10,19 @@ public class DatasetStepExecution : StepExecution
         DatasetId = datasetId;
     }
 
+    public DatasetStepExecution(DatasetStep step, Execution execution) : base(step, execution)
+    {
+        ArgumentNullException.ThrowIfNull(step.AppRegistrationId);
+        ArgumentNullException.ThrowIfNull(step.DatasetGroupId);
+        ArgumentNullException.ThrowIfNull(step.DatasetId);
+
+        AppRegistrationId = (Guid)step.AppRegistrationId;
+        DatasetGroupId = step.DatasetGroupId;
+        DatasetId = step.DatasetId;
+
+        StepExecutionAttempts = new[] { new DatasetStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "App registration id")]
     public Guid AppRegistrationId { get; private set; }
 

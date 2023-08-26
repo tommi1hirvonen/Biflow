@@ -36,4 +36,6 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
     public Guid? ConnectionId { get; set; }
 
     public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
+
+    public override StepExecution ToStepExecution(Execution execution) => new TabularStepExecution(this, execution);
 }

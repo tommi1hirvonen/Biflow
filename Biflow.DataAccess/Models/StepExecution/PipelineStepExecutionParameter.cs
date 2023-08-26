@@ -8,6 +8,11 @@ public class PipelineStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public PipelineStepExecutionParameter(PipelineStepParameter parameter, PipelineStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+    }
+
     public PipelineStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

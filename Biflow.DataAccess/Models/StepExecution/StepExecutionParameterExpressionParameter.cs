@@ -8,6 +8,18 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "StepParameterId", "ParameterName")]
 public class StepExecutionParameterExpressionParameter
 {
+    public StepExecutionParameterExpressionParameter() { }
+
+    public StepExecutionParameterExpressionParameter(StepParameterExpressionParameter parameter, StepExecutionParameterBase execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        StepParameterId = parameter.StepParameterId;
+        ParameterName = parameter.ParameterName;
+        StepParameter = execution;
+        InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
+        InheritFromExecutionParameter = execution.BaseStepExecution.Execution.ExecutionParameters.First(p => p.ParameterId == parameter.InheritFromJobParameterId);
+    }
+
     public Guid ExecutionId { get; set; }
 
     public Guid StepParameterId { get; set; }

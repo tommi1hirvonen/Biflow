@@ -106,6 +106,11 @@ public class BiflowContext : DbContext
             });
         });
 
+        modelBuilder.Entity<JobStepExecution>()
+            .Property(p => p.TagFilters).HasConversion(
+                from => JsonSerializer.Serialize(from, new JsonSerializerOptions { IncludeFields = true }),
+                to => JsonSerializer.Deserialize<List<JobStepExecution.TagFilter>>(string.IsNullOrEmpty(to) ? "[]" : to, new JsonSerializerOptions { IncludeFields = true }) ?? new());
+
         modelBuilder.Entity<StepExecutionAttempt>(e =>
         {
             e.HasDiscriminator<StepType>("StepType")
@@ -205,12 +210,6 @@ public class BiflowContext : DbContext
             .WithMany(s => s.TagFilters)
             .UsingEntity<Dictionary<string, object>>("JobStepTagFilter",
             x => x.HasOne<JobStep>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
-
-            e.HasMany(t => t.JobStepExecutions)
-            .WithMany(s => s.TagFilters)
-            .UsingEntity<Dictionary<string, object>>("ExecutionJobStepTagFilter",
-            x => x.HasOne<JobStepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
 
             e.HasMany(t => t.Schedules)
@@ -390,7 +389,7 @@ public class BiflowContext : DbContext
             e.HasOne(t => t.Category).WithMany(c => c.Tables).HasForeignKey(p => p.CategoryId);
             e.Property(t => t.LockedColumns).HasConversion(
                 from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<string>>(to, null as JsonSerializerOptions) ?? new());
+                to => JsonSerializer.Deserialize<List<string>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
 
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)

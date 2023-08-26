@@ -10,7 +10,7 @@ namespace Biflow.DataAccess.Test;
 
 public class DatabaseFixture : IAsyncLifetime
 {
-    public string ConnectionString { get; } =
+    private string ConnectionString { get; } =
         "Data Source=localhost;Database=BiflowTest;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
 
     public string Username { get; } = "testuser";
@@ -19,28 +19,28 @@ public class DatabaseFixture : IAsyncLifetime
 
     public IDbContextFactory<BiflowContext> DbContextFactory { get; }
 
+    public IExecutionBuilderFactory ExecutionBuilderFactory { get; }
+
     public DatabaseFixture()
     {
         var httpContextAccessor = new MockHttpContextAccessor(Username, Role);
-        var settings = new Dictionary<string, string?>();
+        var settings = new Dictionary<string, string?>
+        {
+            { "ConnectionStrings:BiflowContext", ConnectionString }
+        };
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(settings)
             .Build();
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
-            .AddDbContextFactory<BiflowContext>(options =>
-            {
-                options.EnableSensitiveDataLogging();
-                options.UseSqlServer(ConnectionString, o =>
-                {
-                    o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                });
-            })
+            .AddDbContextFactory<BiflowContext>()
+            .AddExecutionBuilder()
             .BuildServiceProvider();
-        var factory = services.GetService<IDbContextFactory<BiflowContext>>();
+        var factory = services.GetRequiredService<IDbContextFactory<BiflowContext>>();
+        var builderFactory = services.GetRequiredService<IExecutionBuilderFactory>();
         ArgumentNullException.ThrowIfNull(factory);
-        DbContextFactory = factory;
+        (DbContextFactory, ExecutionBuilderFactory) = (factory, builderFactory);
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -54,7 +54,7 @@ public class DatabaseFixture : IAsyncLifetime
         var context = await DbContextFactory.CreateDbContextAsync();
         var connection = new SqlConnectionInfo("Test connection", ConnectionString);
 
-        var job = new Job
+        var job1 = new Job
         {
             JobName = "Test job",
             JobDescription = "Test job",
@@ -67,36 +67,39 @@ public class DatabaseFixture : IAsyncLifetime
         };
         var jobParameter = new JobParameter
         {
-            Job = job,
+            Job = job1,
             ParameterName = "JobParameter1",
             ParameterValueType = ParameterValueType.String,
             ValueString = "Hello world"
         };
-        job.JobParameters = new List<JobParameter> { jobParameter };
-        var jobConcurrency = new JobConcurrency { Job = job, StepType = StepType.Sql, MaxParallelSteps = 1 };
-        job.JobConcurrencies = new List<JobConcurrency> { jobConcurrency };
+        job1.JobParameters = new List<JobParameter> { jobParameter };
+        var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
+        job1.JobConcurrencies = new List<JobConcurrency> { jobConcurrency };
 
-        var tag = new Tag("Test tag") { Color = TagColor.DarkGray };
+        var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
+        var tag2 = new Tag("Another tag") { Color = TagColor.Red };
 
         var step1 = new SqlStep
         {
-            JobId = job.JobId,
+            IsEnabled = true,
+            JobId = job1.JobId,
             StepName = "Test step 1",
             ExecutionPhase = 10,
             SqlStatement = "select 1",
             Connection = connection,
-            Tags = new List<Tag> { tag }
+            Tags = new List<Tag> { tag1, tag2 }
         };
 
         var step2 = new SqlStep
         {
-            JobId = job.JobId,
+            IsEnabled = true,
+            JobId = job1.JobId,
             StepName = "Test step 2",
             StepDescription = "Test step 2 description",
             ExecutionPhase = 20,
             SqlStatement = "select @param",
             Connection = connection,
-            Tags = new List<Tag> { tag }
+            Tags = new List<Tag> { tag1 }
         };
         var step2Dependency = new Dependency(step2.StepId, step1.StepId) { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
         step2.Dependencies = new List<Dependency> { step2Dependency };
@@ -111,12 +114,13 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step3 = new SqlStep
         {
-            JobId = job.JobId,
+            IsEnabled = true,
+            JobId = job1.JobId,
             StepName = "Test step 3",
             ExecutionPhase = 20,
             SqlStatement = "select @param",
             Connection = connection,
-            Tags = new List<Tag> { tag }
+            Tags = new List<Tag> { tag1 }
         };
         var step3Parameter = new SqlStepParameter
         {
@@ -129,12 +133,13 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step4 = new SqlStep
         {
-            JobId = job.JobId,
+            IsEnabled = true,
+            JobId = job1.JobId,
             StepName = "Test step 4",
             ExecutionPhase = 30,
             SqlStatement = "select @param",
             Connection = connection,
-            Tags = new List<Tag> { tag }
+            Tags = new List<Tag> { tag1 }
         };
         var step4Dependency = new Dependency(step4.StepId, step3.StepId) { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
         step4.Dependencies = new List<Dependency> { step4Dependency };
@@ -172,9 +177,47 @@ public class DatabaseFixture : IAsyncLifetime
         };
         step4.Targets = new List<DataObject> { step4Target };
 
-        job.Steps = new List<Step> { step1, step2, step3, step4 };
+        job1.Steps = new List<Step> { step1, step2, step3, step4 };
 
-        context.AddRange(job);
+        var job2 = new Job
+        {
+            JobName = "Another job",
+            JobDescription = "Another job",
+            UseDependencyMode = false,
+            StopOnFirstError = true,
+            MaxParallelSteps = 5,
+            OvertimeNotificationLimitMinutes = 0,
+            IsEnabled = true,
+            Category = null
+        };
+
+        var step5 = new JobStep
+        {
+            IsEnabled = true,
+            JobId = job2.JobId,
+            StepName = "Test step 5",
+            ExecutionPhase = 0,
+            JobExecuteSynchronized = true,
+            JobToExecute = job1,
+            TagFilters = new List<Tag> { tag2 },
+            Tags = new List<Tag>()
+        };
+
+        var step6 = new JobStep
+        {
+            IsEnabled = true,
+            JobId = job2.JobId,
+            StepName = "Test step 6",
+            ExecutionPhase = 0,
+            JobExecuteSynchronized = true,
+            JobToExecute = job1,
+            TagFilters = new List<Tag> { tag1, tag2 },
+            Tags = new List<Tag>()
+        };
+
+        job2.Steps = new List<Step> { step5, step6 };
+
+        context.AddRange(job1, job2);
         await context.SaveChangesAsync();
     }
 

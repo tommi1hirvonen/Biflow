@@ -10,6 +10,15 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
         AgentJobName = agentJobName;
     }
 
+    public AgentJobStepExecution(AgentJobStep step, Execution execution) : base(step, execution)
+    {
+        AgentJobName = step.AgentJobName;
+        TimeoutMinutes = step.TimeoutMinutes;
+        ConnectionId = step.ConnectionId;
+
+        StepExecutionAttempts = new[] { new AgentJobStepExecutionAttempt(this) };
+    }
+
     [Display(Name = "Agent job name")]
     [Required]
     [MinLength(1)]

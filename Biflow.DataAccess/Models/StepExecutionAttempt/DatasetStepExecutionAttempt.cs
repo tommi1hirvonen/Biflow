@@ -11,5 +11,7 @@ public class DatasetStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public DatasetStepExecutionAttempt(DatasetStepExecution execution) : base(execution) { }
+
     protected override StepExecutionAttempt Clone() => new DatasetStepExecutionAttempt(this);
 }

@@ -8,10 +8,47 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ExecutionId", "StepId")]
 public abstract class StepExecution
 {
-    public StepExecution(string stepName, StepType stepType)
+    protected StepExecution(string stepName, StepType stepType)
     {
         StepName = stepName;
         StepType = stepType;
+    }
+
+    protected StepExecution(Step step, Execution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        Execution = execution;
+        StepId = step.StepId;
+        StepName = step.StepName ?? "";
+        DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour;
+        ExecutionPhase = step.ExecutionPhase;
+        RetryAttempts = step.RetryAttempts;
+        RetryIntervalMinutes = step.RetryIntervalMinutes;
+        ExecutionConditionExpression = step.ExecutionConditionExpression;
+        ExecutionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new StepExecutionConditionParameter(p, this))
+            .ToArray();
+        ExecutionDependencies = step.Dependencies
+            .Select(d => new ExecutionDependency(d, this))
+            .ToArray();
+        Sources = step.Sources
+            .Select(s =>
+            {
+                var existing = execution.StepExecutions
+                    .SelectMany(e => e.Sources.Concat(e.Targets))
+                    .FirstOrDefault(o => o.ObjectId == s.ObjectId);
+                return existing ?? new ExecutionDataObject(s, execution);
+            })
+            .ToArray();
+        Targets = step.Targets
+            .Select(t =>
+            {
+                var existing = execution.StepExecutions
+                    .SelectMany(e => e.Sources.Concat(e.Targets).Concat(Sources)) // Also check for this step execution's sources as they are not yet added to the execution.
+                    .FirstOrDefault(o => o.ObjectId == t.ObjectId);
+                return existing ?? new ExecutionDataObject(t, execution);
+            })
+            .ToArray();
     }
 
     [Display(Name = "Execution id")]

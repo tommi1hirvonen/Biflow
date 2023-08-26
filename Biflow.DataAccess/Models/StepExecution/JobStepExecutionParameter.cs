@@ -8,6 +8,12 @@ public class JobStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public JobStepExecutionParameter(JobStepParameter parameter, JobStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+        AssignToJobParameterId = parameter.AssignToJobParameterId;
+    }
+
     public JobStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

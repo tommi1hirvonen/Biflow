@@ -12,6 +12,8 @@ public class PackageStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
+    public PackageStepExecutionAttempt(PackageStepExecution execution) : base(execution) { }
+
     public long? PackageOperationId { get; set; }
 
     protected override StepExecutionAttempt Clone() => new PackageStepExecutionAttempt(this);

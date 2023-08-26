@@ -8,6 +8,11 @@ public class SqlStepExecutionParameter : StepExecutionParameterBase
 
     }
 
+    public SqlStepExecutionParameter(SqlStepParameter parameter, SqlStepExecution execution) : base(parameter, execution)
+    {
+        StepExecution = execution;
+    }
+
     public SqlStepExecution StepExecution { get; set; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

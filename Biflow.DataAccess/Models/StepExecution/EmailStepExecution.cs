@@ -11,6 +11,18 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
         Body = body;
     }
 
+    public EmailStepExecution(EmailStep step, Execution execution) : base(step, execution)
+    {
+        Recipients = step.Recipients;
+        Subject = step.Subject;
+        Body = step.Body;
+
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new EmailStepExecutionParameter(p, this))
+            .ToArray();
+        StepExecutionAttempts = new[] { new EmailStepExecutionAttempt(this) };
+    }
+
     /// <summary>
     /// Comma separated list of recipient email addresses
     /// </summary>

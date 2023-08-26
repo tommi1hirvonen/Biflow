@@ -14,6 +14,19 @@ public class StepExecutionConditionParameter : ParameterBase
         ParameterValueType = parameterValueType;
     }
 
+    public StepExecutionConditionParameter(ExecutionConditionParameter parameter, StepExecution execution)
+    {
+        ExecutionId = execution.ExecutionId;
+        StepId = parameter.StepId;
+        ParameterName = parameter.ParameterName;
+        ParameterId = parameter.ParameterId;
+        ParameterValue = parameter.ParameterValue;
+        ParameterValueType = parameter.ParameterValueType;
+        ExecutionParameterId = parameter.JobParameterId;
+        ExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.JobParameterId);
+        StepExecution = execution;
+    }
+
     [Column("ExecutionId")]
     public Guid ExecutionId { get; set; }
 
