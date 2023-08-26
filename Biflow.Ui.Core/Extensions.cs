@@ -105,6 +105,7 @@ public static partial class Extensions
     {
         services.AddSqlConnectionFactory();
         services.AddDbContextFactory<BiflowContext>();
+        services.AddExecutionBuilderFactory();
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.

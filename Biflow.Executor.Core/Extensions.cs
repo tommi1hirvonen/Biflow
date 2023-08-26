@@ -21,6 +21,7 @@ public static class Extensions
         services.AddSqlConnectionFactory();
         services.AddDbContextFactory<ExecutorDbContext>();
         services.AddDbContextFactory<BiflowContext>();
+        services.AddExecutionBuilderFactory();
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
         services.AddSingleton<ITokenService, TokenService>();

@@ -35,7 +35,7 @@ public class DatabaseFixture : IAsyncLifetime
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
             .AddDbContextFactory<BiflowContext>()
-            .AddExecutionBuilder()
+            .AddExecutionBuilderFactory()
             .BuildServiceProvider();
         var factory = services.GetRequiredService<IDbContextFactory<BiflowContext>>();
         var builderFactory = services.GetRequiredService<IExecutionBuilderFactory>();

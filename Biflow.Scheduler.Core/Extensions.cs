@@ -13,6 +13,7 @@ public static class Extensions
         services.AddQuartz(q => q.UseMicrosoftDependencyInjectionJobFactory());
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
         services.AddDbContextFactory<BiflowContext>();
+        services.AddExecutionBuilderFactory();
         services.AddSqlConnectionFactory();
         services.AddSingleton<ISchedulesManager, SchedulesManager<TExecutionJob>>();
     }
