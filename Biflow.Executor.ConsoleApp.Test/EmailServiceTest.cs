@@ -1,5 +1,6 @@
 using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Executor.Core;
 using Biflow.Executor.Core.Notification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -36,7 +37,7 @@ public class EmailServiceTest
             .AddDbContextFactory<BiflowContext>(options =>
                     options.UseSqlServer(connectionString, o =>
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)))
-            .AddSingleton<IEmailConfiguration, EmailConfiguration>()
+            .Configure<EmailOptions>(configuration)
             .AddSingleton<INotificationService, EmailService>()
             .BuildServiceProvider();
 
