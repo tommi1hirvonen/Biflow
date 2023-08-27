@@ -40,7 +40,7 @@ public partial class ExecutionDetails : ComponentBase
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
             e.RetryAttemptIndex,
-            e.StepExecution.Step!.StepName ?? e.StepExecution.StepName,
+            e.StepExecution.Step?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
             e.StartDateTime,
@@ -50,8 +50,8 @@ public partial class ExecutionDetails : ComponentBase
             e.StepExecution.Execution.DependencyMode,
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
-            e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.Step.Tags));
+            e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
+            e.StepExecution.Step?.Tags ?? new List<Tag>()));
 
     private Report ShowReport { get; set; } = Report.Table;
 
